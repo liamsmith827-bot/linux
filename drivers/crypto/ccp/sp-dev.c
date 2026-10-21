@@ -323,3 +323,4 @@ static void __exit sp_mod_exit(void)
 
 module_init(sp_mod_init);
 module_exit(sp_mod_exit);
+MODULE_IMPORT_NS("ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
