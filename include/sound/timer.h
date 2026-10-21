@@ -52,7 +52,6 @@ struct snd_timer_hardware {
 	int (*stop) (struct snd_timer * timer);
 	int (*set_period) (struct snd_timer * timer, unsigned long period_num, unsigned long period_den);
 	int (*precise_resolution) (struct snd_timer * timer, unsigned long *num, unsigned long *den);
-
 };
 
 struct snd_timer {
@@ -78,7 +77,6 @@ struct snd_timer {
 	struct work_struct task_work;
 	int max_instances;	/* upper limit of timer instances */
 	int num_instances;	/* current number of timer instances */
-
 };
 
 struct snd_timer_instance {
@@ -108,7 +106,6 @@ struct snd_timer_instance {
 	struct list_head slave_list_head;
 	struct list_head slave_active_head;
 	struct snd_timer_instance *master;
-
 };
 
 /*

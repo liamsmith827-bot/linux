@@ -2412,7 +2412,7 @@ __latent_entropy struct task_struct *copy_process(
 
 	trace_android_rvh_copy_process_integrity(clone_flags, p, &retval);
 	if (retval)
-		goto bad_fork_cancel_cgroup;
+		goto bad_fork_core_free;
 
 	/* No more failure paths after this point. */
 

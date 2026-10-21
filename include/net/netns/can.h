@@ -36,7 +36,6 @@ struct netns_can {
 
 	/* CAN GW per-net gateway jobs */
 	struct hlist_head cgw_list;
-
 };
 
 #endif /* __NETNS_CAN_H__ */

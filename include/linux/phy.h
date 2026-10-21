@@ -772,7 +772,6 @@ struct phy_device {
 	/* MACsec management functions */
 	const struct macsec_ops *macsec_ops;
 #endif
-
 };
 
 /* Generic phy_device::dev_flags */
@@ -1275,7 +1274,6 @@ struct phy_driver {
 	 * Returns the time in jiffies until the next update event.
 	 */
 	unsigned int (*get_next_update_time)(struct phy_device *dev);
-
 };
 #define to_phy_driver(d) container_of_const(to_mdio_common_driver(d),		\
 				      struct phy_driver, mdiodrv)

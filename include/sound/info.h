@@ -55,7 +55,6 @@ struct snd_info_entry_ops {
 	int (*mmap)(struct snd_info_entry *entry, void *file_private_data,
 		    struct inode *inode, struct file *file,
 		    struct vm_area_struct *vma);
-
 };
 
 struct snd_info_entry {
@@ -75,7 +74,6 @@ struct snd_info_entry {
 	struct mutex access;
 	struct list_head children;
 	struct list_head list;
-
 };
 
 #if defined(CONFIG_SND_OSSEMUL) && defined(CONFIG_SND_PROC_FS)

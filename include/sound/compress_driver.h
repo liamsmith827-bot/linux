@@ -119,7 +119,6 @@ struct snd_compr_stream {
 	bool pause_in_draining;
 	void *private_data;
 	struct snd_dma_buffer dma_buffer;
-
 };
 
 /**
@@ -178,7 +177,6 @@ struct snd_compr_ops {
 	int (*task_stop) (struct snd_compr_stream *stream, struct snd_compr_task_runtime *task);
 	int (*task_free) (struct snd_compr_stream *stream, struct snd_compr_task_runtime *task);
 #endif
-
 };
 
 /**

@@ -155,7 +155,6 @@ struct usb_phy {
 	 * manually detect the charger type.
 	 */
 	enum usb_charger_type (*charger_detect)(struct usb_phy *x);
-
 };
 
 /* for board-specific init logic */

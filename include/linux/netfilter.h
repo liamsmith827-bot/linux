@@ -193,7 +193,6 @@ struct nf_sockopt_ops {
 	int (*get)(struct sock *sk, int optval, void __user *user, int *len);
 	/* Use the module struct to lock set/get code in place */
 	struct module *owner;
-
 };
 
 /* Function to register/unregister hook points. */
@@ -387,7 +386,6 @@ struct nf_nat_hook {
 			       const struct nlattr *attr);
 	void (*decode_session)(struct sk_buff *skb, struct flowi *fl);
 	void (*remove_nat_bysrc)(struct nf_conn *ct);
-
 };
 
 extern const struct nf_nat_hook __rcu *nf_nat_hook;
@@ -492,7 +490,6 @@ struct nfnl_ct_hook {
 			     u32 portid, u32 report);
 	void (*seq_adjust)(struct sk_buff *skb, struct nf_conn *ct,
 			   enum ip_conntrack_info ctinfo, s32 off);
-
 };
 extern const struct nfnl_ct_hook __rcu *nfnl_ct_hook;
 

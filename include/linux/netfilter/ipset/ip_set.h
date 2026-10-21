@@ -190,7 +190,6 @@ struct ip_set_type_variant {
 	void (*cancel_gc)(struct ip_set *set);
 	/* Region-locking is used */
 	bool region_lock;
-
 };
 
 struct ip_set_region {
@@ -237,7 +236,6 @@ struct ip_set_type {
 
 	/* Set this to THIS_MODULE if you are a module, otherwise NULL */
 	struct module *me;
-
 };
 
 /* register and unregister set type */
@@ -282,7 +280,6 @@ struct ip_set {
 	size_t offset[IPSET_EXT_ID_MAX];
 	/* The type specific data */
 	void *data;
-
 };
 
 static inline void

@@ -241,7 +241,6 @@ struct tty_struct {
 	struct list_head tty_files;
 
 	struct work_struct SAK_work;
-
 } __randomize_layout;
 
 /* Each of a tty's open files has private_data pointing to tty_file_private */

@@ -212,7 +212,6 @@ struct mmu_notifier_ops {
 	 */
 	struct mmu_notifier *(*alloc_notifier)(struct mm_struct *mm);
 	void (*free_notifier)(struct mmu_notifier *subscription);
-
 };
 
 /*
@@ -232,7 +231,6 @@ struct mmu_notifier {
 	struct mm_struct *mm;
 	struct rcu_head rcu;
 	unsigned int users;
-
 };
 
 /**

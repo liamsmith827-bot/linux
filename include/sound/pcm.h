@@ -76,7 +76,6 @@ struct snd_pcm_ops {
 			     unsigned long offset);
 	int (*mmap)(struct snd_pcm_substream *substream, struct vm_area_struct *vma);
 	int (*ack)(struct snd_pcm_substream *substream);
-
 };
 
 /*
@@ -451,7 +450,6 @@ struct snd_pcm_runtime {
 	/* -- OSS things -- */
 	struct snd_pcm_oss_runtime oss;
 #endif
-
 };
 
 struct snd_pcm_group {		/* keep linked substreams */
@@ -507,7 +505,6 @@ struct snd_pcm_substream {
 #ifdef CONFIG_SND_PCM_XRUN_DEBUG
 	unsigned int xrun_counter; /* number of times xrun happens */
 #endif /* CONFIG_SND_PCM_XRUN_DEBUG */
-
 };
 
 #define SUBSTREAM_BUSY(substream) ((substream)->ref_count > 0)
@@ -532,7 +529,6 @@ struct snd_pcm_str {
 #endif
 	struct snd_kcontrol *chmap_kctl; /* channel-mapping controls */
 	struct device *dev;
-
 };
 
 struct snd_pcm {
@@ -555,7 +551,6 @@ struct snd_pcm {
 #if IS_ENABLED(CONFIG_SND_PCM_OSS)
 	struct snd_pcm_oss oss;
 #endif
-
 };
 
 /*

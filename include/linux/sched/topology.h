@@ -140,8 +140,6 @@ struct sched_domain {
 	struct sched_domain_shared *shared;
 
 	unsigned int span_weight;
-
-
 	/*
 	 * See sched_domain_span(), on why flex arrays are broken.
 	 *

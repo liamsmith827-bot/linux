@@ -3359,10 +3359,8 @@ int security_task_alloc(struct task_struct *task, u64 clone_flags)
 	if (rc)
 		return rc;
 	trace_android_rvh_security_task_alloc(task, clone_flags, &rc);
-	if (rc)
-		return rc;
-
-	rc = call_int_hook(task_alloc, task, clone_flags);
+	if (!rc)
+		rc = call_int_hook(task_alloc, task, clone_flags);
 	if (unlikely(rc))
 		security_task_free(task);
 	return rc;

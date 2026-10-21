@@ -467,7 +467,6 @@ struct regmap_config {
 
 	const struct regmap_range_cfg *ranges;
 	unsigned int num_ranges;
-
 };
 
 /**
@@ -505,7 +504,6 @@ struct regmap_range_cfg {
 	/* Data window (per each page) */
 	unsigned int window_start;
 	unsigned int window_len;
-
 };
 
 /**
@@ -618,7 +616,6 @@ struct regmap_bus {
 	enum regmap_endian val_format_endian_default;
 	size_t max_raw_read;
 	size_t max_raw_write;
-
 };
 
 /*

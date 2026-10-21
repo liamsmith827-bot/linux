@@ -25,7 +25,6 @@ struct resource {
 	unsigned long flags;
 	unsigned long desc;
 	struct resource *parent, *sibling, *child;
-
 };
 
 /*

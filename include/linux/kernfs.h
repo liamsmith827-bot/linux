@@ -249,7 +249,6 @@ struct kernfs_syscall_ops {
 		      const char *new_name);
 	int (*show_path)(struct seq_file *sf, struct kernfs_node *kn,
 			 struct kernfs_root *root);
-
 };
 
 struct kernfs_node *kernfs_root_to_node(struct kernfs_root *root);
@@ -272,7 +271,6 @@ struct kernfs_open_file {
 	bool			mmapped:1;
 	bool			released:1;
 	const struct vm_operations_struct *vm_ops;
-
 };
 
 struct kernfs_ops {
@@ -326,7 +324,6 @@ struct kernfs_ops {
 
 	int (*mmap)(struct kernfs_open_file *of, struct vm_area_struct *vma);
 	loff_t (*llseek)(struct kernfs_open_file *of, loff_t offset, int whence);
-
 };
 
 /*

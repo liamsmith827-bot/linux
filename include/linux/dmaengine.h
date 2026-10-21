@@ -629,7 +629,6 @@ struct dma_async_tx_descriptor {
 	struct dma_async_tx_descriptor *parent;
 	spinlock_t lock;
 #endif
-
 };
 
 #ifdef CONFIG_DMA_ENGINE

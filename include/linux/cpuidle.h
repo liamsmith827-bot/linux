@@ -111,7 +111,6 @@ struct cpuidle_device {
 	cpumask_t		coupled_cpus;
 	struct cpuidle_coupled	*coupled;
 #endif
-
 };
 
 DECLARE_PER_CPU(struct cpuidle_device *, cpuidle_devices);
@@ -166,7 +165,6 @@ struct cpuidle_driver {
 
 	/* preferred governor to switch at register time */
 	const char		*governor;
-
 };
 
 #ifdef CONFIG_CPU_IDLE

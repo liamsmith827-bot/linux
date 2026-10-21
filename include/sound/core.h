@@ -62,7 +62,6 @@ struct snd_device_ops {
 	int (*dev_free)(struct snd_device *dev);
 	int (*dev_register)(struct snd_device *dev);
 	int (*dev_disconnect)(struct snd_device *dev);
-
 };
 
 struct snd_device {
@@ -72,7 +71,6 @@ struct snd_device {
 	enum snd_device_type type;	/* device type */
 	void *device_data;		/* device structure */
 	const struct snd_device_ops *ops;	/* operations */
-
 };
 
 #define snd_device(n) list_entry(n, struct snd_device, list)
@@ -147,7 +145,6 @@ struct snd_card {
 	struct snd_mixer_oss *mixer_oss;
 	int mixer_oss_change_count;
 #endif
-
 };
 
 #define dev_to_snd_card(p)	container_of(p, struct snd_card, card_dev)
@@ -223,7 +220,6 @@ struct snd_minor {
 	void *private_data;		/* private data for f_ops->open */
 	struct device *dev;		/* device for sysfs */
 	struct snd_card *card_ptr;	/* assigned card instance */
-
 };
 
 /* return a device pointer linked to each sound device as a parent */

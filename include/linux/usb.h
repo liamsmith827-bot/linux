@@ -272,7 +272,6 @@ struct usb_interface {
 	struct device dev;		/* interface specific device info */
 	struct device *usb_dev;
 	struct work_struct reset_ws;	/* for resets in atomic context */
-
 };
 
 #define to_usb_interface(__dev)	container_of_const(__dev, struct usb_interface, dev)
@@ -434,7 +433,6 @@ struct usb_host_bos {
 	struct usb_ssp_cap_descriptor	*ssp_cap;
 	struct usb_ss_container_id_descriptor	*ss_id;
 	struct usb_ptm_cap_descriptor	*ptm_cap;
-
 };
 
 int __usb_get_extra_descriptor(char *buffer, unsigned size,
@@ -493,7 +491,6 @@ struct usb_bus {
 	struct mon_bus *mon_bus;	/* non-null when associated */
 	int monitored;			/* non-zero when monitored */
 #endif
-
 };
 
 struct usb_dev_state;
@@ -746,7 +743,6 @@ struct usb_device {
 
 	u16 hub_delay;
 	unsigned use_generic_driver:1;
-
 };
 
 #define to_usb_device(__dev)	container_of_const(__dev, struct usb_device, dev)
@@ -1276,7 +1272,6 @@ struct usb_driver {
 	unsigned int supports_autosuspend:1;
 	unsigned int disable_hub_initiated_lpm:1;
 	unsigned int soft_unbind:1;
-
 };
 #define	to_usb_driver(d) container_of_const(d, struct usb_driver, driver)
 
@@ -1670,8 +1665,6 @@ struct urb {
 	int error_count;		/* (return) number of ISO errors */
 	void *context;			/* (in) context for completion */
 	usb_complete_t complete;	/* (in) completion routine */
-
-
 	struct usb_iso_packet_descriptor iso_frame_desc[];
 					/* (in) ISO ONLY */
 };

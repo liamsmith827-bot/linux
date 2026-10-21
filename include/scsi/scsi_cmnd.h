@@ -141,7 +141,6 @@ struct scsi_cmnd {
 					 * to be at an address < 16Mb). */
 
 	int result;		/* Status code from lower level driver */
-
 };
 
 /* Variant of blk_mq_rq_from_pdu() that verifies the type of its argument. */

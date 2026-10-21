@@ -208,7 +208,6 @@ struct coresight_connection {
 	struct coresight_device *filter_src_dev;
 	int src_refcnt;
 	int dest_refcnt;
-
 };
 
 /**
@@ -408,7 +407,6 @@ struct coresight_ops_source {
 			struct perf_event *event);
 	int (*resume_perf)(struct coresight_device *csdev);
 	void (*pause_perf)(struct coresight_device *csdev);
-
 };
 
 /**
@@ -444,7 +442,6 @@ struct coresight_ops {
 	const struct coresight_ops_source *source_ops;
 	const struct coresight_ops_helper *helper_ops;
 	const struct coresight_ops_panic *panic_ops;
-
 };
 
 static inline u32 csdev_access_relaxed_read32(struct csdev_access *csa,

@@ -34,7 +34,6 @@ struct snd_hwdep_ops {
 			  struct snd_hwdep_dsp_status *status);
 	int (*dsp_load)(struct snd_hwdep *hw,
 			struct snd_hwdep_dsp_image *image);
-
 };
 
 struct snd_hwdep {
@@ -60,7 +59,6 @@ struct snd_hwdep {
 	int used;			/* reference counter */
 	unsigned int dsp_loaded;	/* bit fields of loaded dsp indices */
 	unsigned int exclusive:1;	/* exclusive access mode */
-
 };
 
 extern int snd_hwdep_new(struct snd_card *card, char *id, int device,
