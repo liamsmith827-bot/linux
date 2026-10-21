@@ -245,7 +245,7 @@ impl Device<CoreInternal> {
 
 impl<Ctx: DeviceContext> Device<Ctx> {
     /// Obtain the raw `struct device *`.
-    pub(crate) fn as_raw(&self) -> *mut bindings::device {
+    pub fn as_raw(&self) -> *mut bindings::device {
         self.0.get()
     }
 
@@ -405,6 +405,13 @@ impl<Ctx: DeviceContext> Device<Ctx> {
 // argument.
 kernel::impl_device_context_deref!(unsafe { Device });
 kernel::impl_device_context_into_aref!(Device);
+
+impl PartialEq for Device {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_raw() == other.as_raw()
+    }
+}
+impl Eq for Device {}
 
 // SAFETY: Instances of `Device` are always reference-counted.
 unsafe impl crate::sync::aref::AlwaysRefCounted for Device {

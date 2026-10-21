@@ -36,6 +36,7 @@ struct tty_port_operations {
 	void (*shutdown)(struct tty_port *port);
 	int (*activate)(struct tty_port *port, struct tty_struct *tty);
 	void (*destruct)(struct tty_port *port);
+
 };
 
 struct tty_port_client_operations {
@@ -121,6 +122,7 @@ struct tty_port {
 	int			drain_delay;
 	struct kref		kref;
 	void			*client_data;
+
 };
 
 /* tty_port::iflags bits -- use atomic bit ops */

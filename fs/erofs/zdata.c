@@ -8,6 +8,7 @@
 #include <linux/psi.h>
 #include <linux/cpuhotplug.h>
 #include <trace/events/erofs.h>
+#include <trace/hooks/fs.h>
 
 #define Z_EROFS_MAX_SYNC_DECOMPRESS_BYTES	12288
 #define Z_EROFS_PCLUSTER_MAX_PAGES	(Z_EROFS_PCLUSTER_MAX_SIZE / PAGE_SIZE)
@@ -1624,6 +1625,8 @@ static void z_erofs_endio(struct bio *bio)
 	blk_status_t err = bio->bi_status;
 	struct folio_iter fi;
 
+	trace_android_vh_erofs_iostat_update(q->sb, bio);
+
 	bio_for_each_folio_all(fi, bio) {
 		struct folio *folio = fi.folio;
 
@@ -1701,9 +1704,10 @@ drain_io:
 					erofs_fileio_submit_bio(bio);
 				else if (erofs_is_fscache_mode(sb))
 					erofs_fscache_submit_bio(bio);
-				else
+				else {
+					trace_android_vh_erofs_iostat_submit(sb, bio);
 					submit_bio(bio);
-
+				}
 				if (memstall) {
 					psi_memstall_leave(&pflags);
 					memstall = 0;
@@ -1761,8 +1765,10 @@ drain_io:
 			erofs_fileio_submit_bio(bio);
 		else if (erofs_is_fscache_mode(sb))
 			erofs_fscache_submit_bio(bio);
-		else
+		else {
+			trace_android_vh_erofs_iostat_submit(sb, bio);
 			submit_bio(bio);
+		}
 	}
 	if (memstall)
 		psi_memstall_leave(&pflags);

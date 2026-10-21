@@ -65,6 +65,7 @@ struct nf_ipv6_ops {
 					 const struct nf_bridge_frag_data *data,
 					 struct sk_buff *));
 #endif
+
 };
 
 #ifdef CONFIG_NETFILTER

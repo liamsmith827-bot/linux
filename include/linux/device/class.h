@@ -67,6 +67,7 @@ struct class {
 	void (*get_ownership)(const struct device *dev, kuid_t *uid, kgid_t *gid);
 
 	const struct dev_pm_ops *pm;
+
 };
 
 struct class_dev_iter {

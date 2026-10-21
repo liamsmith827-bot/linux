@@ -126,6 +126,7 @@ struct usb_request {
 
 	int			status;
 	unsigned		actual;
+
 };
 
 /*-------------------------------------------------------------------------*/
@@ -156,6 +157,7 @@ struct usb_ep_ops {
 
 	int (*fifo_status) (struct usb_ep *ep);
 	void (*fifo_flush) (struct usb_ep *ep);
+
 };
 
 /**
@@ -244,6 +246,7 @@ struct usb_ep {
 	u16			maxpacket;
 	u16			maxpacket_limit;
 	u16			max_streams;
+
 };
 
 /*-------------------------------------------------------------------------*/
@@ -358,6 +361,7 @@ struct usb_gadget_ops {
 			struct usb_endpoint_descriptor *,
 			struct usb_ss_ep_comp_descriptor *);
 	int	(*check_config)(struct usb_gadget *gadget);
+
 };
 
 /**

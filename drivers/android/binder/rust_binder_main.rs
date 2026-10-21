@@ -3,6 +3,8 @@
 // Copyright (C) 2025 Google LLC.
 
 //! Binder -- the Android IPC mechanism.
+
+#![crate_name = "rust_binder"]
 #![recursion_limit = "256"]
 #![allow(
     clippy::as_underscore,
@@ -37,9 +39,13 @@ mod allocation;
 mod context;
 mod deferred_close;
 mod defs;
+#[macro_use]
+mod debug;
 mod error;
+mod netlink;
 mod node;
 mod page_range;
+mod prio;
 mod process;
 mod range_alloc;
 mod stats;
@@ -89,10 +95,23 @@ module! {
     license: "GPL",
 }
 
+use kernel::bindings::rust_binder_layout;
+const RUST_BINDER_LAYOUT: rust_binder_layout = rust_binder_layout {
+    t: transaction::TRANSACTION_LAYOUT,
+    th: thread::THREAD_LAYOUT,
+    p: process::PROCESS_LAYOUT,
+    n: node::NODE_LAYOUT,
+};
+
 fn next_debug_id() -> usize {
     static NEXT_DEBUG_ID: AtomicUsize = AtomicUsize::new(0);
 
-    NEXT_DEBUG_ID.fetch_add(1, Ordering::Relaxed)
+    loop {
+        let id = NEXT_DEBUG_ID.fetch_add(1, Ordering::Relaxed);
+        if id != 0 {
+            return id;
+        }
+    }
 }
 
 /// Provides a single place to write Binder return values via the
@@ -110,6 +129,7 @@ impl<'a> BinderReturnWriter<'a> {
     /// Write a return code back to user space.
     /// Should be a `BR_` constant from [`defs`] e.g. [`defs::BR_TRANSACTION_COMPLETE`].
     fn write_code(&mut self, code: u32) -> Result {
+        crate::trace::trace_return(code);
         stats::GLOBAL_STATS.inc_br(code);
         self.thread.process.stats.inc_br(code);
         self.writer.write(&code)
@@ -150,6 +170,10 @@ trait DeliverToRead: ListArcSafe + Send + Sync {
     ///
     /// Generally only set to true for non-oneway transactions.
     fn should_sync_wakeup(&self) -> bool;
+
+    /// Called when the work item is selected by a thread. This allows the work item to modify the
+    /// thread that is processing it.
+    fn on_thread_selected(&self, _thread: &Thread) {}
 
     fn debug_print(&self, m: &SeqFile, prefix: &str, transaction_prefix: &str) -> Result<()>;
 }
@@ -216,6 +240,7 @@ impl<T: ListArcSafe> DTRWrap<T> {
 struct DeliverCode {
     code: u32,
     skip: AtomicBool,
+    pid: i32,
 }
 
 kernel::list::impl_list_arc_safe! {
@@ -223,10 +248,11 @@ kernel::list::impl_list_arc_safe! {
 }
 
 impl DeliverCode {
-    fn new(code: u32) -> Self {
+    fn new(code: u32, pid: i32) -> Self {
         Self {
             code,
             skip: AtomicBool::new(false),
+            pid,
         }
     }
 
@@ -251,7 +277,15 @@ impl DeliverToRead for DeliverCode {
         Ok(true)
     }
 
-    fn cancel(self: DArc<Self>) {}
+    fn cancel(self: DArc<Self>) {
+        if !self.skip.load(Ordering::Relaxed) {
+            binder_debug!(
+                pid = self.pid,
+                DeadTransaction,
+                "undelivered TRANSACTION_COMPLETE"
+            );
+        }
+    }
 
     fn should_sync_wakeup(&self) -> bool {
         false
@@ -279,21 +313,46 @@ fn ptr_align(value: usize) -> Option<usize> {
 // SAFETY: We call register in `init`.
 static BINDER_SHRINKER: Shrinker = unsafe { Shrinker::new() };
 
-struct BinderModule {}
+struct BinderModule {
+    _netlink: Option<kernel::net::netlink::Registration>,
+}
 
 impl kernel::Module for BinderModule {
     fn init(_module: &'static kernel::ThisModule) -> Result<Self> {
         // SAFETY: The module initializer never runs twice, so we only call this once.
         unsafe { crate::context::CONTEXTS.init() };
 
+        // SAFETY: Nobody will access this except through tracepoints triggered by this driver, so
+        // currently safe to write.
+        unsafe { bindings::RUST_BINDER_LAYOUT = RUST_BINDER_LAYOUT };
+
+        // SAFETY: This just accesses global booleans.
+        #[cfg(CONFIG_ANDROID_BINDER_IPC)]
+        unsafe {
+            let unload = kernel::error::to_result(bindings::binder_try_unload_builtin());
+            if let Err(unload) = unload {
+                if unload != EPERM {
+                    pr_err!("Failed to load Rust Binder.\n");
+                }
+                bindings::binder_remove_trace_events(_module.as_ptr());
+                return Ok(Self { _netlink: None });
+            }
+        }
+
         pr_warn!("Loaded Rust Binder.");
 
+        crate::transaction::TRANSACTION_LOG.init()?;
+        crate::transaction::FAILED_TRANSACTION_LOG.init()?;
+
+        let netlink = crate::netlink::BINDER_NL_FAMILY.register()?;
         BINDER_SHRINKER.register(kernel::c_str!("android-binder"))?;
 
         // SAFETY: The module is being loaded, so we can initialize binderfs.
         unsafe { kernel::error::to_result(binderfs::init_rust_binderfs())? };
 
-        Ok(Self {})
+        Ok(Self {
+            _netlink: Some(netlink),
+        })
     }
 }
 
@@ -313,8 +372,9 @@ pub static rust_binder_fops: AssertSync<kernel::bindings::file_operations> = {
     let ops = kernel::bindings::file_operations {
         owner: THIS_MODULE.as_ptr(),
         poll: Some(rust_binder_poll),
-        unlocked_ioctl: Some(rust_binder_unlocked_ioctl),
-        compat_ioctl: Some(rust_binder_compat_ioctl),
+        unlocked_ioctl: Some(rust_binder_ioctl),
+        #[cfg(CONFIG_COMPAT)]
+        compat_ioctl: Some(bindings::compat_ptr_ioctl),
         mmap: Some(rust_binder_mmap),
         open: Some(rust_binder_open),
         release: Some(rust_binder_release),
@@ -402,23 +462,7 @@ unsafe extern "C" fn rust_binder_release(
 
 /// # Safety
 /// Only called by binderfs.
-unsafe extern "C" fn rust_binder_compat_ioctl(
-    file: *mut bindings::file,
-    cmd: kernel::ffi::c_uint,
-    arg: kernel::ffi::c_ulong,
-) -> kernel::ffi::c_long {
-    // SAFETY: We previously set `private_data` in `rust_binder_open`.
-    let f = unsafe { Arc::<Process>::borrow((*file).private_data) };
-    // SAFETY: The caller ensures that the file is valid.
-    match Process::compat_ioctl(f, unsafe { File::from_raw_file(file) }, cmd as _, arg as _) {
-        Ok(()) => 0,
-        Err(err) => err.to_errno() as isize,
-    }
-}
-
-/// # Safety
-/// Only called by binderfs.
-unsafe extern "C" fn rust_binder_unlocked_ioctl(
+unsafe extern "C" fn rust_binder_ioctl(
     file: *mut bindings::file,
     cmd: kernel::ffi::c_uint,
     arg: kernel::ffi::c_ulong,
@@ -543,6 +587,27 @@ unsafe extern "C" fn rust_binder_transactions_show(
     if let Err(err) = rust_binder_transactions_show_impl(m) {
         seq_print!(m, "failed to generate state: {:?}\n", err);
     }
+    0
+}
+
+/// # Safety
+/// Only called by binderfs.
+#[no_mangle]
+unsafe extern "C" fn rust_binder_transaction_log_show(
+    ptr: *mut seq_file,
+    _: *mut kernel::ffi::c_void,
+) -> kernel::ffi::c_int {
+    // SAFETY: Accessing the private field of `seq_file` is okay.
+    let is_failed = !unsafe { (*ptr).private }.is_null();
+    // SAFETY: The caller ensures that the pointer is valid and exclusive for the duration in which
+    // this method is called.
+    let m = unsafe { SeqFile::from_raw(ptr) };
+    let log = if is_failed {
+        &transaction::FAILED_TRANSACTION_LOG
+    } else {
+        &transaction::TRANSACTION_LOG
+    };
+    log.debug_print(m);
     0
 }
 

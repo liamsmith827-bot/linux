@@ -1334,58 +1334,6 @@ struct ieee80211_tdls_data {
 	} u;
 } __packed;
 
-/*
- * Peer-to-Peer IE attribute related definitions.
- */
-/*
- * enum ieee80211_p2p_attr_id - identifies type of peer-to-peer attribute.
- */
-enum ieee80211_p2p_attr_id {
-	IEEE80211_P2P_ATTR_STATUS = 0,
-	IEEE80211_P2P_ATTR_MINOR_REASON,
-	IEEE80211_P2P_ATTR_CAPABILITY,
-	IEEE80211_P2P_ATTR_DEVICE_ID,
-	IEEE80211_P2P_ATTR_GO_INTENT,
-	IEEE80211_P2P_ATTR_GO_CONFIG_TIMEOUT,
-	IEEE80211_P2P_ATTR_LISTEN_CHANNEL,
-	IEEE80211_P2P_ATTR_GROUP_BSSID,
-	IEEE80211_P2P_ATTR_EXT_LISTEN_TIMING,
-	IEEE80211_P2P_ATTR_INTENDED_IFACE_ADDR,
-	IEEE80211_P2P_ATTR_MANAGABILITY,
-	IEEE80211_P2P_ATTR_CHANNEL_LIST,
-	IEEE80211_P2P_ATTR_ABSENCE_NOTICE,
-	IEEE80211_P2P_ATTR_DEVICE_INFO,
-	IEEE80211_P2P_ATTR_GROUP_INFO,
-	IEEE80211_P2P_ATTR_GROUP_ID,
-	IEEE80211_P2P_ATTR_INTERFACE,
-	IEEE80211_P2P_ATTR_OPER_CHANNEL,
-	IEEE80211_P2P_ATTR_INVITE_FLAGS,
-	/* 19 - 220: Reserved */
-	IEEE80211_P2P_ATTR_VENDOR_SPECIFIC = 221,
-
-	IEEE80211_P2P_ATTR_MAX
-};
-
-/* Notice of Absence attribute - described in P2P spec 4.1.14 */
-/* Typical max value used here */
-#define IEEE80211_P2P_NOA_DESC_MAX	4
-
-struct ieee80211_p2p_noa_desc {
-	u8 count;
-	__le32 duration;
-	__le32 interval;
-	__le32 start_time;
-} __packed;
-
-struct ieee80211_p2p_noa_attr {
-	u8 index;
-	u8 oppps_ctwindow;
-	struct ieee80211_p2p_noa_desc desc[IEEE80211_P2P_NOA_DESC_MAX];
-} __packed;
-
-#define IEEE80211_P2P_OPPPS_ENABLE_BIT		BIT(7)
-#define IEEE80211_P2P_OPPPS_CTWINDOW_MASK	0x7F
-
 /* Authentication algorithms */
 #define WLAN_AUTH_OPEN 0
 #define WLAN_AUTH_SHARED_KEY 1
@@ -1394,6 +1342,8 @@ struct ieee80211_p2p_noa_attr {
 #define WLAN_AUTH_FILS_SK 4
 #define WLAN_AUTH_FILS_SK_PFS 5
 #define WLAN_AUTH_FILS_PK 6
+#define WLAN_AUTH_IEEE8021X 8
+#define WLAN_AUTH_EPPKE 9
 #define WLAN_AUTH_LEAP 128
 
 #define WLAN_AUTH_CHALLENGE_LEN 128
@@ -2276,6 +2226,7 @@ struct ieee80211_multiple_bssid_configuration {
 #define WLAN_AKM_SUITE_WFA_DPP			SUITE(WLAN_OUI_WFA, 2)
 
 #define WLAN_MAX_KEY_LEN		32
+#define WLAN_MAX_SECURE_LTF_KEYSEED_LEN	48
 
 #define WLAN_PMK_NAME_LEN		16
 #define WLAN_PMKID_LEN			16
@@ -2285,6 +2236,7 @@ struct ieee80211_multiple_bssid_configuration {
 
 #define WLAN_OUI_WFA			0x506f9a
 #define WLAN_OUI_TYPE_WFA_P2P		9
+#define WLAN_OUI_TYPE_WFA_NAN		0x13
 #define WLAN_OUI_TYPE_WFA_DPP		0x1A
 #define WLAN_OUI_MICROSOFT		0x0050f2
 #define WLAN_OUI_TYPE_MICROSOFT_WPA	1
@@ -2888,23 +2840,6 @@ struct ieee80211_tbtt_info_ge_11 {
 	struct ieee80211_enh_crit_upd enh_crit_upd;
 } __packed;
 
-/* NAN operation mode, as defined in Wi-Fi Aware (TM) specification Table 81 */
-#define NAN_OP_MODE_PHY_MODE_VHT	0x01
-#define NAN_OP_MODE_PHY_MODE_HE		0x10
-#define NAN_OP_MODE_PHY_MODE_MASK	0x11
-#define NAN_OP_MODE_80P80MHZ		0x02
-#define NAN_OP_MODE_160MHZ		0x04
-#define NAN_OP_MODE_PNDL_SUPPRTED	0x08
-
-/* NAN Device capabilities, as defined in Wi-Fi Aware (TM) specification
- * Table 79
- */
-#define NAN_DEV_CAPA_DFS_OWNER			0x01
-#define NAN_DEV_CAPA_EXT_KEY_ID_SUPPORTED	0x02
-#define NAN_DEV_CAPA_SIM_NDP_RX_SUPPORTED	0x04
-#define NAN_DEV_CAPA_NDPE_SUPPORTED		0x08
-#define NAN_DEV_CAPA_S3_SUPPORTED		0x10
-
 #include "ieee80211-ht.h"
 #include "ieee80211-vht.h"
 #include "ieee80211-he.h"
@@ -2912,6 +2847,8 @@ struct ieee80211_tbtt_info_ge_11 {
 #include "ieee80211-uhr.h"
 #include "ieee80211-mesh.h"
 #include "ieee80211-s1g.h"
+#include "ieee80211-p2p.h"
+#include "ieee80211-nan.h"
 
 /**
  * ieee80211_check_tim - check if AID bit is set in TIM

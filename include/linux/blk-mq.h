@@ -214,6 +214,8 @@ struct request {
 	 */
 	rq_end_io_fn *end_io;
 	void *end_io_data;
+
+	ANDROID_OEM_DATA(1);
 };
 
 /*
@@ -787,6 +789,7 @@ struct blk_mq_tags {
 	 */
 	spinlock_t lock;
 	struct rcu_head rcu_head;
+	ANDROID_OEM_DATA(1);
 };
 
 static inline struct request *blk_mq_tag_to_rq(struct blk_mq_tags *tags,

@@ -23,6 +23,7 @@
 #include <linux/gfp.h>
 #include <net/tcp.h>
 #include <net/rstreason.h>
+#include <trace/hooks/net.h>
 
 static u32 tcp_clamp_rto_to_user_timeout(const struct sock *sk)
 {
@@ -263,6 +264,7 @@ static int tcp_write_timeout(struct sock *sk)
 		if (retransmits_timed_out(sk, READ_ONCE(net->ipv4.sysctl_tcp_retries1), 0)) {
 			/* Black hole detection */
 			tcp_mtu_probing(icsk, sk);
+			trace_android_vh_tcp_write_timeout_estab_retrans(sk);
 
 			__dst_negative_advice(sk);
 		}
@@ -292,9 +294,14 @@ static int tcp_write_timeout(struct sock *sk)
 
 	if (expired) {
 		/* Has it gone just too far? */
+
+		trace_android_vh_tcp_state_change(sk, TCP_STATE_CHANGE_REASON_SYN_TIMEOUT, 0);
+
 		tcp_write_err(sk);
 		return 1;
 	}
+
+	trace_android_vh_tcp_state_change(sk, TCP_STATE_CHANGE_REASON_RETRANSMIT, 0);
 
 	if (sk_rethink_txhash(sk)) {
 		WRITE_ONCE(tp->timeout_rehash, tp->timeout_rehash + 1);
@@ -679,6 +686,8 @@ out_reset_timer:
 		 */
 		icsk->icsk_backoff++;
 		icsk->icsk_rto = min(icsk->icsk_rto << 1, tcp_rto_max(sk));
+
+		trace_android_vh_tcp_fastsyn(sk);
 	}
 	tcp_reset_xmit_timer(sk, ICSK_TIME_RETRANS,
 			     tcp_clamp_rto_to_user_timeout(sk), false);

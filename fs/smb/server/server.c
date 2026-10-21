@@ -641,6 +641,7 @@ static void __exit ksmbd_server_exit(void)
 MODULE_AUTHOR("Namjae Jeon <linkinjeon@kernel.org>");
 MODULE_DESCRIPTION("Linux kernel CIFS/SMB SERVER");
 MODULE_LICENSE("GPL");
+MODULE_IMPORT_NS("ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
 MODULE_SOFTDEP("pre: ecb");
 MODULE_SOFTDEP("pre: nls");
 MODULE_SOFTDEP("pre: aes");

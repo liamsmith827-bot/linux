@@ -43,6 +43,9 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/pagemap.h>
 
+#undef CREATE_TRACE_POINTS
+#include <trace/hooks/mm.h>
+
 /* How many pages do we try to swap or page in/out together? As a power of 2 */
 int page_cluster;
 static const int page_cluster_max = 31;
@@ -461,6 +464,7 @@ void folio_mark_accessed(struct folio *folio)
 		return;
 	}
 
+	trace_android_vh_mark_folio_accessed(folio);
 	if (!folio_test_referenced(folio)) {
 		folio_set_referenced(folio);
 	} else if (folio_test_unevictable(folio)) {
@@ -482,6 +486,7 @@ void folio_mark_accessed(struct folio *folio)
 			__lru_cache_activate_folio(folio);
 		folio_clear_referenced(folio);
 		workingset_activation(folio);
+		trace_android_vh_spec_promote_folio(folio);
 	}
 	if (folio_test_idle(folio))
 		folio_clear_idle(folio);
@@ -505,8 +510,13 @@ void folio_add_lru(struct folio *folio)
 
 	/* see the comment in lru_gen_folio_seq() */
 	if (lru_gen_enabled() && !folio_test_unevictable(folio) &&
-	    lru_gen_in_fault() && !(current->flags & PF_MEMALLOC))
-		folio_set_active(folio);
+	    lru_gen_in_fault() && !(current->flags & PF_MEMALLOC)) {
+		bool bypass = false;
+
+		trace_android_vh_folio_add_lru_folio_activate(folio, &bypass);
+		if (!bypass)
+			folio_set_active(folio);
+	}
 
 	folio_batch_add_and_move(folio, lru_add);
 }
@@ -611,6 +621,7 @@ static void lru_deactivate(struct lruvec *lruvec, struct folio *folio)
 static void lru_lazyfree(struct lruvec *lruvec, struct folio *folio)
 {
 	long nr_pages = folio_nr_pages(folio);
+	bool folio_added = false;
 
 	if (!folio_test_anon(folio) || !folio_test_swapbacked(folio) ||
 	    folio_test_swapcache(folio) || folio_test_unevictable(folio))
@@ -628,7 +639,9 @@ static void lru_lazyfree(struct lruvec *lruvec, struct folio *folio)
 	 * anonymous folios
 	 */
 	folio_clear_swapbacked(folio);
-	lruvec_add_folio(lruvec, folio);
+	trace_android_vh_add_lazyfree_bypass(lruvec, folio, &folio_added);
+	if (!folio_added)
+		lruvec_add_folio(lruvec, folio);
 
 	__count_vm_events(PGLAZYFREE, nr_pages);
 	count_memcg_events(lruvec_memcg(lruvec), PGLAZYFREE, nr_pages);
@@ -900,6 +913,7 @@ void lru_add_drain_all(void)
 #endif /* CONFIG_SMP */
 
 atomic_t lru_disable_count = ATOMIC_INIT(0);
+EXPORT_SYMBOL_GPL(lru_disable_count);
 
 /*
  * lru_cache_disable() needs to be called before we start compiling
@@ -911,7 +925,12 @@ atomic_t lru_disable_count = ATOMIC_INIT(0);
  */
 void lru_cache_disable(void)
 {
-	atomic_inc(&lru_disable_count);
+	/*
+	 * If someone is already disabled lru_cache, just return with
+	 * increasing the lru_disable_count.
+	 */
+	if (atomic_inc_not_zero(&lru_disable_count))
+		return;
 	/*
 	 * Readers of lru_disable_count are protected by either disabling
 	 * preemption or rcu_read_lock:
@@ -931,7 +950,9 @@ void lru_cache_disable(void)
 #else
 	lru_add_and_bh_lrus_drain();
 #endif
+	atomic_inc(&lru_disable_count);
 }
+EXPORT_SYMBOL_GPL(lru_cache_disable);
 
 /**
  * folios_put_refs - Reduce the reference count on a batch of folios.
@@ -957,6 +978,7 @@ void folios_put_refs(struct folio_batch *folios, unsigned int *refs)
 	for (i = 0, j = 0; i < folios->nr; i++) {
 		struct folio *folio = folios->folios[i];
 		unsigned int nr_refs = refs ? refs[i] : 1;
+		bool direct_free = false;
 
 		if (is_huge_zero_folio(folio))
 			continue;
@@ -971,9 +993,15 @@ void folios_put_refs(struct folio_batch *folios, unsigned int *refs)
 			continue;
 		}
 
+		trace_android_vh_folios_put_direct_free(folio, nr_refs,
+						&lruvec, flags, &direct_free);
+		if (direct_free)
+			goto try_to_free;
+
 		if (!folio_ref_sub_and_test(folio, nr_refs))
 			continue;
 
+try_to_free:
 		/* hugetlb has its own memcg */
 		if (folio_test_hugetlb(folio)) {
 			if (lruvec) {

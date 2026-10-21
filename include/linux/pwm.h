@@ -114,6 +114,7 @@ struct pwm_device {
 	struct pwm_args args;
 	struct pwm_state state;
 	struct pwm_state last;
+
 };
 
 /**
@@ -354,6 +355,8 @@ struct pwm_chip {
 		struct mutex nonatomic_lock;
 		spinlock_t atomic_lock;
 	};
+
+
 	struct pwm_device pwms[] __counted_by(npwm);
 };
 

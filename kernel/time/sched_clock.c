@@ -17,6 +17,7 @@
 #include <linux/sched_clock.h>
 #include <linux/seqlock.h>
 #include <linux/bitops.h>
+#include <trace/hooks/epoch.h>
 
 #include "timekeeping.h"
 
@@ -74,11 +75,13 @@ notrace struct clock_read_data *sched_clock_read_begin(unsigned int *seq)
 	*seq = read_seqcount_latch(&cd.seq);
 	return cd.read_data + (*seq & 1);
 }
+EXPORT_SYMBOL_GPL(sched_clock_read_begin);
 
 notrace int sched_clock_read_retry(unsigned int seq)
 {
 	return read_seqcount_latch_retry(&cd.seq, seq);
 }
+EXPORT_SYMBOL_GPL(sched_clock_read_retry);
 
 static __always_inline unsigned long long __sched_clock(void)
 {
@@ -292,6 +295,7 @@ int sched_clock_suspend(void)
 	update_sched_clock();
 	hrtimer_cancel(&sched_clock_timer);
 	rd->read_sched_clock = suspended_sched_clock_read;
+	trace_android_vh_show_suspend_epoch_val(rd->epoch_ns, rd->epoch_cyc);
 
 	return 0;
 }
@@ -308,6 +312,7 @@ void sched_clock_resume(void)
 	rd->epoch_cyc = cd.actual_read_sched_clock();
 	hrtimer_start(&sched_clock_timer, cd.wrap_kt, HRTIMER_MODE_REL_HARD);
 	rd->read_sched_clock = cd.actual_read_sched_clock;
+	trace_android_vh_show_resume_epoch_val(rd->epoch_cyc);
 }
 
 static void sched_clock_syscore_resume(void *data)

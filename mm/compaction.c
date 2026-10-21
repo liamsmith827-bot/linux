@@ -63,6 +63,12 @@ static inline bool is_via_compact_memory(int order) { return false; }
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/compaction.h>
+#undef CREATE_TRACE_POINTS
+
+#include <trace/hooks/vmscan.h>
+
+#undef CREATE_TRACE_POINTS
+#include <trace/hooks/mm.h>
 
 #define block_start_pfn(pfn, order)	round_down(pfn, 1UL << (order))
 #define block_end_pfn(pfn, order)	ALIGN((pfn) + 1, 1UL << (order))
@@ -1208,6 +1214,8 @@ isolate_success_no_list:
 		cc->nr_migratepages += folio_nr_pages(folio);
 		nr_isolated += folio_nr_pages(folio);
 		nr_scanned += folio_nr_pages(folio) - 1;
+		if (!folio_test_anon(folio))
+			cc->nr_migrate_file_pages += folio_nr_pages(folio);
 
 		/*
 		 * Avoid isolating too much unless this block is being
@@ -1247,6 +1255,7 @@ isolate_fail:
 			}
 			putback_movable_pages(&cc->migratepages);
 			cc->nr_migratepages = 0;
+			cc->nr_migrate_file_pages = 0;
 			nr_isolated = 0;
 		}
 
@@ -1411,6 +1420,8 @@ static bool suitable_migration_source(struct compact_control *cc,
 static bool suitable_migration_target(struct compact_control *cc,
 							struct page *page)
 {
+	bool bypass = false;
+
 	/* If the page is a large free page, then disallow migration */
 	if (PageBuddy(page)) {
 		int order = cc->order > 0 ? cc->order : pageblock_order;
@@ -1424,8 +1435,16 @@ static bool suitable_migration_target(struct compact_control *cc,
 			return false;
 	}
 
+	trace_android_vh_migration_target_bypass(page, &bypass);
+	if (bypass)
+		return false;
+
 	if (cc->ignore_block_suitable)
 		return true;
+
+	/* Allow file pages to migrate only into MIGRATE_MOVABLE blocks */
+	if (cc->nr_migrate_file_pages)
+		return get_pageblock_migratetype(page) == MIGRATE_MOVABLE;
 
 	/* If the block is MIGRATE_MOVABLE or MIGRATE_CMA, allow migration */
 	if (is_migrate_movable(get_pageblock_migratetype(page)))
@@ -1491,6 +1510,7 @@ fast_isolate_around(struct compact_control *cc, unsigned long pfn)
 {
 	unsigned long start_pfn, end_pfn;
 	struct page *page;
+	bool bypass = false;
 
 	/* Do not search around if there are enough pages already */
 	if (cc->nr_freepages >= cc->nr_migratepages)
@@ -1506,6 +1526,10 @@ fast_isolate_around(struct compact_control *cc, unsigned long pfn)
 
 	page = pageblock_pfn_to_page(start_pfn, end_pfn, cc->zone);
 	if (!page)
+		return;
+
+	trace_android_vh_migration_target_bypass(page, &bypass);
+	if (bypass)
 		return;
 
 	isolate_freepages_block(cc, &start_pfn, end_pfn, cc->freepages, 1, false);
@@ -2267,6 +2291,8 @@ static enum compact_result __compact_finished(struct compact_control *cc)
 	unsigned int order;
 	const int migratetype = cc->migratetype;
 	int ret;
+	bool abort_compact = false;
+	bool bypass = false;
 
 	/* Compaction run completes if the migrate and free scanner meet */
 	if (compact_scanners_met(cc)) {
@@ -2306,6 +2332,10 @@ static enum compact_result __compact_finished(struct compact_control *cc)
 
 		goto out;
 	}
+
+	trace_android_vh_compact_bypass(cc, &bypass);
+	if (bypass)
+		return COMPACT_SUCCESS;
 
 	if (is_via_compact_memory(cc->order))
 		return COMPACT_CONTINUE;
@@ -2367,7 +2397,8 @@ static enum compact_result __compact_finished(struct compact_control *cc)
 	}
 
 out:
-	if (cc->contended || fatal_signal_pending(current))
+	trace_android_vh_compact_finished(&abort_compact);
+	if (cc->contended || fatal_signal_pending(current) || abort_compact)
 		ret = COMPACT_CONTENDED;
 
 	return ret;
@@ -2549,6 +2580,7 @@ compact_zone(struct compact_control *cc, struct capture_control *capc)
 	bool update_cached;
 	unsigned int nr_succeeded = 0, nr_migratepages;
 	int order;
+	long vendor_ret;
 
 	/*
 	 * These counters track activities during zone compaction.  Initialize
@@ -2622,6 +2654,7 @@ compact_zone(struct compact_control *cc, struct capture_control *capc)
 		cc->zone->compact_cached_migrate_pfn[0] == cc->zone->compact_cached_migrate_pfn[1];
 
 	trace_mm_compaction_begin(cc, start_pfn, end_pfn, sync);
+	trace_android_vh_mm_compaction_begin(cc, &vendor_ret);
 
 	/* lru_add_drain_all could be expensive with involving other CPUs */
 	lru_add_drain();
@@ -2650,6 +2683,7 @@ rescan:
 			ret = COMPACT_CONTENDED;
 			putback_movable_pages(&cc->migratepages);
 			cc->nr_migratepages = 0;
+			cc->nr_migrate_file_pages = 0;
 			goto out;
 		case ISOLATE_NONE:
 			if (update_cached) {
@@ -2683,6 +2717,7 @@ rescan:
 
 		/* All pages were either migrated or will be released */
 		cc->nr_migratepages = 0;
+		cc->nr_migrate_file_pages = 0;
 		if (err) {
 			putback_movable_pages(&cc->migratepages);
 			/*
@@ -2770,6 +2805,7 @@ out:
 	count_compact_events(COMPACTMIGRATE_SCANNED, cc->total_migrate_scanned);
 	count_compact_events(COMPACTFREE_SCANNED, cc->total_free_scanned);
 
+	trace_android_vh_mm_compaction_end(cc, vendor_ret);
 	trace_mm_compaction_end(cc, start_pfn, end_pfn, sync, ret);
 
 	VM_BUG_ON(!list_empty(&cc->migratepages));
@@ -2828,6 +2864,11 @@ enum compact_result try_to_compact_pages(gfp_t gfp_mask, unsigned int order,
 	for_each_zone_zonelist_nodemask(zone, z, ac->zonelist,
 					ac->highest_zoneidx, ac->nodemask) {
 		enum compact_result status;
+		bool can_compact = true;
+
+		trace_android_vh_mm_customize_zone_can_compact(zone, &can_compact);
+		if (!can_compact)
+			continue;
 
 		if (cpusets_enabled() &&
 			(alloc_flags & ALLOC_CPUSET) &&
@@ -2884,9 +2925,45 @@ enum compact_result try_to_compact_pages(gfp_t gfp_mask, unsigned int order,
 					|| fatal_signal_pending(current))
 			break;
 	}
-
+	trace_android_vh_compaction_try_to_compact_exit(&rc);
 	return rc;
 }
+
+/* Compact all zones within a node with MIGRATE_ASYNC */
+void compact_node_async(int nid)
+{
+	pg_data_t *pgdat = NODE_DATA(nid);
+	int zoneid;
+	struct zone *zone;
+	struct compact_control cc = {
+		.order = -1,
+		.mode = MIGRATE_ASYNC,
+		.ignore_skip_hint = true,
+		.whole_zone = true,
+		.gfp_mask = GFP_KERNEL,
+		.proactive_compaction = false,
+	};
+
+	for (zoneid = 0; zoneid < MAX_NR_ZONES; zoneid++) {
+		bool can_compact = true;
+
+		zone = &pgdat->node_zones[zoneid];
+		if (!populated_zone(zone))
+			continue;
+
+		trace_android_vh_mm_customize_zone_can_compact(zone, &can_compact);
+		if (!can_compact)
+			continue;
+
+		if (fatal_signal_pending(current))
+			break;
+
+		cc.zone = zone;
+
+		compact_zone(&cc, NULL);
+	}
+}
+EXPORT_SYMBOL_GPL(compact_node_async);
 
 /*
  * compact_node() - compact all zones within a node
@@ -2913,8 +2990,14 @@ static int compact_node(pg_data_t *pgdat, bool proactive)
 	};
 
 	for (zoneid = 0; zoneid < MAX_NR_ZONES; zoneid++) {
+		bool can_compact = true;
+
 		zone = &pgdat->node_zones[zoneid];
 		if (!populated_zone(zone))
+			continue;
+
+		trace_android_vh_mm_customize_zone_can_compact(zone, &can_compact);
+		if (!can_compact)
 			continue;
 
 		if (fatal_signal_pending(current))
@@ -3045,9 +3128,14 @@ static bool kcompactd_node_suitable(pg_data_t *pgdat)
 		ALLOC_WMARK_HIGH : ALLOC_WMARK_MIN;
 
 	for (zoneid = 0; zoneid <= highest_zoneidx; zoneid++) {
+		bool can_compact = true;
 		zone = &pgdat->node_zones[zoneid];
 
 		if (!populated_zone(zone))
+			continue;
+
+		trace_android_vh_mm_customize_zone_can_compact(zone, &can_compact);
+		if (!can_compact)
 			continue;
 
 		ret = compaction_suit_allocation_order(zone,
@@ -3086,9 +3174,14 @@ static void kcompactd_do_work(pg_data_t *pgdat)
 
 	for (zoneid = 0; zoneid <= cc.highest_zoneidx; zoneid++) {
 		int status;
+		bool can_compact = true;
 
 		zone = &pgdat->node_zones[zoneid];
 		if (!populated_zone(zone))
+			continue;
+
+		trace_android_vh_mm_customize_zone_can_compact(zone, &can_compact);
+		if (!can_compact)
 			continue;
 
 		if (compaction_deferred(zone, cc.order))
@@ -3129,6 +3222,7 @@ static void kcompactd_do_work(pg_data_t *pgdat)
 		count_compact_events(KCOMPACTD_FREE_SCANNED,
 				     cc.total_free_scanned);
 	}
+	trace_android_vh_compaction_exit(pgdat->node_id, cc.order, cc.highest_zoneidx);
 
 	/*
 	 * Regardless of success, we are done until woken up next. But remember
@@ -3176,6 +3270,7 @@ static int kcompactd(void *p)
 	pg_data_t *pgdat = (pg_data_t *)p;
 	long default_timeout = msecs_to_jiffies(HPAGE_FRAG_CHECK_INTERVAL_MSEC);
 	long timeout = default_timeout;
+	bool bypass = false;
 
 	current->flags |= PF_KCOMPACTD;
 	set_freezable();
@@ -3197,9 +3292,12 @@ static int kcompactd(void *p)
 			kcompactd_work_requested(pgdat), timeout) &&
 			!pgdat->proactive_compact_trigger) {
 
-			psi_memstall_enter(&pflags);
+			trace_android_vh_async_psi_bypass(&bypass);
+			if (!bypass)
+				psi_memstall_enter(&pflags);
 			kcompactd_do_work(pgdat);
-			psi_memstall_leave(&pflags);
+			if (!bypass)
+				psi_memstall_leave(&pflags);
 			/*
 			 * Reset the timeout value. The defer timeout from
 			 * proactive compaction is lost here but that is fine

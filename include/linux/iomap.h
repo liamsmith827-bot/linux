@@ -112,6 +112,7 @@ struct iomap {
 	void			*inline_data;
 	void			*private; /* filesystem private */
 	u64			validity_cookie; /* used with .iomap_valid() */
+
 };
 
 static inline sector_t iomap_sector(const struct iomap *iomap, loff_t pos)
@@ -215,6 +216,7 @@ struct iomap_ops {
 	 */
 	int (*iomap_end)(struct inode *inode, loff_t pos, loff_t length,
 			ssize_t written, unsigned flags, struct iomap *iomap);
+
 };
 
 /**

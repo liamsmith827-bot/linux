@@ -49,6 +49,9 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/thp.h>
 
+#undef CREATE_TRACE_POINTS
+#include <trace/hooks/mm.h>
+
 /*
  * By default, transparent hugepage support is disabled in order to avoid
  * risking an increased memory footprint for applications that are not
@@ -182,6 +185,7 @@ unsigned long __thp_vma_allowable_orders(struct vm_area_struct *vma,
 		supported_orders = THP_ORDERS_ALL_FILE_DEFAULT;
 
 	orders &= supported_orders;
+	trace_android_vh_thp_vma_allowable_orders(vma, &orders);
 	if (!orders)
 		return 0;
 
@@ -653,6 +657,7 @@ static const struct kobj_type thpsize_ktype = {
 };
 
 DEFINE_PER_CPU(struct mthp_stat, mthp_stats) = {{{0}}};
+EXPORT_SYMBOL_GPL(mthp_stats);
 
 static unsigned long sum_mthp_stat(int order, enum mthp_stat_item item)
 {
@@ -1299,6 +1304,11 @@ static struct folio *vma_alloc_anon_folio_pmd(struct vm_area_struct *vma,
 	gfp_t gfp = vma_thp_gfp_mask(vma);
 	const int order = HPAGE_PMD_ORDER;
 	struct folio *folio;
+	bool bypass = false;
+
+	trace_android_vh_customize_pmd_gfp_bypass(&gfp, &bypass);
+	if (bypass)
+		return NULL;
 
 	folio = vma_alloc_folio(gfp, order, vma, addr & HPAGE_PMD_MASK);
 
@@ -2797,6 +2807,7 @@ spinlock_t *__pmd_trans_huge_lock(pmd_t *pmd, struct vm_area_struct *vma)
 	spin_unlock(ptl);
 	return NULL;
 }
+EXPORT_SYMBOL_GPL(__pmd_trans_huge_lock);
 
 /*
  * Returns page table lock pointer if a given pud maps a thp, NULL otherwise.
@@ -3651,6 +3662,8 @@ static int __split_unmapped_folio(struct folio *folio, int new_order,
 int folio_check_splittable(struct folio *folio, unsigned int new_order,
 			   bool uniform_split)
 {
+	bool supported = true;
+
 	VM_WARN_ON_FOLIO(!folio_test_locked(folio), folio);
 	/*
 	 * Folios that just got truncated cannot get split. Signal to the
@@ -3708,6 +3721,10 @@ int folio_check_splittable(struct folio *folio, unsigned int new_order,
 	if (folio_test_writeback(folio))
 		return -EBUSY;
 
+	trace_android_vh_mm_folio_split_supported(folio, new_order, uniform_split, &supported);
+	if (!supported)
+		return -EINVAL;
+
 	return 0;
 }
 
@@ -3736,6 +3753,8 @@ static int __folio_split(struct folio *folio, unsigned int new_order,
 		struct page *split_at, struct page *lock_at,
 		struct list_head *list, bool uniform_split)
 {
+	bool bypass = false;
+
 	struct deferred_split *ds_queue;
 	XA_STATE(xas, &folio->mapping->i_pages, folio->index);
 	struct folio *end_folio = folio_next(folio);
@@ -3836,6 +3855,14 @@ static int __folio_split(struct folio *folio, unsigned int new_order,
 		if (shmem_mapping(mapping))
 			end = shmem_fallocend(mapping->host, end);
 	}
+
+	trace_android_vh_mm_split_huge_page_bypass(folio, list, &ret, &bypass);
+	if (bypass)
+		goto out_unlock;
+	trace_android_rvh_mm_folio_split_bypass(folio, new_order, list,
+			uniform_split, &xas, end, &ret, &bypass);
+	if (bypass)
+		goto out_unlock;
 
 	/*
 	 * Racy check if we can split the page, before unmap_folio() will
@@ -4255,7 +4282,11 @@ static unsigned long deferred_split_count(struct shrinker *shrink,
 {
 	struct pglist_data *pgdata = NODE_DATA(sc->nid);
 	struct deferred_split *ds_queue = &pgdata->deferred_split_queue;
+	bool bypass = false;
 
+	trace_android_vh_split_large_folio_bypass(&bypass);
+	if (bypass)
+		return 0;
 #ifdef CONFIG_MEMCG
 	if (sc->memcg)
 		ds_queue = &sc->memcg->deferred_split_queue;

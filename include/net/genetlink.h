@@ -113,6 +113,7 @@ struct genl_family {
 	unsigned int		mcgrp_offset;
 	/* list of per-socket privs */
 	struct xarray		*sock_privs;
+
 };
 
 /**
@@ -223,6 +224,7 @@ struct genl_ops {
 	u8			internal_flags;
 	u8			flags;
 	u8			validate;
+
 };
 
 /**

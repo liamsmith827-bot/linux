@@ -322,6 +322,7 @@ struct header_ops {
 				const unsigned char *haddr);
 	bool	(*validate)(const char *ll_header, unsigned int len);
 	__be16	(*parse_protocol)(const struct sk_buff *skb);
+
 };
 
 /* These flag bits are private to the generic network queueing
@@ -417,6 +418,7 @@ struct napi_struct {
 	int			napi_rmap_idx;
 	int			index;
 	struct napi_config	*config;
+
 };
 
 enum {
@@ -725,6 +727,7 @@ struct netdev_queue {
 #if defined(CONFIG_XPS) && defined(CONFIG_NUMA)
 	int			numa_node;
 #endif
+
 } ____cacheline_aligned_in_smp;
 
 extern int sysctl_fb_tunnels_only_for_init_net;
@@ -975,6 +978,7 @@ enum bpf_netdev_command {
 	XDP_SETUP_XSK_POOL,
 };
 
+struct apf_ops;
 struct bpf_prog_offload_ops;
 struct netlink_ext_ack;
 struct xdp_umem;
@@ -1034,6 +1038,7 @@ struct xfrmdev_ops {
 	int	(*xdo_dev_policy_add) (struct xfrm_policy *x, struct netlink_ext_ack *extack);
 	void	(*xdo_dev_policy_delete) (struct xfrm_policy *x);
 	void	(*xdo_dev_policy_free) (struct xfrm_policy *x);
+
 };
 #endif
 
@@ -1663,6 +1668,14 @@ struct net_device_ops {
 	 */
 	const struct net_shaper_ops *net_shaper_ops;
 #endif
+
+#if IS_ENABLED(CONFIG_NET_APF)
+	/**
+	 * @apf_ops: Advanced Packet Filter operations
+	 * see include/net/apf.h
+	 */
+	const struct apf_ops *apf_ops;
+#endif
 };
 
 /**
@@ -2230,9 +2243,9 @@ struct net_device {
 	atomic_t		carrier_up_count;
 	atomic_t		carrier_down_count;
 
-#ifdef CONFIG_WIRELESS_EXT
+	/* Android KMI hack to allow vendors to have their own wifi changes in modules */
 	const struct iw_handler_def *wireless_handlers;
-#endif
+	struct iw_public_data	*wireless_data;
 	const struct ethtool_ops *ethtool_ops;
 #ifdef CONFIG_NET_L3_MASTER_DEV
 	const struct l3mdev_ops	*l3mdev_ops;
@@ -2309,9 +2322,8 @@ struct net_device {
 #if IS_ENABLED(CONFIG_AX25)
 	struct ax25_dev	__rcu	*ax25_ptr;
 #endif
-#if IS_ENABLED(CONFIG_CFG80211)
+	/* Android KMI hack to allow vendors to have their own wifi changes in modules */
 	struct wireless_dev	*ieee80211_ptr;
-#endif
 #if IS_ENABLED(CONFIG_IEEE802154) || IS_ENABLED(CONFIG_6LOWPAN)
 	struct wpan_dev		*ieee802154_ptr;
 #endif
@@ -2568,6 +2580,7 @@ struct net_device {
 	struct hlist_head neighbours[NEIGH_NR_TABLES];
 
 	struct hwtstamp_provider __rcu	*hwprov;
+
 
 	u8			priv[] ____cacheline_aligned
 				       __counted_by(priv_len);
@@ -2939,6 +2952,7 @@ struct packet_type {
 	struct net		*af_packet_net;
 	void			*af_packet_priv;
 	struct list_head	list;
+
 };
 
 struct offload_callbacks {

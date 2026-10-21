@@ -260,6 +260,7 @@ struct cgroup_subsys_state {
 	 * Protected by css->ss->rstat_ss_lock otherwise.
 	 */
 	struct cgroup_subsys_state *rstat_flush_next;
+
 };
 
 /*
@@ -625,6 +626,7 @@ struct cgroup {
 	struct bpf_local_storage __rcu  *bpf_cgrp_storage;
 #endif
 
+
 	/* All ancestors including self */
 	struct cgroup *ancestors[];
 };
@@ -668,6 +670,7 @@ struct cgroup_root {
 
 	/* The name for this hierarchy - may be empty */
 	char name[MAX_CGROUP_ROOT_NAMELEN];
+
 };
 
 /*
@@ -757,6 +760,7 @@ struct cftype {
 			 struct poll_table_struct *pt);
 
 	struct lock_class_key	lockdep_key;
+
 };
 
 /*
@@ -852,6 +856,7 @@ struct cgroup_subsys {
 
 	spinlock_t rstat_ss_lock;
 	struct llist_head __percpu *lhead; /* lockless update list head */
+
 };
 
 extern struct percpu_rw_semaphore cgroup_threadgroup_rwsem;

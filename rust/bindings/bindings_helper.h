@@ -35,12 +35,14 @@
 #include <drm/drm_gem.h>
 #include <drm/drm_ioctl.h>
 #include <kunit/test.h>
+#include <linux/anon_inodes.h>
 #include <linux/auxiliary_bus.h>
 #include <linux/bitmap.h>
 #include <linux/blk-mq.h>
 #include <linux/blk_types.h>
 #include <linux/blkdev.h>
 #include <linux/clk.h>
+#include <linux/compat.h>
 #include <linux/completion.h>
 #include <linux/configfs.h>
 #include <linux/cpu.h>
@@ -49,6 +51,7 @@
 #include <linux/cred.h>
 #include <linux/debugfs.h>
 #include <linux/device/faux.h>
+#include <linux/dma-buf.h>
 #include <linux/dma-direction.h>
 #include <linux/dma-mapping.h>
 #include <linux/errname.h>
@@ -62,10 +65,13 @@
 #include <linux/jiffies.h>
 #include <linux/jump_label.h>
 #include <linux/mdio.h>
+#include <linux/memfd.h>
 #include <linux/mm.h>
+#include <linux/mman.h>
 #include <linux/miscdevice.h>
 #include <linux/of_device.h>
 #include <linux/pci.h>
+#include <linux/page_size_compat.h>
 #include <linux/phy.h>
 #include <linux/pid_namespace.h>
 #include <linux/platform_device.h>
@@ -74,16 +80,22 @@
 #include <linux/property.h>
 #include <linux/random.h>
 #include <linux/refcount.h>
+#include <linux/reset.h>
 #include <linux/regulator/consumer.h>
 #include <linux/sched.h>
 #include <linux/security.h>
+#include <linux/shmem_fs.h>
 #include <linux/slab.h>
 #include <linux/task_work.h>
 #include <linux/tracepoint.h>
 #include <linux/wait.h>
 #include <linux/workqueue.h>
 #include <linux/xarray.h>
+#include <net/genetlink.h>
+#include <net/netlink.h>
 #include <trace/events/rust_sample.h>
+#include <uapi/linux/falloc.h>
+#include <uapi/linux/sched/types.h>
 
 #if defined(CONFIG_DRM_PANIC_SCREEN_QR_CODE)
 // Used by `#[export]` in `drivers/gpu/drm/drm_panic_qr.rs`.
@@ -94,6 +106,7 @@
 const size_t RUST_CONST_HELPER_ARCH_SLAB_MINALIGN = ARCH_SLAB_MINALIGN;
 const size_t RUST_CONST_HELPER_ARCH_KMALLOC_MINALIGN = ARCH_KMALLOC_MINALIGN;
 const size_t RUST_CONST_HELPER_PAGE_SIZE = PAGE_SIZE;
+const size_t RUST_CONST_HELPER_GENLMSG_DEFAULT_SIZE = GENLMSG_DEFAULT_SIZE;
 const gfp_t RUST_CONST_HELPER_GFP_ATOMIC = GFP_ATOMIC;
 const gfp_t RUST_CONST_HELPER_GFP_KERNEL = GFP_KERNEL;
 const gfp_t RUST_CONST_HELPER_GFP_KERNEL_ACCOUNT = GFP_KERNEL_ACCOUNT;
@@ -110,8 +123,30 @@ const gfp_t RUST_CONST_HELPER_XA_FLAGS_ALLOC = XA_FLAGS_ALLOC;
 const gfp_t RUST_CONST_HELPER_XA_FLAGS_ALLOC1 = XA_FLAGS_ALLOC1;
 const vm_flags_t RUST_CONST_HELPER_VM_MERGEABLE = VM_MERGEABLE;
 
+enum {
+	RUST_CONST_HELPER_FMODE_READ = FMODE_READ,
+	RUST_CONST_HELPER_FMODE_WRITE = FMODE_WRITE,
+	RUST_CONST_HELPER_FMODE_CAN_READ = FMODE_CAN_READ,
+	RUST_CONST_HELPER_FMODE_CAN_ODIRECT = FMODE_CAN_ODIRECT,
+};
+
+#ifdef CONFIG_64BIT
+const vm_flags_t RUST_CONST_HELPER_VM_NO_REMAP_FILE_PAGES = VM_NO_REMAP_FILE_PAGES;
+#endif
+
 #if IS_ENABLED(CONFIG_ANDROID_BINDER_IPC_RUST)
+#include "../../drivers/android/binder_pick.h"
 #include "../../drivers/android/binder/rust_binder.h"
 #include "../../drivers/android/binder/rust_binder_events.h"
-#include "../../drivers/android/binder/page_range_helper.h"
+#include <trace/hooks/rust_binder.h>
+#endif
+
+#ifdef CONFIG_ASHMEM
+#include "../../drivers/staging/android/ashmem.h"
+const size_t RUST_CONST_HELPER_ASHMEM_NAME_PREFIX_LEN = ASHMEM_NAME_PREFIX_LEN;
+const size_t RUST_CONST_HELPER_ASHMEM_FULL_NAME_LEN = ASHMEM_FULL_NAME_LEN;
+#endif
+
+#if IS_ENABLED(CONFIG_ANDROID_WRAPFD)
+#include <linux/wrapfd.h>
 #endif

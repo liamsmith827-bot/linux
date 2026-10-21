@@ -512,9 +512,9 @@ struct hid_usage {
 	__s8	  wheel_factor;		/* 120/resolution_multiplier */
 	__u16     code;			/* input driver code */
 	__u8      type;			/* input driver type */
-	__s16	  hat_min;		/* hat switch fun */
-	__s16	  hat_max;		/* ditto */
-	__s16	  hat_dir;		/* ditto */
+	__s8	  hat_min;		/* hat switch fun */
+	__s8	  hat_max;		/* ditto */
+	__s8	  hat_dir;		/* ditto */
 	__s16	  wheel_accumulated;	/* hi-res wheel */
 };
 
@@ -620,6 +620,7 @@ struct hid_input {
 	struct list_head reports;	/* the list of reports */
 	unsigned int application;	/* application usage for this input */
 	bool registered;
+
 };
 
 enum hid_type {
@@ -726,6 +727,7 @@ struct hid_device {
 #ifdef CONFIG_HID_BPF
 	struct hid_bpf bpf;						/* hid-bpf data */
 #endif /* CONFIG_HID_BPF */
+
 };
 
 void hiddev_free(struct kref *ref);
@@ -936,6 +938,7 @@ struct hid_ll_driver {
 	bool (*may_wakeup)(struct hid_device *hdev);
 
 	unsigned int max_buffer_size;
+
 };
 
 extern bool hid_is_usb(const struct hid_device *hdev);
@@ -1260,8 +1263,10 @@ static inline u32 hid_report_len(struct hid_report *report)
 	return DIV_ROUND_UP(report->size, 8) + (report->id > 0);
 }
 
-int hid_report_raw_event(struct hid_device *hid, enum hid_report_type type, u8 *data,
-			 size_t bufsize, u32 size, int interrupt);
+int hid_report_raw_event(struct hid_device *hid, enum hid_report_type type, u8 *data, u32 size,
+			 int interrupt);
+int __hid_report_raw_event(struct hid_device *hid, enum hid_report_type type, u8 *data,
+			   size_t bufsize, u32 size, int interrupt);
 
 /* HID quirks API */
 unsigned long hid_lookup_quirk(const struct hid_device *hdev);

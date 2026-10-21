@@ -52,6 +52,12 @@ enum power_supply_charge_type {
 	POWER_SUPPLY_CHARGE_TYPE_CUSTOM,	/* use CHARGE_CONTROL_* props */
 	POWER_SUPPLY_CHARGE_TYPE_LONGLIFE,	/* slow speed, longer life */
 	POWER_SUPPLY_CHARGE_TYPE_BYPASS,	/* bypassing the charger */
+
+	/*
+	 * force to 50 to minimize the chances of userspace binary
+	 * incompatibility on newer upstream kernels
+	 */
+	POWER_SUPPLY_CHARGE_TYPE_TAPER_EXT = 50,	/* charging in CV phase */
 };
 
 enum {
@@ -210,6 +216,9 @@ enum power_supply_usb_type {
 	POWER_SUPPLY_USB_TYPE_PD,		/* Power Delivery Port */
 	POWER_SUPPLY_USB_TYPE_PD_DRP,		/* PD Dual Role Port */
 	POWER_SUPPLY_USB_TYPE_PD_PPS,		/* PD Programmable Power Supply */
+	/* PD Standard Power Range Adjustable Voltage Supply */
+	POWER_SUPPLY_USB_TYPE_PD_SPR_AVS,
+	POWER_SUPPLY_USB_TYPE_PD_PPS_SPR_AVS,	/* Supports both PD PPS + SPR AVS */
 	POWER_SUPPLY_USB_TYPE_APPLE_BRICK_ID,	/* Apple Charging Method */
 };
 
@@ -246,6 +255,7 @@ struct power_supply_config {
 	size_t num_supplicants;
 
 	bool no_wakeup_source;
+
 };
 
 /* Description of power supply */
@@ -287,6 +297,7 @@ struct power_supply_desc {
 	bool no_thermal;
 	/* For APM emulation, think legacy userspace. */
 	int use_for_apm;
+
 };
 
 struct power_supply_ext {
@@ -349,6 +360,7 @@ struct power_supply {
 	struct led_trigger *charging_blink_full_solid_trig;
 	struct led_trigger *charging_orange_full_green_trig;
 #endif
+
 };
 
 #define dev_to_psy(__dev)	container_of_const(__dev, struct power_supply, dev)
@@ -803,14 +815,33 @@ extern int power_supply_reg_notifier(struct notifier_block *nb);
 extern void power_supply_unreg_notifier(struct notifier_block *nb);
 #if IS_ENABLED(CONFIG_POWER_SUPPLY)
 extern struct power_supply *power_supply_get_by_name(const char *name);
+extern int __must_check power_supply_get_system_batteries(struct device *dev,
+							  struct power_supply ***psys);
+extern void power_supply_put_system_batteries(struct power_supply **psys, int count);
 extern void power_supply_put(struct power_supply *psy);
 #else
 static inline void power_supply_put(struct power_supply *psy) {}
 static inline struct power_supply *power_supply_get_by_name(const char *name)
 { return NULL; }
+static inline int __must_check power_supply_get_system_batteries(struct device *dev,
+								 struct power_supply ***psys)
+{
+	if (psys)
+		*psys = NULL;
+	return 0;
+}
+
+static inline void power_supply_put_system_batteries(struct power_supply **psys,
+						     int count)
+{
+}
 #endif
 extern struct power_supply *power_supply_get_by_reference(struct fwnode_handle *fwnode,
 							  const char *property);
+extern int power_supply_get_by_reference_array(struct fwnode_handle *fwnode,
+					       const char *property,
+					       struct power_supply **psy,
+					       ssize_t size);
 extern struct power_supply *devm_power_supply_get_by_reference(
 				    struct device *dev, const char *property);
 

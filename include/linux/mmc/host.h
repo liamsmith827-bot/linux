@@ -272,6 +272,7 @@ struct mmc_host_ops {
 	 * negative errno in case of a failure or zero for success.
 	 */
 	int	(*uhs2_control)(struct mmc_host *host, enum sd_uhs2_operation op);
+
 };
 
 struct mmc_cqe_ops {
@@ -316,6 +317,7 @@ struct mmc_cqe_ops {
 	 * will have zero data bytes transferred.
 	 */
 	void	(*cqe_recovery_finish)(struct mmc_host *host);
+
 };
 
 /**
@@ -578,6 +580,8 @@ struct mmc_host {
 
 	u32			err_stats[MMC_ERR_MAX];
 	u32			max_sd_hs_hz;
+
+
 	unsigned long		private[] ____cacheline_aligned;
 };
 

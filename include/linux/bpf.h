@@ -184,6 +184,7 @@ struct bpf_map_ops {
 
 	/* bpf_iter info used to open a seq_file */
 	const struct bpf_iter_seq_info *iter_seq_info;
+
 };
 
 enum {
@@ -336,6 +337,7 @@ struct bpf_map {
 	s64 __percpu *elem_count;
 	u64 cookie; /* write-once */
 	char *excl_prog_sha;
+
 };
 
 static inline const char *btf_field_type_name(enum btf_field_type type)
@@ -630,6 +632,7 @@ struct bpf_map_dev_ops {
 	int (*map_update_elem)(struct bpf_offloaded_map *map,
 			       void *key, void *value, u64 flags);
 	int (*map_delete_elem)(struct bpf_offloaded_map *map, void *key);
+
 };
 
 struct bpf_offloaded_map {
@@ -638,6 +641,7 @@ struct bpf_offloaded_map {
 	const struct bpf_map_dev_ops *dev_ops;
 	void *dev_priv;
 	struct list_head offloads;
+
 };
 
 static inline struct bpf_offloaded_map *map_to_offmap(struct bpf_map *map)
@@ -935,6 +939,7 @@ struct bpf_func_proto {
 	};
 	int *ret_btf_id; /* return value btf_id */
 	bool (*allowed)(const struct bpf_prog *prog);
+
 };
 
 /* bpf_context is intentionally undefined structure. Pointer to bpf_context is
@@ -1700,6 +1705,7 @@ struct bpf_prog_aux {
 		struct rcu_head	rcu;
 	};
 	struct bpf_stream stream[2];
+
 };
 
 struct bpf_prog {
@@ -1770,6 +1776,7 @@ struct bpf_link {
 	 * link's semantics is determined by target attach hook
 	 */
 	bool sleepable;
+
 };
 
 struct bpf_link_ops {
@@ -1919,6 +1926,7 @@ struct bpf_struct_ops {
 	struct module *owner;
 	const char *name;
 	struct btf_func_model func_models[BPF_STRUCT_OPS_MAX_NR_MEMBERS];
+
 };
 
 /* Every member of a struct_ops type has an instance even a member is not
@@ -2650,6 +2658,7 @@ struct bpf_iter_aux_info {
 		enum bpf_iter_task_type	type;
 		u32 pid;
 	} task;
+
 };
 
 typedef int (*bpf_iter_attach_target_t)(struct bpf_prog *prog,
@@ -3287,7 +3296,7 @@ int sock_map_get_from_fd(const union bpf_attr *attr, struct bpf_prog *prog);
 int sock_map_prog_detach(const union bpf_attr *attr, enum bpf_prog_type ptype);
 int sock_map_update_elem_sys(struct bpf_map *map, void *key, void *value, u64 flags);
 int sock_map_bpf_prog_query(const union bpf_attr *attr,
-			    union bpf_attr __user *uattr);
+			    union bpf_attr __user *uattr, u32 uattr_size);
 int sock_map_link_create(const union bpf_attr *attr, struct bpf_prog *prog);
 
 void sock_map_unhash(struct sock *sk);
@@ -3383,7 +3392,8 @@ static inline int sock_map_update_elem_sys(struct bpf_map *map, void *key, void 
 }
 
 static inline int sock_map_bpf_prog_query(const union bpf_attr *attr,
-					  union bpf_attr __user *uattr)
+					  union bpf_attr __user *uattr,
+					  u32 uattr_size)
 {
 	return -EINVAL;
 }

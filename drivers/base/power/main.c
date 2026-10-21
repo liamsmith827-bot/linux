@@ -28,15 +28,23 @@
 #include <linux/interrupt.h>
 #include <linux/sched.h>
 #include <linux/sched/debug.h>
+#include <linux/sysctl.h>
 #include <linux/async.h>
 #include <linux/suspend.h>
 #include <trace/events/power.h>
 #include <linux/cpufreq.h>
 #include <linux/devfreq.h>
 #include <linux/timer.h>
+#include <linux/nmi.h>
+#include <linux/wakeup_reason.h>
+
+#include <trace/hooks/dtask.h>
 
 #include "../base.h"
 #include "power.h"
+
+#undef MODULE_PARAM_PREFIX
+#define MODULE_PARAM_PREFIX "pm."
 
 typedef int (*pm_callback_t)(struct device *);
 
@@ -56,6 +64,7 @@ static LIST_HEAD(dpm_suspended_list);
 static LIST_HEAD(dpm_late_early_list);
 static LIST_HEAD(dpm_noirq_list);
 
+struct suspend_stats suspend_stats;
 static DEFINE_MUTEX(dpm_list_mtx);
 static pm_message_t pm_transition;
 
@@ -248,12 +257,15 @@ static void dpm_wait(struct device *dev, bool async)
 	if (!dev)
 		return;
 
-	/* Devices with no PM support don't use the completion. */
+	/* Devices with no PM support do not use the completion. */
 	if (dev->power.no_pm)
 		return;
 
-	if (async || (pm_async_enabled && dev->power.async_suspend))
+	if (async || (pm_async_enabled && dev->power.async_suspend)) {
+		trace_android_vh_dpm_wait_start(dev);
 		wait_for_completion(&dev->power.completion);
+		trace_android_vh_dpm_wait_finish(dev);
+	}
 }
 
 static int dpm_wait_fn(struct device *dev, void *async_ptr)
@@ -519,6 +531,68 @@ struct dpm_watchdog {
 #define DECLARE_DPM_WATCHDOG_ON_STACK(wd) \
 	struct dpm_watchdog wd
 
+static bool __read_mostly dpm_watchdog_all_cpu_backtrace;
+module_param(dpm_watchdog_all_cpu_backtrace, bool, 0644);
+MODULE_PARM_DESC(dpm_watchdog_all_cpu_backtrace,
+		 "Backtrace all CPUs on DPM watchdog timeout");
+
+static bool __read_mostly dpm_watchdog_enabled =
+				IS_ENABLED(CONFIG_DPM_WATCHDOG_ENABLED);
+module_param(dpm_watchdog_enabled, bool, 0644);
+MODULE_PARM_DESC(dpm_watchdog_enabled, "Enable DPM watchdog");
+
+static unsigned int __read_mostly dpm_watchdog_timeout = CONFIG_DPM_WATCHDOG_TIMEOUT;
+static unsigned int __read_mostly dpm_watchdog_warning_timeout =
+						CONFIG_DPM_WATCHDOG_WARNING_TIMEOUT;
+static const unsigned int dpm_watchdog_timeout_max = CONFIG_DPM_WATCHDOG_TIMEOUT;
+
+static int proc_dodpm_watchdog_timeout_secs(const struct ctl_table *table,
+					    int write, void *buffer,
+					    size_t *lenp, loff_t *ppos)
+{
+	struct ctl_table ctl = *table;
+	unsigned int val = dpm_watchdog_timeout;
+	int ret;
+
+	ctl.data = &val;
+	ret = proc_douintvec_minmax(&ctl, write, buffer, lenp, ppos);
+	if (ret || !write)
+		return ret;
+
+	if (val < dpm_watchdog_warning_timeout)
+		dpm_watchdog_warning_timeout = val;
+	dpm_watchdog_timeout = val;
+
+	return 0;
+}
+
+static const struct ctl_table dpm_watchdog_sysctls[] = {
+	{
+		.procname	= "dpm_watchdog_timeout_secs",
+		.maxlen		= sizeof(unsigned int),
+		.mode		= 0644,
+		.proc_handler	= proc_dodpm_watchdog_timeout_secs,
+		.extra1		= SYSCTL_ONE,
+		.extra2		= (void *)&dpm_watchdog_timeout_max,
+	},
+	{
+		.procname	= "dpm_watchdog_warning_timeout_secs",
+		.data		= &dpm_watchdog_warning_timeout,
+		.maxlen		= sizeof(unsigned int),
+		.mode		= 0644,
+		.proc_handler	= proc_douintvec_minmax,
+		.extra1		= SYSCTL_ONE,
+		.extra2		= (void *)&dpm_watchdog_timeout,
+	},
+};
+
+static int __init dpm_watchdog_sysctl_init(void)
+{
+	register_sysctl_init("kernel", dpm_watchdog_sysctls);
+	return 0;
+}
+subsys_initcall(dpm_watchdog_sysctl_init);
+
 /**
  * dpm_watchdog_handler - Driver suspend / resume watchdog handler.
  * @t: The timer that PM watchdog depends on.
@@ -534,15 +608,19 @@ static void dpm_watchdog_handler(struct timer_list *t)
 	unsigned int time_left;
 
 	if (wd->fatal) {
+		unsigned int this_cpu = smp_processor_id();
+
 		dev_emerg(wd->dev, "**** DPM device timeout ****\n");
 		show_stack(wd->tsk, NULL, KERN_EMERG);
+		if (dpm_watchdog_all_cpu_backtrace)
+			trigger_allbutcpu_cpu_backtrace(this_cpu);
 		panic("%s %s: unrecoverable failure\n",
 			dev_driver_string(wd->dev), dev_name(wd->dev));
 	}
 
-	time_left = CONFIG_DPM_WATCHDOG_TIMEOUT - CONFIG_DPM_WATCHDOG_WARNING_TIMEOUT;
+	time_left = dpm_watchdog_timeout - dpm_watchdog_warning_timeout;
 	dev_warn(wd->dev, "**** DPM device timeout after %u seconds; %u seconds until panic ****\n",
-		 CONFIG_DPM_WATCHDOG_WARNING_TIMEOUT, time_left);
+		 dpm_watchdog_warning_timeout, time_left);
 	show_stack(wd->tsk, NULL, KERN_WARNING);
 
 	wd->fatal = true;
@@ -558,13 +636,16 @@ static void dpm_watchdog_set(struct dpm_watchdog *wd, struct device *dev)
 {
 	struct timer_list *timer = &wd->timer;
 
+	if (!dpm_watchdog_enabled)
+		return;
+
 	wd->dev = dev;
 	wd->tsk = current;
-	wd->fatal = CONFIG_DPM_WATCHDOG_TIMEOUT == CONFIG_DPM_WATCHDOG_WARNING_TIMEOUT;
+	wd->fatal = dpm_watchdog_timeout == dpm_watchdog_warning_timeout;
 
 	timer_setup_on_stack(timer, dpm_watchdog_handler, 0);
 	/* use same timeout value for both suspend and resume */
-	timer->expires = jiffies + HZ * CONFIG_DPM_WATCHDOG_WARNING_TIMEOUT;
+	timer->expires = jiffies + HZ * dpm_watchdog_warning_timeout;
 	add_timer(timer);
 }
 
@@ -575,6 +656,9 @@ static void dpm_watchdog_set(struct dpm_watchdog *wd, struct device *dev)
 static void dpm_watchdog_clear(struct dpm_watchdog *wd)
 {
 	struct timer_list *timer = &wd->timer;
+
+	if (!dpm_watchdog_enabled)
+		return;
 
 	timer_delete_sync(timer);
 	timer_destroy_on_stack(timer);
@@ -1463,6 +1547,8 @@ Run:
 	error = dpm_run_callback(callback, dev, state, info);
 	if (error) {
 		WRITE_ONCE(async_error, error);
+		log_suspend_abort_reason("Device %s failed to %s noirq: error %d",
+					 dev_name(dev), pm_verb(state.event), error);
 		dpm_save_failed_dev(dev_name(dev));
 		pm_dev_err(dev, state, async ? " async noirq" : " noirq", error);
 		goto Complete;
@@ -1672,6 +1758,8 @@ Run:
 	error = dpm_run_callback(callback, dev, state, info);
 	if (error) {
 		WRITE_ONCE(async_error, error);
+		log_suspend_abort_reason("Device %s failed to %s late: error %d",
+					 dev_name(dev), pm_verb(state.event), error);
 		dpm_save_failed_dev(dev_name(dev));
 		pm_dev_err(dev, state, async ? " async late" : " late", error);
 		pm_runtime_enable(dev);
@@ -1960,6 +2048,9 @@ static void device_suspend(struct device *dev, pm_message_t state, bool async)
 
 		dpm_propagate_wakeup_to_parent(dev);
 		dpm_clear_superiors_direct_complete(dev);
+	} else {
+		log_suspend_abort_reason("Device %s failed to %s: error %d",
+					 dev_name(dev), pm_verb(state.event), error);
 	}
 
 	device_unlock(dev);
@@ -2137,6 +2228,7 @@ static int device_prepare(struct device *dev, pm_message_t state)
 	device_lock(dev);
 
 	dev->power.wakeup_path = false;
+	dev->power.out_band_wakeup = false;
 
 	if (dev->power.no_pm_callbacks)
 		goto unlock;
@@ -2205,7 +2297,9 @@ int dpm_prepare(pm_message_t state)
 	 * disable probing of devices. This sync point is important at least
 	 * at boot time + hibernation restore.
 	 */
+	trace_android_rvh_dpm_prepare(0);
 	wait_for_device_probe();
+	trace_android_rvh_dpm_prepare(1);
 	/*
 	 * It is unsafe if probing of devices will happen during suspend or
 	 * hibernation and system behavior will be unpredictable in this case.
@@ -2237,6 +2331,9 @@ int dpm_prepare(pm_message_t state)
 		} else {
 			dev_info(dev, "not prepared for power transition: code %d\n",
 				 error);
+			log_suspend_abort_reason("Device %s not prepared for power transition: code %d",
+						 dev_name(dev), error);
+			dpm_save_failed_dev(dev_name(dev));
 		}
 
 		mutex_unlock(&dpm_list_mtx);

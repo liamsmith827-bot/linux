@@ -37,6 +37,7 @@
 #include <linux/rwsem.h>
 #include <linux/uio.h>
 #include <linux/atomic.h>
+#include <trace/hooks/mm.h>
 
 #include "internal.h"
 
@@ -1036,6 +1037,12 @@ do_holes:
 				dio_unpin_page(dio, page);
 				goto out;
 			}
+
+			trace_android_vh_io_statistics(dio->inode->i_mapping,
+					sdio->block_in_file >> sdio->blkfactor,
+					this_chunk_blocks >> sdio->blkfactor,
+					iov_iter_rw(sdio->iter) == READ, true);
+
 			sdio->next_block_for_io += this_chunk_blocks;
 
 			sdio->block_in_file += this_chunk_blocks;
@@ -1313,7 +1320,7 @@ fail_dio:
 	kmem_cache_free(dio_cache, dio);
 	return retval;
 }
-EXPORT_SYMBOL(__blockdev_direct_IO);
+EXPORT_SYMBOL_NS(__blockdev_direct_IO, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
 
 static __init int dio_init(void)
 {

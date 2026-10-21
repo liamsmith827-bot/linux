@@ -109,6 +109,7 @@ struct bus_type {
 
 	bool driver_override;
 	bool need_parent_lock;
+
 };
 
 int __must_check bus_register(const struct bus_type *bus);

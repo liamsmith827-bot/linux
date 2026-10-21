@@ -32,6 +32,7 @@
 #include <linux/sched/isolation.h>
 
 #include <trace/events/block.h>
+#include <trace/hooks/blk.h>
 
 #include <linux/t10-pi.h>
 #include "blk.h"
@@ -1533,6 +1534,7 @@ blk_status_t blk_execute_rq(struct request *rq, bool at_head)
 	blk_account_io_start(rq);
 	blk_mq_insert_request(rq, at_head ? BLK_MQ_INSERT_AT_HEAD : 0);
 	blk_mq_run_hw_queue(hctx, false);
+	trace_android_rvh_blk_execute_rq(rq);
 
 	if (blk_rq_is_poll(rq))
 		blk_rq_poll_completion(rq, &wait.done);
@@ -1616,6 +1618,12 @@ static void blk_mq_requeue_work(struct work_struct *work)
 
 void blk_mq_kick_requeue_list(struct request_queue *q)
 {
+	bool skip = false;
+
+	trace_android_vh_blk_mq_kick_requeue_list(q, 0, &skip);
+	if (skip)
+		return;
+
 	kblockd_mod_delayed_work_on(WORK_CPU_UNBOUND, &q->requeue_work, 0);
 }
 EXPORT_SYMBOL(blk_mq_kick_requeue_list);
@@ -1623,6 +1631,13 @@ EXPORT_SYMBOL(blk_mq_kick_requeue_list);
 void blk_mq_delay_kick_requeue_list(struct request_queue *q,
 				    unsigned long msecs)
 {
+	bool skip = false;
+
+	trace_android_vh_blk_mq_kick_requeue_list(q,
+			msecs_to_jiffies(msecs), &skip);
+	if (skip)
+		return;
+
 	kblockd_mod_delayed_work_on(WORK_CPU_UNBOUND, &q->requeue_work,
 				    msecs_to_jiffies(msecs));
 }
@@ -2327,8 +2342,16 @@ select_cpu:
  */
 void blk_mq_delay_run_hw_queue(struct blk_mq_hw_ctx *hctx, unsigned long msecs)
 {
+	bool skip = false;
+
 	if (unlikely(blk_mq_hctx_stopped(hctx)))
 		return;
+
+	trace_android_vh_blk_mq_delay_run_hw_queue(blk_mq_hctx_next_cpu(hctx),
+			hctx, msecs_to_jiffies(msecs), &skip);
+	if (skip)
+		return;
+
 	kblockd_mod_delayed_work_on(blk_mq_hctx_next_cpu(hctx), &hctx->run_work,
 				    msecs_to_jiffies(msecs));
 }
@@ -3143,6 +3166,8 @@ void blk_mq_submit_bio(struct bio *bio)
 	struct request *rq;
 	blk_status_t ret;
 
+	trace_android_vh_check_set_ioprio(bio);
+
 	/*
 	 * If the plug has a cached request for this queue, try to use it.
 	 */
@@ -3232,11 +3257,16 @@ new_request:
 	if (bio_zone_write_plugging(bio))
 		blk_zone_write_plug_init_request(rq);
 
-	if (op_is_flush(bio->bi_opf) && blk_insert_flush(rq))
+	trace_android_rvh_submit_bio_pre(bio, rq);
+
+	if (op_is_flush(bio->bi_opf) && blk_insert_flush(rq)) {
+		trace_android_rvh_submit_bio_post(bio, rq);
 		return;
+	}
 
 	if (plug) {
 		blk_add_rq_to_plug(plug, rq);
+		trace_android_rvh_submit_bio_post(bio, rq);
 		return;
 	}
 
@@ -3248,6 +3278,8 @@ new_request:
 	} else {
 		blk_mq_run_dispatch_ops(q, blk_mq_try_issue_directly(hctx, rq));
 	}
+
+	trace_android_rvh_submit_bio_post(bio, rq);
 	return;
 
 queue_exit:
@@ -3334,8 +3366,10 @@ blk_status_t blk_insert_cloned_request(struct request *rq)
 	 */
 	blk_mq_run_dispatch_ops(q,
 			ret = blk_mq_request_issue_directly(rq, true));
-	if (ret)
+	if (ret) {
 		blk_account_io_done(rq, blk_time_get_ns());
+		trace_android_vh_request_issue_err(rq);
+	}
 	return ret;
 }
 EXPORT_SYMBOL_GPL(blk_insert_cloned_request);

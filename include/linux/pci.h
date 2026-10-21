@@ -569,6 +569,7 @@ struct pci_dev {
 	u8		tph_mode;	/* TPH mode */
 	u8		tph_req_type;	/* TPH requester type */
 #endif
+
 };
 
 static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
@@ -636,6 +637,8 @@ struct pci_host_bridge {
 			resource_size_t start,
 			resource_size_t size,
 			resource_size_t align);
+
+
 	unsigned long	private[] ____cacheline_aligned;
 };
 
@@ -700,6 +703,7 @@ struct pci_bus {
 	unsigned int		is_added:1;
 	unsigned int		unsafe_warn:1;	/* warned about RW1C config write */
 	unsigned int		flit_mode:1;	/* Link in Flit mode */
+
 };
 
 #define to_pci_bus(n)	container_of(n, struct pci_bus, dev)
@@ -838,6 +842,7 @@ struct pci_ops {
 	void __iomem *(*map_bus)(struct pci_bus *bus, unsigned int devfn, int where);
 	int (*read)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val);
 	int (*write)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val);
+
 };
 
 /*
@@ -916,6 +921,7 @@ struct pci_error_handlers {
 
 	/* Allow device driver to record more details of a correctable error */
 	void (*cor_error_detected)(struct pci_dev *dev);
+
 };
 
 
@@ -994,6 +1000,7 @@ struct pci_driver {
 	struct device_driver	driver;
 	struct pci_dynids	dynids;
 	bool driver_managed_dma;
+
 };
 
 #define to_pci_driver(__drv)	\

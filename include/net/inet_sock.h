@@ -242,6 +242,7 @@ struct inet_sock {
 
 	struct ip_mc_socklist __rcu	*mc_list;
 	struct inet_cork_full	cork;
+
 };
 
 #define IPCORK_OPT		1	/* ip-options has been held in ipcork.opt */

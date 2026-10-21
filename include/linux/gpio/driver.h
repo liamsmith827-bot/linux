@@ -319,6 +319,7 @@ struct gpio_irq_chip {
 	 * Store old irq_chip irq_mask callback
 	 */
 	void		(*irq_mask)(struct irq_data *data);
+
 };
 
 /**
@@ -512,6 +513,7 @@ struct gpio_chip {
 	int (*of_xlate)(struct gpio_chip *gc,
 			const struct of_phandle_args *gpiospec, u32 *flags);
 #endif /* CONFIG_OF_GPIO */
+
 };
 
 char *gpiochip_dup_line_label(struct gpio_chip *gc, unsigned int offset);

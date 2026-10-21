@@ -79,6 +79,8 @@ static inline struct inode *wb_inode(struct list_head *head)
  */
 #define CREATE_TRACE_POINTS
 #include <trace/events/writeback.h>
+#undef CREATE_TRACE_POINTS
+#include <trace/hooks/fs.h>
 
 EXPORT_TRACEPOINT_SYMBOL_GPL(wbc_writepage);
 
@@ -133,13 +135,14 @@ static bool inode_io_list_move_locked(struct inode *inode,
 	return false;
 }
 
-static void wb_wakeup(struct bdi_writeback *wb)
+void wb_wakeup(struct bdi_writeback *wb)
 {
 	spin_lock_irq(&wb->work_lock);
 	if (test_bit(WB_registered, &wb->state))
 		mod_delayed_work(bdi_wq, &wb->dwork, 0);
 	spin_unlock_irq(&wb->work_lock);
 }
+EXPORT_SYMBOL_GPL(wb_wakeup);
 
 /*
  * This function is used when the first inode for this wb is marked dirty. It
@@ -1391,6 +1394,7 @@ void inode_io_list_del(struct inode *inode)
 	spin_lock(&inode->i_lock);
 
 	inode->i_state &= ~I_SYNC_QUEUED;
+	trace_android_vh_inode_io_list_del(inode, wb);
 	list_del_init(&inode->i_io_list);
 	wb_io_lists_depopulated(wb);
 
@@ -1444,8 +1448,9 @@ void sb_clear_inode_writeback(struct inode *inode)
  * the case then the inode must have been redirtied while it was being written
  * out and we don't reset its dirtied_when.
  */
-static void redirty_tail_locked(struct inode *inode, struct bdi_writeback *wb)
+void redirty_tail_locked(struct inode *inode, struct bdi_writeback *wb)
 {
+	struct list_head *target_list = &wb->b_dirty;
 	assert_spin_locked(&inode->i_lock);
 
 	inode->i_state &= ~I_SYNC_QUEUED;
@@ -1459,15 +1464,17 @@ static void redirty_tail_locked(struct inode *inode, struct bdi_writeback *wb)
 		wb_io_lists_depopulated(wb);
 		return;
 	}
-	if (!list_empty(&wb->b_dirty)) {
+	trace_android_vh_redirty_tail_locked(&target_list, inode, wb);
+	if (!list_empty(target_list)) {
 		struct inode *tail;
 
-		tail = wb_inode(wb->b_dirty.next);
+		tail = wb_inode(target_list->next);
 		if (time_before(inode->dirtied_when, tail->dirtied_when))
 			inode->dirtied_when = jiffies;
 	}
-	inode_io_list_move_locked(inode, wb, &wb->b_dirty);
+	inode_io_list_move_locked(inode, wb, target_list);
 }
+EXPORT_SYMBOL_GPL(redirty_tail_locked);
 
 static void redirty_tail(struct inode *inode, struct bdi_writeback *wb)
 {
@@ -1585,6 +1592,7 @@ static void queue_io(struct bdi_writeback *wb, struct wb_writeback_work *work,
 	assert_spin_locked(&wb->list_lock);
 	list_splice_init(&wb->b_more_io, &wb->b_io);
 	moved = move_expired_inodes(&wb->b_dirty, &wb->b_io, dirtied_before);
+	trace_android_vh_queue_io(wb, work->for_kupdate, dirtied_before, &moved);
 	if (!work->for_sync)
 		time_expire_jif = jiffies - dirtytime_expire_interval * HZ;
 	moved += move_expired_inodes(&wb->b_dirty_time, &wb->b_io,
@@ -2689,6 +2697,8 @@ void __mark_inode_dirty(struct inode *inode, int flags)
 			else
 				dirty_list = &wb->b_dirty_time;
 
+			trace_android_vh_mark_inode_dirty(inode, wb,
+							       &dirty_list);
 			wakeup_bdi = inode_io_list_move_locked(inode, wb,
 							       dirty_list);
 
@@ -2714,7 +2724,7 @@ out_unlock:
 		spin_unlock(&wb->list_lock);
 	spin_unlock(&inode->i_lock);
 }
-EXPORT_SYMBOL(__mark_inode_dirty);
+EXPORT_SYMBOL_NS(__mark_inode_dirty, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
 
 /*
  * The @s_sync_lock is used to serialise concurrent sync operations
@@ -2880,7 +2890,7 @@ void try_to_writeback_inodes_sb(struct super_block *sb, enum wb_reason reason)
 	__writeback_inodes_sb_nr(sb, get_nr_dirty_pages(), reason, true);
 	up_read(&sb->s_umount);
 }
-EXPORT_SYMBOL(try_to_writeback_inodes_sb);
+EXPORT_SYMBOL_NS(try_to_writeback_inodes_sb, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
 
 /**
  * sync_inodes_sb	-	sync sb inode pages
@@ -2958,7 +2968,7 @@ int write_inode_now(struct inode *inode, int sync)
 	might_sleep();
 	return writeback_single_inode(inode, &wbc);
 }
-EXPORT_SYMBOL(write_inode_now);
+EXPORT_SYMBOL_NS(write_inode_now, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
 
 /**
  * sync_inode_metadata - write an inode to disk
@@ -2978,4 +2988,4 @@ int sync_inode_metadata(struct inode *inode, int wait)
 
 	return writeback_single_inode(inode, &wbc);
 }
-EXPORT_SYMBOL(sync_inode_metadata);
+EXPORT_SYMBOL_NS(sync_inode_metadata, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");

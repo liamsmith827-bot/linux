@@ -5,6 +5,7 @@ config ANDROID_BINDER_IPC
 	bool "Android Binder IPC Driver"
 	depends on MMU
 	depends on NET
+	depends on EVENT_TRACING
 	default n
 	help
 	  Binder is used in Android for both communication between processes,
@@ -15,8 +16,8 @@ config ANDROID_BINDER_IPC
 	  between said processes.
 
 config ANDROID_BINDER_IPC_RUST
-	bool "Rust version of Android Binder IPC Driver"
-	depends on RUST && MMU && !ANDROID_BINDER_IPC
+	tristate "Rust version of Android Binder IPC Driver"
+	depends on RUST && MMU && NET
 	help
 	  This enables the Rust implementation of the Binder driver.
 
@@ -61,5 +62,35 @@ config ANDROID_BINDER_ALLOC_KUNIT_TEST
 	  Each test case runs using a pared-down binder_alloc struct and
 	  test-specific freelist, which allows this KUnit module to be loaded
 	  for testing without interfering with a running system.
+
+config ANDROID_VENDOR_HOOKS
+	bool "Android Vendor Hooks"
+	depends on TRACEPOINTS
+	help
+	  Enable vendor hooks implemented as tracepoints
+
+	  Allow vendor modules to attach to tracepoint "hooks" defined via
+	  DECLARE_HOOK or DECLARE_RESTRICTED_HOOK.
+
+config ANDROID_DEBUG_KINFO
+	bool "Android Debug Kernel Information Support"
+	depends on KALLSYMS
+	help
+	  This supports kernel information backup for bootloader usage.
+	  Specifics:
+	   - The kallsyms symbols for unwind_backtrace
+	   - Page directory pointer
+	   - UTS_RELEASE
+	   - BUILD_INFO(ro.build.fingerprint)
+
+config ANDROID_VENDOR_OEM_DATA
+	bool "Android vendor and OEM runtime storage"
+	depends on 64BIT
+	default y
+	help
+	  Provide storage used by Android vendor hooks and modules compiled
+	  against this kernel. This option does not preserve a binary KMI.
+
+source "drivers/android/wrapfd/Kconfig"
 
 endmenu

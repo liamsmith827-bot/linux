@@ -182,7 +182,15 @@ int uvcg_alloc_buffers(struct uvc_video_queue *queue,
 {
 	int ret;
 
+retry:
 	ret = vb2_reqbufs(&queue->queue, rb);
+	if (ret < 0 && queue->use_sg) {
+		uvc_trace(UVC_TRACE_IOCTL,
+			  "failed to alloc buffer with sg enabled, try non-sg mode\n");
+		queue->use_sg = 0;
+		queue->queue.mem_ops = &vb2_vmalloc_memops;
+		goto retry;
+	}
 
 	return ret ? ret : rb->count;
 }
@@ -357,4 +365,3 @@ struct uvc_buffer *uvcg_queue_head(struct uvc_video_queue *queue)
 
 	return buf;
 }
-

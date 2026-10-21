@@ -20,8 +20,17 @@
 #include "segment.h"
 #include "iostat.h"
 #include <trace/events/f2fs.h>
+#undef CREATE_TRACE_POINTS
+#include <trace/hooks/fs.h>
 
 #define DEFAULT_CHECKPOINT_IOPRIO (IOPRIO_PRIO_VALUE(IOPRIO_CLASS_RT, 3))
+
+void _trace_android_rvh_f2fs_down_read(wait_queue_head_t *read_waiters,
+				    struct rw_semaphore *rwsem, bool *skip)
+{
+	trace_android_rvh_f2fs_down_read(read_waiters, rwsem, skip);
+}
+EXPORT_SYMBOL_GPL(_trace_android_rvh_f2fs_down_read);
 
 static struct kmem_cache *ino_entry_slab;
 struct kmem_cache *f2fs_inode_entry_slab;
@@ -1927,10 +1936,18 @@ int f2fs_issue_checkpoint(struct f2fs_sb_info *sbi)
 	if (waitqueue_active(&cprc->ckpt_wait_queue))
 		wake_up(&cprc->ckpt_wait_queue);
 
-	if (cprc->f2fs_issue_ckpt)
+	if (cprc->f2fs_issue_ckpt) {
+		bool prio_changed = false;
+		int saved_prio;
+
+		trace_android_vh_f2fs_improve_priority(cprc->f2fs_issue_ckpt, &saved_prio,
+						&prio_changed);
 		wait_for_completion(&req.wait);
-	else
+		if (prio_changed)
+			trace_android_vh_f2fs_restore_priority(cprc->f2fs_issue_ckpt, saved_prio);
+	} else {
 		flush_remained_ckpt_reqs(sbi, &req);
+	}
 
 	if (unlikely(req.delta_time >= CP_LONG_LATENCY_THRESHOLD)) {
 		f2fs_warn_ratelimited(sbi,

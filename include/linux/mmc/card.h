@@ -291,6 +291,7 @@ struct mmc_part {
 #define MMC_BLK_DATA_AREA_BOOT	(1<<1)
 #define MMC_BLK_DATA_AREA_GP	(1<<2)
 #define MMC_BLK_DATA_AREA_RPMB	(1<<3)
+
 };
 
 /*
@@ -380,6 +381,7 @@ struct mmc_card {
 	unsigned int    nr_parts;
 
 	struct workqueue_struct *complete_wq;	/* Private workqueue */
+
 };
 
 static inline bool mmc_large_sector(struct mmc_card *card)

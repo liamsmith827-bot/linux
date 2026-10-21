@@ -4,6 +4,7 @@
  *
  * (C) 2004 Nadia Yvette Chambers, Oracle
  */
+#include <trace/hooks/sched.h>
 #include "sched.h"
 #include <linux/wait_bit.h>
 
@@ -187,10 +188,13 @@ EXPORT_SYMBOL_GPL(__wake_up_locked_key);
 void __wake_up_sync_key(struct wait_queue_head *wq_head, unsigned int mode,
 			void *key)
 {
+	int wake_flags = WF_SYNC;
+
 	if (unlikely(!wq_head))
 		return;
 
-	__wake_up_common_lock(wq_head, mode, 1, WF_SYNC, key);
+	trace_android_vh_set_wake_flags(&wake_flags, &mode);
+	__wake_up_common_lock(wq_head, mode, 1, wake_flags, key);
 }
 EXPORT_SYMBOL_GPL(__wake_up_sync_key);
 
@@ -232,6 +236,7 @@ void __wake_up_pollfree(struct wait_queue_head *wq_head)
 	/* POLLFREE must have cleared the queue. */
 	WARN_ON_ONCE(waitqueue_active(wq_head));
 }
+EXPORT_SYMBOL_GPL(__wake_up_pollfree);
 
 /*
  * Note: we use "set_current_state()" _after_ the wait-queue add,

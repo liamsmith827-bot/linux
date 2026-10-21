@@ -25,6 +25,7 @@
 #include <linux/ww_mutex.h>
 
 #include <trace/events/lock.h>
+#include <trace/hooks/dtask.h>
 
 #include "rtmutex_common.h"
 #include "lock_events.h"
@@ -1619,6 +1620,7 @@ static int __sched rt_mutex_slowlock_block(struct rt_mutex_base *lock,
 	struct task_struct *owner;
 	int ret = 0;
 
+	trace_android_vh_rtmutex_wait_start(lock);
 	lockevent_inc(rtmutex_slow_block);
 	for (;;) {
 		/* Try to acquire the lock: */
@@ -1657,6 +1659,7 @@ static int __sched rt_mutex_slowlock_block(struct rt_mutex_base *lock,
 		set_current_state(state);
 	}
 
+	trace_android_vh_rtmutex_wait_finish(lock);
 	__set_current_state(TASK_RUNNING);
 	return ret;
 }

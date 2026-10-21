@@ -1248,6 +1248,7 @@ struct file {
 	};
 	file_ref_t			f_ref;
 	/* --- cacheline 3 boundary (192 bytes) --- */
+
 } __randomize_layout
   __attribute__((aligned(4)));	/* lest something weird decides that 2 is OK */
 
@@ -1538,6 +1539,11 @@ struct super_block {
 	const char *s_subtype;
 
 	const struct dentry_operations *__s_d_op; /* default d_op for dentries */
+
+	/*
+	 * Saved pool identifier for cleancache (-1 means none)
+	 */
+	int cleancache_poolid;
 
 	struct shrinker *s_shrink;	/* per-sb shrinker handle */
 
@@ -2880,6 +2886,7 @@ int do_sys_open(int dfd, const char __user *filename, int flags,
 		umode_t mode);
 extern struct file *file_open_name(struct filename *, int, umode_t);
 extern struct file *filp_open(const char *, int, umode_t);
+extern struct file *filp_open_block(const char *, int, umode_t);
 extern struct file *file_open_root(const struct path *,
 				   const char *, int, umode_t);
 static inline struct file *file_open_root_mnt(struct vfsmount *mnt,

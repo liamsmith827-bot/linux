@@ -73,6 +73,7 @@ struct snd_jack {
 	int hw_status_cache;
 	void *private_data;
 	void (*private_free)(struct snd_jack *);
+
 };
 
 #ifdef CONFIG_SND_JACK

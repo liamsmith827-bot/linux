@@ -223,6 +223,7 @@ struct target_type {
 	dm_dax_zero_page_range_fn dax_zero_page_range;
 	dm_dax_recovery_write_fn dax_recovery_write;
 
+
 	/* For internal device-mapper use. */
 	struct list_head list;
 };

@@ -56,6 +56,7 @@ struct netns_sysctl_ipv6 {
 	u8 skip_notify_on_dev_down;
 	u8 fib_notify_on_flag_change;
 	u8 icmpv6_error_anycast_as_unicast;
+
 };
 
 struct netns_ipv6 {
@@ -120,6 +121,7 @@ struct netns_ipv6 {
 		u32		seq;
 	} ip6addrlbl_table;
 	struct ioam6_pernet_data *ioam6_data;
+
 };
 
 #if IS_ENABLED(CONFIG_NF_DEFRAG_IPV6)

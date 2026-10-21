@@ -263,6 +263,7 @@ struct tty_ldisc_ops {
 				 const u8 *fp, size_t count);
 
 	struct  module *owner;
+
 };
 
 struct tty_ldisc {

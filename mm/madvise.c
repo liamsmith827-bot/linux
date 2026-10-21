@@ -10,7 +10,9 @@
 #include <linux/pagemap.h>
 #include <linux/syscalls.h>
 #include <linux/mempolicy.h>
+#include <linux/page_size_compat.h>
 #include <linux/page-isolation.h>
+#include <linux/pgsize_migration.h>
 #include <linux/page_idle.h>
 #include <linux/userfaultfd_k.h>
 #include <linux/hugetlb.h>
@@ -32,6 +34,9 @@
 #include <linux/swapops.h>
 #include <linux/shmem_fs.h>
 #include <linux/mmu_notifier.h>
+#include <trace/hooks/mm.h>
+#include <trace/hooks/sys.h>
+#include <trace/hooks/madvise.h>
 
 #include <asm/tlb.h>
 
@@ -49,6 +54,7 @@
 struct madvise_walk_private {
 	struct mmu_gather *tlb;
 	bool pageout;
+	void *private;
 };
 
 enum madvise_lock_mode {
@@ -114,6 +120,7 @@ struct anon_vma_name *anon_vma_name(struct vm_area_struct *vma)
 
 	return vma->anon_name;
 }
+EXPORT_SYMBOL_GPL(anon_vma_name);
 
 /* mmap_lock should be write-locked */
 static int replace_anon_vma_name(struct vm_area_struct *vma,
@@ -221,6 +228,7 @@ static int swapin_walk_pmd_entry(pmd_t *pmd, unsigned long start,
 
 		pte_unmap_unlock(ptep, ptl);
 		ptep = NULL;
+		trace_android_vh_madvise_swapin_walk_pmd_entry(entry);
 
 		folio = read_swap_cache_async(entry, GFP_HIGHUSER_MOVABLE,
 					     vma, addr, &splug);
@@ -375,10 +383,17 @@ static int madvise_cold_or_pageout_pte_range(pmd_t *pmd,
 	LIST_HEAD(folio_list);
 	bool pageout_anon_only_filter;
 	unsigned int batch_count = 0;
+	bool abort_madvise = false;
 	int nr;
+	int ret = 0;
 
-	if (fatal_signal_pending(current))
+	trace_android_vh_madvise_cold_or_pageout_abort(vma, &abort_madvise);
+	if (fatal_signal_pending(current) || abort_madvise)
 		return -EINTR;
+
+	trace_android_vh_madvise_pageout_bypass(mm, pageout, &ret);
+	if (ret)
+		return ret;
 
 	pageout_anon_only_filter = pageout && !vma_is_anonymous(vma) &&
 					!can_do_file_pageout(vma);
@@ -450,7 +465,7 @@ static int madvise_cold_or_pageout_pte_range(pmd_t *pmd,
 huge_unlock:
 		spin_unlock(ptl);
 		if (pageout)
-			reclaim_pages(&folio_list);
+			__reclaim_pages(&folio_list, private->private);
 		return 0;
 	}
 
@@ -498,7 +513,11 @@ restart:
 			nr = madvise_folio_pte_batch(addr, end, folio, pte, &ptent);
 			if (nr < folio_nr_pages(folio)) {
 				int err;
+				bool bypass = false;
 
+				trace_android_vh_split_large_folio_bypass(&bypass);
+				if (bypass)
+					continue;
 				if (folio_maybe_mapped_shared(folio))
 					continue;
 				if (pageout_anon_only_filter && !folio_test_anon(folio))
@@ -569,7 +588,7 @@ restart:
 		pte_unmap_unlock(start_pte, ptl);
 	}
 	if (pageout)
-		reclaim_pages(&folio_list);
+		__reclaim_pages(&folio_list, private->private);
 	cond_resched();
 
 	return 0;
@@ -618,7 +637,7 @@ static long madvise_cold(struct madvise_behavior *madv_behavior)
 	return 0;
 }
 
-static void madvise_pageout_page_range(struct mmu_gather *tlb,
+static int madvise_pageout_page_range(struct mmu_gather *tlb,
 		struct vm_area_struct *vma,
 		struct madvise_behavior_range *range)
 {
@@ -626,17 +645,29 @@ static void madvise_pageout_page_range(struct mmu_gather *tlb,
 		.pageout = true,
 		.tlb = tlb,
 	};
+	int ret;
+	LIST_HEAD(folio_list);
+
+	trace_android_rvh_madvise_pageout_begin(&walk_private.private);
 
 	tlb_start_vma(tlb, vma);
-	walk_page_range_vma(vma, range->start, range->end, &cold_walk_ops,
+	ret = walk_page_range_vma(vma, range->start, range->end, &cold_walk_ops,
 			    &walk_private);
 	tlb_end_vma(tlb, vma);
+
+	trace_android_rvh_madvise_pageout_end(walk_private.private, &folio_list);
+	if (!list_empty(&folio_list))
+		reclaim_pages(&folio_list);
+
+	return ret;
 }
 
 static long madvise_pageout(struct madvise_behavior *madv_behavior)
 {
 	struct mmu_gather tlb;
 	struct vm_area_struct *vma = madv_behavior->vma;
+	int ret;
+	bool return_error = false;
 
 	if (!can_madv_lru_vma(vma))
 		return -EINVAL;
@@ -653,8 +684,12 @@ static long madvise_pageout(struct madvise_behavior *madv_behavior)
 
 	lru_add_drain();
 	tlb_gather_mmu(&tlb, madv_behavior->mm);
-	madvise_pageout_page_range(&tlb, vma, &madv_behavior->range);
+	ret = madvise_pageout_page_range(&tlb, vma, &madv_behavior->range);
 	tlb_finish_mmu(&tlb);
+
+	trace_android_vh_madvise_pageout_return_error(ret, &return_error);
+	if (return_error)
+		return (long)ret;
 
 	return 0;
 }
@@ -872,6 +907,8 @@ static long madvise_dontneed_single_vma(struct madvise_behavior *madv_behavior)
 		.reclaim_pt = true,
 		.even_cows = true,
 	};
+
+	madvise_vma_pad_pages(madv_behavior->vma, range->start, range->end);
 
 	zap_page_range_single_batched(
 			madv_behavior->tlb, madv_behavior->vma, range->start,
@@ -1810,9 +1847,9 @@ static bool is_valid_madvise(unsigned long start, size_t len_in, int behavior)
 	if (!madvise_behavior_valid(behavior))
 		return false;
 
-	if (!PAGE_ALIGNED(start))
+	if (!__PAGE_ALIGNED(start))
 		return false;
-	len = PAGE_ALIGN(len_in);
+	len = __PAGE_ALIGN(len_in);
 
 	/* Check to see whether len was rounded up from small -ve to zero */
 	if (len_in && !len)
@@ -1882,6 +1919,7 @@ static int madvise_do_behavior(unsigned long start, size_t len_in,
 	int error;
 	struct madvise_behavior_range *range = &madv_behavior->range;
 
+	len_in = __PAGE_ALIGN(len_in);
 	if (is_memory_failure(madv_behavior)) {
 		range->start = start;
 		range->end = start + len_in;
@@ -1889,7 +1927,7 @@ static int madvise_do_behavior(unsigned long start, size_t len_in,
 	}
 
 	range->start = get_untagged_addr(madv_behavior->mm, start);
-	range->end = range->start + PAGE_ALIGN(len_in);
+	range->end = range->start + len_in;
 
 	blk_start_plug(&plug);
 	if (is_madvise_populate(madv_behavior))
@@ -1981,12 +2019,19 @@ int do_madvise(struct mm_struct *mm, unsigned long start, size_t len_in, int beh
 		.behavior = behavior,
 		.tlb = &tlb,
 	};
+	bool bypass = false;
 
 	if (madvise_should_skip(start, len_in, behavior, &error))
 		return error;
 	error = madvise_lock(&madv_behavior);
 	if (error)
 		return error;
+
+	trace_android_vh_mm_do_madvise_bypass(mm, start, len_in, behavior,
+					      &error, &bypass);
+	if (bypass)
+		return error;
+
 	madvise_init_tlb(&madv_behavior);
 	error = madvise_do_behavior(start, len_in, &madv_behavior);
 	madvise_finish_tlb(&madv_behavior);
@@ -2012,6 +2057,7 @@ static ssize_t vector_madvise(struct mm_struct *mm, struct iov_iter *iter,
 		.behavior = behavior,
 		.tlb = &tlb,
 	};
+	bool return_error = false;
 
 	total_len = iov_iter_count(iter);
 
@@ -2024,6 +2070,10 @@ static ssize_t vector_madvise(struct mm_struct *mm, struct iov_iter *iter,
 		unsigned long start = (unsigned long)iter_iov_addr(iter);
 		size_t len_in = iter_iov_len(iter);
 		int error;
+
+		trace_android_vh_process_madvise_iter(mm, behavior, &ret);
+		if (ret < 0)
+			break;
 
 		if (madvise_should_skip(start, len_in, behavior, &error))
 			ret = error;
@@ -2062,6 +2112,10 @@ static ssize_t vector_madvise(struct mm_struct *mm, struct iov_iter *iter,
 	madvise_unlock(&madv_behavior);
 
 out:
+	trace_android_vh_process_madvise_return_error(behavior, ret, &return_error);
+	if (return_error)
+		return ret;
+
 	ret = (total_len - iov_iter_count(iter)) ? : ret;
 
 	return ret;
@@ -2077,6 +2131,12 @@ SYSCALL_DEFINE5(process_madvise, int, pidfd, const struct iovec __user *, vec,
 	struct task_struct *task;
 	struct mm_struct *mm;
 	unsigned int f_flags;
+	bool bypass = false;
+
+	trace_android_rvh_process_madvise_bypass(pidfd, vec,
+			vlen, behavior, flags, &ret, &bypass);
+	if (bypass)
+		return ret;
 
 	if (flags != 0) {
 		ret = -EINVAL;
@@ -2119,6 +2179,8 @@ SYSCALL_DEFINE5(process_madvise, int, pidfd, const struct iovec __user *, vec,
 		goto release_mm;
 	}
 
+	trace_android_vh_process_madvise_begin(task, behavior);
+
 	ret = vector_madvise(mm, &iter, behavior);
 
 release_mm:
@@ -2128,6 +2190,7 @@ release_task:
 free_iov:
 	kfree(iov);
 out:
+	trace_android_vh_process_madvise(behavior, &ret, NULL);
 	return ret;
 }
 
@@ -2155,9 +2218,9 @@ static int madvise_set_anon_name(struct mm_struct *mm, unsigned long start,
 		.anon_name = anon_name,
 	};
 
-	if (start & ~PAGE_MASK)
+	if (start & ~__PAGE_MASK)
 		return -EINVAL;
-	len = (len_in + ~PAGE_MASK) & PAGE_MASK;
+	len = (len_in + ~__PAGE_MASK) & __PAGE_MASK;
 
 	/* Check to see whether len was rounded up from small -ve to zero */
 	if (len_in && !len)
@@ -2188,6 +2251,7 @@ int set_anon_vma_name(unsigned long addr, unsigned long size,
 	struct anon_vma_name *anon_name = NULL;
 	struct mm_struct *mm = current->mm;
 	int error;
+	bool bypass = false;
 
 	if (uname) {
 		char *name, *pch;
@@ -2209,6 +2273,10 @@ int set_anon_vma_name(unsigned long addr, unsigned long size,
 			return -ENOMEM;
 	}
 
+	trace_android_rvh_pr_set_vma_name_bypass(mm, addr, size, anon_name,
+			&error, &bypass);
+	if (bypass)
+		return error;
 	error = madvise_set_anon_name(mm, addr, size, anon_name);
 	anon_vma_name_put(anon_name);
 

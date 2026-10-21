@@ -404,6 +404,7 @@ struct uart_ops {
 	void		(*poll_put_char)(struct uart_port *, unsigned char);
 	int		(*poll_get_char)(struct uart_port *);
 #endif
+
 };
 
 #define NO_POLL_CHAR		0x00ff0000
@@ -598,6 +599,7 @@ struct uart_port {
 	struct gpio_desc	*rs485_rx_during_tx_gpio; /* Output GPIO that sets the state of RS485 RX during TX */
 	struct serial_iso7816   iso7816;
 	void			*private_data;		/* generic platform data pointer */
+
 };
 
 /*
@@ -902,6 +904,7 @@ struct uart_driver {
 	 */
 	struct uart_state	*state;
 	struct tty_driver	*tty_driver;
+
 };
 
 void uart_write_wakeup(struct uart_port *port);

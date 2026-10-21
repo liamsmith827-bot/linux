@@ -76,6 +76,8 @@
 
 #include <asm/unistd.h>
 #include <asm/mmu_context.h>
+#include <trace/hooks/mm.h>
+#include <trace/hooks/dtask.h>
 
 #include "exit.h"
 
@@ -589,6 +591,7 @@ static void exit_mm(void)
 	task_unlock(current);
 	mmap_read_unlock(mm);
 	mm_update_next_owner(mm);
+	trace_android_vh_exit_mm(mm);
 	mmput(mm);
 	if (test_thread_flag(TIF_MEMDIE))
 		exit_oom_victim();
@@ -917,6 +920,7 @@ void __noreturn do_exit(long code)
 	if (unlikely(kthread))
 		kthread_do_exit(kthread, code);
 
+	profile_task_exit(tsk);
 	kcov_task_exit(tsk);
 	kmsan_task_exit(tsk);
 
@@ -928,8 +932,10 @@ void __noreturn do_exit(long code)
 	sched_mm_cid_exit(tsk);
 	exit_signals(tsk);  /* sets PF_EXITING */
 
+	trace_android_vh_exit_check(current);
 	seccomp_filter_release(tsk);
 
+	trace_android_vh_lock_task_exit(tsk);
 	acct_update_integrals(tsk);
 	group_dead = atomic_dec_and_test(&tsk->signal->live);
 	if (group_dead) {
@@ -1121,6 +1127,7 @@ do_group_exit(int exit_code)
 		}
 		spin_unlock_irq(&sighand->siglock);
 	}
+	trace_android_vh_do_group_exit(current);
 
 	do_exit(exit_code);
 	/* NOTREACHED */

@@ -105,8 +105,10 @@
 #include <linux/rseq.h>
 #include <uapi/linux/pidfd.h>
 #include <linux/pidfs.h>
+#include <linux/cpufreq_times.h>
 #include <linux/tick.h>
 #include <linux/unwind_deferred.h>
+#include <linux/dma-buf.h>
 
 #include <asm/pgalloc.h>
 #include <linux/uaccess.h>
@@ -124,6 +126,10 @@
 
 #include <kunit/visibility.h>
 
+#undef CREATE_TRACE_POINTS
+#include <trace/hooks/sched.h>
+#include <trace/hooks/dtask.h>
+#include <trace/hooks/security.h>
 /*
  * Minimum number of threads to boot the kernel
  */
@@ -133,6 +139,9 @@
  * Maximum number of threads
  */
 #define MAX_THREADS FUTEX_TID_MASK
+
+EXPORT_TRACEPOINT_SYMBOL_GPL(task_newtask);
+EXPORT_TRACEPOINT_SYMBOL_GPL(task_rename);
 
 /*
  * Protected counters by write_lock_irq(&tasklist_lock)
@@ -154,6 +163,7 @@ static const char * const resident_page_types[] = {
 DEFINE_PER_CPU(unsigned long, process_counts) = 0;
 
 __cacheline_aligned DEFINE_RWLOCK(tasklist_lock);  /* outer */
+EXPORT_SYMBOL_GPL(tasklist_lock);
 
 #ifdef CONFIG_PROVE_RCU
 int lockdep_tasklist_lock_is_held(void)
@@ -488,9 +498,11 @@ void free_task(struct task_struct *tsk)
 #ifdef CONFIG_SECCOMP
 	WARN_ON_ONCE(tsk->seccomp.filter);
 #endif
+	cpufreq_task_times_exit(tsk);
 	release_user_cpus_ptr(tsk);
 	scs_release(tsk);
 
+	trace_android_vh_free_task(tsk);
 #ifndef CONFIG_THREAD_INFO_IN_TASK
 	/*
 	 * The task is finally done with both the stack and thread_info,
@@ -690,6 +702,7 @@ void __mmdrop(struct mm_struct *mm)
 	mm_pasid_drop(mm);
 	mm_destroy_cid(mm);
 	percpu_counter_destroy_many(mm->rss_stat, NR_MM_COUNTERS);
+	trace_android_vh_mmap_lock_free(&mm->mmap_lock);
 
 	free_mm(mm);
 }
@@ -736,6 +749,7 @@ void __put_task_struct(struct task_struct *tsk)
 	WARN_ON(refcount_read(&tsk->usage));
 	WARN_ON(tsk == current);
 
+	put_dmabuf_info(tsk->dmabuf_info);
 	unwind_task_free(tsk);
 	sched_ext_free(tsk);
 	io_uring_free(tsk);
@@ -929,6 +943,7 @@ static struct task_struct *dup_task_struct(struct task_struct *orig, int node)
 	tsk->task_frag.page = NULL;
 	tsk->wake_q.next = NULL;
 	tsk->worker_private = NULL;
+	tsk->dmabuf_info = NULL;
 
 	kcov_task_init(tsk);
 	kmsan_task_create(tsk);
@@ -966,6 +981,10 @@ static struct task_struct *dup_task_struct(struct task_struct *orig, int node)
 	RCU_INIT_POINTER(tsk->bpf_storage, NULL);
 	tsk->bpf_ctx = NULL;
 #endif
+	android_init_vendor_data(tsk, 1);
+	android_init_oem_data(tsk, 1);
+	android_init_dynamic_vendor_data(tsk);
+	trace_android_vh_dup_task_struct(tsk, orig);
 	return tsk;
 
 free_stack:
@@ -1027,6 +1046,7 @@ static void mm_init_uprobes_state(struct mm_struct *mm)
 static void mmap_init_lock(struct mm_struct *mm)
 {
 	init_rwsem(&mm->mmap_lock);
+	trace_android_vh_mmap_lock_init(&mm->mmap_lock);
 	mm_lock_seqcount_init(mm);
 #ifdef CONFIG_PER_VMA_LOCK
 	rcuwait_init(&mm->vma_writer_wait);
@@ -1095,6 +1115,9 @@ static struct mm_struct *mm_init(struct mm_struct *mm, struct task_struct *p,
 
 	mm->user_ns = get_user_ns(user_ns);
 	lru_gen_init_mm(mm);
+#ifdef CONFIG_ANDROID_VENDOR_OEM_DATA
+	mm->android_vendor_data1 = 0;
+#endif
 	return mm;
 
 fail_pcpu:
@@ -1139,6 +1162,7 @@ static inline void __mmput(struct mm_struct *mm)
 	exit_mmap(mm);
 	mm_put_huge_zero_folio(mm);
 	set_mm_exe_file(mm, NULL);
+	put_dmabuf_info(mm->dmabuf_info);
 	if (!list_empty(&mm->mmlist)) {
 		spin_lock(&mmlist_lock);
 		list_del(&mm->mmlist);
@@ -1158,8 +1182,10 @@ void mmput(struct mm_struct *mm)
 {
 	might_sleep();
 
-	if (atomic_dec_and_test(&mm->mm_users))
+	if (atomic_dec_and_test(&mm->mm_users)) {
+		trace_android_vh_mmput(mm);
 		__mmput(mm);
+	}
 }
 EXPORT_SYMBOL_GPL(mmput);
 
@@ -1316,6 +1342,7 @@ struct file *get_task_exe_file(struct task_struct *task)
 	task_unlock(task);
 	return exe_file;
 }
+EXPORT_SYMBOL_GPL(get_task_exe_file);
 
 /**
  * get_task_mm - acquire a reference to the task's mm
@@ -1374,6 +1401,7 @@ struct mm_struct *mm_access(struct task_struct *task, unsigned int mode)
 
 	return mm;
 }
+EXPORT_SYMBOL_GPL(mm_access);
 
 static void complete_vfork_done(struct task_struct *tsk)
 {
@@ -1487,6 +1515,7 @@ static struct mm_struct *dup_mm(struct task_struct *tsk,
 		goto fail_nomem;
 
 	memcpy(mm, oldmm, sizeof(*mm));
+	mm->dmabuf_info = NULL;
 
 	if (!mm_init(mm, tsk, mm->user_ns))
 		goto fail_nomem;
@@ -2034,6 +2063,8 @@ __latent_entropy struct task_struct *copy_process(
 	if (args->io_thread)
 		p->flags |= PF_IO_WORKER;
 
+	cpufreq_task_times_init(p);
+
 	if (args->name)
 		strscpy_pad(p->comm, args->name, sizeof(p->comm));
 
@@ -2046,6 +2077,7 @@ __latent_entropy struct task_struct *copy_process(
 	ftrace_graph_init_task(p);
 
 	rt_mutex_init_task(p);
+	raw_spin_lock_init(&p->blocked_lock);
 
 	lockdep_assert_irqs_enabled();
 #ifdef CONFIG_PROVE_LOCKING
@@ -2142,7 +2174,15 @@ __latent_entropy struct task_struct *copy_process(
 
 	lockdep_init_task(p);
 
-	p->blocked_on = NULL; /* not blocked yet */
+	p->blocked_on.lock = NULL; /* not blocked yet */
+	p->blocked_donor = NULL; /* nobody is boosting p yet */
+#ifdef CONFIG_SCHED_PROXY_EXEC
+	INIT_LIST_HEAD(&p->migration_node);
+	INIT_LIST_HEAD(&p->blocked_head);
+	INIT_LIST_HEAD(&p->blocked_node);
+	INIT_LIST_HEAD(&p->blocked_activation_node);
+	p->sleeping_owner = NULL;
+#endif
 
 #ifdef CONFIG_BCACHE
 	p->sequential_io	= 0;
@@ -2277,6 +2317,12 @@ __latent_entropy struct task_struct *copy_process(
 	p->rethooks.first = NULL;
 #endif
 
+	retval = copy_dmabuf_info(clone_flags, p);
+	if (retval) {
+		pr_err("failed to copy dmabuf accounting info, err %d\n", retval);
+		goto bad_fork_put_pidfd;
+	}
+
 	/*
 	 * Ensure that the cgroup subsystem policies allow the new process to be
 	 * forked. It should be noted that the new process's css_set can be changed
@@ -2285,7 +2331,7 @@ __latent_entropy struct task_struct *copy_process(
 	 */
 	retval = cgroup_can_fork(p, args);
 	if (retval)
-		goto bad_fork_put_pidfd;
+		goto bad_fork_cleanup_dmabuf;
 
 	/*
 	 * Now that the cgroups are pinned, re-clone the parent cgroup and put
@@ -2364,6 +2410,10 @@ __latent_entropy struct task_struct *copy_process(
 		goto bad_fork_core_free;
 	}
 
+	trace_android_rvh_copy_process_integrity(clone_flags, p, &retval);
+	if (retval)
+		goto bad_fork_cancel_cgroup;
+
 	/* No more failure paths after this point. */
 
 	/*
@@ -2413,6 +2463,7 @@ __latent_entropy struct task_struct *copy_process(
 		attach_pid(p, PIDTYPE_PID);
 		nr_threads++;
 	}
+	trace_android_vh_copy_process(current, nr_threads);
 	total_forks++;
 	hlist_del_init(&delayed.node);
 	spin_unlock(&current->sighand->siglock);
@@ -2431,6 +2482,7 @@ __latent_entropy struct task_struct *copy_process(
 	uprobe_copy_process(p, clone_flags);
 	user_events_fork(p, clone_flags);
 
+	trace_android_vh_lock_task_fork(p);
 	copy_oom_score_adj(clone_flags, p);
 
 	return p;
@@ -2441,6 +2493,8 @@ bad_fork_core_free:
 	write_unlock_irq(&tasklist_lock);
 bad_fork_cancel_cgroup:
 	cgroup_cancel_fork(p, args);
+bad_fork_cleanup_dmabuf:
+	put_dmabuf_info(p->dmabuf_info);
 bad_fork_put_pidfd:
 	if (clone_flags & CLONE_PIDFD) {
 		fput(pidfile);
@@ -2613,6 +2667,8 @@ pid_t kernel_clone(struct kernel_clone_args *args)
 
 	if (IS_ERR(p))
 		return PTR_ERR(p);
+
+	cpufreq_task_times_alloc(p);
 
 	/*
 	 * Do this prior waking up the new thread - the thread pointer
@@ -3084,6 +3140,7 @@ int ksys_unshare(unsigned long unshare_flags)
 	struct files_struct *new_fd = NULL;
 	struct cred *new_cred = NULL;
 	struct nsproxy *new_nsproxy = NULL;
+	struct task_dma_buf_info *dmabuf_info = NULL;
 	int do_sysvsem = 0;
 	int err;
 
@@ -3169,10 +3226,22 @@ int ksys_unshare(unsigned long unshare_flags)
 			read_sequnlock_excl(&fs->seq);
 		}
 
-		if (new_fd)
+		if (new_fd) {
 			swap(current->files, new_fd);
 
+			/*
+			 * This is a new partial sharing relationship for the current task, since we
+			 * have a new files_struct (and the MM might still be shared). Since partial
+			 * sharing is not supported for dmabuf accounting, we need to remove the
+			 * accounting info from the task. Leave the mm->dmabuf_info so any existing
+			 * accounting can be unaccounted properly.
+			 */
+			dmabuf_info = current->dmabuf_info;
+			current->dmabuf_info = NULL;
+		}
+
 		task_unlock(current);
+		put_dmabuf_info(dmabuf_info);
 
 		if (new_cred) {
 			/* Install the new user namespace */
@@ -3215,6 +3284,7 @@ int unshare_files(void)
 {
 	struct task_struct *task = current;
 	struct files_struct *old, *copy = NULL;
+	struct task_dma_buf_info *dmabuf_info;
 	int error;
 
 	error = unshare_fd(CLONE_FILES, &copy);
@@ -3224,7 +3294,19 @@ int unshare_files(void)
 	old = task->files;
 	task_lock(task);
 	task->files = copy;
+
+	/*
+	 * This is a new partial sharing relationship for the current task, since we have a new
+	 * files_struct (and the MM might still be shared). Since partial sharing is not
+	 * supported for dmabuf accounting, we need to remove the accounting info from the task.
+	 * Leave the mm->dmabuf_info so any existing accounting can be unaccounted properly. For
+	 * execs where we also have a new MM, the fixup for this new files_struct happens externally
+	 * with appropriate locking in dma_buf_begin_new_exec.
+	 */
+	dmabuf_info = task->dmabuf_info;
+	task->dmabuf_info = NULL;
 	task_unlock(task);
+	put_dmabuf_info(dmabuf_info);
 	put_files_struct(old);
 	return 0;
 }

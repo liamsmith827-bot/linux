@@ -59,6 +59,11 @@
 
 #include "workqueue_internal.h"
 
+#include <trace/hooks/dtask.h>
+#include <trace/hooks/wqlockup.h>
+/* events/workqueue.h uses default TRACE_INCLUDE_PATH */
+#undef TRACE_INCLUDE_PATH
+
 enum worker_pool_flags {
 	/*
 	 * worker_pool flags
@@ -539,6 +544,9 @@ static void show_one_worker_pool(struct worker_pool *pool);
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/workqueue.h>
+
+EXPORT_TRACEPOINT_SYMBOL_GPL(workqueue_execute_start);
+EXPORT_TRACEPOINT_SYMBOL_GPL(workqueue_execute_end);
 
 #define assert_rcu_or_pool_mutex()					\
 	RCU_LOCKDEP_WARN(!rcu_read_lock_any_held() &&			\
@@ -2845,6 +2853,7 @@ static struct worker *create_worker(struct worker_pool *pool)
 		}
 
 		set_user_nice(worker->task, pool->attrs->nice);
+		trace_android_rvh_create_worker(worker->task, pool->attrs);
 		kthread_bind_mask(worker->task, pool_allowed_cpus(pool));
 	}
 
@@ -4080,7 +4089,9 @@ void __flush_workqueue(struct workqueue_struct *wq)
 
 	mutex_unlock(&wq->mutex);
 
+	trace_android_vh_flush_wq_wait_start(wq);
 	wait_for_completion(&this_flusher.done);
+	trace_android_vh_flush_wq_wait_finish(wq);
 
 	/*
 	 * Wake-up-and-cascade phase
@@ -4324,7 +4335,9 @@ static bool __flush_work(struct work_struct *work, bool from_cancel)
 		}
 	}
 
+	trace_android_vh_flush_work_wait_start(work);
 	wait_for_completion(&barr.done);
+	trace_android_vh_flush_work_wait_finish(work);
 
 out_destroy:
 	destroy_work_on_stack(&barr.work);
@@ -4701,6 +4714,7 @@ void free_workqueue_attrs(struct workqueue_attrs *attrs)
 		kfree(attrs);
 	}
 }
+EXPORT_SYMBOL_GPL(free_workqueue_attrs);
 
 /**
  * alloc_workqueue_attrs - allocate a workqueue_attrs
@@ -4729,6 +4743,7 @@ fail:
 	free_workqueue_attrs(attrs);
 	return NULL;
 }
+EXPORT_SYMBOL_GPL(alloc_workqueue_attrs_noprof);
 
 static void copy_workqueue_attrs(struct workqueue_attrs *to,
 				 const struct workqueue_attrs *from)
@@ -5451,7 +5466,7 @@ static void apply_wqattrs_commit(struct apply_wqattrs_ctx *ctx)
 	mutex_unlock(&ctx->wq->mutex);
 }
 
-static int apply_workqueue_attrs_locked(struct workqueue_struct *wq,
+int apply_workqueue_attrs_locked(struct workqueue_struct *wq,
 					const struct workqueue_attrs *attrs)
 {
 	struct apply_wqattrs_ctx *ctx;
@@ -5470,6 +5485,7 @@ static int apply_workqueue_attrs_locked(struct workqueue_struct *wq,
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(apply_workqueue_attrs_locked);
 
 /**
  * apply_workqueue_attrs - apply new workqueue_attrs to an unbound workqueue
@@ -5497,6 +5513,7 @@ int apply_workqueue_attrs(struct workqueue_struct *wq,
 
 	return ret;
 }
+EXPORT_SYMBOL_GPL(apply_workqueue_attrs);
 
 /**
  * unbound_wq_update_pwq - update a pwq slot for CPU hot[un]plug
@@ -5571,6 +5588,7 @@ static int alloc_and_link_pwqs(struct workqueue_struct *wq)
 {
 	bool highpri = wq->flags & WQ_HIGHPRI;
 	int cpu, ret;
+	bool skip = false;
 
 	lockdep_assert_held(&wq_pool_mutex);
 
@@ -5607,6 +5625,10 @@ static int alloc_and_link_pwqs(struct workqueue_struct *wq)
 		return 0;
 	}
 
+	trace_android_rvh_alloc_and_link_pwqs(wq, &ret, &skip);
+	if (skip)
+		goto oem_skip;
+
 	if (wq->flags & __WQ_ORDERED) {
 		struct pool_workqueue *dfl_pwq;
 
@@ -5623,6 +5645,9 @@ static int alloc_and_link_pwqs(struct workqueue_struct *wq)
 	if (ret)
 		goto enomem;
 	return 0;
+
+oem_skip:
+	return ret;
 
 enomem:
 	if (wq->cpu_pwq) {
@@ -5808,6 +5833,7 @@ static struct workqueue_struct *__alloc_workqueue(const char *fmt,
 		max_active = wq_clamp_max_active(max_active, flags, wq->name);
 	}
 
+	trace_android_rvh_alloc_workqueue(wq, &flags, &max_active);
 	/* init wq */
 	wq->flags = flags;
 	wq->max_active = max_active;
@@ -6625,6 +6651,7 @@ void wq_worker_comm(char *buf, size_t size, struct task_struct *task)
 
 	mutex_unlock(&wq_pool_attach_mutex);
 }
+EXPORT_SYMBOL_GPL(wq_worker_comm);
 
 #ifdef CONFIG_SMP
 
@@ -7719,6 +7746,7 @@ static void wq_watchdog_timer_fn(struct timer_list *unused)
 			pr_cont_pool_info(pool);
 			pr_cont(" stuck for %us!\n",
 				jiffies_to_msecs(now - pool_ts) / 1000);
+			trace_android_vh_wq_lockup_pool(pool->cpu, pool_ts);
 		}
 
 

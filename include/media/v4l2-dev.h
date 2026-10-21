@@ -212,6 +212,7 @@ struct v4l2_file_operations {
 	int (*mmap) (struct file *, struct vm_area_struct *);
 	int (*open) (struct file *);
 	int (*release) (struct file *);
+
 };
 
 /*
@@ -307,6 +308,7 @@ struct video_device {
 	DECLARE_BITMAP(valid_ioctls, BASE_VIDIOC_PRIVATE);
 
 	struct mutex *lock;
+
 };
 
 /**

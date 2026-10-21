@@ -68,6 +68,7 @@ struct rtc_class_ops {
 	int (*set_offset)(struct device *, long offset);
 	int (*param_get)(struct device *, struct rtc_param *param);
 	int (*param_set)(struct device *, struct rtc_param *param);
+
 };
 
 struct rtc_device;
@@ -161,6 +162,7 @@ struct rtc_device {
 	unsigned int uie_task_active:1;
 	unsigned int uie_timer_active:1;
 #endif
+
 };
 #define to_rtc_device(d) container_of(d, struct rtc_device, dev)
 

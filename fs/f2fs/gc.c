@@ -22,6 +22,7 @@
 #include "gc.h"
 #include "iostat.h"
 #include <trace/events/f2fs.h>
+#include <trace/hooks/fs.h>
 
 static struct kmem_cache *victim_entry_slab;
 
@@ -1202,6 +1203,7 @@ static bool is_alive(struct f2fs_sb_info *sbi, struct f2fs_summary *sum,
 
 static int ra_data_block(struct inode *inode, pgoff_t index)
 {
+	bool bypass = false;
 	struct f2fs_sb_info *sbi = F2FS_I_SB(inode);
 	struct address_space *mapping = inode->i_mapping;
 	struct inode *atomic_inode = NULL;
@@ -1218,6 +1220,10 @@ static int ra_data_block(struct inode *inode, pgoff_t index)
 		.in_list = 0,
 	};
 	int err = 0;
+
+	trace_android_rvh_f2fs_ra_data_block_bypass(inode, index, &err, &bypass);
+	if (bypass)
+		return err;
 
 	f2fs_down_read(&F2FS_I(inode)->i_sem);
 	if (f2fs_is_cow_file(inode)) {
@@ -1315,6 +1321,7 @@ out_iput:
 static int move_data_block(struct inode *inode, block_t bidx,
 				int gc_type, unsigned int segno, int off)
 {
+	bool bypass = false;
 	struct address_space *mapping = inode->i_mapping;
 	struct inode *atomic_inode = NULL;
 	struct f2fs_io_info fio = {
@@ -1337,6 +1344,11 @@ static int move_data_block(struct inode *inode, block_t bidx,
 	int type = fio.sbi->am.atgc_enabled && (gc_type == BG_GC) &&
 				(fio.sbi->gc_mode != GC_URGENT_HIGH) ?
 				CURSEG_ALL_DATA_ATGC : CURSEG_COLD_DATA;
+
+	trace_android_rvh_f2fs_move_data_block_bypass(inode, bidx, gc_type, segno,
+					      off, &err, &bypass);
+	if (bypass)
+		return err;
 
 	f2fs_down_read(&F2FS_I(inode)->i_sem);
 	if (f2fs_is_cow_file(inode)) {

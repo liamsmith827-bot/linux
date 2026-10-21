@@ -213,6 +213,7 @@ struct usb_hcd {
 	 * (ohci 32, uhci 1024, ehci 256/512/1024).
 	 */
 
+
 	/* The HC driver's private data is stored at the end of
 	 * this structure.
 	 */
@@ -404,6 +405,7 @@ struct hc_driver {
 #define EHSET_TEST_SINGLE_STEP_SET_FEATURE 0x06
 	int	(*submit_single_step_set_feature)(struct usb_hcd *,
 			struct urb *, int);
+
 };
 
 static inline int hcd_giveback_urb_in_bh(struct usb_hcd *hcd)
@@ -582,6 +584,7 @@ struct usb_tt {
 	spinlock_t		lock;
 	struct list_head	clear_list;	/* of usb_tt_clear */
 	struct work_struct	clear_work;
+
 };
 
 struct usb_tt_clear {

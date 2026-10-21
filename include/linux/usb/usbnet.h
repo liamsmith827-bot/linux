@@ -82,6 +82,7 @@ struct usbnet {
  * that must be broken
  */
 #		define EVENT_UNPLUG		31
+
 };
 
 static inline bool usbnet_going_away(struct usbnet *ubn)
@@ -182,6 +183,7 @@ struct driver_info {
 	int		out;		/* tx endpoint */
 
 	unsigned long	data;		/* Misc driver specific data */
+
 };
 
 /* Minidrivers are just drivers using the "usbnet" core as a powerful

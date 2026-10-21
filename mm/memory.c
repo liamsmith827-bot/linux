@@ -57,6 +57,7 @@
 #include <linux/export.h>
 #include <linux/delayacct.h>
 #include <linux/init.h>
+#include <linux/pgsize_migration.h>
 #include <linux/writeback.h>
 #include <linux/memcontrol.h>
 #include <linux/mmu_notifier.h>
@@ -78,6 +79,7 @@
 #include <linux/sched/sysctl.h>
 
 #include <trace/events/kmem.h>
+#include <trace/hooks/mm.h>
 
 #include <asm/io.h>
 #include <asm/mmu_context.h>
@@ -177,10 +179,13 @@ static int __init init_zero_pfn(void)
 }
 early_initcall(init_zero_pfn);
 
+EXPORT_TRACEPOINT_SYMBOL_GPL(rss_stat);
+
 void mm_trace_rss_stat(struct mm_struct *mm, int member)
 {
 	trace_rss_stat(mm, member);
 }
+EXPORT_SYMBOL_GPL(mm_trace_rss_stat);
 
 /*
  * Note: this doesn't free the actual pages themselves. That
@@ -770,6 +775,7 @@ struct page *vm_normal_page(struct vm_area_struct *vma, unsigned long addr,
 	return __vm_normal_page(vma, addr, pte_pfn(pte), pte_special(pte),
 				pte_val(pte), PGTABLE_LEVEL_PTE);
 }
+EXPORT_SYMBOL_GPL(vm_normal_page);
 
 /**
  * vm_normal_folio() - Get the "struct folio" associated with a PTE
@@ -1733,6 +1739,7 @@ static inline int zap_nonpresent_ptes(struct mmu_gather *tlb,
 {
 	swp_entry_t entry;
 	int nr = 1;
+	bool bypass = false;
 
 	*any_skipped = true;
 	entry = pte_to_swp_entry(ptent);
@@ -1760,6 +1767,9 @@ static inline int zap_nonpresent_ptes(struct mmu_gather *tlb,
 
 		nr = swap_pte_batch(pte, max_nr, ptent);
 		rss[MM_SWAPENTS] -= nr;
+		trace_android_vh_swapmem_gather_add_bypass(tlb->mm, entry, nr, &bypass);
+		if (bypass)
+			goto skip;
 		free_swap_and_cache_nr(entry, nr);
 	} else if (is_migration_entry(entry)) {
 		struct folio *folio = pfn_swap_entry_folio(entry);
@@ -1790,6 +1800,7 @@ static inline int zap_nonpresent_ptes(struct mmu_gather *tlb,
 		pr_alert("unrecognized swap entry 0x%lx\n", entry.val);
 		WARN_ON_ONCE(1);
 	}
+skip:
 	clear_not_present_full_ptes(vma->vm_mm, addr, pte, nr, tlb->fullmm);
 	*any_skipped = zap_install_uffd_wp_if_needed(vma, addr, pte, nr, details, ptent);
 
@@ -2184,6 +2195,7 @@ void zap_page_range_single(struct vm_area_struct *vma, unsigned long address,
 	zap_page_range_single_batched(&tlb, vma, address, size, details);
 	tlb_finish_mmu(&tlb);
 }
+EXPORT_SYMBOL_GPL(zap_page_range_single);
 
 /**
  * zap_vma_ptes - remove ptes mapping the vma
@@ -2515,7 +2527,6 @@ static int __vm_map_pages(struct vm_area_struct *vma, struct page **pages,
 {
 	unsigned long count = vma_pages(vma);
 	unsigned long uaddr = vma->vm_start;
-	int ret, i;
 
 	/* Fail if the user requested offset is beyond the end of the object */
 	if (offset >= num)
@@ -2525,14 +2536,7 @@ static int __vm_map_pages(struct vm_area_struct *vma, struct page **pages,
 	if (count > num - offset)
 		return -ENXIO;
 
-	for (i = 0; i < count; i++) {
-		ret = vm_insert_page(vma, uaddr, pages[offset + i]);
-		if (ret < 0)
-			return ret;
-		uaddr += PAGE_SIZE;
-	}
-
-	return 0;
+	return vm_insert_pages(vma, uaddr, pages + offset, &count);
 }
 
 /**
@@ -3598,6 +3602,7 @@ static inline void wp_page_reuse(struct vm_fault *vmf, struct folio *folio)
 	flush_cache_page(vma, vmf->address, pte_pfn(vmf->orig_pte));
 	entry = pte_mkyoung(vmf->orig_pte);
 	entry = maybe_mkwrite(pte_mkdirty(entry), vma);
+	trace_android_vh_wp_page_reuse(vmf, folio);
 	if (ptep_set_access_flags(vma, vmf->address, vmf->pte, entry, 1))
 		update_mmu_cache_range(vmf, vma, vmf->address, vmf->pte, 1);
 	pte_unmap_unlock(vmf->pte, vmf->ptl);
@@ -4123,6 +4128,8 @@ static vm_fault_t do_wp_page(struct vm_fault *vmf)
 		return wp_page_shared(vmf, folio);
 	}
 
+	trace_android_vh_do_wp_page(folio);
+
 	/*
 	 * Private mapping: create an exclusive anonymous page copy if reuse
 	 * is impossible. We might miss VM_WRITE for FOLL_FORCE handling.
@@ -4424,8 +4431,11 @@ static struct folio *__alloc_swap_folio(struct vm_fault *vmf)
 	struct vm_area_struct *vma = vmf->vma;
 	struct folio *folio;
 	swp_entry_t entry;
+	gfp_t gfp = GFP_HIGHUSER_MOVABLE | __GFP_CMA;
 
-	folio = vma_alloc_folio(GFP_HIGHUSER_MOVABLE, 0, vma, vmf->address);
+	trace_android_vh_customize_swapin_gfp_mask(vmf, &gfp);
+	folio = vma_alloc_folio(gfp, 0, vma, vmf->address);
+
 	if (!folio)
 		return NULL;
 
@@ -4559,6 +4569,7 @@ static struct folio *alloc_swap_folio(struct vm_fault *vmf)
 
 	/* Try allocating the highest of the remaining orders. */
 	gfp = vma_thp_gfp_mask(vma);
+	trace_android_vh_customize_swapin_gfp_mask(vmf, &gfp);
 	while (orders) {
 		addr = ALIGN_DOWN(vmf->address, PAGE_SIZE << order);
 		folio = vma_alloc_folio(gfp, order, vma, addr);
@@ -4611,6 +4622,7 @@ vm_fault_t do_swap_page(struct vm_fault *vmf)
 	unsigned long page_idx;
 	unsigned long address;
 	pte_t *ptep;
+	bool bypass = false;
 
 	if (!pte_unmap_same(vmf))
 		goto out;
@@ -4701,15 +4713,20 @@ vm_fault_t do_swap_page(struct vm_fault *vmf)
 				 * to entry reuse.
 				 */
 				if (swapcache_prepare(entry, nr_pages)) {
+					trace_android_vh_do_swap_page_wait(folio, vmf);
 					/*
 					 * Relax a bit to prevent rapid
 					 * repeated page faults.
 					 */
+					trace_android_rvh_do_swap_page_relax(entry, &bypass);
+					if (bypass)
+						goto out_page;
 					add_wait_queue(&swapcache_wq, &wait);
 					schedule_timeout_uninterruptible(1);
 					remove_wait_queue(&swapcache_wq, &wait);
 					goto out_page;
 				}
+				trace_android_rvh_do_swap_page_start(entry);
 				need_clear_cache = true;
 
 				memcg1_swapin(entry, nr_pages);
@@ -4726,8 +4743,10 @@ vm_fault_t do_swap_page(struct vm_fault *vmf)
 				folio->private = NULL;
 			}
 		} else {
-			folio = swapin_readahead(entry, GFP_HIGHUSER_MOVABLE,
-						vmf);
+			gfp_t gfp = GFP_HIGHUSER_MOVABLE | __GFP_CMA;
+
+			trace_android_vh_customize_swapin_gfp_mask(vmf, &gfp);
+			folio = swapin_readahead(entry, gfp, vmf);
 			swapcache = folio;
 		}
 
@@ -4750,6 +4769,7 @@ vm_fault_t do_swap_page(struct vm_fault *vmf)
 		count_memcg_event_mm(vma->vm_mm, PGMAJFAULT);
 	}
 
+	trace_android_vh_do_swap_page_folio_lock_check(folio, vmf);
 	ret |= folio_lock_or_retry(folio, vmf);
 	if (ret & VM_FAULT_RETRY)
 		goto out_release;
@@ -4939,6 +4959,7 @@ check_folio:
 		pte = pte_mksoft_dirty(pte);
 	if (pte_swp_uffd_wp(vmf->orig_pte))
 		pte = pte_mkuffd_wp(pte);
+	trace_android_vh_do_swap_page(folio, &pte, vmf, entry);
 
 	/*
 	 * Same logic as in do_wp_page(); however, optimize for pages that are
@@ -5019,6 +5040,7 @@ out:
 		swapcache_clear(si, entry, nr_pages);
 		if (waitqueue_active(&swapcache_wq))
 			wake_up(&swapcache_wq);
+		trace_android_vh_do_swap_page_done(entry);
 	}
 	if (si)
 		put_swap_device(si);
@@ -5038,6 +5060,7 @@ out_release:
 		swapcache_clear(si, entry, nr_pages);
 		if (waitqueue_active(&swapcache_wq))
 			wake_up(&swapcache_wq);
+		trace_android_vh_do_swap_page_done(entry);
 	}
 	if (si)
 		put_swap_device(si);
@@ -5061,7 +5084,7 @@ static struct folio *alloc_anon_folio(struct vm_fault *vmf)
 	struct vm_area_struct *vma = vmf->vma;
 #ifdef CONFIG_TRANSPARENT_HUGEPAGE
 	unsigned long orders;
-	struct folio *folio;
+	struct folio *folio = NULL;
 	unsigned long addr;
 	pte_t *pte;
 	gfp_t gfp;
@@ -5110,10 +5133,18 @@ static struct folio *alloc_anon_folio(struct vm_fault *vmf)
 
 	/* Try allocating the highest of the remaining orders. */
 	gfp = vma_thp_gfp_mask(vma);
+
+	trace_android_vh_customize_thp_gfp_orders(&gfp, &orders, &order);
+
+	trace_android_rvh_mm_customize_alloc_anon_thp(&gfp, &orders, &order, &folio);
+	if (folio)
+		goto allocated;
+
 	while (orders) {
 		addr = ALIGN_DOWN(vmf->address, PAGE_SIZE << order);
 		folio = vma_alloc_folio(gfp, order, vma, addr);
 		if (folio) {
+allocated:
 			if (mem_cgroup_charge(folio, vma->vm_mm, gfp)) {
 				count_mthp_stat(order, MTHP_STAT_ANON_FAULT_FALLBACK_CHARGE);
 				folio_put(folio);
@@ -5156,7 +5187,7 @@ static vm_fault_t do_anonymous_page(struct vm_fault *vmf)
 	pte_t entry;
 
 	/* File mapping without ->vm_ops ? */
-	if (vma->vm_flags & VM_SHARED)
+	if ((vma->vm_flags & VM_SHARED) && !vma->vm_ops)
 		return VM_FAULT_SIGBUS;
 
 	/*
@@ -5211,6 +5242,7 @@ static vm_fault_t do_anonymous_page(struct vm_fault *vmf)
 	 */
 	__folio_mark_uptodate(folio);
 
+	trace_android_vh_do_anonymous_page(vma, folio);
 	entry = folio_mk_pte(folio, vma->vm_page_prot);
 	entry = pte_sw_mkyoung(entry);
 	if (vma->vm_flags & VM_WRITE)
@@ -5668,8 +5700,18 @@ static vm_fault_t do_fault_around(struct vm_fault *vmf)
 	pgoff_t pte_off = pte_index(vmf->address);
 	/* The page offset of vmf->address within the VMA. */
 	pgoff_t vma_off = vmf->pgoff - vmf->vma->vm_pgoff;
+	pgoff_t nr_data_pages = vma_data_pages(vmf->vma);
 	pgoff_t from_pte, to_pte;
 	vm_fault_t ret;
+
+	trace_android_vh_do_fault_around(vmf, &nr_pages);
+
+	/*
+	 * Fault occurred in the padding region. There are no file-cache pages
+	 * to map in this region, so skip fault-around.
+	 */
+	if (vma_off >= nr_data_pages)
+		return 0;
 
 	/* The PTE offset of the start address, clamped to the VMA. */
 	from_pte = max(ALIGN_DOWN(pte_off, nr_pages),
@@ -5677,7 +5719,7 @@ static vm_fault_t do_fault_around(struct vm_fault *vmf)
 
 	/* The PTE offset of the end address, clamped to the VMA and PTE. */
 	to_pte = min3(from_pte + nr_pages, (pgoff_t)PTRS_PER_PTE,
-		      pte_off + vma_pages(vmf->vma) - vma_off) - 1;
+		      pte_off + nr_data_pages - vma_off) - 1;
 
 	if (pmd_none(*vmf->pmd)) {
 		vmf->prealloc_pte = pte_alloc_one(vmf->vma->vm_mm);
@@ -5697,11 +5739,16 @@ static vm_fault_t do_fault_around(struct vm_fault *vmf)
 /* Return true if we should do read fault-around, false otherwise */
 static inline bool should_fault_around(struct vm_fault *vmf)
 {
+	bool should_around = true;
 	/* No ->map_pages?  No way to fault around... */
 	if (!vmf->vma->vm_ops->map_pages)
 		return false;
 
 	if (uffd_disable_fault_around(vmf->vma))
+		return false;
+
+	trace_android_vh_should_fault_around(vmf, &should_around);
+	if (!should_around)
 		return false;
 
 	/* A single page implies no faulting 'around' at all. */
@@ -5713,6 +5760,8 @@ static vm_fault_t do_read_fault(struct vm_fault *vmf)
 	vm_fault_t ret = 0;
 	struct folio *folio;
 
+	trace_android_rvh_do_read_fault(vmf, &fault_around_pages);
+
 	/*
 	 * Let's call ->map_pages() first and use ->fault() as fallback
 	 * if page by the offset is not ready to be mapped (cold cache or
@@ -5722,6 +5771,8 @@ static vm_fault_t do_read_fault(struct vm_fault *vmf)
 		ret = do_fault_around(vmf);
 		if (ret)
 			return ret;
+	} else {
+		trace_android_vh_do_read_fault(vmf, fault_around_pages);
 	}
 
 	ret = vmf_can_call_fault(vmf);
@@ -5867,6 +5918,9 @@ static vm_fault_t do_fault(struct vm_fault *vmf)
 		ret = do_cow_fault(vmf);
 	else
 		ret = do_shared_fault(vmf);
+
+	if (ret & VM_FAULT_NEED_ANONPAGE)
+		ret = do_anonymous_page(vmf);
 
 	/* preallocated pagetable is unused: free it */
 	if (vmf->prealloc_pte) {

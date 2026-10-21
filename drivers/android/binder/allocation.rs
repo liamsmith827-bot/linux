@@ -208,11 +208,12 @@ impl Allocation {
         let num_close_on_free = files.iter().filter(|entry| entry.close_on_free).count();
         let mut close_on_free = KVec::with_capacity(num_close_on_free, GFP_KERNEL)?;
 
-        let mut reservations = KVec::with_capacity(files.len(), GFP_KERNEL)?;
+        let mut reservations = KVVec::with_capacity(files.len(), GFP_KERNEL)?;
         for file_info in files {
             let res = FileDescriptorReservation::get_unused_fd_flags(bindings::O_CLOEXEC)?;
             let fd = res.reserved_fd();
             self.write::<u32>(file_info.buffer_offset, &fd)?;
+            crate::trace::trace_transaction_fd_recv(self.debug_id, fd, file_info.buffer_offset);
 
             reservations.push(
                 Reservation {
@@ -249,6 +250,8 @@ impl Drop for Allocation {
             return;
         }
 
+        crate::trace::trace_transaction_failed_buffer_release(self.debug_id);
+
         if let Some(mut info) = self.allocation_info.take() {
             if let Some(oneway_node) = info.oneway_node.as_ref() {
                 oneway_node.pending_oneway_finished();
@@ -260,29 +263,32 @@ impl Drop for Allocation {
                 let view = AllocationView::new(self, offsets.start);
                 for i in offsets.step_by(size_of::<u64>()) {
                     if view.cleanup_object(i).is_err() {
-                        pr_warn!("Error cleaning up object at offset {}\n", i)
+                        pr_warn_ratelimited!("Error cleaning up object at offset {}\n", i)
                     }
                 }
             }
 
-            for &fd in &info.file_list.close_on_free {
-                let closer = match DeferredFdCloser::new(GFP_KERNEL) {
-                    Ok(closer) => closer,
-                    Err(kernel::alloc::AllocError) => {
-                        // Ignore allocation failures.
-                        break;
-                    }
-                };
+            if self.process.task == kernel::current!().group_leader() {
+                for &fd in &info.file_list.close_on_free {
+                    let closer = match DeferredFdCloser::new(GFP_KERNEL) {
+                        Ok(closer) => closer,
+                        Err(kernel::alloc::AllocError) => {
+                            // Ignore allocation failures.
+                            break;
+                        }
+                    };
 
-                // Here, we ignore errors. The operation can fail if the fd is not valid, or if the
-                // method is called from a kthread. However, this is always called from a syscall,
-                // so the latter case cannot happen, and we don't care about the first case.
-                let _ = closer.close_fd(fd);
+                    // Here, we ignore errors. The operation can fail if the fd is not valid, or if
+                    // the method is called from a kthread. However, this is always called from a
+                    // syscall, so the latter case cannot happen, and we don't care about the first
+                    // case.
+                    let _ = closer.close_fd(fd);
+                }
             }
 
             if info.clear_on_free {
                 if let Err(e) = self.fill_zero() {
-                    pr_warn!("Failed to clear data on free: {:?}", e);
+                    pr_warn_ratelimited!("Failed to clear data on free: {:?}\n", e);
                 }
             }
         }
@@ -411,6 +417,8 @@ impl<'a> AllocationView<'a> {
                 return Err(EINVAL);
             }
         }
+
+        crate::trace::trace_transaction_node_send(self.alloc.debug_id, &node, obj, &newobj);
 
         Ok(())
     }
@@ -563,7 +571,7 @@ impl BinderObject {
 
 #[derive(Default)]
 struct FileList {
-    files_to_translate: KVec<FileEntry>,
+    files_to_translate: KVVec<FileEntry>,
     close_on_free: KVec<u32>,
 }
 
@@ -577,7 +585,7 @@ struct FileEntry {
 }
 
 pub(crate) struct TranslatedFds {
-    reservations: KVec<Reservation>,
+    reservations: KVVec<Reservation>,
     /// If commit is called, then these fds should be closed. (If commit is not called, then they
     /// shouldn't be closed.)
     close_on_free: FdsCloseOnFree,
@@ -591,7 +599,7 @@ struct Reservation {
 impl TranslatedFds {
     pub(crate) fn new() -> Self {
         Self {
-            reservations: KVec::new(),
+            reservations: KVVec::new(),
             close_on_free: FdsCloseOnFree(KVec::new()),
         }
     }

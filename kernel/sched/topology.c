@@ -5,9 +5,13 @@
 
 #include <linux/sched/isolation.h>
 #include <linux/bsearch.h>
+#include <trace/hooks/sched.h>
 #include "sched.h"
 
 DEFINE_MUTEX(sched_domains_mutex);
+#ifdef CONFIG_LOCKDEP
+EXPORT_SYMBOL_GPL(sched_domains_mutex);
+#endif
 void sched_domains_mutex_lock(void)
 {
 	mutex_lock(&sched_domains_mutex);
@@ -207,6 +211,7 @@ sd_parent_degenerate(struct sched_domain *sd, struct sched_domain *parent)
 
 #if defined(CONFIG_ENERGY_MODEL) && defined(CONFIG_CPU_FREQ_GOV_SCHEDUTIL)
 DEFINE_STATIC_KEY_FALSE(sched_energy_present);
+EXPORT_SYMBOL_GPL(sched_energy_present);
 static unsigned int sysctl_sched_energy_aware = 1;
 static DEFINE_MUTEX(sched_energy_mutex);
 static bool sched_energy_update;
@@ -215,6 +220,11 @@ static bool sched_is_eas_possible(const struct cpumask *cpu_mask)
 {
 	bool any_asym_capacity = false;
 	int i;
+	bool eas_check = false;
+
+	trace_android_rvh_build_perf_domains(&eas_check);
+	if (eas_check)
+		return true;
 
 	/* EAS is enabled for asymmetric CPU capacity topologies. */
 	for_each_cpu(i, cpu_mask) {
@@ -507,6 +517,11 @@ void rq_attach_root(struct rq *rq, struct root_domain *rd)
 	 */
 	if (rq->fair_server.dl_server)
 		__dl_server_attach_root(&rq->fair_server, rq);
+
+#ifdef CONFIG_SCHED_CLASS_EXT
+	if (rq->ext_server.dl_server)
+		__dl_server_attach_root(&rq->ext_server, rq);
+#endif
 
 	rq_unlock_irqrestore(rq, &rf);
 
@@ -2624,6 +2639,7 @@ build_sched_domains(const struct cpumask *cpu_map, struct sched_domain_attr *att
 
 	if (rq && sched_debug_verbose)
 		pr_info("root domain span: %*pbl\n", cpumask_pr_args(cpu_map));
+	trace_android_vh_build_sched_domains(has_asym);
 
 	ret = 0;
 error:

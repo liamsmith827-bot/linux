@@ -615,6 +615,7 @@ struct l2cap_chan {
 	void			*data;
 	const struct l2cap_ops	*ops;
 	struct mutex		lock;
+
 };
 
 struct l2cap_ops {
@@ -640,6 +641,7 @@ struct l2cap_ops {
 					       unsigned long len, int nb);
 	int			(*filter) (struct l2cap_chan * chan,
 					   struct sk_buff *skb);
+
 };
 
 struct l2cap_conn {
@@ -675,6 +677,7 @@ struct l2cap_conn {
 	struct mutex		lock;
 	struct kref		ref;
 	struct list_head	users;
+
 };
 
 struct l2cap_user {

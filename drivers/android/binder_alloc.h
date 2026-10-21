@@ -119,6 +119,7 @@ struct binder_alloc {
 	size_t pages_high;
 	bool mapped;
 	bool oneway_spam_detected;
+	ANDROID_OEM_DATA(1);
 };
 
 enum lru_status binder_alloc_free_page(struct list_head *item,
@@ -186,4 +187,3 @@ size_t binder_alloc_buffer_size(struct binder_alloc *alloc,
 #endif
 
 #endif /* _LINUX_BINDER_ALLOC_H */
-

@@ -18,6 +18,8 @@
 #include <linux/suspend.h>
 #include <linux/syscalls.h>
 #include <linux/pm_runtime.h>
+#include <linux/atomic.h>
+#include <linux/wait.h>
 
 #include "power.h"
 
@@ -92,6 +94,61 @@ void ksys_sync_helper(void)
 }
 EXPORT_SYMBOL_GPL(ksys_sync_helper);
 
+#if defined(CONFIG_SUSPEND) || defined(CONFIG_HIBERNATION)
+/* Wakeup events handling resolution while syncing file systems in jiffies */
+#define PM_FS_SYNC_WAKEUP_RESOLUTION	5
+
+static atomic_t pm_fs_sync_count = ATOMIC_INIT(0);
+static struct workqueue_struct *pm_fs_sync_wq;
+static DECLARE_WAIT_QUEUE_HEAD(pm_fs_sync_wait);
+
+static bool pm_fs_sync_completed(void)
+{
+	return atomic_read(&pm_fs_sync_count) == 0;
+}
+
+static void pm_fs_sync_work_fn(struct work_struct *work)
+{
+	ksys_sync_helper();
+
+	if (atomic_dec_and_test(&pm_fs_sync_count))
+		wake_up(&pm_fs_sync_wait);
+}
+static DECLARE_WORK(pm_fs_sync_work, pm_fs_sync_work_fn);
+
+/**
+ * pm_sleep_fs_sync() - Sync file systems in an interruptible way
+ *
+ * Return: 0 on successful file system sync, or -EBUSY if the file system sync
+ * was aborted.
+ */
+int pm_sleep_fs_sync(void)
+{
+	pm_wakeup_clear(0);
+
+	/*
+	 * Take back-to-back sleeps into account by queuing a subsequent fs sync
+	 * only if the previous fs sync is running or is not queued. Multiple fs
+	 * syncs increase the likelihood of saving the latest files immediately
+	 * before sleep.
+	 */
+	if (!work_pending(&pm_fs_sync_work)) {
+		atomic_inc(&pm_fs_sync_count);
+		queue_work(pm_fs_sync_wq, &pm_fs_sync_work);
+	}
+
+	while (!pm_fs_sync_completed()) {
+		if (pm_wakeup_pending())
+			return -EBUSY;
+
+		wait_event_timeout(pm_fs_sync_wait, pm_fs_sync_completed(),
+				   PM_FS_SYNC_WAKEUP_RESOLUTION);
+	}
+
+	return 0;
+}
+#endif /* CONFIG_SUSPEND || CONFIG_HIBERNATION */
+
 /* Routines for PM-transition notifications */
 
 static BLOCKING_NOTIFIER_HEAD(pm_chain_head);
@@ -107,6 +164,19 @@ int unregister_pm_notifier(struct notifier_block *nb)
 	return blocking_notifier_chain_unregister(&pm_chain_head, nb);
 }
 EXPORT_SYMBOL_GPL(unregister_pm_notifier);
+
+void pm_report_hw_sleep_time(u64 t)
+{
+	suspend_stats.last_hw_sleep = t;
+	suspend_stats.total_hw_sleep += t;
+}
+EXPORT_SYMBOL_GPL(pm_report_hw_sleep_time);
+
+void pm_report_max_hw_sleep(u64 t)
+{
+	suspend_stats.max_hw_sleep = t;
+}
+EXPORT_SYMBOL_GPL(pm_report_max_hw_sleep);
 
 int pm_notifier_call_chain_robust(unsigned long val_up, unsigned long val_down)
 {
@@ -231,10 +301,10 @@ static ssize_t mem_sleep_store(struct kobject *kobj, struct kobj_attribute *attr
 power_attr(mem_sleep);
 
 /*
- * sync_on_suspend: invoke ksys_sync_helper() before suspend.
+ * sync_on_suspend: Sync file systems before suspend.
  *
- * show() returns whether ksys_sync_helper() is invoked before suspend.
- * store() accepts 0 or 1.  0 disables ksys_sync_helper() and 1 enables it.
+ * show() returns whether file systems sync before suspend is enabled.
+ * store() accepts 0 or 1.  0 disables file systems sync and 1 enables it.
  */
 bool sync_on_suspend_enabled = !IS_ENABLED(CONFIG_SUSPEND_SKIP_SYNC);
 
@@ -326,74 +396,6 @@ static ssize_t pm_test_store(struct kobject *kobj, struct kobj_attribute *attr,
 
 power_attr(pm_test);
 #endif /* CONFIG_PM_SLEEP_DEBUG */
-
-#define SUSPEND_NR_STEPS	SUSPEND_RESUME
-#define REC_FAILED_NUM		2
-
-struct suspend_stats {
-	unsigned int step_failures[SUSPEND_NR_STEPS];
-	unsigned int success;
-	unsigned int fail;
-	int last_failed_dev;
-	char failed_devs[REC_FAILED_NUM][40];
-	int last_failed_errno;
-	int errno[REC_FAILED_NUM];
-	int last_failed_step;
-	u64 last_hw_sleep;
-	u64 total_hw_sleep;
-	u64 max_hw_sleep;
-	enum suspend_stat_step failed_steps[REC_FAILED_NUM];
-};
-
-static struct suspend_stats suspend_stats;
-static DEFINE_MUTEX(suspend_stats_lock);
-
-void dpm_save_failed_dev(const char *name)
-{
-	mutex_lock(&suspend_stats_lock);
-
-	strscpy(suspend_stats.failed_devs[suspend_stats.last_failed_dev],
-		name, sizeof(suspend_stats.failed_devs[0]));
-	suspend_stats.last_failed_dev++;
-	suspend_stats.last_failed_dev %= REC_FAILED_NUM;
-
-	mutex_unlock(&suspend_stats_lock);
-}
-
-void dpm_save_failed_step(enum suspend_stat_step step)
-{
-	suspend_stats.step_failures[step-1]++;
-	suspend_stats.failed_steps[suspend_stats.last_failed_step] = step;
-	suspend_stats.last_failed_step++;
-	suspend_stats.last_failed_step %= REC_FAILED_NUM;
-}
-
-void dpm_save_errno(int err)
-{
-	if (!err) {
-		suspend_stats.success++;
-		return;
-	}
-
-	suspend_stats.fail++;
-
-	suspend_stats.errno[suspend_stats.last_failed_errno] = err;
-	suspend_stats.last_failed_errno++;
-	suspend_stats.last_failed_errno %= REC_FAILED_NUM;
-}
-
-void pm_report_hw_sleep_time(u64 t)
-{
-	suspend_stats.last_hw_sleep = t;
-	suspend_stats.total_hw_sleep += t;
-}
-EXPORT_SYMBOL_GPL(pm_report_hw_sleep_time);
-
-void pm_report_max_hw_sleep(u64 t)
-{
-	suspend_stats.max_hw_sleep = t;
-}
-EXPORT_SYMBOL_GPL(pm_report_max_hw_sleep);
 
 static const char * const suspend_step_names[] = {
 	[SUSPEND_WORKING] = "",
@@ -1066,16 +1068,26 @@ static const struct attribute_group *attr_groups[] = {
 struct workqueue_struct *pm_wq;
 EXPORT_SYMBOL_GPL(pm_wq);
 
-static int __init pm_start_workqueue(void)
+static int __init pm_start_workqueues(void)
 {
 	pm_wq = alloc_workqueue("pm", WQ_FREEZABLE, 0);
+	if (!pm_wq)
+		return -ENOMEM;
 
-	return pm_wq ? 0 : -ENOMEM;
+#if defined(CONFIG_SUSPEND) || defined(CONFIG_HIBERNATION)
+	pm_fs_sync_wq = alloc_ordered_workqueue("pm_fs_sync", 0);
+	if (!pm_fs_sync_wq) {
+		destroy_workqueue(pm_wq);
+		return -ENOMEM;
+	}
+#endif
+
+	return 0;
 }
 
 static int __init pm_init(void)
 {
-	int error = pm_start_workqueue();
+	int error = pm_start_workqueues();
 	if (error)
 		return error;
 	hibernate_image_size_init();

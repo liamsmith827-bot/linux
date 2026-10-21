@@ -42,6 +42,10 @@
 #include <linux/workqueue.h>
 #include <linux/task_work.h>
 
+#include <trace/hooks/cgroup.h>
+
+#include <trace/hooks/cgroup.h>
+
 DEFINE_STATIC_KEY_FALSE(cpusets_pre_enable_key);
 DEFINE_STATIC_KEY_FALSE(cpusets_enabled_key);
 
@@ -1181,6 +1185,7 @@ void rebuild_sched_domains(void)
 	rebuild_sched_domains_cpuslocked();
 	cpus_read_unlock();
 }
+EXPORT_SYMBOL_GPL(rebuild_sched_domains);
 
 void cpuset_reset_sched_domains(void)
 {
@@ -3330,6 +3335,8 @@ static void cpuset_attach_task(struct cpuset *cs, struct task_struct *task)
 
 	cpuset_change_task_nodemask(task, &cpuset_attach_nodemask_to);
 	cpuset1_update_task_spread_flags(cs, task);
+
+	trace_android_vh_cpuset_attach_task(&cs->css, task);
 }
 
 static void cpuset_attach(struct cgroup_taskset *tset)
@@ -3745,6 +3752,7 @@ static int cpuset_css_online(struct cgroup_subsys_state *css)
 	spin_unlock_irq(&callback_lock);
 out_unlock:
 	cpuset_full_unlock();
+	trace_android_vh_cpuset_css_online(css);
 	return 0;
 }
 
@@ -3875,18 +3883,18 @@ static void cpuset_cancel_fork(struct task_struct *task, struct css_set *cset)
 static void cpuset_fork(struct task_struct *task)
 {
 	struct cpuset *cs;
-	bool same_cs;
+	bool same_cs, inherit_cpus = false;
 
 	rcu_read_lock();
 	cs = task_cs(task);
 	same_cs = (cs == task_cs(current));
 	rcu_read_unlock();
-
 	if (same_cs) {
 		if (cs == &top_cpuset)
 			return;
-
-		set_cpus_allowed_ptr(task, current->cpus_ptr);
+		trace_android_rvh_cpuset_fork(task, &inherit_cpus);
+		if (!inherit_cpus)
+			set_cpus_allowed_ptr(task, current->cpus_ptr);
 		task->mems_allowed = current->mems_allowed;
 		return;
 	}
@@ -4285,6 +4293,7 @@ void cpuset_cpus_allowed(struct task_struct *tsk, struct cpumask *pmask)
 
 	spin_unlock_irqrestore(&callback_lock, flags);
 }
+EXPORT_SYMBOL_GPL(cpuset_cpus_allowed);
 
 /**
  * cpuset_cpus_allowed_fallback - final fallback before complete catastrophe.

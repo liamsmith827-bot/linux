@@ -26,6 +26,7 @@
 #include <linux/xarray.h>
 #include <linux/file.h>
 #include <linux/lockdep.h>
+#include <linux/android_vendor.h>
 
 struct module;
 struct request_queue;
@@ -220,6 +221,8 @@ struct gendisk {
 	struct blk_independent_access_ranges *ia_ranges;
 
 	struct mutex rqos_state_mutex;	/* rqos state change mutex */
+
+	ANDROID_OEM_DATA(1);
 };
 
 /**
@@ -637,6 +640,8 @@ struct request_queue {
 	 * Serializes all debugfs metadata operations using the above dentries.
 	 */
 	struct mutex		debugfs_mutex;
+
+	ANDROID_OEM_DATA(1);
 };
 
 /* Keep blk_queue_flag_name[] in sync with the definitions below */

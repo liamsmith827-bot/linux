@@ -50,6 +50,7 @@
 #include <linux/skbuff_ref.h>
 
 #include <trace/events/tcp.h>
+#include <trace/hooks/net.h>
 
 /* Refresh clocks of a TCP socket,
  * ensuring monotically increasing values.
@@ -278,6 +279,9 @@ static u16 tcp_select_window(struct sock *sk)
 
 	cur_win = tcp_receive_window(tp);
 	new_win = __tcp_select_window(sk);
+
+	trace_android_vh_tcp_select_window(sk, &new_win);
+
 	if (new_win < cur_win) {
 		/* Danger Will Robinson!
 		 * Don't update rcv_wup/rcv_wnd here or else
@@ -296,6 +300,8 @@ static u16 tcp_select_window(struct sock *sk)
 
 	tp->rcv_wnd = new_win;
 	tp->rcv_wup = tp->rcv_nxt;
+
+	trace_android_rvh_tcp_select_window(sk, &new_win);
 
 	/* Make sure we do not exceed the maximum possible
 	 * scaled window.
@@ -2011,7 +2017,7 @@ unsigned int tcp_sync_mss(struct sock *sk, u32 pmtu)
 
 	return mss_now;
 }
-EXPORT_IPV6_MOD(tcp_sync_mss);
+EXPORT_SYMBOL(tcp_sync_mss);
 
 /* Compute the current effective MSS, taking SACKs and IP options,
  * and even PMTU discovery events into account.
@@ -3812,6 +3818,7 @@ void tcp_send_active_reset(struct sock *sk, enum sk_rst_reason reason)
 	 */
 	trace_tcp_send_reset(sk, NULL, reason);
 }
+EXPORT_SYMBOL_GPL(tcp_send_active_reset);
 
 /* Send a crossed SYN-ACK during socket establishment.
  * WARNING: This routine must only be called when we have already sent

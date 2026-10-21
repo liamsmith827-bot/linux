@@ -14,6 +14,7 @@
 #include <linux/memcontrol.h>
 #include <linux/mmu_notifier.h>
 #include <linux/page_idle.h>
+#include <linux/page_size_compat.h>
 #include <linux/kernel-page-flags.h>
 #include <linux/uaccess.h>
 #include "internal.h"
@@ -217,6 +218,7 @@ u64 stable_page_flags(const struct page *page)
 #endif
 
 	u |= kpf_copy_bit(k, KPF_LOCKED,	PG_locked);
+	u |= kpf_copy_bit(k, KPF_ERROR,		PG_error);
 	u |= kpf_copy_bit(k, KPF_DIRTY,		PG_dirty);
 	u |= kpf_copy_bit(k, KPF_UPTODATE,	PG_uptodate);
 	u |= kpf_copy_bit(k, KPF_WRITEBACK,	PG_writeback);
@@ -290,6 +292,9 @@ static const struct proc_ops kpagecgroup_proc_ops = {
 
 static int __init proc_page_init(void)
 {
+	if (__PAGE_SIZE != PAGE_SIZE)
+		return 0;
+
 	proc_create("kpagecount", S_IRUSR, NULL, &kpagecount_proc_ops);
 	proc_create("kpageflags", S_IRUSR, NULL, &kpageflags_proc_ops);
 #ifdef CONFIG_MEMCG

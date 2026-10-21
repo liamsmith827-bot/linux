@@ -4,6 +4,7 @@
 #include <linux/time_namespace.h>
 
 #include "futex.h"
+#include <trace/hooks/futex.h>
 
 /*
  * Support for robust futexes: the kernel cleans up held futexes at
@@ -122,6 +123,7 @@ long do_futex(u32 __user *uaddr, int op, u32 val, ktime_t *timeout,
 			return -ENOSYS;
 	}
 
+	trace_android_vh_do_futex(uaddr, cmd, &flags, uaddr2);
 	switch (cmd) {
 	case FUTEX_WAIT:
 		val3 = FUTEX_BITSET_MATCH_ANY;
@@ -523,4 +525,3 @@ SYSCALL_DEFINE6(futex_time32, u32 __user *, uaddr, int, op, u32, val,
 	return do_futex(uaddr, op, val, tp, uaddr2, (unsigned long)utime, val3);
 }
 #endif /* CONFIG_COMPAT_32BIT_TIME */
-

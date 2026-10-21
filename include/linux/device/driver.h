@@ -119,6 +119,7 @@ struct device_driver {
 	void (*coredump) (struct device *dev);
 
 	struct driver_private *p;
+
 };
 
 

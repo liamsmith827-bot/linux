@@ -4,8 +4,16 @@
  * VMA-specific functions.
  */
 
+#include <linux/pgsize_migration.h>
+
 #include "vma_internal.h"
+
+#include <linux/dma-buf.h>
+#include <linux/page_size_compat.h>
+
 #include "vma.h"
+#undef CREATE_TRACE_POINTS
+#include <trace/hooks/mm.h>
 
 struct mmap_state {
 	struct mm_struct *mm;
@@ -89,6 +97,8 @@ static inline bool is_mergeable_vma(struct vma_merge_struct *vmg, bool merge_nex
 	if (!is_mergeable_vm_userfaultfd_ctx(vma, vmg->uffd_ctx))
 		return false;
 	if (!anon_vma_name_eq(anon_vma_name(vma), vmg->anon_name))
+		return false;
+	if (!is_mergable_pad_vma(vma, vmg->vm_flags))
 		return false;
 	return true;
 }
@@ -457,8 +467,12 @@ void remove_vma(struct vm_area_struct *vma)
 {
 	might_sleep();
 	vma_close(vma);
-	if (vma->vm_file)
+	if (vma->vm_file) {
+		if (is_dma_buf_file(vma->vm_file))
+			dma_buf_unaccount_task(vma->vm_file->private_data,
+					       vma->vm_mm->dmabuf_info);
 		fput(vma->vm_file);
+	}
 	mpol_put(vma_policy(vma));
 	vm_area_free(vma);
 }
@@ -531,8 +545,16 @@ __split_vma(struct vma_iterator *vmi, struct vm_area_struct *vma,
 	if (err)
 		goto out_free_mpol;
 
-	if (new->vm_file)
+	if (new->vm_file) {
 		get_file(new->vm_file);
+		if (is_dma_buf_file(new->vm_file)) {
+			int acct_err = dma_buf_account_task(new->vm_file->private_data,
+							    new->vm_mm->dmabuf_info);
+
+			if (acct_err)
+				pr_err("failed to account dmabuf, err %d\n", acct_err);
+		}
+	}
 
 	if (new->vm_ops && new->vm_ops->open)
 		new->vm_ops->open(new);
@@ -569,6 +591,7 @@ __split_vma(struct vma_iterator *vmi, struct vm_area_struct *vma,
 	else
 		vma_prev(vmi);
 
+	split_pad_vma(vma, new, addr, new_below);
 	return 0;
 
 out_free_mpol:
@@ -1859,6 +1882,7 @@ struct vm_area_struct *copy_vma(struct vm_area_struct **vmap,
 	struct mm_struct *mm = vma->vm_mm;
 	struct vm_area_struct *new_vma;
 	bool faulted_in_anon_vma = true;
+	int acct_err = 0;
 	VMA_ITERATOR(vmi, mm, addr);
 	VMG_VMA_STATE(vmg, &vmi, NULL, vma, addr, addr + len);
 
@@ -1913,13 +1937,23 @@ struct vm_area_struct *copy_vma(struct vm_area_struct **vmap,
 		new_vma = vm_area_dup(vma);
 		if (!new_vma)
 			goto out;
+		/* Do not preserve padding flags on the new VMA */
+		vm_flags_clear(new_vma, VM_PAD_MASK);
 		vma_set_range(new_vma, addr, addr + len, pgoff);
 		if (vma_dup_policy(vma, new_vma))
 			goto out_free_vma;
 		if (anon_vma_clone(new_vma, vma))
 			goto out_free_mempol;
-		if (new_vma->vm_file)
+		if (new_vma->vm_file) {
 			get_file(new_vma->vm_file);
+			if (is_dma_buf_file(new_vma->vm_file)) {
+				acct_err = dma_buf_account_task(new_vma->vm_file->private_data,
+								new_vma->vm_mm->dmabuf_info);
+
+				if (acct_err)
+					pr_err("failed to account dmabuf, err %d\n", acct_err);
+			}
+		}
 		if (new_vma->vm_ops && new_vma->vm_ops->open)
 			new_vma->vm_ops->open(new_vma);
 		if (vma_link(mm, new_vma))
@@ -1932,8 +1966,12 @@ out_vma_link:
 	fixup_hugetlb_reservations(new_vma);
 	vma_close(new_vma);
 
-	if (new_vma->vm_file)
+	if (new_vma->vm_file) {
+		if (is_dma_buf_file(new_vma->vm_file) && !acct_err)
+			dma_buf_unaccount_task(new_vma->vm_file->private_data,
+					       new_vma->vm_mm->dmabuf_info);
 		fput(new_vma->vm_file);
+	}
 
 	unlink_anon_vmas(new_vma);
 out_free_mempol:
@@ -2730,6 +2768,7 @@ static unsigned long __mmap_region(struct file *file, unsigned long addr,
 	if (have_mmap_prepare && allocated_new)
 		set_vma_user_defined_fields(vma, &map);
 
+	trace_android_vh_mmap_region(vma, addr);
 	__mmap_complete(&map, vma);
 
 	return addr;
@@ -2902,7 +2941,7 @@ unsigned long unmapped_area(struct vm_unmapped_area_info *info)
 	VMA_ITERATOR(vmi, current->mm, 0);
 
 	/* Adjust search length to account for worst case alignment overhead */
-	length = info->length + info->align_mask + info->start_gap;
+	length = __PAGE_SIZE_ROUND_UP_ADJ(info->length + info->align_mask + info->start_gap);
 	if (length < info->length)
 		return -ENOMEM;
 
@@ -2938,7 +2977,7 @@ retry:
 		}
 	}
 
-	return gap;
+	return __PAGE_ALIGN(gap);
 }
 
 /**
@@ -2959,7 +2998,7 @@ unsigned long unmapped_area_topdown(struct vm_unmapped_area_info *info)
 	VMA_ITERATOR(vmi, current->mm, 0);
 
 	/* Adjust search length to account for worst case alignment overhead */
-	length = info->length + info->align_mask + info->start_gap;
+	length = __PAGE_SIZE_ROUND_UP_ADJ(info->length + info->align_mask + info->start_gap);
 	if (length < info->length)
 		return -ENOMEM;
 
@@ -2990,7 +3029,7 @@ retry:
 		}
 	}
 
-	return gap;
+	return __PAGE_ALIGN(gap);
 }
 
 /*
@@ -3135,7 +3174,7 @@ int expand_downwards(struct vm_area_struct *vma, unsigned long address)
 
 	mmap_assert_write_locked(mm);
 
-	address &= PAGE_MASK;
+	address &= __PAGE_MASK;
 	if (address < mmap_min_addr || address < FIRST_USER_ADDRESS)
 		return -EPERM;
 

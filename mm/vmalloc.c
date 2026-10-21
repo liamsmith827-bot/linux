@@ -48,6 +48,9 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/vmalloc.h>
 
+#undef CREATE_TRACE_POINTS
+#include <trace/hooks/mm.h>
+
 #include "internal.h"
 #include "pgalloc-track.h"
 
@@ -509,12 +512,14 @@ void __vunmap_range_noflush(unsigned long start, unsigned long end)
 	if (mask & ARCH_PAGE_TABLE_SYNC_MASK)
 		arch_sync_kernel_mappings(start, end);
 }
+EXPORT_SYMBOL_GPL(__vunmap_range_noflush);
 
 void vunmap_range_noflush(unsigned long start, unsigned long end)
 {
 	kmsan_vunmap_range_noflush(start, end);
 	__vunmap_range_noflush(start, end);
 }
+EXPORT_SYMBOL_GPL(vunmap_range_noflush);
 
 /**
  * vunmap_range - unmap kernel virtual addresses
@@ -691,6 +696,7 @@ int __vmap_pages_range_noflush(unsigned long addr, unsigned long end,
 
 	return 0;
 }
+EXPORT_SYMBOL_GPL(__vmap_pages_range_noflush);
 
 int vmap_pages_range_noflush(unsigned long addr, unsigned long end,
 		pgprot_t prot, struct page **pages, unsigned int page_shift)
@@ -702,6 +708,7 @@ int vmap_pages_range_noflush(unsigned long addr, unsigned long end,
 		return ret;
 	return __vmap_pages_range_noflush(addr, end, prot, pages, page_shift);
 }
+EXPORT_SYMBOL_GPL(vmap_pages_range_noflush);
 
 /**
  * vmap_pages_range - map pages to a kernel virtual address
@@ -1077,6 +1084,7 @@ unsigned long vmalloc_nr_pages(void)
 {
 	return atomic_long_read(&nr_vmalloc_pages);
 }
+EXPORT_SYMBOL_NS_GPL(vmalloc_nr_pages, "MINIDUMP");
 
 static struct vmap_area *__find_vmap_area(unsigned long addr, struct rb_root *root)
 {
@@ -2022,6 +2030,7 @@ static inline void setup_vmalloc_vm(struct vm_struct *vm,
 	vm->size = vm->requested_size = va_size(va);
 	vm->caller = caller;
 	va->vm = vm;
+	trace_android_vh_save_vmalloc_stack(flags, vm);
 }
 
 /*
@@ -2105,6 +2114,7 @@ retry:
 		vm->addr = (void *)va->va_start;
 		vm->size = va_size(va);
 		va->vm = vm;
+		trace_android_vh_save_vmalloc_stack(va_flags, vm);
 	}
 
 	vn = addr_to_node(va->va_start);
@@ -3432,8 +3442,13 @@ void vfree_atomic(const void *addr)
  */
 void vfree(const void *addr)
 {
+	bool bypass = false;
 	struct vm_struct *vm;
 	int i;
+
+	trace_android_rvh_vfree_bypass(addr, &bypass);
+	if (bypass)
+		return;
 
 	if (unlikely(in_interrupt())) {
 		vfree_atomic(addr);
@@ -3857,6 +3872,8 @@ void *__vmalloc_node_range_noprof(unsigned long size, unsigned long align,
 	unsigned long original_align = align;
 	unsigned int shift = PAGE_SHIFT;
 
+	trace_android_vh_vmalloc_node_range_start(size);
+
 	if (WARN_ON_ONCE(!size))
 		return NULL;
 
@@ -3952,7 +3969,7 @@ again:
 
 	if (!(vm_flags & VM_DEFER_KMEMLEAK))
 		kmemleak_vmalloc(area, PAGE_ALIGN(size), gfp_mask);
-
+	trace_android_vh_vmalloc_node_range_end(size, area->addr);
 	return area->addr;
 
 fail:
@@ -3987,6 +4004,12 @@ fail:
 void *__vmalloc_node_noprof(unsigned long size, unsigned long align,
 			    gfp_t gfp_mask, int node, const void *caller)
 {
+	void *addr = NULL;
+
+	trace_android_rvh_vmalloc_node_bypass(size, gfp_mask, &addr);
+	if (addr)
+		return addr;
+
 	return __vmalloc_node_range_noprof(size, align, VMALLOC_START, VMALLOC_END,
 				gfp_mask, PAGE_KERNEL, 0, node, caller);
 }
@@ -5139,6 +5162,7 @@ static int vmalloc_info_show(struct seq_file *m, void *p)
 			if (IS_ENABLED(CONFIG_NUMA))
 				show_numa_info(m, v, counters);
 
+			trace_android_vh_show_stack_hash(m, v);
 			seq_putc(m, '\n');
 		}
 		spin_unlock(&vn->busy.lock);

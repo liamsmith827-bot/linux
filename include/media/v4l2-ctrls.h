@@ -93,6 +93,7 @@ union v4l2_ctrl_ptr {
 	struct v4l2_rect *p_rect;
 	void *p;
 	const void *p_const;
+
 };
 
 /**
@@ -125,6 +126,7 @@ struct v4l2_ctrl_ops {
 	int (*g_volatile_ctrl)(struct v4l2_ctrl *ctrl);
 	int (*try_ctrl)(struct v4l2_ctrl *ctrl);
 	int (*s_ctrl)(struct v4l2_ctrl *ctrl);
+
 };
 
 /**
@@ -150,6 +152,7 @@ struct v4l2_ctrl_type_ops {
 			union v4l2_ctrl_ptr ptr);
 	void (*log)(const struct v4l2_ctrl *ctrl);
 	int (*validate)(const struct v4l2_ctrl *ctrl, union v4l2_ctrl_ptr ptr);
+
 };
 
 /**
@@ -322,6 +325,7 @@ struct v4l2_ctrl {
 	union v4l2_ctrl_ptr p_max;
 	union v4l2_ctrl_ptr p_new;
 	union v4l2_ctrl_ptr p_cur;
+
 };
 
 /**
@@ -374,6 +378,7 @@ struct v4l2_ctrl_ref {
 	u32 p_req_array_alloc_elems;
 	u32 p_req_elems;
 	union v4l2_ctrl_ptr p_req;
+
 };
 
 /**
@@ -424,6 +429,7 @@ struct v4l2_ctrl_handler {
 	struct list_head requests;
 	struct list_head requests_queued;
 	struct media_request_object req_obj;
+
 };
 
 /**
@@ -479,6 +485,7 @@ struct v4l2_ctrl_config {
 	const char * const *qmenu;
 	const s64 *qmenu_int;
 	unsigned int is_private:1;
+
 };
 
 /**

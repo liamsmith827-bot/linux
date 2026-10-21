@@ -29,7 +29,9 @@
 #include <linux/sizes.h>
 #include <linux/sched.h>
 #include <linux/pgtable.h>
+#include <linux/pgsize_migration_inline.h>
 #include <linux/kasan.h>
+#include <linux/page_pinner.h>
 #include <linux/memremap.h>
 #include <linux/slab.h>
 #include <linux/cacheinfo.h>
@@ -87,13 +89,13 @@ extern int sysctl_legacy_va_layout;
 #endif
 
 #ifdef CONFIG_HAVE_ARCH_MMAP_RND_BITS
-extern const int mmap_rnd_bits_min;
+extern int mmap_rnd_bits_min __ro_after_init;
 extern int mmap_rnd_bits_max __ro_after_init;
 extern int mmap_rnd_bits __read_mostly;
 #endif
 #ifdef CONFIG_HAVE_ARCH_MMAP_RND_COMPAT_BITS
-extern const int mmap_rnd_compat_bits_min;
-extern const int mmap_rnd_compat_bits_max;
+extern int mmap_rnd_compat_bits_min __ro_after_init;
+extern int mmap_rnd_compat_bits_max __ro_after_init;
 extern int mmap_rnd_compat_bits __read_mostly;
 #endif
 
@@ -450,6 +452,13 @@ extern unsigned int kobjsize(const void *objp);
 #define VM_SEALED	VM_NONE
 #endif
 
+#ifdef CONFIG_64BIT
+#define VM_NO_REMAP_FILE_PAGES_BIT	43
+#define VM_NO_REMAP_FILE_PAGES		BIT(VM_NO_REMAP_FILE_PAGES_BIT)
+#else
+#define VM_NO_REMAP_FILE_PAGES		VM_NONE
+#endif
+
 /* Bits set in the VMA until the stack is in its final location */
 #define VM_STACK_INCOMPLETE_SETUP (VM_RAND_READ | VM_SEQ_READ | VM_STACK_EARLY)
 
@@ -753,6 +762,7 @@ struct vm_operations_struct {
 	struct page *(*find_normal_page)(struct vm_area_struct *vma,
 					 unsigned long addr);
 #endif /* CONFIG_FIND_NORMAL_PAGE */
+
 };
 
 #ifdef CONFIG_NUMA_BALANCING
@@ -858,6 +868,8 @@ static inline void vm_flags_reset(struct vm_area_struct *vma,
 				  vm_flags_t flags)
 {
 	vma_assert_write_locked(vma);
+	/* Preserve padding flags */
+	flags = vma_pad_fixup_flags(vma, flags);
 	vm_flags_init(vma, flags);
 }
 
@@ -865,6 +877,8 @@ static inline void vm_flags_reset_once(struct vm_area_struct *vma,
 				       vm_flags_t flags)
 {
 	vma_assert_write_locked(vma);
+	/* Preserve padding flags */
+	flags = vma_pad_fixup_flags(vma, flags);
 	WRITE_ONCE(ACCESS_PRIVATE(vma, __vm_flags), flags);
 }
 
@@ -1202,8 +1216,13 @@ static inline void folio_reset_order(struct folio *folio)
  */
 static inline int put_page_testzero(struct page *page)
 {
+	int ret;
+
 	VM_BUG_ON_PAGE(page_ref_count(page) == 0, page);
-	return page_ref_dec_and_test(page);
+	ret = page_ref_dec_and_test(page);
+	page_pinner_put_page(page);
+
+	return ret;
 }
 
 static inline int folio_put_testzero(struct folio *folio)
@@ -2109,8 +2128,17 @@ static inline bool is_zero_folio(const struct folio *folio)
 
 /* MIGRATE_CMA and ZONE_MOVABLE do not allow pin folios */
 #ifdef CONFIG_MIGRATION
+extern void _trace_android_vh_mm_customize_longterm_pinnable(struct folio *folio,
+		bool *is_longterm_pinnable);
+
 static inline bool folio_is_longterm_pinnable(struct folio *folio)
 {
+	bool is_longterm_pinnable = false;
+
+	_trace_android_vh_mm_customize_longterm_pinnable(folio, &is_longterm_pinnable);
+	if (is_longterm_pinnable)
+		return true;
+
 #ifdef CONFIG_CMA
 	int mt = folio_migratetype(folio);
 
@@ -4320,6 +4348,16 @@ unsigned long wp_shared_mapping_range(struct address_space *mapping,
 				      pgoff_t first_index, pgoff_t nr);
 #endif
 
+#ifdef CONFIG_SHMEM
+extern int reclaim_shmem_address_space(struct address_space *mapping);
+#else
+static inline
+int reclaim_shmem_address_space(struct address_space *mapping)
+{
+	return 0;
+}
+#endif
+
 #ifdef CONFIG_ANON_VMA_NAME
 int set_anon_vma_name(unsigned long addr, unsigned long size,
 		      const char __user *uname);
@@ -4361,6 +4399,9 @@ void vma_pgtable_walk_end(struct vm_area_struct *vma);
 
 int reserve_mem_find_by_name(const char *name, phys_addr_t *start, phys_addr_t *size);
 int reserve_mem_release_by_name(const char *name);
+
+void zone_pageset_high_and_batch_update(struct zone *zone, int new_high_min,
+					int new_high_max, int new_batch);
 
 #ifdef CONFIG_64BIT
 int do_mseal(unsigned long start, size_t len_in, unsigned long flags);
@@ -4483,5 +4524,16 @@ static inline bool snapshot_page_is_faithful(const struct page_snapshot *ps)
 }
 
 void snapshot_page(struct page_snapshot *ps, const struct page *page);
+void prep_new_page(struct page *page, unsigned int order, gfp_t gfp_flags,
+							unsigned int alloc_flags);
+
+#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+void free_hpage_order(struct page *page, unsigned int order, int __bitwise fpi_flags);
+void free_hpage(struct page *page, int __bitwise fpi_flags);
+void prep_new_hpage_order(struct page *page, unsigned int order,
+			  gfp_t gfp_flags, unsigned int alloc_flags);
+void prep_new_hpage(struct page *page, gfp_t gfp_flags, unsigned int alloc_flags);
+void prep_compound_page(struct page *page, unsigned int order);
+#endif
 
 #endif /* _LINUX_MM_H */

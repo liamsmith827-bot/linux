@@ -11,6 +11,26 @@
 #include <linux/memcontrol.h>
 #include <linux/kfence.h>
 #include <linux/kasan.h>
+#include <linux/stackdepot.h>
+
+#undef CREATE_TRACE_POINTS
+#include <trace/hooks/mm.h>
+
+/**
+ * enum slab_flags - How the slab flags bits are used.
+ * @SL_locked: Is locked with slab_lock()
+ * @SL_partial: On the per-node partial list
+ * @SL_pfmemalloc: Was allocated from PF_MEMALLOC reserves
+ *
+ * The slab flags share space with the page flags but some bits have
+ * different interpretations.  The high bits are used for information
+ * like zone/node/section.
+ */
+enum slab_flags {
+	SL_locked = PG_locked,
+	SL_partial = PG_workingset,     /* Historical reasons for this bit */
+	SL_pfmemalloc = PG_active,      /* Historical reasons for this bit */
+};
 
 /*
  * Internal slab definitions
@@ -291,7 +311,7 @@ struct kmem_cache {
 	unsigned int useroffset;	/* Usercopy region offset */
 	unsigned int usersize;		/* Usercopy region size */
 #endif
-
+	ANDROID_OEM_DATA(1);
 	struct kmem_cache_node *node[MAX_NUMNODES];
 };
 
@@ -401,6 +421,7 @@ kmalloc_slab(size_t size, kmem_buckets *b, gfp_t flags, unsigned long caller)
 
 	if (flags & __GFP_NO_OBJ_EXT)
 		type = KMALLOC_NO_OBJ_EXT;
+	struct kmem_cache *s = NULL;
 
 	if (!b)
 		b = &kmalloc_caches[type];
@@ -408,6 +429,10 @@ kmalloc_slab(size_t size, kmem_buckets *b, gfp_t flags, unsigned long caller)
 		index = kmalloc_size_index[size_index_elem(size)];
 	else
 		index = fls(size - 1);
+
+	trace_android_vh_kmalloc_slab(index, flags, &s);
+	if (s)
+		return s;
 
 	return (*b)[index];
 }
@@ -431,6 +456,11 @@ slab_flags_t kmem_cache_flags(slab_flags_t flags, const char *name);
 static inline bool is_kmalloc_cache(struct kmem_cache *s)
 {
 	return (s->flags & SLAB_KMALLOC);
+}
+
+static inline void __slab_clear_pfmemalloc(struct slab *slab)
+{
+	__clear_bit(SL_pfmemalloc, &slab->flags.f);
 }
 
 static inline bool is_kmalloc_normal(struct kmem_cache *s)
@@ -481,6 +511,22 @@ struct slabinfo {
 
 void get_slabinfo(struct kmem_cache *s, struct slabinfo *sinfo);
 
+/*
+ * Tracking user of a slab.
+ */
+#define TRACK_ADDRS_COUNT 16
+struct track {
+	unsigned long addr;	/* Called from address */
+#ifdef CONFIG_STACKDEPOT
+	depot_stack_handle_t handle;
+#endif
+	int cpu;		/* Was running on cpu */
+	int pid;		/* Pid context */
+	unsigned long when;	/* When did the operation occur */
+};
+
+enum track_item { TRACK_ALLOC, TRACK_FREE };
+
 #ifdef CONFIG_SLUB_DEBUG
 #ifdef CONFIG_SLUB_DEBUG_ON
 DECLARE_STATIC_KEY_TRUE(slub_debug_enabled);
@@ -489,6 +535,12 @@ DECLARE_STATIC_KEY_FALSE(slub_debug_enabled);
 #endif
 extern void print_tracking(struct kmem_cache *s, void *object);
 long validate_slab_cache(struct kmem_cache *s);
+extern struct track *get_track(struct kmem_cache *s, void *object,
+				enum track_item alloc);
+extern unsigned long get_each_kmemcache_object(struct kmem_cache *s,
+		int (*fn)(struct kmem_cache *, void *, void *),
+		void *private);
+
 static inline bool __slub_debug_enabled(void)
 {
 	return static_branch_unlikely(&slub_debug_enabled);

@@ -162,6 +162,8 @@ struct bdi_writeback {
 		struct rcu_head rcu;
 	};
 #endif
+
+	ANDROID_OEM_DATA_ARRAY(1, 2);
 };
 
 struct backing_dev_info {
@@ -205,6 +207,7 @@ struct backing_dev_info {
 #ifdef CONFIG_DEBUG_FS
 	struct dentry *debug_dir;
 #endif
+
 };
 
 struct wb_lock_cookie {

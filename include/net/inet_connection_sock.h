@@ -51,6 +51,7 @@ struct inet_connection_sock_af_ops {
 	int	    (*getsockopt)(struct sock *sk, int level, int optname,
 				  char __user *optval, int __user *optlen);
 	void	    (*mtu_reduced)(struct sock *sk);
+
 };
 
 /** inet_connection_sock - INET connection oriented sock
@@ -138,6 +139,7 @@ struct inet_connection_sock {
 	} icsk_mtup;
 	u32			  icsk_probes_tstamp;
 	u32			  icsk_user_timeout;
+
 
 	u64			  icsk_ca_priv[104 / sizeof(u64)];
 #define ICSK_CA_PRIV_SIZE	  sizeof_field(struct inet_connection_sock, icsk_ca_priv)

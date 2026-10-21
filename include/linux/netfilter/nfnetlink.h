@@ -28,6 +28,7 @@ struct nfnl_callback {
 	const struct nla_policy	*policy;
 	enum nfnl_callback_type	type;
 	__u16			attr_count;
+
 };
 
 enum nfnl_abort_action {
@@ -46,6 +47,7 @@ struct nfnetlink_subsystem {
 	int (*abort)(struct net *net, struct sk_buff *skb,
 		     enum nfnl_abort_action action);
 	bool (*valid_genid)(struct net *net, u32 genid);
+
 };
 
 int nfnetlink_subsys_register(const struct nfnetlink_subsystem *n);

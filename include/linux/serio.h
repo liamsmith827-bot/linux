@@ -62,6 +62,7 @@ struct serio {
 	 * may get indigestion when exposed to concurrent access (i8042).
 	 */
 	struct mutex *ps2_cmd_mutex;
+
 };
 #define to_serio_port(d)	container_of(d, struct serio, dev)
 
@@ -80,6 +81,7 @@ struct serio_driver {
 	void (*cleanup)(struct serio *);
 
 	struct device_driver driver;
+
 };
 #define to_serio_driver(d)	container_of_const(d, struct serio_driver, driver)
 

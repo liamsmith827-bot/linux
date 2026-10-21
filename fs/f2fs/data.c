@@ -26,6 +26,11 @@
 #include "segment.h"
 #include "iostat.h"
 #include <trace/events/f2fs.h>
+#undef CREATE_TRACE_POINTS
+#include <trace/hooks/fs.h>
+#include <trace/hooks/blk.h>
+
+EXPORT_TRACEPOINT_SYMBOL_GPL(f2fs_write_begin);
 
 #define NUM_PREALLOC_POST_READ_CTXS	128
 
@@ -506,6 +511,8 @@ static void f2fs_set_bio_crypt_ctx(struct bio *bio, const struct inode *inode,
 	 */
 	if (!fio || !fio->encrypted_page)
 		fscrypt_set_bio_crypt_ctx(bio, inode, first_idx, gfp_mask);
+	else if (fscrypt_inode_should_skip_dm_default_key(inode))
+		bio_set_skip_dm_default_key(bio);
 }
 
 static bool f2fs_crypt_mergeable_bio(struct bio *bio, const struct inode *inode,
@@ -517,7 +524,9 @@ static bool f2fs_crypt_mergeable_bio(struct bio *bio, const struct inode *inode,
 	 * read/write raw data without encryption.
 	 */
 	if (fio && fio->encrypted_page)
-		return !bio_has_crypt_ctx(bio);
+		return !bio_has_crypt_ctx(bio) &&
+			(bio_should_skip_dm_default_key(bio) ==
+			 fscrypt_inode_should_skip_dm_default_key(inode));
 
 	return fscrypt_mergeable_bio(bio, inode, next_idx);
 }
@@ -525,10 +534,14 @@ static bool f2fs_crypt_mergeable_bio(struct bio *bio, const struct inode *inode,
 void f2fs_submit_read_bio(struct f2fs_sb_info *sbi, struct bio *bio,
 				 enum page_type type)
 {
+	if (!bio)
+		return;
+
 	WARN_ON_ONCE(!is_read_io(bio_op(bio)));
 	trace_f2fs_submit_read_bio(sbi->sb, type, bio);
 
 	iostat_update_submit_ctx(bio, type);
+	trace_android_vh_f2fs_iostat_submit(sbi->sb, type, bio);
 	submit_bio(bio);
 }
 
@@ -538,6 +551,7 @@ static void f2fs_submit_write_bio(struct f2fs_sb_info *sbi, struct bio *bio,
 	WARN_ON_ONCE(is_read_io(bio_op(bio)));
 	trace_f2fs_submit_write_bio(sbi->sb, type, bio);
 	iostat_update_submit_ctx(bio, type);
+	trace_android_vh_f2fs_iostat_submit(sbi->sb, type, bio);
 	submit_bio(bio);
 }
 
@@ -1062,6 +1076,7 @@ alloc_new:
 	io->last_block_in_bio = fio->new_blkaddr;
 
 	trace_f2fs_submit_folio_write(fio->folio, fio);
+	trace_android_vh_f2fs_set_bio_flag(fio->folio, io->bio);
 #ifdef CONFIG_BLK_DEV_ZONED
 	if (f2fs_sb_has_blkzoned(sbi) && btype < META &&
 			is_end_zone_blkaddr(sbi, fio->new_blkaddr)) {
@@ -1154,6 +1169,8 @@ static void f2fs_submit_page_read(struct inode *inode, struct folio *folio,
 static void __set_data_blkaddr(struct dnode_of_data *dn, block_t blkaddr)
 {
 	__le32 *addr = get_dnode_addr(dn->inode, dn->node_folio);
+
+	trace_android_vh_f2fs_dnode_set_blkaddr(dn->inode, blkaddr);
 
 	dn->data_blkaddr = blkaddr;
 	addr[dn->ofs_in_node] = cpu_to_le32(dn->data_blkaddr);
@@ -2136,7 +2153,10 @@ static inline loff_t f2fs_readpage_limit(struct inode *inode)
 
 static inline blk_opf_t f2fs_ra_op_flags(struct readahead_control *rac)
 {
-	return rac ? REQ_RAHEAD : 0;
+	blk_opf_t op_flag = rac ? REQ_RAHEAD : 0;
+
+	trace_android_vh_f2fs_ra_op_flags(&op_flag, rac);
+	return op_flag;
 }
 
 static int f2fs_read_single_page(struct inode *inode, struct folio *folio,
@@ -3317,6 +3337,7 @@ static int __f2fs_write_data_pages(struct address_space *mapping,
 						struct writeback_control *wbc,
 						enum iostat_type io_type)
 {
+	bool wb_done = false;
 	struct inode *inode = mapping->host;
 	struct f2fs_sb_info *sbi = F2FS_I_SB(inode);
 	struct blk_plug plug;
@@ -3361,7 +3382,14 @@ static int __f2fs_write_data_pages(struct address_space *mapping,
 	account_writeback(inode, true);
 
 	blk_start_plug(&plug);
+
+	trace_android_rvh_f2fs_write_cache_pages(mapping, wbc, &ret, &wb_done);
+	if (wb_done)
+		goto blk_finish;
+
 	ret = f2fs_write_cache_pages(mapping, wbc, io_type);
+
+blk_finish:
 	blk_finish_plug(&plug);
 
 	account_writeback(inode, false);

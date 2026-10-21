@@ -236,6 +236,7 @@ struct regulator_ops {
 	int (*resume)(struct regulator_dev *rdev);
 
 	int (*set_pull_down) (struct regulator_dev *);
+
 };
 
 /*
@@ -437,6 +438,7 @@ struct regulator_desc {
 	unsigned int poll_enabled_time;
 
 	unsigned int (*of_map_mode)(unsigned int mode);
+
 };
 
 /**
@@ -658,6 +660,7 @@ struct regulator_dev {
 	spinlock_t err_lock;
 
 	int pw_requested_mW;
+
 };
 
 /*

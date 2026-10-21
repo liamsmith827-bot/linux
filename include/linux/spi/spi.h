@@ -237,6 +237,7 @@ struct spi_device {
 
 	struct gpio_desc	*cs_gpiod[SPI_DEVICE_CS_CNT_MAX];	/* Chip select gpio desc */
 
+
 	/*
 	 * Likely need more hooks for more protocol options affecting how
 	 * the controller talks to each chip, like:
@@ -350,6 +351,7 @@ struct spi_driver {
 	void			(*remove)(struct spi_device *spi);
 	void			(*shutdown)(struct spi_device *spi);
 	struct device_driver	driver;
+
 };
 
 #define to_spi_driver(__drv)   \
@@ -786,6 +788,7 @@ struct spi_controller {
 	bool			queue_empty;
 	bool			must_async;
 	bool			defer_optimize_message;
+
 };
 
 static inline void *spi_controller_get_devdata(struct spi_controller *ctlr)
@@ -1113,6 +1116,7 @@ struct spi_transfer {
 	struct ptp_system_timestamp *ptp_sts;
 
 	struct list_head transfer_list;
+
 };
 
 /**
@@ -1201,6 +1205,7 @@ struct spi_message {
 
 	/* List of spi_res resources when the SPI message is processed */
 	struct list_head        resources;
+
 };
 
 static inline void spi_message_init_no_memset(struct spi_message *m)
@@ -1675,6 +1680,7 @@ struct spi_board_info {
 	 * needed to behave without being bound to a driver:
 	 *  - quirks like clock rate mattering when not selected
 	 */
+
 };
 
 #ifdef	CONFIG_SPI

@@ -8,12 +8,14 @@
 
 #include "fuse_i.h"
 
+#include <linux/filter.h>
 #include <linux/pagemap.h>
 #include <linux/slab.h>
 #include <linux/kernel.h>
 #include <linux/sched.h>
 #include <linux/sched/signal.h>
 #include <linux/module.h>
+#include <linux/splice.h>
 #include <linux/swap.h>
 #include <linux/falloc.h>
 #include <linux/uio.h>
@@ -99,27 +101,39 @@ static void fuse_release_end(struct fuse_args *args, int error)
 	kfree(ra);
 }
 
-static void fuse_file_put(struct fuse_file *ff, bool sync)
+static void fuse_file_put(struct inode *inode, struct fuse_file *ff, bool sync)
 {
 	if (refcount_dec_and_test(&ff->count)) {
 		struct fuse_release_args *ra = &ff->args->release_args;
 		struct fuse_args *args = (ra ? &ra->args : NULL);
 
-		if (ra && ra->inode)
-			fuse_file_io_release(ff, ra->inode);
+#ifdef CONFIG_FUSE_BPF
+		struct fuse_err_ret fer = {0};
 
-		if (!args) {
-			/* Do nothing when server does not implement 'opendir' */
-		} else if (args->opcode == FUSE_RELEASE && ff->fm->fc->no_open) {
+		if (inode)
+			fer = fuse_bpf_backing(inode, struct fuse_release_in,
+					fuse_release_initialize,
+					fuse_release_backing,
+					fuse_release_finalize,
+					inode, ff);
+		if (fer.ret) {
 			fuse_release_end(args, 0);
-		} else if (sync) {
-			fuse_simple_request(ff->fm, args);
-			fuse_release_end(args, 0);
-		} else {
-			args->end = fuse_release_end;
-			if (fuse_simple_background(ff->fm, args,
-						   GFP_KERNEL | __GFP_NOFAIL))
-				fuse_release_end(args, -ENOTCONN);
+		} else
+#endif
+		{
+			if (!args) {
+				/* Do nothing when server does not implement 'open' */
+			} else if (args->opcode == FUSE_RELEASE && ff->fm->fc->no_open) {
+				fuse_release_end(args, 0);
+			} else if (sync) {
+				fuse_simple_request(ff->fm, args);
+				fuse_release_end(args, 0);
+			} else {
+				args->end = fuse_release_end;
+				if (fuse_simple_background(ff->fm, args,
+							GFP_KERNEL | __GFP_NOFAIL))
+					fuse_release_end(args, -ENOTCONN);
+			}
 		}
 		kfree(ff);
 	}
@@ -260,6 +274,20 @@ static int fuse_open(struct inode *inode, struct file *file)
 	if (err)
 		return err;
 
+#ifdef CONFIG_FUSE_BPF
+	{
+		struct fuse_err_ret fer;
+
+		fer = fuse_bpf_backing(inode, struct fuse_open_io,
+				       fuse_open_initialize,
+				       fuse_open_backing,
+				       fuse_open_finalize,
+				       inode, file, false);
+		if (fer.ret)
+			return PTR_ERR(fer.result);
+	}
+#endif
+
 	if (is_wb_truncate || dax_truncate)
 		inode_lock(inode);
 
@@ -380,7 +408,7 @@ void fuse_file_release(struct inode *inode, struct fuse_file *ff,
 	 * before commencing with fs shutdown doesn't work if submounts are
 	 * used.
 	 */
-	fuse_file_put(ff, ff->fm->fc->auto_submounts);
+	fuse_file_put(ra ? ra->inode : NULL, ff, ff->fm->fc->auto_submounts);
 }
 
 void fuse_release_common(struct file *file, bool isdir)
@@ -411,7 +439,7 @@ void fuse_sync_release(struct fuse_inode *fi, struct fuse_file *ff,
 {
 	WARN_ON(refcount_read(&ff->count) > 1);
 	fuse_prepare_release(fi, ff, flags, FUSE_RELEASE, true);
-	fuse_file_put(ff, true);
+	fuse_file_put(&fi->inode, ff, true);
 }
 EXPORT_SYMBOL_GPL(fuse_sync_release);
 
@@ -467,6 +495,17 @@ static int fuse_flush(struct file *file, fl_owner_t id)
 	struct fuse_flush_in inarg;
 	FUSE_ARGS(args);
 	int err;
+
+#ifdef CONFIG_FUSE_BPF
+	struct fuse_err_ret fer;
+
+	fer = fuse_bpf_backing(file->f_inode, struct fuse_flush_in,
+			       fuse_flush_initialize, fuse_flush_backing,
+			       fuse_flush_finalize,
+			       file, id);
+	if (fer.ret)
+		return PTR_ERR(fer.result);
+#endif
 
 	if (fuse_is_bad(inode))
 		return -EIO;
@@ -538,6 +577,17 @@ static int fuse_fsync(struct file *file, loff_t start, loff_t end,
 	struct inode *inode = file->f_mapping->host;
 	struct fuse_conn *fc = get_fuse_conn(inode);
 	int err;
+
+#ifdef CONFIG_FUSE_BPF
+	struct fuse_err_ret fer;
+
+	fer = fuse_bpf_backing(inode, struct fuse_fsync_in,
+			       fuse_fsync_initialize, fuse_fsync_backing,
+			       fuse_fsync_finalize,
+			       file, start, end, datasync);
+	if (fer.ret)
+		return PTR_ERR(fer.result);
+#endif
 
 	if (fuse_is_bad(inode))
 		return -EIO;
@@ -906,7 +956,7 @@ static void fuse_readpages_end(struct fuse_args *args, int err)
 		folio_put(ap->folios[i]);
 	}
 	if (ia->ff)
-		fuse_file_put(ia->ff, false);
+		fuse_file_put(mapping ? mapping->host : NULL, ia->ff, false);
 
 	fuse_io_free(ia);
 }
@@ -953,6 +1003,16 @@ static void fuse_readahead(struct readahead_control *rac)
 	struct fuse_conn *fc = get_fuse_conn(inode);
 	unsigned int max_pages, nr_pages;
 	struct folio *folio = NULL;
+
+#ifdef CONFIG_FUSE_BPF
+	/*
+	 * Currently no meaningful readahead is possible with fuse-bpf within
+	 * the kernel, so unless the daemon is aware of this file, ignore this
+	 * call.
+	 */
+	if (!get_fuse_inode(inode)->nodeid)
+		return;
+#endif
 
 	if (fuse_is_bad(inode))
 		return;
@@ -1787,6 +1847,20 @@ static ssize_t fuse_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
 	if (FUSE_IS_DAX(inode))
 		return fuse_dax_read_iter(iocb, to);
 
+#ifdef CONFIG_FUSE_BPF
+	{
+		struct fuse_err_ret fer;
+
+		fer = fuse_bpf_backing(inode, struct fuse_file_read_iter_io,
+				       fuse_file_read_iter_initialize,
+				       fuse_file_read_iter_backing,
+				       fuse_file_read_iter_finalize,
+				       iocb, to);
+		if (fer.ret)
+			return PTR_ERR(fer.result);
+	}
+#endif
+
 	/* FOPEN_DIRECT_IO overrides FOPEN_PASSTHROUGH */
 	if (ff->open_flags & FOPEN_DIRECT_IO)
 		return fuse_direct_read_iter(iocb, to);
@@ -1805,8 +1879,25 @@ static ssize_t fuse_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
 	if (fuse_is_bad(inode))
 		return -EIO;
 
+	if (iocb->ki_flags & IOCB_DONTCACHE)
+		return -EOPNOTSUPP;
+
 	if (FUSE_IS_DAX(inode))
 		return fuse_dax_write_iter(iocb, from);
+
+#ifdef CONFIG_FUSE_BPF
+	{
+		struct fuse_err_ret fer;
+
+		fer = fuse_bpf_backing(inode, struct fuse_file_write_iter_io,
+				       fuse_file_write_iter_initialize,
+				       fuse_file_write_iter_backing,
+				       fuse_file_write_iter_finalize,
+				       iocb, from);
+		if (fer.ret)
+			return PTR_ERR(fer.result);
+	}
+#endif
 
 	/* FOPEN_DIRECT_IO overrides FOPEN_PASSTHROUGH */
 	if (ff->open_flags & FOPEN_DIRECT_IO)
@@ -1823,6 +1914,12 @@ static ssize_t fuse_splice_read(struct file *in, loff_t *ppos,
 {
 	struct fuse_file *ff = in->private_data;
 
+#ifdef CONFIG_FUSE_BPF
+	/* TODO - this is simply passthrough, not a proper BPF filter */
+	if (ff->backing_file)
+		return fuse_splice_read_backing(in, ppos, pipe, len, flags);
+#endif
+
 	/* FOPEN_DIRECT_IO overrides FOPEN_PASSTHROUGH */
 	if (fuse_file_passthrough(ff) && !(ff->open_flags & FOPEN_DIRECT_IO))
 		return fuse_passthrough_splice_read(in, ppos, pipe, len, flags);
@@ -1834,6 +1931,12 @@ static ssize_t fuse_splice_write(struct pipe_inode_info *pipe, struct file *out,
 				 loff_t *ppos, size_t len, unsigned int flags)
 {
 	struct fuse_file *ff = out->private_data;
+
+#ifdef CONFIG_FUSE_BPF
+	/* TODO - this is simply passthrough, not a proper BPF filter */
+	if (ff->backing_file)
+		return fuse_splice_write_backing(pipe, out, ppos, len, flags);
+#endif
 
 	/* FOPEN_DIRECT_IO overrides FOPEN_PASSTHROUGH */
 	if (fuse_file_passthrough(ff) && !(ff->open_flags & FOPEN_DIRECT_IO))
@@ -1849,7 +1952,7 @@ static void fuse_writepage_free(struct fuse_writepage_args *wpa)
 	if (wpa->bucket)
 		fuse_sync_bucket_dec(wpa->bucket);
 
-	fuse_file_put(wpa->ia.ff, false);
+	fuse_file_put(wpa->inode, wpa->ia.ff, false);
 
 	kfree(ap->folios);
 	kfree(wpa);
@@ -1998,10 +2101,23 @@ int fuse_write_inode(struct inode *inode, struct writeback_control *wbc)
 	struct fuse_file *ff;
 	int err;
 
+	/**
+	 * TODO - fully understand why this is necessary
+	 *
+	 * With fuse-bpf, fsstress fails if rename is enabled without this
+	 *
+	 * We are getting writes here on directory inodes, which do not have an
+	 * initialized file list so crash.
+	 *
+	 * The question is why we are getting those writes
+	 */
+	if (!S_ISREG(inode->i_mode))
+		return 0;
+
 	ff = __fuse_write_file_get(fi);
 	err = fuse_flush_times(inode, ff);
 	if (ff)
-		fuse_file_put(ff, false);
+		fuse_file_put(inode, ff, false);
 
 	return err;
 }
@@ -2222,7 +2338,7 @@ static int fuse_iomap_writeback_submit(struct iomap_writepage_ctx *wpc,
 	}
 
 	if (data->ff)
-		fuse_file_put(data->ff, false);
+		fuse_file_put(wpc->inode, data->ff, false);
 
 	return error;
 }
@@ -2337,6 +2453,12 @@ static int fuse_file_mmap(struct file *file, struct vm_area_struct *vma)
 	if (FUSE_IS_DAX(inode))
 		return fuse_dax_mmap(file, vma);
 
+#ifdef CONFIG_FUSE_BPF
+	/* TODO - this is simply passthrough, not a proper BPF filter */
+	if (ff->backing_file)
+		return fuse_backing_mmap(file, vma);
+#endif
+
 	/*
 	 * If inode is in passthrough io mode, because it has some file open
 	 * in passthrough mode, either mmap to backing file or fail mmap,
@@ -2344,8 +2466,16 @@ static int fuse_file_mmap(struct file *file, struct vm_area_struct *vma)
 	 */
 	if (fuse_file_passthrough(ff))
 		return fuse_passthrough_mmap(file, vma);
+	/*
+	 * Old Android passthrough did not handle this case, but did allow the mmap to continue.
+	 * This will not cleanly handle the case of a shared mmap across passthrough and
+	 * nonpassthrough at the same time, although shared mmap through cache and file io through
+	 * the lower filesystem should work as expected, at a performance penalty.
+	 */
+#if 0
 	else if (fuse_inode_backing(get_fuse_inode(inode)))
 		return -ENODEV;
+#endif
 
 	/*
 	 * FOPEN_DIRECT_IO handling is special compared to O_DIRECT,
@@ -2516,12 +2646,18 @@ static int fuse_file_flock(struct file *file, int cmd, struct file_lock *fl)
 {
 	struct inode *inode = file_inode(file);
 	struct fuse_conn *fc = get_fuse_conn(inode);
+	struct fuse_file *ff = file->private_data;
 	int err;
+
+#ifdef CONFIG_FUSE_BPF
+	/* TODO - this is simply passthrough, not a proper BPF filter */
+	if (ff->backing_file)
+		return fuse_file_flock_backing(file, cmd, fl);
+#endif
 
 	if (fc->no_flock) {
 		err = locks_lock_file_wait(file, fl);
 	} else {
-		struct fuse_file *ff = file->private_data;
 
 		/* emulate flock with POSIX locks */
 		err = fuse_setlk(file, fl, 1);
@@ -2610,6 +2746,17 @@ static loff_t fuse_file_llseek(struct file *file, loff_t offset, int whence)
 {
 	loff_t retval;
 	struct inode *inode = file_inode(file);
+#ifdef CONFIG_FUSE_BPF
+	struct fuse_err_ret fer;
+
+	fer = fuse_bpf_backing(inode, struct fuse_lseek_io,
+			       fuse_lseek_initialize,
+			       fuse_lseek_backing,
+			       fuse_lseek_finalize,
+			       file, offset, whence);
+	if (fer.ret)
+		return PTR_ERR(fer.result);
+#endif
 
 	switch (whence) {
 	case SEEK_SET:
@@ -2900,6 +3047,18 @@ static long fuse_file_fallocate(struct file *file, int mode, loff_t offset,
 		(!(mode & FALLOC_FL_KEEP_SIZE) ||
 		 (mode & (FALLOC_FL_PUNCH_HOLE | FALLOC_FL_ZERO_RANGE)));
 
+#ifdef CONFIG_FUSE_BPF
+	struct fuse_err_ret fer;
+
+	fer = fuse_bpf_backing(inode, struct fuse_fallocate_in,
+			       fuse_file_fallocate_initialize,
+			       fuse_file_fallocate_backing,
+			       fuse_file_fallocate_finalize,
+			       file, mode, offset, length);
+	if (fer.ret)
+		return PTR_ERR(fer.result);
+#endif
+
 	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |
 		     FALLOC_FL_ZERO_RANGE))
 		return -EOPNOTSUPP;
@@ -3004,6 +3163,18 @@ static ssize_t __fuse_copy_file_range(struct file *file_in, loff_t pos_in,
 	 * extended */
 	bool is_unstable = (!fc->writeback_cache) &&
 			   ((pos_out + len) > inode_out->i_size);
+
+#ifdef CONFIG_FUSE_BPF
+	struct fuse_err_ret fer;
+
+	fer = fuse_bpf_backing(file_in->f_inode, struct fuse_copy_file_range_io,
+			       fuse_copy_file_range_initialize,
+			       fuse_copy_file_range_backing,
+			       fuse_copy_file_range_finalize,
+			       file_in, pos_in, file_out, pos_out, len, flags);
+	if (fer.ret)
+		return PTR_ERR(fer.result);
+#endif
 
 	if (fc->no_copy_file_range)
 		return -EOPNOTSUPP;
@@ -3139,6 +3310,7 @@ static const struct file_operations fuse_file_operations = {
 	.poll		= fuse_file_poll,
 	.fallocate	= fuse_file_fallocate,
 	.copy_file_range = fuse_copy_file_range,
+	.fop_flags	= FOP_DONTCACHE,
 };
 
 static const struct address_space_operations fuse_file_aops  = {
@@ -3169,6 +3341,7 @@ void fuse_init_file_inode(struct inode *inode, unsigned int flags)
 	INIT_LIST_HEAD(&fi->queued_writes);
 	fi->writectr = 0;
 	fi->iocachectr = 0;
+	fi->iopassctr = 0;
 	init_waitqueue_head(&fi->page_waitq);
 	init_waitqueue_head(&fi->direct_io_waitq);
 

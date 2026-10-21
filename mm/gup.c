@@ -472,6 +472,19 @@ void unpin_folios(struct folio **folios, unsigned long nfolios)
 EXPORT_SYMBOL_GPL(unpin_folios);
 
 /*
+ * trace_android_vh_mm_customize_longterm_pinnable is called in include/linux/mm.h
+ * by including include/trace/hooks/mm.h, which will result to build-err.
+ * So we create func: _trace_android_vh_mm_customize_longterm_pinnable.
+ */
+#ifdef CONFIG_MIGRATION
+void _trace_android_vh_mm_customize_longterm_pinnable(struct folio *folio,
+		bool *is_longterm_pinnable)
+{
+	trace_android_vh_mm_customize_longterm_pinnable(folio, is_longterm_pinnable);
+}
+#endif
+
+/*
  * Set the MMF_HAS_PINNED if not set yet; after set it'll be there for the mm's
  * lifecycle.  Avoid setting the bit unless necessary, or it might cause write
  * cache bouncing on large SMP machines for concurrent pinned gups.
@@ -2496,6 +2509,10 @@ static long __gup_longterm_locked(struct mm_struct *mm,
 		rc = check_and_migrate_movable_pages(nr_pinned_pages, pages);
 	} while (rc == -EAGAIN);
 	memalloc_pin_restore(flags);
+
+	if (rc)
+		trace_android_rvh_gup_longterm_locked(rc, nr_pinned_pages, start, nr_pages, pages);
+
 	return rc ? rc : nr_pinned_pages;
 }
 

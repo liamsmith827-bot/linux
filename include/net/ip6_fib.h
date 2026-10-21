@@ -62,6 +62,7 @@ struct fib6_config {
 	struct nlattr	*fc_encap;
 	u16		fc_encap_type;
 	bool		fc_is_fdb;
+
 };
 
 struct fib6_node {
@@ -78,6 +79,7 @@ struct fib6_node {
 	int			fn_sernum;
 	struct fib6_info __rcu	*rr_ptr;
 	struct rcu_head		rcu;
+
 };
 
 struct fib6_gc_args {
@@ -201,6 +203,8 @@ struct fib6_info {
 	struct list_head		purge_link;
 	struct rcu_head			rcu;
 	struct nexthop			*nh;
+
+
 	struct fib6_nh			fib6_nh[];
 };
 
@@ -217,6 +221,7 @@ struct rt6_info {
 
 	/* more non-fragment space at head required */
 	unsigned short			rt6i_nfheader_len;
+
 };
 
 struct fib6_result {

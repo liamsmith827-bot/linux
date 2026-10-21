@@ -119,6 +119,7 @@ struct mem_cgroup_per_node {
 	atomic_t		slab_reclaimable;
 	atomic_t		slab_unreclaimable;
 #endif
+
 };
 
 struct mem_cgroup_threshold {
@@ -178,6 +179,7 @@ struct obj_cgroup {
 		struct list_head list; /* protected by objcg_lock */
 		struct rcu_head rcu;
 	};
+
 };
 
 /*
@@ -320,6 +322,9 @@ struct mem_cgroup {
 	spinlock_t event_list_lock;
 #endif /* CONFIG_MEMCG_V1 */
 
+	ANDROID_OEM_DATA_ARRAY(1, 2);
+	ANDROID_VENDOR_DATA(1);
+
 	struct mem_cgroup_per_node *nodeinfo[];
 };
 
@@ -369,6 +374,11 @@ enum objext_flags {
 #ifdef CONFIG_MEMCG
 
 static inline bool folio_memcg_kmem(struct folio *folio);
+
+void do_traversal_all_lruvec(int (*callback)(struct mem_cgroup *memcg,
+					     struct lruvec *lruvec,
+					     void *private),
+			     void *private);
 
 /*
  * After the initialization objcg->memcg is always pointing at

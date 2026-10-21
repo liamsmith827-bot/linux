@@ -673,6 +673,7 @@ struct bpf_subprog_info {
 	enum priv_stack_mode priv_stack_mode;
 	u8 arg_cnt;
 	struct bpf_subprog_arg_info args[MAX_BPF_FUNC_REG_ARGS];
+
 };
 
 struct bpf_verifier_env;
@@ -840,6 +841,7 @@ struct bpf_verifier_env {
 	/* array of pointers to bpf_scc_info indexed by SCC id */
 	struct bpf_scc_info **scc_info;
 	u32 scc_cnt;
+
 };
 
 static inline struct bpf_func_info_aux *subprog_aux(struct bpf_verifier_env *env, int subprog)

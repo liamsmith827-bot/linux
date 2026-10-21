@@ -66,6 +66,7 @@ struct css_task_iter {
 	struct css_set			*cur_dcset;
 	struct task_struct		*cur_task;
 	struct list_head		iters_node;	/* css_set->task_iters */
+
 };
 
 enum cgroup_lifetime_events {

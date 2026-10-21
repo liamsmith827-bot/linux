@@ -76,11 +76,13 @@
 #undef CREATE_TRACE_POINTS
 
 #include <trace/events/vmscan.h>
+#include <trace/hooks/mm.h>
 
 struct cgroup_subsys memory_cgrp_subsys __read_mostly;
 EXPORT_SYMBOL(memory_cgrp_subsys);
 
 struct mem_cgroup *root_mem_cgroup __read_mostly;
+EXPORT_SYMBOL_GPL(root_mem_cgroup);
 
 /* Active memory cgroup to use from an interrupt context */
 DEFINE_PER_CPU(struct mem_cgroup *, int_active_memcg);
@@ -408,6 +410,7 @@ unsigned long lruvec_page_state(struct lruvec *lruvec, enum node_stat_item idx)
 #endif
 	return x;
 }
+EXPORT_SYMBOL_GPL(lruvec_page_state);
 
 unsigned long lruvec_page_state_local(struct lruvec *lruvec,
 				      enum node_stat_item idx)
@@ -628,6 +631,7 @@ void mem_cgroup_flush_stats(struct mem_cgroup *memcg)
 
 	__mem_cgroup_flush_stats(memcg, false);
 }
+EXPORT_SYMBOL_GPL(mem_cgroup_flush_stats);
 
 void mem_cgroup_flush_stats_ratelimited(struct mem_cgroup *memcg)
 {
@@ -661,6 +665,13 @@ unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
 #endif
 	return x;
 }
+EXPORT_SYMBOL_GPL(memcg_page_state);
+
+/* For type visibility of memcg_page_state indices */
+const enum node_stat_item ANDROID_GKI_node_stat_item;
+EXPORT_SYMBOL_GPL(ANDROID_GKI_node_stat_item);
+const enum memcg_stat_item ANDROID_GKI_memcg_stat_item;
+EXPORT_SYMBOL_GPL(ANDROID_GKI_memcg_stat_item);
 
 static int memcg_page_state_unit(int item);
 
@@ -775,6 +786,7 @@ void __mod_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
 	if (!mem_cgroup_disabled())
 		mod_memcg_lruvec_state(lruvec, idx, val);
 }
+EXPORT_SYMBOL_GPL(__mod_lruvec_state);
 
 void __lruvec_stat_mod_folio(struct folio *folio, enum node_stat_item idx,
 			     int val)
@@ -1085,6 +1097,7 @@ out_unlock:
 
 	return next;
 }
+EXPORT_SYMBOL_GPL(mem_cgroup_iter);
 
 /**
  * mem_cgroup_iter_break - abort a hierarchy walk prematurely
@@ -1258,6 +1271,34 @@ struct lruvec *folio_lruvec_lock_irqsave(struct folio *folio,
 	return lruvec;
 }
 
+void do_traversal_all_lruvec(int (*callback)(struct mem_cgroup *memcg,
+					     struct lruvec *lruvec,
+					     void *private),
+			     void *private)
+{
+	pg_data_t *pgdat;
+	int ret;
+
+	for_each_online_pgdat(pgdat) {
+		struct mem_cgroup *memcg = NULL;
+
+		memcg = mem_cgroup_iter(NULL, NULL, NULL);
+		do {
+			struct lruvec *lruvec = mem_cgroup_lruvec(memcg, pgdat);
+
+			ret = callback(memcg, lruvec, private);
+			if (ret) {
+				mem_cgroup_iter_break(NULL, memcg);
+				break;
+			}
+
+			memcg = mem_cgroup_iter(NULL, memcg, NULL);
+		} while (memcg);
+	}
+}
+EXPORT_SYMBOL_GPL(do_traversal_all_lruvec);
+
+
 /**
  * mem_cgroup_update_lru_size - account for adding or removing an lru page
  * @lruvec: mem_cgroup per zone lru vector
@@ -1295,6 +1336,7 @@ void mem_cgroup_update_lru_size(struct lruvec *lruvec, enum lru_list lru,
 	if (nr_pages > 0)
 		*lru_size += nr_pages;
 }
+EXPORT_SYMBOL_GPL(mem_cgroup_update_lru_size);
 
 /**
  * mem_cgroup_margin - calculate chargeable space of a memory cgroup
@@ -2216,6 +2258,9 @@ void __mem_cgroup_handle_over_high(gfp_t gfp_mask)
 	int nr_retries = MAX_RECLAIM_RETRIES;
 	struct mem_cgroup *memcg;
 	bool in_retry = false;
+	bool record_psi = false;
+	bool skip_reclaim = false;
+	bool force_sleep = false;
 
 	memcg = get_mem_cgroup_from_mm(current->mm);
 	current->memcg_nr_pages_over_high = 0;
@@ -2232,6 +2277,12 @@ retry_reclaim:
 	if (task_is_dying())
 		goto out;
 
+	trace_android_vh_mem_cgroup_over_high_reclaim(
+		memcg, nr_pages, in_retry, &nr_reclaimed, &skip_reclaim);
+
+	if (skip_reclaim)
+		goto do_penalty;
+
 	/*
 	 * The allocating task should reclaim at least the batch size, but for
 	 * subsequent retries we only want to do what's necessary to prevent oom
@@ -2245,6 +2296,7 @@ retry_reclaim:
 				    in_retry ? SWAP_CLUSTER_MAX : nr_pages,
 				    gfp_mask);
 
+do_penalty:
 	/*
 	 * memory.high is breached and reclaim is unable to keep up. Throttle
 	 * allocators proactively to slow down excessive growth.
@@ -2261,6 +2313,12 @@ retry_reclaim:
 	 * extremely slowly.
 	 */
 	penalty_jiffies = min(penalty_jiffies, MEMCG_MAX_HIGH_DELAY_JIFFIES);
+
+	trace_android_vh_mem_cgroup_over_high_penalty(
+		memcg, nr_pages, &penalty_jiffies, &force_sleep);
+
+	if (force_sleep)
+		goto do_sleep;
 
 	/*
 	 * Don't sleep if the amount of jiffies this memcg owes us is so low
@@ -2281,6 +2339,7 @@ retry_reclaim:
 		goto retry_reclaim;
 	}
 
+do_sleep:
 	/*
 	 * Reclaim didn't manage to push usage below the limit, slow
 	 * this allocating task down.
@@ -2289,9 +2348,12 @@ retry_reclaim:
 	 * schedule_timeout_killable sets TASK_KILLABLE). This means we don't
 	 * need to account for any ill-begotten jiffies to pay them off later.
 	 */
-	psi_memstall_enter(&pflags);
+	trace_android_vh_mem_cgroup_handle_over_high(&record_psi);
+	if (record_psi)
+		psi_memstall_enter(&pflags);
 	schedule_timeout_killable(penalty_jiffies);
-	psi_memstall_leave(&pflags);
+	if (record_psi)
+		psi_memstall_leave(&pflags);
 
 out:
 	css_put(&memcg->css);
@@ -3578,6 +3640,7 @@ static DEFINE_XARRAY_ALLOC1(mem_cgroup_ids);
 static void mem_cgroup_id_remove(struct mem_cgroup *memcg)
 {
 	if (memcg->id.id > 0) {
+		trace_android_vh_mem_cgroup_id_remove(memcg);
 		xa_erase(&mem_cgroup_ids, memcg->id.id);
 		memcg->id.id = 0;
 	}
@@ -3633,6 +3696,7 @@ struct mem_cgroup *mem_cgroup_from_id(unsigned short id)
 	WARN_ON_ONCE(!rcu_read_lock_held());
 	return xa_load(&mem_cgroup_ids, id);
 }
+EXPORT_SYMBOL_GPL(mem_cgroup_from_id);
 
 #ifdef CONFIG_SHRINKER_DEBUG
 struct mem_cgroup *mem_cgroup_get_from_ino(unsigned long ino)
@@ -3700,6 +3764,7 @@ static void __mem_cgroup_free(struct mem_cgroup *memcg)
 {
 	int node;
 
+	trace_android_vh_mem_cgroup_free(memcg);
 	obj_cgroup_put(memcg->orig_objcg);
 
 	for_each_node(node)
@@ -3788,6 +3853,7 @@ static struct mem_cgroup *mem_cgroup_alloc(struct mem_cgroup *parent)
 	memcg->deferred_split_queue.split_queue_len = 0;
 #endif
 	lru_gen_init_memcg(memcg);
+	trace_android_vh_mem_cgroup_alloc(memcg);
 	return memcg;
 fail:
 	mem_cgroup_id_remove(memcg);
@@ -3885,6 +3951,7 @@ static int mem_cgroup_css_online(struct cgroup_subsys_state *css)
 	 * regular ID destruction during offlining.
 	 */
 	xa_store(&mem_cgroup_ids, memcg->id.id, memcg, GFP_KERNEL);
+	trace_android_vh_mem_cgroup_css_online(css, memcg);
 
 	return 0;
 offline_kmem:
@@ -3898,6 +3965,7 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
 {
 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
 
+	trace_android_vh_mem_cgroup_css_offline(css, memcg);
 	memcg1_css_offline(memcg);
 
 	page_counter_set_min(&memcg->memory, 0);
@@ -4750,6 +4818,7 @@ int __mem_cgroup_charge(struct folio *folio, struct mm_struct *mm, gfp_t gfp)
 	int ret;
 
 	memcg = get_mem_cgroup_from_mm(mm);
+	trace_android_vh_mem_cgroup_charge(folio, &memcg);
 	ret = charge_memcg(folio, memcg, gfp);
 	css_put(&memcg->css);
 

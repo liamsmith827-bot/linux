@@ -122,6 +122,7 @@ struct scmi_clk_proto_ops {
 			      u32 oem_val, bool atomic);
 	int (*parent_get)(const struct scmi_protocol_handle *ph, u32 clk_id, u32 *parent_id);
 	int (*parent_set)(const struct scmi_protocol_handle *ph, u32 clk_id, u32 parent_id);
+
 };
 
 struct scmi_perf_domain_info {
@@ -185,6 +186,7 @@ struct scmi_perf_proto_ops {
 	int (*fast_switch_rate_limit)(const struct scmi_protocol_handle *ph,
 				      u32 domain, u32 *rate_limit);
 	enum scmi_power_scale (*power_scale_get)(const struct scmi_protocol_handle *ph);
+
 };
 
 /**
@@ -211,6 +213,7 @@ struct scmi_power_proto_ops {
 			 u32 state);
 	int (*state_get)(const struct scmi_protocol_handle *ph, u32 domain,
 			 u32 *state);
+
 };
 
 /**
@@ -387,6 +390,7 @@ struct scmi_sensor_info {
 	unsigned int resolution;
 	int exponent;
 	struct scmi_range_attrs scalar_attrs;
+
 };
 
 /*
@@ -522,6 +526,7 @@ struct scmi_sensor_proto_ops {
 			  u32 sensor_id, u32 *sensor_config);
 	int (*config_set)(const struct scmi_protocol_handle *ph,
 			  u32 sensor_id, u32 sensor_config);
+
 };
 
 /**
@@ -543,6 +548,7 @@ struct scmi_reset_proto_ops {
 	int (*reset)(const struct scmi_protocol_handle *ph, u32 domain);
 	int (*assert)(const struct scmi_protocol_handle *ph, u32 domain);
 	int (*deassert)(const struct scmi_protocol_handle *ph, u32 domain);
+
 };
 
 enum scmi_voltage_level_mode {
@@ -913,6 +919,7 @@ struct scmi_handle {
 				    unsigned int *atomic_threshold);
 
 	const struct scmi_notify_ops *notify_ops;
+
 };
 
 enum scmi_std_protocol {
@@ -943,6 +950,7 @@ struct scmi_device {
 	const char *name;
 	struct device dev;
 	struct scmi_handle *handle;
+
 };
 
 #define to_scmi_dev(d) container_of_const(d, struct scmi_device, dev)

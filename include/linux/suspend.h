@@ -40,6 +40,62 @@ typedef int __bitwise suspend_state_t;
 #define PM_SUSPEND_MIN		PM_SUSPEND_TO_IDLE
 #define PM_SUSPEND_MAX		((__force suspend_state_t) 4)
 
+enum suspend_stat_step {
+	SUSPEND_WORKING = 0,
+	SUSPEND_FREEZE,
+	SUSPEND_PREPARE,
+	SUSPEND_SUSPEND,
+	SUSPEND_SUSPEND_LATE,
+	SUSPEND_SUSPEND_NOIRQ,
+	SUSPEND_RESUME_NOIRQ,
+	SUSPEND_RESUME_EARLY,
+	SUSPEND_RESUME
+};
+
+#define SUSPEND_NR_STEPS	SUSPEND_RESUME
+
+struct suspend_stats {
+	unsigned int step_failures[SUSPEND_NR_STEPS];
+	unsigned int success;
+	unsigned int fail;
+#define	REC_FAILED_NUM	2
+	int	last_failed_dev;
+	char	failed_devs[REC_FAILED_NUM][40];
+	int	last_failed_errno;
+	int	errno[REC_FAILED_NUM];
+	int	last_failed_step;
+	u64	last_hw_sleep;
+	u64	total_hw_sleep;
+	u64	max_hw_sleep;
+	enum suspend_stat_step	failed_steps[REC_FAILED_NUM];
+};
+
+extern struct suspend_stats suspend_stats;
+
+static inline void dpm_save_failed_dev(const char *name)
+{
+	strscpy(suspend_stats.failed_devs[suspend_stats.last_failed_dev],
+		name,
+		sizeof(suspend_stats.failed_devs[0]));
+	suspend_stats.last_failed_dev++;
+	suspend_stats.last_failed_dev %= REC_FAILED_NUM;
+}
+
+static inline void dpm_save_failed_errno(int err)
+{
+	suspend_stats.errno[suspend_stats.last_failed_errno] = err;
+	suspend_stats.last_failed_errno++;
+	suspend_stats.last_failed_errno %= REC_FAILED_NUM;
+}
+
+static inline void dpm_save_failed_step(enum suspend_stat_step step)
+{
+	suspend_stats.step_failures[step-1]++;
+	suspend_stats.failed_steps[suspend_stats.last_failed_step] = step;
+	suspend_stats.last_failed_step++;
+	suspend_stats.last_failed_step %= REC_FAILED_NUM;
+}
+
 /**
  * struct platform_suspend_ops - Callbacks for managing platform dependent
  *	system sleep states.
@@ -129,6 +185,7 @@ struct platform_suspend_ops {
 	bool (*suspend_again)(void);
 	void (*end)(void);
 	void (*recover)(void);
+
 };
 
 struct platform_s2idle_ops {
@@ -140,6 +197,7 @@ struct platform_s2idle_ops {
 	void (*restore_early)(void);
 	void (*restore)(void);
 	void (*end)(void);
+
 };
 
 #ifdef CONFIG_SUSPEND
@@ -376,6 +434,7 @@ struct platform_hibernation_ops {
 	int (*pre_restore)(void);
 	void (*restore_cleanup)(void);
 	void (*recover)(void);
+
 };
 
 #ifdef CONFIG_HIBERNATION
@@ -474,11 +533,13 @@ extern void pm_system_wakeup(void);
 extern void pm_system_cancel_wakeup(void);
 extern void pm_wakeup_clear(unsigned int irq_number);
 extern void pm_system_irq_wakeup(unsigned int irq_number);
+extern void pm_print_wakeup_irq(void);
 extern unsigned int pm_wakeup_irq(void);
 extern bool pm_get_wakeup_count(unsigned int *count, bool block);
 extern bool pm_save_wakeup_count(unsigned int count);
 extern void pm_wakep_autosleep_enabled(bool set);
 extern void pm_print_active_wakeup_sources(void);
+extern void pm_get_active_wakeup_sources(char *pending_sources, size_t max);
 
 extern unsigned int lock_system_sleep(void);
 extern void unlock_system_sleep(unsigned int);
@@ -511,8 +572,9 @@ static inline void ksys_sync_helper(void) {}
 static inline bool pm_suspended_storage(void) { return false; }
 static inline bool pm_wakeup_pending(void) { return false; }
 static inline void pm_system_wakeup(void) {}
-static inline void pm_wakeup_clear(bool reset) {}
+static inline void pm_wakeup_clear(unsigned int irq_number) {}
 static inline void pm_system_irq_wakeup(unsigned int irq_number) {}
+static inline void pm_print_wakeup_irq(void) {}
 
 static inline unsigned int lock_system_sleep(void) { return 0; }
 static inline void unlock_system_sleep(unsigned int flags) {}
@@ -588,20 +650,5 @@ void queue_up_suspend_work(void);
 static inline void queue_up_suspend_work(void) {}
 
 #endif /* !CONFIG_PM_AUTOSLEEP */
-
-enum suspend_stat_step {
-	SUSPEND_WORKING = 0,
-	SUSPEND_FREEZE,
-	SUSPEND_PREPARE,
-	SUSPEND_SUSPEND,
-	SUSPEND_SUSPEND_LATE,
-	SUSPEND_SUSPEND_NOIRQ,
-	SUSPEND_RESUME_NOIRQ,
-	SUSPEND_RESUME_EARLY,
-	SUSPEND_RESUME
-};
-
-void dpm_save_failed_dev(const char *name);
-void dpm_save_failed_step(enum suspend_stat_step step);
 
 #endif /* _LINUX_SUSPEND_H */

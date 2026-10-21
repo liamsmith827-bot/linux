@@ -209,6 +209,7 @@ struct input_dev {
 	ktime_t timestamp[INPUT_CLK_MAX];
 
 	bool inhibited;
+
 };
 #define to_input_dev(d) container_of(d, struct input_dev, dev)
 
@@ -334,6 +335,7 @@ struct input_handler {
 
 	struct list_head	h_list;
 	struct list_head	node;
+
 };
 
 /**
@@ -368,6 +370,7 @@ struct input_handle {
 
 	struct list_head	d_node;
 	struct list_head	h_node;
+
 };
 
 struct input_dev __must_check *input_allocate_device(void);

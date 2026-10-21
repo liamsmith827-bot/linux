@@ -84,6 +84,7 @@ struct uio_device {
 	struct mutex		info_lock;
 	struct kobject          *map_dir;
 	struct kobject          *portio_dir;
+
 };
 
 /**

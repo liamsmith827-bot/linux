@@ -104,6 +104,7 @@ struct tls_sw_context_tx {
 #define BIT_TX_SCHEDULED	0
 #define BIT_TX_CLOSING		1
 	unsigned long tx_bitmask;
+
 };
 
 struct tls_strparser {
@@ -139,6 +140,7 @@ struct tls_sw_context_rx {
 	atomic_t decrypt_pending;
 	struct sk_buff_head async_hold;
 	struct wait_queue_head wq;
+
 };
 
 struct tls_record_info {
@@ -280,6 +282,8 @@ struct tlsdev_ops {
 	int (*tls_dev_resync)(struct net_device *netdev,
 			      struct sock *sk, u32 seq, u8 *rcd_sn,
 			      enum tls_offload_ctx_dir direction);
+
+
 };
 
 enum tls_offload_sync_type {
