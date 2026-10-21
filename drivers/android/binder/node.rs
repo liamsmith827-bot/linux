@@ -761,7 +761,7 @@ impl DeliverToRead for Node {
         // If BINDER_THREAD_EXIT is invoked on a thread with a pending node refcount update, we
         // should move ourselves to ensure the refcount update is still delivered.
         if let Some(node) = ListArc::try_from_arc_borrow(self.as_arc_borrow()) {
-            _drop_outside_lock = owner_inner.push_work(node);
+            _drop_outside_lock = owner_inner.push_work(&self.owner, node);
         }
     }
 

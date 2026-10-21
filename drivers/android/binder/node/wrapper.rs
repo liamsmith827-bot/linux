@@ -83,7 +83,7 @@ impl DeliverToRead for NodeWrapper {
         if !ds.has_pushed_node {
             if let Some(node2) = ListArc::try_from_arc_borrow(node.as_arc_borrow()) {
                 ds.has_pushed_node = true;
-                _drop_outside_lock = owner_inner.push_work(node2);
+                _drop_outside_lock = owner_inner.push_work(&node.owner, node2);
             } else {
                 // This can't actually happen.
                 ds.has_strong_zero2one = false;
