@@ -375,9 +375,10 @@ static int fuse_dentry_init(struct dentry *dentry)
 }
 static void fuse_dentry_release(struct dentry *dentry)
 {
+#if BITS_PER_LONG < 64 || defined(CONFIG_FUSE_BPF)
 	struct fuse_dentry *fd = dentry->d_fsdata;
 
-#if BITS_PER_LONG < 64 || defined(CONFIG_FUSE_BPF)
+#ifdef CONFIG_FUSE_BPF
 	if (fd && fd->backing_path.dentry)
 		path_put(&fd->backing_path);
 
@@ -386,6 +387,7 @@ static void fuse_dentry_release(struct dentry *dentry)
 #endif
 
 	kfree_rcu(fd, rcu);
+#endif
 }
 
 static int fuse_dentry_delete(const struct dentry *dentry)

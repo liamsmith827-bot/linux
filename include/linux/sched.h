@@ -1684,11 +1684,8 @@ struct task_struct {
 	 */
 	struct callback_head		l1d_flush_kill;
 #endif
-	struct {
-		/* Save user-dumpable when mm goes away */
-		unsigned	user_dumpable:1;
-		};
-
+	/* Save user-dumpable when mm goes away */
+	unsigned			user_dumpable:1;
 
 #ifdef CONFIG_RV
 	/*
