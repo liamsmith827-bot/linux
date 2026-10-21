@@ -2442,9 +2442,6 @@ static int send_cancel(struct hci_dev *hdev, void *data)
 	if (!hci_dev_test_flag(hdev, HCI_MESH_SENDING))
 		mesh_next(hdev, NULL, 0);
 
-	if (!hci_dev_test_flag(hdev, HCI_MESH_SENDING))
-		mesh_next(hdev, NULL, 0);
-
 	return 0;
 }
 

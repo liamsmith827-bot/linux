@@ -4513,24 +4513,47 @@ struct fib6_info *rt6_add_dflt_router(struct net *net,
 	return rt6_get_dflt_router(net, gwaddr, dev);
 }
 
-static int rt6_addrconf_purge(struct fib6_info *rt, void *arg)
+static void __rt6_purge_dflt_routers(struct net *net,
+				     struct fib6_table *table)
 {
-	struct net_device *dev = fib6_info_nh_dev(rt);
-	struct inet6_dev *idev = dev ? __in6_dev_get(dev) : NULL;
+	struct fib6_info *rt;
 
-	if (rt->fib6_flags & (RTF_DEFAULT | RTF_ADDRCONF) &&
-	    (!idev || idev->cnf.accept_ra != 2)) {
-		/* Delete this route. See fib6_clean_tree() */
-		return -1;
+restart:
+	rcu_read_lock();
+	for_each_fib6_node_rt_rcu(&table->tb6_root) {
+		struct net_device *dev = fib6_info_nh_dev(rt);
+		struct inet6_dev *idev = dev ? __in6_dev_get(dev) : NULL;
+
+		if (rt->fib6_flags & (RTF_DEFAULT | RTF_ADDRCONF) &&
+		    (!idev || idev->cnf.accept_ra != 2) &&
+		    fib6_info_hold_safe(rt)) {
+			rcu_read_unlock();
+			ip6_del_rt(net, rt, false);
+			goto restart;
+		}
 	}
+	rcu_read_unlock();
 
-	/* Continue walking */
-	return 0;
+	table->flags &= ~RT6_TABLE_HAS_DFLT_ROUTER;
 }
 
 void rt6_purge_dflt_routers(struct net *net)
 {
-	fib6_clean_all(net, rt6_addrconf_purge, NULL);
+	struct fib6_table *table;
+	struct hlist_head *head;
+	unsigned int h;
+
+	rcu_read_lock();
+
+	for (h = 0; h < FIB6_TABLE_HASHSZ; h++) {
+		head = &net->ipv6.fib_table_hash[h];
+		hlist_for_each_entry_rcu(table, head, tb6_hlist) {
+			if (table->flags & RT6_TABLE_HAS_DFLT_ROUTER)
+				__rt6_purge_dflt_routers(net, table);
+		}
+	}
+
+	rcu_read_unlock();
 }
 
 static void rtmsg_to_fib6_config(struct net *net,
