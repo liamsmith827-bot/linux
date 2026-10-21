@@ -38,6 +38,8 @@ __modpost:
 include $(objtree)/include/config/auto.conf
 include $(srctree)/scripts/Kbuild.include
 
+mixed-build-prefix = $(if $(KBUILD_MIXED_TREE),$(KBUILD_MIXED_TREE)/)
+
 MODPOST = $(objtree)/scripts/mod/modpost
 
 modpost-args =										\
@@ -129,8 +131,20 @@ modpost-deps += $(ksym-wl)
 endif
 
 ifeq ($(wildcard vmlinux.o),)
+
+# ANDROID: Use vmlinux.symvers from base build when doing mixed build
+ifneq ($(wildcard vmlinux.symvers),)
+modpost-args += -i vmlinux.symvers
+# Not adding vmlinux.symvers to modpost-deps to avoid dependency on
+#   .vmlinux.objs. Just use the one from base build.
+# Note: we don't want to include the vmlinux symbols here because we want to be
+# sure we only use the vmlinux symbols from the GKI kernel.
+output-symdump := modules-only.symvers
+else # vmlinux.symvers does not exist
 missing-input := vmlinux.o
 output-symdump := modules-only.symvers
+endif # whether vmlinux.symvers exists
+
 else
 modpost-args += vmlinux.o
 modpost-deps += vmlinux.o
