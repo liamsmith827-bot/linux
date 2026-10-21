@@ -34,6 +34,7 @@
 
 #include "usb.h"
 
+#include <trace/hooks/usb.h>
 
 /*
  * Adds a new dynamic USBdevice ID to this driver,
@@ -1420,9 +1421,13 @@ static int usb_suspend_both(struct usb_device *udev, pm_message_t msg)
 	int			i = 0, n = 0;
 	struct usb_interface	*intf;
 	bool			offload_active = false;
+	bool			bypass = false;
 
 	if (udev->state == USB_STATE_NOTATTACHED ||
 			udev->state == USB_STATE_SUSPENDED)
+		goto done;
+	trace_android_rvh_usb_dev_suspend(udev, msg, &bypass);
+	if (bypass)
 		goto done;
 
 	usb_offload_set_pm_locked(udev, true);
@@ -1544,6 +1549,7 @@ static int usb_resume_both(struct usb_device *udev, pm_message_t msg)
 	int			i;
 	struct usb_interface	*intf;
 	bool			offload_active = false;
+	bool			bypass = false;
 
 	if (udev->state == USB_STATE_NOTATTACHED) {
 		status = -ENODEV;
@@ -1552,6 +1558,10 @@ static int usb_resume_both(struct usb_device *udev, pm_message_t msg)
 	udev->can_submit = 1;
 	if (msg.event == PM_EVENT_RESUME)
 		offload_active = usb_offload_check(udev);
+
+	trace_android_vh_usb_dev_resume(udev, msg, &bypass);
+	if (bypass)
+		goto done;
 
 	/* Resume the device */
 	if (udev->state == USB_STATE_SUSPENDED || udev->reset_resume) {
