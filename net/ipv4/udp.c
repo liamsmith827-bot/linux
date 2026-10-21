@@ -2169,7 +2169,7 @@ try_again:
 	if (flags & MSG_TRUNC)
 		err = ulen;
 
-	trace_android_rvh_udp_recvmsg(sk, msg, len, flags, addr_len);
+	trace_android_rvh_udp_recvmsg(sk, msg, len, flags, &msg->msg_namelen);
 
 	skb_consume_udp(sk, skb, peeking ? -err : err);
 	return err;

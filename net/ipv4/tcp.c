@@ -2943,7 +2943,7 @@ int tcp_recvmsg(struct sock *sk, struct msghdr *msg, size_t len, int flags)
 		}
 	}
 
-	trace_android_rvh_tcp_recvmsg(sk, msg, len, flags, addr_len);
+	trace_android_rvh_tcp_recvmsg(sk, msg, len, flags, &msg->msg_namelen);
 
 	return ret;
 }

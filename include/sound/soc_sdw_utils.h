@@ -85,7 +85,6 @@ struct asoc_sdw_codec_info {
 	const int part_id;
 	const int version_id;
 	const char *codec_name;
-	const char *name_prefix;
 	int amp_num;
 	const u8 acpi_id[ACPI_ID_LEN];
 	const bool ignore_internal_dmic;
@@ -177,7 +176,6 @@ int asoc_sdw_count_sdw_endpoints(struct snd_soc_card *card,
 
 struct asoc_sdw_dailink *asoc_sdw_find_dailink(struct asoc_sdw_dailink *dailinks,
 					       const struct snd_soc_acpi_endpoint *new);
-int asoc_sdw_get_dai_type(u32 type);
 
 int asoc_sdw_parse_sdw_endpoints(struct device *dev,
 				 struct asoc_sdw_mc_private *ctx,

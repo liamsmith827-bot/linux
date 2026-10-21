@@ -311,12 +311,6 @@ struct platform_device;
 	.info = snd_soc_info_bool_ext, \
 	.get = xhandler_get, .put = xhandler_put, \
 	.private_value = xdata }
-#define SOC_SINGLE_BOOL_EXT_ACC(xname, xdata, xhandler_get, xhandler_put, xaccess) \
-{	.iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = xname, \
-	.access = xaccess, \
-	.info = snd_soc_info_bool_ext, \
-	.get = xhandler_get, .put = xhandler_put, \
-	.private_value = xdata }
 #define SOC_ENUM_EXT(xname, xenum, xhandler_get, xhandler_put) \
 {	.iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = xname, \
 	.info = snd_soc_info_enum_double, \
@@ -803,7 +797,6 @@ struct snd_soc_dai_link {
 #ifdef CONFIG_SND_SOC_TOPOLOGY
 	struct snd_soc_dobj dobj; /* For topology */
 #endif
-
 };
 
 static inline int snd_soc_link_num_ch_map(const struct snd_soc_dai_link *link)
@@ -1090,7 +1083,6 @@ struct snd_soc_card {
 	struct device *devres_dev;
 
 	void *drvdata;
-
 };
 #define for_each_card_prelinks(card, i, link)				\
 	for ((i) = 0;							\
@@ -1184,7 +1176,6 @@ struct snd_soc_pcm_runtime {
 
 	/* CPU/Codec/Platform */
 	int num_components;
-
 	struct snd_soc_component *components[] __counted_by(num_components);
 };
 
@@ -1239,7 +1230,6 @@ struct soc_mixer_control {
 #ifdef CONFIG_SND_SOC_TOPOLOGY
 	struct snd_soc_dobj dobj;
 #endif
-
 };
 
 struct soc_bytes {
@@ -1279,7 +1269,6 @@ struct soc_enum {
 #ifdef CONFIG_SND_SOC_TOPOLOGY
 	struct snd_soc_dobj dobj;
 #endif
-
 };
 
 static inline bool snd_soc_volsw_is_stereo(const struct soc_mixer_control *mc)
