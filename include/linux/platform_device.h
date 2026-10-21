@@ -37,7 +37,6 @@ struct platform_device {
 
 	/* arch specific additions */
 	struct pdev_archdata	archdata;
-
 };
 
 #define platform_get_device_id(pdev)	((pdev)->id_entry)
@@ -98,8 +97,6 @@ devm_platform_ioremap_resource_byname(struct platform_device *pdev,
 
 extern int platform_get_irq(struct platform_device *, unsigned int);
 extern int platform_get_irq_optional(struct platform_device *, unsigned int);
-extern int platform_get_irq_affinity(struct platform_device *, unsigned int,
-				     const struct cpumask **);
 extern int platform_irq_count(struct platform_device *);
 extern int devm_platform_get_irqs_affinity(struct platform_device *dev,
 					   struct irq_affinity *affd,
@@ -130,7 +127,6 @@ struct platform_device_info {
 		u64 dma_mask;
 
 		const struct property_entry *properties;
-
 };
 extern struct platform_device *platform_device_register_full(
 		const struct platform_device_info *pdevinfo);
@@ -249,7 +245,6 @@ struct platform_driver {
 	 * to setup and manage their own I/O address space.
 	 */
 	bool driver_managed_dma;
-
 };
 
 #define to_platform_driver(drv)	(container_of((drv), struct platform_driver, \
