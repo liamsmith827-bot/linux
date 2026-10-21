@@ -368,47 +368,6 @@ void cfg80211_stop_pd(struct cfg80211_registered_device *rdev,
 	rdev->opencount--;
 }
 
-int cfg80211_nan_set_local_schedule(struct cfg80211_registered_device *rdev,
-				    struct wireless_dev *wdev,
-				    struct cfg80211_nan_local_sched *sched)
-{
-	int ret;
-
-	lockdep_assert_held(&rdev->wiphy.mtx);
-
-	if (wdev->iftype != NL80211_IFTYPE_NAN || !wdev_running(wdev))
-		return -EINVAL;
-
-	if (wdev->u.nan.sched_update_pending)
-		return -EBUSY;
-
-	ret = rdev_nan_set_local_sched(rdev, wdev, sched);
-	if (ret)
-		return ret;
-
-	wdev->u.nan.sched_update_pending = sched->deferred;
-
-	kfree(wdev->u.nan.chandefs);
-	wdev->u.nan.chandefs = NULL;
-	wdev->u.nan.n_channels = 0;
-
-	if (!sched->n_channels)
-		return 0;
-
-	wdev->u.nan.chandefs = kcalloc(sched->n_channels,
-				       sizeof(*wdev->u.nan.chandefs),
-				       GFP_KERNEL);
-	if (!wdev->u.nan.chandefs)
-		return -ENOMEM;
-
-	for (int i = 0; i < sched->n_channels; i++)
-		wdev->u.nan.chandefs[i] = sched->nan_channels[i].chandef;
-
-	wdev->u.nan.n_channels = sched->n_channels;
-
-	return 0;
-}
-
 void cfg80211_shutdown_all_interfaces(struct wiphy *wiphy)
 {
 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
