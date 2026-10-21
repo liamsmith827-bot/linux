@@ -1,0 +1,439 @@
+diff --git a/Kconfig b/Kconfig
+index 307e581144de..d051645b83ea 100644
+--- a/Kconfig
++++ b/Kconfig
+@@ -32,3 +32,6 @@ source "lib/Kconfig.debug"
+ source "Documentation/Kconfig"
+ 
+ source "io_uring/Kconfig"
++
++# ANDROID: Set KCONFIG_EXT_PREFIX to decend into an external project.
++source "$(KCONFIG_EXT_PREFIX)Kconfig.ext"
+diff --git a/Makefile b/Makefile
+index dc63a98489a5..89609abe5796 100644
+--- a/Makefile
++++ b/Makefile
+@@ -151,6 +151,24 @@ endif
+ 
+ export KBUILD_EXTMOD
+ 
++# ANDROID: set up mixed-build support. mixed-build allows device kernel modules
++# to be compiled against a GKI kernel. This approach still uses the headers and
++# Kbuild from device kernel, so care must be taken to ensure that those headers match.
++ifdef KBUILD_MIXED_TREE
++# Need vmlinux.symvers for modpost and System.map for depmod, check whether they exist in KBUILD_MIXED_TREE
++required_mixed_files=vmlinux.symvers System.map
++$(if $(filter-out $(words $(required_mixed_files)), \
++		$(words $(wildcard $(add-prefix $(KBUILD_MIXED_TREE)/,$(required_mixed_files))))),,\
++	$(error KBUILD_MIXED_TREE=$(KBUILD_MIXED_TREE) doesn't contain $(required_mixed_files)))
++endif
++
++mixed-build-prefix = $(if $(KBUILD_MIXED_TREE),$(KBUILD_MIXED_TREE)/)
++export KBUILD_MIXED_TREE
++# This is a hack for kleaf to set mixed-build-prefix within the execution of a make rule, e.g.
++# within __modinst_pre.
++# TODO(b/205893923): Revert this hack once it is properly handled.
++export mixed-build-prefix
++
+ ifeq ("$(origin W)", "command line")
+   KBUILD_EXTRA_WARN := $(W)
+ endif
+@@ -516,6 +534,7 @@ ifneq ($(LLVM),)
+ CC		= $(LLVM_PREFIX)clang$(LLVM_SUFFIX)
+ LD		= $(LLVM_PREFIX)ld.lld$(LLVM_SUFFIX)
+ AR		= $(LLVM_PREFIX)llvm-ar$(LLVM_SUFFIX)
++LLVM_LINK	= $(LLVM_PREFIX)llvm-link$(LLVM_SUFFIX)
+ NM		= $(LLVM_PREFIX)llvm-nm$(LLVM_SUFFIX)
+ OBJCOPY		= $(LLVM_PREFIX)llvm-objcopy$(LLVM_SUFFIX)
+ OBJDUMP		= $(LLVM_PREFIX)llvm-objdump$(LLVM_SUFFIX)
+@@ -629,7 +648,7 @@ export RUSTC_BOOTSTRAP := 1
+ export CLIPPY_CONF_DIR := $(srctree)
+ 
+ export ARCH SRCARCH CONFIG_SHELL BASH HOSTCC KBUILD_HOSTCFLAGS CROSS_COMPILE LD CC HOSTPKG_CONFIG
+-export RUSTC RUSTDOC RUSTFMT RUSTC_OR_CLIPPY_QUIET RUSTC_OR_CLIPPY BINDGEN
++export RUSTC RUSTDOC RUSTFMT RUSTC_OR_CLIPPY_QUIET RUSTC_OR_CLIPPY BINDGEN LLVM_LINK
+ export HOSTRUSTC KBUILD_HOSTRUSTFLAGS
+ export CPP AR NM STRIP OBJCOPY OBJDUMP READELF PAHOLE RESOLVE_BTFIDS LEX YACC AWK INSTALLKERNEL
+ export PERL PYTHON3 CHECK CHECKFLAGS MAKE UTS_MACHINE HOSTCXX
+@@ -799,11 +818,13 @@ drivers-y	:=
+ libs-y		:= lib/
+ endif # KBUILD_EXTMOD
+ 
++ifndef KBUILD_MIXED_TREE
+ # The all: target is the default when no target is given on the
+ # command line.
+ # This allow a user to issue only 'make' to build a kernel including modules
+ # Defaults to vmlinux, but the arch makefile usually adds further targets
+ all: vmlinux
++endif
+ 
+ CFLAGS_GCOV	:= -fprofile-arcs -ftest-coverage
+ ifdef CONFIG_CC_IS_GCC
+@@ -1005,13 +1026,29 @@ endif
+ export CC_FLAGS_SCS
+ endif
+ 
++ifdef CONFIG_RUST_INLINE_HELPERS
++# `rustc` normally emits traps for unreachable paths during code generation.
++# With inline helpers, Clang performs code generation from the linked bitcode
++# instead, so request the same behavior explicitly. Otherwise `objtool` may
++# follow an impossible Rust path into the next function.
++CC_FLAGS_RUST_INLINE_HELPERS := -mllvm -trap-unreachable \
++				-mllvm -no-trap-after-noreturn
++export CC_FLAGS_RUST_INLINE_HELPERS
++endif
++
+ ifdef CONFIG_LTO_CLANG
+ ifdef CONFIG_LTO_CLANG_THIN
+ CC_FLAGS_LTO	:= -flto=thin -fsplit-lto-unit
+ else
+ CC_FLAGS_LTO	:= -flto
+ endif
++
++ifeq ($(SRCARCH),x86)
++# Workaround for compiler / linker bug
+ CC_FLAGS_LTO	+= -fvisibility=hidden
++else
++CC_FLAGS_LTO	+= -fvisibility=default
++endif
+ 
+ # Limit inlining across translation units to reduce binary size
+ KBUILD_LDFLAGS += -mllvm -import-instr-limit=5
+@@ -1224,6 +1261,7 @@ targets += vmlinux.a
+ vmlinux.a: $(KBUILD_VMLINUX_OBJS) scripts/head-object-list.txt FORCE
+ 	$(call if_changed,ar_vmlinux.a)
+ 
++ifndef KBUILD_MIXED_TREE
+ PHONY += vmlinux_o
+ vmlinux_o: vmlinux.a $(KBUILD_VMLINUX_LIBS)
+ 	$(Q)$(MAKE) -f $(srctree)/scripts/Makefile.vmlinux_o
+@@ -1246,6 +1284,7 @@ vmlinux: private _LDFLAGS_vmlinux := $(LDFLAGS_vmlinux)
+ vmlinux: export LDFLAGS_vmlinux = $(_LDFLAGS_vmlinux)
+ vmlinux: vmlinux.o $(KBUILD_LDS) modpost
+ 	$(Q)$(MAKE) -f $(srctree)/scripts/Makefile.vmlinux
++endif
+ 
+ # The actual objects are generated when descending,
+ # make sure no implicit rule kicks in
+@@ -1484,7 +1523,9 @@ kselftest-merge:
+ # Devicetree files
+ 
+ ifneq ($(wildcard $(srctree)/arch/$(SRCARCH)/boot/dts/),)
+-dtstree := arch/$(SRCARCH)/boot/dts
++# ANDROID: allow this to be overridden by the build environment. This allows
++# one to compile a device tree that is located out-of-tree.
++dtstree ?= arch/$(SRCARCH)/boot/dts
+ endif
+ 
+ ifneq ($(dtstree),)
+@@ -1921,6 +1962,29 @@ __external_modules_error:
+ 	@false
+ endif
+ 
++# ---------------------------------------------------------------------------
++# Kernel headers from External Modules
++
++#Default location for installed headers
++export INSTALL_HDR_PATH = $(objtree)/usr
++
++quiet_cmd_headers_install = INSTALL $(INSTALL_HDR_PATH)/include
++      cmd_headers_install = \
++	mkdir -p $(INSTALL_HDR_PATH); \
++	rsync -mrl --include='*/' --include='*\.h' --exclude='*' \
++	usr/include $(INSTALL_HDR_PATH);
++
++PHONY += headers_install
++headers_install: headers
++	$(call cmd,headers_install)
++
++hdr-inst := -f $(srctree)/scripts/Makefile.headersinst obj
++
++PHONY += headers
++headers:
++	$(Q)$(MAKE) $(hdr-inst)=include/uapi
++	$(Q)$(MAKE) $(hdr-inst)=arch/$(SRCARCH)/include/uapi
++
+ endif # KBUILD_EXTMOD
+ 
+ # ---------------------------------------------------------------------------
+@@ -1971,7 +2035,9 @@ KBUILD_MODULES :=
+ endif # CONFIG_MODULES
+ 
+ PHONY += modpost
+-modpost: $(if $(single-build),, $(if $(KBUILD_BUILTIN), vmlinux.o)) \
++modpost: $(if $(single-build),, $(if $(KBUILD_EXTMOD),, \
++	 $(if $(KBUILD_MIXED_TREE), vmlinux.symvers, \
++	 $(if $(KBUILD_BUILTIN), vmlinux.o)))) \
+ 	 $(if $(KBUILD_MODULES), modules_check)
+ 	$(Q)$(MAKE) -f $(srctree)/scripts/Makefile.modpost
+ 
+@@ -2023,7 +2089,7 @@ prepare: outputmakefile
+ # Error messages still appears in the original language
+ PHONY += $(build-dir)
+ $(build-dir): prepare
+-	$(Q)$(MAKE) $(build)=$@ need-builtin=1 need-modorder=1 $(single-goals)
++	$(Q)$(MAKE) $(build)=$@ $(if $(KBUILD_MIXED_TREE),,need-builtin=1) need-modorder=1 $(single-goals)
+ 
+ clean-dirs := $(addprefix _clean_, $(clean-dirs))
+ PHONY += $(clean-dirs) clean
+@@ -2032,7 +2098,8 @@ $(clean-dirs):
+ 
+ clean: $(clean-dirs)
+ 	$(call cmd,rmfiles)
+-	@find . $(RCS_FIND_IGNORE) \
++	@find . $(if $(filter-out arch/$(SRCARCH)/boot/dts, $(dtstree)), $(dtstree)) \
++		$(RCS_FIND_IGNORE) \
+ 		\( -name '*.[aios]' -o -name '*.rsi' -o -name '*.ko' -o -name '.*.cmd' \
+ 		-o -name '*.ko.*' \
+ 		-o -name '*.dtb' -o -name '*.dtbo' \
+@@ -2087,7 +2154,7 @@ quiet_cmd_gen_compile_commands = GEN     $@
+       cmd_gen_compile_commands = $(PYTHON3) $< -a $(AR) -o $@ $(filter-out $<, $(real-prereqs))
+ 
+ compile_commands.json: $(srctree)/scripts/clang-tools/gen_compile_commands.py \
+-	$(if $(KBUILD_EXTMOD),, vmlinux.a $(KBUILD_VMLINUX_LIBS)) \
++	$(if $(KBUILD_EXTMOD)$(KBUILD_MIXED_TREE),, vmlinux.a $(KBUILD_VMLINUX_LIBS)) \
+ 	$(if $(CONFIG_MODULES), modules.order) FORCE
+ 	$(call if_changed,gen_compile_commands)
+ 
+diff --git a/scripts/Makefile.modfinal b/scripts/Makefile.modfinal
+index 542ba462ed3e..c64b7747827b 100644
+--- a/scripts/Makefile.modfinal
++++ b/scripts/Makefile.modfinal
+@@ -28,11 +28,16 @@ ccflags-remove-y := $(CC_FLAGS_CFI)
+ .module-common.o: $(srctree)/scripts/module-common.c FORCE
+ 	$(call if_changed_rule,cc_o_c)
+ 
++ifdef CONFIG_CRYPTO_FIPS140_MOD
++ARCH_POSTLINK := $(srctree)/arch/$(SRCARCH)/Makefile.postlink
++endif
++
+ quiet_cmd_ld_ko_o = LD [M]  $@
+       cmd_ld_ko_o =							\
+ 	$(LD) -r $(KBUILD_LDFLAGS)					\
+ 		$(KBUILD_LDFLAGS_MODULE) $(LDFLAGS_MODULE)		\
+-		-T $(objtree)/scripts/module.lds -o $@ $(filter %.o, $^)
++		-T $(objtree)/scripts/module.lds -o $@ $(filter %.o, $^); \
++	$(if $(ARCH_POSTLINK), $(MAKE) -f $(ARCH_POSTLINK) $@, true)
+ 
+ quiet_cmd_btf_ko = BTF [M] $@
+       cmd_btf_ko = 							\
+@@ -52,7 +57,7 @@ if_changed_except = $(if $(call newer_prereqs_except,$(2))$(cmd-check),      \
+ 	printf '%s\n' 'savedcmd_$@ := $(make-cmd)' > $(dot-target).cmd, @:)
+ 
+ # Re-generate module BTFs if either module's .ko or vmlinux changed
+-%.ko: %.o %.mod.o .module-common.o $(objtree)/scripts/module.lds $(and $(CONFIG_DEBUG_INFO_BTF_MODULES),$(KBUILD_BUILTIN),$(objtree)/vmlinux) FORCE
++%.ko: %.o %.mod.o $(extmod_prefix).module-common.o $(objtree)/scripts/module.lds $(and $(CONFIG_DEBUG_INFO_BTF_MODULES),$(KBUILD_BUILTIN),$(objtree)/vmlinux) FORCE
+ 	+$(call if_changed_except,ld_ko_o,$(objtree)/vmlinux)
+ ifdef CONFIG_DEBUG_INFO_BTF_MODULES
+ 	+$(if $(newer-prereqs),$(call cmd,btf_ko))
+diff --git a/scripts/Makefile.modinst b/scripts/Makefile.modinst
+index 9ba45e5b32b1..11b3b7f64403 100644
+--- a/scripts/Makefile.modinst
++++ b/scripts/Makefile.modinst
+@@ -60,6 +60,10 @@ suffix-$(CONFIG_MODULE_COMPRESS_ZSTD)	:= .zst
+ endif
+ 
+ modules := $(patsubst %.o, $(dst)/%.ko$(suffix-y), $(modules))
++ifneq ($(KBUILD_EXTMOD),)
++extmod_suffix := $(shell echo "${KBUILD_EXTMOD}" | md5sum | cut -d " " -f 1)
++modules += $(dst)/modules.order.$(extmod_suffix)
++endif
+ install-$(CONFIG_MODULES) += $(modules)
+ 
+ __modinst: $(install-y)
+@@ -124,6 +128,13 @@ $(dst)/%.ko: %.ko FORCE
+ 	$(call cmd,strip)
+ 	$(call cmd,sign)
+ 
++ifneq ($(KBUILD_EXTMOD),)
++$(dst)/modules.order.$(extmod_suffix): modules.order FORCE
++	$(call cmd,install)
++	@sed -e 's:^\(.*\)\.o$$:$(INSTALL_MOD_DIR)/\1.ko:' \
++	     -i $@
++endif
++
+ ifdef CONFIG_MODULES
+ __modinst: depmod
+ 
+diff --git a/scripts/Makefile.modpost b/scripts/Makefile.modpost
+index d7d45067d08b..4eb01d683cf0 100644
+--- a/scripts/Makefile.modpost
++++ b/scripts/Makefile.modpost
+@@ -38,6 +38,8 @@ __modpost:
+ include $(objtree)/include/config/auto.conf
+ include $(srctree)/scripts/Kbuild.include
+ 
++mixed-build-prefix = $(if $(KBUILD_MIXED_TREE),$(KBUILD_MIXED_TREE)/)
++
+ MODPOST = $(objtree)/scripts/mod/modpost
+ 
+ modpost-args =										\
+@@ -67,6 +69,33 @@ modpost-args += -T modules.order
+ modpost-deps += modules.order
+ endif
+ 
++ifeq ($(CONFIG_MODULE_SCMVERSION),y)
++ifeq ($(KBUILD_EXTMOD),)
++module_srcpath := $(srctree)
++else
++# Get the external module's source path. KBUILD_EXTMOD could either be an
++# absolute path or relative path from $(srctree). This makes sure that we
++# aren't using a relative path from a separate working directory (O= or
++# KBUILD_OUTPUT) since that may not be the actual module's SCM project path. So
++# check the path relative to $(srctree) first.
++ifneq ($(realpath $(srctree)/$(KBUILD_EXTMOD) 2>/dev/null),)
++	module_srcpath := $(srctree)/$(KBUILD_EXTMOD)
++else
++	module_srcpath := $(KBUILD_EXTMOD)
++endif
++endif
++
++# Get the SCM version of the module. Sed verifies setlocalversion returns
++# a proper revision based on the SCM type, e.g. git, mercurial, or svn.
++# Note: relative M= paths are not supported when building the kernel out of the
++# srctree since setlocalversion won't be able to find the module srctree.
++module_scmversion := $(shell $(srctree)/scripts/setlocalversion $(module_srcpath) | \
++	sed -n 's/.*-\(\(g\|hg\)[a-fA-F0-9]\+\(-dirty\)\?\|svn[0-9]\+\).*/\1/p')
++ifneq ($(module_scmversion),)
++modpost-args += -v $(module_scmversion)
++endif
++endif
++
+ ifeq ($(KBUILD_EXTMOD),)
+ 
+ # Generate the list of in-tree objects in vmlinux
+@@ -102,8 +131,20 @@ modpost-deps += $(ksym-wl)
+ endif
+ 
+ ifeq ($(wildcard vmlinux.o),)
++
++# ANDROID: Use vmlinux.symvers from base build when doing mixed build
++ifneq ($(wildcard vmlinux.symvers),)
++modpost-args += -i vmlinux.symvers
++# Not adding vmlinux.symvers to modpost-deps to avoid dependency on
++#   .vmlinux.objs. Just use the one from base build.
++# Note: we don't want to include the vmlinux symbols here because we want to be
++# sure we only use the vmlinux symbols from the GKI kernel.
++output-symdump := modules-only.symvers
++else # vmlinux.symvers does not exist
+ missing-input := vmlinux.o
+ output-symdump := modules-only.symvers
++endif # whether vmlinux.symvers exists
++
+ else
+ modpost-args += vmlinux.o
+ modpost-deps += vmlinux.o
+@@ -132,6 +173,13 @@ modpost-args += -e $(addprefix -i , $(KBUILD_EXTRA_SYMBOLS))
+ 
+ endif # ($(KBUILD_EXTMOD),)
+ 
++ifdef CONFIG_MODULE_SIG_PROTECT
++mod-protect-list := $(CONFIG_MODULE_SIG_PROTECT_LIST)
++mod-protect-list := $(if $(filter-out /%, $(mod-protect-list)),$(if $(wildcard $(objtree)/$(mod-protect-list)),$(objtree)/,$(srctree)/))$(mod-protect-list)
++modpost-args += $(addprefix -p , $(mod-protect-list))
++modpost-deps += $(mod-protect-list)
++endif
++
+ quiet_cmd_modpost = MODPOST $@
+       cmd_modpost = \
+ 	$(if $(missing-input), \
+diff --git a/scripts/module.lds.S b/scripts/module.lds.S
+index ee79c41059f3..9083eb4f5478 100644
+--- a/scripts/module.lds.S
++++ b/scripts/module.lds.S
+@@ -20,9 +20,8 @@ SECTIONS {
+ 	}
+ 
+ 	__ksymtab		0 : ALIGN(8) { *(SORT(___ksymtab+*)) }
+-	__ksymtab_gpl		0 : ALIGN(8) { *(SORT(___ksymtab_gpl+*)) }
+ 	__kcrctab		0 : ALIGN(4) { *(SORT(___kcrctab+*)) }
+-	__kcrctab_gpl		0 : ALIGN(4) { *(SORT(___kcrctab_gpl+*)) }
++	__kflagstab		0 : ALIGN(1) { *(SORT(___kflagstab+*)) }
+ 
+ 	.ctors			0 : ALIGN(8) { *(SORT(.ctors.*)) *(.ctors) }
+ 	.init_array		0 : ALIGN(8) { *(SORT(.init_array.*)) *(.init_array) }
+@@ -38,12 +37,35 @@ SECTIONS {
+ 	__kcfi_traps 		: { KEEP(*(.kcfi_traps)) }
+ #endif
+ 
+-#ifdef CONFIG_LTO_CLANG
++#if IS_ENABLED(CONFIG_CRYPTO_FIPS140_MOD)
+ 	/*
+-	 * With CONFIG_LTO_CLANG, LLD always enables -fdata-sections and
+-	 * -ffunction-sections, which increases the size of the final module.
+-	 * Merge the split sections in the final binary.
++	 * The FIPS140 module incorporates copies of builtin code, which gets
++	 * integrity checked at module load time, and registered in a way that
++	 * ensures that the integrity checked versions supersede the builtin
++	 * ones.  These objects are compiled as builtin code, and so their init
++	 * hooks will be exported from the binary in the same way as builtin
++	 * initcalls are, i.e., annotated with a level that defines the order
++	 * in which the hooks are expected to be invoked.
+ 	 */
++#define INIT_CALLS_LEVEL(level)						\
++		KEEP(*(.initcall##level##.init*))			\
++		KEEP(*(.initcall##level##s.init*))
++
++	.initcalls : {
++		*(.initcalls._start)
++		INIT_CALLS_LEVEL(0)
++		INIT_CALLS_LEVEL(1)
++		INIT_CALLS_LEVEL(2)
++		INIT_CALLS_LEVEL(3)
++		INIT_CALLS_LEVEL(4)
++		INIT_CALLS_LEVEL(5)
++		INIT_CALLS_LEVEL(rootfs)
++		INIT_CALLS_LEVEL(6)
++		INIT_CALLS_LEVEL(7)
++		*(.initcalls._end)
++	}
++#endif
++
+ 	.bss : {
+ 		*(.bss .bss.[0-9a-zA-Z_]*)
+ 		*(.bss..L*)
+@@ -55,10 +77,19 @@ SECTIONS {
+ 	}
+ 
+ 	.rodata : {
++		*(.rodata.._start)
+ 		*(.rodata .rodata.[0-9a-zA-Z_]*)
+ 		*(.rodata..L*)
++		*(.rodata.._end)
+ 	}
+-#endif
++
++	.text : {
++		*(.text.._start)
++		*(.text .text.[0-9a-zA-Z_]*)
++		*(.text.._end)
++		*(.text.._fips140_unchecked)
++	}
++
+ 	MOD_SEPARATE_CODETAG_SECTIONS()
+ }
+ 
+diff --git a/scripts/setlocalversion b/scripts/setlocalversion
+index 28169d7e143b..c13fe6e585e9 100755
+--- a/scripts/setlocalversion
++++ b/scripts/setlocalversion
+@@ -186,16 +186,16 @@ if ${no_local}; then
+ 	exit 0
+ fi
+ 
+-if ! test -e include/config/auto.conf; then
++if ! test -e ${objtree}/include/config/auto.conf; then
+ 	echo "Error: kernelrelease not valid - run 'make prepare' to update it" >&2
+ 	exit 1
+ fi
+ 
+ # version string from CONFIG_LOCALVERSION
+-config_localversion=$(sed -n 's/^CONFIG_LOCALVERSION=\(.*\)$/\1/p' include/config/auto.conf)
++config_localversion=$(sed -n 's/^CONFIG_LOCALVERSION=\(.*\)$/\1/p' ${objtree}/include/config/auto.conf)
+ 
+ # scm version string if not at the kernel version tag or at the file_localversion
+-if grep -q "^CONFIG_LOCALVERSION_AUTO=y$" include/config/auto.conf; then
++if grep -q "^CONFIG_LOCALVERSION_AUTO=y$" ${objtree}/include/config/auto.conf; then
+ 	# full scm version string
+ 	scm_version="$(scm_version)"
+ elif [ "${LOCALVERSION+set}" != "set" ]; then
