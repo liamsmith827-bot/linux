@@ -157,7 +157,7 @@ export KBUILD_EXTMOD
 ifdef KBUILD_MIXED_TREE
 # Need vmlinux.symvers for modpost and System.map for depmod, check whether they exist in KBUILD_MIXED_TREE
 required_mixed_files=vmlinux.symvers System.map
-ifneq ($(words $(required_mixed_files)),$(words $(wildcard $(add-prefix $(KBUILD_MIXED_TREE)/,$(required_mixed_files)))))
+ifneq ($(words $(required_mixed_files)),$(words $(wildcard $(addprefix $(KBUILD_MIXED_TREE)/,$(required_mixed_files)))))
 $(error KBUILD_MIXED_TREE=$(KBUILD_MIXED_TREE) doesn't contain $(required_mixed_files))
 endif
 endif
@@ -1302,6 +1302,7 @@ vmlinux: private _LDFLAGS_vmlinux := $(LDFLAGS_vmlinux)
 vmlinux: export LDFLAGS_vmlinux = $(_LDFLAGS_vmlinux)
 vmlinux: vmlinux.o $(KBUILD_LDS) modpost
 	$(Q)$(MAKE) -f $(srctree)/scripts/Makefile.vmlinux
+endif # KBUILD_MIXED_TREE
 
 # The actual objects are generated when descending,
 # make sure no implicit rule kicks in
