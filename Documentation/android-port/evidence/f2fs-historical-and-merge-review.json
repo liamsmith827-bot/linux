@@ -1,0 +1,363 @@
+{
+  "source_head": "e3f800ff6558b74e37c45d61c5673d3e83dea97b",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "records": [
+    {
+      "commit": "a62a18ccb1526c7f72b6d119be794456f9119919",
+      "paths": [
+        "fs/f2fs/super.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "450100ebfa7e18543d4432b046047e65ff341dabf1aab160f96abfa78b02cd35",
+      "assessment": "Native F2FS cryptops retain has_stable_inodes=true and has_32bit_inodes=1. Native fscrypt policy validation enforces the IV_INO_LBLK_64 stable-inode and maximum-data-unit-index constraints. These evolved interfaces replace the historical get_ino_and_lblk_bits callback without losing encryption-policy eligibility or IV uniqueness checks."
+    },
+    {
+      "commit": "fb710731b64bbe32f6e9abd16c462711da11663c",
+      "paths": [
+        "fs/f2fs/data.c",
+        "fs/f2fs/f2fs.h",
+        "fs/f2fs/super.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "b295f3e99926828b617dcfbd12e9cfc9dde3d91b397b96c1c43c3210adeb7905",
+      "assessment": "All three original paths reviewed. Native F2FS retains the inlinecrypt mount option, per-bio crypto-context setup, mergeability/DUN checks, raw ciphertext GC bypass, filesystem-layer-only post-read decryption, and suppression of manual bounce encryption for inline-crypto files. Native current bio/folio interfaces replace the old helpers. The port also retains the separately reviewed dm-default-key skip bit and requires equal skip state when merging raw-GC bios; do not remove it while reconciling this historical introduction."
+    },
+    {
+      "commit": "f2b53acb8bcea53574cad6903150d901e5e7892b",
+      "paths": [
+        "fs/f2fs/dir.c",
+        "fs/f2fs/f2fs.h",
+        "fs/f2fs/hash.c",
+        "fs/f2fs/inline.c",
+        "fs/f2fs/super.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "a79eb269dc85cda074d54562aac341c39687cb08e82b764d5b2be675ee701ff8",
+      "assessment": "All five original paths reviewed. Native filename setup computes a casefolded name/hash once; encrypted casefold hashing uses SipHash over plaintext, no-key names use their decoded hash, and entry matching delegates decrypt/compare/free to generic_ci_match. Inline conversion passes the stored disk_name/hash without rehashing ciphertext. The obsolete mount prohibition is absent. Keep native strict-encoding/error handling and compatibility fallback, plus the separately retained filename-slot corruption checks, instead of the old per-F2FS compare routine."
+    },
+    {
+      "commit": "66163200effc41b52cb0998360e4c1f6426540b4",
+      "paths": [
+        "fs/f2fs/file.c"
+      ],
+      "unique_remerge_review": true,
+      "patch_sha256": "6128cda1cf93a5d3250ff28ace89d1c2e1f06a263f875d4d5e64bbde05943dad",
+      "assessment": "The complete unique merge hunk chooses f2fs_disable_compressed_file rather than an unconditional old compressed/nonempty/blocks rejection. Native f2fs_fileattr_set retains that helper and current compression eligibility checks. Its complete function matches pinned LTS. No historical ioctl helper or overly broad rejection needs restoring."
+    },
+    {
+      "commit": "8912845e4e959389c26c6fbdc9c151dea721b687",
+      "paths": [
+        "fs/f2fs/data.c",
+        "fs/f2fs/dir.c",
+        "fs/f2fs/f2fs.h",
+        "fs/f2fs/hash.c",
+        "fs/f2fs/inline.c",
+        "fs/f2fs/namei.c"
+      ],
+      "unique_remerge_review": true,
+      "patch_sha256": "d42fde3ee6b61fada2e6981b59bfe15dd1ab1539566423d75862d88f68616a8e",
+      "assessment": "Every unique remerge hunk in all six files reviewed. Native directory setup/hash/lookup and inline conversion carry f2fs_filename, use sb encoding, preserve encrypted casefold SipHash and no-key behavior, and use generic dentry operations with safe concurrent-rename handling. The historical merge dropped f2fs_set_bio_crypt_ctx at merged-bio allocation while selecting attach-io flags; current allocation explicitly retains the crypto context and puts op flags into bio allocation. Do not reproduce that intermediate deletion or resurrect old duplicated directory compare/hash callbacks. Native helper comparisons and separately retained name-slot validation are recorded in the review evidence."
+    },
+    {
+      "commit": "d7b0856eac8e8fa594f5a04fcd98dc4e490a13cb",
+      "paths": [
+        "fs/f2fs/inline.c"
+      ],
+      "unique_remerge_review": true,
+      "patch_sha256": "d888e21d2b4b40b11db903121e9a11219c69951f478f00bdc5b96066381ef804",
+      "assessment": "The entire unique resolution combines the native f2fs trace-event header with the Android filesystem trace-event header in inline.c. Both includes and the Android read/write trace call sites are retained in the integrated source. This preserves trace observability without changing native I/O or error checks; generic trace-source review is recorded separately in fs-legacy-io-trace-review.json."
+    },
+    {
+      "commit": "9169a937f0cf6b59d2d2c8fb1e41d3bc65f5523d",
+      "paths": [
+        "fs/f2fs/f2fs.h"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "6b0adfb1175f728ad20fdfb00f6fc276e1df923721081a10f83c7031b4c399b4",
+      "assessment": "The original single helper change permits eligible inline-encrypted DIO while retaining buffered fallback for verity and compressed files. Native f2fs_force_buffered_io, now in file.c, preserves these three checks and newer inline-data, multi-device block alignment, zoned-write and checkpoint-disabled restrictions. Native f2fs_should_use_dio preserves logical/filesystem-block alignment behavior. Both full functions match LTS; the old kiocb/iter argument API is unnecessary."
+    },
+    {
+      "commit": "82894228718c062d7a6c1a28ecea7e3069688c48",
+      "paths": [
+        "fs/f2fs/super.c"
+      ],
+      "unique_remerge_review": true,
+      "patch_sha256": "b31ecb2cbca21c553c34f4cf9e02e6d7a9346e2076f0adf661994b04409664cb",
+      "assessment": "All unique 6.18.3 merge hunks reviewed. Retain dirty/skipped-data retry diagnostics and traced gc_lock operations around checkpoint enablement, but adapt them to native LTS sync_inodes_sb/f2fs_sync_fs sequencing. The current bounded four-pass loop and writeback/sync timing replace the historical extra sync phases and separate timestamps; error propagation, clearing enable state and pending-checkpoint flush remain. This deliberately does not recreate redundant ACK sync operations; checkpoint-check and lock-trace-check evidence cover the earlier adaptations."
+    },
+    {
+      "commit": "347710e68f07a9b3c1b721e4f248252c20cf953d",
+      "paths": [
+        "fs/f2fs/sysfs.c"
+      ],
+      "unique_remerge_review": true,
+      "patch_sha256": "6618817ba83cc5b9554eb3bda6f47c804a0e54cbbf0e7a0e24a0a061ccee43b0",
+      "assessment": "Both unique hunks retain the Android priority controls before the native size-aware sysfs store helper. Current __sbi_store_value matches LTS and stores according to the actual 1/2/4/8-byte field size, preserving the out-of-bounds fix. The priority controls validate mask/nice ranges, require CAP_SYS_NICE for critical-task changes, and hold s_umount against teardown when accessing the worker tasks. Do not revert to untyped four-byte writes or unprotected task access."
+    },
+    {
+      "commit": "6af9e6888b8631ea34eff581e2cfd3f7b91026bd",
+      "paths": [
+        "fs/f2fs/f2fs.h",
+        "fs/f2fs/segment.c"
+      ],
+      "unique_remerge_review": true,
+      "patch_sha256": "0a3f7efe069027659b0b67f5483c93c1bbd79ccef85f6ecfb42e70bf9959af99",
+      "assessment": "Every unique merge hunk reviewed: remove duplicate summary geometry fields, retain unsigned __has_cursum_space size, and use filesystem blocksize rather than sum_blocksize for compacted-summary page capacity and read boundaries. Current header has one geometry set and retains ACK unsigned size versus native signed int; callers supply nonnegative journal/set entry counts. Both complete segment functions match pinned LTS. Preserve the evolved native variable geometry and bounds rather than duplicate fields or the incorrect summary-unit substitution."
+    },
+    {
+      "commit": "a4edd82b2a86fb89d804f152d49d3fa0fbe6ac82",
+      "paths": [
+        "fs/f2fs/node.c"
+      ],
+      "unique_remerge_review": true,
+      "patch_sha256": "7e8470cb4b2c7c7004a882f40b9194da7947f2e39e7de06f18901fc152b72acd",
+      "assessment": "The complete unique hunk selects the exported Android footer-check helper with in_irq=false. The current node write path retains that interface but uses folio->index as the expected nid, preserving the newer independent LTS integrity check instead of comparing the footer to its own nid. On error it stops the checkpoint with CORRUPTED_NID and redirties. The helper retains native node-type checks, NEED_FSCK and filesystem error reporting; no corruption error is suppressed."
+    },
+    {
+      "commit": "d26d295a9b9d087b32e5ce205def4cff199dcb5b",
+      "paths": [
+        "fs/f2fs/data.c",
+        "fs/f2fs/f2fs.h"
+      ],
+      "unique_remerge_review": true,
+      "patch_sha256": "19ac6f28c15bbf6f00e1e65fec9650c483dddd9b549a271f8719459595017ffd",
+      "assessment": "All unique data.c/header hunks reviewed. Retain Android lock defaults and large-folio per-page accounting around native read/write node-footer validation. Check read footers only after successful I/O; large folios use the adapted sticky-error/pending-read completion helper, while ordinary folios use native folio_end_read. The deferred write completion performs footer checks and native checkpoint-error/wakeup handling before ending writeback. The later adaptations preserve errors and submission ownership that the historical raw pending counter did not guarantee."
+    },
+    {
+      "commit": "759380762603e4772877291bcb5e1c3d8eac1d44",
+      "paths": [
+        "fs/f2fs/super.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "30e163385b97ef12678d783a36a72d05f63ae91d894c8f9e034d6166e0a4e0a2",
+      "assessment": "The entire patch adds the cleancache include and initializes the filesystem pool after successful mount setup. Both effects are retained; the generic superblock starts with NO_POOL and invalidates the pool on teardown. A missing/failing backend leaves the pool inactive and normal reads continue. The SDK enables CLEANCACHE and GCMA, so retain this generic F2FS integration for Android compatibility even though the supplied SDK userdata fstab is ext4. Actual cache performance/runtime use is unverified."
+    },
+    {
+      "commit": "2ea90c3ce5316a517e751ac0197d6f368e203c0e",
+      "paths": [
+        "fs/f2fs/data.c"
+      ],
+      "unique_remerge_review": true,
+      "patch_sha256": "38182bf6494cdc4f1064e066a8d8b6c68c82cf3e7c857acb1872b477b3752d8f",
+      "assessment": "The complete unique merge hunk chose the old one-argument warm-node helper. Retain the current native sbi,folio interface instead; both call and definition agree. In the adapted f2fs_write_end_bio, warm-list removal, page accounting and checkpoint wakeup all precede folio_end_writeback, preserving the LTS teardown-UAF fix. Deferred completion is reviewed separately; the obsolete signature has no independent userspace or source-hook requirement."
+    },
+    {
+      "commit": "69aed449705be28a3f7ab2897be621d64d6e9fcc",
+      "paths": [
+        "fs/f2fs/data.c"
+      ],
+      "unique_remerge_review": true,
+      "patch_sha256": "975e64129e4a1dd3ae78855ff4f0022b02f4ee2903fc4bec9d38f508d39a5468",
+      "assessment": "The full unique hunk retains large-folio accounting/completion around the new successful-I/O guard on footer validation. Current code checks bio status before reading the footer and uses sticky per-folio errors across all constituent bios. Thus a failed read cannot inspect uninitialized footer data or be overwritten by a later successful completion. Retain the corrected large-folio implementation and the native error guard, not the historical unguarded/raw-counter variant."
+    },
+    {
+      "commit": "90490e2c368851b1e59a608fed6a57c7c429af81",
+      "paths": [
+        "fs/f2fs/data.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "27f97abb7934a7f0cdd3a149a7b38a021d0344b8cb803f9084460b13546394c7",
+      "assessment": "The original one-line fix requests cleancache only for a non-uptodate folio. Current ordinary-page read retains that condition, excludes swapcache and validates the mapped block address first. A cache hit additionally passes fsverity_verify_folio when required before being marked uptodate; failure returns EIO. Large-folio-capable mappings select the separate reader. Preserve the corrected lookup condition and later integrity guard rather than trusting cached bytes without verification."
+    },
+    {
+      "commit": "7bcb9b1eaefa3b060e87e2bcc2a5c6b383514ec8",
+      "paths": [
+        "fs/f2fs/gc.c"
+      ],
+      "unique_remerge_review": true,
+      "patch_sha256": "fc1936119d6acd408b30e8fa99e460df64dd2f7f973a21b4a8a3dd0bbc6763a9",
+      "assessment": "Every unique GC merge hunk reviewed. Retain the initialized bypass hook and referenced atomic-inode mapping before ordinary GC I/O, together with native block validation, writeback waits and the uptodate encrypted-folio no-I/O path. The atomic inode is grabbed under i_sem and released on all exits; hook bypass happens before acquiring these resources. This keeps vendor source customization without undoing the native encrypted-data race fix."
+    },
+    {
+      "commit": "984c69230e7d7f491db0bb165fae4a9de829fda5",
+      "paths": [
+        "fs/f2fs/super.c"
+      ],
+      "unique_remerge_review": true,
+      "patch_sha256": "2180080b8a0e0b1a83c616c6220e964187a597e83800cb1a15a946a338a92c8b",
+      "assessment": "All unique 6.18.33 merge hunks reviewed. Current mount initializes traced gc/cp/node locks while retaining the native per-superblock cp_global_sem lockdep key and class assignment. Mount failure and teardown unregister that key. This preserves Android timing metadata and the LTS lockdep-class fix together; no historical layout or duplicate lock initialization is needed."
+    }
+  ],
+  "native_function_witnesses": [
+    {
+      "path": "fs/f2fs/super.c",
+      "function": "f2fs_has_stable_inodes",
+      "identical_to_pinned_lts": true,
+      "port_sha256": "e10e58a381cafccb67da3d3690848ab0b21b9467da7ce795717106478db897f3",
+      "lts_sha256": "e10e58a381cafccb67da3d3690848ab0b21b9467da7ce795717106478db897f3",
+      "adaptation": null
+    },
+    {
+      "path": "fs/f2fs/super.c",
+      "function": "f2fs_get_devices",
+      "identical_to_pinned_lts": true,
+      "port_sha256": "2b740ce182adabaccfa59215fd71fa00851f8fb2165e1c92311c509055813f96",
+      "lts_sha256": "2b740ce182adabaccfa59215fd71fa00851f8fb2165e1c92311c509055813f96",
+      "adaptation": null
+    },
+    {
+      "path": "fs/f2fs/dir.c",
+      "function": "f2fs_init_casefolded_name",
+      "identical_to_pinned_lts": true,
+      "port_sha256": "84e5c06c6135de8204e85e03c9101e80081de5ba1e836e0daad24dae97c22121",
+      "lts_sha256": "84e5c06c6135de8204e85e03c9101e80081de5ba1e836e0daad24dae97c22121",
+      "adaptation": null
+    },
+    {
+      "path": "fs/f2fs/dir.c",
+      "function": "f2fs_free_casefolded_name",
+      "identical_to_pinned_lts": true,
+      "port_sha256": "a2850552f0efc4a94ee595e8f652a028d249f13dc5279128edb26b804c1b0761",
+      "lts_sha256": "a2850552f0efc4a94ee595e8f652a028d249f13dc5279128edb26b804c1b0761",
+      "adaptation": null
+    },
+    {
+      "path": "fs/f2fs/dir.c",
+      "function": "__f2fs_setup_filename",
+      "identical_to_pinned_lts": true,
+      "port_sha256": "c262a5098812b0aa46e548460d5b2b061e9bf99ffcf21f5815fffa02891d1d74",
+      "lts_sha256": "c262a5098812b0aa46e548460d5b2b061e9bf99ffcf21f5815fffa02891d1d74",
+      "adaptation": null
+    },
+    {
+      "path": "fs/f2fs/dir.c",
+      "function": "f2fs_setup_filename",
+      "identical_to_pinned_lts": true,
+      "port_sha256": "7d77211b0dd82e18e51d6c31a7769742107cfef2f179e231980b6259505ac4d7",
+      "lts_sha256": "7d77211b0dd82e18e51d6c31a7769742107cfef2f179e231980b6259505ac4d7",
+      "adaptation": null
+    },
+    {
+      "path": "fs/f2fs/dir.c",
+      "function": "f2fs_prepare_lookup",
+      "identical_to_pinned_lts": true,
+      "port_sha256": "689b46525a4c8ebfa3076b98df4b1f6e30e547392d588251d6a629a524e8cb6c",
+      "lts_sha256": "689b46525a4c8ebfa3076b98df4b1f6e30e547392d588251d6a629a524e8cb6c",
+      "adaptation": null
+    },
+    {
+      "path": "fs/f2fs/dir.c",
+      "function": "f2fs_free_filename",
+      "identical_to_pinned_lts": true,
+      "port_sha256": "a3ed78396825471c92f83e432d067093c33c08fd6ef0db5312f9e368dedf0fff",
+      "lts_sha256": "a3ed78396825471c92f83e432d067093c33c08fd6ef0db5312f9e368dedf0fff",
+      "adaptation": null
+    },
+    {
+      "path": "fs/f2fs/dir.c",
+      "function": "f2fs_match_name",
+      "identical_to_pinned_lts": true,
+      "port_sha256": "37713a6894d703f6e6f718e2a5683579fb84f3661f4929af66f2f488e5599b56",
+      "lts_sha256": "37713a6894d703f6e6f718e2a5683579fb84f3661f4929af66f2f488e5599b56",
+      "adaptation": null
+    },
+    {
+      "path": "fs/f2fs/hash.c",
+      "function": "f2fs_hash_filename",
+      "identical_to_pinned_lts": true,
+      "port_sha256": "318519460fad8f3ee6c399dd56e8d1eb5797d5c7c71678a7d1a8b4c1762b30de",
+      "lts_sha256": "318519460fad8f3ee6c399dd56e8d1eb5797d5c7c71678a7d1a8b4c1762b30de",
+      "adaptation": null
+    },
+    {
+      "path": "fs/f2fs/file.c",
+      "function": "f2fs_fileattr_set",
+      "identical_to_pinned_lts": true,
+      "port_sha256": "3308febaf26c00d544c28a5c94cb8f317ec7566d7feeedf123a54d0bc458bfed",
+      "lts_sha256": "3308febaf26c00d544c28a5c94cb8f317ec7566d7feeedf123a54d0bc458bfed",
+      "adaptation": null
+    },
+    {
+      "path": "fs/f2fs/file.c",
+      "function": "f2fs_force_buffered_io",
+      "identical_to_pinned_lts": true,
+      "port_sha256": "a2d21b10915b9bfa2f9cfefe1b047e18675be4f40545f59c035422501d87196a",
+      "lts_sha256": "a2d21b10915b9bfa2f9cfefe1b047e18675be4f40545f59c035422501d87196a",
+      "adaptation": null
+    },
+    {
+      "path": "fs/f2fs/file.c",
+      "function": "f2fs_should_use_dio",
+      "identical_to_pinned_lts": true,
+      "port_sha256": "ba10136844d977be0e34e60d2258081f8788a22064ee92faf70eda842e098dff",
+      "lts_sha256": "ba10136844d977be0e34e60d2258081f8788a22064ee92faf70eda842e098dff",
+      "adaptation": null
+    },
+    {
+      "path": "fs/f2fs/f2fs.h",
+      "function": "__has_cursum_space",
+      "identical_to_pinned_lts": false,
+      "port_sha256": "400e9d9fb33da16faa892591313f4d59262821ea4eefcd057540ad138def7878",
+      "lts_sha256": "255d99d6ceff4be173a3279684c80d6e1bc1594ef305c6b1f8a3513d20cbfa82",
+      "adaptation": "Keep ACK unsigned entry count; body unchanged."
+    },
+    {
+      "path": "fs/f2fs/segment.c",
+      "function": "f2fs_npages_for_summary_flush",
+      "identical_to_pinned_lts": true,
+      "port_sha256": "447d37ffa05cadcb230bfb5b4b3cd3862361994b582bcb24c02cea93776c20e6",
+      "lts_sha256": "447d37ffa05cadcb230bfb5b4b3cd3862361994b582bcb24c02cea93776c20e6",
+      "adaptation": null
+    },
+    {
+      "path": "fs/f2fs/segment.c",
+      "function": "read_compacted_summaries",
+      "identical_to_pinned_lts": true,
+      "port_sha256": "d4b00cfdd23589ebb35cce878c137fd6896fb7b5ba3547c9d1b13a55051c3cc1",
+      "lts_sha256": "d4b00cfdd23589ebb35cce878c137fd6896fb7b5ba3547c9d1b13a55051c3cc1",
+      "adaptation": null
+    },
+    {
+      "path": "fs/f2fs/sysfs.c",
+      "function": "__sbi_store_value",
+      "identical_to_pinned_lts": true,
+      "port_sha256": "ab11b02e0183358b37917dfb6a13cadc86ea9c495ff75f86f37418ecb3851d67",
+      "lts_sha256": "ab11b02e0183358b37917dfb6a13cadc86ea9c495ff75f86f37418ecb3851d67",
+      "adaptation": null
+    },
+    {
+      "path": "fs/libfs.c",
+      "function": "generic_ci_match",
+      "identical_to_pinned_lts": true,
+      "port_sha256": "dc06f0b25843b244a63a3ad83eac45acde503b5ad5f36bedd15631efb261b7ee",
+      "lts_sha256": "dc06f0b25843b244a63a3ad83eac45acde503b5ad5f36bedd15631efb261b7ee",
+      "adaptation": null
+    },
+    {
+      "path": "fs/libfs.c",
+      "function": "generic_ci_d_compare",
+      "identical_to_pinned_lts": true,
+      "port_sha256": "0f032841240f26677e767817ad21e1a00c54003088f5c5520dfcb9ed5f962272",
+      "lts_sha256": "0f032841240f26677e767817ad21e1a00c54003088f5c5520dfcb9ed5f962272",
+      "adaptation": null
+    },
+    {
+      "path": "fs/libfs.c",
+      "function": "generic_set_sb_d_ops",
+      "identical_to_pinned_lts": true,
+      "port_sha256": "7c66506e1d15280d44992359d07df63aef2161cab2a89f47fefeeb4a99f40946",
+      "lts_sha256": "7c66506e1d15280d44992359d07df63aef2161cab2a89f47fefeeb4a99f40946",
+      "adaptation": null
+    }
+  ],
+  "local_evidence": [
+    "fs/f2fs/{super,data,dir,hash,inline,file,node,segment,gc,sysfs}.c",
+    "fs/f2fs/f2fs.h",
+    "fs/libfs.c",
+    "fs/crypto/{policy,inline_crypt}.c",
+    "fs/super.c",
+    "mm/cleancache.c",
+    "../grapheneos-17/device/generic/goldfish/board/fstab/x86",
+    "../grapheneos-17/system/vold/FsCrypt.cpp",
+    "../kernel_manifest-6.18/common_dist/kernel_x86_64_dot_config"
+  ],
+  "related_validation": [
+    "f2fs-checkpoint-check.json",
+    "f2fs-lock-trace-check.json",
+    "f2fs-largefolio-check.json",
+    "f2fs-deferred-completion-check.json",
+    "f2fs-vendor-hook-review.json",
+    "build-results.json: sdk-build-attempt-81"
+  ],
+  "scope": "Full original changes and unique remerge deltas examined. Existing source is retained with the explicitly recorded native adaptations. Build verification does not establish mounted F2FS, encryption, I/O fault or concurrency behavior."
+}

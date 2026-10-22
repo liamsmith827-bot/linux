@@ -3042,3 +3042,39 @@ reject missing producer lifetime protection, wrong sector units, lost errors
 and missing DUN splits. Allocation, atomics, completion and block I/O are modeled;
 this does not test real concurrency or cryptographic transforms. Only supplied
 local sources and the host compiler were used.
+
+## F2FS historical encryption and remaining merge resolutions
+
+`evidence/f2fs-historical-and-merge-review.json` records 18 complete candidate
+reviews, including every unique resolution hunk in the selected merges. Nineteen
+complete function bodies match pinned LTS. The twentieth retains ACK's unsigned
+summary entry count; callers supply counts or the constant one, and the helper's
+body is unchanged. Compacted-summary capacity and page boundaries use the native
+filesystem block size, with no duplicated geometry fields.
+
+The native encryption interfaces preserve stable 32-bit inode policies, inline
+crypto, ciphertext GC, encrypted casefold hashing and eligible direct I/O. The
+old merge that dropped crypto-context setup is not reproduced: newly allocated
+merged bios receive their context. Generic casefold matching retains decryption
+cleanup, strict-encoding behavior and safe concurrent-rename comparison. Native
+verity/compression/alignment restrictions on direct I/O remain intact.
+
+Merge resolution is selective. Checkpoint diagnostics follow the newer native
+sync sequence, with the previously reviewed bounded retry loop and error return.
+Android lock timing/priority controls coexist with native size-aware sysfs writes
+and the per-superblock lockdep class; task-priority writes retain capability,
+range and teardown protections. Node writes validate against the independent
+folio index. Failed reads never inspect an uninitialized footer, and large-folio
+completion retains errors across constituent bios. Writeback completion accesses
+superblock state and wakes checkpoint waiters before ending writeback, preserving
+the LTS teardown fix.
+
+F2FS cleancache initialization is retained for the enabled generic Android
+configuration. An ordinary-page cache hit must pass fsverity verification when
+required before being marked uptodate. The separate large-folio reader retains
+its earlier ownership/error adaptations. GC retains vendor bypass and referenced
+atomic-inode handling alongside the native encrypted-folio uptodate check.
+These are source-level conclusions supported by the earlier targeted checks and
+successful emulator build 81. No filesystem was mounted and no real encrypted
+I/O, scheduler, teardown race or cache performance was tested. All evidence in
+this review is local; no additional remote resource was accessed.
