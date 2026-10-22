@@ -132,7 +132,6 @@ static const struct kernel_param_ops binder_active_impl_param_ops = {
 
 module_param_cb(active_impl, &binder_active_impl_param_ops, NULL, 0444);
 
-#include "../../kernel/trace/trace_output.h"
 #include "../../kernel/trace/trace.h"
 
 void binder_remove_trace_events(struct module *module)
@@ -141,19 +140,17 @@ void binder_remove_trace_events(struct module *module)
 	const char *name;
 
 	mutex_lock(&event_mutex);
-	mutex_lock(&trace_types_lock);
-	down_write(&trace_event_sem);
 	list_for_each_entry_safe(call, tmp, &ftrace_events, list) {
 		name = trace_event_name(call);
 		if (!name || strncmp(name, "binder_", 7))
 			continue;
 		if (call->module != module)
 			continue;
-		remove_event_from_tracers(call);
-		list_del_init(&call->list);
+		/* Keep busy events registered for native lifetime handling. */
+		if (trace_remove_event_call(call))
+			pr_warn("Binder trace event %s is busy; keeping it registered.\n",
+				name);
 	}
-	up_write(&trace_event_sem);
-	mutex_unlock(&trace_types_lock);
 	mutex_unlock(&event_mutex);
 }
 EXPORT_SYMBOL_GPL(binder_remove_trace_events);

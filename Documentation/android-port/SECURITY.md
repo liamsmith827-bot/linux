@@ -972,6 +972,18 @@ fails. Legacy misc-device registration is explicitly skipped when binderfs is
 configured. The trace-event cleanup follows native trace locking and removes
 only matching Binder events belonging to the selected module/builtin owner.
 
+ACK's selector only removes tracefs files and unlinks the event list entry; it
+does not unregister the trace-event type or destroy its fields. In the inactive
+Rust-module case, removing that list entry also prevents native module-unload
+cleanup from finding the event, leaving a potential stale callback reference
+after module text is freed. Use native trace_remove_event_call under event_mutex
+instead. It acquires the native trace locks, unregisters the event and destroys
+fields, and rejects active/perf-referenced events. Rejected events are logged and
+remain registered, so native lifetime/module-unload handling still owns them.
+An already active old Binder trace event can therefore remain associated with
+its original driver during a switch; this diagnostic limitation is preferable
+to bypassing LTS lifetime checks. Runtime tracing/module unload was not tested.
+
 Source review found one failure-path issue in ACK's added unload routine: if
 built-in C initialization fails, its native error paths have already released
 the shrinker, netlink family or filesystem resources. A later authorized Rust
