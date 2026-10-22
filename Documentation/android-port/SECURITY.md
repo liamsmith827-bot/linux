@@ -3642,3 +3642,30 @@ first removes poll waiters, then lets native LTS RCU defer freeing the pinned
 allocation. Ordinary PollCondVar keeps its original synchronous destructor.
 The native reclamation and wake implementations are retained. Source review and
 successful compilation do not verify epoll races or kernel execution.
+
+## Rust helper inlining and native build infrastructure
+
+Fourteen candidates are reviewed in `evidence/rust-build-family-review.json`.
+Native LTS already supplies Rust constructor-selection cleanup, LLVM version
+detection and proc-macro linker flags; its stricter version-string parser and
+Kleaf's actual linker-flag consumer are preserved. The initial helper-inlining
+proposal and temporary revert are superseded by the replacement implementation,
+which keeps distinct built-in/module helpers and correct code-generation order.
+
+The SDK selects inlining with both compilers reporting LLVM 22.0.1. Keep the
+compatibility gate and bindgen-specific macro definition. Forced inlining
+bypasses LLVM attribute heuristics; this choice is restricted by the existing
+configuration gates and does not remove native helper checks or globally weaken
+compiler flags. All 50 annotation patches preserve token streams after removing
+only the annotation, and all four Rust lock patches add only inline attributes.
+Performance and compiler correctness have not been independently measured.
+
+The final Clang step retains unreachable traps and excludes C LTO flags so code
+generation occurs where those trap options apply. The saved kernel Rust compile
+command contains both trap flags. The SDK currently uses no C LTO; alternate-LTO
+behavior is reviewed in source only. Native Rust target flags and objtool remain.
+
+Review found that atomic.c and its generator disagreed about the helper macro
+fallback. `f4693bcebd83` corrects the generator; executing it reproduces the
+checked-in body and its SHA-1 exactly. Atomic operations are unchanged. The
+ashmem Offset alias cleanup also preserves the earlier legacy ioctl payload fix.

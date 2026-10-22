@@ -4962,5 +4962,174 @@
       "evidence/rust-poll-dependency-review.json",
       "SECURITY.md: Rust publication, poll and priority helpers"
     ]
+  },
+  {
+    "commit": "703f234e314586dec949f92f3773b0e9ff119d00",
+    "disposition": "already-represented-upstream",
+    "rationale": "Already represented by native LTS commit 7d49f53af4b988b188d3932deac2c9c80fd7d9ce: Rust no longer selects module CONSTRUCTORS. The current RUST Kconfig block retains that behavior. This is the removal of a stale unused initialization dependency, not a reason to disable native constructor support for other configured users; no ACK replay is required.",
+    "result_commits": [
+      "7d49f53af4b988b188d3932deac2c9c80fd7d9ce"
+    ],
+    "evidence": [
+      "evidence/rust-build-family-review.json",
+      "SECURITY.md: Rust helper inlining and native build infrastructure"
+    ]
+  },
+  {
+    "commit": "62376f9e4792ec5c3d0f26922eea13229aa5a035",
+    "disposition": "already-represented-upstream",
+    "rationale": "Already represented by native LTS af0121c2d303111d363c62e40413ffb39d5dc0f1. Retain rustc-version and rustc-llvm-version Kconfig helpers and CONFIG_RUSTC_LLVM_VERSION. Keep the later native script fix accepting only a complete three-part LLVM version instead of the older ACK patch grep LLVM. The script is byte-identical to pinned LTS. LLVM version detection directly gates the selected Rust/C bitcode compatibility check.",
+    "result_commits": [
+      "af0121c2d303111d363c62e40413ffb39d5dc0f1"
+    ],
+    "evidence": [
+      "evidence/rust-build-family-review.json",
+      "SECURITY.md: Rust helper inlining and native build infrastructure"
+    ]
+  },
+  {
+    "commit": "6593f6a4c0e1f61e3d0065cb73877794b8be43ae",
+    "disposition": "already-represented-upstream",
+    "rationale": "Already represented by native LTS ceff0757f5dafb5be5205988171809c877b1d3e3: retain exported KBUILD_PROCMACROLDFLAGS with HOSTLDFLAGS fallback and its use when linking Rust proc macros. The local manifest Kleaf kernel_toolchains.bzl supplies PROCMACROLDFLAGS/rpath for its Rust toolchain, so this has a positive workflow consumer. The documentation is exact native LTS; no historical older Makefile is replayed.",
+    "result_commits": [
+      "ceff0757f5dafb5be5205988171809c877b1d3e3"
+    ],
+    "evidence": [
+      "evidence/rust-build-family-review.json",
+      "SECURITY.md: Rust helper inlining and native build infrastructure"
+    ]
+  },
+  {
+    "commit": "50e52dc3c1fa1e28b0733c46ab02af160d85c819",
+    "disposition": "adapted",
+    "rationale": "Retain the relocation of __rust_helper definition from the generated atomic helper into helpers.c so all helper includes see the selected bindgen/inline definition. During review, the generated atomic.c matched ACK but its generator still contained the old LTS fallback. f4693bcebd83 removes that stale generator block. Running only the Rust generator now reproduces the checked-in file body and embedded SHA-1 exactly. Atomic operation bodies and memory-order variants remain unchanged; this keeps regeneration consistent rather than adding an architecture feature.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "f4693bcebd832c3e396835a24032f07a6715ee50"
+    ],
+    "evidence": [
+      "evidence/rust-build-family-review.json",
+      "SECURITY.md: Rust helper inlining and native build infrastructure"
+    ]
+  },
+  {
+    "commit": "0f49f8074a12c8f47534d7b6e0339739da98de1d",
+    "disposition": "adapted",
+    "rationale": "Retain the Rust/Clang LLVM-major compatibility Kconfig gate required by selected RUST_INLINE_HELPERS. The actual SDK config records CLANG_VERSION=220001, RUSTC_LLVM_VERSION=220001 and RUSTC_CLANG_LLVM_COMPATIBLE=y. The gate prevents combining incompatible LLVM major-version bitcode. Equal version numbers and successful compilation do not prove absence of compiler bugs; the gate is retained rather than bypassed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-build-family-review.json",
+      "SECURITY.md: Rust helper inlining and native build infrastructure"
+    ]
+  },
+  {
+    "commit": "e3fd27ea8888bbbe771a39d8a52947e1be64dd8f",
+    "disposition": "adapted",
+    "rationale": "Retain __rust_helper as empty under __BINDGEN__ and __always_inline for C compilation, supporting the selected C-helper inlining mode. Bindgen must see callable declarations while llvm-link internalizes helper definitions into Rust code. The forced inline annotation bypasses LLVM attribute compatibility heuristics; the selected x86_64 target and both compilers report LLVM 22.0.1. Native C helper bodies/checks and global compiler hardening flags are not removed by this macro. The subsequent trap-preservation and LTO-filter fixes are retained. No runtime or optimization-correctness certification is claimed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-build-family-review.json",
+      "SECURITY.md: Rust helper inlining and native build infrastructure"
+    ]
+  },
+  {
+    "commit": "6aaf5b32db353c754c5c992c616c98712ccb7bff",
+    "disposition": "superseded-no-residual-code",
+    "rationale": "Superseded by the explicitly paired revert 411f20ec6e10 and replacement c013f6de2fe5. Retain the replacement inlining implementation for the selected Android build configuration, including its narrower supported-architecture gate, correct module/built-in flags and conditional ld_single stage. Do not resurrect the original unconditional ld_single or duplicate -DMODULE recipe. Full introduction/revert/replacement patches were examined; this is replacement of code, not omission of the inlining feature.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-build-family-review.json",
+      "SECURITY.md: Rust helper inlining and native build infrastructure"
+    ]
+  },
+  {
+    "commit": "411f20ec6e10d2005b6c0b4a8b385bd44e4a2318",
+    "disposition": "superseded-no-residual-code",
+    "rationale": "This temporary revert prepares replacement by c013f6de2fe5 and is superseded in final code. It correctly leaves the native -Zunstable-options fix intact. The final port keeps the replacement helper-inlining feature and that native flag, rather than applying this temporary deletion as a permanent policy. The complete revert and replacement patches were examined.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-build-family-review.json",
+      "SECURITY.md: Rust helper inlining and native build infrastructure"
+    ]
+  },
+  {
+    "commit": "c013f6de2fe527797a267b8ee86949404ed61d32",
+    "disposition": "adapted",
+    "rationale": "Retain the replacement RUST_INLINE_HELPERS implementation, selected by the Android SDK config. It creates separate built-in/module helper bitcode, internalizes helper symbols into each relevant Rust unit, emits an ELF object before objtool, and omits unnecessary standalone helper exports only in this mode. Keep native -Zunstable-options, module/built-in flags, non-inline fallback and later trap/LTO fixes. The *.bc ignore rule retains the timeconst.bc source exception. This is current Android configuration/module source compatibility; historical vendor binaries are not required. Performance benefits are unmeasured here.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-build-family-review.json",
+      "SECURITY.md: Rust helper inlining and native build infrastructure"
+    ]
+  },
+  {
+    "commit": "4c2c9766e8d30b0be643c80ea267003aef317f6e",
+    "disposition": "adapted",
+    "rationale": "Retain __rust_helper annotations across the helper layer for the configured inlining pipeline. All 50 changed files were mechanically compared before/after with string/comment-aware tokenization: removing only __rust_helper tokens makes their token streams identical. Function bodies, argument expressions and native checks are not altered by this candidate. Later native/port adaptations in these files remain independently reviewed; this decision does not restore discarded helpers or superseded implementations. In particular, the NOMMU-only wrapper remains omitted, while vrealloc keeps its annotation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-build-family-review.json",
+      "SECURITY.md: Rust helper inlining and native build infrastructure"
+    ]
+  },
+  {
+    "commit": "a163eae0dcb9bf7a9b7d7a70599d74023de09a0c",
+    "disposition": "adapted",
+    "rationale": "Retain inline attributes on lock/guard wrappers used throughout the configured Rust Binder driver. All four file patches contain only #[inline] insertions after whitespace normalization, with unchanged synchronization operations, ownership contracts and Drop unlock behavior. This keeps the selected Android Rust inlining arrangement coherent without adding an unrelated platform or binary ABI obligation. It permits compiler optimization of thin wrappers; no measured performance or lock-runtime result is claimed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-build-family-review.json",
+      "SECURITY.md: Rust helper inlining and native build infrastructure"
+    ]
+  },
+  {
+    "commit": "7225fcd9f8e559ccf200e885be81a693fc4bbda3",
+    "disposition": "adapted",
+    "rationale": "Retain -mllvm -trap-unreachable and -mllvm -no-trap-after-noreturn on final Clang generation of linked Rust/helper bitcode. Without these, changing code generation from rustc to Clang can lose rustc unreachable traps and expose fallthrough into another function or section. Both flags appear in the actual saved SDK kernel Rust compile command. Native LTS -Zunstable-options and objtool processing remain. This is a security-relevant companion fix for the chosen inlining mode, not a diagnostic-warning suppression.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-build-family-review.json",
+      "SECURITY.md: Rust helper inlining and native build infrastructure"
+    ]
+  },
+  {
+    "commit": "2b7480bf7e1b2a77b0b8d58d78114ca0c4f551fe",
+    "disposition": "adapted",
+    "rationale": "Retain filtering of CC_FLAGS_LTO from final Clang compilation of combined Rust/helper bitcode. This forces machine code generation at the stage receiving the unreachable-trap options, instead of delaying generation to linker LTO where those options would be lost. Both library and module recipes retain the fix and objtool; native C LTO configuration remains available. The current SDK uses no C LTO, so the alternate LTO configuration is source-reviewed rather than exercised. This maintains generic Android build configuration compatibility for the selected helper pipeline.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-build-family-review.json",
+      "SECURITY.md: Rust helper inlining and native build infrastructure"
+    ]
+  },
+  {
+    "commit": "b9eb50985adf7897b59f09e602249a845c40250e",
+    "disposition": "adapted",
+    "rationale": "Retain conversion of Rust miscdevice/ashmem/shmem offset signatures to fs::file::Offset, removing the duplicate temporary loff_t alias. Both aliases represent native bindings::loff_t; error propagation and position synchronization remain unchanged. Final ashmem differs from ACK only by the separately reviewed legacy GET_PIN_STATUS payload-size correction, which is preserved. This is coherent source API integration for a configured SDK driver, not historical binary ABI preservation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-build-family-review.json",
+      "SECURITY.md: Rust helper inlining and native build infrastructure"
+    ]
   }
 ]
