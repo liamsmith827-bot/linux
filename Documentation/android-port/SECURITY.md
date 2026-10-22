@@ -871,3 +871,24 @@ privileged JIT symbol export. Retain this demonstrated Android runtime contract
 and the native LTS BPF fixes. Android's additional access policy has not been
 runtime-tested here, so this review does not claim that every process can or
 cannot exercise those interfaces. No remote source was used for this review.
+
+## TTM allocation vendor hooks
+
+Review of the generated SDK configuration established DRM_TTM=y, selected by
+GKI_HIDDEN_DRM_CONFIGS for source-built module support. Its earlier blanket
+physical-platform hook exclusion was too broad. Restore ACK 44f80f29d2a0's two
+generic allocation hooks, their declarations and GPL exports. Their exact SDK
+runtime consumer remains unresolved; retaining the configured generic vendor
+API follows the compatibility priority without adding a GPU platform driver.
+
+Adapt only the callbacks onto native LTS allocation and backup code. With no
+callback registered, the original GFP flags and MAX_PAGE_ORDER remain unchanged.
+The maximum-order callback can lower the allocation order; clamp its result to
+MAX_PAGE_ORDER so a bad vendor value cannot index beyond the native pool arrays.
+The GFP callback retains ACK's deliberate ability for trusted kernel modules to
+change allocation policy, including reserve/reclaim flags. Such callbacks are
+privileged kernel code and must respect allocator context; no module-sandbox
+claim is made. Include the actual native gfp_t definition instead of ACK's
+unrelated `struct gfp_t` forward declaration. Later LTS DMA mapping, restoration,
+cache attributes and failure cleanup remain in place. Build verification for
+this source change is recorded separately from build 30.
