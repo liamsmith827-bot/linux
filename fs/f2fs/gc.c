@@ -2368,6 +2368,7 @@ static void update_fs_metadata(struct f2fs_sb_info *sbi, int secs)
 					div_u64(blks, sbi->blocks_per_blkz);
 #endif
 	}
+	adjust_pinned_area_boundary(sbi);
 }
 
 int f2fs_resize_fs(struct file *filp, __u64 block_count)

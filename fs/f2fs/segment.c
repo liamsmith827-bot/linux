@@ -2886,19 +2886,26 @@ static int get_new_segment(struct f2fs_sb_info *sbi,
 	unsigned int old_zoneno = GET_ZONE_FROM_SEG(sbi, *newseg);
 	unsigned int alloc_policy = sbi->allocate_section_policy;
 	unsigned int alloc_hint = sbi->allocate_section_hint;
+	unsigned int max_secno;
 	bool init = true;
 	bool looped = false;
 	int i, devi;
 	int ret = 0;
 
 	spin_lock(&free_i->segmap_lock);
+	max_secno = pinning ? f2fs_pinned_area_limit(sbi) : MAIN_SECS(sbi);
+	if (!max_secno) {
+		ret = -ENOSPC;
+		goto out_unlock;
+	}
 
 	if (time_to_inject(sbi, FAULT_NO_SEGMENT)) {
 		ret = -ENOSPC;
 		goto out_unlock;
 	}
 
-	if (!new_sec && ((*newseg + 1) % SEGS_PER_SEC(sbi))) {
+	if (!new_sec && hint < max_secno &&
+	    ((*newseg + 1) % SEGS_PER_SEC(sbi))) {
 		segno = find_next_zero_bit(free_i->free_segmap,
 			GET_SEG_FROM_SEC(sbi, hint + 1), *newseg + 1);
 		if (segno < GET_SEG_FROM_SEC(sbi, hint + 1)) {
@@ -2917,7 +2924,7 @@ static int get_new_segment(struct f2fs_sb_info *sbi,
 	 */
 	if (f2fs_sb_has_blkzoned(sbi)) {
 		/* Prioritize writing to conventional zones */
-		if (sbi->blkzone_alloc_policy == BLKZONE_ALLOC_PRIOR_CONV || pinning)
+		if (sbi->blkzone_alloc_policy == BLKZONE_ALLOC_PRIOR_CONV)
 			segno = 0;
 		else
 			segno = max(sbi->first_seq_zone_segno, *newseg);
@@ -2933,26 +2940,30 @@ static int get_new_segment(struct f2fs_sb_info *sbi,
 		alloc_hint > MAIN_SECS(sbi))
 		alloc_hint = MAIN_SECS(sbi);
 
-	if (alloc_policy == ALLOCATE_FORWARD_FROM_HINT &&
-		hint < alloc_hint)
-		hint = alloc_hint;
-	else if (alloc_policy == ALLOCATE_FORWARD_WITHIN_HINT &&
-			hint >= alloc_hint)
+	if (pinning) {
 		hint = 0;
+	} else if (alloc_policy == ALLOCATE_FORWARD_FROM_HINT &&
+		hint < alloc_hint) {
+		hint = alloc_hint;
+	} else if (alloc_policy == ALLOCATE_FORWARD_WITHIN_HINT &&
+			hint >= alloc_hint) {
+		hint = 0;
+	}
 
 find_other_zone:
-	secno = find_next_zero_bit(free_i->free_secmap, MAIN_SECS(sbi), hint);
+	secno = find_next_zero_bit(free_i->free_secmap, max_secno, hint);
 
-	if (secno >= MAIN_SECS(sbi)) {
+	if (secno >= max_secno) {
 		if (looped) {
-			ret = -ENOSPC;
+			ret = (pinning && has_unpinned_area(sbi)) ?
+					-EAGAIN : -ENOSPC;
 			f2fs_bug_on(sbi, !pinning);
 			goto out_unlock;
 		}
 		hint = 0;
 #ifdef CONFIG_BLK_DEV_ZONED
 		/* Write only to sequential zones */
-		if (f2fs_sb_has_blkzoned(sbi) &&
+		if (!pinning && f2fs_sb_has_blkzoned(sbi) &&
 			sbi->blkzone_alloc_policy == BLKZONE_ALLOC_ONLY_SEQ)
 			hint = GET_SEC_FROM_SEG(sbi, sbi->first_seq_zone_segno);
 #endif
@@ -3011,12 +3022,6 @@ got_it:
 		goto out_unlock;
 	}
 
-	/* no free section in conventional device or conventional zone */
-	if (new_sec && pinning &&
-		f2fs_is_sequential_zone_area(sbi, START_BLOCK(sbi, segno))) {
-		ret = -EAGAIN;
-		goto out_unlock;
-	}
 	__set_inuse(sbi, segno);
 	*newseg = segno;
 out_unlock:
@@ -3443,6 +3448,8 @@ static int __allocate_new_segment(struct f2fs_sb_info *sbi, int type,
 		goto allocate;
 
 	if (!force && curseg->inited &&
+	    (type != CURSEG_COLD_DATA_PINNED ||
+	     GET_SEC_FROM_SEG(sbi, curseg->segno) < f2fs_pinned_area_limit(sbi)) &&
 	    !curseg->next_blkoff &&
 	    !get_valid_blocks(sbi, curseg->segno, new_sec) &&
 	    !get_ckpt_valid_blocks(sbi, curseg->segno, new_sec))
@@ -3474,16 +3481,23 @@ int f2fs_allocate_new_section(struct f2fs_sb_info *sbi, int type, bool force)
 int f2fs_allocate_pinning_section(struct f2fs_sb_info *sbi)
 {
 	struct f2fs_lock_context lc;
+	unsigned int max_secno;
 	int err;
 	bool gc_required = true;
 
 retry:
 	f2fs_lock_op(sbi, &lc);
+	max_secno = f2fs_pinned_area_limit(sbi);
+	if (!max_secno) {
+		f2fs_unlock_op(sbi, &lc);
+		return -ENOSPC;
+	}
 	err = f2fs_allocate_new_section(sbi, CURSEG_COLD_DATA_PINNED, false);
 	f2fs_unlock_op(sbi, &lc);
 
-	if (f2fs_sb_has_blkzoned(sbi) && err == -EAGAIN && gc_required) {
-		err = f2fs_gc_range(sbi, 0, sbi->first_seq_zone_segno - 1,
+	if (max_secno < MAIN_SECS(sbi) && err == -EAGAIN && gc_required) {
+		err = f2fs_gc_range(sbi, 0,
+				max_secno * SEGS_PER_SEC(sbi) - 1,
 				true, ZONED_PIN_SEC_REQUIRED_COUNT, true);
 		if (err)
 			return err;

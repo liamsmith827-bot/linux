@@ -15,7 +15,7 @@ def function(src,name):
     i,d=m.end(),1
     while d:d+=(src[i]=='{')-(src[i]=='}');i+=1
     return src[m.start():i]+'\n'
-body='\n'.join(function(sources['fs/f2fs/segment.h'],n) for n in ['f2fs_dev_is_reserving','f2fs_dev_is_alloc_blocked','sec_usage_check'])
+body='\n'.join(function(sources['fs/f2fs/segment.h'],n) for n in ['f2fs_pinned_area_limit','f2fs_dev_is_reserving','f2fs_dev_is_alloc_blocked','sec_usage_check'])
 body+=function(sources['fs/f2fs/segment.c'],'get_new_segment')
 baseline='334f9060783c42bd9d9e274d39ec4e84b9eb9ed9'
 native=subprocess.check_output(['git','-C',str(ROOT),'show',baseline+':fs/f2fs/segment.c'],text=True)
@@ -51,11 +51,13 @@ prefix=r'''
 #define BLKZONE_ALLOC_ONLY_SEQ 1
 #define STOP_CP_REASON_CORRUPTED_FREE_BITMAP 1
 #define STOP_CP_REASON_NO_SEGMENT 2
+#define min(a,b) ((a)<(b)?(a):(b))
+#define has_unpinned_area(s) (f2fs_pinned_area_limit(s)<MAIN_SECS(s))
 #define max(a,b) ((a)>(b)?(a):(b))
 typedef unsigned block_t;
 struct free_segmap_info { int segmap_lock;unsigned long free_segmap[1],free_secmap[1]; };
 struct f2fs_sb_info { struct free_segmap_info free;unsigned segs_per_sec,secs_per_zone,allocate_section_policy,allocate_section_hint;
-    unsigned cur_victim_sec,used_sec_mask,first_seq_zone_segno,blkzone_alloc_policy;bool zoned,alias;
+    unsigned cur_victim_sec,used_sec_mask,first_seq_zone_segno,blkzone_alloc_policy,pinned_area_max_secno;bool zoned,alias;
     unsigned s_ndevs;struct { unsigned end_blk,alias_ino;bool is_reserving; } devs[2];struct { unsigned zone; } curseg[8]; };
 static unsigned cases,assertions,failures,searches;
 #define CHECK(x) do{assertions++;if(!(x)){failures++;if(failures<8)fprintf(stderr,"line %d: %s\n",__LINE__,#x);}}while(0)
@@ -79,10 +81,11 @@ static void __set_inuse(struct f2fs_sb_info *s,unsigned seg){CHECK(!test_bit(seg
 suffix=r'''
 int main(void){
     for(unsigned occupied=0;occupied<256;occupied++)for(unsigned flags=0;flags<16;flags++)
-    for(unsigned geometry=0;geometry<4;geometry++)for(int pin=0;pin<2;pin++)for(int zone=0;zone<3;zone++){
+    for(unsigned geometry=0;geometry<4;geometry++)for(int pin=0;pin<2;pin++)for(int zone=0;zone<3;zone++)for(unsigned limit=0;limit<=10;limit++){
         struct f2fs_sb_info s={.alias=true,.s_ndevs=2,.segs_per_sec=1+(geometry&1),.secs_per_zone=1+!!(geometry&2),
             .used_sec_mask=1,.cur_victim_sec=1,.zoned=zone!=0,.blkzone_alloc_policy=zone==2?1:0};
         s.first_seq_zone_segno=4*s.segs_per_sec;
+        s.pinned_area_max_secno=zone?min(limit,4):limit;
         s.devs[0].end_blk=16*s.segs_per_sec-1;s.devs[1].end_blk=32*s.segs_per_sec-1;
         s.devs[0].alias_ino=flags&1;s.devs[0].is_reserving=flags&2;
         s.devs[1].alias_ino=flags&4;s.devs[1].is_reserving=flags&8;
@@ -95,7 +98,7 @@ int main(void){
         for(int sec=2;sec<8;sec++){
             int dev=sec>=4;
             bool blocked=(dev?(flags&8):(flags&2)) || (pin && (dev?(flags&4):(flags&1)));
-            bool wrong_zone=zone && pin && sec>=4;
+            bool wrong_zone=pin && sec>=min(s.pinned_area_max_secno,8);
             if(!(occupied&(1U<<sec)) && !blocked && !wrong_zone)allowed|=1U<<sec;
         }
         unsigned selected=(occupied%8)*s.segs_per_sec;searches=0;
@@ -105,7 +108,7 @@ int main(void){
         else {
             CHECK(r==-ENOSPC || r==-EAGAIN);
             /* Native zone/hint preferences can retry or bypass otherwise free zones. */
-            if(!zone){if(allowed && failures<7)fprintf(stderr,"occupied=%u flags=%u geometry=%u pin=%d hint=%u policy=%u selected=%u allowed=%u r=%d\n",occupied,flags,geometry,pin,s.allocate_section_hint,s.allocate_section_policy,selected,allowed,r);CHECK(!allowed);}
+            if(!zone || pin)CHECK(!allowed);
         }
         cases++;
     }
@@ -114,10 +117,17 @@ int main(void){
         s.devs[0].is_reserving=true;s.devs[0].alias_ino=99;
         CHECK(!f2fs_dev_is_reserving(&s,dev));CHECK(!f2fs_dev_is_alloc_blocked(&s,dev,true));cases++;
     }
+    for(unsigned limit=1;limit<4;limit++){
+        struct f2fs_sb_info s={.alias=true,.s_ndevs=2,.segs_per_sec=2,.secs_per_zone=1,
+            .pinned_area_max_secno=limit,.cur_victim_sec=99};
+        s.devs[0].end_blk=31;s.devs[1].end_blk=63;
+        unsigned selected=2*limit;searches=0;
+        CHECK(!get_new_segment(&s,&selected,false,true));CHECK(selected<2*limit);cases++;
+    }
     /* Confirm two non-guarantees against the unchanged pre-alias selector. */
     for(int pin=0;pin<2;pin++){
         struct f2fs_sb_info s={.segs_per_sec=1,.secs_per_zone=pin?2:1,.s_ndevs=2,.zoned=true,
-            .first_seq_zone_segno=4,.blkzone_alloc_policy=BLKZONE_ALLOC_ONLY_SEQ,
+            .first_seq_zone_segno=4,.pinned_area_max_secno=4,.blkzone_alloc_policy=BLKZONE_ALLOC_ONLY_SEQ,
             .allocate_section_policy=pin?0:2,.allocate_section_hint=2,.cur_victim_sec=99};
         s.devs[0].end_blk=15;s.devs[1].end_blk=31;
         s.free.free_secmap[0]=3;s.free.free_segmap[0]=3;
@@ -125,12 +135,16 @@ int main(void){
         struct f2fs_sb_info old=s;unsigned a=pin?0:6,b=a;searches=0;
         int r=get_new_segment(&s,&a,true,pin);searches=0;
         int nr=native_get_new_segment(&old,&b,true,pin);
-        CHECK(r==nr && a==b);CHECK(pin?r==-EAGAIN:(!r && a==2));cases++;
+        if(pin)CHECK(nr==-EAGAIN && !r && a==2);
+        else CHECK(r==nr && a==b && !r && a==2);
+        cases++;
     }
     printf("%u cases, %u assertions, %u failures\n",cases,assertions,failures);return !!failures;
 }
 '''
-variants={'port':body,'missing_device_table_guard_control':body.replace(' || (unsigned int)devi >= sbi->s_ndevs',''),'premature_zone_exhaustion_control':body.replace('		/* The fallback pass must not skip the last usable zone. */\n		init = false;',''),
+variants={'port':body,
+          'out_of_area_partial_segment_control':body.replace('!new_sec && hint < max_secno &&\n\t    ', '!new_sec && '),
+          'stale_boundary_control':body.replace('min(READ_ONCE(sbi->pinned_area_max_secno), MAIN_SECS(sbi))','READ_ONCE(sbi->pinned_area_max_secno)'),'missing_device_table_guard_control':body.replace(' || (unsigned int)devi >= sbi->s_ndevs',''),'premature_zone_exhaustion_control':body.replace('		/* The fallback pass must not skip the last usable zone. */\n		init = false;',''),
           'ignore_device_reservation_control':body.replace('return READ_ONCE(FDEV(devi).is_reserving);','return false;').replace('return (pinning && READ_ONCE(FDEV(devi).alias_ino)) ||\n\t\tREAD_ONCE(FDEV(devi).is_reserving);','return false;')}
 results={}
 with tempfile.TemporaryDirectory(prefix='f2fs-alias-placement-') as tmp:
@@ -142,7 +156,7 @@ with tempfile.TemporaryDirectory(prefix='f2fs-alias-placement-') as tmp:
         assert (r.returncode==0)==(name=='port'),(name,r.stdout,r.stderr)
         results[name]={'exit_code':r.returncode,'stdout':r.stdout,'stderr':r.stderr}
 report={'scope':__doc__+' Two-device, eight-section modeled maps; new-section selection, aliases/pinning, zoned policies, one/two segments and sections per zone, hints and occupied maps. Not actual allocator concurrency, hardware, mount, storage or runtime testing.',
-        'native_baseline':baseline,'native_policy_limits':'Existing allocation hints can override ONLY_SEQ preference; zone separation can return EAGAIN for pinned allocations despite available conventional sections. Both cases executed against the native selector. No full availability guarantee asserted for zoned policies.',
+        'native_baseline':baseline,'native_policy_limits':'Existing non-pinned allocation hints can override ONLY_SEQ preference. The bounded pinned selector now retries within its allowed area and succeeds in the native premature-EAGAIN example. Both cases executed against the native selector. No full availability guarantee asserted for non-pinned zoned policies.',
         'source_sha256':{p:hashlib.sha256(s.encode()).hexdigest() for p,s in sources.items()},'results':results}
 (D/'evidence/f2fs-alias-placement-check.json').write_text(json.dumps(report,indent=2)+'\n')
-print(results['port']['stdout'].strip());print('Device-table, reservation and premature exhaustion controls rejected')
+print(results['port']['stdout'].strip());print('All five placement regression controls rejected')

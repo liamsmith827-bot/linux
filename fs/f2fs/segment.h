@@ -43,6 +43,7 @@ static inline void sanity_check_seg_type(struct f2fs_sb_info *sbi,
 
 #define MAIN_SEGS(sbi)	(SM_I(sbi)->main_segments)
 #define MAIN_SECS(sbi)	((sbi)->total_sections)
+#define has_unpinned_area(sbi)	(f2fs_pinned_area_limit(sbi) < MAIN_SECS(sbi))
 
 #define TOTAL_SEGS(sbi)							\
 	(SM_I(sbi) ? SM_I(sbi)->segment_count : 				\
@@ -964,6 +965,22 @@ static inline block_t sum_blk_addr(struct f2fs_sb_info *sbi, int base, int type)
 	return __start_cp_addr(sbi) +
 		le32_to_cpu(F2FS_CKPT(sbi)->cp_pack_total_block_count)
 				- (base + 1) + type;
+}
+
+static inline unsigned int f2fs_pinned_area_limit(struct f2fs_sb_info *sbi)
+{
+	return min(READ_ONCE(sbi->pinned_area_max_secno), MAIN_SECS(sbi));
+}
+
+static inline void adjust_pinned_area_boundary(struct f2fs_sb_info *sbi)
+{
+	unsigned int total = MAIN_SECS(sbi);
+	unsigned int tail = F2FS_OPTION(sbi).resizable_tail_secno;
+	unsigned int limit = total > tail ? total - tail : 0;
+
+	if (f2fs_sb_has_blkzoned(sbi) && sbi->first_seq_zone_segno != NULL_SEGNO)
+		limit = min(limit, GET_SEC_FROM_SEG(sbi, sbi->first_seq_zone_segno));
+	WRITE_ONCE(sbi->pinned_area_max_secno, limit);
 }
 
 static inline bool f2fs_dev_is_reserving(struct f2fs_sb_info *sbi, int devi)

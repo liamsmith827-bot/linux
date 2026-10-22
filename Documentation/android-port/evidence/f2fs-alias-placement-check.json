@@ -1,31 +1,41 @@
 {
   "scope": "Exercise extracted segment selection against independent allowed-section masks. Two-device, eight-section modeled maps; new-section selection, aliases/pinning, zoned policies, one/two segments and sections per zone, hints and occupied maps. Not actual allocator concurrency, hardware, mount, storage or runtime testing.",
   "native_baseline": "334f9060783c42bd9d9e274d39ec4e84b9eb9ed9",
-  "native_policy_limits": "Existing allocation hints can override ONLY_SEQ preference; zone separation can return EAGAIN for pinned allocations despite available conventional sections. Both cases executed against the native selector. No full availability guarantee asserted for zoned policies.",
+  "native_policy_limits": "Existing non-pinned allocation hints can override ONLY_SEQ preference. The bounded pinned selector now retries within its allowed area and succeeds in the native premature-EAGAIN example. Both cases executed against the native selector. No full availability guarantee asserted for non-pinned zoned policies.",
   "source_sha256": {
-    "fs/f2fs/segment.c": "54bc07a24fc6b5130630ec4668bc79e7eb776ae9e4a2f8e51b23f9f459be63ed",
-    "fs/f2fs/segment.h": "277e7d43cdca272130f213dd0a12e1f638c9e144b93ba60c105a3389026b052a"
+    "fs/f2fs/segment.c": "a1fbe604a2fccd097f592b596877943631aec72976bdedc7838c9b7b825167d0",
+    "fs/f2fs/segment.h": "1ede2aeb04a9ed56eb9d41ca4e29738d09e8859a94e4480b84b9d3accdc3e67b"
   },
   "results": {
     "port": {
       "exit_code": 0,
-      "stdout": "98310 cases, 692653 assertions, 0 failures\n",
+      "stdout": "1081353 cases, 7692149 assertions, 0 failures\n",
       "stderr": ""
+    },
+    "out_of_area_partial_segment_control": {
+      "exit_code": 1,
+      "stdout": "1081353 cases, 7692146 assertions, 3 failures\n",
+      "stderr": "line 423: selected<2*limit\nline 423: selected<2*limit\nline 423: selected<2*limit\n"
+    },
+    "stale_boundary_control": {
+      "exit_code": -6,
+      "stdout": "",
+      "stderr": "line 45: b<8*s->segs_per_sec*4\nline 45: b<8*s->segs_per_sec*4\nline 45: b<8*s->segs_per_sec*4\nline 45: b<8*s->segs_per_sec*4\nline 45: b<8*s->segs_per_sec*4\nline 45: b<8*s->segs_per_sec*4\nline 45: b<8*s->segs_per_sec*4\n"
     },
     "missing_device_table_guard_control": {
       "exit_code": 1,
       "stdout": "",
-      "stderr": "/tmp/f2fs-alias-placement-jjbrpu9f/missing_device_table_guard_control.c:60:9: runtime error: index -1 out of bounds for type '<unknown> [2]'\n"
+      "stderr": "/tmp/f2fs-alias-placement-lwh_jbbe/missing_device_table_guard_control.c:67:9: runtime error: index -1 out of bounds for type '<unknown> [2]'\n"
     },
     "premature_zone_exhaustion_control": {
       "exit_code": 1,
-      "stdout": "98310 cases, 693931 assertions, 898 failures\n",
-      "stderr": "occupied=4 flags=4 geometry=2 pin=1 hint=4 policy=1 selected=4 allowed=8 r=-28\nline 396: !allowed\noccupied=4 flags=4 geometry=3 pin=1 hint=4 policy=1 selected=8 allowed=8 r=-28\nline 396: !allowed\noccupied=4 flags=8 geometry=2 pin=0 hint=4 policy=1 selected=4 allowed=8 r=-28\nline 396: !allowed\noccupied=4 flags=8 geometry=2 pin=1 hint=4 policy=1 selected=4 allowed=8 r=-28\nline 396: !allowed\noccupied=4 flags=8 geometry=3 pin=0 hint=4 policy=1 selected=8 allowed=8 r=-28\nline 396: !allowed\noccupied=4 flags=8 geometry=3 pin=1 hint=4 policy=1 selected=8 allowed=8 r=-28\nline 396: !allowed\noccupied=4 flags=9 geometry=2 pin=0 hint=4 policy=1 selected=4 allowed=8 r=-28\nline 396: !allowed\n"
+      "stdout": "1081353 cases, 7701565 assertions, 5720 failures\n",
+      "stderr": "line 409: !allowed\nline 409: !allowed\nline 409: !allowed\nline 409: !allowed\nline 409: !allowed\nline 409: !allowed\nline 409: !allowed\n"
     },
     "ignore_device_reservation_control": {
       "exit_code": 1,
-      "stdout": "98310 cases, 754681 assertions, 46784 failures\n",
-      "stderr": "line 392: selected<8*s.segs_per_sec && (allowed&(1U<<(selected/s.segs_per_sec)))\nline 392: selected<8*s.segs_per_sec && (allowed&(1U<<(selected/s.segs_per_sec)))\nline 392: selected<8*s.segs_per_sec && (allowed&(1U<<(selected/s.segs_per_sec)))\nline 392: selected<8*s.segs_per_sec && (allowed&(1U<<(selected/s.segs_per_sec)))\nline 392: selected<8*s.segs_per_sec && (allowed&(1U<<(selected/s.segs_per_sec)))\nline 392: selected<8*s.segs_per_sec && (allowed&(1U<<(selected/s.segs_per_sec)))\nline 392: selected<8*s.segs_per_sec && (allowed&(1U<<(selected/s.segs_per_sec)))\n"
+      "stdout": "1081353 cases, 8382893 assertions, 489904 failures\n",
+      "stderr": "line 405: selected<8*s.segs_per_sec && (allowed&(1U<<(selected/s.segs_per_sec)))\nline 405: selected<8*s.segs_per_sec && (allowed&(1U<<(selected/s.segs_per_sec)))\nline 405: selected<8*s.segs_per_sec && (allowed&(1U<<(selected/s.segs_per_sec)))\nline 405: selected<8*s.segs_per_sec && (allowed&(1U<<(selected/s.segs_per_sec)))\nline 405: selected<8*s.segs_per_sec && (allowed&(1U<<(selected/s.segs_per_sec)))\nline 405: selected<8*s.segs_per_sec && (allowed&(1U<<(selected/s.segs_per_sec)))\nline 405: selected<8*s.segs_per_sec && (allowed&(1U<<(selected/s.segs_per_sec)))\n"
     }
   }
 }

@@ -2780,3 +2780,49 @@ single-device filesystems. The placement check now passes 98,310 cases / 692,653
 assertions and additionally rejects a missing-table-guard control. This extends
 the prior two-device model with absent-table queries; it is not a mounted-image
 test. The capacity/reservation and symlink source functions are unchanged.
+
+## F2FS resizable tail and pinned allocation bounds
+
+Retain 65020e790253's optional resizable_tail_secno mount option, default zero,
+and read-only pinned_area_max_secno report for the configured generic filesystem.
+This supports its existing pinned-file/swap and resize APIs; no additional device
+platform is enabled. Actual SDK use is unconfirmed and conservatively retained.
+Native LTS resize validation, freed-section bookkeeping and six-argument range-GC
+locking remain. The documentation conflict keeps the existing lookup-mode table
+and its closing border; the tail option is a separate row.
+
+Publish the boundary after mount setup, after successful remount and after native
+resize metadata updates. Remount publication takes pin_sem: both pinned-section
+allocation consumers (fallocate expansion and swap migration) hold this semaphore
+through allocation/use. Failed remount retains the previously published limit.
+Resize freezes the filesystem before committing its metadata; refreshing the
+boundary then prevents a cached pre-resize value from permitting tail allocations.
+A reader also clamps the published limit to the current MAIN_SECS, including the
+native temporary reduced geometry during resize. Tail subtraction saturates at
+zero if later shrink makes the old tail reservation larger than the new size.
+
+Reject new pinned allocation with ENOSPC when the effective area is zero, before
+forming a GC upper bound: zero * segments_per_section - 1 must not underflow to
+a filesystem-wide range. The bounded GC retry keeps native lock=true, one retry
+and subsequent sync/error propagation. Check the limit before the within-section
+fast path as well as the whole-section search. Do not reuse an empty cached
+pinned section now outside the boundary; allocate a permitted section instead.
+Existing pinned extents are not relocated by changing the option, and a new tail
+reservation is not a guarantee that a later shrink can migrate those old extents.
+
+Pinned search starts at zero within its effective bound and must not restart at
+first_seq_zone_segno on an ONLY_SEQ-policy wrap. It retains the corrected fallback
+zone search. This supersedes the previous alias-checkpoint limitation where a
+pinned allocation could return EAGAIN despite an available conventional section:
+the same modeled case now succeeds inside the allowed range. Existing non-pinned
+allocation-hint versus ONLY_SEQ behavior remains unchanged.
+
+Extracted boundary, retry and cached-section checks pass 6,428 cases / 31,424
+assertions and reject tail underflow, zero-area GC and outside-area reuse controls.
+The expanded selector check passes 1,081,353 cases / 7,692,149 assertions, including
+stale boundaries and partial-segment paths; five regression controls fail.
+Reservation checks still pass 16,442 cases / 17,552 assertions and verify the
+preexisting SIT allocation/update and native resize/range-GC bodies remain intact.
+Publication call positions are also checked in source. These checks model locks,
+GC and storage; actual remount/resize, concurrency and crash behavior are not
+verified. All evidence is local; no additional remote source was accessed.
