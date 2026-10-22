@@ -983,6 +983,9 @@ remain registered, so native lifetime/module-unload handling still owns them.
 An already active old Binder trace event can therefore remain associated with
 its original driver during a switch; this diagnostic limitation is preferable
 to bypassing LTS lifetime checks. Runtime tracing/module unload was not tested.
+With the selector using the existing native API, restore trace_events.c and its
+private trace.h header exactly to LTS; ACK's new exposure of the partial-removal
+helper is no longer needed by this adaptation.
 
 Source review found one failure-path issue in ACK's added unload routine: if
 built-in C initialization fails, its native error paths have already released
