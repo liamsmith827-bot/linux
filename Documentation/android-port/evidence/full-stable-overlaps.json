@@ -1,7 +1,7 @@
 {
   "base": "7d0a66e4bb9081d75c82ec4957c50034cb0ea449",
   "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
-  "port": "3acc3712548b5f8b8f0f5c52133ae8b46ddb8495",
+  "port": "35b41a30b529ba2196e1ed575a8e0e8d2c4675d1",
   "commits_examined": 1677,
   "overlaps": [
     {
@@ -351,6 +351,22 @@
       "status": "reviewed-source-adaptation",
       "assessment": "Both writeback-limit stores use guard(rwsem_write)(&zram->init_lock), preserving write-side exclusion until scope exit.",
       "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "878edb39ecf481b76f3e51ab533ff2c4a8332b74",
+      "subject": "zram: fixup read_block_state()",
+      "lts_added_line_absent": [
+        {
+          "path": "drivers/block/zram/zram_drv.c",
+          "port_path": "drivers/block/zram/zram_drv.c",
+          "hunk": "@@ -1153,0 +1153 @@ static ssize_t read_block_state(struct file *file, char __user *buf,",
+          "line": "struct timespec64 ts;"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "The native stable temporary relocation serves ktime_t conversion and prepares the later bounds fix. ACK uses u32 seconds and prints it directly with a zero fractional field, so timespec64 is unused and removed by 8e348642e1f0. read_block_state still initializes nr_pages only after guard(rwsem_read) and init_done, preserving 391f057f44a5 bounds/lifetime protection. No index/count locking or bounds check is removed. MEMORY_TRACKING is disabled in the current SDK build; full source path was nevertheless reviewed.",
+      "assessment_source_head": "35b41a30b529ba2196e1ed575a8e0e8d2c4675d1"
     },
     {
       "commit": "fef4b8f17e1c54522957b873ed81e6a60897625d",

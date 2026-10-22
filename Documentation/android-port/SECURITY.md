@@ -2036,3 +2036,72 @@ Build 62 completed at 3acc3712548b, manifest cb65420, with both kernel images,
 modified-payload control was rejected. All flag/CRC tables and 659 protected
 exports matched. This checks the memory-hook signature changes through the
 existing emulator build; no kernel callback or emulator was run.
+
+## Zram Android memory management and failure lifetimes
+
+The full zram delta is retained for the existing Android memory daemon:
+local mmd_setup.rs enables compressed_writeback, service.rs gates per-process
+operations on it, and per_process_ioctls.rs implements range writeback, prefetch
+and version 1. This is positive userspace evidence, not speculative platform
+support. Native LTS write-limit exclusion/rounding, initialized disk-size access,
+locked slot-handle capture, synchronous partial-page I/O and compressor cleanup
+remain. The newer native deflate-window validation also remains.
+
+8e348642e1f0 corrects three failure/lifetime problems in this retained code:
+
+- A failed asynchronous read-request allocation previously returned success
+  without filling the destination page. Propagate ENOMEM through the native
+  parent-bio error path, so swap does not consume an unfilled successful read.
+- A prefetched backing copy previously survived overwrite/discard because only
+  swap_slot_free_notify erased it. Invalidate it in every slot_free call so later
+  writeback cannot replace new data with an old cached backing block. Preserve
+  cache retention for unchanged prefetched slots and their concurrent fault reads.
+- ACK 243886974548 correctly waits for prefetch I/O before releasing the init
+  lock and post-processing exclusion, but its zero-counter predicate can return
+  before the last wake_up accesses the stack waitqueue. Use completion locking
+  and a submission reference: completion cannot occur between submissions, and
+  return waits until the last notifier finishes using the stack control. Both
+  success and error paths release resources before notifying completion.
+
+The same adaptation initializes writeback output fields before early errors.
+That avoids returning stale user-provided range results or an uninitialized
+legacy temporary. The SDK's INIT_STACK_ALL_ZERO already mitigates the latter;
+the source now establishes initialization explicitly. Raw compressed writeback
+continues zeroing the unused page tail before full-page storage writes.
+
+The process ioctl deliberately uses CAP_SYS_NICE and get_task_mm, without a
+ptrace access check. The earlier ACK commit message's no-address-disclosure
+rationale is not valid for the final range API: next_addr and written counts
+reveal memory-layout/activity metadata to an authorized caller. Retaining this
+privileged memory-daemon authority is an explicit Android compatibility choice.
+Global capability and device access checks remain; local mmd.te additionally
+restricts current commands to mmd and denies legacy command 1 to all domains.
+No claim is made that SYS_NICE plus device access cannot reveal target metadata.
+Shared file pageout retains its file-owner/write permission check. Native PTE,
+swap-device, task/mm lifetime and range validation remain. A stale PTE can make
+selection approximate; it does not grant userspace raw memory access.
+
+Prefetch is a best-effort hint: deferred I/O/population failures need not be
+reported individually. The range budget counts matching candidate swap entries,
+not guaranteed writes. Reported bytes count completed storage writes, and do not
+count reuse of an already cached backing copy. ACK's access-time storage retains
+seconds precision rather than LTS subsecond diagnostic precision.
+
+35b41a30b529 supplies the native block compat pointer adapter because the existing
+SDK configuration enables IA32 emulation. All four commands have identical
+32/64-bit layouts/numbers, verified by compiling check_zram_uapi.c in both modes.
+It reaches the same capability/device checks and does not change ABI structures.
+The configured native mmd consumer is established; no 32-bit daemon run is claimed.
+
+check_zram_lifetimes.py passes 21 extracted-function host-shim cases and a
+controlled last-notifier interleaving check. Old-source controls expose read
+allocation errors, retained stale cache entries, uninitialized outputs and the
+premature-return interval. These tests do not execute kernel I/O, page walks,
+static kernel lock primitives or Android services. All source/consumer and
+primitive evidence was local; no commit-message or diagnostic URL was opened.
+
+Build 63 completed at 8e348642e1f0, manifest f7b136a, with both kernel images,
+100 common and 45 virtual-device modules. All 145 signatures verified and the
+modified-payload control was rejected. All module flag/CRC tables and 659 protected
+exports matched. This validates compilation and packaging of the zram lifetime
+fixes; it does not execute swap I/O or the later compat ioctl dispatch addition.

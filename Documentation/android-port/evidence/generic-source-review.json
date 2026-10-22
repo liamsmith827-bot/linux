@@ -6396,5 +6396,69 @@
     "port_blob": "8360c371039980b17163d5e9ee1c1023c1b84252",
     "lts_to_port_sha256": "2be97aeb4e6cfc1fbe2599530184f04c8d9a66ca62cb964eb78b9767086ffbb7",
     "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "drivers/block/zram/zram_drv.c": {
+    "review_head": "35b41a30b529ba2196e1ed575a8e0e8d2c4675d1",
+    "status": "reviewed-source-selection",
+    "rationale": "Complete LTS-to-port and normalized-ACK deltas read, with full compressed writeback, prefetch, slot-free/replacement, completion, sysfs and I/O ownership paths. Retain compressed batched writeback and prefetch backing-copy cache: local mmd_setup.rs enables compressed_writeback, service.rs gates per-process operations on it, and per_process_ioctls.rs uses the range/prefetch/version ABI. Keep native LTS init read/write exclusion, write-side limit stores, 4-KiB budget rounding, locked slot-handle capture, synchronous partial writes, compressor reset on failed init and deflate bounds. 8e348642e1f0 propagates asynchronous request/bio allocation failure to native parent read-error handling; invalidates cached backing copies in every slot_free path (not only swap notify), preventing stale reuse after overwrite/discard; and uses a completion plus submission reference to join the last prefetch notifier before returning or dropping init_lock/pp_in_progress. Free request resources before completing. Original raw compressed page tail zeroing remains, preserving confidentiality on full-page backing writes. Native page/slot references and swap-level ownership protect normal fault reads; concurrent arbitrary raw-device overwrite is not promised an atomic snapshot. Slot metadata becomes u32 seconds/flags, retaining the big-endian lock-bit correction without claiming subsecond idle telemetry. Prefetch is best effort: deferred I/O/population failures do not report all missed hints to userspace. Process budget counts matching swap entries, not guaranteed successful writes; result bytes count completed physical writes and omit cache reuse. 35b41a30b529 uses native compat_ptr dispatch for identical ioctl layouts in the already-enabled IA32 configuration, preserving checks. 21 extracted-function error/cleanup cases and deterministic last-notifier interleaving checks pass with old-source controls; no actual I/O or memory-pressure race run.",
+    "port_blob": "4c268516ede0ec2a5dda22553fdae62a17bd8db1",
+    "lts_to_port_sha256": "5ca6e5f70ec763efff5e24cd156ef2410bef1ba25ee9a13e91a38f6417d68def",
+    "normalized_ack_to_port_sha256": "2b97fdaf5dce00a9b4f591b2589ae2eb91e7f1265df2c72cc404318b4cd304f9"
+  },
+  "drivers/block/zram/zram_drv.h": {
+    "review_head": "35b41a30b529ba2196e1ed575a8e0e8d2c4675d1",
+    "status": "reviewed-source-selection",
+    "rationale": "Complete LTS and normalized ACK header deltas read with implementation. Retain reduced slot flag/access-time metadata and ZRAM_ENTRY_LOCK_BIT mapping, writeback batching/compression/cache state, shared pp/wb control definitions and prototypes for ioctl implementation. Native size guard checks flags fit u32. Store actual initialized state for runtime features; no historical KMI padding. Cache records remain separate from actual RAM/zsmalloc ownership; lifecycle fixes in 8e348642e1f0 use existing declarations. WRITEBACK/MULTI_COMP/ANDROID_IOCTL guards and disabled cache stubs match compilation paths. No binary layout compatibility claim.",
+    "port_blob": "6d17a4511c7da2b9ef2303d33ca5ce6c64b70105",
+    "lts_to_port_sha256": "153661b0e5e73bfa2370d7f3e4832cb911913ab855d6d809c4e6622cfcda8173",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "drivers/block/zram/zram_ioctl.c": {
+    "review_head": "35b41a30b529ba2196e1ed575a8e0e8d2c4675d1",
+    "status": "reviewed-source-selection",
+    "rationale": "Entire ioctl implementation, native mm/pagewalk/swap APIs and local mmd userspace/policy reviewed. Retain version 1, legacy writeback, bounded range writeback and process prefetch, guarded by device access plus global capable(CAP_SYS_NICE) for process operations. This intentionally uses get_task_mm rather than ptrace mm_access: current range API returns next_addr and byte counts, so old commit 4191645fc555 claim that no address metadata is exposed does not apply to the final ABI. Accept that privileged daemon metadata/performance authority for Android compatibility; do not claim unprivileged isolation from a SYS_NICE holder with device access. Local mmd.te permits only mmd for current ioctls and denies legacy to every domain. Native file owner/write check limits shared file pageout; pidfd/task/mm refs, mmap lock, PTE snapshot lock, swap device reference/type/non-swap and bounds checks remain. PTE snapshot can become stale before marking a slot, so selection is approximate; global post-processing exclusion and slot flags prevent old data replacing a newly written-back generation. 8e348642e1f0 initializes next_addr/written_bytes before all failures, including the legacy stack temporary; SDK stack initialization already mitigates uninitialized automatic data, and no ABI sizes or command values change. Actual driver functions pass 21 host-shim cases covering permission/init/busy/allocation/scan/write errors, output counts and cleanup; old controls reproduce failures. No live task page walk, swapoff or authorization test.",
+    "port_blob": "3be1bf4f4b92002a813b35f33c2b5eeb3d5fcfec",
+    "lts_to_port_sha256": "def75a87578e2a688f555b6b008192ead2cf99acfcb3ad6b3cb5ac4d33be7707",
+    "normalized_ack_to_port_sha256": "e290bf86e22304d09ed0aa5d0bc46af7e4061dd5ceab81b36a1ae4abd9e666cc"
+  },
+  "drivers/block/zram/zram_ioctl.h": {
+    "review_head": "35b41a30b529ba2196e1ed575a8e0e8d2c4675d1",
+    "status": "reviewed-source-selection",
+    "rationale": "Full new ACK interface header retained for the optional Android ioctl object and the disabled-config fallback. Actual SDK enables ZRAM_ANDROID_IOCTL and resolves the external implementation. This is source linkage rather than userspace structure layout or historical module KMI. Only trailing whitespace normalization from final ACK.",
+    "port_blob": "0a12b8f94eba4c1d9f30538827de7ccb863aa5aa",
+    "lts_to_port_sha256": "c4946b2207a663f77ec67274e6d4acd60a60a9797c50a0d3d33a0b716a44158a",
+    "normalized_ack_to_port_sha256": "abb11ecf89130fffaed3cd2071e8e7fc27939d28d6faaab6b3d19c855ddc32ea"
+  },
+  "include/uapi/linux/zram_ioctl.h": {
+    "review_head": "35b41a30b529ba2196e1ed575a8e0e8d2c4675d1",
+    "status": "reviewed-source-selection",
+    "rationale": "Full final ACK UAPI retained byte-for-byte. Local mmd per_process_ioctls.rs uses magic 0xBB, commands 2/3/4 and version 1 with five u64 range fields, one u64 prefetch pidfd and zero-size meaning unlimited candidates. Keep legacy command 1 for kernel ABI compatibility despite current mmd SELinux prohibition. All structures begin with aligned_u64; compile-only assertions with host cc -m32 and -m64 confirm sizes 16/40/8, field offsets and all four ioctl numbers. 35b41a30b529 supplies native block compat pointer dispatch in configured IA32 mode, with no argument layout translation or permission bypass. No userspace service or kernel runtime test.",
+    "port_blob": "cce1f49fb4d058e566090f71934f1ee8e1cf709c",
+    "lts_to_port_sha256": "20bd312274ddd58b1a309c21bc9ced34b0f466066293f10b55adbd741c0ee74a",
+    "normalized_ack_to_port_sha256": "96eec24e0ee02d920b63188611f8a7fe037e4f4199ff46ad01e78b452068a04c"
+  },
+  "drivers/block/zram/Kconfig": {
+    "review_head": "35b41a30b529ba2196e1ed575a8e0e8d2c4675d1",
+    "status": "reviewed-source-selection",
+    "rationale": "Complete delta adds ZRAM_ANDROID_IOCTL dependent on ZRAM_WRITEBACK, retaining the original LTS compression/backend selections. Actual SDK builds ZRAM=m, WRITEBACK/MULTI_COMP/ANDROID_IOCTL=y and LZORLE default; local mmd is a positive consumer. Retain configuration compatibility without enabling a future platform or GrapheneOS hardening.",
+    "port_blob": "caa0040803fa9bed347b2b74b9c422dbb21a051b",
+    "lts_to_port_sha256": "10a510bb714acccb03d9b577c33b1a654eff0ced57633dc9c91a35a7ceed1e48",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "drivers/block/zram/Makefile": {
+    "review_head": "35b41a30b529ba2196e1ed575a8e0e8d2c4675d1",
+    "status": "reviewed-source-selection",
+    "rationale": "Complete delta adds zram_ioctl.o under CONFIG_ZRAM_ANDROID_IOCTL to the existing zram composite module. Preserve native backend object selection and module layout; original emulator workflow builds the configured source dependency, without external module edits.",
+    "port_blob": "8465855c316caf51316238e31bb480f54fd098c7",
+    "lts_to_port_sha256": "da698be0abc0a3d2e2eec541addee79ec663e9c9c75c754ff942c11ed660c8f8",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "drivers/block/zram/TEST_MAPPING": {
+    "review_head": "35b41a30b529ba2196e1ed575a8e0e8d2c4675d1",
+    "status": "reviewed-source-selection",
+    "rationale": "Full JSON test metadata parsed/read: preserve ACK Android presubmit/selftest/network/USB/Telecom test mapping and imports as build/test integration metadata. It changes no runtime code or current kernel build steps and does not imply any listed Android OS/CTS/VTS/selftest was run. Source test names/configuration are retained for the existing workflow ecosystem.",
+    "port_blob": "2bff97bec521243b7c5832bcad58a8299a39b086",
+    "lts_to_port_sha256": "fc5f691473b873b05cf744f7353459a88c0734633bc53be2a37de03063e499eb",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   }
 }
