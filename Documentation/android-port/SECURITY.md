@@ -2267,3 +2267,70 @@ Retaining native F2FS return-value/error checks instead of ACK's cleanup and
 FAULT_DISCARD deletion has the same ordinary discard outcome in the SDK. No
 actual block error is suppressed by this decision; completion errors remain
 handled by native bio completion. All evidence is local.
+
+## F2FS diagnostics, retry policy and recovered names (0911085e16d9, 4a7c4f4e132f)
+
+Retain generic fadvise and real error-report trace interfaces. NEED_FSCK reports
+preserve caller function/line; an inline helper evaluates flag arguments once.
+The checkpoint-stop event is added at the native checkpoint.c location. Native
+flush, persisted stop reason and critical-error behavior are unchanged. These
+reporting events are independent of the omitted fault-injection simulator.
+Defragmentation reports successful moved blocks through read-only sysfs/debug
+output. An initialized atomic counter prevents lost concurrent updates and keeps
+ACK's unsigned 32-bit modulo range; it is diagnostic, not an allocation policy.
+
+ACK's congestion retry policy now sleeps one jiffy, or 4 ms at the SDK's HZ=250,
+while periodic discard submission remains 20 ms. This changes responsiveness and
+wake frequency; no performance improvement has been measured. Native retry
+conditions and scheduling calls remain. Individual last_time and NAT heuristic
+samples receive READ_ONCE/WRITE_ONCE/data_race annotations. These do not provide
+a cross-field snapshot or replace metadata locking. Documentation now correctly
+states the already-existing rt,3 checkpoint I/O priority.
+
+Native LTS already bounds recovery filename logs and skips node-footer validation
+after a failed read. Keep those implementations. ACK dae54701fcc8 additionally
+rejects zero-length recovered names and reports malformed lengths as filesystem
+corruption; pinned LTS lacks that validation. Apply it in 4a7c4f4e132f before any
+hashing or dentry reconstruction, preserving native encrypted/casefolded bounds
+checks, recovery ordering and bounded diagnostics. No filesystem image was mounted
+and no runtime test was performed. Evidence consists of full local patches,
+source review and the separately recorded build; no new remote sources were used.
+
+## F2FS verity API reconciliation
+
+The SDK enables FS_VERITY and F2FS compression. The extra IS_ENABLED guard in
+25111fb0cb80 is true for this target and does not alter its behavior. Retain the
+native LTS info lookup and verification interfaces instead of 5117198dee04's
+cross-function cached-pointer transport refactor. The native acquire lookup,
+metadata eligibility, decompression need_verity selection, and context release
+before recursive verity work remain. Six complete functions and both native core
+verity files match pinned LTS, recorded in `evidence/f2fs-verity-native-comparison.json`.
+
+Compressed mappings are excluded from large-folio eligibility. Native page-sized
+verification, uptodate and unlock helpers therefore suffice for compressed
+rpages; retaining the explicit failure clear from LTS is harmless and does not
+remove validation. This accounts for 6b162dff9448 and 70bbe16075d3 without enabling
+unsupported compressed large-folio behavior. In contrast, c9a415d6a8ef's hole
+subpage-offset correction is required by the newly selected noncompressed large
+folios and is adapted in ce7f50c5967d. Their bios use native length/offset-aware
+verification, and all failures feed the accumulated completion status. This
+review does not claim runtime or cryptographic validation, and uses no remote
+resources.
+
+## F2FS native lifetime and helper preservation
+
+Native superblock cleanup clears s_fs_info immediately after freeing sbi, and
+native drop_inode releases its temporary inode reference with atomic_dec under
+i_lock, avoiding iput recursion. The ACK fixes 3f3b4e256b70 and 749c4bff73d5 are
+already represented. Native decompression replaces the old 1f7ba8693d16 counter
+scheme with one remaining-pages countdown, a separate context reference count,
+and per-cluster verity work. The read counter is never reset for verification;
+completion and each bio page hold distinct lifetime references. Retain this
+newer design and its failure cleanup rather than restore the old per-bio counter.
+
+The private unlock-parameter bool cleanup and F2FS_SUPER_BLOCK page-count spelling
+have no required runtime effect here: callers pass the same truth values and
+block-device pagecache folio orders are bounded (SDK maximum order 9), so the
+native divisor is the same positive page count. These are per-patch source
+findings, not blanket approval of the remaining F2FS delta. No runtime tests or
+remote resources were used for these decisions.

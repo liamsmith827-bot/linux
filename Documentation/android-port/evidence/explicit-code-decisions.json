@@ -1630,5 +1630,159 @@
     "disposition": "reconciled-to-lts",
     "rationale": "Removes FAULT_DISCARD simulation and its now-dead error handling after a66e0ba8f7ae. The SDK disables fault injection, and native __blkdev_issue_discard returns zero. Keeping the native loop/return checks therefore has the same ordinary discard result and preserves native source structure. No runtime failure handling is weakened, and documentation continues to describe the retained native debug source. Full local patches and both native functions were examined. See SECURITY.md: F2FS fault injection target boundary; no remote access.",
     "result_commits": []
+  },
+  {
+    "commit": "02c28ea9537c647c17e8b2f1c5ba9edd053a1366",
+    "disposition": "adapted",
+    "rationale": "Retain ACK runtime congestion retry policy for the configured F2FS filesystem. With the follow-up 21c1db22bbbf, allocation/writeback/unmount retries sleep one jiffy (4 ms at SDK HZ=250), compared with native 20 ms. Periodic discard submission keeps its separate 20-ms interval. Every retry still schedules; more frequent condition checking can cost CPU/wakeups but no lock, validation or retry-success condition is removed. No measured latency/performance claim. Actual SDK config enables F2FS and F2FS_STAT_FS; generic runtime/diagnostic contracts are retained conservatively although actual SDK F2FS use is unconfirmed. Full local patches and native call sites were examined. See SECURITY.md; no runtime or remote-source claim.",
+    "result_commits": [
+      "0911085e16d9d2a3f2cd59ad9b4bc422eda5e750"
+    ]
+  },
+  {
+    "commit": "21c1db22bbbf3ff45ed829d733ed7501351e60fd",
+    "disposition": "adapted",
+    "rationale": "Use one jiffy directly for the selected congestion retry interval; keep the separate 20-ms discard pacing. The units match schedule_timeout/io_schedule_timeout. No zero-delay busy loop or new kernel tick configuration is introduced. Actual SDK config enables F2FS and F2FS_STAT_FS; generic runtime/diagnostic contracts are retained conservatively although actual SDK F2FS use is unconfirmed. Full local patches and native call sites were examined. See SECURITY.md; no runtime or remote-source claim.",
+    "result_commits": [
+      "0911085e16d9d2a3f2cd59ad9b4bc422eda5e750"
+    ]
+  },
+  {
+    "commit": "88b0e5b779452e961c908a831943541e3e882f8a",
+    "disposition": "adapted",
+    "rationale": "Correct checkpoint-thread sysfs documentation from be,3 to rt,3, matching the native DEFAULT_CHECKPOINT_IOPRIO and initialization. This makes the interface description accurate without changing scheduler policy. Actual SDK config enables F2FS and F2FS_STAT_FS; generic runtime/diagnostic contracts are retained conservatively although actual SDK F2FS use is unconfirmed. Full local patches and native call sites were examined. See SECURITY.md; no runtime or remote-source claim.",
+    "result_commits": [
+      "0911085e16d9d2a3f2cd59ad9b4bc422eda5e750"
+    ]
+  },
+  {
+    "commit": "edea1f72501d29857a1efe383471248fe0f98ea8",
+    "disposition": "adapted",
+    "rationale": "Retain f2fs_fadvise tracepoint with inode size read through i_size_read and the exact requested offset/length/advice. Native advice validation and return paths are unchanged; tracing visibility is governed by existing trace access controls. Actual SDK config enables F2FS and F2FS_STAT_FS; generic runtime/diagnostic contracts are retained conservatively although actual SDK F2FS use is unconfirmed. Full local patches and native call sites were examined. See SECURITY.md; no runtime or remote-source claim.",
+    "result_commits": [
+      "0911085e16d9d2a3f2cd59ad9b4bc422eda5e750"
+    ]
+  },
+  {
+    "commit": "57f324a72936ed03df8875dbbebf662abe804611",
+    "disposition": "adapted",
+    "rationale": "Retain WRITE_ONCE/READ_ONCE annotations for shared last_time values while leaving native wrap-safe timeout arithmetic and policy intact. These are consistent individual samples, not an atomic snapshot across REQ/DISCARD/GC fields. Actual SDK config enables F2FS and F2FS_STAT_FS; generic runtime/diagnostic contracts are retained conservatively although actual SDK F2FS use is unconfirmed. Full local patches and native call sites were examined. See SECURITY.md; no runtime or remote-source claim.",
+    "result_commits": [
+      "0911085e16d9d2a3f2cd59ad9b4bc422eda5e750"
+    ]
+  },
+  {
+    "commit": "aa49950484cafb621c49b0d7b51eb1253894fbb3",
+    "disposition": "adapted",
+    "rationale": "Retain data_race(READ_ONCE) sampling for NAT heuristic counters, avoiding an extra nat_tree_lock in balancing. These annotations document approximate counters and constrain compiler accesses; they do not serialize NAT writers or replace the native locking protecting NAT metadata. Actual SDK config enables F2FS and F2FS_STAT_FS; generic runtime/diagnostic contracts are retained conservatively although actual SDK F2FS use is unconfirmed. Full local patches and native call sites were examined. See SECURITY.md; no runtime or remote-source claim.",
+    "result_commits": [
+      "0911085e16d9d2a3f2cd59ad9b4bc422eda5e750"
+    ]
+  },
+  {
+    "commit": "a483e59fd752cc2e28e7963ecbf4af7a99cc4fd6",
+    "disposition": "adapted",
+    "rationale": "Retain defrag_blocks read-only sysfs/debug statistics with CONFIG_F2FS_STAT_FS=y. Adapt the unsigned 32-bit counter to atomic_t with unsigned output, initialized before stat_info publication, so concurrent successful operations on different inodes do not lose increments. The counter retains modulo-2^32 range and does not control defragmentation. Omit unrelated blkoff context from the conflict. Native ioctl authorization, inode locking, error handling and range updates remain. Actual SDK config enables F2FS and F2FS_STAT_FS; generic runtime/diagnostic contracts are retained conservatively although actual SDK F2FS use is unconfirmed. Full local patches and native call sites were examined. See SECURITY.md; no runtime or remote-source claim.",
+    "result_commits": [
+      "0911085e16d9d2a3f2cd59ad9b4bc422eda5e750"
+    ]
+  },
+  {
+    "commit": "bfaefa6c7d45d2de5b294b5341941e5d127ac6f7",
+    "disposition": "adapted",
+    "rationale": "Retain real NEED_FSCK and checkpoint-stop trace events independently of disabled fault injection. Adapt the call to native checkpoint.c rather than move/rewrite the native error handler. Pass __func__/__LINE__ through a wrapper to an inline helper that evaluates sbi/type once, sets the same flag, then reports. Native flush, stop-reason recording and critical-error/remount behavior remain; no extra writable control is exposed. Actual SDK config enables F2FS and F2FS_STAT_FS; generic runtime/diagnostic contracts are retained conservatively although actual SDK F2FS use is unconfirmed. Full local patches and native call sites were examined. See SECURITY.md; no runtime or remote-source claim.",
+    "result_commits": [
+      "0911085e16d9d2a3f2cd59ad9b4bc422eda5e750"
+    ]
+  },
+  {
+    "commit": "dae54701fcc8cb998b19bf07f972b2622b789851",
+    "disposition": "applied",
+    "rationale": "Pinned LTS rejects only oversized recovered names with WARN_ON/ENAMETOOLONG and accepts zero length. Apply the exact ACK patch: reject zero or oversized length before hashing/dentry reconstruction, mark NEED_FSCK and ERROR_CORRUPTED_INODE, and return EFSCORRUPTED. Preserve native LTS bounded recovery logging and encrypted/casefolded hash-size checks. This prevents false successful recovery of an empty name and reports malformed disk metadata consistently. Compilation is recorded separately; no corrupt-image mount test.",
+    "result_commits": [
+      "4a7c4f4e132f869164553e309f2fae519dede989"
+    ]
+  },
+  {
+    "commit": "751615fe69857ae1543d62a79f20d40a75af2506",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native LTS 59970b2586fe already checks bio->bi_status == BLK_STS_OK before reading the node footer; the port retains that condition in the adapted large-folio completion path. The complete one-hunk ACK change is represented. Failed reads therefore cannot feed uninitialized data into footer validation. Full local ACK patch and native implementation were examined; no remote resource was accessed.",
+    "result_commits": []
+  },
+  {
+    "commit": "7a7999e30b829bd1813b309a15a1c9c45bb3e895",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native LTS 35c5abccd092 already bounds both recovery log names with min(i_namelen,F2FS_NAME_LEN), uses %.*s, and substitutes a constant for encrypted names. Retain that inlined implementation rather than ACK helper extraction and cosmetic decimal directory formatting. The security effect is present in both recovery paths; unrelated LTS recovery ordering and loop detection remain. Full local ACK patch and native implementation were examined; no remote resource was accessed.",
+    "result_commits": []
+  },
+  {
+    "commit": "d7ca6fd4f0c7df196cd50d381f8932e9581565ac",
+    "disposition": "adapted",
+    "rationale": "The critical_task_priority documentation was corrected to default 120 in 0e583bb7ddb4 when the feature was selected. That matches init_f2fs_rwsems and the thread priority update; the complete ACK one-line correction is already represented by this adaptation. Full local ACK patch and native implementation were examined; no remote resource was accessed.",
+    "result_commits": [
+      "0e583bb7ddb4d8f97e19d1581673758f1d3cbffd"
+    ]
+  },
+  {
+    "commit": "25111fb0cb801dd08dfe8245a3dcf2e51d8f1beb",
+    "disposition": "omitted-current-target",
+    "rationale": "The sole change adds IS_ENABLED(CONFIG_FS_VERITY) before the existing decompression verification-work condition. The SDK has FS_VERITY=y, so the expression is true and does not change control flow. Retain the native condition; non-verity build dead-code elimination is outside this selected configuration. Native need_verity is derived from fsverity_active and remains false without verity. Full local five-patch series, native fsverity APIs, compression page filtering and large-folio eligibility were examined. See evidence/f2fs-verity-native-comparison.json and SECURITY.md. No runtime verification or remote resource access.",
+    "result_commits": []
+  },
+  {
+    "commit": "5117198dee04928ca854e772381fefb87bdb175d",
+    "disposition": "reconciled-to-lts",
+    "rationale": "The patch threads cached fsverity_info through internal bio/read/compression contexts to consolidate lookups after an API conversion. Retain native LTS public/internal verity APIs instead: fsverity_active uses fsverity_get_info with smp_load_acquire, verification obtains the same inode-owned context, post-read work frees its mempool context before recursive verity reads, and native eligibility excludes metadata pages. All six selected lookup/verification functions are exactly native LTS. No userspace or vendor callback signature is provided by this refactor; no verification or security check is omitted. Large-folio hole verification uses the native block/offset API separately. Full local five-patch series, native fsverity APIs, compression page filtering and large-folio eligibility were examined. See evidence/f2fs-verity-native-comparison.json and SECURITY.md. No runtime verification or remote resource access.",
+    "result_commits": []
+  },
+  {
+    "commit": "6b162dff9448db4c6dd3f68d089c2b10b51ada36",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep the native explicit ClearPageUptodate on verification failure. The ACK patch only removes this redundant clear: f2fs_read_multi_pages filters already-uptodate rpages before decompression, and verification work marks them uptodate only after success. Retaining the clear neither accepts invalid data nor changes the read contract; no API conversion is needed. Full local five-patch series, native fsverity APIs, compression page filtering and large-folio eligibility were examined. See evidence/f2fs-verity-native-comparison.json and SECURITY.md. No runtime verification or remote resource access.",
+    "result_commits": []
+  },
+  {
+    "commit": "70bbe16075d33091cf9be3b1e4982784b53bb75f",
+    "disposition": "reconciled-to-lts",
+    "rationale": "The partial folio conversion changes verification/uptodate/unlock helpers for compressed rpages. Current ACK and port large-folio mapping eligibility explicitly excludes compressed files. Native compressed order-0 rpages therefore have PAGE_SIZE == folio_size and equivalent verify/mark/unlock behavior. Keep native page helpers and the explicit failure clear; do not infer or add unsupported compressed large-folio writes. This is a positive source eligibility boundary, not an absent-consumer assumption. Full local five-patch series, native fsverity APIs, compression page filtering and large-folio eligibility were examined. See evidence/f2fs-verity-native-comparison.json and SECURITY.md. No runtime verification or remote resource access.",
+    "result_commits": []
+  },
+  {
+    "commit": "c9a415d6a8ef1bb944e712fed255e76fc152cf72",
+    "disposition": "partially-adapted",
+    "rationale": "Retain the security-relevant large-folio hole fix in ce7f50c5967d: zero and verify the actual subpage offset through native fsverity_verify_blocks(folio,PAGE_SIZE,page_offset), then aggregate failure before unlocking. Keep native repeated eligibility lookups rather than the unrelated fsverity_info transport refactor. The mixed compressed-bio verification branch receives only order-0 folios because mapping eligibility excludes compressed files, so its native fsverity_verify_page call is equivalent there. The ordinary noncompressed large-folio bio uses native length/offset-aware fsverity_verify_bio. No entire-folio verification is substituted for per-bio segments. Full local five-patch series, native fsverity APIs, compression page filtering and large-folio eligibility were examined. See evidence/f2fs-verity-native-comparison.json and SECURITY.md. No runtime verification or remote resource access.",
+    "result_commits": [
+      "ce7f50c5967d3417371d2585486e177dce384b94"
+    ]
+  },
+  {
+    "commit": "3f3b4e256b70060ce01e720ee5ec2dd65a8df068",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native LTS and port f2fs_fill_super error cleanup both set sb->s_fs_info=NULL immediately after kfree(sbi), before optional recovery retry. The exact ACK lifetime fix is present; later native lockdep unregister and fs_context option cleanup remain. This prevents the freed superblock-private pointer from being freed again. Evidence: complete local ACK patch and named LTS/port functions; SECURITY.md. No remote access or runtime test.",
+    "result_commits": []
+  },
+  {
+    "commit": "749c4bff73d5ebf61e0205cd8907f65954ff51e8",
+    "disposition": "already-represented-upstream",
+    "rationale": "The native f2fs_drop_inode I_SYNC/unlinked path takes a temporary __iget before dropping i_lock, finishes cleanup, reacquires i_lock and uses atomic_dec(&inode->i_count), not iput. The full ACK fix is present and avoids recursive eviction while holding i_lock. Native checkpoint-disabled metadata handling and fscrypt inode-drop behavior remain. Evidence: complete local ACK patch and named LTS/port functions; SECURITY.md. No remote access or runtime test.",
+    "result_commits": []
+  },
+  {
+    "commit": "1f7ba8693d169a1edb3e8175dfeaf3166023bdc8",
+    "disposition": "superseded-no-residual-code",
+    "rationale": "The historical patch separates reused decompression/verity counters and introduces per-bio verity policy. Native LTS has replaced that design: alloc_dic initializes remaining_pages once plus refcnt=1 and a per-cluster need_verity; end_read_compressed_page decrements remaining_pages to trigger decompression, which enqueues cluster verification only after completion. It never resets remaining_pages for verity. Pagecache completion owns one reference until verification/unlock, each compressed bio page has a separate reference, and mixed-bio verification skips compressed pages already verified by the cluster. The native failure and context-release paths are retained. Full historical patch, current alloc/read/decompress/verify/free paths and struct lifetime comments were examined; do not revive the superseded counter/API design. Evidence: complete local ACK patch and named LTS/port functions; SECURITY.md. No remote access or runtime test.",
+    "result_commits": []
+  },
+  {
+    "commit": "1aa819921bab6ec4bee67f17cf240b07f37be793",
+    "disposition": "reconciled-to-lts",
+    "rationale": "The full patch converts private unlock parameters/call literals from int and 0/1 to bool/false/true, and folds two unlock+put sequences into f2fs_folio_put. Native callers pass only the same truth values; native helper branches on unlock, and the two explicit cleanup sequences operate on already locked valid folios. Retain the native internal signatures and matching release order. No userspace/vendor hook ABI, normal lock decision or reference count changes; additional helper debug assertions are not a needed target behavior. Evidence: complete local ACK patch and named LTS/port functions; SECURITY.md. No remote access or runtime test.",
+    "result_commits": []
+  },
+  {
+    "commit": "f8456b480a588a7d204b39864e1ab139012c7a1c",
+    "disposition": "reconciled-to-lts",
+    "rationale": "The sole hunk replaces index % (1 << folio_order) with index % folio_nr_pages in F2FS_SUPER_BLOCK. Its callers use block-device pagecache folios (read_mapping_folio or that mapping), whose order is bounded by MAX_PAGECACHE_ORDER; on the SDK 4-KiB/THP configuration this is PMD order 9. Native shift and page count therefore yield the same positive power-of-two divisor without signed-shift overflow. Retain the native expression to avoid an unnecessary cleanup; no different block/folio indexing or new platform capability is claimed. Evidence: complete local ACK patch and named LTS/port functions; SECURITY.md. No remote access or runtime test.",
+    "result_commits": []
   }
 ]
