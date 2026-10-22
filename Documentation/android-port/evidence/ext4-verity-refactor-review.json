@@ -1,0 +1,34 @@
+{
+  "source_head": "dcfd52aea1b7809405b334c96c18907152c7a69d",
+  "records": [
+    {
+      "commit": "9109bec71c2f32c8fb37e2ffc43d36ce82a0b48e",
+      "patch_sha256": "4cef2bd050567568832ca686077fc8cb7cf44a64041823bae08b5b5488eebe4b",
+      "assessment": "Complete single-hunk patch only allows dead-code elimination of the verity work handler when CONFIG_FS_VERITY=n. SDK has CONFIG_FS_VERITY=y, so the added constant condition is true and changes no selected-target behavior. Native enabled_steps still prevents verification work on inactive files, including alternate disabled configurations; keep LTS code and avoid an off-configuration size optimization unrelated to this target. This does not omit a verification or memory-safety fix."
+    },
+    {
+      "commit": "ae399cb55e464b5f950ff025519a0e6a10622c4b",
+      "patch_sha256": "8f053a93790b8aa8b8929d8abe8393077c18bf8e8cfce4abc916723ec4b67f9f",
+      "assessment": "Complete three-file patch only relocates read_folio/readahead from inode.c to readpage.c and changes internal linkage/declarations. Keep the native file organization and internal functions. Required early prefetch was adapted at those native call sites in dcfd52aea1b7; inlining/file location is not an Android userspace or vendor source API requirement. Original trace, inline-data fallback and native read paths remain; no LTS fix is displaced."
+    },
+    {
+      "commit": "00edba64944fa07a3696164c85d77d9fc8398402",
+      "patch_sha256": "a1b2fd8f14076fa30b31be1e40f4f6c332b370a4bf7c776c278e8e5715554453",
+      "assessment": "Complete ext4 lookup-consolidation patch examined. It caches the verity pointer in bio_post_read_ctx and changes helper arguments to amortize the later hash-table lookup. The port retains inode-owned native acquire-load lookups instead of the hash table, so retain native ext4_need_verity, inode-based context setup and native verification calls. Early prefetch is separately adapted, with active/EOF guards. Both holes and the separately retained cleancache hit path verify before marking a folio uptodate, and verity_work frees its mempool context before nested read/decrypt work. No new security or Android-visible operation from this internal argument refactor is omitted; real performance was not measured."
+    }
+  ],
+  "examined_paths": [
+    "fs/ext4/readpage.c",
+    "fs/ext4/inode.c",
+    "fs/ext4/ext4.h",
+    "include/linux/fsverity.h"
+  ],
+  "source_blobs": {
+    "fs/ext4/readpage.c": "a4b211360daf56de999d9f70caecc3817a1dced5",
+    "fs/ext4/inode.c": "65eb8b5fccbce8788c46dbc427e2309be55ca0ad",
+    "fs/ext4/ext4.h": "da6428312c36b5c0591084a1d7805392f70e2433",
+    "include/linux/fsverity.h": "5fa6d3bb1fb6cf0757177ff8851a2043ca07cf78"
+  },
+  "scope": "Complete original patches, current code and native delta reviewed; no live filesystem test.",
+  "remote_resources": []
+}

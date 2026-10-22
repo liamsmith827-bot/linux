@@ -2621,5 +2621,65 @@
     "disposition": "reconciled-to-lts",
     "rationale": "This fixes a cross-inode hash-chain UAF introduced by f706f34d4749. That hash table is not selected: native fsverity_get_info directly loads the inode-owned pointer, fsverity_free_info removes no shared chain, and other inodes cannot traverse this object during lookup. Full fix and predecessor examined. Retain native inode-lifetime cleanup; applying an RCU union/callback without the hash table is not required to preserve this fix effect. This is a concrete missing-precondition analysis, not a claim that all possible verity lifetime races are ruled out. Full original patch and affected current implementations examined. See evidence/fsverity-representation-review.json. No additional remote resources; no runtime/concurrency verification.",
     "result_commits": []
+  },
+  {
+    "commit": "5ad4c759e6939cf7629ca2d515a32da0b3e7dcc9",
+    "disposition": "adapted",
+    "rationale": "Retain all five generic fs-verity tracepoints for configured Android integrity diagnostics; SDK consumption is unresolved, so lack of a located consumer is not used to omit them. Complete patch review and source comparison in evidence/fsverity-trace-review.json confirm no verification control-flow changes, original header, initialized arguments, validated digest lengths and live-owner value copies. Access uses existing tracing permissions; no integrity bypass is added. SECURITY.md describes exposure and verification limits.",
+    "result_commits": [
+      "6cd9fcdf600d20c93098dd4275a176ecb0242626"
+    ]
+  },
+  {
+    "commit": "5c0658a3a25879d7dc0e8250fa67b042ef50b6bf",
+    "disposition": "partially-adapted",
+    "rationale": "Start Merkle prefetch in native ext4/F2FS read_folio and readahead paths using the optional callback, native acquire-load inode info, data/EOF-bounded ranges and invalidate-lock-protected cache lookup. Retain LTS three-argument demand readers, completion-time fallback, non-ENOENT error propagation, hash verification and read_metadata io_pages-capped sequential prefetch rather than ACK reader/signature/context removals and whole-request metadata prefetch. Btrfs is not configured for the SDK and retains its native signature. Complete original patch examined, including these omitted refactors; no future platform feature added. evidence/verity-prefetch-check.json records 9220 extracted cases and four rejected regression controls; verification code remains unchanged. SECURITY.md explains range, lifetime, concurrency and performance limits.",
+    "result_commits": [
+      "dcfd52aea1b7809405b334c96c18907152c7a69d"
+    ]
+  },
+  {
+    "commit": "6d304c90e6206f0096d7b7cbe03399f77d03384e",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "rationale": "Full unique remerge resolution reviewed: migrate signature/size arguments, move descriptor validation out of the wrapper, widen exported helper size from u32 to size_t, and retain the then-existing incfs wrapper. The wrapper/export were subsequently removed by 7f2bfb86500c. Keep native size_t signature API, descriptor bounds checks in open.c and enable.c, and newer empty-keyring rejection and LSM integrity notification. signature.c is byte-identical to pinned LTS; new header additions concern prefetch only. No surviving unique signature behavior requires replay; built-in signatures are disabled in SDK but their native security behavior is retained. Evidence: evidence/fsverity-final-review.json; only supplied local sources used.",
+    "result_commits": []
+  },
+  {
+    "commit": "141b3c5aa71885bb4b20c62b3cf3e7e81fca07d0",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "rationale": "Both unique remerge hunks reviewed: remove valid-signature debug output, and move the then-existing exported helper declaration/stub after new open/setattr wrappers. Current signature.c equals LTS and has no removed debug output. The exported helper declaration/stub were subsequently removed by 7f2bfb86500c; native fsverity_file_open and inode setattr protection remain. Do not resurrect the reverted helper or historical wrapper arrangement. Native signature/descriptor/LSM security checks remain. Evidence: evidence/fsverity-final-review.json; only supplied local sources used.",
+    "result_commits": []
+  },
+  {
+    "commit": "7f2bfb86500c235e2bcd88cf88c2d9fe28f785ad",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "Re-reviewed complete removal of the incfs signature-export wrapper after new prefetch/header changes invalidated the old whole-file witness. The signature.c result remains byte-identical to LTS; no __fsverity_verify_signature definition/declaration/export or incfs caller exists in current selected source or final ACK. Keep native validated vi hash algorithm/digest and size_t signature parameters, empty-keyring parser avoidance and LSM integrity notification. New trace/prefetch declarations do not restore this reverted API. Evidence: evidence/fsverity-final-review.json; only supplied local sources used.",
+    "result_commits": []
+  },
+  {
+    "commit": "193e41e7166ee2c2a1b42e0a4ebcac14d58f69ba",
+    "disposition": "adapted",
+    "rationale": "Provide CONFIG_FS_VERITY=n inline no-op fsverity_readahead, adapting the parameter back to the retained native inode API. The source fix addresses dead-code-elimination assumptions; the unconditional configured filesystem call sites must not require an undefined symbol in alternate Android configurations. SDK enables verity, but the optional feature needs a coherent source stub. Extracted disabled-config stub compiles/links at -O0 and has no undefined prefetch symbol. No verification bypass when verity is enabled. Evidence: evidence/fsverity-final-review.json; only supplied local sources used.",
+    "result_commits": [
+      "dcfd52aea1b7809405b334c96c18907152c7a69d"
+    ]
+  },
+  {
+    "commit": "9109bec71c2f32c8fb37e2ffc43d36ce82a0b48e",
+    "disposition": "omitted-current-target",
+    "rationale": "Complete single-hunk patch only allows dead-code elimination of the verity work handler when CONFIG_FS_VERITY=n. SDK has CONFIG_FS_VERITY=y, so the added constant condition is true and changes no selected-target behavior. Native enabled_steps still prevents verification work on inactive files, including alternate disabled configurations; keep LTS code and avoid an off-configuration size optimization unrelated to this target. This does not omit a verification or memory-safety fix. See evidence/ext4-verity-refactor-review.json. Only local sources used.",
+    "result_commits": []
+  },
+  {
+    "commit": "ae399cb55e464b5f950ff025519a0e6a10622c4b",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Complete three-file patch only relocates read_folio/readahead from inode.c to readpage.c and changes internal linkage/declarations. Keep the native file organization and internal functions. Required early prefetch was adapted at those native call sites in dcfd52aea1b7; inlining/file location is not an Android userspace or vendor source API requirement. Original trace, inline-data fallback and native read paths remain; no LTS fix is displaced. See evidence/ext4-verity-refactor-review.json. Only local sources used.",
+    "result_commits": []
+  },
+  {
+    "commit": "00edba64944fa07a3696164c85d77d9fc8398402",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Complete ext4 lookup-consolidation patch examined. It caches the verity pointer in bio_post_read_ctx and changes helper arguments to amortize the later hash-table lookup. The port retains inode-owned native acquire-load lookups instead of the hash table, so retain native ext4_need_verity, inode-based context setup and native verification calls. Early prefetch is separately adapted, with active/EOF guards. Both holes and the separately retained cleancache hit path verify before marking a folio uptodate, and verity_work frees its mempool context before nested read/decrypt work. No new security or Android-visible operation from this internal argument refactor is omitted; real performance was not measured. See evidence/ext4-verity-refactor-review.json. Only local sources used.",
+    "result_commits": []
   }
 ]

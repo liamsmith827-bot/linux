@@ -1,0 +1,54 @@
+{
+  "source_head": "dcfd52aea1b7809405b334c96c18907152c7a69d",
+  "records": [
+    {
+      "commit": "6d304c90e6206f0096d7b7cbe03399f77d03384e",
+      "unique_merge_resolution": true,
+      "patch_sha256": "38b90943fd084e7b1545f3d575b2bbc439509b6182eb1839f19e556cf794adb2",
+      "paths": [
+        "fs/verity/signature.c",
+        "include/linux/fsverity.h"
+      ],
+      "assessment": "Full unique remerge resolution reviewed: migrate signature/size arguments, move descriptor validation out of the wrapper, widen exported helper size from u32 to size_t, and retain the then-existing incfs wrapper. The wrapper/export were subsequently removed by 7f2bfb86500c. Keep native size_t signature API, descriptor bounds checks in open.c and enable.c, and newer empty-keyring rejection and LSM integrity notification. signature.c is byte-identical to pinned LTS; new header additions concern prefetch only. No surviving unique signature behavior requires replay; built-in signatures are disabled in SDK but their native security behavior is retained."
+    },
+    {
+      "commit": "141b3c5aa71885bb4b20c62b3cf3e7e81fca07d0",
+      "unique_merge_resolution": true,
+      "patch_sha256": "8068f4f85f49e38e27da0027223750489ba9cbe0f652f1dda9f9fccd9cb5599c",
+      "paths": [
+        "fs/verity/signature.c",
+        "include/linux/fsverity.h"
+      ],
+      "assessment": "Both unique remerge hunks reviewed: remove valid-signature debug output, and move the then-existing exported helper declaration/stub after new open/setattr wrappers. Current signature.c equals LTS and has no removed debug output. The exported helper declaration/stub were subsequently removed by 7f2bfb86500c; native fsverity_file_open and inode setattr protection remain. Do not resurrect the reverted helper or historical wrapper arrangement. Native signature/descriptor/LSM security checks remain."
+    },
+    {
+      "commit": "7f2bfb86500c235e2bcd88cf88c2d9fe28f785ad",
+      "unique_merge_resolution": false,
+      "patch_sha256": "e68e0bc19a6cfd61888bf204e7ea203e6e183316cdad68995eaefd6b01b4483e",
+      "paths": [
+        "fs/verity/signature.c",
+        "include/linux/fsverity.h"
+      ],
+      "assessment": "Re-reviewed complete removal of the incfs signature-export wrapper after new prefetch/header changes invalidated the old whole-file witness. The signature.c result remains byte-identical to LTS; no __fsverity_verify_signature definition/declaration/export or incfs caller exists in current selected source or final ACK. Keep native validated vi hash algorithm/digest and size_t signature parameters, empty-keyring parser avoidance and LSM integrity notification. New trace/prefetch declarations do not restore this reverted API."
+    },
+    {
+      "commit": "193e41e7166ee2c2a1b42e0a4ebcac14d58f69ba",
+      "unique_merge_resolution": false,
+      "patch_sha256": "a35c7379b9ec5d836ae07e5b3edbcb64f7810d12bbe4e1908eb28d04e2c17df5",
+      "paths": [
+        "include/linux/fsverity.h"
+      ],
+      "assessment": "Provide CONFIG_FS_VERITY=n inline no-op fsverity_readahead, adapting the parameter back to the retained native inode API. The source fix addresses dead-code-elimination assumptions; the unconditional configured filesystem call sites must not require an undefined symbol in alternate Android configurations. SDK enables verity, but the optional feature needs a coherent source stub. Extracted disabled-config stub compiles/links at -O0 and has no undefined prefetch symbol. No verification bypass when verity is enabled."
+    }
+  ],
+  "native_signature_identical": true,
+  "no_exported_signature_helper_in_port_or_ack": true,
+  "disabled_stub_test": {
+    "optimization": "-O0",
+    "linked": true,
+    "exit_code": 0,
+    "no_undefined_prefetch_symbol": true,
+    "stub_sha256": "6b6d5e2a1c159f397069c94f73b7d1abb817f1241590e8f94dd2f8ea65592b5b"
+  },
+  "remote_resources": []
+}
