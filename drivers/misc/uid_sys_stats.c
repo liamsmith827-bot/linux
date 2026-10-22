@@ -284,6 +284,7 @@ static ssize_t uid_remove_write(struct file *file,
 	char uids[128];
 	char *start_uid, *end_uid = NULL;
 	long int uid_start = 0, uid_end = 0;
+	u32 bkt;
 
 	if (count >= sizeof(uids))
 		count = sizeof(uids) - 1;
@@ -302,20 +303,23 @@ static ssize_t uid_remove_write(struct file *file,
 		kstrtol(end_uid, 10, &uid_end) != 0) {
 		return -EINVAL;
 	}
+	if (uid_start < 0 || uid_end < uid_start || uid_end > UINT_MAX)
+		return -EINVAL;
 
-	for (; uid_start <= uid_end; uid_start++) {
+	/* Work depends on stored entries, not the size of the requested range. */
+	for_each_bkt(bkt) {
 		struct uid_entry *uid_entry;
 		struct hlist_node *tmp;
-		u32 bkt = uid_to_bkt((uid_t)uid_start);
 
-		lock_uid(uid_start);
+		lock_uid_by_bkt(bkt);
 		for_each_uid_entry_safe(uid_entry, tmp, bkt) {
-			if (uid_start == uid_entry->uid) {
+			if (uid_entry->uid >= uid_start && uid_entry->uid <= uid_end) {
 				hash_del(&uid_entry->hash);
 				kfree(uid_entry);
 			}
 		}
-		unlock_uid(uid_start);
+		unlock_uid_by_bkt(bkt);
+		cond_resched();
 	}
 
 	return count;
