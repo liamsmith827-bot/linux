@@ -5335,12 +5335,12 @@
     "normalized_ack_to_port_sha256": "60829cc4b1cd07ed7463eb6d03e329cea8d80cef85b7696273d143b678b63bc5"
   },
   "drivers/dma-buf/dma-buf.c": {
-    "review_head": "90d9af708feaa6f3603718f42d3e12956547a039",
+    "review_head": "a7db20b7e4ce4bd785187682e4d195bae9da1cba",
     "status": "reviewed-source-selection",
-    "rationale": "Full LTS and normalized-ACK residuals reviewed. Retain accounting for per-process DMA-buf RSS/PSS and high-water marks: pinned GrapheneOS lmkd.cpp reads dmabuf_pss for victim sizing, and libmeminfo has procfs API tests (read, not executed). State uses refcounts and locks, counts actual child FDs/VMAs, shares only when both MM/files are shared, and intentionally leaves partial sharing/kernel threads unaccounted. Preallocation avoids sleeping under the accounting spinlock; 54fdb0c6e4bd trims unused records after fork and failed preallocation so duplicate FDs/VMAs cannot leave an unbounded per-CPU cache. Keep Android buffer iteration, naming, partial CPU-access and flags APIs plus release hook; 90d9af708fea guards NULL partial-end access and supplies zero default flags. Native LTS mapping bounds, reservation/fence waits, poll, sync-file ioctls and release behavior remain. Accounting failures on mmap log and preserve successful mapping; fork/exec allocations can fail with ENOMEM. Cross-file VMA/fd/fork lifecycle paths retain separate candidate reviews. No runtime correctness or OOM-policy test claim.",
-    "port_blob": "7cb5465f23b86f77c49157fbba715cbf1bd722db",
-    "lts_to_port_sha256": "29bea74bfc68e5a812f4c4f8cfd30412a91020d0b6bd0e788855e9e04cb4a8b4",
-    "normalized_ack_to_port_sha256": "a5a08ee38ce0a5a2d729e9b38c831e4670ca6cb619afb3b291bc38d04eaa85a2"
+    "rationale": "Full LTS and normalized-ACK residuals reviewed. Retain accounting for per-process DMA-buf RSS/PSS and high-water marks: pinned GrapheneOS lmkd.cpp reads dmabuf_pss for victim sizing, and libmeminfo has procfs API tests (read, not executed). State uses refcounts and locks, counts actual child FDs/VMAs, shares only when both MM/files are shared, and intentionally leaves partial sharing/kernel threads unaccounted. Preallocation avoids sleeping under the accounting spinlock; 54fdb0c6e4bd trims unused records after fork and failed preallocation so duplicate FDs/VMAs cannot leave an unbounded per-CPU cache. Keep Android buffer iteration, naming, partial CPU-access and flags APIs plus release hook; 90d9af708fea guards NULL partial-end access and supplies zero default flags. Native LTS mapping bounds, reservation/fence waits, poll, sync-file ioctls and release behavior remain. Accounting failures on mmap log and preserve successful mapping; fork/exec allocations can fail with ENOMEM. Cross-file VMA/fd/fork lifecycle paths retain separate candidate reviews. No runtime correctness or OOM-policy test claim. Incremental review a7db20b7e4ce: count duplicate references without allocation; after a missing new record, keep tracking/draining existing records but prohibit new records and return EIO from RSS/PSS/HWM interfaces. This avoids an untracked close subtracting a later unrelated attribution. Details and compatibility/security limitations are in evidence/dmabuf-accounting-local-review.json and SECURITY.md. No native LTS I/O, fence or file lifetime path is replaced.",
+    "port_blob": "156bb86fa77cfccd18a72e406ca73e018740f5fd",
+    "lts_to_port_sha256": "88585fa1417bb1e7cc524ad20bd6e5114a45bf978f0c3c0f1978d4c8b06776dd",
+    "normalized_ack_to_port_sha256": "cb67be7ec0c31c4be93953af553d3e79d880fb350dcd20695799ed854e248e31"
   },
   "drivers/dma-buf/dma-heap.c": {
     "review_head": "eecae28e83be9b3498c24cc31daebea893bfb0a5",
@@ -5375,12 +5375,12 @@
     "normalized_ack_to_port_sha256": "96700e0e1adbc4f30a6d8641596e6dd6b939ac9367b13f9580de335eeb014896"
   },
   "include/linux/dma-buf.h": {
-    "review_head": "90d9af708feaa6f3603718f42d3e12956547a039",
+    "review_head": "a7db20b7e4ce4bd785187682e4d195bae9da1cba",
     "status": "reviewed-source-selection",
-    "rationale": "Full LTS and normalized-ACK deltas reviewed. Keep source API declarations for accounting, buffer flags/naming, partial CPU access and DMA mapping attributes plus concrete runtime counters and state, without KABI padding. The native LTS fd publication helper is represented by a local fd_install wrapper because this selected tree has no fd tracepoint; ioctl still installs only after copy succeeds. Disabled-config stubs leave native paths unchanged. Partial access remains a trusted kernel/exporter contract, with range/coherence obligations at callers and callbacks; it is not a new userspace partial-access ioctl.",
-    "port_blob": "603fc79b93cfeee7cff357aaab951365e5e13899",
-    "lts_to_port_sha256": "61791979fb475ec52fa7e30607cad088416aff8b8ca00b8a50544739c8b749bd",
-    "normalized_ack_to_port_sha256": "aedbc76f939f07be225f1a8355b57831c96e7464ab9c48049c66eec193688753"
+    "rationale": "Full LTS and normalized-ACK deltas reviewed. Keep source API declarations for accounting, buffer flags/naming, partial CPU access and DMA mapping attributes plus concrete runtime counters and state, without KABI padding. The native LTS fd publication helper is represented by a local fd_install wrapper because this selected tree has no fd tracepoint; ioctl still installs only after copy succeeds. Disabled-config stubs leave native paths unchanged. Partial access remains a trusted kernel/exporter contract, with range/coherence obligations at callers and callbacks; it is not a new userspace partial-access ioctl. Incremental review a7db20b7e4ce: count duplicate references without allocation; after a missing new record, keep tracking/draining existing records but prohibit new records and return EIO from RSS/PSS/HWM interfaces. This avoids an untracked close subtracting a later unrelated attribution. Details and compatibility/security limitations are in evidence/dmabuf-accounting-local-review.json and SECURITY.md. No native LTS I/O, fence or file lifetime path is replaced.",
+    "port_blob": "3e3897790227fdc4dc938b9de48e237139ad2d6f",
+    "lts_to_port_sha256": "93c49353432932214516f3bfc2a0ef915672fc19e96fc39cbaa950060569e6d1",
+    "normalized_ack_to_port_sha256": "671a7804c90d0b349dd4ab80d77a62cf8571a80399364cac08a1a1c372b1f26c"
   },
   "include/linux/dma-heap.h": {
     "review_head": "90d9af708feaa6f3603718f42d3e12956547a039",

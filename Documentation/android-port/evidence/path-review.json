@@ -11621,17 +11621,18 @@
   "drivers/dma-buf/dma-buf.c": {
     "ack_blob": "8e379f21b5d20571b29f182c5fba7331b6507cda",
     "lts_blob": "2bcf9ceca99758fa0ee89a4d281b49925676899e",
-    "port_blob": "7cb5465f23b86f77c49157fbba715cbf1bd722db",
+    "port_blob": "156bb86fa77cfccd18a72e406ca73e018740f5fd",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "a7db20b7e4ce4bd785187682e4d195bae9da1cba",
       "90d9af708feaa6f3603718f42d3e12956547a039",
       "54fdb0c6e4bdf41d156a38ad133b30b0ae2f46c3",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "8e379f21b5d20571b29f182c5fba7331b6507cda",
     "common_ancestor_blob": "2bcf9ceca99758fa0ee89a4d281b49925676899e",
-    "specific_evidence": "Full LTS and normalized-ACK residuals reviewed. Retain accounting for per-process DMA-buf RSS/PSS and high-water marks: pinned GrapheneOS lmkd.cpp reads dmabuf_pss for victim sizing, and libmeminfo has procfs API tests (read, not executed). State uses refcounts and locks, counts actual child FDs/VMAs, shares only when both MM/files are shared, and intentionally leaves partial sharing/kernel threads unaccounted. Preallocation avoids sleeping under the accounting spinlock; 54fdb0c6e4bd trims unused records after fork and failed preallocation so duplicate FDs/VMAs cannot leave an unbounded per-CPU cache. Keep Android buffer iteration, naming, partial CPU-access and flags APIs plus release hook; 90d9af708fea guards NULL partial-end access and supplies zero default flags. Native LTS mapping bounds, reservation/fence waits, poll, sync-file ioctls and release behavior remain. Accounting failures on mmap log and preserve successful mapping; fork/exec allocations can fail with ENOMEM. Cross-file VMA/fd/fork lifecycle paths retain separate candidate reviews. No runtime correctness or OOM-policy test claim.",
+    "specific_evidence": "Full LTS and normalized-ACK residuals reviewed. Retain accounting for per-process DMA-buf RSS/PSS and high-water marks: pinned GrapheneOS lmkd.cpp reads dmabuf_pss for victim sizing, and libmeminfo has procfs API tests (read, not executed). State uses refcounts and locks, counts actual child FDs/VMAs, shares only when both MM/files are shared, and intentionally leaves partial sharing/kernel threads unaccounted. Preallocation avoids sleeping under the accounting spinlock; 54fdb0c6e4bd trims unused records after fork and failed preallocation so duplicate FDs/VMAs cannot leave an unbounded per-CPU cache. Keep Android buffer iteration, naming, partial CPU-access and flags APIs plus release hook; 90d9af708fea guards NULL partial-end access and supplies zero default flags. Native LTS mapping bounds, reservation/fence waits, poll, sync-file ioctls and release behavior remain. Accounting failures on mmap log and preserve successful mapping; fork/exec allocations can fail with ENOMEM. Cross-file VMA/fd/fork lifecycle paths retain separate candidate reviews. No runtime correctness or OOM-policy test claim. Incremental review a7db20b7e4ce: count duplicate references without allocation; after a missing new record, keep tracking/draining existing records but prohibit new records and return EIO from RSS/PSS/HWM interfaces. This avoids an untracked close subtracting a later unrelated attribution. Details and compatibility/security limitations are in evidence/dmabuf-accounting-local-review.json and SECURITY.md. No native LTS I/O, fence or file lifetime path is replaced.",
     "review_record": "evidence/generic-source-review.json"
   },
   "drivers/dma-buf/dma-heap.c": {
@@ -23868,10 +23869,11 @@
   "fs/proc/base.c": {
     "ack_blob": "b81d122db30078101dd088550de0a2fc282455b1",
     "lts_blob": "c8d783f3b2ac637da32c8fbeafe8369618229701",
-    "port_blob": "dacb2830cfa56f4c6fda44ae81c1e2f13ed9c6c7",
+    "port_blob": "16ee1b53bbcf47e0d5d7324a9b434bf277bce6a4",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "a7db20b7e4ce4bd785187682e4d195bae9da1cba",
       "20063c97d296302d8cbabf1c1b39daf3ebbe6b7b",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
@@ -26321,15 +26323,16 @@
   "include/linux/dma-buf.h": {
     "ack_blob": "d3bfe2346a3bc91f7b10b0f6686972954f0ba844",
     "lts_blob": "0b0b5fbb6cc1f30968aaabcfb218481a778aa9f1",
-    "port_blob": "603fc79b93cfeee7cff357aaab951365e5e13899",
+    "port_blob": "3e3897790227fdc4dc938b9de48e237139ad2d6f",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "a7db20b7e4ce4bd785187682e4d195bae9da1cba",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "326a96e6092d64d197f9f1d7e4200f8bf0459686",
     "common_ancestor_blob": "d58e329ac0e71c40aead90c425f0e617e3e5ee2c",
-    "specific_evidence": "Full LTS and normalized-ACK deltas reviewed. Keep source API declarations for accounting, buffer flags/naming, partial CPU access and DMA mapping attributes plus concrete runtime counters and state, without KABI padding. The native LTS fd publication helper is represented by a local fd_install wrapper because this selected tree has no fd tracepoint; ioctl still installs only after copy succeeds. Disabled-config stubs leave native paths unchanged. Partial access remains a trusted kernel/exporter contract, with range/coherence obligations at callers and callbacks; it is not a new userspace partial-access ioctl.",
+    "specific_evidence": "Full LTS and normalized-ACK deltas reviewed. Keep source API declarations for accounting, buffer flags/naming, partial CPU access and DMA mapping attributes plus concrete runtime counters and state, without KABI padding. The native LTS fd publication helper is represented by a local fd_install wrapper because this selected tree has no fd tracepoint; ioctl still installs only after copy succeeds. Disabled-config stubs leave native paths unchanged. Partial access remains a trusted kernel/exporter contract, with range/coherence obligations at callers and callbacks; it is not a new userspace partial-access ioctl. Incremental review a7db20b7e4ce: count duplicate references without allocation; after a missing new record, keep tracking/draining existing records but prohibit new records and return EIO from RSS/PSS/HWM interfaces. This avoids an untracked close subtracting a later unrelated attribution. Details and compatibility/security limitations are in evidence/dmabuf-accounting-local-review.json and SECURITY.md. No native LTS I/O, fence or file lifetime path is replaced.",
     "review_record": "evidence/generic-source-review.json"
   },
   "include/linux/dma-direct.h": {

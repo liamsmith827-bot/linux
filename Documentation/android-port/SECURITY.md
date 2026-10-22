@@ -3455,3 +3455,68 @@ metadata here rather than claim that the Android test harness was validated.
 Only the archive generation and kernel/module workflow are in the requested
 verification scope. No Android OS build, CTS/VTS run or external resource access
 was performed for this review.
+
+## DMA-buf accounting under allocation failure
+
+The earlier OOM accounting question is resolved by `a7db20b7e4ce`, with
+runtime behavior still unverified. In ACK, record preloading can fail before
+looking up an existing record. Several callers deliberately continue successful
+FD installation or mapping after this failure. A subsequent close can therefore
+subtract a reference that was never counted, including from a record created
+later for the same buffer. These are statistics counters, separate from native
+file and DMA-buf lifetime references; the observed undercount is not itself a
+claim of a buffer use-after-free.
+
+The adaptation first counts existing records under the accounting lock without
+allocating. It checks again after preloading, including failed preloading, so
+another thread's intervening insertion is counted. If there is still no record
+and no available allocation, the context becomes incomplete. Existing records
+continue to count every duplicate and drain normally, but no new records can
+be created in that context. This last condition matters: merely looking up
+existing records before allocating would not prevent an untracked old close
+from decrementing a record created later. Missing-record closes are expected
+and quiet for incomplete contexts. The per-CPU pool's caller-owned lock and
+bounded trimming remain; no allocation is moved under the accounting spinlock.
+
+RSS, PSS and HWM reads, and HWM reset, return `EIO` for an incomplete context.
+The numeric success format, permissions, disabled-accounting behavior and
+owner references remain. A fresh independently constructed fork/exec context
+can collect statistics again from its actual FDs and VMAs. Existing contexts
+do not attempt a racing reconstruction. `fd_install` and successful mappings
+remain nonfatal on accounting allocation failure; fork/exec setup can still
+fail allocation. A failed `dup2` can conservatively invalidate statistics even
+when its attempted acquisition is rolled back.
+
+This is an intentional compatibility tradeoff under allocation failure. Pinned
+GrapheneOS `system/memory/lmkd/lmkd.cpp` handles a failed procfs read by omitting
+the DMA-buf term and continuing ordinary task RSS selection. Victim choice can
+be less informed under OOM. Reporting unavailable data avoids presenting a
+known incomplete count as valid, but does not guarantee accurate post-OOM
+victim sizing. PSS still divides by tracked contexts: unsupported sharing and
+untracked references can skew another context's estimate. RSS trace events
+after failure describe the remaining known records, not complete allocation
+telemetry. No new trace validity ABI is claimed. Native LTS file, buffer,
+fence, reservation and mapping lifetimes are unchanged by this adaptation.
+
+The complete nine candidate patches (2,294 lines including metadata) and the
+current FD, VMA, fork, exec and procfs owner paths were reviewed. The release
+hook is retained conservatively as a generic vendor source customization
+interface; no SDK subscriber is established. It runs after exporter release,
+so callbacks must not dereference exporter-private storage already released.
+GrapheneOS Perfetto has the DMA-buf RSS trace descriptor and protobuf event;
+libmeminfo supplies the RSS/HWM API tests. These local tests were inspected,
+not executed. Historical current-task attribution, direct unpinned procfs
+state and stale parent accounting copies are superseded by the final owner,
+reference and reconstruction fixes, without restoring KABI padding.
+
+`check_dmabuf_accounting.py` extracts the accounting/list and four procfs
+handlers. Its host shims pass 46,662 cases and 7,331,995 assertions, including
+selected preload interleavings, caller-owned preloads, unavailable statistics,
+HWM reset and balanced references. Four negative controls fail. This does not
+execute real kernel allocation faults, locking, FD installation, mapping,
+fork/exec, procfs, tracing or LMK. Build 89 completed for this source, producing both kernel images, 100 common
+modules and 45 virtual-device modules. All signatures verified, the altered
+payload was rejected, and all protected-export and module table checks passed. `evidence/dmabuf-accounting-local-review.json` records each decision,
+result IDs and exact unchanged-function witnesses supporting 28 earlier final
+decisions. All evidence used for this review was local; no remote resource
+was accessed.

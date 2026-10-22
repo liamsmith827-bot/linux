@@ -102,13 +102,16 @@
   },
   {
     "topic": "DMA-buf accounting after nonfatal record allocation failure",
-    "status": "cross-file failure behavior under review; VMA lifecycle candidates remain provisional",
+    "status": "resolved source adaptation; real OOM and concurrent runtime behavior not verified",
     "candidates": [
       "7586bc159720",
       "09725f5bd79d",
       "dd1b8c5c86bb"
     ],
-    "evidence": "Full local __dma_buf_account_task, preload, unaccount, fd_install, do_dup2, dma_buf_mmap/internal, __split_vma and copy_vma were examined. Preload may fail before finding an already existing record. fd_install/mmap/split/copy deliberately log and continue without a count; later close/unmap decrements any existing record, so failure can undercount other still-live references. These counters are statistics, separate from the native file/buffer lifetime references, but local lmkd uses them in victim sizing. Need decide whether to retain/document ACK best-effort OOM accounting or adapt failure tracking without changing successful mmap/fd-install contracts. No actual allocation fault, mmap or LMK test has run. Prior path review explicitly described nonfatal errors but did not establish balanced counts after such a failure. No source change for this question yet; no remote access."
+    "evidence": "a7db20b7e4ce counts duplicate references without allocating and marks a context incomplete when a new record cannot be obtained. It continues counting/draining existing records, never creates new records in that context, and returns EIO from RSS/PSS/HWM reads/reset. This prevents later untracked closes decrementing a new record and keeps nonfatal fd/mmap contracts. Local lmkd handles read failure by excluding the DMA-buf term; its OOM victim sizing can be less informed. PSS for other contexts remains an estimate over tracked users. Full candidate and source evidence: evidence/dmabuf-accounting-local-review.json; host extracted-function regression report: evidence/dmabuf-accounting-check.json. No runtime allocation/mapping/LMK or concurrency verification and no remote access.",
+    "result_commits": [
+      "a7db20b7e4ce4bd785187682e4d195bae9da1cba"
+    ]
   },
   {
     "topic": "Memblock memsize optional reporting and accounting",

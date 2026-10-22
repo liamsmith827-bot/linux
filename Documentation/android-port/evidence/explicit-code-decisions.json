@@ -4415,5 +4415,170 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
       "6dddb6d97e32954dbc5647b172a96b616f733d72"
     ]
+  },
+  {
+    "commit": "7586bc1597204dff10f6d7326d5b3031688db70d",
+    "subject": "ANDROID: Track per-process dmabuf RSS",
+    "disposition": "adapted",
+    "rationale": "Retain per-context DMA-buf RSS and FD/VMA attribution: local lmkd reads these procfs statistics and libmeminfo tests full-buffer attribution for dup, mmap, partial mmap and close. Use the final owning files/mm design rather than the original current-task/flush implementation. Existing port places task state before thread_struct and preserves native fork/MM/FD cleanup; first-fork state is zeroed. a7db20b7e4ce counts duplicates before allocation and makes an allocation-incomplete context permanently unavailable to procfs while draining existing records. Successful fd_install/mmap/split remain nonfatal on accounting failure. A fresh independent fork or exec reconstructs from actual references. This is a deliberate OOM statistics-availability tradeoff, not a claim of exact statistics after allocation failure. Native file and buffer lifetime references and LTS mappings remain separate and unchanged.",
+    "result_commits": [
+      "0553783af7f74cea06cd514fe2483a90ff531c68",
+      "20063c97d296302d8cbabf1c1b39daf3ebbe6b7b",
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "54fdb0c6e4bdf41d156a38ad133b30b0ae2f46c3",
+      "8a7a4fcdab67fd9340bb2a4194fb84b20e2d2724",
+      "90d9af708feaa6f3603718f42d3e12956547a039",
+      "d1dc0cf821209662fb3a18c5bd72a2ae3792667a",
+      "a7db20b7e4ce4bd785187682e4d195bae9da1cba"
+    ],
+    "evidence": [
+      "evidence/dmabuf-accounting-local-review.json",
+      "evidence/dmabuf-accounting-check.json",
+      "SECURITY.md: DMA-buf accounting under allocation failure"
+    ]
+  },
+  {
+    "commit": "ae23a52292f76ff37231e42b07fd79508718ce19",
+    "subject": "ANDROID: Track per-process dmabuf RSS HWM",
+    "disposition": "adapted",
+    "rationale": "Retain RSS high-water mark, read endpoint and zero-only reset. Local libmeminfo explicitly reads and resets this API. New/fork-reconstructed contexts initialize the watermark from counted buffers; add updates and user reset are under the accounting lock. a7db20b7e4ce returns EIO for both read and reset after an incomplete record allocation, retaining balanced task/info references. The ACK numeric success format and procfs permissions remain. Consumers must handle an unavailable statistic under OOM; libmeminfo tests were inspected, not executed.",
+    "result_commits": [
+      "20063c97d296302d8cbabf1c1b39daf3ebbe6b7b",
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "54fdb0c6e4bdf41d156a38ad133b30b0ae2f46c3",
+      "90d9af708feaa6f3603718f42d3e12956547a039",
+      "a7db20b7e4ce4bd785187682e4d195bae9da1cba"
+    ],
+    "evidence": [
+      "evidence/dmabuf-accounting-local-review.json",
+      "evidence/dmabuf-accounting-check.json",
+      "SECURITY.md: DMA-buf accounting under allocation failure"
+    ]
+  },
+  {
+    "commit": "256ce9e0a9156dfe62faf8f06e67ece3a3af334f",
+    "subject": "ANDROID: Add dmabuf RSS trace event",
+    "disposition": "adapted",
+    "rationale": "Retain the dmabuf_rss_stat tracepoint, its RSS/delta/inode fields and add/remove call sites. Pinned GrapheneOS Perfetto event_info.cc and ftrace_descriptors.cc recognize this event and its ftrace proto includes it. This is Android tracing compatibility, not KMI padding. No trace allocation or new buffer lifetime owner is introduced. After accounting becomes incomplete, remaining events only describe the retained known records; no new trace validity ABI or complete OOM telemetry guarantee is claimed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "54fdb0c6e4bdf41d156a38ad133b30b0ae2f46c3",
+      "90d9af708feaa6f3603718f42d3e12956547a039",
+      "a7db20b7e4ce4bd785187682e4d195bae9da1cba"
+    ],
+    "evidence": [
+      "evidence/dmabuf-accounting-local-review.json",
+      "evidence/dmabuf-accounting-check.json",
+      "SECURITY.md: DMA-buf accounting under allocation failure"
+    ]
+  },
+  {
+    "commit": "08059b9c89dd8e0ae30f8462dbd1193aa5780abe",
+    "subject": "ANDROID: Track per-process dmabuf PSS",
+    "disposition": "adapted",
+    "rationale": "Retain atomic nr_task_refs initialization, per-context record add/remove accounting, release diagnostic and procfs PSS. Local lmkd proc_get_heaviest explicitly adds this PSS to victim size. Later ACK fork reconstruction and pinned procfs info references replace historical unsafe copying/direct task dereferences. a7db20b7e4ce rejects PSS reads for incomplete contexts instead of publishing silently undercounted values. The divisor remains the number of tracked contexts, not all kernel references or unsupported partial-sharing contexts; untracked references can still skew another context's PSS. This is a statistic, not a memory-ownership or access-control refcount.",
+    "result_commits": [
+      "20063c97d296302d8cbabf1c1b39daf3ebbe6b7b",
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "54fdb0c6e4bdf41d156a38ad133b30b0ae2f46c3",
+      "90d9af708feaa6f3603718f42d3e12956547a039",
+      "a7db20b7e4ce4bd785187682e4d195bae9da1cba"
+    ],
+    "evidence": [
+      "evidence/dmabuf-accounting-local-review.json",
+      "evidence/dmabuf-accounting-check.json",
+      "SECURITY.md: DMA-buf accounting under allocation failure"
+    ]
+  },
+  {
+    "commit": "09725f5bd79ddb1909d7d05ec74c9378c9e662c3",
+    "subject": "ANDROID: Don't use current pointer for per-process dmabuf accounting",
+    "disposition": "adapted",
+    "rationale": "Retain owner-based files_struct/mm_struct accounting and their lifetime pins, explicit FD close/close_range/exec/dup paths, VMA ownership and begin_new_exec reconstruction. This prevents a partially sharing task from bypassing unaccount and leaving a stale DMA-buf pointer in another task's record list. Preserve subsequent ACK fixes: full sharing acquires only the new task reference, procfs pins under task_lock, child counts come from actual FDs/VMAs, and nullable exec state is guarded. Native LTS close-on-exec ordering, file publication and MM destruction remain. a7db20b7e4ce fixes nonfatal allocation imbalance without adding failure to fd_install or successful mappings. No runtime fork/exec or lockdep test was run.",
+    "result_commits": [
+      "0553783af7f74cea06cd514fe2483a90ff531c68",
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "54fdb0c6e4bdf41d156a38ad133b30b0ae2f46c3",
+      "7f9fdddd5bf89fe656e25c3e4069c2df2091706d",
+      "8a7a4fcdab67fd9340bb2a4194fb84b20e2d2724",
+      "90d9af708feaa6f3603718f42d3e12956547a039",
+      "a7db20b7e4ce4bd785187682e4d195bae9da1cba"
+    ],
+    "evidence": [
+      "evidence/dmabuf-accounting-local-review.json",
+      "evidence/dmabuf-accounting-check.json",
+      "SECURITY.md: DMA-buf accounting under allocation failure"
+    ]
+  },
+  {
+    "commit": "7e01c825891b29c91bdd948c37c7ba85e9a84eaa",
+    "subject": "ANDROID: GKI: dma-buf: add vendor hook for dma_buf_release",
+    "disposition": "adapted",
+    "rationale": "Retain the generic android_vh_dma_buf_release hook declaration, exported tracepoint and callback after exporter release but before reservation teardown/free. The user explicitly prioritizes vendor source customization; this is the generic configured DMA-buf release API, not an IOMMU/SoC driver or future platform addition. No local SDK subscriber is established, so runtime necessity is unresolved and retention is conservative. Callbacks are trusted kernel code and must not dereference exporter-private storage already freed by the preceding release callback. Native teardown remains; no historical module-binary KMI is promised.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "54fdb0c6e4bdf41d156a38ad133b30b0ae2f46c3",
+      "90d9af708feaa6f3603718f42d3e12956547a039",
+      "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+      "b5140723dca254a5c3fc9c6777475dc9fd36e748",
+      "fb15ca9e6bc4f11a0caed2109c4deee6baf82a50"
+    ],
+    "evidence": [
+      "evidence/dmabuf-accounting-local-review.json",
+      "evidence/dmabuf-accounting-check.json",
+      "SECURITY.md: DMA-buf accounting under allocation failure"
+    ]
+  },
+  {
+    "commit": "9d923a8ee28fa36f28abf98ae2fdea88b1c13d2b",
+    "subject": "ANDROID: read task_dma_buf_info under task lock and pin it",
+    "disposition": "adapted",
+    "rationale": "Retain task_lock-protected accounting-info acquisition, temporary references in every procfs path, fork parent reference transfer and protected exec/close_range pointer swaps. These avoid a use-after-free when procfs races exec/unshare, as demonstrated by the complete local before/after ownership paths. a7db20b7e4ce reads the new incomplete flag under the info lock and releases every acquired info/task reference on EIO as well as success. The host shim verifies these read/reset reference balances but does not exercise real concurrent exec.",
+    "result_commits": [
+      "20063c97d296302d8cbabf1c1b39daf3ebbe6b7b",
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "54fdb0c6e4bdf41d156a38ad133b30b0ae2f46c3",
+      "90d9af708feaa6f3603718f42d3e12956547a039",
+      "a7db20b7e4ce4bd785187682e4d195bae9da1cba"
+    ],
+    "evidence": [
+      "evidence/dmabuf-accounting-local-review.json",
+      "evidence/dmabuf-accounting-check.json",
+      "SECURITY.md: DMA-buf accounting under allocation failure"
+    ]
+  },
+  {
+    "commit": "7c882abd8167237448c8f0445626dbb2171151e1",
+    "subject": "ANDROID: dma-buf: Improve dmabuf query condition",
+    "disposition": "adapted",
+    "rationale": "Retain the inline static-branch query, disabled-config false stub and early procfs return before task_lock when dmabuf_accounting is disabled. All account/unaccount/fork/exec/early-parameter paths use the same boot-time key. This keeps the Android configuration/boot opt-out coherent and avoids collecting or publishing counters while disabled; no runtime toggle is added. KABI include context is omitted independently; native jump-label APIs are used.",
+    "result_commits": [
+      "20063c97d296302d8cbabf1c1b39daf3ebbe6b7b",
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "54fdb0c6e4bdf41d156a38ad133b30b0ae2f46c3",
+      "90d9af708feaa6f3603718f42d3e12956547a039",
+      "a7db20b7e4ce4bd785187682e4d195bae9da1cba"
+    ],
+    "evidence": [
+      "evidence/dmabuf-accounting-local-review.json",
+      "evidence/dmabuf-accounting-check.json",
+      "SECURITY.md: DMA-buf accounting under allocation failure"
+    ]
+  },
+  {
+    "commit": "dd1b8c5c86bbc4372ce7a0815f4d3c6da27b6a8b",
+    "subject": "ANDROID: Account dmabufs in mremap()",
+    "disposition": "adapted",
+    "rationale": "Retain copy_vma attribution after file acquisition and balanced vma_link-failure rollback, using new_vma->vm_mm ownership; retain __split_vma and remove_vma accounting. The required nonmergeability guard remains on successful DMA-buf mmap, so copying a real DMA-buf VMA follows the allocation path. a7db20b7e4ce removes allocation dependency for an existing record and prevents creation of later records after an untracked failure, fixing the later-unmap undercount. mmap/mremap success is not turned into a statistics-allocation error. Native LTS VMA linking, file cleanup and mapping semantics are retained; host counter tests are not a real mremap test.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "8a7a4fcdab67fd9340bb2a4194fb84b20e2d2724",
+      "a7db20b7e4ce4bd785187682e4d195bae9da1cba"
+    ],
+    "evidence": [
+      "evidence/dmabuf-accounting-local-review.json",
+      "evidence/dmabuf-accounting-check.json",
+      "SECURITY.md: DMA-buf accounting under allocation failure"
+    ]
   }
 ]
