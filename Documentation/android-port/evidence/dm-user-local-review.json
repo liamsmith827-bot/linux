@@ -109,5 +109,24 @@
     "kernel/workqueue.c: mod_delayed_work_on",
     "include/linux/mempool.h"
   ],
-  "limits": "No real kernel concurrency, live block target or snapshot protocol test. The daemon documents inability to signal a read error after a successful partial reply header; protocol remains unchanged. Original target integration is a separate multi-file candidate."
+  "limits": "No real kernel concurrency, live block target or snapshot protocol test. The daemon documents inability to signal a read error after a successful partial reply header; protocol remains unchanged. Original target integration is a separate multi-file candidate.",
+  "integration_review": {
+    "source_head": "a890dee123e738d74365ee20de1fbc25cf773fa1",
+    "commit": "83bf345abc0bc06b98e906bfbb120a52446e1c43",
+    "files": [
+      "drivers/md/Kconfig",
+      "drivers/md/Makefile",
+      "drivers/md/dm-user.c"
+    ],
+    "original_patch_sha256": "240823272a0367b2c4d9f6921cc0fef3bc6a4c68db7f9671ba3633486521d085",
+    "reviewed_evolution_sha256": "946954a2cf04646fdf223e567ea8514217ee5c3ca8f15ac699c84ca1039132b1",
+    "config_identical_to_original": true,
+    "make_rule_retained": true,
+    "uapi_blob": "6d8f535b3542ff94bb95850cedf9fe9f6a9db272",
+    "assessment": "Retain the generic Android device-mapper user target, its Kconfig option and build rule. The enabled SDK config and supplied fs_mgr SnapshotManager/DmUserBlockServer are positive consumers of the misc-device and five-u64 message header. Current SDK OTA activation is unverified; source compatibility is retained conservatively. Full original implementation and all subsequent dm-user changes were examined. Preserve stream framing, per-channel sequence matching, payload forwarding and error completion, with the later static/API/refcount/list fixes. Adapt timeout ownership, cancellation/rearming, pool allocation progress and constructor cleanup (6917a945ff76/e0935585c306). Correct partial-copy totals and no-payload bio extent/vector handling (a890dee123e7). Keep native LTS DM, mempool and workqueue code intact. Unsupported operations/flags remain explicitly rejected as in ACK; no new opcode is invented. The local daemon mid-payload error-reporting limitation remains documented. Focused host tests pass; no live target or snapshot protocol has been run. Evidence: evidence/dm-user-local-review.json; SECURITY.md: dm-user timeout ownership and allocation progress. Only local sources were used.",
+    "checks": [
+      "dm-user-lifetime-check.json",
+      "dm-user-copy-check.json"
+    ]
+  }
 }
