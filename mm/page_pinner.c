@@ -47,7 +47,7 @@ struct captured_pinner {
 };
 
 struct page_pinner_buffer {
-	spinlock_t lock;
+	raw_spinlock_t lock;
 	unsigned long index;
 	struct captured_pinner *buffer;
 };
@@ -94,7 +94,7 @@ static void init_page_pinner(void)
 	if (!pp_buffer.buffer)
 		return;
 
-	spin_lock_init(&pp_buffer.lock);
+	raw_spin_lock_init(&pp_buffer.lock);
 	pp_buffer.index = 0;
 
 	register_failure_stack();
@@ -144,11 +144,15 @@ static void add_record(struct page_pinner_buffer *pp_buf,
 	unsigned long flags;
 	unsigned long idx;
 
-	spin_lock_irqsave(&pp_buf->lock, flags);
+	/* Freeing a page may be reentrant or run in NMI context. */
+	if (!IS_ENABLED(CONFIG_SMP) && in_nmi())
+		return;
+	if (!raw_spin_trylock_irqsave(&pp_buf->lock, flags))
+		return;
 	idx = pp_buf->index++;
 	pp_buf->index %= pp_buf_size;
 	pp_buf->buffer[idx] = *record;
-	spin_unlock_irqrestore(&pp_buf->lock, flags);
+	raw_spin_unlock_irqrestore(&pp_buf->lock, flags);
 }
 
 void __free_page_pinner(struct page *page, unsigned int order)
@@ -170,7 +174,8 @@ void __free_page_pinner(struct page *page, unsigned int order)
 
 		page_pinner = get_page_pinner(page_ext);
 
-		record.handle = save_stack(GFP_NOWAIT|__GFP_NOWARN);
+		/* Match page-owner's nonspinning free_pages_nolock path. */
+		record.handle = save_stack(__GFP_NOWARN);
 		record.ts_usec = (u64)ktime_to_us(ktime_get_boottime());
 		record.state = PP_FREE;
 		capture_page_state(page + iter.index, &record);
@@ -271,7 +276,7 @@ void __page_pinner_failure_detect(struct page *page)
 	if (!page_pinner->ts_usec)
 		page_pinner->ts_usec = now;
 	set_bit(PAGE_EXT_PINNER_MIGRATION_FAILED, &page_ext->flags);
-	record.handle = save_stack(GFP_NOWAIT|__GFP_NOWARN);
+	record.handle = save_stack(__GFP_NOWARN);
 	record.ts_usec = now;
 	record.state = PP_FAIL_DETECTED;
 	capture_page_state(page, &record);
@@ -301,7 +306,7 @@ void __page_pinner_put_page(struct page *page)
 	}
 
 	page_pinner = get_page_pinner(page_ext);
-	record.handle = save_stack(GFP_NOWAIT|__GFP_NOWARN);
+	record.handle = save_stack(__GFP_NOWARN);
 	now = (u64)ktime_to_us(ktime_get_boottime());
 	ts_usec = page_pinner->ts_usec;
 
@@ -331,9 +336,9 @@ static ssize_t read_buffer(struct file *file, char __user *buf,
 	if (*ppos < 0)
 		return -EINVAL;
 
-	spin_lock_irqsave(&pp_buffer.lock, flags);
+	raw_spin_lock_irqsave(&pp_buffer.lock, flags);
 	if (*ppos >= pp_buf_size) {
-		spin_unlock_irqrestore(&pp_buffer.lock, flags);
+		raw_spin_unlock_irqrestore(&pp_buffer.lock, flags);
 		return 0;
 	}
 
@@ -347,7 +352,7 @@ static ssize_t read_buffer(struct file *file, char __user *buf,
 	idx = (pp_buffer.index + pp_buf_size - 1 - i) % pp_buf_size;
 
 	record = pp_buffer.buffer[idx];
-	spin_unlock_irqrestore(&pp_buffer.lock, flags);
+	raw_spin_unlock_irqrestore(&pp_buffer.lock, flags);
 	if (!record.handle)
 		return 0;
 
@@ -391,12 +396,12 @@ static int buffer_size_set(void *data, u64 val)
 	if (!new)
 		return -ENOMEM;
 
-	spin_lock_irqsave(&pp_buffer.lock, flags);
+	raw_spin_lock_irqsave(&pp_buffer.lock, flags);
 	old = pp_buffer.buffer;
 	pp_buffer.buffer = new;
 	pp_buffer.index = 0;
 	WRITE_ONCE(pp_buf_size, val);
-	spin_unlock_irqrestore(&pp_buffer.lock, flags);
+	raw_spin_unlock_irqrestore(&pp_buffer.lock, flags);
 	kvfree(old);
 
 	return 0;

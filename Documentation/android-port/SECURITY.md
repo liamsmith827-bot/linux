@@ -731,3 +731,24 @@ support. Those consumers are acknowledged, not treated as missing. Their
 existence on other platforms does not make an ARM64 hypervisor implementation
 part of the currently selected x86 SDK kernel. No AVF runtime claim follows
 from this architecture exclusion.
+
+## Page-pinner and LTS nonblocking free paths
+
+The native LTS free_pages_nolock API may run reentrantly, under raw spinlocks,
+or in IRQ/NMI context. It reaches both put_page_testzero and the free-page
+preparation callback. ACK page-pinner's GFP_NOWAIT stack saving permits stack
+depot to spin/allocate, and its ordinary buffer spinlock can deadlock on
+reentry. Preserve the LTS contract: all page-pinner event stack saves use
+__GFP_NOWARN without GFP_NOWAIT, as native page-owner does, so stack depot does
+not allocate pools and only tries its lock. Buffer writes similarly use a raw
+trylock; readers/resizers hold that raw lock only for size/index/record access
+or pointer replacement. Uniprocessor NMI recording is skipped because trylock
+cannot detect same-CPU ownership there.
+
+This intentionally changes optional diagnostic fidelity: an event may be dropped
+under contention, and a missing stack uses the existing failure-stack handle
+instead of allocating from a reentrant free path. Clearing page-extension state
+and freeing the page still proceed. It does not change Android userspace APIs,
+page-pinner source signatures or the allocator's return values. This is a
+source-level preservation of LTS availability/reentrancy guarantees; no NMI,
+contention or fault-injection runtime validation has been performed.
