@@ -2217,9 +2217,23 @@ static void init_ckpt_req(struct ckpt_req *req)
 	req->queue_time = ktime_get();
 }
 
+static struct task_struct *get_ckpt_task(struct ckpt_req_control *cprc)
+{
+	struct task_struct *task;
+
+	/* Remount can stop the thread while a priority callback is waiting. */
+	spin_lock(&cprc->stat_lock);
+	task = cprc->f2fs_issue_ckpt;
+	if (task)
+		get_task_struct(task);
+	spin_unlock(&cprc->stat_lock);
+	return task;
+}
+
 int f2fs_issue_checkpoint(struct f2fs_sb_info *sbi)
 {
 	struct ckpt_req_control *cprc = &sbi->cprc_info;
+	struct task_struct *ckpt_task;
 	struct ckpt_req req;
 	struct cp_control cpc;
 
@@ -2236,7 +2250,7 @@ int f2fs_issue_checkpoint(struct f2fs_sb_info *sbi)
 		return ret;
 	}
 
-	if (!cprc->f2fs_issue_ckpt)
+	if (!READ_ONCE(cprc->f2fs_issue_ckpt))
 		return __write_checkpoint_sync(sbi);
 
 	init_ckpt_req(&req);
@@ -2254,15 +2268,17 @@ int f2fs_issue_checkpoint(struct f2fs_sb_info *sbi)
 	if (waitqueue_active(&cprc->ckpt_wait_queue))
 		wake_up(&cprc->ckpt_wait_queue);
 
-	if (cprc->f2fs_issue_ckpt) {
+	ckpt_task = get_ckpt_task(cprc);
+	if (ckpt_task) {
 		bool prio_changed = false;
-		int saved_prio;
+		int saved_prio = READ_ONCE(ckpt_task->prio);
 
-		trace_android_vh_f2fs_improve_priority(cprc->f2fs_issue_ckpt, &saved_prio,
+		trace_android_vh_f2fs_improve_priority(ckpt_task, &saved_prio,
 						&prio_changed);
 		wait_for_completion(&req.wait);
 		if (prio_changed)
-			trace_android_vh_f2fs_restore_priority(cprc->f2fs_issue_ckpt, saved_prio);
+			trace_android_vh_f2fs_restore_priority(ckpt_task, saved_prio);
+		put_task_struct(ckpt_task);
 	} else {
 		flush_remained_ckpt_reqs(sbi, &req);
 	}
@@ -2280,22 +2296,22 @@ int f2fs_start_ckpt_thread(struct f2fs_sb_info *sbi)
 {
 	dev_t dev = sbi->sb->s_bdev->bd_dev;
 	struct ckpt_req_control *cprc = &sbi->cprc_info;
+	struct task_struct *ckpt_task;
 
 	if (cprc->f2fs_issue_ckpt)
 		return 0;
 
-	cprc->f2fs_issue_ckpt = kthread_run(issue_checkpoint_thread, sbi,
+	ckpt_task = kthread_run(issue_checkpoint_thread, sbi,
 			"f2fs_ckpt-%u:%u", MAJOR(dev), MINOR(dev));
-	if (IS_ERR(cprc->f2fs_issue_ckpt)) {
-		int err = PTR_ERR(cprc->f2fs_issue_ckpt);
+	if (IS_ERR(ckpt_task))
+		return PTR_ERR(ckpt_task);
 
-		cprc->f2fs_issue_ckpt = NULL;
-		return err;
-	}
-
-	set_task_ioprio(cprc->f2fs_issue_ckpt, cprc->ckpt_thread_ioprio);
-	set_user_nice(cprc->f2fs_issue_ckpt,
+	set_task_ioprio(ckpt_task, cprc->ckpt_thread_ioprio);
+	set_user_nice(ckpt_task,
 			PRIO_TO_NICE(sbi->critical_task_priority));
+	spin_lock(&cprc->stat_lock);
+	WRITE_ONCE(cprc->f2fs_issue_ckpt, ckpt_task);
+	spin_unlock(&cprc->stat_lock);
 
 	return 0;
 }
@@ -2305,11 +2321,13 @@ void f2fs_stop_ckpt_thread(struct f2fs_sb_info *sbi)
 	struct ckpt_req_control *cprc = &sbi->cprc_info;
 	struct task_struct *ckpt_task;
 
-	if (!cprc->f2fs_issue_ckpt)
+	spin_lock(&cprc->stat_lock);
+	ckpt_task = cprc->f2fs_issue_ckpt;
+	WRITE_ONCE(cprc->f2fs_issue_ckpt, NULL);
+	spin_unlock(&cprc->stat_lock);
+	if (!ckpt_task)
 		return;
 
-	ckpt_task = cprc->f2fs_issue_ckpt;
-	cprc->f2fs_issue_ckpt = NULL;
 	kthread_stop(ckpt_task);
 
 	f2fs_flush_ckpt_thread(sbi);

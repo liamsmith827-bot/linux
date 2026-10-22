@@ -3654,7 +3654,7 @@ static int __f2fs_write_data_pages(struct address_space *mapping,
 	struct inode *inode = mapping->host;
 	struct f2fs_sb_info *sbi = F2FS_I_SB(inode);
 	struct blk_plug plug;
-	int ret = 0;
+	int ret = -EIO;
 	bool locked = false;
 
 	/* skip writing if there is no dirty page in this inode */

@@ -159,7 +159,7 @@ int main(void)
         struct inode i={.sbi=&s,.dirty=8}; struct address_space m={&i};
         struct writeback_control w={.sync_mode=sync};
         int ret=__f2fs_write_data_pages(&m,&w,FS_DATA_IO);
-        CHECK(ret==(mode==2 ? 0:write_status));
+        CHECK(ret==(mode==2 ? -EIO:write_status));
         CHECK(s.nr_pages[F2FS_SKIPPED_WRITE]==
               (enabled && sync && (mode || err) ? 7:0));
         CHECK(native_calls==(mode==0) && removed==1);

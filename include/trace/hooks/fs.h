@@ -112,6 +112,10 @@ DECLARE_HOOK(android_vh_f2fs_restore_priority,
 	TP_PROTO(struct task_struct *p, int saved_prio),
 	TP_ARGS(p, saved_prio));
 
+/*
+ * read_waiters is NULL without CONFIG_F2FS_UNFAIR_RWSEM.
+ * Setting skip requires the callback to acquire rwsem for reading.
+ */
 DECLARE_RESTRICTED_HOOK(android_rvh_f2fs_down_read,
 	TP_PROTO(wait_queue_head_t *read_waiters, struct rw_semaphore *rwsem, bool *skip),
 	TP_ARGS(read_waiters, rwsem, skip), 1);

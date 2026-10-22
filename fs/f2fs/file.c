@@ -5471,7 +5471,7 @@ static ssize_t f2fs_buffered_write_iter(struct kiocb *iocb,
 {
 	struct file *file = iocb->ki_filp;
 	struct inode *inode = file_inode(file);
-	ssize_t ret;
+	ssize_t ret = -EIO;
 	bool write_done = false;
 
 	if (iocb->ki_flags & IOCB_NOWAIT)

@@ -2826,3 +2826,68 @@ preexisting SIT allocation/update and native resize/range-GC bodies remain intac
 Publication call positions are also checked in source. These checks model locks,
 GC and storage; actual remount/resize, concurrency and crash behavior are not
 verified. All evidence is local; no additional remote source was accessed.
+
+## F2FS vendor callback review
+
+Retain the source interfaces in 49f93b14577c, 4e1c4268094a, 2240301db3ad,
+1444d806aafb, 431b548a65bd, 45c752087e24, 4f9acbadfd8f, 80732fccb2e9 and
+96292eb66bda. Every original patch, declaration/export and current call site was
+examined. F2FS and Android vendor hooks are enabled in the SDK build. No callback
+registration was located in the supplied common-modules/external C/H sources;
+that does not establish dispensability. Keep the generic customization API
+conservatively. The SLC motivation of one patch does not limit its generic file
+creation/bio callbacks to a physical device. No device driver is added here.
+
+The checkpoint boost/restore pair now uses a referenced task snapshot, acquired
+under cprc.stat_lock shared with publication/removal. A remount can stop the
+thread during the request wait; reloading its pointer afterward could pass NULL
+or a dead task to the restore callback. Publish only a successfully created and
+configured task, never an ERR_PTR. Drop the reference after restoring priority.
+Do not hold the spinlock across callbacks, completion waits or kthread_stop.
+Keep the native early synchronous path when no thread exists, queued request
+completion and the stop-time drain. The saved priority is initialized from the
+snapshot; callbacks remain responsible for matched boost/restore semantics under
+concurrent requesters and for any scheduler-policy-specific state.
+
+The down-read callback must acquire the real rwsem before setting skip. It now
+receives NULL for read_waiters when CONFIG_F2FS_UNFAIR_RWSEM is disabled, rather
+than referring to a nonexistent field. The SDK enables that option, so its queue
+argument is unchanged. In either mode, no callback preserves native acquisition.
+An incorrect callback can violate locking; these are trusted kernel extensions,
+not a userspace permission bypass or a verified third-party implementation.
+
+Buffered-write and writeback replacement callbacks start with -EIO, so marking
+an operation completed without supplying a result cannot silently report
+success or expose uninitialized stack data. Native calls overwrite that default.
+The native NOWAIT rejection, outer inode/write/verity checks, preallocation
+cleanup, write sync, block plug, writeback accounting and mutex release remain.
+A writeback replacement still records skipped pages even when it returns success,
+preserving checkpoint retry accounting. GC bypasses occur before reference/folio
+acquisition and retain native atomic-inode references, validity checks and error
+cleanup in the non-bypass path. Replacing GC must preserve valid-block accounting
+and progress; returning success alone does not evacuate data. Custom ioctl
+callbacks inherit checkpoint error/readiness guards and VFS ioctl security checks,
+but must implement command-specific capability, user-copy and mount-write rules.
+Compression callbacks may veto only after native eligibility checks, and retain
+i_sem release on failure. OEM inode storage remains source functionality; native
+GFP_F2FS_ZERO allocation clears it on every allocation, so the redundant ACK
+explicit memset is unnecessary. Historical layout compatibility is not retained.
+
+The printk callback keeps 45c752's NULL-sbi check; its va_format points to a live
+stack va_list only during the synchronous callback. Creation/open callbacks keep
+native fscrypt/fsverity, link, quota and error paths. Bio flag callbacks see the
+native folio directly and must preserve operation/crypto/integrity semantics;
+readahead's rac can be NULL. Iostat callbacks precede submission and context
+unbind; skipping latency accounting still restores bi_private and frees its
+mempool object exactly once. No instrumentation pointer may be retained without
+independent lifetime protection. These APIs expand trusted module authority as
+requested; they do not validate arbitrary module policy.
+
+Extracted hook checks pass 44 cases each with fair and unfair locking (208 and
+210 assertions); eight controls reject false write success, duplicate acquisition,
+missing task references and lost priority restoration. Checkpoint/writeback
+checks pass 38 cases / 338 assertions with the accounting regression rejected.
+Direct-I/O iostat ownership checks pass 64 cases / 912 assertions with two failure
+controls rejected. These model locking, thread shutdown and I/O; they do not
+verify real scheduling, concurrent remount or third-party callbacks. All reviewed
+sources are local and no additional remote resource was accessed.
