@@ -4620,9 +4620,547 @@
   "init/Kconfig.gki": {
     "review_head": "c28e05cecf172a43e41a10d622b6b0f6e8c5ea2f",
     "status": "reviewed-source-selection",
-    "rationale": "Reviewed entire hidden-selection file. Keep generic hidden core dependencies for source-built external modules (DRM/media/audio/regmap/IRQ/network/MM/USB/GPIO etc.), including optional generic APIs where precise runtime use is unresolved. User prioritizes Android configuration and vendor source customization. Remove Qualcomm physical shared-memory/ARCH_QCOM group, ARM64 MediaTek timer group, ARM64 DRM bridge selection and ARM-AMBA PrimeCell GPIO selection in c28e05cecf17; these explicitly support physical SoC/other-architecture implementations outside SDK. Keep native LTS definitions and generic DT pinctrl support. Dynamic task storage config remains for source vendor data, with its implementation separately reviewed; not old ABI layout preservation. See SECURITY.md; config change needs attempt 30 verification.",
+    "rationale": "Reviewed entire hidden-selection file. Keep generic hidden core dependencies for source-built external modules (DRM/media/audio/regmap/IRQ/network/MM/USB/GPIO etc.), including optional generic APIs where precise runtime use is unresolved. User prioritizes Android configuration and vendor source customization. Remove Qualcomm physical shared-memory/ARCH_QCOM group, ARM64 MediaTek timer group, ARM64 DRM bridge selection and ARM-AMBA PrimeCell GPIO selection in c28e05cecf17; these explicitly support physical SoC/other-architecture implementations outside SDK. Keep native LTS definitions and generic DT pinctrl support. Dynamic task storage config remains for source vendor data, with its implementation separately reviewed; not old ABI layout preservation. See SECURITY.md; build 30 verified the resulting configuration and all 145 signed modules.",
     "normalized_delta_sha256": "67c0ddfcd7f32ab4253cd4518a7a14d31e822f01e43e974b5f4c74419d1ef9c2",
     "ack_blob": "722d6a24fb8bb56c0625890feaf5e309d5ef4c8f",
     "lts_blob": null
+  },
+  "drivers/android/vendor_hooks.c": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed all central includes/exports and the complete ACK delta. This registry only generates hook objects and GPL exports; it adds no callback body. Retain generic Android interfaces and native tracepoint types. Omit documented ARM64 fault/IRQ/PSCI/SME/Gunyah, physical UFS/DWC3/remoteproc/power-domain, unavailable generic sched_clock, SCMI and DT PCI-power-specific hooks. Restore configured generic TTM hooks in a83fe26baa41. Registry cross-reference accounts for every declaration/export and records special event/Rust wrappers and final-ACK stale scheduler declarations. See evidence/vendor-hook-registry-review.json; invocation semantics are reviewed at each call site.",
+    "port_blob": "c5c8da29b4f3f9c3083b1d4507ae076689693e24"
+  },
+  "include/trace/events/android_vendor_lmk.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Full header defines the exported vendor-triggered LMK trace event with int reason and short min_oom_score_adj fields, scalar assignments and bounded scalar formatting. Keep exact ACK event/source interface for vendor modules; lack of an in-tree trigger is not evidence it is unnecessary. It neither sends a signal nor kills a process itself. Native LTS trace event implementation provides registration/recording; no runtime execution claim.",
+    "port_blob": "ad6b18ca0b4b8009bbff96509a8d33fc8caea6af"
+  },
+  "include/trace/hooks/avc.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 4 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "5100dde72c9d322449f8a5461e463434ac7ee2e8"
+  },
+  "include/trace/hooks/binder.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 31 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "7bc00734c5bcd0df717ae68a8a1a5960bf93dff5"
+  },
+  "include/trace/hooks/bl_hib.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 6 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Exclude only save_cpu_resume whose ACK invocation is ARM64 hibernation; retain generic hibernation hooks.",
+    "port_blob": "0b4c867eef7ebaa252f8437d9f4a6fd30b35e752"
+  },
+  "include/trace/hooks/blk.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 16 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "a9a88edc9a16eb63533e16020e5d1bcc2be0e758"
+  },
+  "include/trace/hooks/bug.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 1 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "bbae73fd14c4105f8ed01525745da6de68df70c1"
+  },
+  "include/trace/hooks/cgroup.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 8 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "ba9cc45a4681ab4526fc92873d9d9df983395229"
+  },
+  "include/trace/hooks/cpufreq.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 8 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Exclude only SCMI limit callback belonging to the unconfigured ARM_SCMI_CPUFREQ implementation; retain generic cpufreq hooks.",
+    "port_blob": "b0d4ec114d58adc7effc3caf15f85c17f50ae1bc"
+  },
+  "include/trace/hooks/cpuidle.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 2 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "ba2c2eee2bb2a09c14cd740a69ed46be01c7ee6c"
+  },
+  "include/trace/hooks/dmabuf.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 5 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "ebfdcec78975b31841f768edc4e4dd994ef32b26"
+  },
+  "include/trace/hooks/dtask.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 48 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "41ab77d04d5e91e5fc79f68cf6861f8dbfa693af"
+  },
+  "include/trace/hooks/fs.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 32 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "1061fee1dce640cabf635e20c89379beaa4c6b0a"
+  },
+  "include/trace/hooks/fsnotify.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 1 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "2909261c3358d9aa7919f8161a3a4a9cfdc217ec"
+  },
+  "include/trace/hooks/ftrace_dump.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 4 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "a70f9f78a8ed8a344e5f63ea065d8519e7d76e90"
+  },
+  "include/trace/hooks/fuse.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 3 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "2e5ae0c46a101edcd272e5be338c86c810378cc8"
+  },
+  "include/trace/hooks/futex.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 9 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "d6f775fab6f6e215c66da284f867435f08f5ef11"
+  },
+  "include/trace/hooks/hung_task.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 2 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "1559d3ed774f00597b2d93a3edfd9ace3cbca80c"
+  },
+  "include/trace/hooks/iommu.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 8 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "8dc0cfbedbd2b54183dae1e05cd7e956921bc756"
+  },
+  "include/trace/hooks/logbuf.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 3 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "166d9ea55d1f75e77ba489884052e1df0e91cc23"
+  },
+  "include/trace/hooks/madvise.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 5 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "3dace49e3753729225ce2323bbdc786974c0b29c"
+  },
+  "include/trace/hooks/mm.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 249 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "7c79965985a9b61b7a23f2c2b65f588b6564509a"
+  },
+  "include/trace/hooks/module.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 3 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "653c65a8c0cdb7fd1052ccb8305c3ca1a024d5f6"
+  },
+  "include/trace/hooks/net.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 43 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "0f8bd7f9505299b51f842ca4a96ce9a10f2ec4da"
+  },
+  "include/trace/hooks/pci.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 4 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Exclude only DT PCI power-controller creation hook outside the SDK ACPI/virtio topology; retain generic PCI power hooks.",
+    "port_blob": "3fbc20278fb369c1c20730d09ffd2200c5d4e2a1"
+  },
+  "include/trace/hooks/power.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 9 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "1dadc7987656543cf6d13859c9ba8357ce87dfb0"
+  },
+  "include/trace/hooks/preemptirq.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 4 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "52308c882acb95ff8734460e6fad5c66895216c6"
+  },
+  "include/trace/hooks/printk.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 4 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "b3e9598386c7bec0862b72941737fbcdd74d9f86"
+  },
+  "include/trace/hooks/psi.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 2 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "91a008655031469acd472184ced194c9d8e562b1"
+  },
+  "include/trace/hooks/ptrace.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 1 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "24c964fab07ef06f9ac8b65012bbfc05c460932a"
+  },
+  "include/trace/hooks/rcu.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 4 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "cff3a78e56d044689c6d1e96b50e005a1bbaa8d2"
+  },
+  "include/trace/hooks/reboot.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 1 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "e9c7d688cbc8bad11f850fd95379ad9ab0a493af"
+  },
+  "include/trace/hooks/regmap.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 1 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "cb6fc43d3472004202c33c29f36e7704841de01a"
+  },
+  "include/trace/hooks/rust_binder.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 3 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "400910fabbef34fc97cf92fc053377d814da35a5"
+  },
+  "include/trace/hooks/rwsem.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 13 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "acf8cc38086903379f8800095e67c1d4deadb687"
+  },
+  "include/trace/hooks/sched.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 137 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "a83da5ffea536896365f127773ffa4565ed6ce20"
+  },
+  "include/trace/hooks/security.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 7 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "c40422610dab00dba94d6a60b4679afd5d1aeb6b"
+  },
+  "include/trace/hooks/selinux.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 1 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "0b65631b5dde3e60de6b70dc335325a0bcf4242f"
+  },
+  "include/trace/hooks/signal.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 3 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "c845aec359d7f95a88cc85b0e0fb5307d3734b6c"
+  },
+  "include/trace/hooks/softlockup.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 1 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "eb2855379d98768428cf726e798aa10ccba7b2c5"
+  },
+  "include/trace/hooks/suspend.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 3 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "bceaa49feaf83fe7ce365c21ed52e9d3b322dc05"
+  },
+  "include/trace/hooks/sys.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 3 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "98a024e4adf98e00eb84f04c40f3f92dc9cbd952"
+  },
+  "include/trace/hooks/syscall_check.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 4 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "4710700b010855f63909605c9f0175c5aa796add"
+  },
+  "include/trace/hooks/sysrqcrash.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 1 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "92e7bc7ca9c3f5780ab00b0937dc01db22542e44"
+  },
+  "include/trace/hooks/thermal.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 2 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "d2aaf2063fe7773f54ba82f2b98003c28c903fbe"
+  },
+  "include/trace/hooks/timer.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 1 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "67ef865dad4adb64c896091055df2a8653771bca"
+  },
+  "include/trace/hooks/topology.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 3 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "3c9827931ee47919692f5633af2f8fa88a637a2c"
+  },
+  "include/trace/hooks/ttm_pool.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 2 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Native gfp_t include replaces the ineffective struct forward declaration; TTM hooks are restored conservatively because DRM_TTM is configured. See SECURITY.md.",
+    "port_blob": "a7db558fd4467e303a9b1728c95b28aac86a1aa9"
+  },
+  "include/trace/hooks/usb.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 2 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "1a1b4c5e8a64e49b7371dac3df182339558d58fb"
+  },
+  "include/trace/hooks/user.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 2 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "b6ca2f66c8c6f9482bb1290d1baf4eb74af7aebc"
+  },
+  "include/trace/hooks/vendor_hooks.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed full header. Keep ACK ordinary tracepoint alias, static-call restricted dispatch and the maximum-two-callback iterator/registration interface. Restricted hooks cannot unregister and callbacks must remain resident. Remove GENKSYMS include hiding because it only preserves historical CRCs; all source builds include native LTS tracepoint definitions. Registration adaptation and security are in SECURITY.md; native ordinary tracepoint semantics remain.",
+    "port_blob": "21924fa659c755fbbfa01dde1dab3223d6a5582b"
+  },
+  "include/trace/hooks/vmscan.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 50 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "476474fc49e2f5733ebe13446f755125e49c65f7"
+  },
+  "include/trace/hooks/wqlockup.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 4 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "b6eedd58bfe4bba66535c19e7ceb73a239a25db5"
+  },
+  "include/trace/hooks/xhci.h": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Structurally reviewed hook interface header with 2 declarations. Retain final ACK generic vendor source signatures; complete declaration/export/call-site cross-reference is in evidence/vendor-hook-registry-review.json. Parsed restricted conditions are true constants; residual declarations only supply forward types, the TCP reason enum or native-compatible typedefs. Header macros create no new userspace permission bypass themselves. Their trusted kernel callbacks and call-site behavior require separate source reviews. Content equals final ACK apart from possible trailing blank-line normalization; no historical binary layout promise.",
+    "port_blob": "e4c2e02dd30c3009e396d4ef55c507c8e88e5932"
+  },
+  "kernel/sched/vendor_hooks.c": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Full scheduler registry contains only native scheduler includes, tracepoint generation and GPL exports and is byte-identical to final ACK. Retain source-module scheduler customization interfaces, including final-ACK check_preempt_tick/getaffinity declarations with no in-tree call; do not invent new call sites. Complete registry cross-reference in evidence/vendor-hook-registry-review.json. Scheduler behavior and call-site locking remain separate source decisions.",
+    "port_blob": "6b2b79dfb1353a5d29bfb24f6b6c2305c1c9d3b9"
+  },
+  "kernel/tracepoint.c": {
+    "review_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed complete LTS-to-port delta and native tracepoint_update_call/registration transitions. Keep native ordinary tracepoints unchanged; add ACK restricted two-probe non-removable registration. f9c4d1582398 moves the second-data check under tracepoints_mutex, rejects NULL probes, reports ENOMEM and unwinds regfunc failure. First publication enables the static key after setup; subsequent registration only publishes a function with zero-initialized data, preserving the ACK no-second-data contract. Callbacks must remain resident trusted kernel code. See SECURITY.md; no concurrency runtime test.",
+    "port_blob": "7a70a3ed233327ced3f9f5186bedccf8818d38f1"
+  },
+  "Makefile": {
+    "review_head": "992b43bd7628be76a576dd3c4c2d14473c355b88",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed complete LTS-to-port and normalized-ACK-to-port differences. Retain mixed build input validation/prefix and suppression of duplicate vmlinux builds; source-module UAPI headers_install; LLVM_LINK and configured Rust inline-helper flags. Correct ACK add-prefix/conditional bug to require vmlinux.symvers and System.map. Native LTS version 6.18.57, Clippy MSRV workaround, Rust frame-pointer module flags, option checks, GCOV atomic-counter guard and hidden LTO visibility remain. Native vmlinux.o targets match the actual LTS builtin metadata rules. External DT overrides are outside this x86 ACPI SDK workflow. Build 31 completed the unchanged common and virtual-module paths; no historical ABI preservation.",
+    "port_blob": "67125d6d257150441071f8063fd381d4f1dbb63e",
+    "lts_to_port_sha256": "e1cb0b58cb5b93b092271b0e92a2da529f158ef6529f5e52370f896c37fa13c0",
+    "normalized_ack_to_port_sha256": "13b14e1d1d9860f1f26444170aa1a87736a292f55d6bb45bc62ef2a14e11fa7f"
+  },
+  "scripts/Makefile.build": {
+    "review_head": "992b43bd7628be76a576dd3c4c2d14473c355b88",
+    "status": "reviewed-source-selection",
+    "rationale": "Full net delta restores deprecated EXTRA_* source-module flags and the ACK Rust inline-helper bitcode pipeline, and lets Rust crate identity follow the source/module metadata rather than the object basename. Final file is byte-identical to normalized ACK. It keeps LTS build ordering and objtool validation; configured Rust code is linked with C helpers and Clang gets explicit unreachable-trap flags from root Makefile. Build 31 compiles this path with nonpermissive CFI. No old binary KMI is preserved.",
+    "port_blob": "fb9ddd731c917636160219f8364ae439d7941e74",
+    "lts_to_port_sha256": "dcbab69c9b5b24089f21c5429aa3e609f33e51eea7c2c890f4208f4efca7155f",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "scripts/Makefile.lib": {
+    "review_head": "992b43bd7628be76a576dd3c4c2d14473c355b88",
+    "status": "reviewed-source-selection",
+    "rationale": "Full net delta supports EXTRA_AFLAGS/CFLAGS/CPPFLAGS/LDFLAGS for vendor module sources, propagates existing AutoFDO flags to Rust, and retains Android LZ4 -12 --favor-decSpeed image-compression policy. File is byte-identical to normalized ACK; native command/input tracking remains. LZ4 format stays legacy -l with original size-trailer handling; compression policy is not a decompressor security check. No SDK use of optional AutoFDO is asserted.",
+    "port_blob": "81322e4395ae5087114b1801b5096e71ec4a80ec",
+    "lts_to_port_sha256": "7b853964f707696917ccddb3bc5a5d53b762ccd57c45daac4f7b1e22324ae66c",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "scripts/Makefile.modpost": {
+    "review_head": "992b43bd7628be76a576dd3c4c2d14473c355b88",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed whole file and LTS net delta. Retain module SCM-version extraction with restricted revision text, native symbol-version/namespace/error checks, base-build symbol import for mixed virtual modules and protected module-name list processing. No historical import whitelist is imposed when trimming is disabled, as explicitly assessed in SECURITY.md. File equals normalized ACK; source-built versions are regenerated rather than matching historical binaries. Successful original workflow validates mixed and ordinary module compilation.",
+    "port_blob": "4eb01d683cf0e95cc835918bce200366fa5ed6dd",
+    "lts_to_port_sha256": "7f411c77fba16474c3967f62b6c528982144aafc101d3837d5d1c452435ddbc9",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "scripts/Makefile.modinst": {
+    "review_head": "992b43bd7628be76a576dd3c4c2d14473c355b88",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed full file and net delta. Keep per-external-source modules.order installation using a path-derived MD5 suffix; this hash separates filenames and is not an integrity primitive. Native copy, strip, sign, compression and depmod behavior remain, including native tolerance of external signing failures during installation. The unchanged build_virt workflow finally signs every external module, and build 31 independently verifies all 145 signatures. File equals normalized ACK; no runtime module-loading claim.",
+    "port_blob": "11b3b7f6440316fa4aa231dc40c86aa6290df742",
+    "lts_to_port_sha256": "0f1224e7d96a38d2384cdc52300f3fea16345e7b3f055eb016203e7a1f599998",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "scripts/Makefile.modfinal": {
+    "review_head": "992b43bd7628be76a576dd3c4c2d14473c355b88",
+    "status": "reviewed-source-selection",
+    "rationale": "Keep exact native LTS module-final linking/BTF implementation, including the native .module-common.o path. ACK-only ARM64 FIPS140 postlink step is excluded: pinned crypto/Kconfig explicitly depends on ARM64 and modules. This does not disable a selected x86 crypto integrity check. Current workflow successfully produces and signs SDK modules with native linker ordering.",
+    "port_blob": "542ba462ed3ec9607e0df10e26613a4c7ac318e8",
+    "lts_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "normalized_ack_to_port_sha256": "8bbd951a163994703ecce2f04e79ba504c985170195381cb4cac5ac306ee38d9"
+  },
+  "scripts/mod/modpost.c": {
+    "review_head": "992b43bd7628be76a576dd3c4c2d14473c355b88",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed full LTS and ACK net differences. Retain source-version metadata, unified symbol/CRC/flag output and protected-export table generation consumed by matching source loader/linkers. Protect-module names retain full native object paths. Keep native LTS object suffix validation before parse_elf, fatal negative/truncated vsnprintf handling and warnings for empty unexpected nonallocated sections; do not restore ACK weakened checks. SCM option is bounded and generated by the restricted Makefile revision filter. Trimming/import-whitelist security distinction is documented in SECURITY.md; no binary ABI promise.",
+    "port_blob": "b4688694118b2235f4ed1eb8cc26bfc28a80dc44",
+    "lts_to_port_sha256": "26eb78b27c5082b9523eee2a3d66ce2acb5970b5a8b1aad706d4e91967c0c1de",
+    "normalized_ack_to_port_sha256": "a5036bc6e666e692a4607a73d8db056560927ce6b637c4612dd7e78dd9a53ad9"
+  },
+  "scripts/mod/modpost.h": {
+    "review_head": "992b43bd7628be76a576dd3c4c2d14473c355b88",
+    "status": "reviewed-source-selection",
+    "rationale": "Only net addition is protect_exports boolean in modpost internal module metadata, needed for protected-export generation. It is a host build-tool structure and not a vendor binary layout compatibility wrapper. Final content equals normalized ACK.",
+    "port_blob": "f7283cbfa05b72796cc3bbb6374a5252b746f215",
+    "lts_to_port_sha256": "676434f908f6d351f493737990d1d0d5c9689e45c473dd131184a355d8461cb0",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "scripts/module.lds.S": {
+    "review_head": "992b43bd7628be76a576dd3c4c2d14473c355b88",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed entire net delta: use one sorted __ksymtab/__kcrctab and a matching byte __kflagstab for the selected module format; GPL-only status is preserved in flags. Retain native LTS CFI traps, module common-object layout and conditional LTO data merging. Omit separate ARM64-only FIPS140 initcall/integrity-region and unconditional section-merging modifications. Native x86 modules and protected export checks use corresponding loader/source format.",
+    "port_blob": "1841a43d87710813bf64e986d6c363fe1645d809",
+    "lts_to_port_sha256": "d75837c46f61a905de447b15f077d2b0d719328946dbf7488dda1586c2e49d7c",
+    "normalized_ack_to_port_sha256": "7df7338d97356c0978d8bbb7d2e67bf25d26bfd00d6d44488ee1c65e4f045311"
+  },
+  "include/asm-generic/vmlinux.lds.h": {
+    "review_head": "992b43bd7628be76a576dd3c4c2d14473c355b88",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed all LTS net changes and confirmed final content equals normalized ACK. Retain explicit function/data subsection support required by selected code-generation paths, while keeping .text.startup[.*] and .text.exit[.*] in dedicated init/exit regions rather than generic TEXT_MAIN. Retain generic optional Propeller data-section support and unified sorted symbol/CRC/flag/protected-export tables consumed by the matching loader. No historical binary layout is retained. Build 31 links the SDK image and modules; runtime relocation/loading is untested.",
+    "port_blob": "a9c0ce56d3ec83bbade0019d03c1e454ed2d029b",
+    "lts_to_port_sha256": "7d640c9d9a7926394e0deafb0db4bfe4fc2165326ca402c97dd9bd646742d614",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "include/linux/export-internal.h": {
+    "review_head": "992b43bd7628be76a576dd3c4c2d14473c355b88",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed every net change. Emit one symbol and CRC table plus a byte flags table and protected-export names, matching modpost and kernel/module link scripts. Preserve native relative symbol references, function descriptor handling and namespace strings. Final file equals normalized ACK; representation supports signature-based protection and GPL checks without a historical KMI claim.",
+    "port_blob": "03e4eca768ed3405bf39222543920386ce235b93",
+    "lts_to_port_sha256": "c3438d05616012dcef4cf01f998c0f89d9b36189e1f8fb579782e8ecf871b8df",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "include/linux/module_symbol.h": {
+    "review_head": "992b43bd7628be76a576dd3c4c2d14473c355b88",
+    "status": "reviewed-source-selection",
+    "rationale": "Retain only Android GPL_ONLY and PROTECTED flag bit definitions needed by the matching module format. 992b43bd7628 removes ACK __kvm_nvhe_ prefix recognition, which solely supports ARM64 hypervisor symbols outside SDK. Remaining mapping-symbol recognition is exactly native LTS, so x86 tool/module behavior retains its baseline checks.",
+    "port_blob": "1d0414da4c7c9f1a3b48a687d6b7b80fb935d1fa",
+    "lts_to_port_sha256": "1904357bcbdacdf1bfd163458c9a2bb02dbb628d44ebeb8e27d9c6222c7e7653",
+    "normalized_ack_to_port_sha256": "a771f19b6fa8d67055a02e3023d20471793807fed44ca6f6fd3beb9c0850757d"
+  },
+  "drivers/android/binder.c": {
+    "review_head": "be8a3b37ae74ccc9314a4186004ec4d1ca02e50b",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed complete LTS-to-port and normalized-ACK-to-port deltas, including all transaction/scheduling hook placements. Keep Android policy/RT inheritance with recipient CAP_SYS_NICE and RLIMIT_RTPRIO/NICE checks, RESET_ON_FORK, opt-in inherit_rt and nested pending/abort priority restoration. Thread task references are balanced at allocation/free. Pinned GrapheneOS libbinder Binder.cpp/Parcel.cpp implements these flags and binderLibTest.cpp exercises the API (not executed). Generic hooks retain trusted queue/priority/budget customization; unregistered defaults follow native paths. Preserve LTS outdated-async failure-buffer cleanup/fd-fixups, aligned LSM context sizing and single target snapshot/tmpref (a658d19bb7fa). a56219a4a60d gates added driver-unload cleanup on successful C init, avoiding repeated native resource unwind. Native transaction permission checks and buffer validation remain; source-level security/availability limits are detailed in SECURITY.md.",
+    "port_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+    "lts_to_port_sha256": "f3966354aea45966d45b35fd09fd360e1ce2a8ad693e116e85efd25e1c0f1c44",
+    "normalized_ack_to_port_sha256": "ec4711b4cb670d5f767a00300914a40ff37eac3b0e6f0e8f2e4363d3445d05f3"
+  },
+  "drivers/android/binder_alloc.c": {
+    "review_head": "be8a3b37ae74ccc9314a4186004ec4d1ca02e50b",
+    "status": "reviewed-source-selection",
+    "rationale": "Full LTS delta is allocation-budget/refusal hook and GPL export of the existing buffer-copy helper. Hook defaults to no refusal and native async-space, buffer bounds, mmap and shrinker logic remain. A trusted vendor may deliberately refuse with EPERM or adjust free_async_space and must preserve allocator invariants. Final allocation implementation is byte-identical to normalized ACK; source-export consumer runs as kernel code. No runtime allocation test.",
+    "port_blob": "70e8a992033df79b3c08e47960f19b71bebccfbb",
+    "lts_to_port_sha256": "59add80b94905603d5252f4c31486aef0e4f0453f2dfea8de5b07a71e08ce711",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "drivers/android/binder_alloc.h": {
+    "review_head": "be8a3b37ae74ccc9314a4186004ec4d1ca02e50b",
+    "status": "reviewed-source-selection",
+    "rationale": "Full delta adds one OEM runtime-data field and removes a trailing blank line. Preserve native LTS buffer/allocator layout fields and APIs, without old KABI wrapper/layout padding. OEM storage supports selected vendor hooks compiled from source; binary structure compatibility is not retained.",
+    "port_blob": "944c3bde30ec4d0255355585a964cb416d019990",
+    "lts_to_port_sha256": "48a25657e2467bd4afe20b7cef8d304246e980f61fd46f1dc30e5f9144446f63",
+    "normalized_ack_to_port_sha256": "76d88556e8f3720c310c403e61fb2f81540b3459767bab477e2758906e949348"
+  },
+  "drivers/android/binder_internal.h": {
+    "review_head": "be8a3b37ae74ccc9314a4186004ec4d1ca02e50b",
+    "status": "reviewed-source-selection",
+    "rationale": "Full delta contains actual scheduling policy/priority and nested restoration state, held task pointer, implementation-selector unload declarations and runtime vendor/OEM fields. Keep native LTS refcounts, lock annotations, transaction locks and allocator interfaces. Data additions implement Android runtime/source customization, not historical structure-layout preservation. Header equals normalized ACK; corresponding C logic and LTS fix retention are separately documented.",
+    "port_blob": "3dfeff2667f309abc61c1fdda33849eb6a15d29b",
+    "lts_to_port_sha256": "6d5ba0b7413d67c3ede0dee58f72394ee8eece905a8ede59443ff9eb8e71ccdd",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "include/uapi/linux/android/binder.h": {
+    "review_head": "be8a3b37ae74ccc9314a4186004ec4d1ca02e50b",
+    "status": "reviewed-source-selection",
+    "rationale": "Full delta adds documented scheduling-policy/INHERIT_RT masks consumed by pinned GrapheneOS libbinder, plus TF_DEFER_COMPLETE used by the selected Rust Binder thread implementation. Keep final ACK UAPI values exactly (apart from blank line). C Binder retains ACK treatment of flags; no new C handling is invented for the Rust-specific completion optimization. Preserve every native LTS ioctl/transaction definition. Actual runtime ABI use and CTS are untested.",
+    "port_blob": "bab8238a5af12ec8fb664c0a2332b70d5c1434f9",
+    "lts_to_port_sha256": "4b54b0746850d9106c0acdde3d85368e48a1ec6962c4dc05f7d663bdab76eae8",
+    "normalized_ack_to_port_sha256": "08b528415d03f512fbbceb3116e8aaf7b16524c91e7371a56e8eb8e82eafc7b0"
+  },
+  "drivers/android/binder_trace.h": {
+    "review_head": "be8a3b37ae74ccc9314a4186004ec4d1ca02e50b",
+    "status": "reviewed-source-selection",
+    "rationale": "Only net delta is binder_set_priority event with scalar process/thread/old/new/desired priority fields and scalar formatting. Retain exact final ACK tracing interface for Android scheduling diagnostics; native tracepoint event code provides recording. Runtime tracing not verified.",
+    "port_blob": "df216b3edaefd91f5940b39b8cb216f8f3d07f76",
+    "lts_to_port_sha256": "1e49af03072d66d1a20baa824b82ee18b1b3b9aefc535d8262903ea45de48387",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "drivers/android/binderfs.c": {
+    "review_head": "be8a3b37ae74ccc9314a4186004ec4d1ca02e50b",
+    "status": "reviewed-source-selection",
+    "rationale": "Full delta adds the implementation selector before filesystem-context allocation plus a teardown helper. Selector mutex establishes C use before any mount can proceed; a failed allocation still retains C selection, matching ACK. Teardown is reached only through the serialized switch, and a56219a4a60d now prevents it after failed initial registration. Native LTS namespace, inode, device creation, mount bounds and cleanup remain. File equals normalized ACK.",
+    "port_blob": "85faf55a25f5fbc1ef8035471549be4604fcd64f",
+    "lts_to_port_sha256": "a1f78be740e6a3f6822e8cf21a721da61ca577f02fd176103660bda8dcb35ab0",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "drivers/android/binder_pick.c": {
+    "review_head": "be8a3b37ae74ccc9314a4186004ec4d1ca02e50b",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed full new selector and native trace-event removal implementation. Retain mutex-serialized binder.impl setting, mount/load exclusion and active_impl reporting; configured binderfs skips legacy misc-device registration. be8a3b37ae74 replaces partial tracefs/list unlink with native trace_remove_event_call under event_mutex so event type and field lifetime are cleaned up, while active/perf-referenced events remain owned by native handling. Busy events warn and remain associated with old driver; no runtime switch or unload test. Rust init failure after successful C unload does not automatically restore C, as in ACK; recorded availability limitation.",
+    "port_blob": "aa93fbbe9d1ac6ddce8f435305b149bf0007b7b3",
+    "lts_to_port_sha256": "7cd416cbe4eb2944453143458cfe3a5877006cfe893ae55d12666d824bda7f91",
+    "normalized_ack_to_port_sha256": "b9f9c536783251db997f1cd158fb27d58d58db1f527167e0e32504670ae2887e"
+  },
+  "drivers/android/binder_pick.h": {
+    "review_head": "be8a3b37ae74ccc9314a4186004ec4d1ca02e50b",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed full declaration-only header for the configured C/Rust selector, trace cleanup and built-in teardown. Source signatures retained; behavior and failure/lifetime adaptations are documented at binder_pick.c and binder.c. No historical binary layout fields.",
+    "port_blob": "b013f41aef11f4163ab805b61b51df17e61b8080",
+    "lts_to_port_sha256": "676a3847605b1efd001c82234badc6c3b86d202eedf7663f3948bff4a06a735f",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "drivers/android/Kconfig": {
+    "review_head": "be8a3b37ae74ccc9314a4186004ec4d1ca02e50b",
+    "status": "reviewed-source-selection",
+    "rationale": "Full LTS and ACK deltas retain Binder event tracing dependency, modular Rust Binder alongside built-in C, Android vendor hooks, runtime OEM/vendor storage and wrapfd menu. Omit bootloader debug_kinfo interface outside SDK and historical KABI reserve option. Rewrite storage help to describe actual vendor runtime data, not binary-layout guarantees. Generated SDK config has C=y, Rust=m, binderfs=y and vendor hooks enabled. Individual drivers/interfaces are reviewed separately.",
+    "port_blob": "f21ad8cb3e93acdd14499528122c3245afb01292",
+    "lts_to_port_sha256": "bb63389de788ded19a068ef10316c3d192642a6f4cec98b4246fdfc7960fb69a",
+    "normalized_ack_to_port_sha256": "25deadde8e1ab25236e2b2c0da439435c142898e536f88557b376f5c70561bcd"
+  },
+  "drivers/android/Makefile": {
+    "review_head": "be8a3b37ae74ccc9314a4186004ec4d1ca02e50b",
+    "status": "reviewed-source-selection",
+    "rationale": "Complete final selection keeps built-in C Binder allocation/netlink/selector, conditional Rust subdirectory contents, hook registry and wrapfd. Exclude only debug_kinfo bootloader-specific implementation. Exact final ACK rules otherwise; current SDK builds the selected Binder/module inputs. Source build glue does not finalize the separate Rust/wrapfd implementation candidates.",
+    "port_blob": "7783894efa98586f4b80fba13d2769e87a5a3401",
+    "lts_to_port_sha256": "f74d3ea2e4478dbbb9e193e04d9cc23514698f2f7fb5ed136aa29f4f48c7ffcb",
+    "normalized_ack_to_port_sha256": "fa29175c8f1adf6440e1cd47585bd60fd5ede97517822f53b01d608147916aa4"
+  },
+  "include/linux/android_vendor.h": {
+    "review_head": "be8a3b37ae74ccc9314a4186004ec4d1ca02e50b",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed full header. Retain u64 vendor/OEM runtime fields and zero-initialization macros, conditionally compiled with ANDROID_VENDOR_OEM_DATA, for source-built hooks/modules. These are actual extension data, not reserve/replacement KABI wrappers or layout preservation. Historical comment terminology does not create a binary KMI promise; definitions remain compatible with current source consumers. Structure allocation/initialization and use of each field are reviewed at its own call site.",
+    "port_blob": "af3014ccc82ebe532a76a45e2fb7180c9a9c2a7b",
+    "lts_to_port_sha256": "22a3b8d9d3a6ee952742d37db0d84bc8071a4b920e1fb83042c5eba7cd3e4471",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "kernel/trace/trace_events.c": {
+    "review_head": "873b2952f13735e7c3cfdeaa2a8a685e184d9b32",
+    "status": "reviewed-source-selection",
+    "rationale": "Restore exact native LTS trace implementation/private header in 873b2952f137. ACK 42393aa5693a exposed remove_event_from_tracers only for its Binder selector partial cleanup. The adapted selector instead calls existing native trace_remove_event_call, retaining type/field cleanup and active-event checks, so this extra helper exposure is unnecessary. This is a concrete replaced consumer, not a failed consumer search. No native trace behavior or fix is weakened; see SECURITY.md: C Binder scheduling, hooks and implementation selection."
+  },
+  "kernel/trace/trace.h": {
+    "review_head": "873b2952f13735e7c3cfdeaa2a8a685e184d9b32",
+    "status": "reviewed-source-selection",
+    "rationale": "Restore exact native LTS trace implementation/private header in 873b2952f137. ACK 42393aa5693a exposed remove_event_from_tracers only for its Binder selector partial cleanup. The adapted selector instead calls existing native trace_remove_event_call, retaining type/field cleanup and active-event checks, so this extra helper exposure is unnecessary. This is a concrete replaced consumer, not a failed consumer search. No native trace behavior or fix is weakened; see SECURITY.md: C Binder scheduling, hooks and implementation selection."
   }
 }

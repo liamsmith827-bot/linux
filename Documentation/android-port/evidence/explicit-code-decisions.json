@@ -851,5 +851,13 @@
     "disposition": "omitted-current-target",
     "rationale": "The patch only enables/removes/re-enables Samsung SoC UART configuration. Native LTS drivers/tty/serial/Kconfig restricts SERIAL_SAMSUNG to Samsung/Exynos/Apple/Artpec platforms or COMPILE_TEST; the SDK x86 build selects none of those. Retain native UART code and the configured 8250/virtio SDK interfaces, and omit these physical-SoC selections. The paired historical removal/revert does not require replay. This does not infer dispensability from a missing consumer and does not change LTS fixes or a generic serial ABI.",
     "result_commits": []
+  },
+  {
+    "commit": "44f80f29d2a0dce31ed3b071ba17cd24db1ca13f",
+    "disposition": "adapted",
+    "rationale": "The SDK config enables generic DRM_TTM through hidden source-module dependencies. Retain both allocation vendor hooks and their GPL exports for source customization even though their precise SDK runtime use is unresolved. Adapt onto native LTS without importing unrelated TTM backup/performance work or ANDROID_KABI_DECLONLY. Clamp the callback-supplied maximum order to MAX_PAGE_ORDER to preserve the pool-array bound; include the native gfp_t definition. Unregistered hooks preserve LTS behavior. Trusted vendor callbacks can deliberately change allocation policy, including GFP reserve/reclaim flags; no runtime validation is claimed. See SECURITY.md: TTM allocation vendor hooks. Commit-message URLs were read as local text, not accessed.",
+    "result_commits": [
+      "a83fe26baa415ac546af1b927a90be8e3b7e2691"
+    ]
   }
 ]
