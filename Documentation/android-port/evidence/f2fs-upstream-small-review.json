@@ -1,0 +1,88 @@
+{
+  "records": [
+    {
+      "commit": "f19515bca8c506c928d707ad666927b6668f38c3",
+      "review": "Pinned LTS already rejects direct I/O for compressed files in f2fs_force_buffered_io, now in file.c. The entire current predicate equals LTS, including fscrypt/verity, inline-data, device-alignment, zoned-write and disabled-checkpoint checks. This repairs a historical merge error that is absent in the selected code; preserve native predicate to avoid bypassing compression decoding.",
+      "source_head": "6f10e5ec87108a1a0e6b5bda0a8b1509eed33308",
+      "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "original_patch_sha256": "644314d1c318cd0ccc2c1c5099270a5e45813949989876c06d3727494d230fab",
+      "path_witnesses": {
+        "fs/f2fs/f2fs.h": {
+          "2ff600d29ee478d0a8d46ef8a58afb5e038fe692": "ec1b9831e5afe1eff2a26313de80bf03f582c3c7",
+          "HEAD": "c9c5b5577766e092ff47bf769a654144c1fb8323"
+        }
+      }
+    },
+    {
+      "commit": "78e33c3f95d6311f749ac6c02e853a1b020dce8c",
+      "review": "The original FSSETXATTR mask correction is upstream. Current LTS/native fileattr conversion computes masked_flags and compares only selected casefold/compression flags, retaining unselected inode flags. Later upstream compression eligibility/locking supersedes the old compression transitions. Current port adds only separately reviewed alias rejection and compression veto to that helper; project-quota validation and VFS fileattr permission checking are retained. Do not resurrect the obsolete unmasked BUG_ON.",
+      "source_head": "6f10e5ec87108a1a0e6b5bda0a8b1509eed33308",
+      "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "upstream_commit": "99eabb914e0f870445d065e83e857507f9728a33",
+      "stable_patch_id": "667706e97cd4eeaf41a8a35c70c2b2b23e40aadd",
+      "original_patch_sha256": "cbafe5bb7956d40f7db50d9b105207f6e0a58bbe6c8900b3754fdcced16338b1",
+      "path_witnesses": {
+        "fs/f2fs/file.c": {
+          "2ff600d29ee478d0a8d46ef8a58afb5e038fe692": "791f1cf198c16a78f8cd2857841b648042c56ced",
+          "HEAD": "1b06fd799646b058bc12ffbce17d91282b51a4f4"
+        }
+      }
+    },
+    {
+      "commit": "1f756392662639a0b45e8748f3adf4b4c878f3b0",
+      "review": "Pinned LTS already implements the encryption-nonce helper and both native/compat ioctl dispatch. The helper is byte-identical in the port and checks the encryption feature before fscrypt_ioctl_get_nonce; the common helper validates context length/version and bounded copy_to_user. This is the nonce, not a key; preserve existing interface and errors.",
+      "source_head": "6f10e5ec87108a1a0e6b5bda0a8b1509eed33308",
+      "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "upstream_commit": "ee446e1af4ff90945e2273ae0af322b8b745b8cc",
+      "stable_patch_id": "51fa4187bcfc2d3c10719da02be51598c049908a",
+      "original_patch_sha256": "40deaf94228cfabfe8a38b1a69ed1f26dcf3223cdf6400f48a9bf4db9ab73162",
+      "path_witnesses": {
+        "fs/f2fs/file.c": {
+          "2ff600d29ee478d0a8d46ef8a58afb5e038fe692": "791f1cf198c16a78f8cd2857841b648042c56ced",
+          "HEAD": "1b06fd799646b058bc12ffbce17d91282b51a4f4"
+        }
+      }
+    },
+    {
+      "commit": "97ea2b6e2ada71e1699217d95381d7a42310a58d",
+      "review": "The mask-before-update fix is upstream and retained: iflags &= mask replaces the historical BUG_ON, and masked_flags and final assignment preserve flags outside the request. VFS fileattr conversion shrinks the mask for xflags requests. This avoids incorrectly rejecting/bugging a legitimate flag operation while keeping quota, compression and casefold constraints.",
+      "source_head": "6f10e5ec87108a1a0e6b5bda0a8b1509eed33308",
+      "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "upstream_commit": "a753103909a7e3d22147505d944da3d20759e1a5",
+      "stable_patch_id": "dc7f64bef110602aef9b9a3f54a21db171be7cd6",
+      "original_patch_sha256": "7d2ab7f4c244e31cfb86b3d8a8d0994723b53444ffdc8fe831a2dba80a88619b",
+      "path_witnesses": {
+        "fs/f2fs/file.c": {
+          "2ff600d29ee478d0a8d46ef8a58afb5e038fe692": "791f1cf198c16a78f8cd2857841b648042c56ced",
+          "HEAD": "1b06fd799646b058bc12ffbce17d91282b51a4f4"
+        }
+      }
+    },
+    {
+      "commit": "fab7f30fa7111c9f44aaa46a1a828da75bba609a",
+      "review": "The lazytime parser restoration is upstream; later native fs_context parsing represents lazytime/nolazytime with fsparam_flag_no and ctx_set_opt/ctx_clear_opt. The native mount applies LAZYTIME to SB_LAZYTIME and remount keeps the native flag propagation. Keep the current parser rather than replaying removed match_table/parse_options machinery. No change to native timestamp durability semantics.",
+      "source_head": "6f10e5ec87108a1a0e6b5bda0a8b1509eed33308",
+      "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "upstream_commit": "acff9409dd40beaca2bd982678d222e2740ad84b",
+      "stable_patch_id": "0e68ef39461fbc9c4318cd753d655fc0115e9293",
+      "original_patch_sha256": "37cf125f24b4aec910cbc33f3d12c49c40756c61ed7e92b098b9c903da117eac",
+      "path_witnesses": {
+        "fs/f2fs/super.c": {
+          "2ff600d29ee478d0a8d46ef8a58afb5e038fe692": "74b12c1ef82110287a335c25f97f0e6db05a0c5c",
+          "HEAD": "45ae417e995a4fa4bec09fc523b0b4059becb5ba"
+        }
+      }
+    },
+    {
+      "identical_functions": [
+        "f2fs_force_buffered_io",
+        "f2fs_ioc_get_encryption_nonce",
+        "f2fs_fileattr_set"
+      ],
+      "path": "fs/f2fs/file.c",
+      "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "port": "6f10e5ec87108a1a0e6b5bda0a8b1509eed33308"
+    }
+  ],
+  "remote_resources": []
+}

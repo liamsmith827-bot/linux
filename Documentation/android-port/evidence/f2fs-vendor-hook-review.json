@@ -1,0 +1,102 @@
+{
+  "source_head": "6f10e5ec87108a1a0e6b5bda0a8b1509eed33308",
+  "candidates": [
+    {
+      "commit": "49f93b14577c7c4f54b6301d351929ec6e4ce089",
+      "original_patch_sha256": "499ead4dd43283095c52d37ba730ed1a02681ab34f15f8d6f02491e52bae2b44",
+      "files": {
+        "drivers/android/vendor_hooks.c": "c5c8da29b4f3f9c3083b1d4507ae076689693e24",
+        "fs/f2fs/checkpoint.c": "1aa9c819bf47be9360b6955534ede7e81c58c57f",
+        "include/trace/hooks/fs.h": "5009f054eae4b4551732621f6c1978ef6a66fe74"
+      },
+      "review": "Retain checkpoint boost/restore source hooks and exports around native completion waits. Pin the task under stat_lock shared with successful publication and stop removal; restore on that snapshot before put_task_struct, avoiding NULL/stale-task access when remount stops the thread during the wait. Initialize saved priority. Preserve LTS synchronous fallback when no thread exists, request completion and stop-time draining; callbacks must coordinate overlapping boosts. Extracted stop-during-wait lifetime controls reject an unreferenced task."
+    },
+    {
+      "commit": "4e1c4268094aed2888ea52c2626905886854a5c2",
+      "original_patch_sha256": "2417f307e2dc8b76034d8aca172a7ffdf9a62cb2f04875a0f8e24a273786852e",
+      "files": {
+        "drivers/android/vendor_hooks.c": "c5c8da29b4f3f9c3083b1d4507ae076689693e24",
+        "fs/f2fs/checkpoint.c": "1aa9c819bf47be9360b6955534ede7e81c58c57f",
+        "fs/f2fs/f2fs.h": "c9c5b5577766e092ff47bf769a654144c1fb8323",
+        "include/trace/hooks/fs.h": "5009f054eae4b4551732621f6c1978ef6a66fe74"
+      },
+      "review": "Retain the restricted down-read callback, exported wrapper and native fallback. A callback setting skip must already hold the real rwsem. Pass NULL for read_waiters in fair-lock configurations, where that member does not exist; SDK unfair locking retains its queue. Extracted checks compile/run both configurations and reject duplicate acquisition. No lock is bypassed by default."
+    },
+    {
+      "commit": "2240301db3ad63ec8d5281f2d862e7c73e0a0656",
+      "original_patch_sha256": "7ce0130e190a196cc3d6ea0913a8074d117a977cd3d81d9bbe07aaa313aad749",
+      "files": {
+        "drivers/android/vendor_hooks.c": "c5c8da29b4f3f9c3083b1d4507ae076689693e24",
+        "fs/f2fs/file.c": "1b06fd799646b058bc12ffbce17d91282b51a4f4",
+        "include/trace/hooks/fs.h": "5009f054eae4b4551732621f6c1978ef6a66fe74"
+      },
+      "review": "Retain the file-open source callback and declaration/export after native fscrypt, large-folio write and fsverity checks; quota open and finish_preallocate_blocks/error accounting still run afterward. This permits OEM per-inode policy without bypassing open checks. Pointers are borrowed for the call; a module must acquire references for retained state."
+    },
+    {
+      "commit": "1444d806aafbff95eed142f5fdfe178c3541c889",
+      "original_patch_sha256": "2027abc067fb7a2e1ea5af80c37fada065990e4a8cfab7c2dabde560986785c0",
+      "files": {
+        "drivers/android/vendor_hooks.c": "c5c8da29b4f3f9c3083b1d4507ae076689693e24",
+        "fs/f2fs/super.c": "45ae417e995a4fa4bec09fc523b0b4059becb5ba",
+        "include/trace/hooks/fs.h": "5009f054eae4b4551732621f6c1978ef6a66fe74"
+      },
+      "review": "Retain the filesystem diagnostic callback, header and export with follow-up 45c752 NULL-sbi guard. Native printing/rate selection and va_end remain; the stack va_format/va_list is only valid during the synchronous callback. No new userspace diagnostic exposure is implemented."
+    },
+    {
+      "commit": "431b548a65bdcc1d635664608c8deb2392973618",
+      "original_patch_sha256": "96869235203cfaf21391a07d2fc20022ab97c4b6dd1e8e75a4fed0dfb520fa72",
+      "files": {
+        "drivers/android/vendor_hooks.c": "c5c8da29b4f3f9c3083b1d4507ae076689693e24",
+        "fs/f2fs/data.c": "80959e6c90adb5f6887bf907f8c9b9a262e7f60c",
+        "fs/f2fs/namei.c": "949289b87fe87dfd82cd26b17b8edbc1c972a910",
+        "include/trace/hooks/fs.h": "5009f054eae4b4551732621f6c1978ef6a66fe74"
+      },
+      "review": "Retain generic creation and bio-flag callbacks, declarations/exports and f2fs_write_begin tracepoint export. Adapt the obsolete fio->page conversion to native fio->folio. The UFS/SLC commit motivation does not restrict these generic APIs to UFS; no physical driver is added. Native create/link failure handling, block/crypto checks and bio lifetime remain; callbacks must preserve operation and integrity semantics."
+    },
+    {
+      "commit": "45c752087e242e2fb206ed0a16790248eb69a258",
+      "original_patch_sha256": "2980ef940c71f3a31b0292774ce13e542a94ab11804a9538f042d87251cf73e4",
+      "files": {
+        "fs/f2fs/super.c": "45ae417e995a4fa4bec09fc523b0b4059becb5ba"
+      },
+      "review": "Retain the explicit sbi test before the printk callback, preventing a NULL dereference in early diagnostics; native null-sbi printing and va_end remain. This fixes the earlier callback addition rather than omitting the interface."
+    },
+    {
+      "commit": "4f9acbadfd8f1391dd553a22ce35b6a65085cf4e",
+      "original_patch_sha256": "a018aab2677b5dfa83dae0fa85af8165195c49b89483be7f2185d49054733604",
+      "files": {
+        "drivers/android/vendor_hooks.c": "c5c8da29b4f3f9c3083b1d4507ae076689693e24",
+        "fs/f2fs/data.c": "80959e6c90adb5f6887bf907f8c9b9a262e7f60c",
+        "include/trace/hooks/blk.h": "a9a88edc9a16eb63533e16020e5d1bcc2be0e758"
+      },
+      "review": "Retain readahead op-flag callback, declaration and export. Native defaults are REQ_RAHEAD when rac exists and zero otherwise; the callback must handle NULL rac and preserve the read/crypto/integrity operation contract. Native block bounds and error cleanup remain outside this scoped flag customization."
+    },
+    {
+      "commit": "80732fccb2e9930ad992e71e4c6965f9a51188c9",
+      "original_patch_sha256": "524f74f60e37513a6d6380dc74fcd9d0ccb4a2c59a297432abe2c5df46716ad9",
+      "files": {
+        "drivers/android/vendor_hooks.c": "c5c8da29b4f3f9c3083b1d4507ae076689693e24",
+        "fs/f2fs/data.c": "80959e6c90adb5f6887bf907f8c9b9a262e7f60c",
+        "fs/f2fs/f2fs.h": "c9c5b5577766e092ff47bf769a654144c1fb8323",
+        "fs/f2fs/file.c": "1b06fd799646b058bc12ffbce17d91282b51a4f4",
+        "fs/f2fs/gc.c": "39669d008035b8dcc167db8e91d92138bb4a66c4",
+        "fs/f2fs/inode.c": "213ffe9b308ee32154056bbaebb51bfa68857573",
+        "fs/f2fs/super.c": "45ae417e995a4fa4bec09fc523b0b4059becb5ba",
+        "include/trace/hooks/fs.h": "5009f054eae4b4551732621f6c1978ef6a66fe74"
+      },
+      "review": "Retain all seven buffered I/O, writeback, GC, ioctl, dnode and compression hooks plus exports and OEM inode storage. Native GFP_F2FS_ZERO clears the full allocation, making ACK explicit OEM memset redundant. Adapt result defaults to -EIO; preserve NOWAIT, outer permission/write/sync/preallocation handling, plug/accounting/mutex cleanup and skipped-write accounting even on callback success. Native GC atomic-inode references/validity checks remain on the normal path; bypass callbacks own correct operation/accounting/progress. Custom ioctls must implement command-specific authority/user-copy rules; compression veto unlocks i_sem. SECURITY.md records callback trust boundaries and extracted host regression coverage."
+    },
+    {
+      "commit": "96292eb66bda74946f133f95f2b1ac2fa3eb4e3b",
+      "original_patch_sha256": "65aedfd5ba95415ab38d6b0b92b14e9805e4e67ed9fdbd3fb7c73b808c8acd12",
+      "files": {
+        "drivers/android/vendor_hooks.c": "c5c8da29b4f3f9c3083b1d4507ae076689693e24",
+        "fs/f2fs/data.c": "80959e6c90adb5f6887bf907f8c9b9a262e7f60c",
+        "fs/f2fs/iostat.c": "3dbdf0608b0d5478900a2b42e2c974deac246514",
+        "include/trace/hooks/fs.h": "5009f054eae4b4551732621f6c1978ef6a66fe74"
+      },
+      "review": "Retain submit and completion iostat callbacks/declarations/exports. Completion skip suppresses latency statistics only: native bi_private restoration and mempool freeing remain unconditional. The adapted direct-I/O wrapper restores iomap ownership and propagates status. Extracted iostat checks cover enable toggling, read/write, callback skip and I/O errors (64 cases/912 assertions), rejecting lost restoration and disabled-allocation regressions."
+    }
+  ],
+  "remote_resources": []
+}

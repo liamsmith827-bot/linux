@@ -2408,5 +2408,136 @@
       "f9df7466034c34651ed3aef400bfee927f2b154e"
     ],
     "rationale": "Retain optional resizable-tail mount option and pinned-area sysfs for configured F2FS; SDK runtime use unconfirmed, conservative generic compatibility. Saturate tail subtraction, refresh boundary after resize metadata, publish successful remount under pin_sem, clamp reads to current MAIN_SECS and reject zero area before GC bound subtraction. Bound within-section fast path and empty cached pinned-section reuse, and avoid ONLY_SEQ wrap escaping the permitted range. Existing pinned extents are not migrated merely by changing the option. Native LTS full resize/range-GC and per-block SIT bodies remain, with six-argument lock semantics. Preserve lookup-mode documentation table. Extracted boundary 6428/31424 and expanded placement 1081353/7692149 checks pass with rejected controls; native pinned premature-EAGAIN case now succeeds, non-pinned hint behavior retained. SECURITY.md details source reasoning and no actual runtime/remount/crash verification."
+  },
+  {
+    "commit": "49f93b14577c7c4f54b6301d351929ec6e4ce089",
+    "disposition": "adapted",
+    "rationale": "Retain checkpoint boost/restore source hooks and exports around native completion waits. Pin the task under stat_lock shared with successful publication and stop removal; restore on that snapshot before put_task_struct, avoiding NULL/stale-task access when remount stops the thread during the wait. Initialize saved priority. Preserve LTS synchronous fallback when no thread exists, request completion and stop-time draining; callbacks must coordinate overlapping boosts. Extracted stop-during-wait lifetime controls reject an unreferenced task. Full original patch and every changed interface/call site reviewed against the current source and pinned LTS. Keep conservatively for configured F2FS/Android vendor source compatibility; no registration found in local common-modules/external C/H sources is not proof of dispensability. No runtime or arbitrary callback safety claim. See SECURITY.md F2FS vendor callback review; no additional remote source used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6f10e5ec87108a1a0e6b5bda0a8b1509eed33308"
+    ]
+  },
+  {
+    "commit": "4e1c4268094aed2888ea52c2626905886854a5c2",
+    "disposition": "adapted",
+    "rationale": "Retain the restricted down-read callback, exported wrapper and native fallback. A callback setting skip must already hold the real rwsem. Pass NULL for read_waiters in fair-lock configurations, where that member does not exist; SDK unfair locking retains its queue. Extracted checks compile/run both configurations and reject duplicate acquisition. No lock is bypassed by default. Full original patch and every changed interface/call site reviewed against the current source and pinned LTS. Keep conservatively for configured F2FS/Android vendor source compatibility; no registration found in local common-modules/external C/H sources is not proof of dispensability. No runtime or arbitrary callback safety claim. See SECURITY.md F2FS vendor callback review; no additional remote source used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6f10e5ec87108a1a0e6b5bda0a8b1509eed33308"
+    ]
+  },
+  {
+    "commit": "2240301db3ad63ec8d5281f2d862e7c73e0a0656",
+    "disposition": "adapted",
+    "rationale": "Retain the file-open source callback and declaration/export after native fscrypt, large-folio write and fsverity checks; quota open and finish_preallocate_blocks/error accounting still run afterward. This permits OEM per-inode policy without bypassing open checks. Pointers are borrowed for the call; a module must acquire references for retained state. Full original patch and every changed interface/call site reviewed against the current source and pinned LTS. Keep conservatively for configured F2FS/Android vendor source compatibility; no registration found in local common-modules/external C/H sources is not proof of dispensability. No runtime or arbitrary callback safety claim. See SECURITY.md F2FS vendor callback review; no additional remote source used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6f10e5ec87108a1a0e6b5bda0a8b1509eed33308"
+    ]
+  },
+  {
+    "commit": "1444d806aafbff95eed142f5fdfe178c3541c889",
+    "disposition": "adapted",
+    "rationale": "Retain the filesystem diagnostic callback, header and export with follow-up 45c752 NULL-sbi guard. Native printing/rate selection and va_end remain; the stack va_format/va_list is only valid during the synchronous callback. No new userspace diagnostic exposure is implemented. Full original patch and every changed interface/call site reviewed against the current source and pinned LTS. Keep conservatively for configured F2FS/Android vendor source compatibility; no registration found in local common-modules/external C/H sources is not proof of dispensability. No runtime or arbitrary callback safety claim. See SECURITY.md F2FS vendor callback review; no additional remote source used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6f10e5ec87108a1a0e6b5bda0a8b1509eed33308"
+    ]
+  },
+  {
+    "commit": "431b548a65bdcc1d635664608c8deb2392973618",
+    "disposition": "adapted",
+    "rationale": "Retain generic creation and bio-flag callbacks, declarations/exports and f2fs_write_begin tracepoint export. Adapt the obsolete fio->page conversion to native fio->folio. The UFS/SLC commit motivation does not restrict these generic APIs to UFS; no physical driver is added. Native create/link failure handling, block/crypto checks and bio lifetime remain; callbacks must preserve operation and integrity semantics. Full original patch and every changed interface/call site reviewed against the current source and pinned LTS. Keep conservatively for configured F2FS/Android vendor source compatibility; no registration found in local common-modules/external C/H sources is not proof of dispensability. No runtime or arbitrary callback safety claim. See SECURITY.md F2FS vendor callback review; no additional remote source used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6f10e5ec87108a1a0e6b5bda0a8b1509eed33308"
+    ]
+  },
+  {
+    "commit": "45c752087e242e2fb206ed0a16790248eb69a258",
+    "disposition": "adapted",
+    "rationale": "Retain the explicit sbi test before the printk callback, preventing a NULL dereference in early diagnostics; native null-sbi printing and va_end remain. This fixes the earlier callback addition rather than omitting the interface. Full original patch and every changed interface/call site reviewed against the current source and pinned LTS. Keep conservatively for configured F2FS/Android vendor source compatibility; no registration found in local common-modules/external C/H sources is not proof of dispensability. No runtime or arbitrary callback safety claim. See SECURITY.md F2FS vendor callback review; no additional remote source used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6f10e5ec87108a1a0e6b5bda0a8b1509eed33308"
+    ]
+  },
+  {
+    "commit": "4f9acbadfd8f1391dd553a22ce35b6a65085cf4e",
+    "disposition": "adapted",
+    "rationale": "Retain readahead op-flag callback, declaration and export. Native defaults are REQ_RAHEAD when rac exists and zero otherwise; the callback must handle NULL rac and preserve the read/crypto/integrity operation contract. Native block bounds and error cleanup remain outside this scoped flag customization. Full original patch and every changed interface/call site reviewed against the current source and pinned LTS. Keep conservatively for configured F2FS/Android vendor source compatibility; no registration found in local common-modules/external C/H sources is not proof of dispensability. No runtime or arbitrary callback safety claim. See SECURITY.md F2FS vendor callback review; no additional remote source used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6f10e5ec87108a1a0e6b5bda0a8b1509eed33308"
+    ]
+  },
+  {
+    "commit": "80732fccb2e9930ad992e71e4c6965f9a51188c9",
+    "disposition": "adapted",
+    "rationale": "Retain all seven buffered I/O, writeback, GC, ioctl, dnode and compression hooks plus exports and OEM inode storage. Native GFP_F2FS_ZERO clears the full allocation, making ACK explicit OEM memset redundant. Adapt result defaults to -EIO; preserve NOWAIT, outer permission/write/sync/preallocation handling, plug/accounting/mutex cleanup and skipped-write accounting even on callback success. Native GC atomic-inode references/validity checks remain on the normal path; bypass callbacks own correct operation/accounting/progress. Custom ioctls must implement command-specific authority/user-copy rules; compression veto unlocks i_sem. SECURITY.md records callback trust boundaries and extracted host regression coverage. Full original patch and every changed interface/call site reviewed against the current source and pinned LTS. Keep conservatively for configured F2FS/Android vendor source compatibility; no registration found in local common-modules/external C/H sources is not proof of dispensability. No runtime or arbitrary callback safety claim. See SECURITY.md F2FS vendor callback review; no additional remote source used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "e6897f1d24cd2e29f95460d61a9ea107200dc5ee",
+      "6f10e5ec87108a1a0e6b5bda0a8b1509eed33308"
+    ]
+  },
+  {
+    "commit": "96292eb66bda74946f133f95f2b1ac2fa3eb4e3b",
+    "disposition": "adapted",
+    "rationale": "Retain submit and completion iostat callbacks/declarations/exports. Completion skip suppresses latency statistics only: native bi_private restoration and mempool freeing remain unconditional. The adapted direct-I/O wrapper restores iomap ownership and propagates status. Extracted iostat checks cover enable toggling, read/write, callback skip and I/O errors (64 cases/912 assertions), rejecting lost restoration and disabled-allocation regressions. Full original patch and every changed interface/call site reviewed against the current source and pinned LTS. Keep conservatively for configured F2FS/Android vendor source compatibility; no registration found in local common-modules/external C/H sources is not proof of dispensability. No runtime or arbitrary callback safety claim. See SECURITY.md F2FS vendor callback review; no additional remote source used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "ad600244b1a086ffa0c8aa7632684d3fb81bde81",
+      "6f10e5ec87108a1a0e6b5bda0a8b1509eed33308"
+    ]
+  },
+  {
+    "commit": "f19515bca8c506c928d707ad666927b6668f38c3",
+    "disposition": "already-represented-upstream",
+    "rationale": "Pinned LTS already rejects direct I/O for compressed files in f2fs_force_buffered_io, now in file.c. The entire current predicate equals LTS, including fscrypt/verity, inline-data, device-alignment, zoned-write and disabled-checkpoint checks. This repairs a historical merge error that is absent in the selected code; preserve native predicate to avoid bypassing compression decoding. Full original patch reviewed against pinned LTS and port; evidence/f2fs-upstream-small-review.json records equivalent upstream patch IDs or function identity. No additional remote resource used; embedded patch URLs were not accessed.",
+    "result_commits": []
+  },
+  {
+    "commit": "78e33c3f95d6311f749ac6c02e853a1b020dce8c",
+    "disposition": "already-represented-upstream",
+    "rationale": "The original FSSETXATTR mask correction is upstream. Current LTS/native fileattr conversion computes masked_flags and compares only selected casefold/compression flags, retaining unselected inode flags. Later upstream compression eligibility/locking supersedes the old compression transitions. Current port adds only separately reviewed alias rejection and compression veto to that helper; project-quota validation and VFS fileattr permission checking are retained. Do not resurrect the obsolete unmasked BUG_ON. Full original patch reviewed against pinned LTS and port; evidence/f2fs-upstream-small-review.json records equivalent upstream patch IDs or function identity. No additional remote resource used; embedded patch URLs were not accessed.",
+    "result_commits": []
+  },
+  {
+    "commit": "1f756392662639a0b45e8748f3adf4b4c878f3b0",
+    "disposition": "already-represented-upstream",
+    "rationale": "Pinned LTS already implements the encryption-nonce helper and both native/compat ioctl dispatch. The helper is byte-identical in the port and checks the encryption feature before fscrypt_ioctl_get_nonce; the common helper validates context length/version and bounded copy_to_user. This is the nonce, not a key; preserve existing interface and errors. Full original patch reviewed against pinned LTS and port; evidence/f2fs-upstream-small-review.json records equivalent upstream patch IDs or function identity. No additional remote resource used; embedded patch URLs were not accessed.",
+    "result_commits": []
+  },
+  {
+    "commit": "97ea2b6e2ada71e1699217d95381d7a42310a58d",
+    "disposition": "already-represented-upstream",
+    "rationale": "The mask-before-update fix is upstream and retained: iflags &= mask replaces the historical BUG_ON, and masked_flags and final assignment preserve flags outside the request. VFS fileattr conversion shrinks the mask for xflags requests. This avoids incorrectly rejecting/bugging a legitimate flag operation while keeping quota, compression and casefold constraints. Full original patch reviewed against pinned LTS and port; evidence/f2fs-upstream-small-review.json records equivalent upstream patch IDs or function identity. No additional remote resource used; embedded patch URLs were not accessed.",
+    "result_commits": []
+  },
+  {
+    "commit": "fab7f30fa7111c9f44aaa46a1a828da75bba609a",
+    "disposition": "already-represented-upstream",
+    "rationale": "The lazytime parser restoration is upstream; later native fs_context parsing represents lazytime/nolazytime with fsparam_flag_no and ctx_set_opt/ctx_clear_opt. The native mount applies LAZYTIME to SB_LAZYTIME and remount keeps the native flag propagation. Keep the current parser rather than replaying removed match_table/parse_options machinery. No change to native timestamp durability semantics. Full original patch reviewed against pinned LTS and port; evidence/f2fs-upstream-small-review.json records equivalent upstream patch IDs or function identity. No additional remote resource used; embedded patch URLs were not accessed.",
+    "result_commits": []
+  },
+  {
+    "commit": "f2fe7bac26dcc286ceb13297f163ad6353f3d5ef",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "The original android_fs data-read/write tracepoints, helper, templates and ext4/F2FS/mpage call sites were removed by d04d4bc9e984 after I/O API changes. Full addition and revert inspected, including moved F2FS DIO call sites. Final ACK, LTS and port contain none of these symbols/headers. Preserve that final removal; do not resurrect alias-allocating trace callbacks in low-level reclaim-sensitive paths. GrapheneOS Perfetto still recognizes legacy event schemas (external/perfetto/src/traced/probes/ftrace/event_info.cc); this is not evidence that such events must be restored to a kernel whose final ACK removed them. Local atrace disk category selects optional native ext4/F2FS events, and those remain; current native F2FS file-based data events also remain, without claiming identical timing/ABI to the removed events. No additional remote source used; no runtime trace validation.",
+    "result_commits": []
+  },
+  {
+    "commit": "c32cef58b3d7aa9f368d7dceb5c685a183084fac",
+    "disposition": "superseded-no-residual-code",
+    "rationale": "This added an IS_NOQUOTA guard to the old android_fs write-begin tracing to avoid d_obtain_alias allocation/reclaim deadlock during quota writeback. The containing callback and path helper were subsequently removed by d04d4bc9e984 and are absent from final ACK and port. Its safety effect is retained by removal of the entire problematic call, not by applying an orphan guard. GrapheneOS Perfetto still recognizes legacy event schemas (external/perfetto/src/traced/probes/ftrace/event_info.cc); this is not evidence that such events must be restored to a kernel whose final ACK removed them. Local atrace disk category selects optional native ext4/F2FS events, and those remain; current native F2FS file-based data events also remain, without claiming identical timing/ABI to the removed events. No additional remote source used; no runtime trace validation.",
+    "result_commits": []
+  },
+  {
+    "commit": "d04d4bc9e9840681d9eef49bab5d1028778031ae",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "Preserve this removal of obsolete android_fs data tracepoints/helpers and every ext4/F2FS/mpage call site. Native LTS needs no removal patch because those interfaces are absent already; current port also has no residual symbols/headers. Every deletion examined, including F2FS DIO calls moved into file.c and the earlier quota guard. This avoids reviving incompatible completion code and alias-allocation reclaim exposure. GrapheneOS Perfetto still recognizes legacy event schemas (external/perfetto/src/traced/probes/ftrace/event_info.cc); this is not evidence that such events must be restored to a kernel whose final ACK removed them. Local atrace disk category selects optional native ext4/F2FS events, and those remain; current native F2FS file-based data events also remain, without claiming identical timing/ABI to the removed events. No additional remote source used; no runtime trace validation.",
+    "result_commits": []
   }
 ]

@@ -1,0 +1,33 @@
+{
+  "source_head": "6f10e5ec87108a1a0e6b5bda0a8b1509eed33308",
+  "candidates": [
+    {
+      "commit": "f2fe7bac26dcc286ceb13297f163ad6353f3d5ef",
+      "original_patch_sha256": "f31f8f6f4ea50d3815136613b3930450370338c9d281860d66d7e8f5c4ab2ea1",
+      "review": "The original android_fs data-read/write tracepoints, helper, templates and ext4/F2FS/mpage call sites were removed by d04d4bc9e984 after I/O API changes. Full addition and revert inspected, including moved F2FS DIO call sites. Final ACK, LTS and port contain none of these symbols/headers. Preserve that final removal; do not resurrect alias-allocating trace callbacks in low-level reclaim-sensitive paths. GrapheneOS Perfetto still recognizes legacy event schemas (external/perfetto/src/traced/probes/ftrace/event_info.cc); this is not evidence that such events must be restored to a kernel whose final ACK removed them. Local atrace disk category selects optional native ext4/F2FS events, and those remain; current native F2FS file-based data events also remain, without claiming identical timing/ABI to the removed events. No additional remote source used; no runtime trace validation."
+    },
+    {
+      "commit": "c32cef58b3d7aa9f368d7dceb5c685a183084fac",
+      "original_patch_sha256": "a4cf8195ceeac4af777a2b63cb72d270b55ab4eab8a01a8d3eabb7dcb7b39f51",
+      "review": "This added an IS_NOQUOTA guard to the old android_fs write-begin tracing to avoid d_obtain_alias allocation/reclaim deadlock during quota writeback. The containing callback and path helper were subsequently removed by d04d4bc9e984 and are absent from final ACK and port. Its safety effect is retained by removal of the entire problematic call, not by applying an orphan guard. GrapheneOS Perfetto still recognizes legacy event schemas (external/perfetto/src/traced/probes/ftrace/event_info.cc); this is not evidence that such events must be restored to a kernel whose final ACK removed them. Local atrace disk category selects optional native ext4/F2FS events, and those remain; current native F2FS file-based data events also remain, without claiming identical timing/ABI to the removed events. No additional remote source used; no runtime trace validation."
+    },
+    {
+      "commit": "d04d4bc9e9840681d9eef49bab5d1028778031ae",
+      "original_patch_sha256": "08e277fa7884c96d5b8187b60fa44b0856c3ff36c4f0626ad8ba09756061aedf",
+      "review": "Preserve this removal of obsolete android_fs data tracepoints/helpers and every ext4/F2FS/mpage call site. Native LTS needs no removal patch because those interfaces are absent already; current port also has no residual symbols/headers. Every deletion examined, including F2FS DIO calls moved into file.c and the earlier quota guard. This avoids reviving incompatible completion code and alias-allocation reclaim exposure. GrapheneOS Perfetto still recognizes legacy event schemas (external/perfetto/src/traced/probes/ftrace/event_info.cc); this is not evidence that such events must be restored to a kernel whose final ACK removed them. Local atrace disk category selects optional native ext4/F2FS events, and those remain; current native F2FS file-based data events also remain, without claiming identical timing/ABI to the removed events. No additional remote source used; no runtime trace validation."
+    }
+  ],
+  "absence_search": {
+    "refs": [
+      "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "6f10e5ec87108a1a0e6b5bda0a8b1509eed33308"
+    ],
+    "pattern": "android_fs_data|android_fstrace|trace/events/android_fs",
+    "paths": [
+      "fs",
+      "include/trace"
+    ]
+  },
+  "remote_resources": []
+}
