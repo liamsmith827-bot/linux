@@ -16,7 +16,7 @@
 #include <linux/perf_event.h>
 
 #define MIN_PAGE_SHIFT_COMPAT (PAGE_SHIFT + 1)
-#define MAX_PAGE_SHIFT_COMPAT 16 /* Max of 64KB */
+#define MAX_PAGE_SHIFT_COMPAT __MAX_PAGE_SHIFT
 #define __MMAP_RND_BITS(x)      (x - (__PAGE_SHIFT - PAGE_SHIFT))
 
 DEFINE_STATIC_KEY_FALSE(page_shift_compat_enabled);
@@ -27,9 +27,9 @@ EXPORT_SYMBOL_GPL(page_shift_compat);
 
 static int __init early_page_shift_compat(char *buf)
 {
-	int ret;
+	int ret, shift;
 
-	ret = kstrtoint(buf, 10, &page_shift_compat);
+	ret = kstrtoint(buf, 10, &shift);
 	if (ret)
 		return ret;
 
@@ -37,10 +37,10 @@ static int __init early_page_shift_compat(char *buf)
 	if (PAGE_SHIFT != 12)
 		return -ENOTSUPP;
 
-	if (page_shift_compat < MIN_PAGE_SHIFT_COMPAT ||
-		page_shift_compat > MAX_PAGE_SHIFT_COMPAT)
+	if (shift < MIN_PAGE_SHIFT_COMPAT || shift > MAX_PAGE_SHIFT_COMPAT)
 		return -EINVAL;
 
+	page_shift_compat = shift;
 	static_branch_enable(&page_shift_compat_enabled);
 
 	return 0;

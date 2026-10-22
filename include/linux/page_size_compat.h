@@ -15,9 +15,8 @@
  * The macros for use with the emulated page size are all
  * namespaced by the prefix '__'.
  *
- * The valid range of androidboot.page_shift is [13, 16].
- * In other words page sizes of 8KB, 16KB, 32KB and 64KB can
- * be emulated.
+ * The valid range of page_shift is [13, __MAX_PAGE_SHIFT].
+ * The x86 vDSO layout supports page sizes up to 16KB.
  */
 
 #include <linux/page_size_compat_defs.h>
