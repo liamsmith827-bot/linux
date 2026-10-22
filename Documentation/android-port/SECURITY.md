@@ -135,13 +135,13 @@ Zoned write-order pipelines and bulk-allocation optimizations are not required
 by the conventional virtio-block SDK target and are omitted. This does not remove
 LTS zoned support or its fixes.
 
-F2FS/ext4/btrfs/netfs/fs-verity implementations remain at LTS except explicitly
-ported vendor hooks/data/namespace integration and metadata-encryption state.
-ACK's optional fs-verity and F2FS implementation refactors are not prerequisites
-for the existing Android userspace ABI on this ext4 SDK target. Keeping LTS
-preserves its complete fixes, including inode/GC locking, netfs request lifetime
-and fs-verity state. An abandoned reverse-patch experiment is retained as audit
-history only; it is not the final implementation.
+The initial filesystem integration started with LTS implementations plus Android
+interfaces. The later subsystem sections below record the F2FS and other source
+adaptations now present, their LTS conflict analysis and verification limits.
+Per-candidate review_status in the ledger determines whether a selection is final;
+the initial broad source policies do not finalize unresolved feature necessity.
+An abandoned reverse-patch experiment is retained as audit history only; it is
+not the final implementation.
 
 FUSE canonical-path/BPF Android interfaces are included; vold Utils.cpp contains
 FUSE-BPF negotiation and fallback. The adaptation keeps LTS split args.h,
@@ -2891,3 +2891,18 @@ Direct-I/O iostat ownership checks pass 64 cases / 912 assertions with two failu
 controls rejected. These model locking, thread shutdown and I/O; they do not
 verify real scheduling, concurrent remount or third-party callbacks. All reviewed
 sources are local and no additional remote resource was accessed.
+
+## Native Merkle page-reader error propagation
+
+Adapt 36f66dd065e5's error handling into the native ext4 and F2FS readers. A
+cache miss (-ENOENT) can initiate readahead and demand reading; an existing stale
+folio is dropped before demand reading. Other lookup errors return unchanged
+without issuing more I/O, including simulated allocation failure. Keep the native
+per-filesystem metadata offset and the previously restored invalidate-lock
+protection around page_cache_ra_unbounded. The selected reader still returns a
+referenced page or an error; no hash checking, crypto policy or visibility check
+is bypassed. This transfers the fix from ACK's common helper without requiring
+that helper's refactoring. Extracted tests pass 160 cases / 1,520 assertions over
+both filesystems, cache hit/miss/stale states, lookup/read failures and readahead
+lengths. Controls reject retrying non-ENOENT errors and leaking a stale reference.
+Actual storage I/O and memory pressure are not tested. All sources are local.
