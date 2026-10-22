@@ -83,7 +83,7 @@ struct dma_buf *dma_heap_buffer_alloc(struct dma_heap *heap, size_t len,
 				      u64 heap_flags)
 {
 	struct dma_buf *dma_buf;
-	typeof(heap->ops->allocate) allocate;
+	struct dma_buf *(*allocate)(struct dma_heap *, unsigned long, u32, u64);
 	u64 stime = 0;
 
 	if (fd_flags & ~DMA_HEAP_VALID_FD_FLAGS)
