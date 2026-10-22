@@ -2030,11 +2030,12 @@ int do_madvise(struct mm_struct *mm, unsigned long start, size_t len_in, int beh
 	trace_android_vh_mm_do_madvise_bypass(mm, start, len_in, behavior,
 					      &error, &bypass);
 	if (bypass)
-		return error;
+		goto out_unlock;
 
 	madvise_init_tlb(&madv_behavior);
 	error = madvise_do_behavior(start, len_in, &madv_behavior);
 	madvise_finish_tlb(&madv_behavior);
+out_unlock:
 	madvise_unlock(&madv_behavior);
 
 	return error;
@@ -2124,7 +2125,7 @@ out:
 SYSCALL_DEFINE5(process_madvise, int, pidfd, const struct iovec __user *, vec,
 		size_t, vlen, int, behavior, unsigned int, flags)
 {
-	ssize_t ret;
+	ssize_t ret = 0;
 	struct iovec iovstack[UIO_FASTIOV];
 	struct iovec *iov = iovstack;
 	struct iov_iter iter;
@@ -2250,7 +2251,7 @@ int set_anon_vma_name(unsigned long addr, unsigned long size,
 {
 	struct anon_vma_name *anon_name = NULL;
 	struct mm_struct *mm = current->mm;
-	int error;
+	int error = 0;
 	bool bypass = false;
 
 	if (uname) {
@@ -2275,9 +2276,8 @@ int set_anon_vma_name(unsigned long addr, unsigned long size,
 
 	trace_android_rvh_pr_set_vma_name_bypass(mm, addr, size, anon_name,
 			&error, &bypass);
-	if (bypass)
-		return error;
-	error = madvise_set_anon_name(mm, addr, size, anon_name);
+	if (!bypass)
+		error = madvise_set_anon_name(mm, addr, size, anon_name);
 	anon_vma_name_put(anon_name);
 
 	return error;
