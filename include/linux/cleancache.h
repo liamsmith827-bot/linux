@@ -98,18 +98,25 @@ static inline int cleancache_get_page(struct page *page)
 
 static inline void cleancache_put_page(struct page *page)
 {
-	if (cleancache_enabled && cleancache_fs_enabled(page) &&
-	    !PageCompound(page))
-		__cleancache_put_page(page);
+	if (cleancache_enabled && cleancache_fs_enabled(page)) {
+		/* A large folio can replace previously cached base pages. */
+		if (PageCompound(page))
+			__cleancache_invalidate_inode(page->mapping);
+		else
+			__cleancache_put_page(page);
+	}
 }
 
 static inline void cleancache_invalidate_page(struct address_space *mapping,
 					struct page *page)
 {
 	/* careful... page->mapping is NULL sometimes when this is called */
-	if (cleancache_enabled && cleancache_fs_enabled_mapping(mapping) &&
-	    !PageCompound(page))
-		__cleancache_invalidate_page(mapping, page);
+	if (cleancache_enabled && cleancache_fs_enabled_mapping(mapping)) {
+		if (PageCompound(page))
+			__cleancache_invalidate_inode(mapping);
+		else
+			__cleancache_invalidate_page(mapping, page);
+	}
 }
 
 static inline void cleancache_invalidate_inode(struct address_space *mapping)
