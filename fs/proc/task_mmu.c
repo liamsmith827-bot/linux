@@ -1146,7 +1146,7 @@ static void smaps_pte_entry(pte_t *pte, unsigned long addr,
 }
 
 #ifdef CONFIG_TRANSPARENT_HUGEPAGE
-static void smaps_pmd_entry(pmd_t *pmd, unsigned long addr,
+static void smaps_pmd_entry(pmd_t *pmd, unsigned long addr, unsigned long end,
 		struct mm_walk *walk)
 {
 	struct mem_size_stats *mss = walk->private;
@@ -1155,6 +1155,7 @@ static void smaps_pmd_entry(pmd_t *pmd, unsigned long addr,
 	struct page *page = NULL;
 	bool present = false;
 	struct folio *folio;
+	unsigned long size = end - addr;
 
 	if (pmd_none(*pmd))
 		return;
@@ -1171,19 +1172,27 @@ static void smaps_pmd_entry(pmd_t *pmd, unsigned long addr,
 		return;
 	folio = page_folio(page);
 	if (folio_test_anon(folio))
-		mss->anonymous_thp += HPAGE_PMD_SIZE;
+		mss->anonymous_thp += size;
 	else if (folio_test_swapbacked(folio))
-		mss->shmem_thp += HPAGE_PMD_SIZE;
+		mss->shmem_thp += size;
 	else if (folio_is_zone_device(folio))
 		/* pass */;
 	else
-		mss->file_thp += HPAGE_PMD_SIZE;
+		mss->file_thp += size;
 
-	smaps_account(mss, page, true, pmd_young(*pmd), pmd_dirty(*pmd),
-		      locked, present);
+	if (size == HPAGE_PMD_SIZE) {
+		smaps_account(mss, page, true, pmd_young(*pmd), pmd_dirty(*pmd),
+			      locked, present);
+	} else {
+		/* ELF data/padding display ranges can split a PMD mapping. */
+		page += (addr & ~HPAGE_PMD_MASK) >> PAGE_SHIFT;
+		for (; addr < end; addr += PAGE_SIZE, page++)
+			smaps_account(mss, page, false, pmd_young(*pmd),
+				      pmd_dirty(*pmd), locked, present);
+	}
 }
 #else
-static void smaps_pmd_entry(pmd_t *pmd, unsigned long addr,
+static void smaps_pmd_entry(pmd_t *pmd, unsigned long addr, unsigned long end,
 		struct mm_walk *walk)
 {
 }
@@ -1198,7 +1207,7 @@ static int smaps_pte_range(pmd_t *pmd, unsigned long addr, unsigned long end,
 
 	ptl = pmd_trans_huge_lock(pmd, vma);
 	if (ptl) {
-		smaps_pmd_entry(pmd, addr, walk);
+		smaps_pmd_entry(pmd, addr, end, walk);
 		spin_unlock(ptl);
 		goto out;
 	}
