@@ -128,13 +128,9 @@
 #include <linux/blk-cgroup.h>
 #include <linux/fadvise.h>
 #include <linux/sched/mm.h>
-#include <trace/hooks/mm.h>
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/readahead.h>
-#undef CREATE_TRACE_POINTS
-#include <trace/hooks/mm.h>
-
 #undef CREATE_TRACE_POINTS
 #include <trace/hooks/mm.h>
 
@@ -278,6 +274,16 @@ void page_cache_ra_unbounded(struct readahead_control *ractl,
 		int ret;
 
 		if (folio && !xa_is_value(folio)) {
+#ifdef CONFIG_ANDROID_VENDOR_OEM_DATA
+			struct folio *referenced = NULL;
+
+			/* The raw XArray lookup does not pin callback arguments. */
+			if (trace_android_vh_page_cache_ra_unbounded_enabled()) {
+				referenced = filemap_get_folio(mapping, index + i);
+				if (IS_ERR(referenced))
+					referenced = NULL;
+			}
+#endif
 			/*
 			 * Page already present?  Kick off the current batch
 			 * of contiguous pages before continuing with the
@@ -290,8 +296,11 @@ void page_cache_ra_unbounded(struct readahead_control *ractl,
 			ractl->_index += min_nrpages;
 			i = ractl->_index + ractl->_nr_pages - index;
 #ifdef CONFIG_ANDROID_VENDOR_OEM_DATA
-			trace_android_vh_page_cache_ra_unbounded(mapping, folio,
-					&ractl->android_oem_data1);
+			if (referenced) {
+				trace_android_vh_page_cache_ra_unbounded(mapping,
+						referenced, &ractl->android_oem_data1);
+				folio_put(referenced);
+			}
 #endif
 			continue;
 		}
