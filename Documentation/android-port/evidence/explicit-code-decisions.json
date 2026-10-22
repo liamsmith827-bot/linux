@@ -3933,5 +3933,146 @@
     "disposition": "reconciled-to-lts",
     "rationale": "Keep the complete native dm-bufio cache implementation. The full ACK patch caches buffer_tree pointers to avoid repeated deterministic cache_index computations across get/put/mark/insert/remove, allocation retry, prefetch, dirty write and forget paths. It changes helper signatures and all callers together but not tree selection or lock type. Native code uses the same hashed tree for each lock/search/unlock, preserving ownership and later LTS fixes. Omission forgoes an internal speed/code-size optimization; actual SDK performance is unmeasured. Evidence: evidence/dm-bufio-config-review.json. Only local sources were examined.",
     "result_commits": []
+  },
+  {
+    "commit": "9dcd66af6bfa5c00853cb2b90b0f080f3f350055",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain the generic wrappedkey_v0 option, status flag and target version 2.1.0 through the evolved enum key-type API. The original boolean implementation was removed in 4f277ec44b02 and replaced by 56e1e0a69a00/6f27eb70c2b4; do not recreate its fixed 128-byte/local key-size definitions. Local vold emits this option for both wrapped-key variants. Actual SDK hardware support is unverified, so retain the source interface conservatively; raw-only fallback cannot accept wrapped keys. Evidence: evidence/dm-default-key-local-review.json; SECURITY.md: dm-default-key IV bounds and source compatibility. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "ccad3ca520bc4f76057f5bf3919be74042a421d3",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain the parsed key_size argument to blk_crypto_init_key rather than the cipher raw-key size. This prevents truncating wrapped material. Bounded even-length hex parsing precedes decoding, and the crypto helper validates raw key size or wrapped security-strength/maximum limits. Current key_size naming supersedes raw_key_size without losing this fix. Evidence: evidence/dm-default-key-local-review.json; SECURITY.md: dm-default-key IV bounds and source compatibility. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "0884133fda24d46b83ca1f25cf5ce98f100ca0e4",
+    "disposition": "adapted",
+    "rationale": "Retain precise DUN width and map-time max_dun check, with additional construction checks in 2d4754f38b2b: reject IV-range overflow and unaligned IV bases, and allocate at least one DUN byte for a valid single unit at DUN zero. Native blk_crypto_init_key rejects zero width. The supplied vold IV=0/4K-sector mapping stays valid. Host tests exercise constructor and map with an independent 128-bit geometry oracle; no actual encryption is tested. Evidence: evidence/dm-default-key-local-review.json; SECURITY.md: dm-default-key IV bounds and source compatibility. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "2d4754f38b2b5e7051e1324aca6cf44fec374cbd"
+    ]
+  },
+  {
+    "commit": "759502a4b8b587037d062028bfde18048c36ea3e",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "The logical_block_size maximum uses unsigned int, matching physical_block_size/io_min and native queue_limits width. Retain the complete one-line fix so large backing-device logical blocks are not truncated to unsigned short. The full io_hints body equals final ACK after removing the separately omitted ORDERED_HWQ feature assignment. Evidence: evidence/dm-default-key-local-review.json; SECURITY.md: dm-default-key IV bounds and source compatibility. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "92f919a5c662c57891c77e18f387fa51aac9876e",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain kfree_sensitive for the target state (containing its key) and cipher string. The key is evicted before dm_put_device and sensitive freeing; stack key_bytes is explicitly wiped at constructor out, including failures after parsing. This uses the native sensitive-free API rather than resurrecting kzfree. Host cleanup checks cover ownership, not physical memory-erasure verification. Evidence: evidence/dm-default-key-local-review.json; SECURITY.md: dm-default-key IV bounds and source compatibility. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "1b8a5df4b3b2617ce97f325c9389135f9109baf9",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain the explicit STATUSTYPE_IMA case returning an empty string, together with STATUSTYPE_INFO. TABLE output redacts key material with a dash. Current status function equals final ACK; no uninitialized status bytes or secret key is intentionally emitted through this path. Evidence: evidence/dm-default-key-local-review.json; SECURITY.md: dm-default-key IV bounds and source compatibility. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "4f277ec44b025502ccd017029a26112a4c470777",
+    "disposition": "superseded-no-residual-code",
+    "rationale": "The temporary wrapped-key removal is superseded by the later enum-based reintroduction in 56e1e0a69a00 and RAW rename in 6f27eb70c2b4. Final ACK and port again accept wrappedkey_v0 and report version 2.1.0. Do not apply this historical removal to the current generic Android source interface. Evidence: evidence/dm-default-key-local-review.json; SECURITY.md: dm-default-key IV bounds and source compatibility. Only local sources were used.",
+    "result_commits": []
+  },
+  {
+    "commit": "56e1e0a69a00cb18b706b382a90a8b02feb4aa8b",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain the enum key-type implementation, generic key storage bound, parsed length, optional wrappedkey_v0 argument and table-status emission. Later 6f27eb70c2b4 supplies the current RAW enumerator. Local vold has positive callers; retaining syntax does not provide hardware functionality or allow wrapped keys through software fallback. This decision covers the target integration only, not all separate block-layer wrapped-key patches. Evidence: evidence/dm-default-key-local-review.json; SECURITY.md: dm-default-key IV bounds and source compatibility. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "22d5a9e86f776be55ca481dc4fbb326f3eb20eb8",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Conservatively retain the generic report_zones callback, configured stub and DM_TARGET_ZONED_HM advertisement with their native API. The SDK build already enables BLK_DEV_ZONED, while supplied userdata is conventional virtio storage; actual SDK zoned use is unresolved. No platform driver is added. Pair this existing generic block interface with 05e1912555d4 so advertised zoned support cannot use an unknown append sector as the IV. Evidence: evidence/dm-default-key-local-review.json; SECURITY.md: dm-default-key IV bounds and source compatibility. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "29575b445056af369bbccbbea4f2e37c78474c8f",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain the native block_device-based blk_crypto_start_using_key and eviction arguments. The complete patch replaces obsolete request_queue-based calls; successful key setup still precedes use and teardown occurs before releasing the backing device. No compatibility wrapper for historical kernel/module binaries is retained. Evidence: evidence/dm-default-key-local-review.json; SECURITY.md: dm-default-key IV bounds and source compatibility. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "7e0806eae138ae8476b5cd5cebcf4616b37d2da2",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain void blk_crypto_evict_key use matching the native API; remove the obsolete error-return variable/test. Later d326f904525a restricts eviction to an initialized key. Current destructor equals final ACK, preserving eviction-before-device-release and sensitive cleanup. Evidence: evidence/dm-default-key-local-review.json; SECURITY.md: dm-default-key IV bounds and source compatibility. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "473fa7d470952abfacc6000e9e4fc085c1176cdd",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain bdev_nr_sectors in prepare_ioctl, replacing direct block-inode size access. Current callback has the native cmd/arg/forward signature and preserves return 1 for nonzero start or partial-device mappings. Native DM therefore still requires CAP_SYS_RAWIO in that case; no ioctl privilege restriction is removed. Evidence: evidence/dm-default-key-local-review.json; SECURITY.md: dm-default-key IV bounds and source compatibility. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "d326f904525adbaafe72ec4f06589f7db14855a0",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain blk_key->size > 0 before eviction during constructor failure or normal teardown. The zeroed target has an uninitialized crypto mode until key initialization succeeds; calling eviction then can crash. Current destructor is exactly final ACK. The host constructor-failure test rejects a control that evicts uninitialized keys; actual keyslot hardware is not exercised. Evidence: evidence/dm-default-key-local-review.json; SECURITY.md: dm-default-key IV bounds and source compatibility. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "05e1912555d471e1c2fae2a42b3caf5ed74821ab",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain emulate_zone_append=true when the backing device is zoned. It is a correctness condition for the retained generic report_zones/host-managed capability: append writes must be translated to their final sector before deriving sector-based encryption IVs. Native dm_table_supports_zone_append honors the flag and native blk_zone_wplug_prepare_bio performs emulation. Actual SDK zoned media is unverified; no additional platform-specific support is introduced. Evidence: evidence/dm-default-key-local-review.json; SECURITY.md: dm-default-key IV bounds and source compatibility. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "6f27eb70c2b452e7d80736975926c5f2ca62534e",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain current key_bytes/key_size naming and BLK_CRYPTO_KEY_TYPE_RAW matching the native-style shared crypto interface. The full patch changes names and the default key-type enumerator; key length validation, wrapped selection and memzero_explicit still match. Do not restore obsolete STANDARD/bool APIs or binary layout aliases. Evidence: evidence/dm-default-key-local-review.json; SECURITY.md: dm-default-key IV bounds and source compatibility. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "0a21402c105a51a49f23c5c858a6d1052762cdde",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain flush_bypasses_map=true and num_flush_bios=1. A zero-sector flush needs no crypto context; the target has a fixed backing-device list and native DM sends those flushes directly to the table devices. Data-bearing I/O still goes through mapping/encryption. This uses native flush infrastructure and does not bypass data encryption. Evidence: evidence/dm-default-key-local-review.json; SECURITY.md: dm-default-key IV bounds and source compatibility. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "8f8c2623854ae501168c69548cc9200f3fd5b06d",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Omit the sole BLK_FEAT_ORDERED_HWQ assertion. This feature bit is absent from pinned LTS queue_limits; it accompanies the separate ACK block-layer ordered-hardware-queue optimization. Keep native DM/zone write serialization and the target append-emulation requirement, without asserting an unsupported stronger queue guarantee. Current io_hints otherwise equals final ACK; no logical/physical block-size limit is removed. Evidence: evidence/dm-default-key-local-review.json; SECURITY.md: dm-default-key IV bounds and source compatibility. Only local sources were used.",
+    "result_commits": []
+  },
+  {
+    "commit": "bfca9d0cc7d50a5d366dc90e269e9dd04aec763d",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain the FS_ENCRYPTION_INLINE_CRYPT dependency and explanatory comment in DM_DEFAULT_KEY. The skip-default-key bio flag must be set for fscrypt-encrypted file contents even when the mount does not use inlinecrypt, avoiding unintended second encryption. Current target Kconfig stanza equals final ACK, and the SDK selects this dependency. This is a source/configuration requirement, not a vendor-binary KMI requirement. Evidence: evidence/dm-default-key-local-review.json; SECURITY.md: dm-default-key IV bounds and source compatibility. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
   }
 ]

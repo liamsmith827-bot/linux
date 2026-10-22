@@ -1,0 +1,227 @@
+{
+  "source_head": "2d4754f38b2b5e7051e1324aca6cf44fec374cbd",
+  "records": [
+    {
+      "commit": "9dcd66af6bfa5c00853cb2b90b0f080f3f350055",
+      "disposition": "adapted-net-subsystem",
+      "assessment": "Retain the generic wrappedkey_v0 option, status flag and target version 2.1.0 through the evolved enum key-type API. The original boolean implementation was removed in 4f277ec44b02 and replaced by 56e1e0a69a00/6f27eb70c2b4; do not recreate its fixed 128-byte/local key-size definitions. Local vold emits this option for both wrapped-key variants. Actual SDK hardware support is unverified, so retain the source interface conservatively; raw-only fallback cannot accept wrapped keys.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "patch_sha256": "f113cae3a751087e59fa959a243be9f6261172a42d4481c8776c5e40f813f347"
+    },
+    {
+      "commit": "ccad3ca520bc4f76057f5bf3919be74042a421d3",
+      "disposition": "adapted-net-subsystem",
+      "assessment": "Retain the parsed key_size argument to blk_crypto_init_key rather than the cipher raw-key size. This prevents truncating wrapped material. Bounded even-length hex parsing precedes decoding, and the crypto helper validates raw key size or wrapped security-strength/maximum limits. Current key_size naming supersedes raw_key_size without losing this fix.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "patch_sha256": "579a1271556aa7b7fa6476b1e94f763bb86e7853f259fcc80aa656e5e1f166b3"
+    },
+    {
+      "commit": "0884133fda24d46b83ca1f25cf5ce98f100ca0e4",
+      "disposition": "adapted",
+      "assessment": "Retain precise DUN width and map-time max_dun check, with additional construction checks in 2d4754f38b2b: reject IV-range overflow and unaligned IV bases, and allocate at least one DUN byte for a valid single unit at DUN zero. Native blk_crypto_init_key rejects zero width. The supplied vold IV=0/4K-sector mapping stays valid. Host tests exercise constructor and map with an independent 128-bit geometry oracle; no actual encryption is tested.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "2d4754f38b2b5e7051e1324aca6cf44fec374cbd"
+      ],
+      "patch_sha256": "6eb1d087367403c6d055d8066dc8b04ef3fce268fe10d54107bee3f991b3bb54"
+    },
+    {
+      "commit": "759502a4b8b587037d062028bfde18048c36ea3e",
+      "disposition": "adapted-net-subsystem",
+      "assessment": "The logical_block_size maximum uses unsigned int, matching physical_block_size/io_min and native queue_limits width. Retain the complete one-line fix so large backing-device logical blocks are not truncated to unsigned short. The full io_hints body equals final ACK after removing the separately omitted ORDERED_HWQ feature assignment.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "patch_sha256": "a02788640b1808f66a84cc9d339efc469c3c7b8d632c69d7f4a95fb2efe456f7"
+    },
+    {
+      "commit": "92f919a5c662c57891c77e18f387fa51aac9876e",
+      "disposition": "adapted-net-subsystem",
+      "assessment": "Retain kfree_sensitive for the target state (containing its key) and cipher string. The key is evicted before dm_put_device and sensitive freeing; stack key_bytes is explicitly wiped at constructor out, including failures after parsing. This uses the native sensitive-free API rather than resurrecting kzfree. Host cleanup checks cover ownership, not physical memory-erasure verification.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "patch_sha256": "d42ce4536dc112e97e8b48e996b0da884c0d9d6bf9c6c78b1fd3780775926b3c"
+    },
+    {
+      "commit": "1b8a5df4b3b2617ce97f325c9389135f9109baf9",
+      "disposition": "adapted-net-subsystem",
+      "assessment": "Retain the explicit STATUSTYPE_IMA case returning an empty string, together with STATUSTYPE_INFO. TABLE output redacts key material with a dash. Current status function equals final ACK; no uninitialized status bytes or secret key is intentionally emitted through this path.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "patch_sha256": "3f3dd021dcb0863e21d4ba084845e95cd249388f5d320b6b99c20e40044f1dc9"
+    },
+    {
+      "commit": "4f277ec44b025502ccd017029a26112a4c470777",
+      "disposition": "superseded-no-residual-code",
+      "assessment": "The temporary wrapped-key removal is superseded by the later enum-based reintroduction in 56e1e0a69a00 and RAW rename in 6f27eb70c2b4. Final ACK and port again accept wrappedkey_v0 and report version 2.1.0. Do not apply this historical removal to the current generic Android source interface.",
+      "result_commits": [],
+      "patch_sha256": "db213d85a45849b59b4e612bf78526038c1d08746e1637719e738f759e5dfc45"
+    },
+    {
+      "commit": "56e1e0a69a00cb18b706b382a90a8b02feb4aa8b",
+      "disposition": "adapted-net-subsystem",
+      "assessment": "Retain the enum key-type implementation, generic key storage bound, parsed length, optional wrappedkey_v0 argument and table-status emission. Later 6f27eb70c2b4 supplies the current RAW enumerator. Local vold has positive callers; retaining syntax does not provide hardware functionality or allow wrapped keys through software fallback. This decision covers the target integration only, not all separate block-layer wrapped-key patches.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "patch_sha256": "c6df0775bcc1b98e12c1f7377ca62635d049f606a2345468dc20cfadba26f133"
+    },
+    {
+      "commit": "22d5a9e86f776be55ca481dc4fbb326f3eb20eb8",
+      "disposition": "adapted-net-subsystem",
+      "assessment": "Conservatively retain the generic report_zones callback, configured stub and DM_TARGET_ZONED_HM advertisement with their native API. The SDK build already enables BLK_DEV_ZONED, while supplied userdata is conventional virtio storage; actual SDK zoned use is unresolved. No platform driver is added. Pair this existing generic block interface with 05e1912555d4 so advertised zoned support cannot use an unknown append sector as the IV.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "patch_sha256": "79660dbe647658e743eecfc98ebd277fd7aa51c0b293163f449e7b9fa8a0e75e"
+    },
+    {
+      "commit": "29575b445056af369bbccbbea4f2e37c78474c8f",
+      "disposition": "adapted-net-subsystem",
+      "assessment": "Retain the native block_device-based blk_crypto_start_using_key and eviction arguments. The complete patch replaces obsolete request_queue-based calls; successful key setup still precedes use and teardown occurs before releasing the backing device. No compatibility wrapper for historical kernel/module binaries is retained.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "patch_sha256": "0a680b52aeed339b75e1b89ed65c001078d737e028f154e9b65d821d149c8512"
+    },
+    {
+      "commit": "7e0806eae138ae8476b5cd5cebcf4616b37d2da2",
+      "disposition": "adapted-net-subsystem",
+      "assessment": "Retain void blk_crypto_evict_key use matching the native API; remove the obsolete error-return variable/test. Later d326f904525a restricts eviction to an initialized key. Current destructor equals final ACK, preserving eviction-before-device-release and sensitive cleanup.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "patch_sha256": "e0a54c808ea96a38e39591452bf321cec25d9f78660f6ae7f2c0fd6330688a45"
+    },
+    {
+      "commit": "473fa7d470952abfacc6000e9e4fc085c1176cdd",
+      "disposition": "adapted-net-subsystem",
+      "assessment": "Retain bdev_nr_sectors in prepare_ioctl, replacing direct block-inode size access. Current callback has the native cmd/arg/forward signature and preserves return 1 for nonzero start or partial-device mappings. Native DM therefore still requires CAP_SYS_RAWIO in that case; no ioctl privilege restriction is removed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "patch_sha256": "56d26a1dbfc3c09e4eaa76fead3a9d4079fc7384e669e01f42344ab90263f9d1"
+    },
+    {
+      "commit": "d326f904525adbaafe72ec4f06589f7db14855a0",
+      "disposition": "adapted-net-subsystem",
+      "assessment": "Retain blk_key->size > 0 before eviction during constructor failure or normal teardown. The zeroed target has an uninitialized crypto mode until key initialization succeeds; calling eviction then can crash. Current destructor is exactly final ACK. The host constructor-failure test rejects a control that evicts uninitialized keys; actual keyslot hardware is not exercised.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "patch_sha256": "1e49830c90ae73798e086675a6a807dc21c14aaf6656eccf97b02c1ecdcf822d"
+    },
+    {
+      "commit": "05e1912555d471e1c2fae2a42b3caf5ed74821ab",
+      "disposition": "adapted-net-subsystem",
+      "assessment": "Retain emulate_zone_append=true when the backing device is zoned. It is a correctness condition for the retained generic report_zones/host-managed capability: append writes must be translated to their final sector before deriving sector-based encryption IVs. Native dm_table_supports_zone_append honors the flag and native blk_zone_wplug_prepare_bio performs emulation. Actual SDK zoned media is unverified; no additional platform-specific support is introduced.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "patch_sha256": "9f0ba4c3f6c96fec4d75168761dab2ee047c1cbd712644a6c7191b5426a56def"
+    },
+    {
+      "commit": "6f27eb70c2b452e7d80736975926c5f2ca62534e",
+      "disposition": "adapted-net-subsystem",
+      "assessment": "Retain current key_bytes/key_size naming and BLK_CRYPTO_KEY_TYPE_RAW matching the native-style shared crypto interface. The full patch changes names and the default key-type enumerator; key length validation, wrapped selection and memzero_explicit still match. Do not restore obsolete STANDARD/bool APIs or binary layout aliases.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "patch_sha256": "4a021bd0e8300e8f4bb5b0d4fce64676adcc02a9962414460891aae4bec4ce69"
+    },
+    {
+      "commit": "0a21402c105a51a49f23c5c858a6d1052762cdde",
+      "disposition": "adapted-net-subsystem",
+      "assessment": "Retain flush_bypasses_map=true and num_flush_bios=1. A zero-sector flush needs no crypto context; the target has a fixed backing-device list and native DM sends those flushes directly to the table devices. Data-bearing I/O still goes through mapping/encryption. This uses native flush infrastructure and does not bypass data encryption.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "patch_sha256": "fcdcc2c77bf6ae7a3012899b976b269c4e2ccdee602b2fdbb6dff50edc25e81a"
+    },
+    {
+      "commit": "8f8c2623854ae501168c69548cc9200f3fd5b06d",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Omit the sole BLK_FEAT_ORDERED_HWQ assertion. This feature bit is absent from pinned LTS queue_limits; it accompanies the separate ACK block-layer ordered-hardware-queue optimization. Keep native DM/zone write serialization and the target append-emulation requirement, without asserting an unsupported stronger queue guarantee. Current io_hints otherwise equals final ACK; no logical/physical block-size limit is removed.",
+      "result_commits": [],
+      "patch_sha256": "6838b285d4fc9660340b29759eb7d341b6679fb8864d8346e8698c5e8bf46cc7"
+    },
+    {
+      "commit": "bfca9d0cc7d50a5d366dc90e269e9dd04aec763d",
+      "disposition": "adapted-net-subsystem",
+      "assessment": "Retain the FS_ENCRYPTION_INLINE_CRYPT dependency and explanatory comment in DM_DEFAULT_KEY. The skip-default-key bio flag must be set for fscrypt-encrypted file contents even when the mount does not use inlinecrypt, avoiding unintended second encryption. Current target Kconfig stanza equals final ACK, and the SDK selects this dependency. This is a source/configuration requirement, not a vendor-binary KMI requirement.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "patch_sha256": "d2570ddb71d0130567a4014d5dfa2be79196b1268219c871c466b4fe1103db06"
+    }
+  ],
+  "function_witnesses": [
+    {
+      "function": "lookup_cipher",
+      "identical_to_final_ack": true,
+      "sha256": "9e672febb772742fc129927436a4bc764e90a3ec2d0ad0c4f033cb5818db2ae9"
+    },
+    {
+      "function": "default_key_dtr",
+      "identical_to_final_ack": true,
+      "sha256": "b2592897258d84d34232a41c3bfebba9fa9b4ab5034eba59ab6b3f96cbeeff9a"
+    },
+    {
+      "function": "default_key_ctr_optional",
+      "identical_to_final_ack": true,
+      "sha256": "299e9d55a580036f999554c877f8bbaae4f8b23bec96444d688d891b60931c43"
+    },
+    {
+      "function": "default_key_map",
+      "identical_to_final_ack": true,
+      "sha256": "4bd6ddb6a3153852184fb462580302b0ba3aef5990df0a666bca3d1b10fe1926"
+    },
+    {
+      "function": "default_key_status",
+      "identical_to_final_ack": true,
+      "sha256": "4e95de0f406421e8751a8f26c5a7246646dd6b9a490d121fb418500d3260632d"
+    },
+    {
+      "function": "default_key_prepare_ioctl",
+      "identical_to_final_ack": true,
+      "sha256": "f17085afe0c62faea2d4c7079587c0826302895f9ee12099d3531a58dc5e09bd"
+    },
+    {
+      "function": "default_key_iterate_devices",
+      "identical_to_final_ack": true,
+      "sha256": "d0c7c0d63718bf0172e62dd5d1e8068ba54f857c0c589b5eb34aec96c8a044a4"
+    },
+    {
+      "function": "default_key_report_zones",
+      "identical_to_final_ack": true,
+      "sha256": "a697b560dd341c9e5563456496f9f8942bf7c2af4b1b96df72b88ba175c8ace5"
+    },
+    {
+      "function": "dm_default_key_init",
+      "identical_to_final_ack": true,
+      "sha256": "be08d283b3b5826b84723ba2619e77c369ebafecaca4c345473741e8a4521c38"
+    },
+    {
+      "function": "dm_default_key_exit",
+      "identical_to_final_ack": true,
+      "sha256": "76c4198b3b6c7d960eb3c27a3c996fa054bdb29c9fac99cf7cf7f8e4d4e1f998"
+    }
+  ],
+  "io_hints_sole_omission": "limits->features |= BLK_FEAT_ORDERED_HWQ;",
+  "config_matches_final_ack": true,
+  "current_target_blob": "ded5590bfbaaa22d2eaa94a0bcebe46dfe9fcf20",
+  "full_ack_to_port_diff_sha256": "9b1e764aa2e3e0a45ae06691e90c242677cd7eb1c82efb94da72b8b4041bbc0b",
+  "host_checks": "dm-default-key-check.json",
+  "local_consumers": [
+    "grapheneos-17/device/generic/goldfish/board/fstab/x86",
+    "grapheneos-17/system/vold/MetadataCrypt.cpp:create_crypto_blk_dev",
+    "grapheneos-17/system/fs/fs_mgr/libdm/dm_target.cpp:DmTargetDefaultKey::GetParameterString"
+  ],
+  "limits": "18 narrow commits only. Original 10-file integration and multi-file crypto protocol changes remain separate candidates. Wrapped/zoned SDK runtime is unverified; generic configured source interfaces retained conservatively. No remote source accessed."
+}
