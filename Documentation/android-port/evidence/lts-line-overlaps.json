@@ -1,0 +1,443 @@
+[
+  {
+    "commit": "03525b632908b049f4d04cc8a71cdff2329589cf",
+    "subject": "wifi: mac80211: count only matching reservations in reserved switch",
+    "changed_lts_additions": [
+      {
+        "path": "net/mac80211/chan.c",
+        "hunk": "@@ -1642 +1652 @@ static int ieee80211_vif_use_reserved_switch(struct ieee80211_local *local)",
+        "lts_line": "if (ieee80211_link_has_in_place_reservation(link, ctx)) {"
+      },
+      {
+        "path": "net/mac80211/chan.c",
+        "hunk": "@@ -1663 +1673 @@ static int ieee80211_vif_use_reserved_switch(struct ieee80211_local *local)",
+        "lts_line": "if (ieee80211_link_has_in_place_reservation(link, ctx) &&"
+      },
+      {
+        "path": "net/mac80211/chan.c",
+        "hunk": "@@ -1808 +1818,2 @@ static int ieee80211_vif_use_reserved_switch(struct ieee80211_local *local)",
+        "lts_line": "if (WARN_ON(ieee80211_link_has_in_place_reservation(link,"
+      }
+    ],
+    "status": "reviewed-source-adaptation",
+    "assessment": "Preserved via ieee80211_link_has_in_place_reservation(iter.link, ctx): the iterator representation changed, but the reservation is still matched to ctx.",
+    "evidence": "SECURITY.md; final source functions named in assessment; comparison against the pinned LTS change"
+  },
+  {
+    "commit": "755476d7ba92a1f3fe2a376c515d710bc6baebc3",
+    "subject": "sched/rt,dl: Skip migrate-disabled tasks when picking a push candidate",
+    "changed_lts_additions": [
+      {
+        "path": "kernel/sched/deadline.c",
+        "hunk": "@@ -2780,2 +2780,2 @@ static struct task_struct *pick_next_pushable_dl_task(struct rq *rq)",
+        "lts_line": "if (!task_on_cpu(rq, i) && !is_migration_disabled(i)) {"
+      },
+      {
+        "path": "kernel/sched/rt.c",
+        "hunk": "@@ -1863,2 +1863,2 @@ static struct task_struct *pick_next_pushable_task(struct rq *rq)",
+        "lts_line": "if (!task_on_cpu(rq, i) && !is_migration_disabled(i)) {"
+      }
+    ],
+    "status": "reviewed-source-adaptation",
+    "assessment": "Preserved in __task_is_pushable(): reject current tasks and is_migration_disabled(p); proxy task_is_pushable also checks exec_ctx. Intermediate proxy-chain runtime behavior remains an unresolved validation item; no relaxation of these explicit checks is intended.",
+    "evidence": "SECURITY.md; final source functions named in assessment; comparison against the pinned LTS change"
+  },
+  {
+    "commit": "6a1a15d86ba691fecdae7adf0ba1eb6b3e2f236f",
+    "subject": "sched: Make class_schedulers avoid pushing current, and get rid of proxy_tag_curr()",
+    "changed_lts_additions": [
+      {
+        "path": "kernel/sched/rt.c",
+        "hunk": "@@ -1856 +1856,2 @@ static struct task_struct *pick_next_pushable_task(struct rq *rq)",
+        "lts_line": "struct task_struct *i, *p = NULL;"
+      },
+      {
+        "path": "kernel/sched/rt.c",
+        "hunk": "@@ -1861,2 +1862,10 @@ static struct task_struct *pick_next_pushable_task(struct rq *rq)",
+        "lts_line": "plist_for_each_entry(i, head, pushable_tasks) {"
+      }
+    ],
+    "status": "reviewed-source-adaptation",
+    "assessment": "Preserved through task_is_pushable and __task_is_pushable rejecting task_on_cpu; list iteration uses the adapted proxy candidate representation.",
+    "evidence": "SECURITY.md; final source functions named in assessment; comparison against the pinned LTS change"
+  },
+  {
+    "commit": "0a0c03e4b7c63bdd2db457349431a20d62721c60",
+    "subject": "wifi: cfg80211: Add an API to configure local NAN schedule",
+    "changed_lts_additions": [
+      {
+        "path": "net/wireless/nl80211.c",
+        "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+        "lts_line": "struct cfg80211_nan_local_sched *sched,"
+      },
+      {
+        "path": "net/wireless/nl80211.c",
+        "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+        "lts_line": "if (cfg80211_chandef_compatible(&sched->nan_channels[i].chandef,"
+      },
+      {
+        "path": "net/wireless/nl80211.c",
+        "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+        "lts_line": "if (!channel_parsed[NL80211_ATTR_NAN_CHANNEL_ENTRY])"
+      },
+      {
+        "path": "net/wireless/nl80211.c",
+        "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+        "lts_line": "sched->nan_channels[index].channel_entry ="
+      },
+      {
+        "path": "net/wireless/nl80211.c",
+        "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+        "lts_line": "if (!channel_parsed[NL80211_ATTR_NAN_RX_NSS])"
+      },
+      {
+        "path": "net/wireless/nl80211.c",
+        "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+        "lts_line": "sched->nan_channels[index].rx_nss ="
+      },
+      {
+        "path": "net/wireless/nl80211.c",
+        "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+        "lts_line": "if (sched->nan_channels[index].rx_nss > n_rx_nss ||"
+      },
+      {
+        "path": "net/wireless/nl80211.c",
+        "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+        "lts_line": "!sched->nan_channels[index].rx_nss) {"
+      },
+      {
+        "path": "net/wireless/nl80211.c",
+        "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+        "lts_line": "sched->nan_channels[index].chandef = chandef;"
+      },
+      {
+        "path": "net/wireless/nl80211.c",
+        "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+        "lts_line": "int rem, i = 0, n_channels = 0;"
+      },
+      {
+        "path": "net/wireless/nl80211.c",
+        "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+        "lts_line": "int ret = nl80211_parse_nan_channel(rdev, channel, info, sched,"
+      },
+      {
+        "path": "net/wireless/nl80211.c",
+        "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+        "lts_line": "memcpy(sched->schedule,"
+      },
+      {
+        "path": "net/wireless/nl80211.c",
+        "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+        "lts_line": "nla_data(info->attrs[NL80211_ATTR_NAN_TIME_SLOTS]),"
+      },
+      {
+        "path": "net/wireless/nl80211.c",
+        "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+        "lts_line": "nla_len(info->attrs[NL80211_ATTR_NAN_TIME_SLOTS]));"
+      },
+      {
+        "path": "net/wireless/nl80211.c",
+        "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+        "lts_line": "for (int slot = 0; slot < ARRAY_SIZE(sched->schedule); slot++) {"
+      },
+      {
+        "path": "net/wireless/nl80211.c",
+        "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+        "lts_line": "if (sched->schedule[slot] != NL80211_NAN_SCHED_NOT_AVAIL_SLOT &&"
+      },
+      {
+        "path": "net/wireless/nl80211.c",
+        "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+        "lts_line": "sched->schedule[slot] >= sched->n_channels) {"
+      },
+      {
+        "path": "net/wireless/nl80211.c",
+        "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+        "lts_line": "\"Invalid time slot in NAN schedule\");"
+      }
+    ],
+    "status": "reviewed-source-adaptation",
+    "assessment": "Retained through shared NAN channel/schedule parsers: channel/regulatory validity, channel entry and RX NSS limits, and schedule-slot channel indices remain validated.",
+    "evidence": "SECURITY.md; final source functions named in assessment; comparison against the pinned LTS change"
+  },
+  {
+    "commit": "335c515932a59a694f5602af891292184cf2b215",
+    "subject": "wifi: cfg80211: add initial UHR support",
+    "changed_lts_additions": [
+      {
+        "path": "net/wireless/nl80211.c",
+        "hunk": "@@ -8076 +8132,2 @@ int cfg80211_check_station_change(struct wiphy *wiphy,",
+        "lts_line": "params->link_sta_params.eht_capa ||"
+      }
+    ],
+    "status": "reviewed-source-adaptation",
+    "assessment": "cfg80211_check_station_change still tests ext_capab, link_sta_params.eht_capa and link_sta_params.uhr_capa; line wrapping differs.",
+    "evidence": "SECURITY.md; final source functions named in assessment; comparison against the pinned LTS change"
+  },
+  {
+    "commit": "69d57dbadb27ffd5eef34fd184bab145500cdabc",
+    "subject": "dma-buf: dma-heap: don't publish fd before copy_to_user() succeeds",
+    "changed_lts_additions": [
+      {
+        "path": "drivers/dma-buf/dma-heap.c",
+        "hunk": "@@ -109 +84,5 @@ static long dma_heap_ioctl_allocate(struct file *file, void *data)",
+        "lts_line": "len = PAGE_ALIGN(heap_allocation->len);"
+      },
+      {
+        "path": "drivers/dma-buf/dma-heap.c",
+        "hunk": "@@ -111,5 +90,11 @@ static long dma_heap_ioctl_allocate(struct file *file, void *data)",
+        "lts_line": "dmabuf = heap->ops->allocate(heap, len, heap_allocation->fd_flags,"
+      }
+    ],
+    "status": "reviewed-source-adaptation",
+    "assessment": "dma_heap_buffer_alloc performs PAGE_ALIGN and flag validation. dma_heap_ioctl reserves an fd, copies output, and only then calls fd_install; failure paths release the reserved fd and dma_buf.",
+    "evidence": "SECURITY.md; final source functions named in assessment; comparison against the pinned LTS change"
+  },
+  {
+    "commit": "9a78de3befad667bf8ef7318dec319493549e2c6",
+    "subject": "zram: read slot block idx under slot lock",
+    "changed_lts_additions": [
+      {
+        "path": "drivers/block/zram/zram_drv.c",
+        "hunk": "@@ -1736,0 +1737,2 @@ static int zram_read_page(struct zram *zram, struct page *page, u32 index,",
+        "lts_line": "unsigned long blk_idx = zram_get_handle(zram, index);"
+      },
+      {
+        "path": "drivers/block/zram/zram_drv.c",
+        "hunk": "@@ -1742,3 +1744 @@ static int zram_read_page(struct zram *zram, struct page *page, u32 index,",
+        "lts_line": "ret = read_from_bdev(zram, page, blk_idx, parent);"
+      }
+    ],
+    "status": "reviewed-source-adaptation",
+    "assessment": "zram_read_page captures get_slot_handle while holding the slot lock, unlocks, and passes captured blk_idx to the backing read; the compressed-writeback metadata accessor differs.",
+    "evidence": "SECURITY.md; final source functions named in assessment; comparison against the pinned LTS change"
+  },
+  {
+    "commit": "d1743ec2dd2c8a3a701277fab82492c67a48f3d5",
+    "subject": "zram: take write lock in wb limit store handlers",
+    "changed_lts_additions": [
+      {
+        "path": "drivers/block/zram/zram_drv.c",
+        "hunk": "@@ -513 +514 @@ static ssize_t writeback_limit_enable_store(struct device *dev,",
+        "lts_line": "down_write(&zram->init_lock);"
+      },
+      {
+        "path": "drivers/block/zram/zram_drv.c",
+        "hunk": "@@ -517 +518 @@ static ssize_t writeback_limit_enable_store(struct device *dev,",
+        "lts_line": "up_write(&zram->init_lock);"
+      },
+      {
+        "path": "drivers/block/zram/zram_drv.c",
+        "hunk": "@@ -548 +551 @@ static ssize_t writeback_limit_store(struct device *dev,",
+        "lts_line": "down_write(&zram->init_lock);"
+      },
+      {
+        "path": "drivers/block/zram/zram_drv.c",
+        "hunk": "@@ -552 +555 @@ static ssize_t writeback_limit_store(struct device *dev,",
+        "lts_line": "up_write(&zram->init_lock);"
+      }
+    ],
+    "status": "reviewed-source-adaptation",
+    "assessment": "Both writeback-limit stores use guard(rwsem_write)(&zram->init_lock), preserving write-side exclusion until scope exit.",
+    "evidence": "SECURITY.md; final source functions named in assessment; comparison against the pinned LTS change"
+  },
+  {
+    "commit": "fef4b8f17e1c54522957b873ed81e6a60897625d",
+    "subject": "sched: Rework prev_balance() to avoid stale prev references",
+    "changed_lts_additions": [
+      {
+        "path": "kernel/sched/core.c",
+        "hunk": "@@ -5982 +5981 @@ __pick_next_task(struct rq *rq, struct task_struct *prev, struct rq_flags *rf)",
+        "lts_line": "p = pick_next_task_fair(rq, rq->donor, rf);"
+      },
+      {
+        "path": "kernel/sched/core.c",
+        "hunk": "@@ -6000 +5999 @@ __pick_next_task(struct rq *rq, struct task_struct *prev, struct rq_flags *rf)",
+        "lts_line": "p = class->pick_next_task(rq, rq->donor);"
+      },
+      {
+        "path": "kernel/sched/fair.c",
+        "hunk": "@@ -8882 +8882 @@ static int",
+        "lts_line": "balance_fair(struct rq *rq, struct rq_flags *rf)"
+      }
+    ],
+    "status": "reviewed-source-adaptation",
+    "assessment": "The proxy-execution pick API uses current rq->donor inside pick_next_task_fair and class pick paths after balance. It does not retain the stale caller prev across lock-dropping balance.",
+    "evidence": "SECURITY.md; final source functions named in assessment; comparison against the pinned LTS change"
+  },
+  {
+    "commit": "952f7a6d392b824d1fafd38d2d3321ec931718bd",
+    "subject": "fuse: split off fuse_args and related definitions into a separate header",
+    "changed_lts_additions": [
+      {
+        "path": "fs/fuse/args.h",
+        "hunk": "@@ -0,0 +1,65 @@",
+        "lts_line": "struct fuse_in_arg in_args[4];"
+      },
+      {
+        "path": "fs/fuse/args.h",
+        "hunk": "@@ -0,0 +1,65 @@",
+        "lts_line": "struct fuse_arg out_args[2];"
+      }
+    ],
+    "status": "reviewed-source-adaptation",
+    "assessment": "Split args.h remains; in_args/out_args expand from LTS 4/2 to Android 5/3 for FUSE-BPF instead of restoring the old unsplit header.",
+    "evidence": "SECURITY.md; final source functions named in assessment; comparison against the pinned LTS change"
+  },
+  {
+    "commit": "12be1d75e9b29b387088aa729f8b79563ada400d",
+    "subject": "rust_binder: only print failure if error has source",
+    "changed_lts_additions": [
+      {
+        "path": "drivers/android/binder/thread.rs",
+        "hunk": "@@ -1273,6 +1272,7 @@ fn transaction(self: &Arc<Self>, cmd: u32, reader: &mut UserSliceReader) -> Resu",
+        "lts_line": "\"{}:{} transaction to {} failed: {err:?}\","
+      },
+      {
+        "path": "drivers/android/binder/thread.rs",
+        "hunk": "@@ -1273,6 +1272,7 @@ fn transaction(self: &Arc<Self>, cmd: u32, reader: &mut UserSliceReader) -> Resu",
+        "lts_line": "info.from_pid,"
+      },
+      {
+        "path": "drivers/android/binder/thread.rs",
+        "hunk": "@@ -1273,6 +1272,7 @@ fn transaction(self: &Arc<Self>, cmd: u32, reader: &mut UserSliceReader) -> Resu",
+        "lts_line": "info.from_tid,"
+      }
+    ],
+    "status": "reviewed-source-adaptation",
+    "assessment": "TransactionInfo stores Option<Error>; error reporting remains conditional on a real source. Android logging formatting replaces the old direct message.",
+    "evidence": "SECURITY.md; final source functions named in assessment; comparison against the pinned LTS change"
+  },
+  {
+    "commit": "bd818dcf4783ef5b924732f0ec52d931b94459bf",
+    "subject": "rust_binder: fix BINDER_GET_EXTENDED_ERROR",
+    "changed_lts_additions": [
+      {
+        "path": "drivers/android/binder/thread.rs",
+        "hunk": "@@ -1244,0 +1263,2 @@ fn transaction(self: &Arc<Self>, cmd: u32, reader: &mut UserSliceReader) -> Resu",
+        "lts_line": "if let Some(source) = &err.source {"
+      },
+      {
+        "path": "drivers/android/binder/thread.rs",
+        "hunk": "@@ -1244,0 +1263,2 @@ fn transaction(self: &Arc<Self>, cmd: u32, reader: &mut UserSliceReader) -> Resu",
+        "lts_line": "info.errno = source.to_errno();"
+      },
+      {
+        "path": "drivers/android/binder/thread.rs",
+        "hunk": "@@ -1246,4 +1266,5 @@ fn transaction(self: &Arc<Self>, cmd: u32, reader: &mut UserSliceReader) -> Resu",
+        "lts_line": "inner.extended_error ="
+      },
+      {
+        "path": "drivers/android/binder/thread.rs",
+        "hunk": "@@ -1253 +1274 @@ fn transaction(self: &Arc<Self>, cmd: u32, reader: &mut UserSliceReader) -> Resu",
+        "lts_line": "\"{}:{} transaction to {} failed: {err:?}\","
+      },
+      {
+        "path": "drivers/android/binder/thread.rs",
+        "hunk": "@@ -1325,2 +1347,4 @@ fn reply_inner(self: &Arc<Self>, info: &mut TransactionInfo) -> BinderResult {",
+        "lts_line": "\"{}:{} reply to {} failed: {err:?}\","
+      },
+      {
+        "path": "drivers/android/binder/thread.rs",
+        "hunk": "@@ -1325,2 +1347,4 @@ fn reply_inner(self: &Arc<Self>, info: &mut TransactionInfo) -> BinderResult {",
+        "lts_line": "info.from_pid,"
+      },
+      {
+        "path": "drivers/android/binder/thread.rs",
+        "hunk": "@@ -1325,2 +1347,4 @@ fn reply_inner(self: &Arc<Self>, info: &mut TransactionInfo) -> BinderResult {",
+        "lts_line": "info.from_tid,"
+      },
+      {
+        "path": "drivers/android/binder/transaction.rs",
+        "hunk": "@@ -146 +145 @@ pub(crate) fn new_reply(",
+        "lts_line": "match from.copy_transaction_data(to.clone(), info, info.debug_id, allow_fds, None) {"
+      }
+    ],
+    "status": "reviewed-source-adaptation",
+    "assessment": "Extended error is cleared on transaction entry, then set from the source errno when Some(source) exists. TransactionInfo carries the error through the adapted copy/allocate helpers.",
+    "evidence": "SECURITY.md; final source functions named in assessment; comparison against the pinned LTS change"
+  },
+  {
+    "commit": "e5049526a7aacdb53aaaee2e21b0fd8c865f02b4",
+    "subject": "rust_binder: introduce TransactionInfo",
+    "changed_lts_additions": [
+      {
+        "path": "drivers/android/binder/thread.rs",
+        "hunk": "@@ -998,12 +996,11 @@ pub(crate) fn copy_transaction_data(",
+        "lts_line": "let mut alloc = match to_process.buffer_alloc(debug_id, len, info) {"
+      },
+      {
+        "path": "drivers/android/binder/thread.rs",
+        "hunk": "@@ -998,12 +996,11 @@ pub(crate) fn copy_transaction_data(",
+        "lts_line": "Ok(alloc) => alloc,"
+      },
+      {
+        "path": "drivers/android/binder/thread.rs",
+        "hunk": "@@ -998,12 +996,11 @@ pub(crate) fn copy_transaction_data(",
+        "lts_line": "\"Failed to allocate buffer. len:{}, is_oneway:{}\","
+      },
+      {
+        "path": "drivers/android/binder/thread.rs",
+        "hunk": "@@ -998,12 +996,11 @@ pub(crate) fn copy_transaction_data(",
+        "lts_line": "info.is_oneway(),"
+      },
+      {
+        "path": "drivers/android/binder/thread.rs",
+        "hunk": "@@ -1213,0 +1242,17 @@ fn transaction<T>(self: &Arc<Self>, tr: &BinderTransactionDataSg, inner: T)",
+        "lts_line": "if let Some(source) = &err.source {"
+      },
+      {
+        "path": "drivers/android/binder/thread.rs",
+        "hunk": "@@ -1213,0 +1242,17 @@ fn transaction<T>(self: &Arc<Self>, tr: &BinderTransactionDataSg, inner: T)",
+        "lts_line": "info.errno = source.to_errno();"
+      },
+      {
+        "path": "drivers/android/binder/thread.rs",
+        "hunk": "@@ -1213,0 +1242,17 @@ fn transaction<T>(self: &Arc<Self>, tr: &BinderTransactionDataSg, inner: T)",
+        "lts_line": "info.from_pid,"
+      },
+      {
+        "path": "drivers/android/binder/thread.rs",
+        "hunk": "@@ -1213,0 +1242,17 @@ fn transaction<T>(self: &Arc<Self>, tr: &BinderTransactionDataSg, inner: T)",
+        "lts_line": "info.from_tid,"
+      },
+      {
+        "path": "drivers/android/binder/transaction.rs",
+        "hunk": "@@ -26,0 +27,27 @@",
+        "lts_line": "#[derive(Zeroable)]"
+      },
+      {
+        "path": "drivers/android/binder/transaction.rs",
+        "hunk": "@@ -26,0 +27,27 @@",
+        "lts_line": "pub(crate) errno: i32,"
+      },
+      {
+        "path": "drivers/android/binder/transaction.rs",
+        "hunk": "@@ -122,11 +145,9 @@ pub(crate) fn new_reply(",
+        "lts_line": "Ok(alloc) => alloc,"
+      },
+      {
+        "path": "drivers/android/binder/transaction.rs",
+        "hunk": "@@ -122,11 +145,9 @@ pub(crate) fn new_reply(",
+        "lts_line": "pr_warn!(\"Failure in copy_transaction_data: {:?}\", err);"
+      }
+    ],
+    "status": "reviewed-source-adaptation",
+    "assessment": "TransactionInfo is retained in the later ACK form with Option<Error>, with the LTS extended-error fixes preserved; the old errno-only representation is superseded.",
+    "evidence": "SECURITY.md; final source functions named in assessment; comparison against the pinned LTS change"
+  },
+  {
+    "commit": "2abfd3ffbd9452f72535d96ff3982b3ab1f8f2f9",
+    "subject": "virtiofs: fix UAF on submount umount",
+    "changed_lts_additions": [
+      {
+        "path": "fs/fuse/file.c",
+        "hunk": "@@ -378 +384 @@ void fuse_file_release(struct inode *inode, struct fuse_file *ff,",
+        "lts_line": "fuse_file_put(ff, ff->fm->fc->auto_submounts);"
+      }
+    ],
+    "status": "reviewed-source-adaptation",
+    "assessment": "fuse_file_release still passes ff->fm->fc->auto_submounts to fuse_file_put; the Android path adds its inode argument. Synchronous submount release is retained.",
+    "evidence": "SECURITY.md; final source functions named in assessment; comparison against the pinned LTS change"
+  }
+]

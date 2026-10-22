@@ -1,0 +1,378 @@
+diff --git a/block/bio.c b/block/bio.c
+index b184f0a3fcb2b4010b81f5e81ed2d4441acae13d..fc78425f4875344f154174274fec3bc76dc1fb77 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -270,6 +270,9 @@ void bio_init(struct bio *bio, struct block_device *bdev, struct bio_vec *table,
+ #endif
+ #ifdef CONFIG_BLK_INLINE_ENCRYPTION
+ 	bio->bi_crypt_context = NULL;
++#if IS_ENABLED(CONFIG_DM_DEFAULT_KEY)
++	bio->bi_skip_dm_default_key = false;
++#endif
+ #endif
+ #ifdef CONFIG_BLK_DEV_INTEGRITY
+ 	bio->bi_integrity = NULL;
+diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
+index 1cce3294634d187cd3cfe205deed8c639fad137a..0175fcae5dd5021e6e6684c333630cb131309782 100644
+--- a/block/blk-cgroup.h
++++ b/block/blk-cgroup.h
+@@ -20,6 +20,7 @@
+ #include <linux/blk-mq.h>
+ #include <linux/llist.h>
+ #include "blk.h"
++#include <linux/android_vendor.h>
+ 
+ struct blkcg_gq;
+ struct blkg_policy_data;
+@@ -89,6 +90,8 @@ struct blkcg_gq {
+ 	int				last_use;
+ 
+ 	struct rcu_head			rcu_head;
++
++	ANDROID_OEM_DATA(1);
+ };
+ 
+ struct blkcg {
+@@ -117,6 +120,8 @@ struct blkcg {
+ #ifdef CONFIG_CGROUP_WRITEBACK
+ 	struct list_head		cgwb_list;
+ #endif
++
++	ANDROID_OEM_DATA(1);
+ };
+ 
+ static inline struct blkcg *css_to_blkcg(struct cgroup_subsys_state *css)
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 14ae73eebe0d7bca1475e608c6961269218cc400..c7f36c0487f573bc9204e7ddb7cabaf77bbce645 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -43,6 +43,8 @@
+ 
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/block.h>
++#undef CREATE_TRACE_POINTS
++#include <trace/hooks/blk.h>
+ 
+ #include "blk.h"
+ #include "blk-mq-sched.h"
+@@ -918,6 +962,7 @@ void submit_bio(struct bio *bio)
+ 	}
+ 
+ 	bio_set_ioprio(bio);
++	trace_android_vh_set_ioprio(bio);
+ 	submit_bio_noacct(bio);
+ }
+ EXPORT_SYMBOL(submit_bio);
+diff --git a/block/blk-crypto.c b/block/blk-crypto.c
+index 3e7bf1974cbd8f44510b609e278e0bdb0dcb7a0f..236b78ddaeafc108b7ab80a90d2832aae613c59d 100644
+--- a/block/blk-crypto.c
++++ b/block/blk-crypto.c
+@@ -116,6 +116,7 @@ void bio_crypt_set_ctx(struct bio *bio, const struct blk_crypto_key *key,
+ 
+ 	bio->bi_crypt_context = bc;
+ }
++EXPORT_SYMBOL_GPL(bio_crypt_set_ctx);
+ 
+ void __bio_crypt_free_ctx(struct bio *bio)
+ {
+@@ -381,6 +361,7 @@ int blk_crypto_init_key(struct blk_crypto_key *blk_key,
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(blk_crypto_init_key);
+ 
+ bool blk_crypto_config_supported_natively(struct block_device *bdev,
+ 					  const struct blk_crypto_config *cfg)
+@@ -431,6 +412,7 @@ int blk_crypto_start_using_key(struct block_device *bdev,
+ 	}
+ 	return blk_crypto_fallback_start_using_mode(key->crypto_cfg.crypto_mode);
+ }
++EXPORT_SYMBOL_GPL(blk_crypto_start_using_key);
+ 
+ /**
+  * blk_crypto_evict_key() - Evict a blk_crypto_key from a block_device
+diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+index 5b664dbdf655575d092dc0789be56f42ca3c8be5..61355f540ea693932e7a0f2a2ec2ef362e484867 100644
+--- a/block/blk-mq-tag.c
++++ b/block/blk-mq-tag.c
+@@ -17,6 +17,10 @@
+ #include "blk-mq.h"
+ #include "blk-mq-sched.h"
+ 
++#undef CREATE_TRACE_POINTS
++#include <trace/hooks/blk.h>
++
++
+ /*
+  * Recalculate wakeup batch when tag is shared by hctx.
+  */
+@@ -188,6 +188,7 @@ unsigned int blk_mq_get_tag(struct blk_mq_alloc_data *data)
+ 			break;
+ 
+ 		bt_prev = bt;
++		trace_android_rvh_blk_mq_get_tag(NULL);
+ 		io_schedule();
+ 
+ 		sbitmap_finish_wait(bt, ws, &wait);
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 4ebb92014eae1871176a4d99894e02520fd62a6c..864d11889888e49714dde91dd10a975023f9c861 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -32,6 +32,9 @@
+ #include <linux/sched/isolation.h>
+ 
+ #include <trace/events/block.h>
++#include <trace/hooks/blk.h>
+ 
+ #include <linux/t10-pi.h>
+ #include "blk.h"
+@@ -1503,6 +1507,7 @@ blk_status_t blk_execute_rq(struct request *rq, bool at_head)
+ 	blk_account_io_start(rq);
+ 	blk_mq_insert_request(rq, at_head ? BLK_MQ_INSERT_AT_HEAD : 0);
+ 	blk_mq_run_hw_queue(hctx, false);
++	trace_android_rvh_blk_execute_rq(rq);
+ 
+ 	if (blk_rq_is_poll(rq))
+ 		blk_rq_poll_completion(rq, &wait.done);
+@@ -1586,6 +1622,12 @@ static void blk_mq_requeue_work(struct work_struct *work)
+ 
+ void blk_mq_kick_requeue_list(struct request_queue *q)
+ {
++	bool skip = false;
++
++	trace_android_vh_blk_mq_kick_requeue_list(q, 0, &skip);
++	if (skip)
++		return;
++
+ 	kblockd_mod_delayed_work_on(WORK_CPU_UNBOUND, &q->requeue_work, 0);
+ }
+ EXPORT_SYMBOL(blk_mq_kick_requeue_list);
+@@ -1593,6 +1635,13 @@ EXPORT_SYMBOL(blk_mq_kick_requeue_list);
+ void blk_mq_delay_kick_requeue_list(struct request_queue *q,
+ 				    unsigned long msecs)
+ {
++	bool skip = false;
++
++	trace_android_vh_blk_mq_kick_requeue_list(q,
++			msecs_to_jiffies(msecs), &skip);
++	if (skip)
++		return;
++
+ 	kblockd_mod_delayed_work_on(WORK_CPU_UNBOUND, &q->requeue_work,
+ 				    msecs_to_jiffies(msecs));
+ }
+@@ -2297,8 +2372,16 @@ static int blk_mq_hctx_next_cpu(struct blk_mq_hw_ctx *hctx)
+  */
+ void blk_mq_delay_run_hw_queue(struct blk_mq_hw_ctx *hctx, unsigned long msecs)
+ {
++	bool skip = false;
++
+ 	if (unlikely(blk_mq_hctx_stopped(hctx)))
+ 		return;
++
++	trace_android_vh_blk_mq_delay_run_hw_queue(blk_mq_hctx_next_cpu(hctx),
++			hctx, msecs_to_jiffies(msecs), &skip);
++	if (skip)
++		return;
++
+ 	kblockd_mod_delayed_work_on(blk_mq_hctx_next_cpu(hctx), &hctx->run_work,
+ 				    msecs_to_jiffies(msecs));
+ }
+@@ -3128,6 +3229,8 @@ void blk_mq_submit_bio(struct bio *bio)
+ 	struct request *rq;
+ 	blk_status_t ret;
+ 
++	trace_android_vh_check_set_ioprio(bio);
++
+ 	/*
+ 	 * If the plug has a cached request for this queue, try to use it.
+ 	 */
+@@ -3216,22 +3318,30 @@ void blk_mq_submit_bio(struct bio *bio)
+ 	if (bio_zone_write_plugging(bio))
+ 		blk_zone_write_plug_init_request(rq);
+ 
+-	if (op_is_flush(bio->bi_opf) && blk_insert_flush(rq))
++	trace_android_rvh_submit_bio_pre(bio, rq);
++
++	if (op_is_flush(bio->bi_opf) && blk_insert_flush(rq)) {
++		trace_android_rvh_submit_bio_post(bio, rq);
+ 		return;
++	}
+ 
+ 	if (plug) {
+ 		blk_add_rq_to_plug(plug, rq);
++		trace_android_rvh_submit_bio_post(bio, rq);
+ 		return;
+ 	}
+ 
+ 	hctx = rq->mq_hctx;
+ 	if ((rq->rq_flags & RQF_USE_SCHED) ||
+ 	    (hctx->dispatch_busy && (q->nr_hw_queues == 1 || !is_sync))) {
+ 		blk_mq_insert_request(rq, 0);
+ 		blk_mq_run_hw_queue(hctx, true);
+ 	} else {
+ 		blk_mq_run_dispatch_ops(q, blk_mq_try_issue_directly(hctx, rq));
+ 	}
++
++	trace_android_rvh_submit_bio_post(bio, rq);
+ 	return;
+ 
+ queue_exit:
+@@ -3301,8 +3411,10 @@ blk_status_t blk_insert_cloned_request(struct request *rq)
+ 	 */
+ 	blk_mq_run_dispatch_ops(q,
+ 			ret = blk_mq_request_issue_directly(rq, true));
+-	if (ret)
++	if (ret) {
+ 		blk_account_io_done(rq, blk_time_get_ns());
++		trace_android_vh_request_issue_err(rq);
++	}
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(blk_insert_cloned_request);
+diff --git a/block/blk-rq-qos.c b/block/blk-rq-qos.c
+index 654478dfbc20445914c43416344d8e44adfa9e43..a3935e1a182d270657f5f42bb81d240b151c6cd6 100644
+--- a/block/blk-rq-qos.c
++++ b/block/blk-rq-qos.c
+@@ -1,6 +1,7 @@
+ // SPDX-License-Identifier: GPL-2.0
+ 
+ #include "blk-rq-qos.h"
++#include <trace/hooks/blk.h>
+ 
+ /*
+  * Increment 'v', if 'v' is below 'below'. Returns true if we succeeded,
+@@ -304,6 +305,7 @@ void rq_qos_wait(struct rq_wait *rqw, void *private_data,
+ 	do {
+ 		if (data.got_token)
+ 			break;
++		trace_android_rvh_rq_qos_wait(NULL);
+ 		io_schedule();
+ 		set_current_state(TASK_UNINTERRUPTIBLE);
+ 	} while (1);
+diff --git a/block/blk-wbt.c b/block/blk-wbt.c
+index 0974875f77bda299f4f38418bb311b0e3716aa03..8985ada02944695d4595f8e3c81e9e171a29b55d 100644
+--- a/block/blk-wbt.c
++++ b/block/blk-wbt.c
+@@ -33,6 +33,8 @@
+ 
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/wbt.h>
++#undef CREATE_TRACE_POINTS
++#include <trace/hooks/blk.h>
+ 
+ enum wbt_flags {
+ 	WBT_TRACKED		= 1,	/* write, tracked for throttling */
+@@ -647,6 +649,7 @@ static void wbt_wait(struct rq_qos *rqos, struct bio *bio)
+ 	enum wbt_flags flags;
+ 
+ 	flags = bio_to_wbt_flags(rwb, bio);
++	trace_android_vh_wbt_wait(bio, (int)flags);
+ 	if (!(flags & WBT_TRACKED)) {
+ 		if (flags & WBT_READ)
+ 			wb_timestamp(rwb, &rwb->last_issue);
+@@ -663,6 +666,7 @@ static void wbt_track(struct rq_qos *rqos, struct request *rq, struct bio *bio)
+ {
+ 	struct rq_wb *rwb = RQWB(rqos);
+ 	rq->wbt_flags |= bio_to_wbt_flags(rwb, bio);
++	trace_android_vh_wbt_track(rq, bio);
+ }
+ 
+ static void wbt_issue(struct rq_qos *rqos, struct request *rq)
+diff --git a/block/elevator.c b/block/elevator.c
+index 7a97998cd8bd72244c3f6c520464de41e801acf6..d52a27e1d508dff9daa5a289adcc845a5eca0fdc 100644
+--- a/block/elevator.c
++++ b/block/elevator.c
+@@ -139,6 +139,7 @@ struct elevator_queue *elevator_alloc(struct request_queue *q,
+ 
+ 	return eq;
+ }
++EXPORT_SYMBOL(elevator_alloc);
+ 
+ static void elevator_release(struct kobject *kobj)
+ {
+diff --git a/block/holder.c b/block/holder.c
+index 791091a7eac234d79970aca9b32a5d317b085483..eed1fd06330653b3a56ad1a93811491436731dee 100644
+--- a/block/holder.c
++++ b/block/holder.c
+@@ -1,6 +1,7 @@
+ // SPDX-License-Identifier: GPL-2.0-only
+ #include <linux/blkdev.h>
+ #include <linux/slab.h>
++#include <trace/hooks/blk.h>
+ 
+ struct bd_holder_disk {
+ 	struct list_head	list;
+@@ -109,6 +110,7 @@ int bd_link_disk_holder(struct block_device *bdev, struct gendisk *disk)
+ 	if (ret)
+ 		goto out_del_symlink;
+ 	list_add(&holder->list, &disk->slave_bdevs);
++	trace_android_vh_bd_link_disk_holder(bdev, disk);
+ 
+ 	mutex_unlock(&blk_holder_mutex);
+ 	return 0;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 59e54550a053f92111dd987b04e9694f418e436c..999e23d4d50c84e3b378226956133d28f60c5760 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -26,6 +26,7 @@
+ #include <linux/xarray.h>
+ #include <linux/file.h>
+ #include <linux/lockdep.h>
++#include <linux/android_vendor.h>
+ 
+ struct module;
+ struct request_queue;
+@@ -220,6 +222,8 @@ struct gendisk {
+ 	struct blk_independent_access_ranges *ia_ranges;
+ 
+ 	struct mutex rqos_state_mutex;	/* rqos state change mutex */
++
++	ANDROID_OEM_DATA(1);
+ };
+ 
+ /**
+@@ -637,6 +651,8 @@ struct request_queue {
+ 	 * Serializes all debugfs metadata operations using the above dentries.
+ 	 */
+ 	struct mutex		debugfs_mutex;
++
++	ANDROID_OEM_DATA(1);
+ };
+ 
+ /* Keep blk_queue_flag_name[] in sync with the definitions below */
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index b25d12545f46da3b962de59639349c3eebf7b5cc..04c0c790c9227216b3fbde12f86314e4dd3b83ec 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -206,6 +206,8 @@ struct request {
+ 	 */
+ 	rq_end_io_fn *end_io;
+ 	void *end_io_data;
++
++	ANDROID_OEM_DATA(1);
+ };
+ 
+ static inline enum req_op req_op(const struct request *req)
+@@ -771,6 +776,7 @@ struct blk_mq_tags {
+ 	 */
+ 	spinlock_t lock;
+ 	struct rcu_head rcu_head;
++	ANDROID_OEM_DATA(1);
+ };
+ 
+ static inline struct request *blk_mq_tag_to_rq(struct blk_mq_tags *tags,
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 4e2e3aed32f5f791579254d66adb52b2f9b0c766..6665cb4cffaf8fcb4f1230e8cf56b695956bbbbd 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -247,6 +247,9 @@ struct bio {
+ 
+ #ifdef CONFIG_BLK_INLINE_ENCRYPTION
+ 	struct bio_crypt_ctx	*bi_crypt_context;
++#if IS_ENABLED(CONFIG_DM_DEFAULT_KEY)
++	bool			bi_skip_dm_default_key;
++#endif
+ #endif
+ 
+ #if defined(CONFIG_BLK_DEV_INTEGRITY)

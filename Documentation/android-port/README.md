@@ -1,6 +1,10 @@
 # Android 6.18 SDK emulator port audit
 
-Status: work in progress. No compilation or runtime compatibility claim has been made.
+Status: work in progress. The complete emulator workflow succeeded in attempt 23
+at Linux c7aeaf39ed7f, including final signing. All 145 generated module signatures
+were cryptographically verified against the build certificate; a modified-payload
+control was rejected. Later compatibility changes are being rebuilt. The exhaustive
+commit audit remains unfinished. No runtime compatibility is claimed.
 
 ## Scope and immutable inputs
 
@@ -18,6 +22,8 @@ build, prebuilt replacement, emulator boot, or device flashing is authorized.
 | ACK boundary in supplied kernel history | `23112ce1886ea26b19be03207c0227a06a6ca009` |
 | ACK / pinned Linux merge base | `5366199be46fb53de62861721d34ba816e7e440e` |
 | GrapheneOS 17 platform manifest | `d55794af3ddb532fde6f81808e7aa77c0543e6b1` |
+| Local upstream Linux reference (consulted during analysis) | `9e947d96915af63e28896caae85a81b74855621b` |
+| Linux v6.18 peeled tag (full stable-fix scan start) | `7d0a66e4bb9081d75c82ec4957c50034cb0ea449` |
 | 6.18 kernel manifest | `fae63ef0c2a745e2d7b798f76e3269e9859e0366` |
 
 The ACK boundary is the parent of `042b0229899ba6452d9740db6d82701e978f4334`
@@ -36,8 +42,8 @@ not imply that the remote was contacted during this work.
 
 Candidates are exactly `git rev-list ACK --not LINUX`, including merges: 11,731
 commits, of which 2,623 are merges. The exhaustive ledger is `candidates.jsonl`
-and its tabular rendering is `candidates.tsv`. Pending rows are not final
-dispositions. Each row records parents, subject, changed files and the decision
+and its tabular rendering is `candidates.tsv`. Rows marked `review_status=draft-net-reconciliation` are not completed
+review even when a provisional disposition is populated. See DECISIONS.md. Each row records parents, subject, changed files and the decision
 evidence; implementations must record resulting commit IDs before completion.
 
 The ledger distinguishes commit identity, patch equivalence, and effective code.
@@ -69,7 +75,20 @@ this logging requirement.
 
 ## Delivery branches and verification
 
-Linux working branch: `port/android-6.18-sdk-audit`.
-The existing manifest branch `port/android-6.18-sdk` was already present at the
-pinned manifest commit on entry; a separate delivery branch will be created.
-No dependency changes or successful build results yet.
+Linux working branch: `port/android-6.18-sdk-audit`, based on the pinned LTS.
+The implementation is committed; `git status` reports only uncommitted work.
+Use `git log LINUX..HEAD` and `git diff LINUX HEAD` with the pinned LINUX hash
+above to inspect the committed port.
+
+The manifest repository (`kernel_manifest-6.18/.repo/manifests`) and modified
+Kleaf dependency (`kernel_manifest-6.18/build/kernel`) have delivery branches
+with the same name. The manifest uses local file remotes for these delivered
+repositories. These URLs are workspace-local and must be replaced with published
+repository URLs when transporting the manifest elsewhere. The reason for the
+Kleaf modification is documented in SECURITY.md. Other dependency projects
+retain their original sources and commits.
+
+The successful attempts 19 through 23 source/dependency pins, artifact hashes and signature
+verification are recorded in `evidence/build-results.json`. This result applies
+to its recorded source commit, not automatically to later changes. Build logs
+are in the workspace root as `sdk-build-attempt-*.log`.

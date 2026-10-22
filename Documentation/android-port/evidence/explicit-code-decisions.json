@@ -1,0 +1,29 @@
+[
+  {
+    "commit": "ba882210daeeacdcedc703dc09ed1f5f62425ca6",
+    "disposition": "applied",
+    "rationale": "The configured generic extcon framework must not reuse a connector ID until device_unregister has removed its device name. The release callback in pinned LTS is empty and object storage has separate ownership, so moving ida_free afterward does not dereference freed extcon storage. This prevents registration collisions without changing LTS lifetime rules.",
+    "result_commits": [
+      "c8fb68cc017c3356427bd0c86fab2451f90b2afe"
+    ],
+    "application_patch_id": "831ffba0041a353f6a55612daf384423e552956c"
+  },
+  {
+    "commit": "86daefb58da53955d746f5d0b1e9c89f2f64e6ff",
+    "disposition": "applied",
+    "rationale": "The SDK uses ext4 and enables Unicode/casefold support. Pinned LTS still invalidates a casefolded dentry while holding a journal handle; eviction of child dentries can wait on that transaction, causing a deadlock. Stop the transaction before d_invalidate and guard invalidation on successful removal. The cherry-pick preserves all other newer LTS namei fixes and closes an availability failure.",
+    "result_commits": [
+      "22157454367ab7958331c2b7690e24c7588608d3"
+    ],
+    "application_patch_id": "e66161b253b26af53add2db14cd137c184222800"
+  },
+  {
+    "commit": "a6c308a0fafe1e155115ad421da1050b0c574e83",
+    "disposition": "applied",
+    "rationale": "F2FS remains enabled for Android configuration compatibility. Pinned LTS has the inline-directory conversion bounds check but lacks this lookup check. Reject an on-disk name length above F2FS_NAME_LEN or extending past the available filename slots before comparing it. This prevents out-of-bounds reads from malformed directory entries; existing LTS error cleanup and inode validation are unchanged.",
+    "result_commits": [
+      "c7aeaf39ed7f163c7b3a11f83219d0612c53d5db"
+    ],
+    "application_patch_id": "05d0e33cf716e4941a5e1b1bc3acb00eacd5a4ed"
+  }
+]

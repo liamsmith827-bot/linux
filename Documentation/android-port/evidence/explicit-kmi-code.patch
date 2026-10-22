@@ -1,0 +1,983 @@
+commit 7a2a316228bcd80821a15fed6cd70c80a5daa182
+Author: Satya Durga Srinivasu Prabhala <satyap@codeaurora.org>
+Date:   Wed Oct 28 00:02:04 2020 -0700
+
+    ANDROID: sched: gki: add padding to some structs to support WALT
+    
+    Add padding to below structs to support WALT based accounting:
+            1. struct cpu_topology
+            2. struct task_struct
+            3. struct sched_domain_shared
+            4. struct task_group
+            5. struct root_domain
+            6. struct rq
+    
+    To accommodate potential future changes, reserving more memory than
+    what WALT needs today.
+    
+    Bug: 171858786
+    Change-Id: If6d901174fc7963be3ae44daa799cb2953669ec1
+    Signed-off-by: Satya Durga Srinivasu Prabhala <satyap@codeaurora.org>
+
+diff --git a/include/linux/arch_topology.h b/include/linux/arch_topology.h
+index 0f6cd6b73a61..3f33dfe7f808 100644
+--- a/include/linux/arch_topology.h
++++ b/include/linux/arch_topology.h
+@@ -7,6 +7,7 @@
+ 
+ #include <linux/types.h>
+ #include <linux/percpu.h>
++#include <linux/android_vendor.h>
+ 
+ void topology_normalize_cpu_scale(void);
+ int topology_update_cpu_topology(void);
+@@ -54,6 +55,8 @@ struct cpu_topology {
+ 	cpumask_t thread_sibling;
+ 	cpumask_t core_sibling;
+ 	cpumask_t llc_sibling;
++
++	cpumask_t android_vendor_data1;
+ };
+ 
+ #ifdef CONFIG_GENERIC_ARCH_TOPOLOGY
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 9d80893f4d14..ecb71323a6b5 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1330,7 +1330,7 @@ struct task_struct {
+ 					__mce_reserved : 62;
+ 	struct callback_head		mce_kill_me;
+ #endif
+-	ANDROID_VENDOR_DATA_ARRAY(1, 2);
++	ANDROID_VENDOR_DATA_ARRAY(1, 64);
+ 
+ 	/*
+ 	 * New fields for task_struct should be added above here, so that
+diff --git a/include/linux/sched/topology.h b/include/linux/sched/topology.h
+index 9ef7bf686a9f..452158253764 100644
+--- a/include/linux/sched/topology.h
++++ b/include/linux/sched/topology.h
+@@ -3,6 +3,7 @@
+ #define _LINUX_SCHED_TOPOLOGY_H
+ 
+ #include <linux/topology.h>
++#include <linux/android_vendor.h>
+ 
+ #include <linux/sched/idle.h>
+ 
+@@ -74,6 +75,8 @@ struct sched_domain_shared {
+ 	atomic_t	ref;
+ 	atomic_t	nr_busy_cpus;
+ 	int		has_idle_cores;
++
++	ANDROID_VENDOR_DATA(1);
+ };
+ 
+ struct sched_domain {
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index 00d65f80b80b..98da2587800b 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -65,6 +65,7 @@
+ #include <linux/syscalls.h>
+ #include <linux/task_work.h>
+ #include <linux/tsacct_kern.h>
++#include <linux/android_vendor.h>
+ 
+ #include <asm/tlb.h>
+ #include <asm-generic/vmlinux.lds.h>
+@@ -430,6 +431,8 @@ struct task_group {
+ 	struct uclamp_se	uclamp[UCLAMP_CNT];
+ 	/* Latency-sensitive flag used for a task group */
+ 	unsigned int		latency_sensitive;
++
++	ANDROID_VENDOR_DATA_ARRAY(1, 4);
+ #endif
+ 
+ };
+@@ -830,6 +833,8 @@ struct root_domain {
+ 	 * CPUs of the rd. Protected by RCU.
+ 	 */
+ 	struct perf_domain __rcu *pd;
++
++	ANDROID_VENDOR_DATA_ARRAY(1, 4);
+ };
+ 
+ extern void init_defrootdomain(void);
+@@ -1050,6 +1055,8 @@ struct rq {
+ 	/* Must be inspected within a rcu lock section */
+ 	struct cpuidle_state	*idle_state;
+ #endif
++
++	ANDROID_VENDOR_DATA_ARRAY(1, 96);
+ };
+ 
+ #ifdef CONFIG_FAIR_GROUP_SCHED
+
+commit ffaeda21f89886bce03fecb3a3a48cedbd048253
+Author: Todd Kjos <tkjos@google.com>
+Date:   Wed Jul 27 21:58:22 2022 +0000
+
+    Revert "ANDROID: sched: gki: add padding to some structs to support WALT"
+    
+    This reverts commit 7a2a316228bcd80821a15fed6cd70c80a5daa182.
+    
+    Reason for revert: Fields are no longer needed for WALT
+    
+    Bug: 233898087
+    Change-Id: Ie21114707cd432bef3488bfb613c19a784a27172
+    Signed-off-by: Todd Kjos <tkjos@google.com>
+
+diff --git a/include/linux/arch_topology.h b/include/linux/arch_topology.h
+index 1249429a0873..58cbe18d825c 100644
+--- a/include/linux/arch_topology.h
++++ b/include/linux/arch_topology.h
+@@ -7,7 +7,6 @@
+ 
+ #include <linux/types.h>
+ #include <linux/percpu.h>
+-#include <linux/android_vendor.h>
+ 
+ void topology_normalize_cpu_scale(void);
+ int topology_update_cpu_topology(void);
+@@ -74,8 +73,6 @@ struct cpu_topology {
+ 	cpumask_t core_sibling;
+ 	cpumask_t cluster_sibling;
+ 	cpumask_t llc_sibling;
+-
+-	cpumask_t android_vendor_data1;
+ };
+ 
+ #ifdef CONFIG_GENERIC_ARCH_TOPOLOGY
+diff --git a/include/linux/sched/topology.h b/include/linux/sched/topology.h
+index dcba7ee6ddb5..56cffe42abbc 100644
+--- a/include/linux/sched/topology.h
++++ b/include/linux/sched/topology.h
+@@ -3,7 +3,6 @@
+ #define _LINUX_SCHED_TOPOLOGY_H
+ 
+ #include <linux/topology.h>
+-#include <linux/android_vendor.h>
+ 
+ #include <linux/sched/idle.h>
+ 
+@@ -82,8 +81,6 @@ struct sched_domain_shared {
+ 	atomic_t	ref;
+ 	atomic_t	nr_busy_cpus;
+ 	int		has_idle_cores;
+-
+-	ANDROID_VENDOR_DATA(1);
+ };
+ 
+ struct sched_domain {
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index c0e3376048f2..160017a346db 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -434,8 +434,6 @@ struct task_group {
+ 	struct uclamp_se	uclamp[UCLAMP_CNT];
+ 	/* Latency-sensitive flag used for a task group */
+ 	unsigned int		latency_sensitive;
+-
+-	ANDROID_VENDOR_DATA_ARRAY(1, 4);
+ #endif
+ 
+ };
+@@ -857,8 +855,6 @@ struct root_domain {
+ 	 * CPUs of the rd. Protected by RCU.
+ 	 */
+ 	struct perf_domain __rcu *pd;
+-
+-	ANDROID_VENDOR_DATA_ARRAY(1, 4);
+ };
+ 
+ extern void init_defrootdomain(void);
+@@ -1117,8 +1113,6 @@ struct rq {
+ 	unsigned int		core_forceidle_occupation;
+ 	u64			core_forceidle_start;
+ #endif
+-
+-	ANDROID_VENDOR_DATA_ARRAY(1, 96);
+ };
+ 
+ #ifdef CONFIG_FAIR_GROUP_SCHED
+
+commit 4dfac8f44e3293fea96ccc7ae46a7eba92d48968
+Author: Sai Harshini Nimmala <quic_snimmala@quicinc.com>
+Date:   Sat Oct 8 20:03:49 2022 -0700
+
+    ANDROID: sched: gki: add padding to some structs to support WALT
+    
+    Qualcomm's load tracking algorithm WALT needs to carry data in the
+    task_group structure. Hence, add padding to it.
+    
+    This commit partially reverts commit ffaeda21f898(Revert "ANDROID: sched:
+    gki: add padding to some structs to support WALT"), to effectively bring
+    back a part of the original change.
+    
+    Bug: 200103201
+    Change-Id: I728d905d59f03d76dadf007e8f38c6532bd60b91
+    Signed-off-by: Sai Harshini Nimmala <quic_snimmala@quicinc.com>
+
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index 0e9717e91f36..895ee9942331 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -420,6 +420,8 @@ struct task_group {
+ 	struct uclamp_se	uclamp[UCLAMP_CNT];
+ 	/* Latency-sensitive flag used for a task group */
+ 	unsigned int		latency_sensitive;
++
++	ANDROID_VENDOR_DATA_ARRAY(1, 4);
+ #endif
+ 
+ };
+
+commit 51c5f5f8708a2f97fd07ec34407cc8d20b8a1053
+Author: T.J. Mercier <tjmercier@google.com>
+Date:   Fri Aug 29 09:05:36 2025 -0700
+
+    ANDROID: GKI: Disable KABI macros for !CONFIG_64BIT
+    
+    GKI currently maintains a stable ABI only for the ARM64 architecture,
+    however the KABI macros take effect on all architectures. This causes
+    padding to be added for those architectures which is unnecessary, but
+    not usually harmful. However if the alignment or size checks in
+    _ANDROID_KABI_NORMAL_SIZE_ALIGN fail, they will cause a build failure on
+    the basis of an ABI break. That should only occur on architectures where
+    we maintain a stable ABI. While ARM64 is the only currently supported
+    architecture, we may support other 64 bit architectures in the future,
+    so disable the KABI macros for non-64 bit builds.
+    
+    Bug: 441915167
+    Change-Id: I6db6991c79140aa084bbf560d9c0f2e3c28d782e
+    Signed-off-by: T.J. Mercier <tjmercier@google.com>
+
+diff --git a/drivers/android/Kconfig b/drivers/android/Kconfig
+index edd59a32e5df..10c21d5e352c 100644
+--- a/drivers/android/Kconfig
++++ b/drivers/android/Kconfig
+@@ -70,6 +70,7 @@ config ANDROID_DEBUG_KINFO
+ 
+ config ANDROID_KABI_RESERVE
+ 	bool "Android KABI reserve padding"
++	depends on 64BIT
+ 	default y
+ 	help
+ 	  This option enables the padding that the Android GKI kernel adds
+@@ -86,6 +87,7 @@ config ANDROID_KABI_RESERVE
+ 
+ config ANDROID_VENDOR_OEM_DATA
+ 	bool "Android vendor and OEM data padding"
++	depends on 64BIT
+ 	default y
+ 	help
+ 	  This option enables the padding that the Android GKI kernel adds
+diff --git a/include/linux/android_kabi.h b/include/linux/android_kabi.h
+index 95cdb96e8692..c1ccd96816af 100644
+--- a/include/linux/android_kabi.h
++++ b/include/linux/android_kabi.h
+@@ -33,6 +33,8 @@
+ #ifndef _ANDROID_KABI_H
+ #define _ANDROID_KABI_H
+ 
++#ifdef CONFIG_ANDROID_KABI_RESERVE
++
+ #include <linux/args.h>
+ #include <linux/compiler.h>
+ #include <linux/compiler_attributes.h>
+@@ -165,4 +167,18 @@
+ #define ANDROID_BACKPORT_USE(number, _new) \
+ 	_ANDROID_KABI_REPLACE(ANDROID_BACKPORT_RESERVE(number), _new)
+ 
++#else /* CONFIG_ANDROID_KABI_RESERVE */
++
++#define ANDROID_KABI_RESERVE(number)
++#define ANDROID_BACKPORT_RESERVE(number)
++#define ANDROID_KABI_DECLONLY(fqn)
++#define ANDROID_KABI_ENUMERATOR_IGNORE(fqn, field)
++#define ANDROID_KABI_ENUMERATOR_VALUE(fqn, field, value)
++#define ANDROID_KABI_IGNORE(n, _new) _new
++#define ANDROID_KABI_REPLACE(_oldtype, _oldname, _new) _new
++#define ANDROID_KABI_USE(number, _new) _new
++#define ANDROID_KABI_USE2(number, _new1, _new2) _new1; _new2
++
++#endif /* CONFIG_ANDROID_KABI_RESERVE */
++
+ #endif /* _ANDROID_KABI_H */
+
+commit cfe4afb7705410abce48b0818e2ec2c9695b991f
+Author: Carlos Llamas <cmllamas@google.com>
+Date:   Sun Mar 15 18:25:38 2026 +0000
+
+    ANDROID: GKI: 2026/03/18 KMI update
+    
+    KMI update for 2026/03/18
+    
+    Bug: 492971758
+    Change-Id: Ibce87a17ec6353c9e99ff5c3f50187dd8c49f631
+    Signed-off-by: Carlos Llamas <cmllamas@google.com>
+
+diff --git a/bazel/constants.scl b/bazel/constants.scl
+index 65eb7a21eb26..e27be2474f33 100644
+--- a/bazel/constants.scl
++++ b/bazel/constants.scl
+@@ -1,5 +1,5 @@
+ BRANCH="android17-6.18"
+-KMI_GENERATION=0
++KMI_GENERATION=1
+ CLANG_VERSION="r584948b"
+ RUSTC_VERSION="1.91.1"
+ AARCH64_NDK_TRIPLE="aarch64-linux-android31"
+
+commit b0ac6a9e3667e10c39e0bcc3605e3ae365d945af
+Author: T.J. Mercier <tjmercier@google.com>
+Date:   Tue Mar 24 17:41:42 2026 -0700
+
+    ANDROID: GKI: Add padding to mem_cgroup_reclaim_cookie
+    
+    This struct has recently entered use again, and may receive updates.
+    
+    Bug: 491161822
+    Change-Id: I23605ffd0d169c5a1f7a64d6ef292046bf163766
+    Signed-off-by: T.J. Mercier <tjmercier@google.com>
+
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 57f9ae78de5b..cc5d199e0be3 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -23,6 +23,7 @@
+ #include <linux/writeback.h>
+ #include <linux/page-flags.h>
+ #include <linux/shrinker.h>
++#include <linux/android_kabi.h>
+ 
+ struct mem_cgroup;
+ struct obj_cgroup;
+@@ -58,6 +59,7 @@ enum memcg_memory_event {
+ struct mem_cgroup_reclaim_cookie {
+ 	pg_data_t *pgdat;
+ 	int generation;
++	ANDROID_KABI_RESERVE(1);
+ };
+ 
+ #ifdef CONFIG_MEMCG
+
+commit 484b042fdd2a4a4d62969e479e8a38e9d9c1cc61
+Author: Carlos Llamas <cmllamas@google.com>
+Date:   Fri Mar 20 17:59:14 2026 +0000
+
+    ANDROID: GKI: 2026-04-01 KMI update
+    
+    KMI update for 2026-04-01
+    
+    Bug: 494603229
+    Change-Id: I8080a1f734538a28388b8986f57f71bb0354c010
+    Signed-off-by: Carlos Llamas <cmllamas@google.com>
+
+diff --git a/bazel/constants.scl b/bazel/constants.scl
+index e27be2474f33..2939c1e160fe 100644
+--- a/bazel/constants.scl
++++ b/bazel/constants.scl
+@@ -1,5 +1,5 @@
+ BRANCH="android17-6.18"
+-KMI_GENERATION=1
++KMI_GENERATION=2
+ CLANG_VERSION="r584948b"
+ RUSTC_VERSION="1.91.1"
+ AARCH64_NDK_TRIPLE="aarch64-linux-android31"
+
+commit 31aae7b12f1ad7ceb0095a295ad6bdfef2ae2f9b
+Author: Carlos Llamas <cmllamas@google.com>
+Date:   Thu Apr 9 17:59:50 2026 +0000
+
+    ANDROID: GKI: 2026/04/15 KMI update
+    
+    KMI update for 2026/04/15
+    
+    Bug: 501109721
+    Change-Id: I78e5f4b97970b64a1d41bb62b3b865b94e088c03
+    Signed-off-by: Carlos Llamas <cmllamas@google.com>
+
+diff --git a/bazel/constants.scl b/bazel/constants.scl
+index 8bf6aaf9578f..867ddf7b5592 100644
+--- a/bazel/constants.scl
++++ b/bazel/constants.scl
+@@ -1,5 +1,5 @@
+ BRANCH="android17-6.18"
+-KMI_GENERATION=2
++KMI_GENERATION=3
+ CLANG_VERSION="r584948b"
+ RUSTC_VERSION="1.91.1.p1"
+ AARCH64_NDK_TRIPLE="aarch64-linux-android31"
+
+commit a68dc0ac7b90e314aea0f9425faa6fdadc97c0f0
+Author: T.J. Mercier <tjmercier@google.com>
+Date:   Wed Apr 15 14:35:26 2026 -0700
+
+    ANDROID: Add KMI padding
+    
+    Padding the MM team thinks may be useful.
+    
+    Bug: 503002112
+    Change-Id: I06b35a6cc4c5b3e87659160f7550be7ce54241a2
+    Signed-off-by: T.J. Mercier <tjmercier@google.com>
+
+diff --git a/include/linux/bpf.h b/include/linux/bpf.h
+index ce3f7780d31a..2a1aefd4a0a2 100644
+--- a/include/linux/bpf.h
++++ b/include/linux/bpf.h
+@@ -339,6 +339,8 @@ struct bpf_map {
+ 	s64 __percpu *elem_count;
+ 	u64 cookie; /* write-once */
+ 	char *excl_prog_sha;
++
++	ANDROID_KABI_RESERVE(1);
+ };
+ 
+ static inline const char *btf_field_type_name(enum btf_field_type type)
+@@ -643,6 +645,8 @@ struct bpf_offloaded_map {
+ 	const struct bpf_map_dev_ops *dev_ops;
+ 	void *dev_priv;
+ 	struct list_head offloads;
++
++	ANDROID_KABI_RESERVE(1);
+ };
+ 
+ static inline struct bpf_offloaded_map *map_to_offmap(struct bpf_map *map)
+@@ -939,6 +943,8 @@ struct bpf_func_proto {
+ 	};
+ 	int *ret_btf_id; /* return value btf_id */
+ 	bool (*allowed)(const struct bpf_prog *prog);
++
++	ANDROID_KABI_RESERVE(1);
+ };
+ 
+ /* bpf_context is intentionally undefined structure. Pointer to bpf_context is
+@@ -1794,6 +1800,8 @@ struct bpf_link {
+ 	 * link's semantics is determined by target attach hook
+ 	 */
+ 	bool sleepable;
++
++	ANDROID_KABI_RESERVE(1);
+ };
+ 
+ struct bpf_link_ops {
+@@ -1944,6 +1952,8 @@ struct bpf_struct_ops {
+ 	struct module *owner;
+ 	const char *name;
+ 	struct btf_func_model func_models[BPF_STRUCT_OPS_MAX_NR_MEMBERS];
++
++	ANDROID_KABI_RESERVE(1);
+ };
+ 
+ /* Every member of a struct_ops type has an instance even a member is not
+@@ -2673,6 +2683,8 @@ struct bpf_iter_aux_info {
+ 		enum bpf_iter_task_type	type;
+ 		u32 pid;
+ 	} task;
++
++	ANDROID_KABI_RESERVE(1);
+ };
+ 
+ typedef int (*bpf_iter_attach_target_t)(struct bpf_prog *prog,
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index b760a3c470a5..165f689dcff0 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -21,6 +21,7 @@
+ #include <linux/workqueue.h>
+ #include <linux/bpf-cgroup-defs.h>
+ #include <linux/psi_types.h>
++#include <linux/android_kabi.h>
+ 
+ #ifdef CONFIG_CGROUPS
+ 
+@@ -260,6 +261,8 @@ struct cgroup_subsys_state {
+ 	 * Protected by css->ss->rstat_ss_lock otherwise.
+ 	 */
+ 	struct cgroup_subsys_state *rstat_flush_next;
++
++	ANDROID_KABI_RESERVE(1);
+ };
+ 
+ /*
+@@ -625,6 +628,8 @@ struct cgroup {
+ 	struct bpf_local_storage __rcu  *bpf_cgrp_storage;
+ #endif
+ 
++	ANDROID_KABI_RESERVE(1);
++
+ 	/* All ancestors including self */
+ 	struct cgroup *ancestors[];
+ };
+@@ -668,6 +673,8 @@ struct cgroup_root {
+ 
+ 	/* The name for this hierarchy - may be empty */
+ 	char name[MAX_CGROUP_ROOT_NAMELEN];
++
++	ANDROID_KABI_RESERVE(1);
+ };
+ 
+ /*
+@@ -757,6 +764,8 @@ struct cftype {
+ 			 struct poll_table_struct *pt);
+ 
+ 	struct lock_class_key	lockdep_key;
++
++	ANDROID_KABI_RESERVE(1);
+ };
+ 
+ /*
+@@ -852,6 +861,8 @@ struct cgroup_subsys {
+ 
+ 	spinlock_t rstat_ss_lock;
+ 	struct llist_head __percpu *lhead; /* lockless update list head */
++
++	ANDROID_KABI_RESERVE(1);
+ };
+ 
+ extern struct percpu_rw_semaphore cgroup_threadgroup_rwsem;
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index cc5d199e0be3..91b43f1c9958 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -121,6 +121,8 @@ struct mem_cgroup_per_node {
+ 	atomic_t		slab_reclaimable;
+ 	atomic_t		slab_unreclaimable;
+ #endif
++
++	ANDROID_KABI_RESERVE(1);
+ };
+ 
+ struct mem_cgroup_threshold {
+@@ -180,6 +182,8 @@ struct obj_cgroup {
+ 		struct list_head list; /* protected by objcg_lock */
+ 		struct rcu_head rcu;
+ 	};
++
++	ANDROID_KABI_RESERVE(1);
+ };
+ 
+ /*
+@@ -324,6 +328,7 @@ struct mem_cgroup {
+ 
+ 	ANDROID_OEM_DATA_ARRAY(1, 2);
+ 	ANDROID_VENDOR_DATA(1);
++	ANDROID_KABI_RESERVE(1);
+ 
+ 	struct mem_cgroup_per_node *nodeinfo[];
+ };
+diff --git a/include/linux/mm_types.h b/include/linux/mm_types.h
+index 93ce64be8ed5..f2552e68a18e 100644
+--- a/include/linux/mm_types.h
++++ b/include/linux/mm_types.h
+@@ -1237,6 +1237,7 @@ struct mm_struct {
+ 		struct task_dma_buf_info *dmabuf_info;
+ 
+ 		ANDROID_KABI_RESERVE(1);
++		ANDROID_BACKPORT_RESERVE(1);
+ 		ANDROID_VENDOR_DATA(1);
+ 	} __randomize_layout;
+ 
+@@ -1307,6 +1308,8 @@ struct lru_gen_mm_list {
+ 	struct list_head fifo;
+ 	/* protects the list above */
+ 	spinlock_t lock;
++
++	ANDROID_KABI_RESERVE(1);
+ };
+ 
+ #endif /* CONFIG_LRU_GEN */
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index 6bc44f433e7c..dad9c402fdad 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -15,6 +15,7 @@
+ #include <linux/bitops.h>
+ #include <linux/hardirq.h> /* for in_interrupt() */
+ #include <linux/hugetlb_inline.h>
++#include <linux/android_kabi.h>
+ 
+ struct folio_batch;
+ 
+@@ -1339,7 +1340,9 @@ struct readahead_control {
+ 	bool dropbehind;
+ 	bool _workingset;
+ 	unsigned long _pflags;
++
+ 	ANDROID_OEM_DATA(1);
++	ANDROID_KABI_RESERVE(1);
+ };
+ 
+ #define DEFINE_READAHEAD(ractl, f, r, m, i)				\
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 1f3d26fc2513..898aed389657 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -65,6 +65,7 @@
+ #include <linux/swapops.h>
+ #include <linux/balloon_compaction.h>
+ #include <linux/sched/sysctl.h>
++#include <linux/android_kabi.h>
+ 
+ #include "internal.h"
+ #include "swap.h"
+@@ -189,6 +190,9 @@ struct scan_control {
+ 	/* for recording the reclaimed slab by now */
+ 	struct reclaim_state reclaim_state;
+ 	ANDROID_VENDOR_DATA(1);
++
++	ANDROID_KABI_RESERVE(1);
++	ANDROID_KABI_RESERVE(2);
+ };
+ 
+ #ifdef ARCH_HAS_PREFETCHW
+
+commit fbc2933f52c09007dae51988e0c3a7765eda5bac
+Author: Carlos Llamas <cmllamas@google.com>
+Date:   Sat Apr 25 16:59:27 2026 +0000
+
+    ANDROID: GKI: 2026-04-29 KMI update
+    
+    KMI update for 2026-04-29
+    
+    Bug: 506164501
+    Change-Id: I9e515e85e931f3fa6d71d5ea8747eb4d00123856
+    Signed-off-by: Carlos Llamas <cmllamas@google.com>
+
+diff --git a/bazel/constants.scl b/bazel/constants.scl
+index 867ddf7b5592..c11098cd6445 100644
+--- a/bazel/constants.scl
++++ b/bazel/constants.scl
+@@ -1,5 +1,5 @@
+ BRANCH="android17-6.18"
+-KMI_GENERATION=3
++KMI_GENERATION=4
+ CLANG_VERSION="r584948b"
+ RUSTC_VERSION="1.91.1.p1"
+ AARCH64_NDK_TRIPLE="aarch64-linux-android31"
+
+commit 2c5d51bd4b32440d778d18fa2ac697282c87ad34
+Author: Carlos Llamas <cmllamas@google.com>
+Date:   Fri May 15 14:25:37 2026 +0000
+
+    ANDROID: GKI: 2026-05-15 KMI update
+    
+    KMI update for 2026-05-15
+    
+    Bug: 513572520
+    Change-Id: I02ff8c0dba2cbb1d1e772beb10fa37bde348c621
+    Signed-off-by: Carlos Llamas <cmllamas@google.com>
+
+diff --git a/bazel/constants.scl b/bazel/constants.scl
+index 0b47e3f0f28b..41c709926087 100644
+--- a/bazel/constants.scl
++++ b/bazel/constants.scl
+@@ -1,5 +1,5 @@
+ BRANCH="android17-6.18"
+-KMI_GENERATION=4
++KMI_GENERATION=5
+ CLANG_VERSION="r584948c"
+ RUSTC_VERSION="1.91.1.p1"
+ AARCH64_NDK_TRIPLE="aarch64-linux-android31"
+
+commit 54103a1f7260c580d36febff418a76342e399bca
+Author: Frederick Mayle <fmayle@google.com>
+Date:   Thu May 21 16:08:51 2026 -0700
+
+    ANDROID: GKI ABI fixup for readahead_control->_max_index
+    
+    Bug: 499041092
+    Change-Id: I0043372583029c4db1a27c72fb567eed27a814fd
+    Signed-off-by: Frederick Mayle <fmayle@google.com>
+
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index ded250713724..1e0d6dc80708 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -1343,7 +1343,6 @@ struct readahead_control {
+ 	struct file_ra_state *ra;
+ /* private: use the readahead_* accessors instead */
+ 	pgoff_t _index;
+-	pgoff_t _max_index; /* limit readahead to _max_index, inclusive */
+ 	unsigned int _nr_pages;
+ 	unsigned int _batch_count;
+ 	bool dropbehind;
+@@ -1351,7 +1350,7 @@ struct readahead_control {
+ 	unsigned long _pflags;
+ 
+ 	ANDROID_OEM_DATA(1);
+-	ANDROID_KABI_RESERVE(1);
++	ANDROID_KABI_USE(1, pgoff_t _max_index); /* limit readahead to _max_index, inclusive */
+ };
+ 
+ #define DEFINE_READAHEAD(ractl, f, r, m, i)				\
+
+commit 28ef5ece6941de3c35c2ba64ea6a9a2a8578d350
+Author: Lee Jones <lee@kernel.org>
+Date:   Thu Jun 25 11:59:55 2026 +0100
+
+    ANDROID: Fix ABI issues related to changed hid_report_raw_event()
+    
+    Upstream recently started passing the original buffer size through
+    hid_report_raw_event() in order to fix a few recently reported
+    vulnerabilities.  These issues also affect Android so we need this
+    change.  However, since it changes the function signature which breaks
+    ABI, we need to provide a wrapper.
+    
+    Bug: 483018448
+    Signed-off-by: Lee Jones <joneslee@google.com>
+    Change-Id: I2c50f89815a713391a6ae9510601a3a0ebfc4d5e
+
+diff --git a/drivers/hid/hid-core.c b/drivers/hid/hid-core.c
+index 6a1600af30e2..f3363125ede2 100644
+--- a/drivers/hid/hid-core.c
++++ b/drivers/hid/hid-core.c
+@@ -2029,8 +2029,8 @@ int __hid_request(struct hid_device *hid, struct hid_report *report,
+ }
+ EXPORT_SYMBOL_GPL(__hid_request);
+ 
+-int hid_report_raw_event(struct hid_device *hid, enum hid_report_type type, u8 *data,
+-			 size_t bufsize, u32 size, int interrupt)
++int __hid_report_raw_event(struct hid_device *hid, enum hid_report_type type, u8 *data,
++			   size_t bufsize, u32 size, int interrupt)
+ {
+ 	struct hid_report_enum *report_enum = hid->report_enum + type;
+ 	struct hid_report *report;
+@@ -2099,6 +2099,13 @@ int hid_report_raw_event(struct hid_device *hid, enum hid_report_type type, u8 *
+ 
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(__hid_report_raw_event);
++
++int hid_report_raw_event(struct hid_device *hid, enum hid_report_type type, u8 *data, u32 size,
++			 int interrupt)
++{
++	return __hid_report_raw_event(hid, type, data, size, size, interrupt);
++}
+ EXPORT_SYMBOL_GPL(hid_report_raw_event);
+ 
+ 
+@@ -2159,7 +2166,7 @@ static int __hid_input_report(struct hid_device *hid, enum hid_report_type type,
+ 			goto unlock;
+ 	}
+ 
+-	ret = hid_report_raw_event(hid, type, data, bufsize, size, interrupt);
++	ret = __hid_report_raw_event(hid, type, data, bufsize, size, interrupt);
+ 
+ unlock:
+ 	if (!lock_already_taken)
+diff --git a/drivers/hid/hid-gfrm.c b/drivers/hid/hid-gfrm.c
+index d2a56bf92b41..326ae2805925 100644
+--- a/drivers/hid/hid-gfrm.c
++++ b/drivers/hid/hid-gfrm.c
+@@ -65,16 +65,16 @@ static int gfrm_raw_event(struct hid_device *hdev, struct hid_report *report,
+ 	 */
+ 	switch (data[1]) {
+ 	case GFRM100_SEARCH_KEY_DOWN:
+-		ret = hid_report_raw_event(hdev, HID_INPUT_REPORT, search_key_dn,
+-					   sizeof(search_key_dn), sizeof(search_key_dn), 1);
++		ret = __hid_report_raw_event(hdev, HID_INPUT_REPORT, search_key_dn,
++					     sizeof(search_key_dn), sizeof(search_key_dn), 1);
+ 		break;
+ 
+ 	case GFRM100_SEARCH_KEY_AUDIO_DATA:
+ 		break;
+ 
+ 	case GFRM100_SEARCH_KEY_UP:
+-		ret = hid_report_raw_event(hdev, HID_INPUT_REPORT, search_key_up,
+-					   sizeof(search_key_up), sizeof(search_key_up), 1);
++		ret = __hid_report_raw_event(hdev, HID_INPUT_REPORT, search_key_up,
++					     sizeof(search_key_up), sizeof(search_key_up), 1);
+ 		break;
+ 
+ 	default:
+diff --git a/drivers/hid/hid-logitech-hidpp.c b/drivers/hid/hid-logitech-hidpp.c
+index 209de6a3e985..847d980479c4 100644
+--- a/drivers/hid/hid-logitech-hidpp.c
++++ b/drivers/hid/hid-logitech-hidpp.c
+@@ -3663,8 +3663,8 @@ static int hidpp10_consumer_keys_raw_event(struct hidpp_device *hidpp,
+ 	consumer_report[0] = 0x03;
+ 	memcpy(&consumer_report[1], &data[3], 4);
+ 	/* We are called from atomic context */
+-	hid_report_raw_event(hidpp->hid_dev, HID_INPUT_REPORT,
+-			     consumer_report, sizeof(consumer_report), 5, 1);
++	__hid_report_raw_event(hidpp->hid_dev, HID_INPUT_REPORT,
++			       consumer_report, sizeof(consumer_report), 5, 1);
+ 
+ 	return 1;
+ }
+diff --git a/drivers/hid/hid-multitouch.c b/drivers/hid/hid-multitouch.c
+index a543d4822107..c1cb38b0a577 100644
+--- a/drivers/hid/hid-multitouch.c
++++ b/drivers/hid/hid-multitouch.c
+@@ -530,8 +530,8 @@ static void mt_get_feature(struct hid_device *hdev, struct hid_report *report)
+ 			goto free;
+ 		}
+ 
+-		ret = hid_report_raw_event(hdev, HID_FEATURE_REPORT, buf,
+-					   size, size, 0);
++		ret = __hid_report_raw_event(hdev, HID_FEATURE_REPORT, buf,
++					     size, size, 0);
+ 		if (ret)
+ 			dev_warn(&hdev->dev, "failed to report feature\n");
+ 	}
+diff --git a/drivers/hid/hid-primax.c b/drivers/hid/hid-primax.c
+index 8db054280afb..310a6e27924d 100644
+--- a/drivers/hid/hid-primax.c
++++ b/drivers/hid/hid-primax.c
+@@ -44,7 +44,7 @@ static int px_raw_event(struct hid_device *hid, struct hid_report *report,
+ 			data[0] |= (1 << (data[idx] - 0xE0));
+ 			data[idx] = 0;
+ 		}
+-		hid_report_raw_event(hid, HID_INPUT_REPORT, data, size, size, 0);
++		__hid_report_raw_event(hid, HID_INPUT_REPORT, data, size, size, 0);
+ 		return 1;
+ 
+ 	default:	/* unknown report */
+diff --git a/drivers/hid/hid-vivaldi-common.c b/drivers/hid/hid-vivaldi-common.c
+index b12bb5cc091a..c3c9fe9e697b 100644
+--- a/drivers/hid/hid-vivaldi-common.c
++++ b/drivers/hid/hid-vivaldi-common.c
+@@ -84,8 +84,8 @@ void vivaldi_feature_mapping(struct hid_device *hdev,
+ 		report_len--;
+ 	}
+ 
+-	ret = hid_report_raw_event(hdev, HID_FEATURE_REPORT, report_data,
+-				   report_len, report_len, 0);
++	ret = __hid_report_raw_event(hdev, HID_FEATURE_REPORT, report_data,
++				     report_len, report_len, 0);
+ 	if (ret) {
+ 		dev_warn(&hdev->dev, "failed to report feature %d\n",
+ 			 field->report->id);
+diff --git a/drivers/hid/wacom_sys.c b/drivers/hid/wacom_sys.c
+index 63b5fed9415d..bac4b5c27afa 100644
+--- a/drivers/hid/wacom_sys.c
++++ b/drivers/hid/wacom_sys.c
+@@ -90,7 +90,7 @@ static void wacom_wac_queue_flush(struct hid_device *hdev,
+ 			kfree(buf);
+ 			continue;
+ 		}
+-		err = hid_report_raw_event(hdev, HID_INPUT_REPORT, buf, size, size, false);
++		err = __hid_report_raw_event(hdev, HID_INPUT_REPORT, buf, size, size, false);
+ 		if (err) {
+ 			hid_warn(hdev, "%s: unable to flush event due to error %d\n",
+ 				 __func__, err);
+@@ -333,7 +333,7 @@ static void wacom_feature_mapping(struct hid_device *hdev,
+ 			ret = wacom_get_report(hdev, HID_FEATURE_REPORT,
+ 					       data, n, WAC_CMD_RETRIES);
+ 			if (ret == n && features->type == HID_GENERIC) {
+-				ret = hid_report_raw_event(hdev,
++				ret = __hid_report_raw_event(hdev,
+ 					HID_FEATURE_REPORT, data, n, n, 0);
+ 			} else if (ret == 2 && features->type != HID_GENERIC) {
+ 				features->touch_max = data[1];
+@@ -395,8 +395,8 @@ static void wacom_feature_mapping(struct hid_device *hdev,
+ 		ret = wacom_get_report(hdev, HID_FEATURE_REPORT,
+ 					data, n, WAC_CMD_RETRIES);
+ 		if (ret == n) {
+-			ret = hid_report_raw_event(hdev, HID_FEATURE_REPORT,
+-						   data, n, n, 0);
++			ret = __hid_report_raw_event(hdev, HID_FEATURE_REPORT,
++						     data, n, n, 0);
+ 		} else {
+ 			hid_warn(hdev, "%s: could not retrieve sensor offsets\n",
+ 				 __func__);
+diff --git a/drivers/staging/greybus/hid.c b/drivers/staging/greybus/hid.c
+index afa78c96ede8..092136f5c28f 100644
+--- a/drivers/staging/greybus/hid.c
++++ b/drivers/staging/greybus/hid.c
+@@ -199,9 +199,9 @@ static void gb_hid_init_report(struct gb_hid *ghid, struct hid_report *report)
+ 	/*
+ 	 * hid->driver_lock is held as we are in probe function,
+ 	 * we just need to setup the input fields, so using
+-	 * hid_report_raw_event is safe.
++	 * __hid_report_raw_event is safe.
+ 	 */
+-	hid_report_raw_event(ghid->hid, report->type, ghid->inbuf, ghid->bufsize, size, 1);
++	__hid_report_raw_event(ghid->hid, report->type, ghid->inbuf, ghid->bufsize, size, 1);
+ }
+ 
+ static void gb_hid_init_reports(struct gb_hid *ghid)
+diff --git a/drivers/usb/gadget/function/android_f_accessory.c b/drivers/usb/gadget/function/android_f_accessory.c
+index 12f6dcda0054..fa3c56859f12 100644
+--- a/drivers/usb/gadget/function/android_f_accessory.c
++++ b/drivers/usb/gadget/function/android_f_accessory.c
+@@ -505,7 +505,7 @@ static void acc_complete_send_hid_event(struct usb_ep *ep,
+ 		return;
+ 	}
+ 
+-	hid_report_raw_event(hid->hid, HID_INPUT_REPORT, req->buf, length, length, 1);
++	__hid_report_raw_event(hid->hid, HID_INPUT_REPORT, req->buf, length, length, 1);
+ }
+ 
+ static int acc_hid_parse(struct hid_device *hid)
+diff --git a/include/linux/hid.h b/include/linux/hid.h
+index c56e46c7301d..618c4397ff57 100644
+--- a/include/linux/hid.h
++++ b/include/linux/hid.h
+@@ -1274,8 +1274,10 @@ static inline u32 hid_report_len(struct hid_report *report)
+ 	return DIV_ROUND_UP(report->size, 8) + (report->id > 0);
+ }
+ 
+-int hid_report_raw_event(struct hid_device *hid, enum hid_report_type type, u8 *data,
+-			 size_t bufsize, u32 size, int interrupt);
++int hid_report_raw_event(struct hid_device *hid, enum hid_report_type type, u8 *data, u32 size,
++			 int interrupt);
++int __hid_report_raw_event(struct hid_device *hid, enum hid_report_type type, u8 *data,
++			   size_t bufsize, u32 size, int interrupt);
+ 
+ /* HID quirks API */
+ unsigned long hid_lookup_quirk(const struct hid_device *hdev);
+
+commit 07857b13bb505dc797feaba782eaae3e7352a9d5
+Author: Will McVicker <willmcvicker@google.com>
+Date:   Wed Apr 10 09:54:27 2024 -0700
+
+    ANDROID: Add known structs used by modules to KMI
+    
+    This adds `struct dwc3` and `struct kernel_all_info` to the KMI via fake
+    GKI symbols as we know some partners are using these in their
+    out-of-tree drivers. This ensures that future changes to these structs
+    will not break partner builds.
+    
+    Bug: 332277393
+    Bug: 236036821
+    Change-Id: Ifa1ac6b71d58415339a63f16a79c1f713dda789f
+    Signed-off-by: Will McVicker <willmcvicker@google.com>
+
+diff --git a/drivers/android/debug_kinfo.c b/drivers/android/debug_kinfo.c
+index c0793c40ca0c..a307ada55202 100644
+--- a/drivers/android/debug_kinfo.c
++++ b/drivers/android/debug_kinfo.c
+@@ -180,6 +180,12 @@ static struct platform_driver debug_kinfo_driver = {
+ };
+ module_platform_driver(debug_kinfo_driver);
+ 
++/*
++ * For type visibility
++ */
++const struct kernel_all_info *const ANDROID_GKI_struct_kernel_all_info;
++EXPORT_SYMBOL_GPL(ANDROID_GKI_struct_kernel_all_info);
++
+ MODULE_AUTHOR("Jone Chou <jonechou@google.com>");
+ MODULE_DESCRIPTION("Debug Kinfo Driver");
+ MODULE_LICENSE("GPL v2");
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index 57f34b0d80bd..6530557aef6e 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -2846,6 +2846,12 @@ static struct platform_driver dwc3_driver = {
+ 
+ module_platform_driver(dwc3_driver);
+ 
++/*
++ * For type visibility (http://b/236036821)
++ */
++const struct dwc3 *const ANDROID_GKI_struct_dwc3;
++EXPORT_SYMBOL_GPL(ANDROID_GKI_struct_dwc3);
++
+ MODULE_ALIAS("platform:dwc3");
+ MODULE_AUTHOR("Felipe Balbi <balbi@ti.com>");
+ MODULE_LICENSE("GPL v2");

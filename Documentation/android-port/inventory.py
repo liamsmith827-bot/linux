@@ -27,7 +27,7 @@ def pins(root, name):
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
         rows = list(pool.map(pin_project, [(root, p) for p in projects]))
     with (HERE / 'inputs' / name).open('w') as f:
-        w = csv.writer(f, delimiter='\t')
+        w = csv.writer(f, delimiter='\t', lineterminator='\n')
         w.writerow(['path', 'commit', 'tracked_changes', 'configured_remotes'])
         w.writerows(rows)
 
@@ -39,12 +39,19 @@ def commit_info(line):
                 disposition='pending', rationale='', evidence=[], result_commits=[])
 
 def render(rows):
+    columns = ['commit', 'parents', 'subject', 'files', 'disposition',
+               'review_status', 'rationale', 'evidence', 'result_commits']
     with (HERE / 'candidates.tsv').open('w') as f:
-        w = csv.writer(f, delimiter='\t')
-        w.writerow(['commit', 'parents', 'subject', 'files', 'disposition', 'rationale', 'evidence', 'result_commits'])
+        w = csv.writer(f, delimiter='\t', lineterminator='\n')
+        w.writerow(columns)
         for r in rows:
-            w.writerow([r[k] if isinstance(r[k], str) else '; '.join(r[k]) for k in
-                        ['commit', 'parents', 'subject', 'files', 'disposition', 'rationale', 'evidence', 'result_commits']])
+            values = []
+            for key in columns:
+                value = r.get(key, 'pending' if key == 'review_status' else '')
+                if isinstance(value, list):
+                    value = '; '.join(value)
+                values.append(value or '-')
+            w.writerow(values)
 
 if __name__ == '__main__':
     (HERE / 'inputs').mkdir(exist_ok=True)

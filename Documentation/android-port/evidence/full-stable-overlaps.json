@@ -1,0 +1,764 @@
+{
+  "base": "7d0a66e4bb9081d75c82ec4957c50034cb0ea449",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "port": "c7aeaf39ed7f163c7b3a11f83219d0612c53d5db",
+  "commits_examined": 1692,
+  "overlaps": [
+    {
+      "commit": "71cbad138969edecef01b28dff87d91b56db538d",
+      "subject": "rust_binder: reschedule node refcount update on thread exit",
+      "lts_added_line_absent": [
+        {
+          "path": "drivers/android/binder/node.rs",
+          "port_path": "drivers/android/binder/node.rs",
+          "hunk": "@@ -728 +728,15 @@ fn do_work(",
+          "line": "_drop_outside_lock = owner_inner.push_work(node);"
+        },
+        {
+          "path": "drivers/android/binder/node/wrapper.rs",
+          "port_path": "drivers/android/binder/node/wrapper.rs",
+          "hunk": "@@ -60 +60,33 @@ fn do_work(",
+          "line": "_drop_outside_lock = owner_inner.push_work(node2);"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "The refcount-update requeue on thread exit is retained in both Node and NodeWrapper cancellation. The adapted push_work API additionally receives &self.owner / &node.owner so polling notification is correct; destruction remains outside the process lock.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "03525b632908b049f4d04cc8a71cdff2329589cf",
+      "subject": "wifi: mac80211: count only matching reservations in reserved switch",
+      "lts_added_line_absent": [
+        {
+          "path": "net/mac80211/chan.c",
+          "port_path": "net/mac80211/chan.c",
+          "hunk": "@@ -1642 +1652 @@ static int ieee80211_vif_use_reserved_switch(struct ieee80211_local *local)",
+          "line": "if (ieee80211_link_has_in_place_reservation(link, ctx)) {"
+        },
+        {
+          "path": "net/mac80211/chan.c",
+          "port_path": "net/mac80211/chan.c",
+          "hunk": "@@ -1663 +1673 @@ static int ieee80211_vif_use_reserved_switch(struct ieee80211_local *local)",
+          "line": "if (ieee80211_link_has_in_place_reservation(link, ctx) &&"
+        },
+        {
+          "path": "net/mac80211/chan.c",
+          "port_path": "net/mac80211/chan.c",
+          "hunk": "@@ -1808 +1818,2 @@ static int ieee80211_vif_use_reserved_switch(struct ieee80211_local *local)",
+          "line": "if (WARN_ON(ieee80211_link_has_in_place_reservation(link,"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "Preserved via ieee80211_link_has_in_place_reservation(iter.link, ctx): the iterator representation changed, but the reservation is still matched to ctx.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "755476d7ba92a1f3fe2a376c515d710bc6baebc3",
+      "subject": "sched/rt,dl: Skip migrate-disabled tasks when picking a push candidate",
+      "lts_added_line_absent": [
+        {
+          "path": "kernel/sched/deadline.c",
+          "port_path": "kernel/sched/deadline.c",
+          "hunk": "@@ -2780,2 +2780,2 @@ static struct task_struct *pick_next_pushable_dl_task(struct rq *rq)",
+          "line": "if (!task_on_cpu(rq, i) && !is_migration_disabled(i)) {"
+        },
+        {
+          "path": "kernel/sched/rt.c",
+          "port_path": "kernel/sched/rt.c",
+          "hunk": "@@ -1863,2 +1863,2 @@ static struct task_struct *pick_next_pushable_task(struct rq *rq)",
+          "line": "if (!task_on_cpu(rq, i) && !is_migration_disabled(i)) {"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "Preserved in __task_is_pushable(): reject current tasks and is_migration_disabled(p); proxy task_is_pushable also checks exec_ctx. Intermediate proxy-chain runtime behavior remains an unresolved validation item; no relaxation of these explicit checks is intended.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "6a1a15d86ba691fecdae7adf0ba1eb6b3e2f236f",
+      "subject": "sched: Make class_schedulers avoid pushing current, and get rid of proxy_tag_curr()",
+      "lts_added_line_absent": [
+        {
+          "path": "kernel/sched/rt.c",
+          "port_path": "kernel/sched/rt.c",
+          "hunk": "@@ -1856 +1856,2 @@ static struct task_struct *pick_next_pushable_task(struct rq *rq)",
+          "line": "struct task_struct *i, *p = NULL;"
+        },
+        {
+          "path": "kernel/sched/rt.c",
+          "port_path": "kernel/sched/rt.c",
+          "hunk": "@@ -1861,2 +1862,10 @@ static struct task_struct *pick_next_pushable_task(struct rq *rq)",
+          "line": "plist_for_each_entry(i, head, pushable_tasks) {"
+        }
+      ],
+      "lts_removed_line_present": [
+        {
+          "path": "kernel/sched/core.c",
+          "port_path": "kernel/sched/core.c",
+          "hunk": "@@ -6761,17 +6760,0 @@ find_proxy_task(struct rq *rq, struct task_struct *donor, struct rq_flags *rf)",
+          "line": "if (!sched_proxy_exec())"
+        }
+      ],
+      "status": "reviewed-source-adaptation",
+      "assessment": "Preserved through task_is_pushable and __task_is_pushable rejecting task_on_cpu; list iteration uses the adapted proxy candidate representation. The repeated if (!sched_proxy_exec()) text is in other proxy guards; it does not reintroduce proxy_tag_curr.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "0a0c03e4b7c63bdd2db457349431a20d62721c60",
+      "subject": "wifi: cfg80211: Add an API to configure local NAN schedule",
+      "lts_added_line_absent": [
+        {
+          "path": "net/wireless/nl80211.c",
+          "port_path": "net/wireless/nl80211.c",
+          "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+          "line": "struct cfg80211_nan_local_sched *sched,"
+        },
+        {
+          "path": "net/wireless/nl80211.c",
+          "port_path": "net/wireless/nl80211.c",
+          "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+          "line": "if (cfg80211_chandef_compatible(&sched->nan_channels[i].chandef,"
+        },
+        {
+          "path": "net/wireless/nl80211.c",
+          "port_path": "net/wireless/nl80211.c",
+          "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+          "line": "if (!channel_parsed[NL80211_ATTR_NAN_CHANNEL_ENTRY])"
+        },
+        {
+          "path": "net/wireless/nl80211.c",
+          "port_path": "net/wireless/nl80211.c",
+          "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+          "line": "sched->nan_channels[index].channel_entry ="
+        },
+        {
+          "path": "net/wireless/nl80211.c",
+          "port_path": "net/wireless/nl80211.c",
+          "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+          "line": "if (!channel_parsed[NL80211_ATTR_NAN_RX_NSS])"
+        },
+        {
+          "path": "net/wireless/nl80211.c",
+          "port_path": "net/wireless/nl80211.c",
+          "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+          "line": "sched->nan_channels[index].rx_nss ="
+        },
+        {
+          "path": "net/wireless/nl80211.c",
+          "port_path": "net/wireless/nl80211.c",
+          "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+          "line": "if (sched->nan_channels[index].rx_nss > n_rx_nss ||"
+        },
+        {
+          "path": "net/wireless/nl80211.c",
+          "port_path": "net/wireless/nl80211.c",
+          "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+          "line": "!sched->nan_channels[index].rx_nss) {"
+        },
+        {
+          "path": "net/wireless/nl80211.c",
+          "port_path": "net/wireless/nl80211.c",
+          "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+          "line": "sched->nan_channels[index].chandef = chandef;"
+        },
+        {
+          "path": "net/wireless/nl80211.c",
+          "port_path": "net/wireless/nl80211.c",
+          "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+          "line": "int rem, i = 0, n_channels = 0;"
+        },
+        {
+          "path": "net/wireless/nl80211.c",
+          "port_path": "net/wireless/nl80211.c",
+          "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+          "line": "int ret = nl80211_parse_nan_channel(rdev, channel, info, sched,"
+        },
+        {
+          "path": "net/wireless/nl80211.c",
+          "port_path": "net/wireless/nl80211.c",
+          "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+          "line": "memcpy(sched->schedule,"
+        },
+        {
+          "path": "net/wireless/nl80211.c",
+          "port_path": "net/wireless/nl80211.c",
+          "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+          "line": "nla_data(info->attrs[NL80211_ATTR_NAN_TIME_SLOTS]),"
+        },
+        {
+          "path": "net/wireless/nl80211.c",
+          "port_path": "net/wireless/nl80211.c",
+          "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+          "line": "nla_len(info->attrs[NL80211_ATTR_NAN_TIME_SLOTS]));"
+        },
+        {
+          "path": "net/wireless/nl80211.c",
+          "port_path": "net/wireless/nl80211.c",
+          "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+          "line": "for (int slot = 0; slot < ARRAY_SIZE(sched->schedule); slot++) {"
+        },
+        {
+          "path": "net/wireless/nl80211.c",
+          "port_path": "net/wireless/nl80211.c",
+          "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+          "line": "if (sched->schedule[slot] != NL80211_NAN_SCHED_NOT_AVAIL_SLOT &&"
+        },
+        {
+          "path": "net/wireless/nl80211.c",
+          "port_path": "net/wireless/nl80211.c",
+          "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+          "line": "sched->schedule[slot] >= sched->n_channels) {"
+        },
+        {
+          "path": "net/wireless/nl80211.c",
+          "port_path": "net/wireless/nl80211.c",
+          "hunk": "@@ -16355,0 +16398,218 @@ EXPORT_SYMBOL(cfg80211_nan_func_terminated);",
+          "line": "\"Invalid time slot in NAN schedule\");"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "Retained through shared NAN channel/schedule parsers: channel/regulatory validity, channel entry and RX NSS limits, and schedule-slot channel indices remain validated.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "335c515932a59a694f5602af891292184cf2b215",
+      "subject": "wifi: cfg80211: add initial UHR support",
+      "lts_added_line_absent": [
+        {
+          "path": "net/wireless/nl80211.c",
+          "port_path": "net/wireless/nl80211.c",
+          "hunk": "@@ -8076 +8132,2 @@ int cfg80211_check_station_change(struct wiphy *wiphy,",
+          "line": "params->link_sta_params.eht_capa ||"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "cfg80211_check_station_change still tests ext_capab, link_sta_params.eht_capa and link_sta_params.uhr_capa; line wrapping differs.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "69d57dbadb27ffd5eef34fd184bab145500cdabc",
+      "subject": "dma-buf: dma-heap: don't publish fd before copy_to_user() succeeds",
+      "lts_added_line_absent": [
+        {
+          "path": "drivers/dma-buf/dma-heap.c",
+          "port_path": "drivers/dma-buf/dma-heap.c",
+          "hunk": "@@ -109 +84,5 @@ static long dma_heap_ioctl_allocate(struct file *file, void *data)",
+          "line": "len = PAGE_ALIGN(heap_allocation->len);"
+        },
+        {
+          "path": "drivers/dma-buf/dma-heap.c",
+          "port_path": "drivers/dma-buf/dma-heap.c",
+          "hunk": "@@ -111,5 +90,11 @@ static long dma_heap_ioctl_allocate(struct file *file, void *data)",
+          "line": "dmabuf = heap->ops->allocate(heap, len, heap_allocation->fd_flags,"
+        }
+      ],
+      "lts_removed_line_present": [
+        {
+          "path": "drivers/dma-buf/dma-heap.c",
+          "port_path": "drivers/dma-buf/dma-heap.c",
+          "hunk": "@@ -52,27 +51,0 @@ static DEFINE_XARRAY_ALLOC(dma_heap_minors);",
+          "line": "return PTR_ERR(dmabuf);"
+        },
+        {
+          "path": "drivers/dma-buf/dma-heap.c",
+          "port_path": "drivers/dma-buf/dma-heap.c",
+          "hunk": "@@ -52,27 +51,0 @@ static DEFINE_XARRAY_ALLOC(dma_heap_minors);",
+          "line": "fd = dma_buf_fd(dmabuf, fd_flags);"
+        },
+        {
+          "path": "drivers/dma-buf/dma-heap.c",
+          "port_path": "drivers/dma-buf/dma-heap.c",
+          "hunk": "@@ -111,5 +90,11 @@ static long dma_heap_ioctl_allocate(struct file *file, void *data)",
+          "line": "heap_allocation->fd_flags,"
+        }
+      ],
+      "status": "reviewed-source-adaptation",
+      "assessment": "dma_heap_buffer_alloc performs PAGE_ALIGN and flag validation. dma_heap_ioctl reserves an fd, copies output, and only then calls fd_install; failure paths release the reserved fd and dma_buf. The old dma_buf_fd call remains only in the separate in-kernel dma_heap_bufferfd_alloc API, which the ioctl does not call.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "9a78de3befad667bf8ef7318dec319493549e2c6",
+      "subject": "zram: read slot block idx under slot lock",
+      "lts_added_line_absent": [
+        {
+          "path": "drivers/block/zram/zram_drv.c",
+          "port_path": "drivers/block/zram/zram_drv.c",
+          "hunk": "@@ -1736,0 +1737,2 @@ static int zram_read_page(struct zram *zram, struct page *page, u32 index,",
+          "line": "unsigned long blk_idx = zram_get_handle(zram, index);"
+        },
+        {
+          "path": "drivers/block/zram/zram_drv.c",
+          "port_path": "drivers/block/zram/zram_drv.c",
+          "hunk": "@@ -1742,3 +1744 @@ static int zram_read_page(struct zram *zram, struct page *page, u32 index,",
+          "line": "ret = read_from_bdev(zram, page, blk_idx, parent);"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "zram_read_page captures get_slot_handle while holding the slot lock, unlocks, and passes captured blk_idx to the backing read; the compressed-writeback metadata accessor differs.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "d1743ec2dd2c8a3a701277fab82492c67a48f3d5",
+      "subject": "zram: take write lock in wb limit store handlers",
+      "lts_added_line_absent": [
+        {
+          "path": "drivers/block/zram/zram_drv.c",
+          "port_path": "drivers/block/zram/zram_drv.c",
+          "hunk": "@@ -513 +514 @@ static ssize_t writeback_limit_enable_store(struct device *dev,",
+          "line": "down_write(&zram->init_lock);"
+        },
+        {
+          "path": "drivers/block/zram/zram_drv.c",
+          "port_path": "drivers/block/zram/zram_drv.c",
+          "hunk": "@@ -517 +518 @@ static ssize_t writeback_limit_enable_store(struct device *dev,",
+          "line": "up_write(&zram->init_lock);"
+        },
+        {
+          "path": "drivers/block/zram/zram_drv.c",
+          "port_path": "drivers/block/zram/zram_drv.c",
+          "hunk": "@@ -548 +551 @@ static ssize_t writeback_limit_store(struct device *dev,",
+          "line": "down_write(&zram->init_lock);"
+        },
+        {
+          "path": "drivers/block/zram/zram_drv.c",
+          "port_path": "drivers/block/zram/zram_drv.c",
+          "hunk": "@@ -552 +555 @@ static ssize_t writeback_limit_store(struct device *dev,",
+          "line": "up_write(&zram->init_lock);"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "Both writeback-limit stores use guard(rwsem_write)(&zram->init_lock), preserving write-side exclusion until scope exit.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "fef4b8f17e1c54522957b873ed81e6a60897625d",
+      "subject": "sched: Rework prev_balance() to avoid stale prev references",
+      "lts_added_line_absent": [
+        {
+          "path": "kernel/sched/core.c",
+          "port_path": "kernel/sched/core.c",
+          "hunk": "@@ -5982 +5981 @@ __pick_next_task(struct rq *rq, struct task_struct *prev, struct rq_flags *rf)",
+          "line": "p = pick_next_task_fair(rq, rq->donor, rf);"
+        },
+        {
+          "path": "kernel/sched/core.c",
+          "port_path": "kernel/sched/core.c",
+          "hunk": "@@ -6000 +5999 @@ __pick_next_task(struct rq *rq, struct task_struct *prev, struct rq_flags *rf)",
+          "line": "p = class->pick_next_task(rq, rq->donor);"
+        },
+        {
+          "path": "kernel/sched/fair.c",
+          "port_path": "kernel/sched/fair.c",
+          "hunk": "@@ -8882 +8882 @@ static int",
+          "line": "balance_fair(struct rq *rq, struct rq_flags *rf)"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "The proxy-execution pick API uses current rq->donor inside pick_next_task_fair and class pick paths after balance. It does not retain the stale caller prev across lock-dropping balance.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "952f7a6d392b824d1fafd38d2d3321ec931718bd",
+      "subject": "fuse: split off fuse_args and related definitions into a separate header",
+      "lts_added_line_absent": [
+        {
+          "path": "fs/fuse/args.h",
+          "port_path": "fs/fuse/args.h",
+          "hunk": "@@ -0,0 +1,65 @@",
+          "line": "struct fuse_in_arg in_args[4];"
+        },
+        {
+          "path": "fs/fuse/args.h",
+          "port_path": "fs/fuse/args.h",
+          "hunk": "@@ -0,0 +1,65 @@",
+          "line": "struct fuse_arg out_args[2];"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "Split args.h remains; in_args/out_args expand from LTS 4/2 to Android 5/3 for FUSE-BPF instead of restoring the old unsplit header.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "12be1d75e9b29b387088aa729f8b79563ada400d",
+      "subject": "rust_binder: only print failure if error has source",
+      "lts_added_line_absent": [
+        {
+          "path": "drivers/android/binder/thread.rs",
+          "port_path": "drivers/android/binder/thread.rs",
+          "hunk": "@@ -1273,6 +1272,7 @@ fn transaction(self: &Arc<Self>, cmd: u32, reader: &mut UserSliceReader) -> Resu",
+          "line": "\"{}:{} transaction to {} failed: {err:?}\","
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "TransactionInfo stores Option<Error>; error reporting remains conditional on a real source. Android logging formatting replaces the old direct message.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "bd818dcf4783ef5b924732f0ec52d931b94459bf",
+      "subject": "rust_binder: fix BINDER_GET_EXTENDED_ERROR",
+      "lts_added_line_absent": [
+        {
+          "path": "drivers/android/binder/thread.rs",
+          "port_path": "drivers/android/binder/thread.rs",
+          "hunk": "@@ -1244,0 +1263,2 @@ fn transaction(self: &Arc<Self>, cmd: u32, reader: &mut UserSliceReader) -> Resu",
+          "line": "if let Some(source) = &err.source {"
+        },
+        {
+          "path": "drivers/android/binder/thread.rs",
+          "port_path": "drivers/android/binder/thread.rs",
+          "hunk": "@@ -1244,0 +1263,2 @@ fn transaction(self: &Arc<Self>, cmd: u32, reader: &mut UserSliceReader) -> Resu",
+          "line": "info.errno = source.to_errno();"
+        },
+        {
+          "path": "drivers/android/binder/thread.rs",
+          "port_path": "drivers/android/binder/thread.rs",
+          "hunk": "@@ -1246,4 +1266,5 @@ fn transaction(self: &Arc<Self>, cmd: u32, reader: &mut UserSliceReader) -> Resu",
+          "line": "inner.extended_error ="
+        },
+        {
+          "path": "drivers/android/binder/thread.rs",
+          "port_path": "drivers/android/binder/thread.rs",
+          "hunk": "@@ -1253 +1274 @@ fn transaction(self: &Arc<Self>, cmd: u32, reader: &mut UserSliceReader) -> Resu",
+          "line": "\"{}:{} transaction to {} failed: {err:?}\","
+        },
+        {
+          "path": "drivers/android/binder/thread.rs",
+          "port_path": "drivers/android/binder/thread.rs",
+          "hunk": "@@ -1325,2 +1347,4 @@ fn reply_inner(self: &Arc<Self>, info: &mut TransactionInfo) -> BinderResult {",
+          "line": "\"{}:{} reply to {} failed: {err:?}\","
+        },
+        {
+          "path": "drivers/android/binder/transaction.rs",
+          "port_path": "drivers/android/binder/transaction.rs",
+          "hunk": "@@ -146 +145 @@ pub(crate) fn new_reply(",
+          "line": "match from.copy_transaction_data(to.clone(), info, info.debug_id, allow_fds, None) {"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "Extended error is cleared on transaction entry, then set from the source errno when Some(source) exists. TransactionInfo carries the error through the adapted copy/allocate helpers.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "e5049526a7aacdb53aaaee2e21b0fd8c865f02b4",
+      "subject": "rust_binder: introduce TransactionInfo",
+      "lts_added_line_absent": [
+        {
+          "path": "drivers/android/binder/thread.rs",
+          "port_path": "drivers/android/binder/thread.rs",
+          "hunk": "@@ -998,12 +996,11 @@ pub(crate) fn copy_transaction_data(",
+          "line": "let mut alloc = match to_process.buffer_alloc(debug_id, len, info) {"
+        },
+        {
+          "path": "drivers/android/binder/thread.rs",
+          "port_path": "drivers/android/binder/thread.rs",
+          "hunk": "@@ -998,12 +996,11 @@ pub(crate) fn copy_transaction_data(",
+          "line": "Ok(alloc) => alloc,"
+        },
+        {
+          "path": "drivers/android/binder/thread.rs",
+          "port_path": "drivers/android/binder/thread.rs",
+          "hunk": "@@ -998,12 +996,11 @@ pub(crate) fn copy_transaction_data(",
+          "line": "\"Failed to allocate buffer. len:{}, is_oneway:{}\","
+        },
+        {
+          "path": "drivers/android/binder/thread.rs",
+          "port_path": "drivers/android/binder/thread.rs",
+          "hunk": "@@ -1213,0 +1242,17 @@ fn transaction<T>(self: &Arc<Self>, tr: &BinderTransactionDataSg, inner: T)",
+          "line": "if let Some(source) = &err.source {"
+        },
+        {
+          "path": "drivers/android/binder/thread.rs",
+          "port_path": "drivers/android/binder/thread.rs",
+          "hunk": "@@ -1213,0 +1242,17 @@ fn transaction<T>(self: &Arc<Self>, tr: &BinderTransactionDataSg, inner: T)",
+          "line": "info.errno = source.to_errno();"
+        },
+        {
+          "path": "drivers/android/binder/transaction.rs",
+          "port_path": "drivers/android/binder/transaction.rs",
+          "hunk": "@@ -26,0 +27,27 @@",
+          "line": "#[derive(Zeroable)]"
+        },
+        {
+          "path": "drivers/android/binder/transaction.rs",
+          "port_path": "drivers/android/binder/transaction.rs",
+          "hunk": "@@ -26,0 +27,27 @@",
+          "line": "pub(crate) errno: i32,"
+        },
+        {
+          "path": "drivers/android/binder/transaction.rs",
+          "port_path": "drivers/android/binder/transaction.rs",
+          "hunk": "@@ -122,11 +145,9 @@ pub(crate) fn new_reply(",
+          "line": "Ok(alloc) => alloc,"
+        },
+        {
+          "path": "drivers/android/binder/transaction.rs",
+          "port_path": "drivers/android/binder/transaction.rs",
+          "hunk": "@@ -122,11 +145,9 @@ pub(crate) fn new_reply(",
+          "line": "pr_warn!(\"Failure in copy_transaction_data: {:?}\", err);"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "TransactionInfo is retained in the later ACK form with Option<Error>, with the LTS extended-error fixes preserved; the old errno-only representation is superseded.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "2abfd3ffbd9452f72535d96ff3982b3ab1f8f2f9",
+      "subject": "virtiofs: fix UAF on submount umount",
+      "lts_added_line_absent": [
+        {
+          "path": "fs/fuse/file.c",
+          "port_path": "fs/fuse/file.c",
+          "hunk": "@@ -378 +384 @@ void fuse_file_release(struct inode *inode, struct fuse_file *ff,",
+          "line": "fuse_file_put(ff, ff->fm->fc->auto_submounts);"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "fuse_file_release still passes ff->fm->fc->auto_submounts to fuse_file_put; the Android path adds its inode argument. Synchronous submount release is retained.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "da3d241c5b925f17a9d8051d7a9e0d454d8e01f6",
+      "subject": "fuse: fix uninit-value in fuse_dentry_revalidate()",
+      "lts_added_line_absent": [
+        {
+          "path": "fs/fuse/dir.c",
+          "port_path": "fs/fuse/dir.c",
+          "hunk": "@@ -288,0 +288,9 @@ static int fuse_dentry_init(struct dentry *dentry)",
+          "line": "#if BITS_PER_LONG < 64"
+        },
+        {
+          "path": "fs/fuse/dir.c",
+          "port_path": "fs/fuse/dir.c",
+          "hunk": "@@ -295,0 +307 @@ static void fuse_dentry_release(struct dentry *dentry)",
+          "line": "#if BITS_PER_LONG < 64"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "Retain zero initialization of d_time and kzalloc of the allocated fuse_dentry. Extend the 32-bit allocation/release guard to CONFIG_FUSE_BPF on 64-bit. d1dc0cf82120 also puts the free under that same guard, avoiding treating the non-BPF inline timestamp as a pointer.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "20a01f20d1f4064d90a8627aa41b5987f0220bb9",
+      "subject": "rust_binder: check ownership before using vma",
+      "lts_added_line_absent": [
+        {
+          "path": "drivers/android/binder/page_range.rs",
+          "port_path": "drivers/android/binder/page_range.rs",
+          "hunk": "@@ -402,16 +438,18 @@ unsafe fn use_page_slow(&self, i: usize) -> Result<()> {",
+          "line": "MmWithUser::into_mmput_async(self.mm.mmget_not_zero().ok_or(ESRCH)?)"
+        },
+        {
+          "path": "drivers/android/binder/page_range.rs",
+          "port_path": "drivers/android/binder/page_range.rs",
+          "hunk": "@@ -402,16 +438,18 @@ unsafe fn use_page_slow(&self, i: usize) -> Result<()> {",
+          "line": ".vm_insert_page(user_page_addr, &new_page)"
+        },
+        {
+          "path": "drivers/android/binder/page_range.rs",
+          "port_path": "drivers/android/binder/page_range.rs",
+          "hunk": "@@ -402,16 +438,18 @@ unsafe fn use_page_slow(&self, i: usize) -> Result<()> {",
+          "line": ".inspect_err(|err| {"
+        },
+        {
+          "path": "drivers/android/binder/page_range.rs",
+          "port_path": "drivers/android/binder/page_range.rs",
+          "hunk": "@@ -402,16 +438,18 @@ unsafe fn use_page_slow(&self, i: usize) -> Result<()> {",
+          "line": "\"Failed to vm_insert_page({}): vma_addr:{} i:{} err:{:?}\","
+        },
+        {
+          "path": "drivers/android/binder/page_range.rs",
+          "port_path": "drivers/android/binder/page_range.rs",
+          "hunk": "@@ -720,3 +761,5 @@ fn drop(self: Pin<&mut Self>) {",
+          "line": "if let Some(unchecked_vma) = mmap_read.vma_lookup(vma_addr) {"
+        },
+        {
+          "path": "drivers/android/binder/page_range.rs",
+          "port_path": "drivers/android/binder/page_range.rs",
+          "hunk": "@@ -720,3 +761,5 @@ fn drop(self: Pin<&mut Self>) {",
+          "line": "if let Some(vma) = check_vma(unchecked_vma, range_ptr) {"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "Both insertion paths (RCU VMA lock and mmap-read fallback) use check_vma, checking BINDER_VM_OPS and owner vm_private_data before vm_insert_page. The shrinker acquires a VMA read lock and checks the owner before zap_page_range_single. MmWithUser still uses mmput_async. The absent strings are refactoring/formatting and removed diagnostic text, not the identity check.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "ee54b5ba72d421a7d51c9d580b7b015b45ff8846",
+      "subject": "sched/fair: Only set slice protection at pick time",
+      "lts_added_line_absent": [
+        {
+          "path": "kernel/sched/fair.c",
+          "port_path": "kernel/sched/fair.c",
+          "hunk": "@@ -5480 +5480 @@ static void",
+          "line": "set_next_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, bool first)"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "set_next_entity is exported instead of static; set_protect_slice still executes only if first is true when the entity is on-rq.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "423b750d87d2e162139c53be709a60a59829f928",
+      "subject": "sched/fair: Introduce and use the vruntime_cmp() and vruntime_op() wrappers for wrapped-signed aritmetics",
+      "lts_added_line_absent": [
+        {
+          "path": "kernel/sched/fair.c",
+          "port_path": "kernel/sched/fair.c",
+          "hunk": "@@ -735 +772 @@ static int vruntime_eligible(struct cfs_rq *cfs_rq, u64 vruntime)",
+          "line": "return avg >= vruntime_op(vruntime, \"-\", cfs_rq->zero_vruntime) * load;"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "vruntime_op is retained, assigned to key before comparison. Android adds an int128/scaled multiplication path to avoid overflow, retaining the LTS wrapped subtraction instead of reverting to ordinary signed subtraction.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "028084eca16915b66946671219810f538d269309",
+      "subject": "sched/fair: Rename cfs_rq::avg_vruntime to ::sum_w_vruntime, and helper functions",
+      "lts_added_line_absent": [
+        {
+          "path": "kernel/sched/fair.c",
+          "port_path": "kernel/sched/fair.c",
+          "hunk": "@@ -657 +657 @@ u64 avg_vruntime(struct cfs_rq *cfs_rq)",
+          "line": "s64 avg = cfs_rq->sum_w_vruntime;"
+        },
+        {
+          "path": "kernel/sched/fair.c",
+          "port_path": "kernel/sched/fair.c",
+          "hunk": "@@ -725 +725 @@ static int vruntime_eligible(struct cfs_rq *cfs_rq, u64 vruntime)",
+          "line": "s64 avg = cfs_rq->sum_w_vruntime;"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "sum_w_vruntime remains the accumulator. The eligible function adds key to the declaration and avg_vruntime uses the same accumulator under the variable name runtime; no field-name reversion.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "f64491066c662fd3cd8b5ebcd296879ea33dfb62",
+      "subject": "mm/page_alloc: skip debug_check_no_{obj,locks}_freed with FPI_TRYLOCK",
+      "lts_added_line_absent": [
+        {
+          "path": "mm/page_alloc.c",
+          "port_path": "mm/page_alloc.c",
+          "hunk": "@@ -1608 +1613 @@ static void __free_pages_ok(struct page *page, unsigned int order,",
+          "line": "if (__free_pages_prepare(page, order, fpi_flags))"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "__free_pages_prepare still receives fpi_flags and skips debug_check_no_locks_freed/debug_check_no_obj_freed for FPI_TRYLOCK. The success branch is expressed as an early return on failure around vendor hook calls.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "1251bbdb8f5b2ea86ca9b4268a2e6aa34372ab33",
+      "subject": "wifi: mac80211_hwsim: fix typo in frequency notification",
+      "lts_added_line_absent": [
+        {
+          "path": "drivers/net/wireless/virtual/mac80211_hwsim.c",
+          "port_path": "drivers/net/wireless/virtual/mac80211_hwsim_main.c",
+          "hunk": "@@ -4043 +4043 @@ mac80211_hwsim_nan_dw_start(struct hrtimer *timer)",
+          "line": "ch = ieee80211_get_channel(hw->wiphy, 5745);"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "NAN timing code moved again from mac80211_hwsim_main.c into mac80211_hwsim_nan.c. Its DW notification uses 5745 MHz for channel 149, preserving the corrected frequency. This is a multi-file move beyond the scanner single-path rename map.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "514d605ab6ce88f45f551ebaade2f5e52c1bb6ed",
+      "subject": "sched_ext: Factor out local_dsq_post_enq() from dispatch_enqueue()",
+      "lts_added_line_absent": [
+        {
+          "path": "kernel/sched/ext.c",
+          "port_path": "kernel/sched/ext.c",
+          "hunk": "@@ -908,0 +909,16 @@ static void refill_task_slice_dfl(struct scx_sched *sch, struct task_struct *p)",
+          "line": "if ((enq_flags & SCX_ENQ_PREEMPT) && p != rq->curr &&"
+        },
+        {
+          "path": "kernel/sched/ext.c",
+          "port_path": "kernel/sched/ext.c",
+          "hunk": "@@ -908,0 +909,16 @@ static void refill_task_slice_dfl(struct scx_sched *sch, struct task_struct *p)",
+          "line": "rq->curr->sched_class == &ext_sched_class) {"
+        },
+        {
+          "path": "kernel/sched/ext.c",
+          "port_path": "kernel/sched/ext.c",
+          "hunk": "@@ -908,0 +909,16 @@ static void refill_task_slice_dfl(struct scx_sched *sch, struct task_struct *p)",
+          "line": "if (preempt || sched_class_above(&ext_sched_class, rq->curr->sched_class))"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "local_dsq_post_enq is retained. Proxy execution compares and updates rq->donor (the scheduled entity) rather than rq->curr (the executing proxy task); idle/in-balance early return and rescheduling remain. This follows the selected proxy scheduler model; runtime scheduler parity remains unverified.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "48298e1ba378c04876dc8feb8dfc412706403762",
+      "subject": "rust: dma: add helpers for architectures without CONFIG_HAS_DMA",
+      "lts_added_line_absent": [
+        {
+          "path": "rust/helpers/dma.c",
+          "port_path": "rust/helpers/dma.c",
+          "hunk": "@@ -21,0 +22,21 @@ int rust_helper_dma_set_mask_and_coherent(struct device *dev, u64 mask)",
+          "line": "int rust_helper_dma_set_mask(struct device *dev, u64 mask)"
+        },
+        {
+          "path": "rust/helpers/dma.c",
+          "port_path": "rust/helpers/dma.c",
+          "hunk": "@@ -21,0 +22,21 @@ int rust_helper_dma_set_mask_and_coherent(struct device *dev, u64 mask)",
+          "line": "int rust_helper_dma_set_coherent_mask(struct device *dev, u64 mask)"
+        },
+        {
+          "path": "rust/helpers/dma.c",
+          "port_path": "rust/helpers/dma.c",
+          "hunk": "@@ -21,0 +22,21 @@ int rust_helper_dma_set_mask_and_coherent(struct device *dev, u64 mask)",
+          "line": "int rust_helper_dma_map_sgtable(struct device *dev, struct sg_table *sgt,"
+        },
+        {
+          "path": "rust/helpers/dma.c",
+          "port_path": "rust/helpers/dma.c",
+          "hunk": "@@ -21,0 +22,21 @@ int rust_helper_dma_set_mask_and_coherent(struct device *dev, u64 mask)",
+          "line": "size_t rust_helper_dma_max_mapping_size(struct device *dev)"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "All four Rust DMA helpers remain with their original bodies. __rust_helper annotations support the selected Rust inline-helper option; the helper names/signatures still provide the LTS non-CONFIG_HAS_DMA fallbacks.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "0283fac52b42712196e23509283f634ffa6c3b65",
+      "subject": "wifi: cfg80211: use cfg80211_leave() in iftype change",
+      "lts_added_line_absent": [
+        {
+          "path": "net/wireless/util.c",
+          "port_path": "net/wireless/util.c",
+          "hunk": "@@ -1206,22 +1206 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,",
+          "line": "cfg80211_leave(rdev, dev->ieee80211_ptr);"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "Interface change still calls the leave cleanup via cfg80211_leave_locked(..., -1), under the revised locking API. NAN interface type changes are explicitly rejected because that path cannot satisfy NAN leave locking.",
+      "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    }
+  ]
+}

@@ -1,0 +1,184 @@
+diff --git a/Kconfig b/Kconfig
+index 307e581144de32a074883e44101cc6873080d1f9..d051645b83eaaaf85fb97d68160f46fac12118d8 100644
+--- a/Kconfig
++++ b/Kconfig
+@@ -32,3 +32,6 @@ source "lib/Kconfig.debug"
+ source "Documentation/Kconfig"
+ 
+ source "io_uring/Kconfig"
++
++# ANDROID: Set KCONFIG_EXT_PREFIX to decend into an external project.
++source "$(KCONFIG_EXT_PREFIX)Kconfig.ext"
+diff --git a/Makefile b/Makefile
+index dc63a98489a542563d53279386004dae8924e9c4..89609abe57961162182a1c2b4d566eb6638127bb 100644
+--- a/Makefile
++++ b/Makefile
+@@ -151,6 +151,24 @@ endif
+ 
+ export KBUILD_EXTMOD
+ 
++# ANDROID: set up mixed-build support. mixed-build allows device kernel modules
++# to be compiled against a GKI kernel. This approach still uses the headers and
++# Kbuild from device kernel, so care must be taken to ensure that those headers match.
++ifdef KBUILD_MIXED_TREE
++# Need vmlinux.symvers for modpost and System.map for depmod, check whether they exist in KBUILD_MIXED_TREE
++required_mixed_files=vmlinux.symvers System.map
++$(if $(filter-out $(words $(required_mixed_files)), \
++		$(words $(wildcard $(add-prefix $(KBUILD_MIXED_TREE)/,$(required_mixed_files))))),,\
++	$(error KBUILD_MIXED_TREE=$(KBUILD_MIXED_TREE) doesn't contain $(required_mixed_files)))
++endif
++
++mixed-build-prefix = $(if $(KBUILD_MIXED_TREE),$(KBUILD_MIXED_TREE)/)
++export KBUILD_MIXED_TREE
++# This is a hack for kleaf to set mixed-build-prefix within the execution of a make rule, e.g.
++# within __modinst_pre.
++# TODO(b/205893923): Revert this hack once it is properly handled.
++export mixed-build-prefix
++
+ ifeq ("$(origin W)", "command line")
+   KBUILD_EXTRA_WARN := $(W)
+ endif
+@@ -799,11 +818,13 @@ drivers-y	:=
+ libs-y		:= lib/
+ endif # KBUILD_EXTMOD
+ 
++ifndef KBUILD_MIXED_TREE
+ # The all: target is the default when no target is given on the
+ # command line.
+ # This allow a user to issue only 'make' to build a kernel including modules
+ # Defaults to vmlinux, but the arch makefile usually adds further targets
+ all: vmlinux
++endif
+ 
+ CFLAGS_GCOV	:= -fprofile-arcs -ftest-coverage
+ ifdef CONFIG_CC_IS_GCC
+@@ -1224,6 +1261,7 @@ targets += vmlinux.a
+ vmlinux.a: $(KBUILD_VMLINUX_OBJS) scripts/head-object-list.txt FORCE
+ 	$(call if_changed,ar_vmlinux.a)
+ 
++ifndef KBUILD_MIXED_TREE
+ PHONY += vmlinux_o
+ vmlinux_o: vmlinux.a $(KBUILD_VMLINUX_LIBS)
+ 	$(Q)$(MAKE) -f $(srctree)/scripts/Makefile.vmlinux_o
+@@ -1921,6 +1962,29 @@ __external_modules_error:
+ 	@false
+ endif
+ 
++# ---------------------------------------------------------------------------
++# Kernel headers from External Modules
++
++#Default location for installed headers
++export INSTALL_HDR_PATH = $(objtree)/usr
++
++quiet_cmd_headers_install = INSTALL $(INSTALL_HDR_PATH)/include
++      cmd_headers_install = \
++	mkdir -p $(INSTALL_HDR_PATH); \
++	rsync -mrl --include='*/' --include='*\.h' --exclude='*' \
++	usr/include $(INSTALL_HDR_PATH);
++
++PHONY += headers_install
++headers_install: headers
++	$(call cmd,headers_install)
++
++hdr-inst := -f $(srctree)/scripts/Makefile.headersinst obj
++
++PHONY += headers
++headers:
++	$(Q)$(MAKE) $(hdr-inst)=include/uapi
++	$(Q)$(MAKE) $(hdr-inst)=arch/$(SRCARCH)/include/uapi
++
+ endif # KBUILD_EXTMOD
+ 
+ # ---------------------------------------------------------------------------
+@@ -1971,7 +2035,9 @@ KBUILD_MODULES :=
+ endif # CONFIG_MODULES
+ 
+ PHONY += modpost
+-modpost: $(if $(single-build),, $(if $(KBUILD_BUILTIN), vmlinux.o)) \
++modpost: $(if $(single-build),, $(if $(KBUILD_EXTMOD),, \
++	 $(if $(KBUILD_MIXED_TREE), vmlinux.symvers, \
++	 $(if $(KBUILD_BUILTIN), vmlinux.o)))) \
+ 	 $(if $(KBUILD_MODULES), modules_check)
+ 	$(Q)$(MAKE) -f $(srctree)/scripts/Makefile.modpost
+ 
+@@ -2023,7 +2089,7 @@ prepare: outputmakefile
+ # Error messages still appears in the original language
+ PHONY += $(build-dir)
+ $(build-dir): prepare
+-	$(Q)$(MAKE) $(build)=$@ need-builtin=1 need-modorder=1 $(single-goals)
++	$(Q)$(MAKE) $(build)=$@ $(if $(KBUILD_MIXED_TREE),,need-builtin=1) need-modorder=1 $(single-goals)
+ 
+ clean-dirs := $(addprefix _clean_, $(clean-dirs))
+ PHONY += $(clean-dirs) clean
+@@ -2087,7 +2154,7 @@ quiet_cmd_gen_compile_commands = GEN     $@
+       cmd_gen_compile_commands = $(PYTHON3) $< -a $(AR) -o $@ $(filter-out $<, $(real-prereqs))
+ 
+ compile_commands.json: $(srctree)/scripts/clang-tools/gen_compile_commands.py \
+-	$(if $(KBUILD_EXTMOD),, vmlinux.a $(KBUILD_VMLINUX_LIBS)) \
++	$(if $(KBUILD_EXTMOD)$(KBUILD_MIXED_TREE),, vmlinux.a $(KBUILD_VMLINUX_LIBS)) \
+ 	$(if $(CONFIG_MODULES), modules.order) FORCE
+ 	$(call if_changed,gen_compile_commands)
+ 
+diff --git a/scripts/Makefile.modpost b/scripts/Makefile.modpost
+index d7d45067d08b94a82451d66a64eae29b6826e139..4eb01d683cf0e95cc835918bce200366fa5ed6dd 100644
+--- a/scripts/Makefile.modpost
++++ b/scripts/Makefile.modpost
+@@ -38,6 +38,8 @@ __modpost:
+ include $(objtree)/include/config/auto.conf
+ include $(srctree)/scripts/Kbuild.include
+ 
++mixed-build-prefix = $(if $(KBUILD_MIXED_TREE),$(KBUILD_MIXED_TREE)/)
++
+ MODPOST = $(objtree)/scripts/mod/modpost
+ 
+ modpost-args =										\
+@@ -102,8 +131,20 @@ modpost-deps += $(ksym-wl)
+ endif
+ 
+ ifeq ($(wildcard vmlinux.o),)
++
++# ANDROID: Use vmlinux.symvers from base build when doing mixed build
++ifneq ($(wildcard vmlinux.symvers),)
++modpost-args += -i vmlinux.symvers
++# Not adding vmlinux.symvers to modpost-deps to avoid dependency on
++#   .vmlinux.objs. Just use the one from base build.
++# Note: we don't want to include the vmlinux symbols here because we want to be
++# sure we only use the vmlinux symbols from the GKI kernel.
++output-symdump := modules-only.symvers
++else # vmlinux.symvers does not exist
+ missing-input := vmlinux.o
+ output-symdump := modules-only.symvers
++endif # whether vmlinux.symvers exists
++
+ else
+ modpost-args += vmlinux.o
+ modpost-deps += vmlinux.o
+diff --git a/scripts/Makefile.modinst b/scripts/Makefile.modinst
+index 9ba45e5b32b183a4139f2a3436448ab91d09a43e..11b3b7f6440316fa4aa231dc40c86aa6290df742 100644
+--- a/scripts/Makefile.modinst
++++ b/scripts/Makefile.modinst
+@@ -60,6 +60,10 @@ suffix-$(CONFIG_MODULE_COMPRESS_ZSTD)	:= .zst
+ endif
+ 
+ modules := $(patsubst %.o, $(dst)/%.ko$(suffix-y), $(modules))
++ifneq ($(KBUILD_EXTMOD),)
++extmod_suffix := $(shell echo "${KBUILD_EXTMOD}" | md5sum | cut -d " " -f 1)
++modules += $(dst)/modules.order.$(extmod_suffix)
++endif
+ install-$(CONFIG_MODULES) += $(modules)
+ 
+ __modinst: $(install-y)
+@@ -124,6 +128,13 @@ $(dst)/%.ko: %.ko FORCE
+ 	$(call cmd,strip)
+ 	$(call cmd,sign)
+ 
++ifneq ($(KBUILD_EXTMOD),)
++$(dst)/modules.order.$(extmod_suffix): modules.order FORCE
++	$(call cmd,install)
++	@sed -e 's:^\(.*\)\.o$$:$(INSTALL_MOD_DIR)/\1.ko:' \
++	     -i $@
++endif
++
+ ifdef CONFIG_MODULES
+ __modinst: depmod
+ 

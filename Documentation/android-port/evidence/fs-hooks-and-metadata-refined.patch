@@ -1,0 +1,701 @@
+diff --git a/fs/attr.c b/fs/attr.c
+index 795f231d00e8eaaadf5b62f241655cb4b69cb507..44fb2c6667d9235b707f871cefd45e8a586d3a08 100644
+--- a/fs/attr.c
++++ b/fs/attr.c
+@@ -16,6 +16,7 @@
+ #include <linux/fcntl.h>
+ #include <linux/filelock.h>
+ #include <linux/security.h>
++#include <trace/hooks/fs.h>
+ 
+ /**
+  * setattr_should_drop_sgid - determine whether the setgid bit needs to be
+@@ -223,7 +234,7 @@ int setattr_prepare(struct mnt_idmap *idmap, struct dentry *dentry,
+ 
+ 	return 0;
+ }
+-EXPORT_SYMBOL(setattr_prepare);
++EXPORT_SYMBOL_NS(setattr_prepare, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ /**
+  * inode_newsize_ok - may this inode be truncated to a given size
+@@ -269,7 +280,7 @@ int inode_newsize_ok(const struct inode *inode, loff_t offset)
+ out_big:
+ 	return -EFBIG;
+ }
+-EXPORT_SYMBOL(inode_newsize_ok);
++EXPORT_SYMBOL_NS(inode_newsize_ok, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ /**
+  * setattr_copy_mgtime - update timestamps for mgtime inodes
+@@ -549,9 +560,10 @@ int notify_change(struct mnt_idmap *idmap, struct dentry *dentry,
+ 
+ 	if (!error) {
+ 		fsnotify_change(dentry, ia_valid);
++		trace_android_rvh_post_setattr(dentry);
+ 		security_inode_post_setattr(idmap, dentry, ia_valid);
+ 	}
+ 
+ 	return error;
+ }
+-EXPORT_SYMBOL(notify_change);
++EXPORT_SYMBOL_NS(notify_change, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+diff --git a/fs/buffer.c b/fs/buffer.c
+index b6b477ff7b75dd9d7b2f5151630d8b1896b012ad..b3d92a66fadb2984e6f7e515eb233fa6dec88a3f 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -174,7 +174,7 @@ void end_buffer_write_sync(struct buffer_head *bh, int uptodate)
+ 	unlock_buffer(bh);
+ 	put_bh(bh);
+ }
+-EXPORT_SYMBOL(end_buffer_write_sync);
++EXPORT_SYMBOL_NS(end_buffer_write_sync, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ static struct buffer_head *
+ __find_get_block_slow(struct block_device *bdev, sector_t block, bool atomic)
+@@ -461,7 +458,7 @@ void mark_buffer_async_write(struct buffer_head *bh)
+ {
+ 	mark_buffer_async_write_endio(bh, end_buffer_async_write);
+ }
+-EXPORT_SYMBOL(mark_buffer_async_write);
++EXPORT_SYMBOL_NS(mark_buffer_async_write, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ 
+ /*
+@@ -1209,7 +1206,7 @@ void mark_buffer_dirty(struct buffer_head *bh)
+ 			__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
+ 	}
+ }
+-EXPORT_SYMBOL(mark_buffer_dirty);
++EXPORT_SYMBOL_NS(mark_buffer_dirty, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ void mark_buffer_write_io_error(struct buffer_head *bh)
+ {
+@@ -1220,7 +1217,7 @@ void mark_buffer_write_io_error(struct buffer_head *bh)
+ 	if (bh->b_assoc_map)
+ 		mapping_set_error(bh->b_assoc_map, -EIO);
+ }
+-EXPORT_SYMBOL(mark_buffer_write_io_error);
++EXPORT_SYMBOL_NS(mark_buffer_write_io_error, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ /**
+  * __brelse - Release a buffer.
+@@ -1236,7 +1233,7 @@ void __brelse(struct buffer_head *bh)
+ 	}
+ 	WARN(1, KERN_ERR "VFS: brelse: Trying to free free buffer\n");
+ }
+-EXPORT_SYMBOL(__brelse);
++EXPORT_SYMBOL_NS(__brelse, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ /**
+  * __bforget - Discard any dirty data in a buffer.
+@@ -1258,7 +1255,7 @@ void __bforget(struct buffer_head *bh)
+ 	}
+ 	__brelse(bh);
+ }
+-EXPORT_SYMBOL(__bforget);
++EXPORT_SYMBOL_NS(__bforget, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ static struct buffer_head *__bread_slow(struct buffer_head *bh)
+ {
+@@ -1475,7 +1472,7 @@ void __breadahead(struct block_device *bdev, sector_t block, unsigned size)
+ 		brelse(bh);
+ 	}
+ }
+-EXPORT_SYMBOL(__breadahead);
++EXPORT_SYMBOL_NS(__breadahead, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ /**
+  * __bread_gfp() - Read a block.
+@@ -1518,7 +1515,7 @@ struct buffer_head *__bread_gfp(struct block_device *bdev, sector_t block,
+ 		bh = __bread_slow(bh);
+ 	return bh;
+ }
+-EXPORT_SYMBOL(__bread_gfp);
++EXPORT_SYMBOL_NS(__bread_gfp, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ static void __invalidate_bh_lrus(struct bh_lru *b)
+ {
+@@ -1713,7 +1710,7 @@ struct buffer_head *create_empty_buffers(struct folio *folio,
+ 
+ 	return head;
+ }
+-EXPORT_SYMBOL(create_empty_buffers);
++EXPORT_SYMBOL_NS(create_empty_buffers, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ /**
+  * clean_bdev_aliases: clean a range of buffers in block device
+@@ -1787,7 +1784,7 @@ void clean_bdev_aliases(struct block_device *bdev, sector_t block, sector_t len)
+ 			break;
+ 	}
+ }
+-EXPORT_SYMBOL(clean_bdev_aliases);
++EXPORT_SYMBOL_NS(clean_bdev_aliases, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ static struct buffer_head *folio_create_buffers(struct folio *folio,
+ 						struct inode *inode,
+@@ -2334,7 +2331,7 @@ int generic_write_end(const struct kiocb *iocb, struct address_space *mapping,
+ 		mark_inode_dirty(inode);
+ 	return copied;
+ }
+-EXPORT_SYMBOL(generic_write_end);
++EXPORT_SYMBOL_NS(generic_write_end, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ /*
+  * block_is_partially_uptodate checks whether buffers within a folio are
+@@ -2377,7 +2374,7 @@ bool block_is_partially_uptodate(struct folio *folio, size_t from, size_t count)
+ 
+ 	return ret;
+ }
+-EXPORT_SYMBOL(block_is_partially_uptodate);
++EXPORT_SYMBOL_NS(block_is_partially_uptodate, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ /*
+  * Generic "read_folio" function for block devices that have the normal
+@@ -2492,7 +2489,7 @@ int generic_cont_expand_simple(struct inode *inode, loff_t size)
+ out:
+ 	return err;
+ }
+-EXPORT_SYMBOL(generic_cont_expand_simple);
++EXPORT_SYMBOL_NS(generic_cont_expand_simple, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ static int cont_expand_zero(const struct kiocb *iocb,
+ 			    struct address_space *mapping,
+@@ -2764,7 +2761,7 @@ sector_t generic_block_bmap(struct address_space *mapping, sector_t block,
+ 	get_block(inode, block, &tmp, 0);
+ 	return tmp.b_blocknr;
+ }
+-EXPORT_SYMBOL(generic_block_bmap);
++EXPORT_SYMBOL_NS(generic_block_bmap, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ static void end_bio_bh_io_sync(struct bio *bio)
+ {
+@@ -2873,13 +2870,13 @@ int __sync_dirty_buffer(struct buffer_head *bh, blk_opf_t op_flags)
+ 	}
+ 	return 0;
+ }
+-EXPORT_SYMBOL(__sync_dirty_buffer);
++EXPORT_SYMBOL_NS(__sync_dirty_buffer, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ int sync_dirty_buffer(struct buffer_head *bh)
+ {
+ 	return __sync_dirty_buffer(bh, REQ_SYNC);
+ }
+-EXPORT_SYMBOL(sync_dirty_buffer);
++EXPORT_SYMBOL_NS(sync_dirty_buffer, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ static inline int buffer_busy(struct buffer_head *bh)
+ {
+diff --git a/fs/eventpoll.c b/fs/eventpoll.c
+index e9e6938f7184ae2beb998c52ddf10cb6870458d0..59e88239bbb455cb10cf5b25596f24bb693b288d 100644
+--- a/fs/eventpoll.c
++++ b/fs/eventpoll.c
+@@ -40,6 +40,8 @@
+ #include <linux/capability.h>
+ #include <net/busy_poll.h>
+ 
++#include <trace/hooks/fs.h>
++
+ /*
+  * LOCKING:
+  * There are three level of locking required by epoll :
+@@ -1510,15 +1512,20 @@ static int ep_create_wakeup_source(struct epitem *epi)
+ {
+ 	struct name_snapshot n;
+ 	struct wakeup_source *ws;
++	char ws_name[64];
+ 
++	strscpy(ws_name, "eventpoll", sizeof(ws_name));
++	trace_android_vh_ep_create_wakeup_source(ws_name, sizeof(ws_name));
+ 	if (!epi->ep->ws) {
+-		epi->ep->ws = wakeup_source_register(NULL, "eventpoll");
++		epi->ep->ws = wakeup_source_register(NULL, ws_name);
+ 		if (!epi->ep->ws)
+ 			return -ENOMEM;
+ 	}
+ 
+ 	take_dentry_name_snapshot(&n, epi->ffd.file->f_path.dentry);
+-	ws = wakeup_source_register(NULL, n.name.name);
++	strscpy(ws_name, n.name.name, sizeof(ws_name));
++	trace_android_vh_ep_create_wakeup_source(ws_name, sizeof(ws_name));
++	ws = wakeup_source_register(NULL, ws_name);
+ 	release_dentry_name_snapshot(&n);
+ 
+ 	if (!ws)
+diff --git a/fs/f2fs/checkpoint.c b/fs/f2fs/checkpoint.c
+index bbe07e3a6c75ac236989ea256bd721245cef3eda..596b62b4c6b48f44921a8013c02a7c6802c5ab1c 100644
+--- a/fs/f2fs/checkpoint.c
++++ b/fs/f2fs/checkpoint.c
+@@ -1915,10 +2236,18 @@ int f2fs_issue_checkpoint(struct f2fs_sb_info *sbi)
+ 	if (waitqueue_active(&cprc->ckpt_wait_queue))
+ 		wake_up(&cprc->ckpt_wait_queue);
+ 
+-	if (cprc->f2fs_issue_ckpt)
++	if (cprc->f2fs_issue_ckpt) {
++		bool prio_changed = false;
++		int saved_prio;
++
++		trace_android_vh_f2fs_improve_priority(cprc->f2fs_issue_ckpt, &saved_prio,
++						&prio_changed);
+ 		wait_for_completion(&req.wait);
+-	else
++		if (prio_changed)
++			trace_android_vh_f2fs_restore_priority(cprc->f2fs_issue_ckpt, saved_prio);
++	} else {
+ 		flush_remained_ckpt_reqs(sbi, &req);
++	}
+ 
+ 	if (unlikely(req.delta_time >= CP_LONG_LATENCY_THRESHOLD)) {
+ 		f2fs_warn_ratelimited(sbi,
+diff --git a/fs/f2fs/data.c b/fs/f2fs/data.c
+index f468cba89f303bbc8fba73b6bf1925f8c69bbe4b..c83ce99ee66ba64418fb25bfe948b8c23640b400 100644
+--- a/fs/f2fs/data.c
++++ b/fs/f2fs/data.c
+@@ -506,6 +565,8 @@ static void f2fs_set_bio_crypt_ctx(struct bio *bio, const struct inode *inode,
+ 	 */
+ 	if (!fio || !fio->encrypted_page)
+ 		fscrypt_set_bio_crypt_ctx(bio, inode, first_idx, gfp_mask);
++	else if (fscrypt_inode_should_skip_dm_default_key(inode))
++		bio_set_skip_dm_default_key(bio);
+ }
+ 
+ static bool f2fs_crypt_mergeable_bio(struct bio *bio, const struct inode *inode,
+@@ -517,7 +578,9 @@ static bool f2fs_crypt_mergeable_bio(struct bio *bio, const struct inode *inode,
+ 	 * read/write raw data without encryption.
+ 	 */
+ 	if (fio && fio->encrypted_page)
+-		return !bio_has_crypt_ctx(bio);
++		return !bio_has_crypt_ctx(bio) &&
++			(bio_should_skip_dm_default_key(bio) ==
++			 fscrypt_inode_should_skip_dm_default_key(inode));
+ 
+ 	return fscrypt_mergeable_bio(bio, inode, next_idx);
+ }
+@@ -525,10 +588,14 @@ static bool f2fs_crypt_mergeable_bio(struct bio *bio, const struct inode *inode,
+ void f2fs_submit_read_bio(struct f2fs_sb_info *sbi, struct bio *bio,
+ 				 enum page_type type)
+ {
++	if (!bio)
++		return;
++
+ 	WARN_ON_ONCE(!is_read_io(bio_op(bio)));
+ 	trace_f2fs_submit_read_bio(sbi->sb, type, bio);
+ 
+ 	iostat_update_submit_ctx(bio, type);
++	trace_android_vh_f2fs_iostat_submit(sbi->sb, type, bio);
+ 	submit_bio(bio);
+ }
+ 
+@@ -538,6 +605,7 @@ static void f2fs_submit_write_bio(struct f2fs_sb_info *sbi, struct bio *bio,
+ 	WARN_ON_ONCE(is_read_io(bio_op(bio)));
+ 	trace_f2fs_submit_write_bio(sbi->sb, type, bio);
+ 	iostat_update_submit_ctx(bio, type);
++	trace_android_vh_f2fs_iostat_submit(sbi->sb, type, bio);
+ 	submit_bio(bio);
+ }
+ 
+@@ -1033,6 +1147,7 @@ void f2fs_submit_page_write(struct f2fs_io_info *fio)
+ 	io->last_block_in_bio = fio->new_blkaddr;
+ 
+ 	trace_f2fs_submit_folio_write(fio->folio, fio);
++	trace_android_vh_f2fs_set_bio_flag(fio->folio, io->bio);
+ #ifdef CONFIG_BLK_DEV_ZONED
+ 	if (f2fs_sb_has_blkzoned(sbi) && btype < META &&
+ 			is_end_zone_blkaddr(sbi, fio->new_blkaddr)) {
+@@ -1126,6 +1243,8 @@ static void __set_data_blkaddr(struct dnode_of_data *dn, block_t blkaddr)
+ {
+ 	__le32 *addr = get_dnode_addr(dn->inode, dn->node_folio);
+ 
++	trace_android_vh_f2fs_dnode_set_blkaddr(dn->inode, blkaddr);
++
+ 	dn->data_blkaddr = blkaddr;
+ 	addr[dn->ofs_in_node] = cpu_to_le32(dn->data_blkaddr);
+ }
+@@ -3329,7 +3704,14 @@ static int __f2fs_write_data_pages(struct address_space *mapping,
+ 	account_writeback(inode, true);
+ 
+ 	blk_start_plug(&plug);
++
++	trace_android_rvh_f2fs_write_cache_pages(mapping, wbc, &ret, &wb_done);
++	if (wb_done)
++		goto blk_finish;
++
+ 	ret = f2fs_write_cache_pages(mapping, wbc, io_type);
++
++blk_finish:
+ 	blk_finish_plug(&plug);
+ 
+ 	account_writeback(inode, false);
+diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
+index a77858bd38779f64f218afedd9a34601fd6ddbe7..6c34c9a8858f40f2bc62eb6796d0ade6fa6d6854 100644
+--- a/fs/f2fs/f2fs.h
++++ b/fs/f2fs/f2fs.h
+@@ -970,9 +1023,7 @@ struct f2fs_inode_info {
+ #ifdef CONFIG_FS_ENCRYPTION
+ 	struct fscrypt_inode_info *i_crypt_info; /* filesystem encryption info */
+ #endif
+ #ifdef CONFIG_FS_VERITY
+ 	struct fsverity_info *i_verity_info; /* filesystem verity info */
+ #endif
++	ANDROID_OEM_DATA_ARRAY(1, 2);
+ };
+ 
+ static inline void get_read_extent_info(struct extent_info *ext,
+@@ -2305,8 +2448,15 @@ static inline int f2fs_rwsem_is_contended(struct f2fs_rwsem *sem)
+ 	return rwsem_is_contended(&sem->internal_rwsem);
+ }
+ 
++void _trace_android_rvh_f2fs_down_read(wait_queue_head_t *read_waiters,
++				   struct rw_semaphore *rwsem, bool *skip);
++
+ static inline void f2fs_down_read(struct f2fs_rwsem *sem)
+ {
++	bool skip = false;
++	_trace_android_rvh_f2fs_down_read(&sem->read_waiters, &sem->internal_rwsem, &skip);
++	if (skip)
++		return;
+ #ifdef CONFIG_F2FS_UNFAIR_RWSEM
+ 	wait_event(sem->read_waiters, down_read_trylock(&sem->internal_rwsem));
+ #else
+diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
+index 6d42e2d28861ce8be3a3d2d5233066ccf73fe975..d1dd7b5cb00dec5d6ab0155380879a12a02ca799 100644
+--- a/fs/f2fs/file.c
++++ b/fs/f2fs/file.c
+@@ -631,6 +696,8 @@ static int f2fs_file_open(struct inode *inode, struct file *filp)
+ 	filp->f_mode |= FMODE_NOWAIT;
+ 	filp->f_mode |= FMODE_CAN_ODIRECT;
+ 
++	trace_android_vh_f2fs_file_open(inode, filp);
++
+ 	err = dquot_file_open(inode, filp);
+ 	if (err)
+ 		return err;
+@@ -2134,6 +2252,13 @@ static int f2fs_setflags_common(struct inode *inode, u32 iflags, u32 mask)
+ 				f2fs_up_write(&fi->i_sem);
+ 				return -EINVAL;
+ 			}
++
++			trace_android_vh_f2fs_inode_may_compress(inode, &err);
++			if (err) {
++				f2fs_up_write(&fi->i_sem);
++				return err;
++			}
++
+ 			err = set_compress_context(inode);
+ 			f2fs_up_write(&fi->i_sem);
+ 
+@@ -4712,11 +5110,18 @@ static long __f2fs_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+ 
+ long f2fs_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+ {
++	long ret = 0;
++	bool ioctl_done = false;
++
+ 	if (unlikely(f2fs_cp_error(F2FS_I_SB(file_inode(filp)))))
+ 		return -EIO;
+ 	if (!f2fs_is_checkpoint_ready(F2FS_I_SB(file_inode(filp))))
+ 		return -ENOSPC;
+ 
++	trace_android_vh_f2fs_customized_ioctl(filp, cmd, arg, &ret, &ioctl_done);
++	if (ioctl_done)
++		return ret;
++
+ 	return __f2fs_ioctl(filp, cmd, arg);
+ }
+ 
+@@ -5011,12 +5455,18 @@ static ssize_t f2fs_buffered_write_iter(struct kiocb *iocb,
+ 	struct file *file = iocb->ki_filp;
+ 	struct inode *inode = file_inode(file);
+ 	ssize_t ret;
++	bool write_done = false;
+ 
+ 	if (iocb->ki_flags & IOCB_NOWAIT)
+ 		return -EOPNOTSUPP;
+ 
++	trace_android_rvh_f2fs_buffer_write(iocb, from, &ret, &write_done);
++	if (write_done)
++		goto out;
++
+ 	ret = generic_perform_write(iocb, from);
+ 
++out:
+ 	if (ret > 0) {
+ 		f2fs_update_iostat(F2FS_I_SB(inode), inode,
+ 						APP_BUFFERED_IO, ret);
+diff --git a/fs/f2fs/gc.c b/fs/f2fs/gc.c
+index 3d9f326ae840adfc44000d7b7f7ccd113d5ed801..97e2a690ab3a4ff803f2e31747a95a2ef9b0ea96 100644
+--- a/fs/f2fs/gc.c
++++ b/fs/f2fs/gc.c
+@@ -22,6 +22,7 @@
+ #include "gc.h"
+ #include "iostat.h"
+ #include <trace/events/f2fs.h>
++#include <trace/hooks/fs.h>
+ 
+ static struct kmem_cache *victim_entry_slab;
+ 
+diff --git a/fs/f2fs/iostat.c b/fs/f2fs/iostat.c
+index f8703038e1d81c619d71c038a1cc840401b04f38..3dbdf0608b0d5478900a2b42e2c974deac246514 100644
+--- a/fs/f2fs/iostat.c
++++ b/fs/f2fs/iostat.c
+@@ -13,6 +13,7 @@
+ #include "f2fs.h"
+ #include "iostat.h"
+ #include <trace/events/f2fs.h>
++#include <trace/hooks/fs.h>
+ 
+ static struct kmem_cache *bio_iostat_ctx_cache;
+ static mempool_t *bio_iostat_ctx_pool;
+@@ -241,7 +278,9 @@ void iostat_update_and_unbind_ctx(struct bio *bio)
+ {
+ 	struct bio_iostat_ctx *iostat_ctx = bio->bi_private;
+ 	enum iostat_lat_type lat_type;
++	bool skip = false;
+ 
++	trace_android_vh_f2fs_iostat_update(iostat_ctx->sbi->sb, bio, &skip);
+ 	if (op_is_write(bio_op(bio))) {
+ 		lat_type = bio->bi_opf & REQ_SYNC ?
+ 				WRITE_SYNC_IO : WRITE_ASYNC_IO;
+diff --git a/fs/f2fs/namei.c b/fs/f2fs/namei.c
+index fb0b0b35ad26de5e1fe13e309a0a3f42859cc205..6923e37d82ac3e0d5756b518b49b620f590e05a9 100644
+--- a/fs/f2fs/namei.c
++++ b/fs/f2fs/namei.c
+@@ -22,6 +22,9 @@
+ #include "acl.h"
+ #include <trace/events/f2fs.h>
+ 
++#undef CREATE_TRACE_POINTS
++#include <trace/hooks/fs.h>
++
+ static inline bool is_extension_exist(const unsigned char *s, const char *sub,
+ 						bool tmp_ext, bool tmp_dot)
+ {
+diff --git a/fs/f2fs/super.c b/fs/f2fs/super.c
+index 9154f702e1706a90bab91bdb124e51d3f18ac1b8..ac11a7fe86f4aae5ad2a483a7cd9a453c49c2cd5 100644
+--- a/fs/f2fs/super.c
++++ b/fs/f2fs/super.c
+@@ -40,6 +41,9 @@
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/f2fs.h>
+ 
++#undef CREATE_TRACE_POINTS
++#include <trace/hooks/fs.h>
++
+ static struct kmem_cache *f2fs_inode_cachep;
+ 
+ #ifdef CONFIG_F2FS_FAULT_INJECTION
+@@ -409,6 +467,8 @@ void f2fs_printk(struct f2fs_sb_info *sbi, bool limit_rate,
+ 			printk("%c%cF2FS-fs: %pV\n",
+ 				KERN_SOH_ASCII, level, &vaf);
+ 
++	if (sbi)
++		trace_android_vh_f2fs_printk(sbi->s_flag, &vaf, level, limit_rate);
+ 	va_end(args);
+ }
+ 
+diff --git a/fs/inode.c b/fs/inode.c
+index 2c55ec49b0239734ea2b9a9cdb5593fc5157c765..ced2a9c76a6bfc144590be2e5d09a797224f3b96 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -29,6 +30,10 @@
+ 
+ #include "internal.h"
+ 
++#undef CREATE_TRACE_POINTS
++#include <trace/hooks/vmscan.h>
++#include <trace/hooks/fs.h>
++
+ /*
+  * Inode locking rules:
+  *
+@@ -419,7 +424,7 @@ void drop_nlink(struct inode *inode)
+ 	if (!inode->i_nlink)
+ 		atomic_long_inc(&inode->i_sb->s_remove_count);
+ }
+-EXPORT_SYMBOL(drop_nlink);
++EXPORT_SYMBOL_NS(drop_nlink, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ /**
+  * clear_nlink - directly zero an inode's link count
+@@ -458,7 +463,7 @@ void set_nlink(struct inode *inode, unsigned int nlink)
+ 		inode->__i_nlink = nlink;
+ 	}
+ }
+-EXPORT_SYMBOL(set_nlink);
++EXPORT_SYMBOL_NS(set_nlink, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ /**
+  * inc_nlink - directly increment an inode's link count
+@@ -512,7 +517,7 @@ void inode_init_once(struct inode *inode)
+ 	__address_space_init_once(&inode->i_data);
+ 	i_size_ordered_init(inode);
+ }
+-EXPORT_SYMBOL(inode_init_once);
++EXPORT_SYMBOL_NS(inode_init_once, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ static void init_once(void *foo)
+ {
+@@ -528,7 +533,7 @@ void ihold(struct inode *inode)
+ {
+ 	WARN_ON(atomic_inc_return(&inode->i_count) < 2);
+ }
+-EXPORT_SYMBOL(ihold);
++EXPORT_SYMBOL_NS(ihold, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ static void __inode_add_lru(struct inode *inode, bool rotate)
+ {
+@@ -567,6 +572,7 @@ void inode_add_lru(struct inode *inode)
+ {
+ 	__inode_add_lru(inode, false);
+ }
++EXPORT_SYMBOL(inode_add_lru);
+ 
+ static void inode_lru_list_del(struct inode *inode)
+ {
+@@ -670,7 +676,7 @@ void __insert_inode_hash(struct inode *inode, unsigned long hashval)
+ 	spin_unlock(&inode->i_lock);
+ 	spin_unlock(&inode_hash_lock);
+ }
+-EXPORT_SYMBOL(__insert_inode_hash);
++EXPORT_SYMBOL_NS(__insert_inode_hash, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ /**
+  *	__remove_inode_hash - remove an inode from the hash
+@@ -686,7 +692,7 @@ void __remove_inode_hash(struct inode *inode)
+ 	spin_unlock(&inode->i_lock);
+ 	spin_unlock(&inode_hash_lock);
+ }
+-EXPORT_SYMBOL(__remove_inode_hash);
++EXPORT_SYMBOL_NS(__remove_inode_hash, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ void dump_mapping(const struct address_space *mapping)
+ {
+@@ -767,7 +781,7 @@ void clear_inode(struct inode *inode)
+ 	/* don't need i_lock here, no concurrent mods to i_state */
+ 	inode->i_state = I_FREEING | I_CLEAR;
+ }
+-EXPORT_SYMBOL(clear_inode);
++EXPORT_SYMBOL_NS(clear_inode, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ /*
+  * Free the inode passed in, removing it from the lists it is still connected
+@@ -792,6 +806,7 @@ static void evict(struct inode *inode)
+ 	if (!list_empty(&inode->i_io_list))
+ 		inode_io_list_del(inode);
+ 
++	trace_android_vh_evict(inode);
+ 	inode_sb_list_del(inode);
+ 
+ 	spin_lock(&inode->i_lock);
+@@ -931,6 +947,12 @@ static enum lru_status inode_lru_isolate(struct list_head *item,
+ 	if (!spin_trylock(&inode->i_lock))
+ 		return LRU_SKIP;
+ 
++	trace_android_vh_inode_lru_isolate(inode, &skip);
++	if (skip) {
++		spin_unlock(&inode->i_lock);
++		return LRU_SKIP;
++	}
++
+ 	/*
+ 	 * Inodes can get referenced, redirtied, or repopulated while
+ 	 * they're already on the LRU, and this can make them
+@@ -1191,7 +1213,7 @@ void unlock_new_inode(struct inode *inode)
+ 	inode_wake_up_bit(inode, __I_NEW);
+ 	spin_unlock(&inode->i_lock);
+ }
+-EXPORT_SYMBOL(unlock_new_inode);
++EXPORT_SYMBOL_NS(unlock_new_inode, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ void discard_new_inode(struct inode *inode)
+ {
+@@ -1364,7 +1386,7 @@ struct inode *iget5_locked(struct super_block *sb, unsigned long hashval,
+ 	}
+ 	return inode;
+ }
+-EXPORT_SYMBOL(iget5_locked);
++EXPORT_SYMBOL_NS(iget5_locked, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ /**
+  * iget5_locked_rcu - obtain an inode from a mounted file system
+@@ -1540,7 +1562,7 @@ ino_t iunique(struct super_block *sb, ino_t max_reserved)
+ 
+ 	return res;
+ }
+-EXPORT_SYMBOL(iunique);
++EXPORT_SYMBOL_NS(iunique, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ struct inode *igrab(struct inode *inode)
+ {
+@@ -1626,7 +1648,7 @@ struct inode *ilookup5(struct super_block *sb, unsigned long hashval,
+ 	}
+ 	return inode;
+ }
+-EXPORT_SYMBOL(ilookup5);
++EXPORT_SYMBOL_NS(ilookup5, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ /**
+  * ilookup - search for an inode in the inode cache
+@@ -2204,7 +2226,7 @@ void touch_atime(const struct path *path)
+ skip_update:
+ 	sb_end_write(inode->i_sb);
+ }
+-EXPORT_SYMBOL(touch_atime);
++EXPORT_SYMBOL_NS(touch_atime, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ /*
+  * Return mask of changes for notify_change() that need to be done as a
+@@ -2282,7 +2304,7 @@ int file_remove_privs(struct file *file)
+ {
+ 	return file_remove_privs_flags(file, 0);
+ }
+-EXPORT_SYMBOL(file_remove_privs);
++EXPORT_SYMBOL_NS(file_remove_privs, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ /**
+  * current_time - Return FS time (possibly fine-grained)
+@@ -2575,7 +2597,7 @@ void init_special_inode(struct inode *inode, umode_t mode, dev_t rdev)
+ 		break;
+ 	}
+ }
+-EXPORT_SYMBOL(init_special_inode);
++EXPORT_SYMBOL_NS(init_special_inode, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ /**
+  * inode_init_owner - Init uid,gid,mode for new inode according to posix standards
+@@ -2604,7 +2626,7 @@ void inode_init_owner(struct mnt_idmap *idmap, struct inode *inode,
+ 		inode_fsgid_set(inode, idmap);
+ 	inode->i_mode = mode;
+ }
+-EXPORT_SYMBOL(inode_init_owner);
++EXPORT_SYMBOL_NS(inode_init_owner, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ /**
+  * inode_owner_or_capable - check current task permissions to inode
+@@ -2660,7 +2682,7 @@ void inode_dio_wait(struct inode *inode)
+ {
+ 	wait_var_event(&inode->i_dio_count, inode_dio_finished(inode));
+ }
+-EXPORT_SYMBOL(inode_dio_wait);
++EXPORT_SYMBOL_NS(inode_dio_wait, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ void inode_dio_wait_interruptible(struct inode *inode)
+ {
+@@ -2691,7 +2713,7 @@ void inode_set_flags(struct inode *inode, unsigned int flags,
+ 	WARN_ON_ONCE(flags & ~mask);
+ 	set_mask_bits(&inode->i_flags, mask, flags);
+ }
+-EXPORT_SYMBOL(inode_set_flags);
++EXPORT_SYMBOL_NS(inode_set_flags, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ void inode_nohighmem(struct inode *inode)
+ {
+@@ -2738,7 +2760,7 @@ struct timespec64 timestamp_truncate(struct timespec64 t, struct inode *inode)
+ 		WARN(1, "invalid file time granularity: %u", gran);
+ 	return t;
+ }
+-EXPORT_SYMBOL(timestamp_truncate);
++EXPORT_SYMBOL_NS(timestamp_truncate, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+ 
+ /**
+  * inode_set_ctime_current - set the ctime to current_time

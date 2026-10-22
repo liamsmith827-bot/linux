@@ -1,0 +1,160 @@
+diff --git a/kernel/dma/swiotlb.c b/kernel/dma/swiotlb.c
+index e27225f8aeb27a51ecd0aa2b3847eb0b2ca1d30c..94101dc9fc19dafb23d7e6323ef7bf141e0e100b 100644
+--- a/kernel/dma/swiotlb.c
++++ b/kernel/dma/swiotlb.c
+@@ -795,6 +797,7 @@ struct io_tlb_pool *__swiotlb_find_pool(struct device *dev, phys_addr_t paddr)
+ 	rcu_read_unlock();
+ 	return pool;
+ }
++EXPORT_SYMBOL_GPL(__swiotlb_find_pool);
+ 
+ /**
+  * swiotlb_del_pool() - remove an IO TLB pool from a device
+diff --git a/kernel/trace/trace.c b/kernel/trace/trace.c
+index 55c9f51a2fda091fcb64a5db95e2b9a29fab6fb4..c2eb2ac1610d80815fcfd45d41453ce8be9ef461 100644
+--- a/kernel/trace/trace.c
++++ b/kernel/trace/trace.c
+@@ -52,6 +53,7 @@
+ #include <linux/sort.h>
+ #include <linux/io.h> /* vmap_page_range() */
+ #include <linux/fs_context.h>
++#include <trace/hooks/ftrace_dump.h>
+ 
+ #include <asm/setup.h> /* COMMAND_LINE_SIZE */
+ 
+@@ -10721,7 +10724,11 @@ static struct notifier_block trace_die_notifier = {
+ static int trace_die_panic_handler(struct notifier_block *self,
+ 				unsigned long ev, void *unused)
+ {
+-	if (!ftrace_dump_on_oops_enabled())
++	bool ftrace_check = false;
++
++	trace_android_vh_ftrace_oops_enter(&ftrace_check);
++
++	if (!ftrace_dump_on_oops_enabled() || ftrace_check)
+ 		return NOTIFY_DONE;
+ 
+ 	/* The die notifier requires DIE_OOPS to trigger */
+@@ -10730,6 +10737,7 @@ static int trace_die_panic_handler(struct notifier_block *self,
+ 
+ 	ftrace_dump(DUMP_PARAM);
+ 
++	trace_android_vh_ftrace_oops_exit(&ftrace_check);
+ 	return NOTIFY_DONE;
+ }
+ 
+@@ -10749,6 +10757,8 @@ static int trace_die_panic_handler(struct notifier_block *self,
+ void
+ trace_printk_seq(struct trace_seq *s)
+ {
++	bool dump_printk = true;
++
+ 	/* Probably should print a warning here. */
+ 	if (s->seq.len >= TRACE_MAX_PRINT)
+ 		s->seq.len = TRACE_MAX_PRINT;
+@@ -10764,7 +10774,9 @@ trace_printk_seq(struct trace_seq *s)
+ 	/* should be zero ended, but we are paranoid. */
+ 	s->buffer[s->seq.len] = 0;
+ 
+-	printk(KERN_TRACE "%s", s->buffer);
++	trace_android_vh_ftrace_dump_buffer(s, &dump_printk);
++	if (dump_printk)
++		printk(KERN_TRACE "%s", s->buffer);
+ 
+ 	trace_seq_init(s);
+ }
+@@ -10806,6 +10818,7 @@ static void ftrace_dump_one(struct trace_array *tr, enum ftrace_dump_mode dump_m
+ 	unsigned int old_userobj;
+ 	unsigned long flags;
+ 	int cnt = 0;
++	bool ftrace_check = true;
+ 
+ 	/*
+ 	 * Always turn off tracing when we dump.
+@@ -10846,6 +10859,14 @@ static void ftrace_dump_one(struct trace_array *tr, enum ftrace_dump_mode dump_m
+ 		printk("#          MAY BE MISSING FUNCTION EVENTS\n");
+ 	}
+ 
++	/*
++	 * Ftrace timestmap support two types:
++	 * - ftrace_check = 1, latency format, start with 0 from a specific time.
++	 * - ftrace_check = 0, absolute time format, consistent with kernel time.
++	 * With this vendor hook, we can choose the format from different requirement.
++	 */
++	trace_android_vh_ftrace_format_check(&ftrace_check);
++
+ 	/*
+ 	 * We need to stop all tracing on all CPUS to read
+ 	 * the next buffer. This is a bit expensive, but is
+@@ -10861,7 +10882,8 @@ static void ftrace_dump_one(struct trace_array *tr, enum ftrace_dump_mode dump_m
+ 		cnt++;
+ 
+ 		trace_iterator_reset(&iter);
+-		iter.iter_flags |= TRACE_FILE_LAT_FMT;
++		if (ftrace_check)
++			iter.iter_flags |= TRACE_FILE_LAT_FMT;
+ 
+ 		if (trace_find_next_entry_inc(&iter) != NULL) {
+ 			int ret;
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 8218e9d1887b7edac5496726d8540ee93ff7833f..45d02f49d43114be4f26de99fcaf1ac0e73d82c8 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -48,6 +48,9 @@
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/thp.h>
+ 
++#undef CREATE_TRACE_POINTS
++#include <trace/hooks/mm.h>
++
+ /*
+  * By default, transparent hugepage support is disabled in order to avoid
+  * risking an increased memory footprint for applications that are not
+@@ -119,6 +122,7 @@ unsigned long __thp_vma_allowable_orders(struct vm_area_struct *vma,
+ 		supported_orders = THP_ORDERS_ALL_FILE_DEFAULT;
+ 
+ 	orders &= supported_orders;
++	trace_android_vh_thp_vma_allowable_orders(vma, &orders);
+ 	if (!orders)
+ 		return 0;
+ 
+@@ -596,6 +600,7 @@ static const struct kobj_type thpsize_ktype = {
+ };
+ 
+ DEFINE_PER_CPU(struct mthp_stat, mthp_stats) = {{{0}}};
++EXPORT_SYMBOL_GPL(mthp_stats);
+ 
+ static unsigned long sum_mthp_stat(int order, enum mthp_stat_item item)
+ {
+@@ -1184,6 +1189,11 @@ static struct folio *vma_alloc_anon_folio_pmd(struct vm_area_struct *vma,
+ 	gfp_t gfp = vma_thp_gfp_mask(vma);
+ 	const int order = HPAGE_PMD_ORDER;
+ 	struct folio *folio;
++	bool bypass = false;
++
++	trace_android_vh_customize_pmd_gfp_bypass(&gfp, &bypass);
++	if (bypass)
++		return NULL;
+ 
+ 	folio = vma_alloc_folio(gfp, order, vma, addr & HPAGE_PMD_MASK);
+ 
+@@ -2678,6 +2668,7 @@ spinlock_t *__pmd_trans_huge_lock(pmd_t *pmd, struct vm_area_struct *vma)
+ 	spin_unlock(ptl);
+ 	return NULL;
+ }
++EXPORT_SYMBOL_GPL(__pmd_trans_huge_lock);
+ 
+ /*
+  * Returns page table lock pointer if a given pud maps a thp, NULL otherwise.
+@@ -4102,7 +4109,11 @@ static unsigned long deferred_split_count(struct shrinker *shrink,
+ {
+ 	struct pglist_data *pgdata = NODE_DATA(sc->nid);
+ 	struct deferred_split *ds_queue = &pgdata->deferred_split_queue;
++	bool bypass = false;
+ 
++	trace_android_vh_split_large_folio_bypass(&bypass);
++	if (bypass)
++		return 0;
+ #ifdef CONFIG_MEMCG
+ 	if (sc->memcg)
+ 		ds_queue = &sc->memcg->deferred_split_queue;

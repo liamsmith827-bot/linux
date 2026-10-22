@@ -1,0 +1,537 @@
+[
+  {
+    "path": "drivers/android/binder.c",
+    "choices": [
+      "lts",
+      {
+        "text": "\tbool is_nested = false;\n"
+      }
+    ],
+    "rationale_and_security": "Preserve LTS transaction target pinning under t->lock, which prevents use-after-free. Add ACK nested-transaction state while retaining the LTS LIST_HEAD declarations rather than duplicate initialization.",
+    "input_sha256": "0cc848d8cc8f1a7e948543e92e4566e9a8ca9468c3cc8a14520b3b7b163743e6",
+    "output_sha256": "4a4232318069db404f6d1aad325cb09098ab8257b2b81d9685be224249e0a845"
+  },
+  {
+    "path": "drivers/android/binder/error.rs",
+    "choices": [
+      "ack",
+      "lts"
+    ],
+    "rationale_and_security": "Retain ACK error source locations for Android debug reporting and the LTS dead-reply predicate. No change to error authorization or lifetime rules.",
+    "input_sha256": "57f446feabde057bc01ed241f52cc18a94b758a56262f4b639deea6330799e83",
+    "output_sha256": "aa95a850f7e93facf70155094a27170d5f578dbb7e36b1a3c36c4e45d561452f"
+  },
+  {
+    "path": "drivers/android/binder/process.rs",
+    "choices": [
+      "ack",
+      "lts",
+      "ack"
+    ],
+    "rationale_and_security": "Adapt handle allocation bookkeeping to ACK bitmap indexes and move removed tree nodes into deferred-drop locals. Keep node destruction outside node_refs spinlock; retain other LTS node/ref lifetime fixes in the automatic merge.",
+    "input_sha256": "fff18f254e032670a9819ecd3de7a29adbd6d4874f23aef94e1291cf708a621e",
+    "output_sha256": "e2b389ea7ffebefe193aba93b87da2773e00b521f6189931760f03dccebc1a11"
+  },
+  {
+    "path": "drivers/android/binder/thread.rs",
+    "choices": [
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack"
+    ],
+    "rationale_and_security": "Preserve ACK priority inheritance with CAP_SYS_NICE and RLIMIT validation, deferred-completion UAPI, and consolidated debug/netlink reporting. The reply conflict is overlapping old void push_work and the new PushWorkRes match: keep the latter single match and the merged notification after unlock. Error paths still propagate their error; logging changes consolidate duplicate output. Other LTS changes remain in the merged file and require compile validation.",
+    "input_sha256": "a625192d1c7bc88a5a3d26eb95ec1fd83d9f93bc805aa2ec1ce8554d280e478e",
+    "output_sha256": "0084e97a2927334368f156580a95467da5b2304b7a7348274a84339466e79e89"
+  },
+  {
+    "path": "drivers/android/binder/transaction.rs",
+    "choices": [
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack"
+    ],
+    "rationale_and_security": "Retain ACK transaction tracing, bounded debug rings and structured error reporting consistently with thread.rs. Option<Error> and Option<ErrorLocation> replace integer/error-location fields; their empty state is the ACK zero-initialized representation. LTS error returns remain semantically equivalent via ?; duplicated diagnostics move to the common report path. Runtime KABI reserved initializers are removed separately while preserving hook offset descriptions.",
+    "input_sha256": "d9ce7c6640dcb971dd765b937be7cee11752147562981e67811cba769c9839bc",
+    "output_sha256": "fa4a6c61a3b5df99a466e2432264a50448e9384ee76a2a21106094bb087a3188"
+  },
+  {
+    "path": "drivers/base/core.c",
+    "choices": [
+      "lts"
+    ],
+    "rationale_and_security": "Keep LTS dev_can_match and fwnode_test_flag accessors, preserving readiness and flag concurrency handling; Android exports and hooks remain outside the conflict.",
+    "input_sha256": "967d3b2f4a56aff7eccdec53b747a5895f6aacd767c3d723064e777b1b258ee7",
+    "output_sha256": "3a1f5d702d9de597e657404f727194866c864527f814ed85ca79c3b35be7189a"
+  },
+  {
+    "path": "drivers/base/dd.c",
+    "choices": [
+      "lts"
+    ],
+    "rationale_and_security": "Preserve the LTS ready_to_probe gate and dev_set_can_match ordering. Removing it permits premature probes before device_add initialization and is not necessary for Android hooks.",
+    "input_sha256": "8e476f2b578240f294dfe4b5f1ced7ea32e96ba660a74975c7d859caf5c1b97e",
+    "output_sha256": "26efc05457b05672d7156cc7c6198dfc7c4875bc3a9cb0629ed716992704ed0f"
+  },
+  {
+    "path": "drivers/base/firmware_loader/fallback.c",
+    "choices": [
+      "lts"
+    ],
+    "rationale_and_security": "Whitespace-only conflict; keep LTS formatting, with Android firmware hooks retained outside it.",
+    "input_sha256": "409c3a390e5a058a0490fcf625b048c7f72ce8d2cab82b25ec809181a6490363",
+    "output_sha256": "28e0955ba4a16df0566343e2509f1309d0dbaa488303a6ef71e59c572b5b3010"
+  },
+  {
+    "path": "drivers/base/power/main.c",
+    "choices": [
+      {
+        "text": "\t/* Devices with no PM support do not use the completion. */\n\tif (dev->power.no_pm)\n\t\treturn;\n\n\tif (async || (pm_async_enabled && dev->power.async_suspend)) {\n\t\ttrace_android_vh_dpm_wait_start(dev);\n"
+      }
+    ],
+    "rationale_and_security": "Keep LTS no_pm early return to avoid waiting on unused completions; bracket the existing wait with Android instrumentation only after that check.",
+    "input_sha256": "4a045585fd8a0a2521314695822494349bdfadc35486048319181b14a9ba1b03",
+    "output_sha256": "b9b3b0ba8b9344f832b83f6a59b48ab901d4ba643d660d47ad543fc711ed00e5"
+  },
+  {
+    "path": "drivers/base/syscore.c",
+    "choices": [
+      {
+        "text": "\tlog_suspend_abort_reason(\"System core suspend callback %pS failed\",\n\t\tsyscore->ops->suspend);\n\tpr_err(\"PM: System core suspend callback %pS failed.\\n\",\n\t       syscore->ops->suspend);\n"
+      }
+    ],
+    "rationale_and_security": "Adapt Android suspend failure accounting to LTS syscore object/data callbacks. Retain LTS callback identity and symbol formatting; do not restore the old ops API.",
+    "input_sha256": "107fd8bb010f21a9b17c23628c549de09636e54b73c786afbe77919ee31fa480",
+    "output_sha256": "cfd666e3af98f3662f8b455b07583a1f94652a152d06ab141699a852b8b3e048"
+  },
+  {
+    "path": "drivers/dma-buf/dma-heap.c",
+    "choices": [
+      "ack",
+      {
+        "text": "\tdmabuf = dma_heap_buffer_alloc(heap, heap_allocation->len,\n\t\t\t\t      heap_allocation->fd_flags,\n\t\t\t\t      heap_allocation->heap_flags);\n\tif (IS_ERR(dmabuf))\n\t\treturn dmabuf;\n\n\tfd = get_unused_fd_flags(heap_allocation->fd_flags);\n\tif (fd < 0) {\n\t\tdma_buf_put(dmabuf);\n\t\treturn ERR_PTR(fd);\n\t}\n"
+      }
+    ],
+    "rationale": "Keep LTS deferred fd installation until copy_to_user succeeds, avoiding leaked/exposed descriptors on failed ioctls. Add ACK in-kernel allocation API and hooks; userspace path shares validation/allocation but NOT dma_heap_bufferfd_alloc, which installs early. Kernel API retains its normal ownership contract.",
+    "input_sha256": "6d7ca3f6b3997d8b13232a103de474a3190cb834328c69f7f9673948797f11a9",
+    "output_sha256": "e845c7797cf8d74767427f663548f6e59de357090e571c68ed6a24322bd1f797"
+  },
+  {
+    "path": "fs/crypto/inline_crypt.c",
+    "choices": [
+      "lts"
+    ],
+    "rationale": "The get_devices_new name only preserves the historical KMI callback slot. Retain the current LTS callback and its current prototype.",
+    "input_sha256": "bd84dcc026834fa5ac9f955b978dcc3e038d7e6d42a22156992e77540bdef3ab",
+    "output_sha256": "f603d2b3068db491589400eaf9a862d60b8f51972985d635d0ad0ec5861104e5"
+  },
+  {
+    "path": "fs/crypto/keyring.c",
+    "choices": [
+      "lts"
+    ],
+    "rationale": "Retain LTS typed allocation; no Android behavior depends on reverting allocation syntax.",
+    "input_sha256": "58d83720008a884d66916444f22b1ae9be4d57d45bdb348cd037ca4cd948c61a",
+    "output_sha256": "c63701b836f6306febe470dfc7f4dd8d635f0477f57054fa16fc9841676520c3"
+  },
+  {
+    "path": "fs/crypto/keysetup.c",
+    "choices": [
+      "lts"
+    ],
+    "rationale": "Retain LTS typed allocation; Android wrapped-key behavior outside the hunk remains.",
+    "input_sha256": "206be5d388efce17ec69af337eb49780e1543a29fcfe869b3932f3482f731832",
+    "output_sha256": "951573e308e1b2e9bef75f14f1363b4caddb55ad23c23a1f0898441a4273a1be"
+  },
+  {
+    "path": "include/linux/fscrypt.h",
+    "choices": [
+      {
+        "text": "\tunsigned int (*get_devices)(\n\t\tstruct super_block *sb,\n\t\tstruct block_device *devs[FSCRYPT_MAX_DEVICES]);\n\n\tANDROID_OEM_DATA_ARRAY(1, 4);\n"
+      }
+    ],
+    "rationale": "Retain LTS callback ABI source signature; OEM module storage is functional customization, not binary compatibility. Remove obsolete duplicate get_devices field separately.",
+    "input_sha256": "ff1879f58b55e0910f43058d37d2538eeffcf10fb53c8d05678ad3762d219bcb",
+    "output_sha256": "1a2f54d821d7a05bb3b337aba1f300f4170e88df20f9a3cc36947503c63a82a6"
+  },
+  {
+    "path": "drivers/block/zram/zram_drv.c",
+    "choices": [
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      {
+        "text": "\tu64 nr_pages;\n\tunsigned long lo = 0, hi;\n\tstruct zram_pp_ctl *pp_ctl = NULL;\n\tstruct zram_wb_ctl *wb_ctl = NULL;\n"
+      },
+      {
+        "text": "\tnr_pages = zram->disksize >> PAGE_SHIFT;\n\thi = nr_pages;\n\n\tpp_ctl = init_pp_ctl();\n\tif (!pp_ctl) {\n"
+      },
+      "lts",
+      "ack",
+      "ack",
+      "lts",
+      "ack"
+    ],
+    "rationale": "Android mmd/src/zram/per_process_ioctls.rs and mmd_setup.rs consume compressed writeback and per-process prefetch. Keep ACK rewrite with LTS equivalent locking: rwsem_write guards for wb limits, LTS rounddown to page units, disk size read after init_lock, capture slot handle before unlock, synchronous partial-page read and compressor reset in destroy_comps. ACK slot renaming is required for the rewrite. Preserve all other LTS changes in automatic merge; verify these invariants separately.",
+    "input_sha256": "180d569579431a70cba53a45083a44821d2a18c26430379cc6ff7dfe42362c8b",
+    "output_sha256": "74097e1226a03abf76847b6fdbc29885fc775430c7a66c0c0ddfd9e62c4c0b38"
+  },
+  {
+    "path": "fs/fuse/file.c",
+    "choices": [
+      {
+        "text": "\t\tif (inode)\n\t\t\tfer = fuse_bpf_backing(inode, struct fuse_release_in,\n\t\t\t\t\tfuse_release_initialize,\n\t\t\t\t\tfuse_release_backing,\n\t\t\t\t\tfuse_release_finalize,\n\t\t\t\t\tinode, ff);\n\t\tif (fer.ret) {\n\t\t\tfuse_release_end(args, 0);\n\t\t} else\n#endif\n\t\t{\n\t\t\tif (!args) {\n\t\t\t\t/* Do nothing when server does not implement 'open' */\n\t\t\t} else if (args->opcode == FUSE_RELEASE && ff->fm->fc->no_open) {\n\t\t\t\tfuse_release_end(args, 0);\n\t\t\t} else if (sync) {\n\t\t\t\tfuse_simple_request(ff->fm, args);\n\t\t\t\tfuse_release_end(args, 0);\n\t\t\t} else {\n\t\t\t\targs->end = fuse_release_end;\n\t\t\t\tif (fuse_simple_background(ff->fm, args,\n\t\t\t\t\t\t\tGFP_KERNEL | __GFP_NOFAIL))\n\t\t\t\t\tfuse_release_end(args, -ENOTCONN);\n\t\t\t}\n"
+      },
+      {
+        "text": "\tfuse_file_put(ra ? ra->inode : NULL, ff, ff->fm->fc->auto_submounts);\n"
+      }
+    ],
+    "rationale": "Adapt Android FUSE-BPF backing release to LTS end callback signature, preserve LTS auto_submounts synchronous release decision and current passthrough_release in fuse_prepare_release. Do not resurrect obsolete fuse_file_io_release. Stable max-folio bound, flock success accounting and DAX invalidate-unlock fix remain.",
+    "input_sha256": "52e238267b002746aad825b577446686ab4a1befaef739b7165d08c4d6b699f5",
+    "output_sha256": "352cef1f2f7a24656ea959177591f1b0d1f68dc28de1dca6dd6fa6ccc6864fe8"
+  },
+  {
+    "path": "fs/fuse/fuse_i.h",
+    "choices": [
+      "both",
+      "lts"
+    ],
+    "rationale": "Keep LTS args.h single structure definition and callback signatures/credentials. Add only Android error_in and canonical_path fields to args.h, no duplicate old struct. Keep Android backing/filter includes.",
+    "input_sha256": "1fbf212e1bb4f7225d282767cec6eb7f33ddafcc6e843e2ebb8b4b910a37e48e",
+    "output_sha256": "f1c0ddc93c22f32ef60e87a73a1620a504e1d14c451368e5fa84b6df389dff50"
+  },
+  {
+    "path": "init/Kconfig",
+    "choices": [
+      {
+        "text": "\tdepends on !KASAN || CC_IS_CLANG\n\tdepends on !KASAN_SW_TAGS\n"
+      }
+    ],
+    "rationale": "Preserve LTS sanitizer compatibility constraints. The ACK relaxed version check is arm64 software-tag KASAN specific; x86 SDK target does not require it.",
+    "input_sha256": "8e3ac840fbc1cf8dc3f9e4749627a4dcd40ac34c0c1191ad075ec6447e2134e3",
+    "output_sha256": "1bd7a975f45f08bafdc1335419367ae862ff2f5ca37a9e96acc99a427bfeec0f"
+  },
+  {
+    "path": "kernel/fork.c",
+    "choices": [
+      "both"
+    ],
+    "rationale": "Retain LTS BPF task-storage initialization, independently initialize Android per-task vendor/OEM storage before exposing dup_task_struct hook; prevents inherited stale BPF state.",
+    "input_sha256": "c442ed19e587a8314bcffc40cdc4b6c9c83c315de783facd7915154d39404846",
+    "output_sha256": "f4f53f55cc113d0845f37c8ad5bc39bf1c751ff2f51167dd0b2ffc18cb5abe99"
+  },
+  {
+    "path": "kernel/bpf/syscall.c",
+    "choices": [
+      "lts"
+    ],
+    "rationale": "Preserve LTS query size handling; inspect surrounding query API to avoid duplicating superseded size check.",
+    "input_sha256": "3c2f6242c681b42aaa4a9cd99d8dd5dde629171ad1114c8c08e21905bbab2951",
+    "output_sha256": "b96c6ed5eb93a0c065749337cd93f6e8c8f2150d17632e7d23cbf8a0be4ed17a"
+  },
+  {
+    "path": "mm/page_alloc.c",
+    "choices": [
+      "both"
+    ],
+    "rationale": "Keep LTS compaction/reclaim-order promotion and independent Android PCP-drain and latency hook state.",
+    "input_sha256": "8fd8474ec34d93e3271edc956810a923d80949f3882280f2bef92a2a5218b9e6",
+    "output_sha256": "fdbe31bce20117fd0d06878502033672d52bde5517c44d5a1bc7949775738ba1"
+  },
+  {
+    "path": "mm/slab.h",
+    "choices": [
+      "both"
+    ],
+    "rationale": "Retain LTS __GFP_NO_OBJ_EXT kmalloc cache selection, alongside Android hook cache pointer.",
+    "input_sha256": "2c068eab919c3a7ac4236c8e7d899743fd219a3a03d411f3707123781689fbd5",
+    "output_sha256": "bbbba8e415deae279264268caa5ea9b2ddbfba08b341df8d93e29aff0661663f"
+  },
+  {
+    "path": "mm/vmscan.c",
+    "choices": [
+      "ack",
+      "ack"
+    ],
+    "rationale": "Retain Android dirty/writeback hook state and folio-eviction bypass hook in merged LTS reclaim. These additions do not replace the surrounding LTS reclaim algorithm.",
+    "input_sha256": "d673a2a9c5649951890ccebe3b34795cda17bce214ccf970f2aaf92261c42f4b",
+    "output_sha256": "2c86055fba3d99c29d063432ea017ba3163867b8f97cd810214f580d0ba77772"
+  },
+  {
+    "path": "rust/kernel/uaccess.rs",
+    "choices": [
+      "lts"
+    ],
+    "rationale": "Equivalent Zeroable safety explanation; keep LTS wording.",
+    "input_sha256": "2c0efd5bb34fc313b978bf6842c76c1d95f950a9ffb1d52e774e92cdcf64f2a0",
+    "output_sha256": "ab65b76a3afd27d66fae285e7ab772b563d52ff6e599deea8f462bbc68923d79"
+  },
+  {
+    "path": "rust/uapi/lib.rs",
+    "choices": [
+      {
+        "text": "#![cfg_attr(not(CONFIG_RUSTC_HAS_UNNECESSARY_TRANSMUTES), allow(unknown_lints))]\n#![allow(unnecessary_transmutes)]\n#![cfg_attr(\n    CONFIG_RUSTC_HAS_SUSPICIOUS_RUNTIME_SYMBOL_DEFINITIONS,\n    allow(suspicious_runtime_symbol_definitions)\n)]\n#![feature(cfi_encoding)]\n"
+      }
+    ],
+    "rationale": "Retain LTS compiler-version lint compatibility, add CFI encoding for Android Rust binder/toolchain.",
+    "input_sha256": "8cdb85d296d241ca5ee5d3b4cf0832f8a74e88f5ae5e90f973a1c36571c2794f",
+    "output_sha256": "2d6cf8c41792ee53be3a6e0d79cb36941bc5b24c1ba11ad03ee6e425f01de2fe"
+  },
+  {
+    "path": "rust/uapi/uapi_helper.h",
+    "choices": [
+      "both"
+    ],
+    "rationale": "Retain LTS ioctl definitions and add Android binder-netlink UAPI bindings.",
+    "input_sha256": "e9012ce3ca6a910541cbab5322f4b21f5e189722cae24dda21c093d12a711e9e",
+    "output_sha256": "245bb1796dedf0cb7e04610904649497702cf96cb08031b3da3327fcf3b98fd4"
+  },
+  {
+    "path": "kernel/sched/core.c",
+    "choices": [
+      "ack",
+      "ack",
+      "ack",
+      "lts",
+      "ack"
+    ],
+    "rationale": "Retain ACK proxy-execution scheduling interface and RETRY_TASK protocol required by enabled SCHED_PROXY_EXEC. Preserve LTS core_pick_in_flight decrement and all other LTS core-pick coordination; the shared pushability helper is separately tightened to retain migration-disabled exclusions.",
+    "input_sha256": "1de456920d4f91ec1568dc5f6581009e2d487b90632c62bda952d5ed0b9abff9",
+    "output_sha256": "68a0337e8db20fd2451725b53be5c1f37523b02a8fb320f688250c47fdeab4a7"
+  },
+  {
+    "path": "kernel/sched/deadline.c",
+    "choices": [
+      "ack",
+      "ack"
+    ],
+    "rationale": "Use unified proxy-aware pushability and current prev naming. Separately preserve LTS migration-disabled rule in task_is_pushable so proxy-chain selection does not weaken it.",
+    "input_sha256": "609ce11620b4fdedeec2ebb12eb2754911380c1480be74c47bc33c109130733a",
+    "output_sha256": "0d1a85b51c74c621e504bb1242f117ee3b4f64a7493947395cdc8dd0e76c746b"
+  },
+  {
+    "path": "kernel/sched/rt.c",
+    "choices": [
+      "ack",
+      "ack"
+    ],
+    "rationale": "Use proxy-aware push-task selection; preserve LTS migration-disabled rule in shared helper and proxy execution context. Keep queued-task checks.",
+    "input_sha256": "0a426829bf40c7b55630662edc54c2436418fbaca799801f21ba0b6456efbec4",
+    "output_sha256": "18709bc15b302b6633884f7c32f5a4f03faa20db3882efd610fdf749023fa92d"
+  },
+  {
+    "path": "kernel/sched/sched.h",
+    "choices": [
+      "ack"
+    ],
+    "rationale": "Propagate rq_flags through task picking for ACK proxy scheduling; no binary KMI compatibility is required.",
+    "input_sha256": "2fdf954df91503d8dfce9df2dea27f300e0dab092afb7bf6ac5102de59bcc10f",
+    "output_sha256": "05084b952b0141ca4a1e3a1cf4844ff4ff875dac3c07654837ad7d00d289a48d"
+  },
+  {
+    "path": "kernel/sched/fair.c",
+    "choices": [
+      "lts",
+      "lts",
+      "lts",
+      {
+        "text": "\ttrace_android_vh_reweight_entity(se, &weight);\n"
+      },
+      "lts",
+      "ack"
+    ],
+    "rationale": "Keep LTS vlag scaling and stored entity lag, adding only Android weight hook. ACK task-picking API moves balancing into pick_task_fair; removal of old separate balance_fair is paired with that implementation.",
+    "input_sha256": "f6671ddbebcd1b2917a6b785c7d0f4cb9c3aef5317fb4f39b86c59bb9790ad66",
+    "output_sha256": "a2b23471243c4904bdf59cad2c4627709278edd8597c25047cd7175104d9bd82"
+  },
+  {
+    "path": "kernel/sched/ext.c",
+    "choices": [
+      "lts",
+      "lts",
+      {
+        "text": "\tint cpu;\n\tint repeat = 0;\n"
+      }
+    ],
+    "rationale": "Keep LTS core-sibling balancing and cookie-aware warning. Invoke retained balance_scx from new task-picking entry point. Keep LTS split disable-workflow and exit-kind initialization instead of duplicating its old compare-exchange here; add only Android repeat-hook state.",
+    "input_sha256": "aaace45dabbdf7b7bf79cc08f0363f82025054d9ed2a24fa351cb09fcf21c8c0",
+    "output_sha256": "1ba59de0b4cfe96595f9d8f307eb739305325f37517091314d04c8bf2c09e059"
+  },
+  {
+    "path": "include/linux/ieee80211-s1g.h",
+    "choices": [
+      "lts"
+    ],
+    "rationale": "Keep LTS TIM boundary calculation; do not reintroduce extra two bytes beyond the supplied element length.",
+    "input_sha256": "3619fc266608cf0fba579b6fac776247f3720d9dc46b3398eeaad61df3f23f12",
+    "output_sha256": "cca697fcff28ae546ea0454efe15298cc52eadc8d6177b8322b1eb179dfae3e3"
+  },
+  {
+    "path": "include/linux/ieee80211.h",
+    "choices": [
+      "ack",
+      "ack"
+    ],
+    "rationale": "P2P definitions moved into separate header; use one definition and include NAN header for emulator hwsim additions.",
+    "input_sha256": "b3fadb02185953dd96f3241e9a1b040bd3273a74517c2036f43bda491a19bf35",
+    "output_sha256": "d32049d1ac4b4c5196bc725ded74cbdb371d2737f2e92e3cfbeae432bcfbec39"
+  },
+  {
+    "path": "include/net/cfg80211.h",
+    "choices": [
+      "lts",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack"
+    ],
+    "rationale": "NAN peer-schedule structures and driver callbacks are new source interfaces implemented by the emulated wireless stack. No old layout padding retained.",
+    "input_sha256": "ac88ade2b656488481540fb18ee1c2669e1abed44488a05b7246d88b7ebe37b0",
+    "output_sha256": "27f67e6f7ff1ce2515b38186f73653d1db77bb1515e19c0197013fc14ad87e56"
+  },
+  {
+    "path": "include/uapi/linux/nl80211.h",
+    "choices": [
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack"
+    ],
+    "rationale": "Retain ACK NAN/PD netlink definitions and documentation, appended to existing UAPI enumeration. This maintains userspace/header compatibility with local wpa_supplicant nl80211 NAN code and hwsim implementation; necessity of every optional NAN operation on the shipping SDK configuration is unresolved, conservatively included for source/runtime compatibility.",
+    "input_sha256": "e9f59a052cfbdc3a6a96bd85843fd981a1b7c0f9ee1d2df2f0c7281cd7331f56",
+    "output_sha256": "1d0c78a42764f39f67325f2d276ea1d0c1322797615150ce7bbb9d29d71f8fd9"
+  },
+  {
+    "path": "net/mac80211/chan.c",
+    "choices": [
+      {
+        "text": "\t\t\tif (iter.link && ieee80211_link_has_in_place_reservation(iter.link, ctx)) {\n"
+      },
+      "ack",
+      "ack",
+      "ack"
+    ],
+    "rationale": "Adapt NAN-aware channel-user traversal while retaining LTS context-specific in-place reservation test at every call. Keep readiness/error checks and allow explicit NAN evacuation. New traversal walks interface/link identities, avoiding mutation of reserved_links during iteration; no blanket ACK choice of reservation checks.",
+    "input_sha256": "7f7264ef858ce86494d68af71dec43748119dce424fdd38b26921cc0be29f68e",
+    "output_sha256": "66b60757498b55dae42c1c3fef776a336f8edb922eecd5be082413f3d4551d5c"
+  },
+  {
+    "path": "net/mac80211/rx.c",
+    "choices": [
+      {
+        "text": "\tbool multicast;\n\tstatic const u8 nan_network_id[ETH_ALEN] __aligned(2) = {\n\t\t0x51, 0x6F, 0x9A, 0x01, 0x00, 0x00\n\t};\n\n\tif (ieee80211_is_s1g_beacon(hdr->frame_control))\n\t\treturn sdata->vif.type == NL80211_IFTYPE_STATION && bssid;\n\n\tmulticast = is_multicast_ether_addr(hdr->addr1);\n"
+      }
+    ],
+    "rationale": "Preserve LTS early S1G-beacon handling before addr1 access; only add NAN network identifier. Avoid out-of-bounds/incorrect format interpretation of short S1G frames.",
+    "input_sha256": "fa0f165544652127fdc4fc0a2088bbe7d69526ce6fbc698ba5e25c9c81aaa7cf",
+    "output_sha256": "321f8bae8882ecad088c65b954e448326e547cff25d9b475b19ff88bf9580be1"
+  },
+  {
+    "path": "net/wireless/core.c",
+    "choices": [
+      "lts",
+      "lts",
+      "lts"
+    ],
+    "rationale": "Keep LTS PMSR cleanup and native wiphy_work lifecycle; restore enclosing scoped_guard braces for disconnect work cancellation. Remove obsolete layout-cast helper/size assertion.",
+    "input_sha256": "c0e31bcecf83f87ba226fb4fd60db041c9e757c31c879136b8cc927ab866a2cf",
+    "output_sha256": "e48671435fb717e95eddb5d5d0f1ac64d10e21433dfb05d0b79ad5668aac6161"
+  },
+  {
+    "path": "net/wireless/pmsr.c",
+    "choices": [
+      "lts",
+      "lts",
+      "lts"
+    ],
+    "rationale": "Keep LTS typed wiphy_work lifetime handling instead of KMI-preserving casts; retain independent protocol additions.",
+    "input_sha256": "eacba1439f86177421f8f29c5b2bffba9a5ffc65a1fea583f9972a2b8d9da829",
+    "output_sha256": "c388824ee1a32ebce81fdec19967141103fc3eea42883a938af9fad2ee769d33"
+  },
+  {
+    "path": "net/wireless/nl80211.c",
+    "choices": [
+      "ack",
+      "ack",
+      "lts",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack",
+      "ack"
+    ],
+    "rationale": "Keep LTS HE/EHT capability-operation pairing checks. New NAN station exception admits HT/VHT/HE for NAN-management station only, retaining EHT and other constraints. Shared NAN schedule parser retains slot bounds, required attribute checks, local channel incompatibility/NSS checks, and admin-only dispatch; peer schedules additionally validated against local channels.",
+    "input_sha256": "c598a6a39df7e67a5d1bdc86b46b4f768d6e02211f40281ffbf633da5ebf442f",
+    "output_sha256": "5a9d5e50a32ab32512100f7ee68bc5c24ca2cc83048496b2de9404371fb0e63c"
+  },
+  {
+    "path": "net/wireless/rdev-ops.h",
+    "choices": [
+      "ack"
+    ],
+    "rationale": "Provide dispatch for new emulated NAN and PD source interfaces, preserving unsupported return where the optional callback is absent.",
+    "input_sha256": "f3f5477dc02c6eaa88606f4a78f6ed809af27bb7a25db916daa7f485a9a47a37",
+    "output_sha256": "6c3a4a7897c05e127507d85fa3f7ec787f2a413b33a7bdd0cac07c0a84199cbc"
+  },
+  {
+    "path": "net/wireless/trace.h",
+    "choices": [
+      "ack",
+      "ack"
+    ],
+    "rationale": "Trace descriptors for retained NAN interfaces; fixed arrays and dynamic ULW lengths match implementation.",
+    "input_sha256": "98f11cb0e11b36d6222164069ad1fd59e4325872283da2b75d088d082414df31",
+    "output_sha256": "61f150fc9016556015291855f99236c202595484f71e64fae9e199884710c269"
+  },
+  {
+    "path": "net/bluetooth/l2cap_core.c",
+    "choices": [
+      "ack"
+    ],
+    "rationale": "Retain additional !conn rejection together with LTS FLAG_DEL test; it narrows invalid access rather than weakening the stable deletion check.",
+    "input_sha256": "66e719fcd1b8494451cc9ca8ceb0c54ec51bdaf7e969021fb086223655a69a9f",
+    "output_sha256": "8389b79b86d855ccc4bfef35599d68ec442729e047219899c4141d66a12b2721"
+  },
+  {
+    "path": "net/bluetooth/l2cap_sock.c",
+    "choices": [
+      "ack"
+    ],
+    "rationale": "Keep expanded lifetime commentary for existing child-socket lock and hold_unless_zero path. Review actual pin/unlock ordering separately; this conflict changes only comments.",
+    "input_sha256": "5380d2d7874061093d7f4fbf34b96e25d39978ff6595d1edd704a88f14858ec3",
+    "output_sha256": "cfe980686768c80c89573ec659c0077ea1145f640899c74fc6da8b81620d93c5"
+  }
+]
