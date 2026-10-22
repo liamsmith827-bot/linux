@@ -3344,11 +3344,15 @@ static int proc_dmabuf_rss_show(struct seq_file *m, struct pid_namespace *ns,
 
 	if (dmabuf_info) {
 		unsigned long rss;
+		bool incomplete;
 
 		spin_lock(&dmabuf_info->lock);
 		rss = dmabuf_info->rss;
+		incomplete = dmabuf_info->incomplete;
 		spin_unlock(&dmabuf_info->lock);
 		put_dmabuf_info(dmabuf_info);
+		if (incomplete)
+			return -EIO;
 		seq_printf(m, "%lu\n", rss);
 	}
 
@@ -3370,12 +3374,17 @@ static int proc_dmabuf_rss_hwm_show(struct seq_file *m, void *v)
 
 	if (dmabuf_info) {
 		unsigned long rss_hwm;
+		bool incomplete;
 
 		spin_lock(&dmabuf_info->lock);
 		rss_hwm = dmabuf_info->rss_hwm;
+		incomplete = dmabuf_info->incomplete;
 		spin_unlock(&dmabuf_info->lock);
 		put_dmabuf_info(dmabuf_info);
-		seq_printf(m, "%lu\n", rss_hwm);
+		if (incomplete)
+			ret = -EIO;
+		else
+			seq_printf(m, "%lu\n", rss_hwm);
 	}
 
 	put_task_struct(task);
@@ -3415,7 +3424,10 @@ proc_dmabuf_rss_hwm_write(struct file *file, const char __user *buf,
 		ret = -ENOENT;
 	} else {
 		spin_lock(&dmabuf_info->lock);
-		dmabuf_info->rss_hwm = dmabuf_info->rss;
+		if (dmabuf_info->incomplete)
+			ret = -EIO;
+		else
+			dmabuf_info->rss_hwm = dmabuf_info->rss;
 		spin_unlock(&dmabuf_info->lock);
 		put_dmabuf_info(dmabuf_info);
 	}
@@ -3438,11 +3450,16 @@ static int proc_dmabuf_pss_show(struct seq_file *m, struct pid_namespace *ns,
 {
 	struct task_dma_buf_info *dmabuf_info = get_task_dmabuf_info(task);
 	struct task_dma_buf_record *rec;
+	int ret = 0;
 
 	if (dmabuf_info) {
 		unsigned long pss = 0;
 
 		spin_lock(&dmabuf_info->lock);
+		if (dmabuf_info->incomplete) {
+			ret = -EIO;
+			goto out_unlock;
+		}
 		list_for_each_entry(rec, &dmabuf_info->dmabufs, node) {
 			s64 refs = atomic64_read(&rec->dmabuf->nr_task_refs);
 
@@ -3453,12 +3470,14 @@ static int proc_dmabuf_pss_show(struct seq_file *m, struct pid_namespace *ns,
 
 			pss += rec->dmabuf->size / (size_t)refs;
 		}
+out_unlock:
 		spin_unlock(&dmabuf_info->lock);
 		put_dmabuf_info(dmabuf_info);
-		seq_printf(m, "%lu\n", pss);
+		if (!ret)
+			seq_printf(m, "%lu\n", pss);
 	}
 
-	return 0;
+	return ret;
 }
 #endif
 

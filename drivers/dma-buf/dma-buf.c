@@ -371,6 +371,7 @@ static int __dma_buf_account_task(struct dma_buf *dmabuf, struct task_dma_buf_in
 				  bool preload)
 {
 	struct task_dma_buf_record *rec;
+	bool have_preload = true;
 	int ret = 0;
 
 	if (!is_dmabuf_accounting_enabled())
@@ -379,27 +380,50 @@ static int __dma_buf_account_task(struct dma_buf *dmabuf, struct task_dma_buf_in
 	if (!dmabuf_info)
 		return 0;
 
-	if (preload && !task_dmabuf_records_preload(1))
-		return -ENOMEM;
+	/* A duplicate reference must not depend on allocating another record. */
+	spin_lock(&dmabuf_info->lock);
+	rec = find_task_dmabuf_record(dmabuf_info, dmabuf);
+	if (rec) {
+		++rec->refcnt;
+		spin_unlock(&dmabuf_info->lock);
+		return 0;
+	}
+	if (dmabuf_info->incomplete) {
+		spin_unlock(&dmabuf_info->lock);
+		return 0;
+	}
+	spin_unlock(&dmabuf_info->lock);
+
+	if (preload)
+		have_preload = task_dmabuf_records_preload(1);
 
 	spin_lock(&dmabuf_info->lock);
 	rec = find_task_dmabuf_record(dmabuf_info, dmabuf);
 	if (rec) {
 		++rec->refcnt;
-		if (preload)
-			trim_task_dmabuf_records_locked();
-	} else {
-		rec = alloc_task_dmabuf_record();
-		if (WARN_ON(!rec)) {
+	} else if (!dmabuf_info->incomplete) {
+		rec = have_preload ? alloc_task_dmabuf_record() : NULL;
+		if (!rec) {
+			/*
+			 * fd_install() and successful mmap/split operations cannot
+			 * roll back just because statistics allocation failed. Once
+			 * a reference is untracked, never create another record in
+			 * this context: closing that reference could otherwise
+			 * subtract from a later record for the same buffer. Keep
+			 * counting and draining existing records, but stop reporting
+			 * this context's incomplete statistics through procfs.
+			 */
+			dmabuf_info->incomplete = true;
 			ret = -ENOMEM;
-			goto err;
+		} else {
+			add_task_dmabuf_record(dmabuf_info, dmabuf, rec);
 		}
-		add_task_dmabuf_record(dmabuf_info, dmabuf, rec);
 	}
-err:
 	spin_unlock(&dmabuf_info->lock);
-	if (preload)
+	if (preload && have_preload) {
+		trim_task_dmabuf_records_locked();
 		task_dmabuf_records_preload_end();
+	}
 
 	return ret;
 }
@@ -407,11 +431,14 @@ err:
 /**
  * dma_buf_account_task - Account a dmabuf to a task
  * @dmabuf:	[in]	pointer to dma_buf
- * @task:	[in]	pointer to task_struct
+ * @dmabuf_info:	[in]	accounting context for the owning files or mm
  *
  * When a process obtains a dmabuf file descriptor, or maps a dmabuf, this
- * function attributes the provided @dmabuf to the @task. The first time @dmabuf
- * is attributed to @task, the buffer's size is added to the @task's dmabuf RSS.
+ * function attributes @dmabuf to @dmabuf_info. The first time the buffer
+ * is attributed to the accounting context, its size is added to dmabuf RSS.
+ * After a record allocation failure, new buffers are no longer tracked in this
+ * context and its procfs statistics return -EIO. Existing records still count
+ * every new reference and drain normally.
  *
  * Return:
  * * 0 on success
@@ -425,12 +452,11 @@ int dma_buf_account_task(struct dma_buf *dmabuf, struct task_dma_buf_info *dmabu
 /**
  * dma_buf_unaccount_task - Unaccount a dmabuf from a task
  * @dmabuf:	[in]	pointer to dma_buf
- * @task:	[in]	pointer to task_struct
+ * @dmabuf_info:	[in]	accounting context for the owning files or mm
  *
  * When a process closes a dmabuf file descriptor, or unmaps a dmabuf, this
- * function removes the provided @dmabuf attribution from the @task. When all
- * references to @dmabuf are removed from @task, the buffer's size is removed
- * from the task's dmabuf RSS.
+ * function removes one attribution from @dmabuf_info. When all tracked
+ * references to @dmabuf are removed, its size is removed from dmabuf RSS.
  */
 void dma_buf_unaccount_task(struct dma_buf *dmabuf, struct task_dma_buf_info *dmabuf_info)
 {
@@ -454,7 +480,7 @@ void dma_buf_unaccount_task(struct dma_buf *dmabuf, struct task_dma_buf_info *dm
 		} else {
 			rec = NULL;
 		}
-	} else {
+	} else if (!dmabuf_info->incomplete) {
 		pr_err("Could not find dmabuf %lu in unaccount\n",
 		       file_inode(dmabuf->file)->i_ino);
 	}

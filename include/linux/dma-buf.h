@@ -637,7 +637,7 @@ struct task_dma_buf_record {
 
 /**
  * struct task_dma_buf_info - Holds RSS and RSS HWM counters, and a list of
- * dmabufs for alltasks that share both mm_struct and files_struct.
+ * dmabufs for all tasks that share both mm_struct and files_struct.
  *
  * @rss: The sum of all dmabuf memory referenced by the task(s) via memory
  *       mappings or file descriptors in bytes. Buffers referenced more than
@@ -648,9 +648,12 @@ struct task_dma_buf_record {
  * @rss_hwm: The maximum value of @rss over the lifetime of this struct. (Unless
  *           reset by userspace.)
  * @refcnt: The number of tasks sharing this struct.
- * @lock: Lock protecting @rss, @dmabufs, and @dmabuf_count.
+ * @lock: Lock protecting @rss, @rss_hwm, @dmabufs, @dmabuf_count, and @incomplete.
  * @dmabufs: List of all dmabufs referenced by the task(s).
  * @dmabuf_count: The number of elements on the @dmabufs list.
+ * @incomplete: A record allocation failed. Existing records continue to count
+ *              references, but no new records may be added and statistics are
+ *              unavailable until a fresh accounting context is constructed.
  */
 struct task_dma_buf_info {
 	unsigned long rss;
@@ -659,6 +662,7 @@ struct task_dma_buf_info {
 	spinlock_t lock;
 	struct list_head dmabufs;
 	unsigned int dmabuf_count;
+	bool incomplete;
 };
 
 /**
