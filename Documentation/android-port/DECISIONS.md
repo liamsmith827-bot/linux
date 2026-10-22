@@ -5,6 +5,11 @@ boundary but not the pinned LTS tip. `candidates.tsv` is the readable table;
 `candidates.jsonl` preserves structured evidence. **Check `review_status` as well
 as `disposition`: `draft-net-reconciliation` rows are not completed review.**
 
+`evidence/progress.json` reports the finalized count, provisional count and
+percentage, along with the source commit examined. `reconcile.py` regenerates
+it from the ledger. The percentage includes justified omissions and upstream
+representation; it does not measure code lines ported or runtime compatibility.
+
 A candidate is not necessarily a patch to apply. This history includes old
 Android-mainline merges, intermediate implementations, removals, reapplies,
 upstream equivalents, and ABI bookkeeping. Replaying all of it would both

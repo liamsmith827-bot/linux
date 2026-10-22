@@ -611,3 +611,22 @@ and filesystem geometry: free_segment_range itself can perform GC/checkpoint
 I/O. Their own error state remains authoritative; the adaptation removes the
 additional unconditional repair flag from this caller. No recovery behavior
 has been exercised with injected I/O errors.
+
+
+## Intel pKVM host-only subset
+
+The supplied goldfish `board/kernel/x86_64.mk` installs
+`board/kernel/x86_64_cmdline.txt`, containing exactly
+`8250.nr_uarts=1 clocksource=pit`. In ACK, `arch/x86/kvm/pkvm.c` defines
+`enable_pkvm` as a zero-initialized bool, and `vmx/pkvm_init.c` enables it through
+the early `kvm-intel.pkvm` parameter. Initialization returns before setting up
+the protected hypervisor when it is false. This is affirmative boot-contract
+evidence for excluding the isolated protected-host backend from this SDK port.
+The original ACK x86 config compiles PKVM_INTEL, but compilation does not enable
+this opt-in mode. Native LTS Intel and AMD KVM remain configured.
+
+The 56 path records cover only isolated pKVM host implementation directories
+and files. Shared KVM/MM/IOMMU changes and pKVM guest support require separate
+review. AVF userspace exists in the platform; no assertion is made that protected
+VM behavior would work without this backend or that other boot parameters could
+never request it. Such a target change requires revisiting this exclusion.

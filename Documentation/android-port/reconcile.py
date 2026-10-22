@@ -195,4 +195,16 @@ assert len(rows)==11731
 assert all(r['disposition']!='pending' and r['rationale'] for r in rows)
 (D/'candidates.jsonl').write_text(''.join(json.dumps(r)+'\n' for r in rows));render(rows)
 (D/'evidence/decision-counts.json').write_text(json.dumps(dict(collections.Counter(r['disposition'] for r in rows)),indent=2)+'\n')
+reviewed = [r for r in rows if r['review_status'] == 'reviewed']
+progress = {
+ 'source_head': head,
+ 'candidate_count': len(rows),
+ 'finalized_count': len(reviewed),
+ 'provisional_count': len(rows) - len(reviewed),
+ 'finalized_percent': round(100 * len(reviewed) / len(rows), 2),
+ 'metric': 'Finalized candidate dispositions, including justified omissions, upstream representation and merge resolutions. This is not a percentage of code lines ported or runtime compatibility verified.',
+ 'finalized_dispositions': dict(collections.Counter(r['disposition'] for r in reviewed)),
+ 'provisional_dispositions': dict(collections.Counter(r['disposition'] for r in rows if r['review_status'] != 'reviewed')),
+}
+(D/'evidence/progress.json').write_text(json.dumps(progress, indent=2)+'\n')
 print('Decisions:',collections.Counter(r['disposition'] for r in rows))
