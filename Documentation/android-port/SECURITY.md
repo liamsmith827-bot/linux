@@ -2906,3 +2906,30 @@ that helper's refactoring. Extracted tests pass 160 cases / 1,520 assertions ove
 both filesystems, cache hit/miss/stale states, lookup/read failures and readahead
 lengths. Controls reject retrying non-ENOENT errors and leaking a stale reference.
 Actual storage I/O and memory pressure are not tested. All sources are local.
+
+## Fs-verity diagnostics and retained inode representation
+
+Retain 5ad4c759e693's five fs-verity diagnostic trace events, including their
+call sites and maintainer entry. These instrument enable/tree construction and
+hash verification without changing control flow. All modified implementation
+files equal the prior source after removing only trace calls/includes and
+whitespace; the event header matches the full reviewed ACK patch. Parameters
+are initialized before calls, and dynamic digest arrays use the validated hash
+algorithm's digest size. Events copy values while their inode/verity-info owners
+are live. Trace output includes inode, sizes, offsets and hashes; access remains
+subject to existing tracing permissions. No new userspace read interface or
+permission exception is introduced. SDK consumption is unconfirmed, so retain
+this generic configured diagnostic capability conservatively. Compilation is
+recorded separately; actual trace collection is not verified.
+
+The preceding representation decisions retain native per-filesystem info pointers,
+zero initialization, release/acquire publication, fsverity_active's initialized-info
+check, and cleanup. They retain the used native verification-context inode and
+page wrapper needed by compressed F2FS consumers. These choices do not preserve
+historical binary layout: they avoid internal storage/argument refactors that add
+no target integrity operation. The cross-inode rhashtable-chain use-after-free
+fixed by efe665b77332 cannot arise without that hash chain; its complete fix and
+introducing patch were reviewed. This is not a blanket claim about every possible
+verity lifetime issue. The optional earlier Merkle readahead policy is a separate
+candidate still under review, not dismissed by these representation decisions.
+No additional remote resources were used.
