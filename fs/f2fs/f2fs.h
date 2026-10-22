@@ -10,6 +10,7 @@
 
 #include <linux/uio.h>
 #include <linux/types.h>
+#include <linux/mmzone.h>
 #include <linux/page-flags.h>
 #include <linux/slab.h>
 #include <linux/crc32.h>
@@ -2047,6 +2048,8 @@ struct f2fs_sb_info {
 	unsigned long long iostat_count[NR_IO_TYPE];
 	unsigned long long iostat_bytes[NR_IO_TYPE];
 	unsigned long long prev_iostat_bytes[NR_IO_TYPE];
+	unsigned long long iostat_read_folio_count[NR_PAGE_ORDERS];
+	unsigned long long prev_iostat_read_folio_count[NR_PAGE_ORDERS];
 	bool iostat_enable;
 	unsigned long iostat_next_period;
 	unsigned int iostat_period_ms;
@@ -5034,6 +5037,22 @@ static inline bool is_journalled_quota(struct f2fs_sb_info *sbi)
 		F2FS_OPTION(sbi).s_qf_names[GRPQUOTA] ||
 		F2FS_OPTION(sbi).s_qf_names[PRJQUOTA])
 		return true;
+#endif
+	return false;
+}
+
+static inline bool f2fs_quota_file(struct inode *inode)
+{
+#ifdef CONFIG_QUOTA
+	int i;
+
+	if (!f2fs_sb_has_quota_ino(F2FS_I_SB(inode)))
+		return false;
+
+	for (i = 0; i < MAXQUOTAS; i++) {
+		if (f2fs_qf_ino(F2FS_I_SB(inode)->sb, i) == inode->i_ino)
+			return true;
+	}
 #endif
 	return false;
 }
