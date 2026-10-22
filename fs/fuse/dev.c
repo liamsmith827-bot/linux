@@ -2324,7 +2324,7 @@ static ssize_t fuse_dev_do_write(struct fuse_dev *fud,
 		}
 	}
 
-	if (!err && (req->in.h.opcode == FUSE_LOOKUP ||
+	if (!err && !oh.error && (req->in.h.opcode == FUSE_LOOKUP ||
 		     req->in.h.opcode == (FUSE_LOOKUP | FUSE_POSTFILTER)) &&
 		req->args->out_args[1].size == sizeof(struct fuse_entry_bpf_out)) {
 		struct fuse_entry_bpf_out *febo = (struct fuse_entry_bpf_out *)

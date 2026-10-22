@@ -3120,3 +3120,31 @@ limitation, and local MediaProvider disables splice-write negotiation after
 observing redaction/cache issues. This port retains the required mixed-open
 interface with the stated limits; it does not claim that these focused fixes
 solve all mixed-cache coherence. No remote resource was accessed for this review.
+
+## FUSE-BPF lookup failure and reference cleanup
+
+Review of the retained child-inode and stacking-depth fixes found incompatible
+error conventions in their callers. fuse_iget_backing returns NULL on allocation
+failure. Create, mkdir, mknod, link, symlink and lookup paths now report ENOMEM;
+lookup finalization cannot turn allocation failure for a positive lower dentry
+into a successful negative result. The existing correct-child-inode and I_NEW
+initialization rules remain. d_splice_alias consumes the inode on failure too,
+so both creation and lookup continue to clear their local reference immediately.
+
+A rejected backing file is represented by ERR_PTR(-ELOOP). Common lookup-reply
+cleanup now skips error pointers and releases both backing and unused BPF file
+references. fuse_get_bpf_prog consumes its file reference; the caller clears that
+slot before handing it over, preventing a later double fput. Revalidation starts
+with zeroed reply storage and performs cleanup even when a node-ID mismatch
+short-circuits the comparison. Failed daemon replies no longer acquire backing
+or program references from output data that was not copied. Stack-depth limits,
+canonical-path size validation, locked create/delete lookup, atomic backing-inode
+exchange and backing-getattr error propagation remain retained.
+
+The extracted lookup/reference checks pass 49 cases / 282 assertions and reject
+four regressions: fput on an error pointer, double BPF-file release, allocation
+failure as negative success, and double inode release after splice failure.
+The checks model VFS/reference operations and do not establish concurrent
+replacement safety. These fixes adapt retained ACK error paths; no native LTS
+fix or access check is removed. Source review also checked all seven callers of
+fuse_iget_backing against its NULL-return contract. Only local sources were used.

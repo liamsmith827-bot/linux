@@ -180,6 +180,16 @@ static void fuse_lookup_init(struct fuse_conn *fc, struct fuse_args *args,
 	args->out_args[1].value = bpf_outarg;
 }
 
+void fuse_entry_bpf_release(struct fuse_entry_bpf *arg)
+{
+	if (!IS_ERR_OR_NULL(arg->backing_file))
+		fput(arg->backing_file);
+	if (!IS_ERR_OR_NULL(arg->bpf_file))
+		fput(arg->bpf_file);
+	arg->backing_file = NULL;
+	arg->bpf_file = NULL;
+}
+
 #ifdef CONFIG_FUSE_BPF
 static bool backing_data_changed(struct fuse_inode *fi, struct dentry *entry,
 				 struct fuse_entry_bpf *bpf_arg)
@@ -192,7 +202,7 @@ static bool backing_data_changed(struct fuse_inode *fi, struct dentry *entry,
 
 	if (!entry || !fi->backing_inode) {
 		ret = false;
-		goto put_backing_file;
+		return ret;
 	}
 
 	get_fuse_backing_path(entry, &new_backing_path);
@@ -216,9 +226,6 @@ put_bpf:
 put_inode:
 	iput(new_backing_inode);
 	path_put(&new_backing_path);
-put_backing_file:
-	if (bpf_arg->backing_file)
-		fput(bpf_arg->backing_file);
 	return ret;
 }
 #endif
@@ -265,7 +272,10 @@ static int fuse_dentry_revalidate(struct inode *dir, const struct qstr *name,
 	if (time_before64(fuse_dentry_time(entry), get_jiffies_64()) ||
 		 (flags & (LOOKUP_EXCL | LOOKUP_REVAL | LOOKUP_RENAME_TARGET))) {
 		struct fuse_entry_out outarg;
-		struct fuse_entry_bpf bpf_arg;
+		struct fuse_entry_bpf bpf_arg = {0};
+#ifdef CONFIG_FUSE_BPF
+		bool backing_changed = false;
+#endif
 		FUSE_ARGS(args);
 		struct fuse_forget_link *forget;
 		u64 attr_version;
@@ -305,6 +315,13 @@ static int fuse_dentry_revalidate(struct inode *dir, const struct qstr *name,
 		ret = fuse_simple_request(fm, &args);
 		dput(parent);
 
+#ifdef CONFIG_FUSE_BPF
+		if (ret == sizeof(bpf_arg.out))
+			backing_changed = backing_data_changed(get_fuse_inode(inode),
+							entry, &bpf_arg);
+#endif
+		fuse_entry_bpf_release(&bpf_arg);
+
 		/* Zero nodeid is same as -ENOENT */
 		if (!ret && !outarg.nodeid)
 			ret = -ENOENT;
@@ -312,8 +329,7 @@ static int fuse_dentry_revalidate(struct inode *dir, const struct qstr *name,
 			fi = get_fuse_inode(inode);
 			if (outarg.nodeid != get_node_id(inode) ||
 #ifdef CONFIG_FUSE_BPF
-			    (ret == sizeof(bpf_arg.out) &&
-					    backing_data_changed(fi, entry, &bpf_arg)) ||
+			    backing_changed ||
 #endif
 			    (bool) IS_AUTOMOUNT(inode) != (bool) (outarg.attr.flags & FUSE_ATTR_SUBMOUNT)) {
 				fuse_queue_forget(fm->fc, forget,
@@ -555,8 +571,10 @@ int fuse_lookup_name(struct super_block *sb, u64 nodeid, const struct qstr *name
 
 		backing_inode = backing_file->f_inode;
 		*inode = fuse_iget_backing(sb, outarg->nodeid, backing_inode);
-		if (!*inode)
+		if (!*inode) {
+			err = -ENOMEM;
 			goto out_put_forget;
+		}
 
 		err = fuse_handle_backing(&bpf_arg,
 				&get_fuse_inode(*inode)->backing_inode,
@@ -599,8 +617,7 @@ int fuse_lookup_name(struct super_block *sb, u64 nodeid, const struct qstr *name
  out_put_forget:
 	kfree(forget);
  out:
-	if (bpf_arg.backing_file)
-		fput(bpf_arg.backing_file);
+	fuse_entry_bpf_release(&bpf_arg);
 	return err;
 }
 

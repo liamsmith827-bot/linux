@@ -1167,6 +1167,7 @@ struct inode *fuse_iget(struct super_block *sb, u64 nodeid,
 			u64 attr_valid, u64 attr_version,
 			u64 evict_ctr);
 
+void fuse_entry_bpf_release(struct fuse_entry_bpf *arg);
 int fuse_lookup_name(struct super_block *sb, u64 nodeid, const struct qstr *name,
 		     struct fuse_entry_out *outarg,
 		     struct dentry *entry, struct inode **inode);

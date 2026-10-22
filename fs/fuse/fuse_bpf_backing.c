@@ -277,7 +277,7 @@ int fuse_create_open_backing(
 	inode = fuse_iget_backing(dir->i_sb, target_nodeid,
 			fuse_entry->backing_path.dentry->d_inode);
 	if (!inode) {
-		err = -EIO;
+		err = -ENOMEM;
 		goto out;
 	}
 
@@ -1291,6 +1291,8 @@ int fuse_handle_bpf_prog(struct fuse_entry_bpf *feb, struct inode *parent,
 		if (IS_ERR(bpf_file))
 			return PTR_ERR(bpf_file);
 
+		/* fuse_get_bpf_prog() consumes the file reference on all paths. */
+		feb->bpf_file = NULL;
 		new_bpf = fuse_get_bpf_prog(bpf_file);
 		if (IS_ERR(new_bpf))
 			return PTR_ERR(new_bpf);
@@ -1343,9 +1345,14 @@ struct dentry *fuse_lookup_finalize(struct fuse_bpf_args *fa, struct inode *dir,
 		target_nodeid = get_fuse_inode(entry_inode)->nodeid;
 
 	backing_inode = backing_entry->d_inode;
-	if (backing_inode)
+	if (backing_inode) {
 		inode = fuse_iget_backing(dir->i_sb, target_nodeid,
 					  backing_inode);
+		if (!inode) {
+			ret = ERR_PTR(-ENOMEM);
+			goto out;
+		}
+	}
 
 	error = inode ?
 		fuse_handle_bpf_prog(feb, dir, &get_fuse_inode(inode)->bpf) :
@@ -1375,8 +1382,7 @@ struct dentry *fuse_lookup_finalize(struct fuse_bpf_args *fa, struct inode *dir,
 
 out:
 	iput(inode);
-	if (feb->backing_file)
-		fput(feb->backing_file);
+	fuse_entry_bpf_release(feb);
 	return ret;
 }
 
@@ -1484,8 +1490,8 @@ int fuse_mknod_backing(
 		goto out;
 	}
 	inode = fuse_iget_backing(dir->i_sb, 0, d_inode(backing_path.dentry));
-	if (IS_ERR(inode)) {
-		err = PTR_ERR(inode);
+	if (!inode) {
+		err = -ENOMEM;
 		goto out;
 	}
 	d_instantiate(entry, inode);
@@ -1570,8 +1576,8 @@ int fuse_mkdir_backing(
 	}
 	inode = fuse_iget_backing(dir_inode->i_sb, 0,
 				  backing_path.dentry->d_inode);
-	if (IS_ERR(inode)) {
-		err = PTR_ERR(inode);
+	if (!inode) {
+		err = -ENOMEM;
 		goto out;
 	}
 	d_instantiate(entry, inode);
@@ -1968,8 +1974,8 @@ int fuse_link_backing(struct fuse_bpf_args *fa, struct dentry *entry,
 	}
 
 	fuse_new_inode = fuse_iget_backing(dir->i_sb, 0, d_inode(backing_new_path.dentry));
-	if (IS_ERR(fuse_new_inode)) {
-		err = PTR_ERR(fuse_new_inode);
+	if (!fuse_new_inode) {
+		err = -ENOMEM;
 		goto out;
 	}
 	d_instantiate(newent, fuse_new_inode);
@@ -2360,8 +2366,8 @@ int fuse_symlink_backing(
 		goto out;
 	}
 	inode = fuse_iget_backing(dir->i_sb, 0, d_inode(backing_path.dentry));
-	if (IS_ERR(inode)) {
-		err = PTR_ERR(inode);
+	if (!inode) {
+		err = -ENOMEM;
 		goto out;
 	}
 	d_instantiate(entry, inode);
