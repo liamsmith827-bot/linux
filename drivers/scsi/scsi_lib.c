@@ -53,6 +53,9 @@
 #define  SCSI_INLINE_SG_CNT  2
 #endif
 
+EXPORT_TRACEPOINT_SYMBOL_GPL(scsi_dispatch_cmd_start);
+EXPORT_TRACEPOINT_SYMBOL_GPL(scsi_dispatch_cmd_done);
+
 static struct kmem_cache *scsi_sense_cache;
 static DEFINE_MUTEX(scsi_sense_cache_mutex);
 
@@ -2158,6 +2161,7 @@ struct scsi_device *scsi_device_from_queue(struct request_queue *q)
 
 	return sdev;
 }
+EXPORT_SYMBOL_GPL(scsi_device_from_queue);
 /*
  * pktcdvd should have been integrated into the SCSI layers, but for historical
  * reasons like the old IDE driver it isn't.  This export allows it to safely
