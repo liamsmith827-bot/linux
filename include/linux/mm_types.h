@@ -1532,6 +1532,7 @@ typedef __bitwise unsigned int vm_fault_t;
  *				fsync() to complete (for synchronous page faults
  *				in DAX)
  * @VM_FAULT_COMPLETED:		->fault completed, meanwhile mmap lock released
+ * @VM_FAULT_NEED_ANONPAGE:	emulated file tail needs an anonymous page
  * @VM_FAULT_HINDEX_MASK:	mask HINDEX value
  *
  */
@@ -1549,7 +1550,7 @@ enum vm_fault_reason {
 	VM_FAULT_DONE_COW       = (__force vm_fault_t)0x001000,
 	VM_FAULT_NEEDDSYNC      = (__force vm_fault_t)0x002000,
 	VM_FAULT_COMPLETED      = (__force vm_fault_t)0x004000,
-	VM_FAULT_NEED_ANONPAGE  = (__force vm_fault_t)0x080000,
+	VM_FAULT_NEED_ANONPAGE  = (__force vm_fault_t)0x008000,
 	VM_FAULT_HINDEX_MASK    = (__force vm_fault_t)0x0f0000,
 };
 

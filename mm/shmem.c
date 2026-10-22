@@ -2797,12 +2797,13 @@ static vm_fault_t shmem_fault(struct vm_fault *vmf)
 	vm_fault_t ret = 0;
 	int err;
 	pgoff_t max_idx;
+	loff_t size = i_size_read(inode);
 
-	max_idx = DIV_ROUND_UP(i_size_read(inode), __PAGE_SIZE) * (__PAGE_SIZE / PAGE_SIZE);
+	max_idx = DIV_ROUND_UP(size, __PAGE_SIZE) * (__PAGE_SIZE / PAGE_SIZE);
 	if (unlikely(vmf->pgoff >= max_idx))
 		return VM_FAULT_SIGBUS;
 
-	max_idx = DIV_ROUND_UP(i_size_read(inode), PAGE_SIZE);
+	max_idx = DIV_ROUND_UP(size, PAGE_SIZE);
 	if (unlikely(vmf->pgoff >= max_idx))
 		return VM_FAULT_NEED_ANONPAGE;
 
