@@ -138,7 +138,9 @@ impl TransactionLog {
         }
     }
 
-    pub(crate) fn init(&self) -> Result {
+    /// Allocates log storage locally and returns an infallible publication step.
+    /// Dropping it before publication releases the allocation on init failure.
+    pub(crate) fn prepare(&self) -> Result<impl FnOnce() + '_> {
         let entries = KBox::pin_init(
             pin_init::pin_init_array_from_fn(|_| {
                 pin_init!(TransactionLogSlot {
@@ -150,8 +152,9 @@ impl TransactionLog {
             }),
             GFP_KERNEL,
         )?;
-        self.entries.populate(entries);
-        Ok(())
+        Ok(move || {
+            self.entries.populate(entries);
+        })
     }
 
     fn add(&self, entry: &TransactionLogEntry) {

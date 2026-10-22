@@ -341,14 +341,30 @@ impl kernel::Module for BinderModule {
 
         pr_warn!("Loaded Rust Binder.");
 
-        crate::transaction::TRANSACTION_LOG.init()?;
-        crate::transaction::FAILED_TRANSACTION_LOG.init()?;
+        let publish_log = crate::transaction::TRANSACTION_LOG.prepare()?;
+        let publish_failed_log = crate::transaction::FAILED_TRANSACTION_LOG.prepare()?;
 
         let netlink = crate::netlink::BINDER_NL_FAMILY.register()?;
         BINDER_SHRINKER.register(kernel::c_str!("android-binder"))?;
 
         // SAFETY: The module is being loaded, so we can initialize binderfs.
-        unsafe { kernel::error::to_result(binderfs::init_rust_binderfs())? };
+        if let Err(err) = unsafe { kernel::error::to_result(binderfs::init_rust_binderfs()) } {
+            // SAFETY: No binderfs filesystem was published on failure, so no page
+            // range can have used this successfully registered shrinker.
+            unsafe { BINDER_SHRINKER.unregister_unused() };
+            return Err(err);
+        }
+
+        // Publication is infallible. Before it, diagnostic readers see an empty
+        // log; initialization failures drop the locally owned allocations.
+        publish_log();
+        publish_failed_log();
+
+        // SAFETY: The loader holds a reference throughout init. This driver has
+        // no teardown for binderfs or its shrinker, so successful activation must
+        // keep module text/data resident for those callbacks. The inactive path
+        // above takes no reference and remains unloadable. Built-in is a no-op.
+        unsafe { bindings::__module_get(_module.as_ptr()) };
 
         Ok(Self {
             _netlink: Some(netlink),

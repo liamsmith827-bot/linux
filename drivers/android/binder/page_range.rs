@@ -84,7 +84,7 @@ impl Shrinker {
         if shrinker.is_null() {
             // SAFETY: We initialized it, so its okay to destroy it.
             unsafe { bindings::list_lru_destroy(self.list_lru.get()) };
-            return Err(Error::from_errno(ret));
+            return Err(ENOMEM);
         }
 
         // SAFETY: We're about to register the shrinker, and these are the fields we need to
@@ -102,6 +102,21 @@ impl Shrinker {
         unsafe { self.inner.get().write(shrinker) };
 
         Ok(())
+    }
+
+    /// Unregisters the shrinker when initialization fails before binderfs is published.
+    ///
+    /// # Safety
+    ///
+    /// `register` must have succeeded, no page ranges may have used this shrinker,
+    /// and this method must be called only once. The shrinker must not be used afterwards.
+    pub(crate) unsafe fn unregister_unused(&self) {
+        // SAFETY: Registration succeeded. Native shrinker_free waits for current
+        // callbacks; no ranges can populate the LRU before binderfs is published.
+        unsafe {
+            bindings::shrinker_free(*self.inner.get());
+            bindings::list_lru_destroy(self.list_lru.get());
+        }
     }
 }
 
