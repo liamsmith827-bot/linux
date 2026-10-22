@@ -1,0 +1,584 @@
+{
+  "source_head": "9e4d89fab8be269cdfa979c81871aff240be829d",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "records": [
+    {
+      "commit": "4c090c8696dc661b2746b93cc691d624228acab7",
+      "paths": [
+        "fs/fuse/fuse_i.h"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "0ee997b93b095088e29ebb2f78c1895bf7bbedeff93884d7dc8cfd8c8c60d974",
+      "assessment": "This single hunk keeps the virtio-fs argument pointer in fuse_req even when CONFIG_VIRTIO_FS is disabled to permit downstream binary-compatible configuration changes. Retain the native conditional member. The actual SDK enables VIRTIO_FS and rebuilds modules; historical cross-configuration layout preservation is explicitly excluded."
+    },
+    {
+      "commit": "caf51e6b49049cfaed816f71a98d6c0e158fc3ff",
+      "paths": [
+        "fs/fuse/fuse_i.h"
+      ],
+      "unique_remerge_review": true,
+      "patch_sha256": "b8fb7e4842c0f6fd9ef828e650edf58b34f895f721fffb3b5e19e81a870a5f5d",
+      "assessment": "The complete unique resolution both preserves the unconditional KMI member and adds the native fuse_mount pointer. Retain the native mount pointer and native CONFIG_VIRTIO_FS guard; omit only the historical layout constraint. No runtime or source-level virtio-fs operation is removed."
+    },
+    {
+      "commit": "89d67670605c505e46546af2b38922acb4907607",
+      "paths": [
+        "fs/fuse/inode.c",
+        "fs/fuse/passthrough.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "a8efe7010dcfab97491cd2902e9c48774268feeded5960056089441afbfad7dc",
+      "assessment": "Initial one-shot IDR/open/setup/release implementation; its early error paths could leak the acquired file. The old fuse_passthrough structure, passthrough_fh/one-shot IDR and custom fuse_aio_req are absent from final ACK and the port after upstream passthrough replaced them (remaining removal in 25867a2d88c5). Keep the native backing-ID, referenced backing-file and fs/backing-file.c implementation: it handles sync/async I/O, reverts credentials on allocation failure, owns async references, uses current completion/timestamp APIs and performs mmap LSM checks. Android writeback-cache attribute behavior is separately retained/adapted under 65687870ee84/62c103092ea2. Supersession of these internal implementations does not omit passthrough functionality or restore their historical leaks."
+    },
+    {
+      "commit": "f32d3e5eb8274a35ff703c6baf1571bf1624c414",
+      "paths": [
+        "fs/fuse/file.c",
+        "fs/fuse/fuse_i.h",
+        "fs/fuse/passthrough.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "3f9212fed55502a65ae7172aa5970e919d447e6bcd294386003d7621a4920158",
+      "assessment": "Initial synchronous read/write and manual IOCB-to-RWF conversion implementation. The old fuse_passthrough structure, passthrough_fh/one-shot IDR and custom fuse_aio_req are absent from final ACK and the port after upstream passthrough replaced them (remaining removal in 25867a2d88c5). Keep the native backing-ID, referenced backing-file and fs/backing-file.c implementation: it handles sync/async I/O, reverts credentials on allocation failure, owns async references, uses current completion/timestamp APIs and performs mmap LSM checks. Android writeback-cache attribute behavior is separately retained/adapted under 65687870ee84/62c103092ea2. Supersession of these internal implementations does not omit passthrough functionality or restore their historical leaks."
+    },
+    {
+      "commit": "aa525f2e9125cbe90e93db726e8ad4e8b6d99d37",
+      "paths": [
+        "fs/fuse/passthrough.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "a560e90072ba6117f087a28c130261f473d7a04404f64aae851d870e09d76411",
+      "assessment": "Initial custom asynchronous request/completion implementation. The old fuse_passthrough structure, passthrough_fh/one-shot IDR and custom fuse_aio_req are absent from final ACK and the port after upstream passthrough replaced them (remaining removal in 25867a2d88c5). Keep the native backing-ID, referenced backing-file and fs/backing-file.c implementation: it handles sync/async I/O, reverts credentials on allocation failure, owns async references, uses current completion/timestamp APIs and performs mmap LSM checks. Android writeback-cache attribute behavior is separately retained/adapted under 65687870ee84/62c103092ea2. Supersession of these internal implementations does not omit passthrough functionality or restore their historical leaks."
+    },
+    {
+      "commit": "9ee350d7eccbd678ff680501a63585629a00ea0b",
+      "paths": [
+        "fs/fuse/fuse_i.h",
+        "fs/fuse/passthrough.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "eacad3e4d4da6cceb8af8ccc8ed9f0fdd02a31df06c3fdf23fcfe4d426660f97",
+      "assessment": "Initial daemon credential override and lifetime implementation. The old fuse_passthrough structure, passthrough_fh/one-shot IDR and custom fuse_aio_req are absent from final ACK and the port after upstream passthrough replaced them (remaining removal in 25867a2d88c5). Keep the native backing-ID, referenced backing-file and fs/backing-file.c implementation: it handles sync/async I/O, reverts credentials on allocation failure, owns async references, uses current completion/timestamp APIs and performs mmap LSM checks. Android writeback-cache attribute behavior is separately retained/adapted under 65687870ee84/62c103092ea2. Supersession of these internal implementations does not omit passthrough functionality or restore their historical leaks."
+    },
+    {
+      "commit": "7b8e18bfcd4cb655fdd1d4bd96910b3b759ca988",
+      "paths": [
+        "fs/fuse/fuse_i.h",
+        "fs/fuse/passthrough.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "1b91aea269d4eeca787725c9b315db2b9a3dc3cf0c7b67b69f1465cbefb6dcbc",
+      "assessment": "Reverts the first credential-override version before its later reintroduction. The old fuse_passthrough structure, passthrough_fh/one-shot IDR and custom fuse_aio_req are absent from final ACK and the port after upstream passthrough replaced them (remaining removal in 25867a2d88c5). Keep the native backing-ID, referenced backing-file and fs/backing-file.c implementation: it handles sync/async I/O, reverts credentials on allocation failure, owns async references, uses current completion/timestamp APIs and performs mmap LSM checks. Android writeback-cache attribute behavior is separately retained/adapted under 65687870ee84/62c103092ea2. Supersession of these internal implementations does not omit passthrough functionality or restore their historical leaks."
+    },
+    {
+      "commit": "6e18e9bfd0fd9736a43452b490acb1a5fda29ad9",
+      "paths": [
+        "fs/fuse/passthrough.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "113f5a33681952b1472e4c24f6f72084ae41fee50ffdfded8f88b959d585f08c",
+      "assessment": "Reverts the first custom asynchronous I/O version before its later reintroduction. The old fuse_passthrough structure, passthrough_fh/one-shot IDR and custom fuse_aio_req are absent from final ACK and the port after upstream passthrough replaced them (remaining removal in 25867a2d88c5). Keep the native backing-ID, referenced backing-file and fs/backing-file.c implementation: it handles sync/async I/O, reverts credentials on allocation failure, owns async references, uses current completion/timestamp APIs and performs mmap LSM checks. Android writeback-cache attribute behavior is separately retained/adapted under 65687870ee84/62c103092ea2. Supersession of these internal implementations does not omit passthrough functionality or restore their historical leaks."
+    },
+    {
+      "commit": "79fd967db6bdb78f74c8fbf21664ba70a5fc02c9",
+      "paths": [
+        "fs/fuse/file.c",
+        "fs/fuse/fuse_i.h",
+        "fs/fuse/passthrough.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "1cce483355ef0a93abfdc2b715a2f37dc015cf42454a0f04936a823c66627ecf",
+      "assessment": "Reverts the first synchronous I/O version before its later reintroduction. The old fuse_passthrough structure, passthrough_fh/one-shot IDR and custom fuse_aio_req are absent from final ACK and the port after upstream passthrough replaced them (remaining removal in 25867a2d88c5). Keep the native backing-ID, referenced backing-file and fs/backing-file.c implementation: it handles sync/async I/O, reverts credentials on allocation failure, owns async references, uses current completion/timestamp APIs and performs mmap LSM checks. Android writeback-cache attribute behavior is separately retained/adapted under 65687870ee84/62c103092ea2. Supersession of these internal implementations does not omit passthrough functionality or restore their historical leaks."
+    },
+    {
+      "commit": "6ce9f3010f4633499047eb2064c2c67582a3314e",
+      "paths": [
+        "fs/fuse/inode.c",
+        "fs/fuse/passthrough.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "b8f15a052786ef2379868e0828b0de0538d44245eee87568526e106b50b95b89",
+      "assessment": "Reverts the first IDR/open/release version before its later reintroduction. The old fuse_passthrough structure, passthrough_fh/one-shot IDR and custom fuse_aio_req are absent from final ACK and the port after upstream passthrough replaced them (remaining removal in 25867a2d88c5). Keep the native backing-ID, referenced backing-file and fs/backing-file.c implementation: it handles sync/async I/O, reverts credentials on allocation failure, owns async references, uses current completion/timestamp APIs and performs mmap LSM checks. Android writeback-cache attribute behavior is separately retained/adapted under 65687870ee84/62c103092ea2. Supersession of these internal implementations does not omit passthrough functionality or restore their historical leaks."
+    },
+    {
+      "commit": "9ea958368e3537b05d2c942507376afb02fb0550",
+      "paths": [
+        "fs/fuse/inode.c",
+        "fs/fuse/passthrough.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "59b895f92c07a682347e13cabb4fdb9788879c4b0a3a0ee9f9896ad1558c7394",
+      "assessment": "Second IDR/open/release version adds stack-depth and error cleanup; its failed-ID path also illustrates why the old ownership sequence must not be copied literally. The old fuse_passthrough structure, passthrough_fh/one-shot IDR and custom fuse_aio_req are absent from final ACK and the port after upstream passthrough replaced them (remaining removal in 25867a2d88c5). Keep the native backing-ID, referenced backing-file and fs/backing-file.c implementation: it handles sync/async I/O, reverts credentials on allocation failure, owns async references, uses current completion/timestamp APIs and performs mmap LSM checks. Android writeback-cache attribute behavior is separately retained/adapted under 65687870ee84/62c103092ea2. Supersession of these internal implementations does not omit passthrough functionality or restore their historical leaks."
+    },
+    {
+      "commit": "7b923066bbdb31e18171718c3dfb4041aa585d2b",
+      "paths": [
+        "fs/fuse/file.c",
+        "fs/fuse/fuse_i.h",
+        "fs/fuse/passthrough.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "3d3e4dc225f05385c8d5119f3fb1e639e00b18980e885caf936d6a33e409385e",
+      "assessment": "Second synchronous I/O version masks the accepted IOCB flags. The old fuse_passthrough structure, passthrough_fh/one-shot IDR and custom fuse_aio_req are absent from final ACK and the port after upstream passthrough replaced them (remaining removal in 25867a2d88c5). Keep the native backing-ID, referenced backing-file and fs/backing-file.c implementation: it handles sync/async I/O, reverts credentials on allocation failure, owns async references, uses current completion/timestamp APIs and performs mmap LSM checks. Android writeback-cache attribute behavior is separately retained/adapted under 65687870ee84/62c103092ea2. Supersession of these internal implementations does not omit passthrough functionality or restore their historical leaks."
+    },
+    {
+      "commit": "36b0681228c4c301475e7aac5e1fa2ef1284b0f1",
+      "paths": [
+        "fs/fuse/passthrough.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "677f606fc48722144dc3a8d79990adab61703d4b90b2baffec8c67875f482b50",
+      "assessment": "Second custom asynchronous request/completion version. The old fuse_passthrough structure, passthrough_fh/one-shot IDR and custom fuse_aio_req are absent from final ACK and the port after upstream passthrough replaced them (remaining removal in 25867a2d88c5). Keep the native backing-ID, referenced backing-file and fs/backing-file.c implementation: it handles sync/async I/O, reverts credentials on allocation failure, owns async references, uses current completion/timestamp APIs and performs mmap LSM checks. Android writeback-cache attribute behavior is separately retained/adapted under 65687870ee84/62c103092ea2. Supersession of these internal implementations does not omit passthrough functionality or restore their historical leaks."
+    },
+    {
+      "commit": "b7fe962f5ea2ae04e0a1510c4d81eb41f76f9fe1",
+      "paths": [
+        "fs/fuse/fuse_i.h",
+        "fs/fuse/passthrough.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "a88fb9fbb40d7bc522bcf97b2ef5a467784a6d641bee49ec66de65a027235a76",
+      "assessment": "Second daemon credential override and lifetime version. The old fuse_passthrough structure, passthrough_fh/one-shot IDR and custom fuse_aio_req are absent from final ACK and the port after upstream passthrough replaced them (remaining removal in 25867a2d88c5). Keep the native backing-ID, referenced backing-file and fs/backing-file.c implementation: it handles sync/async I/O, reverts credentials on allocation failure, owns async references, uses current completion/timestamp APIs and performs mmap LSM checks. Android writeback-cache attribute behavior is separately retained/adapted under 65687870ee84/62c103092ea2. Supersession of these internal implementations does not omit passthrough functionality or restore their historical leaks."
+    },
+    {
+      "commit": "5f339265fd1ad4b1a717ac5b0711113b3cf69afe",
+      "paths": [
+        "fs/fuse/file.c",
+        "fs/fuse/fuse_i.h",
+        "fs/fuse/passthrough.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "e539e3ceac8d33dc23e3621aee36fdeb4c6446b8479886abd5280bea1d63173c",
+      "assessment": "Legacy passthrough mmap switches the VMA file manually and updates timestamps. The old fuse_passthrough structure, passthrough_fh/one-shot IDR and custom fuse_aio_req are absent from final ACK and the port after upstream passthrough replaced them (remaining removal in 25867a2d88c5). Keep the native backing-ID, referenced backing-file and fs/backing-file.c implementation: it handles sync/async I/O, reverts credentials on allocation failure, owns async references, uses current completion/timestamp APIs and performs mmap LSM checks. Android writeback-cache attribute behavior is separately retained/adapted under 65687870ee84/62c103092ea2. Supersession of these internal implementations does not omit passthrough functionality or restore their historical leaks."
+    },
+    {
+      "commit": "8f11760cac56c3fc857635b041d6d0fe6db3a0c0",
+      "paths": [
+        "fs/fuse/passthrough.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "93ae48c3662766c9c75c5e6e581a1cd8165bccf0f3a7cd19f8ea888af4d57fe6",
+      "assessment": "Fixes an allocation-failure exit that skipped reverting overridden credentials in the legacy reader. The old fuse_passthrough structure, passthrough_fh/one-shot IDR and custom fuse_aio_req are absent from final ACK and the port after upstream passthrough replaced them (remaining removal in 25867a2d88c5). Keep the native backing-ID, referenced backing-file and fs/backing-file.c implementation: it handles sync/async I/O, reverts credentials on allocation failure, owns async references, uses current completion/timestamp APIs and performs mmap LSM checks. Android writeback-cache attribute behavior is separately retained/adapted under 65687870ee84/62c103092ea2. Supersession of these internal implementations does not omit passthrough functionality or restore their historical leaks."
+    },
+    {
+      "commit": "4fd3fbfa130768e2c36aac651bd41e1d4babc6c5",
+      "paths": [
+        "fs/fuse/dev.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "d400f7f965eae916debf7a353776f004ab362e399560cb50964d1daca034977c",
+      "assessment": "The patch temporarily regresses full ioctl matching to type/number matching. f5ec17375c2b reverses it; current fuse_dev_ioctl uses full command values and the native clone/backing/sync-init dispatch. Do not restore acceptance of wrong-size/direction commands."
+    },
+    {
+      "commit": "f5ec17375c2beda2064262cc0607bd56a9d97301",
+      "paths": [
+        "fs/fuse/dev.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "a88764768e7fa7e0423d8c04c4c966aaf5cdf56a05cce9ac14e8c5c68abb2667",
+      "assessment": "Retain the corrected full ioctl-command dispatch. The obsolete PASSTHROUGH_OPEN command has been replaced by the upstream BACKING_OPEN/CLOSE protocol in final ACK and the port; local libfuse/MediaProvider explicitly support that protocol. Native ioctl and clone helper bodies match LTS."
+    },
+    {
+      "commit": "c90859e710fee6599ebf6a2a953eb53dac96445c",
+      "paths": [
+        "fs/fuse/fuse_i.h"
+      ],
+      "unique_remerge_review": true,
+      "patch_sha256": "f909eba5ae0554ac954163f5d2afeac9db11fded1dab7be7165bf88de58f2057",
+      "assessment": "The full unique merge hunk retains the native curr_bucket and the old Android one-shot passthrough IDR/lock. The current code retains native sync buckets and the upstream backing_files_map lifecycle instead; the superseded passthrough_req fields are absent from final ACK and the port. Do not resurrect duplicate IDRs."
+    },
+    {
+      "commit": "cad4f67e5b5bca9ee8ec716e7a153a92467c1c07",
+      "paths": [
+        "fs/fuse/dir.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "40d50e800d71d716e9a771cd512a1d6b47dc703b70152c52e7e59b90ed494a28",
+      "assessment": "The original one-line change zeroes canonical-path reply storage. Current canonical-path allocation uses get_zeroed_page, bounds output to PATH_MAX and frees the page after completion. The later reply-size check is also retained, preventing a zero-size write before the buffer."
+    },
+    {
+      "commit": "af696131413a90e6e44956664dce5fe2bb131ca9",
+      "paths": [
+        "fs/fuse/passthrough.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "0c82b4370de362745aa9c28e459be0cf660ce48b61c104f05870c31a1462c95c",
+      "assessment": "Legacy lower-file timestamp/size copying on read/write/mmap. The old fuse_passthrough structure, passthrough_fh/one-shot IDR and custom fuse_aio_req are absent from final ACK and the port after upstream passthrough replaced them (remaining removal in 25867a2d88c5). Keep the native backing-ID, referenced backing-file and fs/backing-file.c implementation: it handles sync/async I/O, reverts credentials on allocation failure, owns async references, uses current completion/timestamp APIs and performs mmap LSM checks. Android writeback-cache attribute behavior is separately retained/adapted under 65687870ee84/62c103092ea2. Supersession of these internal implementations does not omit passthrough functionality or restore their historical leaks."
+    },
+    {
+      "commit": "8c07eec25d5347fc700d8d277ac42e9913618f45",
+      "paths": [
+        "fs/fuse/passthrough.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "9106e0b3cf636be33f507ef8db1a47e70cdeba85c73ebb5f34627abe9f604d14",
+      "assessment": "Legacy custom ki_complete adapter changes from three arguments to two. The old fuse_passthrough structure, passthrough_fh/one-shot IDR and custom fuse_aio_req are absent from final ACK and the port after upstream passthrough replaced them (remaining removal in 25867a2d88c5). Keep the native backing-ID, referenced backing-file and fs/backing-file.c implementation: it handles sync/async I/O, reverts credentials on allocation failure, owns async references, uses current completion/timestamp APIs and performs mmap LSM checks. Android writeback-cache attribute behavior is separately retained/adapted under 65687870ee84/62c103092ea2. Supersession of these internal implementations does not omit passthrough functionality or restore their historical leaks."
+    },
+    {
+      "commit": "b36eaed571d9cf47ff4a18dde1f776ac44dc9a93",
+      "paths": [
+        "fs/fuse/passthrough.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "c5dbf5bc948678811a23d39daa64531417fc75c995b92a819ecca2fed3cc9670",
+      "assessment": "Adds linux/file.h for the legacy passthrough implementation. The old fuse_passthrough structure, passthrough_fh/one-shot IDR and custom fuse_aio_req are absent from final ACK and the port after upstream passthrough replaced them (remaining removal in 25867a2d88c5). Keep the native backing-ID, referenced backing-file and fs/backing-file.c implementation: it handles sync/async I/O, reverts credentials on allocation failure, owns async references, uses current completion/timestamp APIs and performs mmap LSM checks. Android writeback-cache attribute behavior is separately retained/adapted under 65687870ee84/62c103092ea2. Supersession of these internal implementations does not omit passthrough functionality or restore their historical leaks."
+    },
+    {
+      "commit": "6c8323d62035f8c5fa5080d17f365253aa54191e",
+      "paths": [
+        "fs/fuse/inode.c"
+      ],
+      "unique_remerge_review": true,
+      "patch_sha256": "a9839aba19e14f68d80dfdb700f3b43be44c43c00c4c27739db8350ed740a748",
+      "assessment": "Both unique merge hunks correctly combine upper/lower initialization flags before encoding or consuming passthrough negotiation. Native init retains the combined u64 flags, FUSE_INIT_EXT gating and validated maximum stack depth. Current libfuse sets those fields. The historical unconditional maximum stack depth and old passthrough bit are superseded by the upstream protocol; retain the newer checks."
+    },
+    {
+      "commit": "cb464a560c88be25b05870fb1896e748e258d7d4",
+      "paths": [
+        "fs/fuse/dev.c"
+      ],
+      "unique_remerge_review": true,
+      "patch_sha256": "861615d9098811f0cef4cbb56cb8786c91d8f653356d2bc12cbf969494c9b479",
+      "assessment": "The complete unique resolution drops the historical same-user-namespace test when cloning a FUSE connection and retains matching file operations. The current native clone helper uses fd scope cleanup, operation identity, initialized-device validation and fuse_mutex. It is identical to pinned LTS, so no additional relaxation or legacy descriptor management is introduced."
+    },
+    {
+      "commit": "9615d2aacac528f3d718f009a54f89bddc449b80",
+      "paths": [
+        "fs/fuse/inode.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "e2bd842beb42a86e9082e22ced059da9c0c4be993b9dfd66ea71b074a8c8d4e0",
+      "assessment": "This temporary compatibility revert accepted flags2 without FUSE_INIT_EXT. ACK 25867a2d88c5 restores the explicit gate; it remains in both final ACK and the port. The supplied libfuse sends FUSE_INIT_EXT with flags2 for the upstream protocol, so preserve the native protocol validation rather than resurrecting this reverted compatibility path."
+    },
+    {
+      "commit": "4f9b4aec2e8615331919b1c300269ecf07cd71f0",
+      "paths": [
+        "fs/fuse/passthrough.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "2e790131e323c5b772c9d0213dd558221d954bd61e88f7cc5d7e26e00222e9f5",
+      "assessment": "Converts the legacy timestamp code to the newer ctime accessors. The old fuse_passthrough structure, passthrough_fh/one-shot IDR and custom fuse_aio_req are absent from final ACK and the port after upstream passthrough replaced them (remaining removal in 25867a2d88c5). Keep the native backing-ID, referenced backing-file and fs/backing-file.c implementation: it handles sync/async I/O, reverts credentials on allocation failure, owns async references, uses current completion/timestamp APIs and performs mmap LSM checks. Android writeback-cache attribute behavior is separately retained/adapted under 65687870ee84/62c103092ea2. Supersession of these internal implementations does not omit passthrough functionality or restore their historical leaks."
+    },
+    {
+      "commit": "d7a345d8a919b73174a1677e3e0d68961040b406",
+      "paths": [
+        "fs/fuse/passthrough.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "f8a58626007ca8208db49ff2ec389d7f162b504767423dd4963a8f4c0303cf5c",
+      "assessment": "Converts the remaining legacy timestamp code to current atime/mtime accessors. The old fuse_passthrough structure, passthrough_fh/one-shot IDR and custom fuse_aio_req are absent from final ACK and the port after upstream passthrough replaced them (remaining removal in 25867a2d88c5). Keep the native backing-ID, referenced backing-file and fs/backing-file.c implementation: it handles sync/async I/O, reverts credentials on allocation failure, owns async references, uses current completion/timestamp APIs and performs mmap LSM checks. Android writeback-cache attribute behavior is separately retained/adapted under 65687870ee84/62c103092ea2. Supersession of these internal implementations does not omit passthrough functionality or restore their historical leaks."
+    },
+    {
+      "commit": "9c09afab6e348ac0e11d63c6680819ad2103dfc3",
+      "paths": [
+        "fs/fuse/passthrough.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "d32e8429510a13d4dcb3d92c290016fe5468066de8b1b571b7e5e0b7e0667160",
+      "assessment": "Moves the legacy IOCB mask helper into passthrough.c after its generic helper disappeared. The old fuse_passthrough structure, passthrough_fh/one-shot IDR and custom fuse_aio_req are absent from final ACK and the port after upstream passthrough replaced them (remaining removal in 25867a2d88c5). Keep the native backing-ID, referenced backing-file and fs/backing-file.c implementation: it handles sync/async I/O, reverts credentials on allocation failure, owns async references, uses current completion/timestamp APIs and performs mmap LSM checks. Android writeback-cache attribute behavior is separately retained/adapted under 65687870ee84/62c103092ea2. Supersession of these internal implementations does not omit passthrough functionality or restore their historical leaks."
+    },
+    {
+      "commit": "25867a2d88c520f973d1046a6b9ebe5210ea5670",
+      "paths": [
+        "fs/fuse/OWNERS",
+        "fs/fuse/inode.c",
+        "fs/fuse/virtio_fs.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "e90346a39630fad2ea1ce43e5e30351b0580f83736431c20c0c1a2ac19d2b4e0",
+      "assessment": "All three paths reviewed: remove obsolete IDR/init/free plumbing, restore FUSE_INIT_EXT validation, avoid duplicate passthrough advertisement, delete the legacy OWNERS entry, and restore native virtio-fs wake callback signatures. Current code retains native backing-file initialization/freeing and supported upstream passthrough; virtio_fs.c exactly matches LTS. This removes superseded implementation plumbing, not the Android mixed-open adaptations reviewed separately."
+    },
+    {
+      "commit": "d4728821182ae4f401fe855dd814d3a8d1b99d2d",
+      "paths": [
+        "fs/fuse/passthrough.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "bddd20eb3179e77c8fba7c03a35fbc9dec1f28fbc394bbf6b8c4342b42e79aa7",
+      "assessment": "The initial capability relaxation in passthrough.c was reverted by 7ec0dcc2f8c7 and reintroduced after the native code moved to backing.c in 6fb1128f2700. Retain that later adaptation, including restored passthrough-negotiation checks and allocation cleanup in 7ad75c4cc44c; do not duplicate the obsolete location or disabled-code blocks."
+    },
+    {
+      "commit": "3ae410445fb1a6781ec06ae2cf359a861e55004b",
+      "paths": [
+        "fs/fuse/iomode.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "f6ff0b47412272d6b82ddd8087cc41e8a7abd980144accbd43bbfc80bb2de89a",
+      "assessment": "Retain Android mixed passthrough/cached opens: MediaProvider chooses the mode per file handle according to redaction/transformation needs. Keep the native prohibition on mixing parallel direct writes with cached I/O and reject conflicting backing objects. The separate counter adaptation corrects the inherited cached-open wait predicate, so a backing pointer no longer bypasses waiting for active DIO. Native non-writeback restriction on opening a non-passthrough handle after passthrough remains."
+    },
+    {
+      "commit": "65687870ee849f333e55c2a022005ece6de32300",
+      "paths": [
+        "fs/fuse/passthrough.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "111878b0f51795ad1972e580d7d49300ffe3bc91228c4f6bd75f57f43ffdc553",
+      "assessment": "Retain lower-file mtime/ctime/blocks/size synchronization for Android writeback-cache passthrough completion. For non-writeback operation, keep the newer LTS fuse_write_update_attr(inode, iocb->ki_pos, ret) rather than reverting to the old broad invalidation helper. This preserves native size/error-aware completion while adapting the explicitly negotiated Android mode. Concurrent mixed-cache coherence remains a stated runtime limitation."
+    },
+    {
+      "commit": "d30885a29d6526b6f138843023920289f6480373",
+      "paths": [
+        "fs/fuse/inode.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "53721944ad8d44682a51eae5b72b2d6d2c960b89add869a595a1483e8c9a13cf",
+      "assessment": "Retain negotiation of passthrough together with writeback cache because the supplied MediaProvider explicitly requests both. Keep native FUSE_INIT_EXT/configuration/stack-depth validation. This intentionally relaxes native mode exclusion and is accompanied by the Android attribute/counter/cache adaptations and focused ownership fixes. SECURITY.md records the acknowledged mixed writable-mapping and busy-page invalidation limits; compilation is not proof of coherence."
+    },
+    {
+      "commit": "24955a554f9266e1996d0839613ca9e52dea34c4",
+      "paths": [
+        "fs/fuse/file.c",
+        "fs/fuse/fuse_i.h",
+        "fs/fuse/inode.c",
+        "fs/fuse/iomode.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "a6c7fb8668125f42ef3a4f86bee9cbce73ef26aeb99c01f1d550d45d27bce94b",
+      "assessment": "All four paths reviewed. Retain separate iopassctr/IOM_PASSTHROUGH, initialization/eviction accounting, FOPEN_KEEP_CACHE compatibility and release dispatch. Adapt the inherited native combined-counter logic: cached opens wait for negative DIO counts even with active passthrough, and ordinary DIO completion never releases the backing object owned by passthrough opens. Only the final passthrough close drops that inode reference. Extracted mode sequences and regression controls verify these ownership decisions."
+    },
+    {
+      "commit": "62c103092ea2b2f44c306d5071cf4327f6132b60",
+      "paths": [
+        "fs/fuse/file.c",
+        "fs/fuse/passthrough.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "8d2f6961824024bf69996ccbfa7974c198ef4ddf56f2382f2b51a9b85dbd0fe0",
+      "assessment": "Retain the Android allowance for mixed mmap/open modes, flushing FUSE writeback before passthrough reads/splice reads, and invalidating the written page range after lower writes. Preserve newer native kiocb-based completion and splice interfaces. Adapt the read paths to propagate write_inode_now failure before reading potentially stale lower data. The original patch explicitly acknowledges mixed shared-mmap limitations; these are recorded as unresolved runtime coherence, not claimed resolved by the targeted checks."
+    },
+    {
+      "commit": "d9f5e07300cf5ed85e619a59502a918f3c8ea677",
+      "paths": [
+        "fs/fuse/fuse_i.h"
+      ],
+      "unique_remerge_review": true,
+      "patch_sha256": "5362ad40b9ff9480cd6042220a3b37deb01060c85848fd460c0bf724671da71e",
+      "assessment": "The complete unique merge hunk keeps both native vmap_base and Android canonical_path. Both remain in the native split args.h structure along with newer callback signatures and flags; no field is lost by moving the Android addition to the current structure location."
+    },
+    {
+      "commit": "7ec0dcc2f8c70d0ac81e931ca41fd590bab9fc7d",
+      "paths": [
+        "fs/fuse/passthrough.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "693853baa899b722df0e3e381036eef679361bd38e9065315be1e48f538adb36",
+      "assessment": "This revert restores CAP_SYS_ADMIN in the old source location only temporarily; the same Android relaxation returns in backing.c in 6fb1128f2700. Current MediaProvider supplies a concrete consumer without that capability. Preserve the later narrower adaptation: negotiated passthrough is required, but the daemon need not gain global CAP_SYS_ADMIN."
+    },
+    {
+      "commit": "6fb1128f2700b465c6e47917c65dd1fab7a0014f",
+      "paths": [
+        "fs/fuse/backing.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "8856cf686f80a95725ebd90fb38cc0ab04c61bc0b53181c67be58f49270ae5a3",
+      "assessment": "Retain Android backing registration without CAP_SYS_ADMIN for the local MediaProvider daemon, whose SELinux domain has FUSE descriptor access without that global capability. Restore fc->passthrough checks because local libfuse negotiates the upstream feature before registration. Preserve regular-file/depth/flag validation and reference cleanup, adding prepare_creds OOM handling. This is a deliberate LTS permission difference with expanded daemon attack surface, documented in SECURITY.md; neither SELinux nor possession of a descriptor is claimed to eliminate all risk."
+    },
+    {
+      "commit": "7c5d3cb6f9974c528a82f71f2ef661524a593fa8",
+      "paths": [
+        "fs/fuse/fuse_bpf_backing.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "9e9e8ff9eda5a03a4c44cdc3f0b73fa58f96f500cb02995fe68997c8fd9dc2bc",
+      "assessment": "The complete patch replaces manual VMA file reference swapping with vma_set_file. Retain it in FUSE-BPF mmap and preserve the current native mmap_prepare capability as well as mmap. Failed vfs_mmap returns without manually dropping the VMA-owned file, avoiding the old inconsistent cleanup. The separate upstream passthrough mmap uses native backing_file_mmap and its LSM check."
+    },
+    {
+      "commit": "abb36e8df50c45109aa0a1f38235855108c4c9bb",
+      "paths": [
+        "fs/fuse/dir.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "53e94c7caf40bfb3353d30639d2efa6c629dd21e1fa905e61056c59affac3a69",
+      "assessment": "The historical fix matches dentry callback availability to allocated storage. Current code further incorporates the native unconditional epoch initializer: d_init/d_release are always registered, d_time is zeroed, and allocation/free remain guarded by 32-bit-or-BPF configuration. BPF path/program cleanup is guarded separately. d1dc0cf82120 preserves the LTS rule that a 64-bit non-BPF inline timestamp must not be freed as a pointer."
+    },
+    {
+      "commit": "cd790dede6fe72618e972ba53e1426fcaf88c795",
+      "paths": [
+        "fs/fuse/fuse_bpf_backing.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "c1487b909fc0fac1d9c068972ac369ed6bebfe8197dce3dd0aaf72e6d2644040",
+      "assessment": "Retain the backing parent inode lock across lookup_one and vfs_create, with balanced unlocks for lookup and positive-dentry failures. The port also fixes the subsequent NULL allocation and reply-reference error paths. Parent lookup/create remains under the VFS-required lock; no old early-unlock behavior is restored."
+    },
+    {
+      "commit": "46a7c05b95fb6b33a4b817701d874cefa25ffd82",
+      "paths": [
+        "fs/fuse/fuse_bpf_backing.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "b82d621b5ad932ba05c6d1661940f80c2fc326e1b7d73649afe2b800e34198ef",
+      "assessment": "Retain connection-epoch stamping after successful creation, alias splice, mknod, mkdir, link and symlink. The six sites now also respect corrected allocation failure handling; unsuccessful allocation/splice cannot stamp a falsely successful child. Native dentry initialization still starts epoch zero."
+    },
+    {
+      "commit": "18ce464affa6b8caf183ad0db7714fadd122b77a",
+      "paths": [
+        "fs/fuse/fuse_bpf_backing.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "af15b9003dc7368fd916cd98146a606043a0cefc0ba2e7ab65b2cca3c7b6dc40",
+      "assessment": "Retain setting backing_path.dentry=NULL when native vfs_mkdir returns an error after consuming its input dentry, so path_put releases only the remaining mount reference. Parent unlocking remains balanced. Also correct the later child-inode allocation check to its NULL contract; the original path cleanup fix alone did not cover that failure."
+    },
+    {
+      "commit": "cfdf2cf6fefc1af7321930b08e1eabc6dee56525",
+      "paths": [
+        "fs/fuse/fuse_bpf_backing.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "2a74dc9e1730b64ce8de5f2595e82efa53c9ff21504acaa5094ba262041bbc0d",
+      "assessment": "Retain both unlink and rmdir re-lookups under the backing parent inode lock. A lookup error or different dentry aborts before the VFS operation; the temporary lookup reference, parent reference and path are released on all shown exits. This preserves the ACK rename/delete-race defense alongside native VFS operation signatures."
+    },
+    {
+      "commit": "dce80b4280fa2b4d26fe5d01fae8fe7c75bb482b",
+      "paths": [
+        "fs/fuse/fuse_i.h"
+      ],
+      "unique_remerge_review": true,
+      "patch_sha256": "16093a7a6fb10e10b9f31d74b7cd5f122f2a515ad3958f41c51fe4c4535b1d88",
+      "assessment": "The complete 6.18.25 unique resolution retains native abort_on_kill and Android enlarged in/out argument arrays. The port keeps all three in native args.h, alongside later native callback and folio organization. Reducing arrays to old upstream fixed counts would break BPF pre/postfilter arguments; no native abort behavior is dropped."
+    },
+    {
+      "commit": "2a019038e8dc33fffa828653cd8ed59287b180e7",
+      "paths": [
+        "fs/fuse/dev.c",
+        "fs/fuse/fuse_i.h"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "bf9041f943d018b363131d95d343c0dfb7df67213d838f31961e3c213136ad11",
+      "assessment": "Retain the actual synchronous scheduler wake hint: __fuse_request_send sets FR_SYNC_WAKEUP, queue_req atomically consumes it, and only that path uses wake_up_sync; forget/interrupt paths retain ordinary wakeup. The bit-based implementation minimizes source deviation from native queue callbacks and does not add layout-padding or historical ABI aliases. Its runtime purpose survives independently of the commit message KMI motivation. Reported external performance numbers were not verified or adopted."
+    },
+    {
+      "commit": "bb4c8fa976f662066ab110812acb9a82ed3faf1c",
+      "paths": [
+        "fs/fuse/dev.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "5d059f2e6de8e8f81f7fd1a27e00c217e88df82ab40abbdf9773adc97e333c9a",
+      "assessment": "Retain zero-length canonical-path rejection with EBADMSG and termination at min(reply_size, PATH_MAX)-1 before kern_path. The request buffer is a zeroed page, advertised output is PATH_MAX, and native copy-out validation bounds replies. No indexing at -1 or outside that page is restored."
+    },
+    {
+      "commit": "119b028420a47cfa44950fc4aacbcee77e4320fe",
+      "paths": [
+        "fs/fuse/fuse_bpf_backing.c",
+        "fs/fuse/inode.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "26abf88edf11a726e8c4191a48226d6ba39a8df74a77b1f567487125e181e6e2",
+      "assessment": "Retain mknod/link/symlink instantiation from the actual child lower inode with nodeid zero, plus fuse_init_inode only while I_NEW and before unlock_new_inode. Adapt all callers to fuse_iget_backing NULL allocation failures; old IS_ERR checks could reach NULL dereferences/false-success instantiation. The child identity and native initialization-before-publication ordering remain."
+    },
+    {
+      "commit": "6d5aba4ca8f9a597bbe3e0b7e5a37337d58af433",
+      "paths": [
+        "fs/fuse/fuse_bpf_backing.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "e3617dd83f5d0b00c92f97157ecfedc98e80e14e606ea9eeddf8640f55f9a2e9",
+      "assessment": "Retain clearing the local inode immediately after d_splice_alias in both create and lookup finalization, including error returns. d_splice_alias consumes the reference regardless of outcome. Extracted lookup checks reject reintroducing the error-path double iput; the related OOM/reply-reference corrections do not change that ownership rule."
+    },
+    {
+      "commit": "a52575260f65a2ae33e8da933a8aa054f3c75d74",
+      "paths": [
+        "fs/fuse/dev.c",
+        "fs/fuse/inode.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "db7aaa70ab2dbb1c9363d55307a6a735056c6b72eba63e36c38264e2afdef39f",
+      "assessment": "Retain refusal of FUSE/too-deep backing objects on daemon replies and root_dir, and set root stack depth from the lower filesystem. Adapt reply ownership so ERR_PTR(-ELOOP) is never passed to fput, unused BPF files are released even on lookup/revalidation failure, and error daemon replies cannot acquire files from uncopied output. The limit remains an actual rejection, not an error-pointer crash in cleanup."
+    },
+    {
+      "commit": "a4748d3182864f6d123171c68072753b6d582469",
+      "paths": [
+        "fs/fuse/fuse_bpf_backing.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "ed595667d8b3bd21a6f15a59cb155abf1a2569dd61051228e16b591fa363e1e6",
+      "assessment": "Retain NULL-safe optional backing-inode slots, ihold before atomic replacement, and iput of the exchanged old inode for remove/replace. Path ownership stays balanced for these operations. Extracted checks cover absent slots, keep/remove/replace and rejected handles. Atomic writer exchange is not claimed to prove all concurrent reader lifetime safety; wider BPF concurrency is untested. New reply cleanup handles rejected error pointers without dereference."
+    },
+    {
+      "commit": "2153877e3284329a2dd78ae11289d3ca25906217",
+      "paths": [
+        "fs/fuse/fuse_bpf_backing.c"
+      ],
+      "unique_remerge_review": false,
+      "patch_sha256": "56bac91d9e32d8a310441b32631dc14414441b1ec81696fe5934fb8b940c6e4f",
+      "assessment": "Retain fa->error_in propagation before finalize_attr. A failed lower getattr cannot turn zero/uninitialized attributes into permanent FUSE_I_BAD state. Successful attributes still follow the native validation/finalization path; the error guard is present exactly in current source."
+    },
+    {
+      "commit": "cfc27f82192af8205c6b15ed3e986b65c452e41e",
+      "paths": [
+        "fs/fuse/dir.c"
+      ],
+      "unique_remerge_review": true,
+      "patch_sha256": "ec480fc254d2924500f4c66bf36f9c96bd3aac1be627c5a21b0cdaf11ab24166",
+      "assessment": "Every unique remerge hunk reviewed. Retain unconditional d_time=0 initialization and dentry callbacks from the LTS uninitialized-epoch fix, plus allocated Android BPF metadata on 64-bit. Correct the ACK merged release guard: only configurations allocating metadata free it, and only BPF configurations access its path/program fields. d1dc0cf82120 preserves this native safety condition; the current revalidation reply initialization adds a separate zeroing safeguard."
+    }
+  ],
+  "native_witnesses": [
+    {
+      "path": "fs/fuse/dev.c",
+      "function": "fuse_dev_ioctl",
+      "identical_to_pinned_lts": true,
+      "sha256": "ff4418ece9b166d1302316c33d58693e33ad1ff248b68462cd703ee5912a0592"
+    },
+    {
+      "path": "fs/fuse/dev.c",
+      "function": "fuse_dev_ioctl_clone",
+      "identical_to_pinned_lts": true,
+      "sha256": "fb638ec0a382124e540500b756ab4c9e9759e59e097197eea1fa5e3b3ae2f6c2"
+    },
+    {
+      "path": "fs/fuse/dev.c",
+      "function": "fuse_dev_ioctl_backing_open",
+      "identical_to_pinned_lts": true,
+      "sha256": "0b17296b1d7b1eacf7c8291e31a20b4fa103e5649562cb123f78c9dbacb56e7e"
+    },
+    {
+      "path": "fs/fuse/dev.c",
+      "function": "fuse_dev_ioctl_backing_close",
+      "identical_to_pinned_lts": true,
+      "sha256": "7bbdca20f1c8328f0c6a28743b13efec7ab3dc8ea66e82005c96ec23dce6b6a9"
+    },
+    {
+      "path": "fs/fuse/passthrough.c",
+      "function": "fuse_passthrough_open",
+      "identical_to_pinned_lts": true,
+      "sha256": "b60970be8216717288a7e5d704b6683c8ecf3a465d485202508b14236706e0a5"
+    },
+    {
+      "path": "fs/fuse/passthrough.c",
+      "function": "fuse_passthrough_release",
+      "identical_to_pinned_lts": true,
+      "sha256": "91b69f2f1fd5cd0a12bbe3474c84586009bbd59f273c0d57ee816a85512fc07c"
+    },
+    {
+      "path": "fs/fuse/passthrough.c",
+      "function": "fuse_passthrough_mmap",
+      "identical_to_pinned_lts": true,
+      "sha256": "bd056e4cea0fba9dd7cfed951f3f893e54d2ebe674fe043dac90e2f6a7f5abf6"
+    },
+    {
+      "path": "fs/fuse/virtio_fs.c",
+      "identical_to_pinned_lts": true,
+      "blob": "2b3daa93e299ae011e57b91ad5c9e170220ca8d3"
+    },
+    {
+      "path": "fs/backing-file.c",
+      "identical_to_pinned_lts": false,
+      "port_blob": "f938c3560d4fa6b98eefdd9105900c3b5a8ecde1",
+      "lts_blob": "6f16e23f7046139ab9c0a755ab5e99f382d797ca",
+      "difference": "Only BACKING_IOCB_MASK adds IOCB_DONTCACHE; native ownership, credential cleanup, completion and mmap checks are unchanged. The generic DONTCACHE feature is reviewed separately."
+    }
+  ],
+  "local_consumers": [
+    "../grapheneos-17/packages/providers/MediaProvider/jni/FuseDaemon.cpp: pf_init/create_handle_for_node/do_passthrough_enable",
+    "../grapheneos-17/external/libfuse/lib/fuse_lowlevel.c: init reply/backing ioctls",
+    "../grapheneos-17/system/sepolicy/private/mediaprovider_app.te",
+    "../grapheneos-17/system/sepolicy/private/app_neverallows.te",
+    "../kernel_manifest-6.18/common_dist/kernel_x86_64_dot_config"
+  ],
+  "checks": [
+    "fuse-passthrough-check.json",
+    "fuse-bpf-lifetime-check.json"
+  ],
+  "limits": "No runtime, live FUSE mount, real concurrency, redaction or mixed writable mapping validation. Mixed-cache limitations are explicitly retained in SECURITY.md; atomic writer swap does not establish reader safety."
+}
