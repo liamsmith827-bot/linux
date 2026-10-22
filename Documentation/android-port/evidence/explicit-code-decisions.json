@@ -2377,5 +2377,28 @@
       "334f9060783c42bd9d9e274d39ec4e84b9eb9ed9"
     ],
     "rationale": "Adapt symlink rollback to delete before dentry publication and reuse the deletion orphan reservation; other failed-inode callers retain their own reservation. Preserve native writeback and DIRSYNC error returns, unlike ACK losing the writeback error in ret; later persistence failure leaves an already created link. Return ENOENT on missing deletion entry rather than claiming an orphan slot was acquired. Retain native static device-alias unlink for the concrete GrapheneOS fs_mgr/userdata_alias_remove.cpp consumer; omit conflict-context alias ban. Native crypto/quota/corrupt-count/locking/trace lifetime behavior retained. Failed rollback may still leave a broken symlink with original error, explicitly documented. Extracted tests pass 630 cases/5082 assertions and reject lost-error/double-orphan/missing-entry controls; no actual filesystem or crash testing. SECURITY.md records source reasoning including VFS I_CREATING behavior."
+  },
+  {
+    "commit": "8b4be13c97ade0eb5e7430b5734f0c936329e530",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain configured generic dynamic reserve/release/status ioctls conservatively; actual SDK dynamic use unconfirmed, not proved absent by searches. Preserve concrete fs_mgr static unlink with registered inode identity cleared on last unlink and reject re-reservation through an unlinked descriptor. Keep alias namespace restrictions, strict geometry checks, mount restore before pinned curseg init with errors propagated, and hold mount-write through checkpoint. Preserve complete prior LTS-based resize/range-GC/SIT allocation functions; relocate all NR_CURSEG_TYPE and pass native GC lock argument. Fix u32 capacity wrap/saturate reservation subtraction and ACK premature zone-search exhaustion after wrap. Native zone/hint limitations documented with baseline controls. Extracted reservation 16442/17552, placement 98306/692645, unlink 630/5114 tests pass and regression controls fail; no actual multi-device/concurrency/crash test. Full security tradeoffs and source evidence in SECURITY.md. Follow-up 1f7421fccc61 bounds both device predicates before FDEV for single-device/absent-table mounts; 98310 placement cases/692653 assertions and missing-table regression control pass.",
+    "result_commits": [
+      "feed643b969d7541fe1720d82568369418605496",
+      "1f7421fccc6171ad8c660ad4ca42d0c0b32896a3"
+    ]
+  },
+  {
+    "commit": "0b3c285a9221498d782bf3cdbf8b989d5c8b1f1a",
+    "disposition": "partially-adapted-net-subsystem",
+    "rationale": "Keep alias rename replacement failure through out_dir cleanup so looked-up folios are released. Omit the patch's alias-unlink denial because local GrapheneOS fs_mgr explicitly unlinks static aliases; the current __do_unlink wrapper already retains tracing/error cleanup, with identity cleared on last deletion and no denied-alias early return. No native cleanup or LTS filesystem validation weakened. Integrated dynamic alias adaptation and extended unlink checks are documented in SECURITY.md.",
+    "result_commits": [
+      "feed643b969d7541fe1720d82568369418605496"
+    ]
+  },
+  {
+    "commit": "c1019db84f6313d36aca5a7ef7e0dca5ba883fe3",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "After device-alias sanity additions changed the file blob, reread the full candidate and rechecked complete post-patch presence against both pinned LTS and current port with reverse-apply checks on temporary indexes. __destroy_extent_node does not set FI_NO_EXTENT, and __may_extent_tree/__update_extent_tree_range gate that flag only for EX_READ; age extents remain usable. The new alignment check is in separate sanity_check_extent_cache and does not reverse this stale-largest-extent fix. Evidence: evidence/f2fs-extent-presence-after-alias.json. No new implementation or runtime claim."
   }
 ]

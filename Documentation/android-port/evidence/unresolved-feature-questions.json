@@ -28,12 +28,16 @@
   },
   {
     "topic": "F2FS dynamic device-alias reserve/release",
-    "status": "unresolved necessity; candidate decisions remain provisional",
+    "status": "resolved adaptation; dynamic SDK runtime use unconfirmed and retained conservatively",
     "candidates": [
       "8b4be13c97ade0eb5e7430b5734f0c936329e530",
       "0b3c285a9221498d782bf3cdbf8b989d5c8b1f1a"
     ],
-    "evidence": "Correction to earlier note: native LTS has IS_DEVICE_ALIASING and static device-alias support; it is the dynamic reserve/release/status ioctls and associated restrictions/restoration that ACK adds. 8b4be13c97ad and 0b3c285a9221 patches were examined; local vold supports formatting static aliases, but that alone does not decide the dynamic extension. SDK ext4 fstab is not sufficient evidence to omit generic functionality. Full dynamic feature and native LTS interaction review remains pending. Full patches and local system/fs/fs_mgr/userdata_alias_remove.cpp were subsequently examined: fs_mgr removes a static alias with unlink after the userdata.alias.remove property, whereas the ACK dynamic extension forbids unlink of every aliased inode. This is a concrete existing-consumer conflict, not a failed search. Adapting new ioctls requires preserving that static release route and native LTS all-curseg relocation, freed-section accounting and six-argument GC lock semantics. Also review reserve-block overflow and checkpoint versus mount-write lifetime before selection. No dynamic ioctl consumer or SDK execution has been established."
+    "evidence": "Full 8b4be13c97ad/0b3c285a9221 patches, native static alias behavior, local fs_mgr userdata_alias_remove.cpp, vold/f2fs-tools, allocation/SIT/GC/resize/quota/checkpoint/mount/error paths reviewed. Dynamic ioctls retained with existing static unlink preserved through per-device control inode tracking; do not infer missing consumer means unnecessary. Native per-block SIT and resize/GC functions kept exactly; all current segments relocated, safe capacity arithmetic and write hold through checkpoint. Mount lookup errors propagate; placement fallback corrected after a failing extracted case. 16442 reservation/geometry, 98306 placement and 630 unlink cases pass with regression controls. Actual concurrency/storage/SDK use unverified, and native zone/hint retry behavior explicitly retained. See SECURITY.md. No additional remote source. Follow-up single-device scan-path review adds explicit device-table bounds; absent-table queries and negative control pass, placement total now 98310 cases/692653 assertions.",
+    "result_commits": [
+      "feed643b969d7541fe1720d82568369418605496",
+      "1f7421fccc6171ad8c660ad4ca42d0c0b32896a3"
+    ]
   },
   {
     "topic": "Page-pinner higher-order iteration",
