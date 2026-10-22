@@ -25,9 +25,10 @@
 
 #include <linux/mman.h>
 #include <linux/printk.h>
+#include <linux/ratelimit.h>
 
 #define pgcompat_err(fmt, ...) \
-	pr_err("pgcompat [%i (%s)]: " fmt, task_pid_nr(current), current->comm, ## __VA_ARGS__)
+	pr_err_ratelimited("pgcompat [%i (%s)]: " fmt, task_pid_nr(current), current->comm, ## __VA_ARGS__)
 
 #define __offset_in_page_log(addr)							\
 ({											\

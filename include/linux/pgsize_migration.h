@@ -17,12 +17,13 @@
 #include <linux/fs.h>
 #include <linux/pgsize_migration_inline.h>
 #include <linux/printk.h>
+#include <linux/ratelimit.h>
 #include <linux/seq_file.h>
 #include <linux/mm.h>
 #include <linux/sched.h>
 
 #define pgmigration_err(fmt, ...) \
-	pr_err("page size migration: [%i (%s)] %s:%d: " fmt, \
+	pr_err_ratelimited("page size migration: [%i (%s)] %s:%d: " fmt, \
 		task_pid_nr(current), current->comm, __func__, __LINE__, ## __VA_ARGS__)
 
 #if PAGE_SIZE == SZ_4K && defined(CONFIG_64BIT)
