@@ -1861,18 +1861,6 @@ static void binder_free_transaction(struct binder_transaction *t)
 		atomic_inc(&target_thread->tmp_ref);
 	spin_unlock(&t->lock);
 
-	spin_lock(&t->lock);
-	target_proc = t->to_proc;
-	target_thread = t->to_thread;
-	/*
-	 * Pin target_thread to keep target_proc alive. Undelivered
-	 * transactions with !target_thread are safe, as target_proc
-	 * can only be the current context there.
-	 */
-	if (target_thread)
-		atomic_inc(&target_thread->tmp_ref);
-	spin_unlock(&t->lock);
-
 	trace_android_vh_free_oem_binder_struct(t);
 	if (target_proc) {
 		binder_inner_proc_lock(target_proc);
