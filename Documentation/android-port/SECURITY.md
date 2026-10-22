@@ -3001,3 +3001,44 @@ vold contains a concrete encrypted/casefolded directory preparation path. This
 review does not infer dispensability from missing consumers. It preserves native
 capabilities and does not test live encrypted filesystem behavior. Only local
 sources were read; a URL embedded in a vold comment was not accessed.
+
+## Fscrypt history and asynchronous encrypted zeroing
+
+Fourteen additional fscrypt-only candidates, including three nonempty merges,
+are reviewed in fscrypt-local-review.json. Native LTS already supplies complete
+inode-crypto zeroization, inline-crypto capability selection and raw-key fallback,
+precise DUN widths, wrapped-key setup and current data-unit-aware interfaces.
+Keep the native bounded device arrays and per-mode key list rather than older
+queue-reference, allocation and argument arrangements. The native key-claim list
+fix is stable commit 9d1dc507b99c: its UID ownership, quota keys, mk_sem locking,
+other-user claims, synchronous list cleanup and RCU master cleanup are retained.
+Twenty-two relevant functions exactly match the pinned LTS implementation.
+Android legacy wrapped-key flag/KDF compatibility and dm-default-key integration
+are separate retained deltas; these historical decisions do not remove them.
+
+The integrated b52f2a4f2d07/adcf6597b9c8 zeroout sequence is retained: physical
+blocks are converted to 512-byte sectors once, each bio receives its encryption
+context, and page batching stops at a DUN discontinuity. IV_INO_LBLK_32 inline
+crypto remains excluded for sub-page filesystem blocks, preserving the older
+a79db694f392 guard. The pending counter includes a producer reference until
+submission ends and one reference per bio before submit. Immediate completions
+therefore cannot release the on-stack completion state during submission.
+The caller waits for all submitted I/O; cmpxchg records a nonzero completion
+error without allowing later success to erase it, and every bio is released.
+
+Compared with LTS's serial submit_bio_wait loop, the retained ACK implementation
+permits multiple requests in flight and can finish submitting the range before
+an error is reported. It still returns failure if any request failed and never
+claims that unwritten blocks were zeroed. This increases possible concurrent I/O
+and allocation pressure; actual latency and memory-pressure behavior are not
+measured. The non-inline encryption path is unchanged except for passing the
+already computed sector value to the inline helper. Retain this generic ACK
+runtime behavior conservatively; no physical storage driver is added.
+
+Extracted zeroout checks pass 1,584 cases / 1,004,124 assertions, covering
+1/2/4 KiB blocks, large sector addresses, vector boundaries, DUN wrap and
+immediate, deferred reverse-order and mixed completion schedules. Four controls
+reject missing producer lifetime protection, wrong sector units, lost errors
+and missing DUN splits. Allocation, atomics, completion and block I/O are modeled;
+this does not test real concurrency or cryptographic transforms. Only supplied
+local sources and the host compiler were used.

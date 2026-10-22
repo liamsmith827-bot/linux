@@ -1,0 +1,288 @@
+{
+  "source_head": "829a3f79f0103a72362ffff1c01ca90c4dbbeee8",
+  "records": [
+    {
+      "commit": "7ab69374a588fbf71aa9fec5c429b80123c004e0",
+      "patch_sha256": "fe2b16ef96764f15c4758fdd7ecaccf01119dd0130e646180f4979c8922e86fd",
+      "paths": [
+        "fs/crypto/keysetup.c"
+      ],
+      "unique_remerge_review": false,
+      "assessment": "Native put_crypt_info retains memzero_explicit over the complete inode crypto object after releasing its key/master references and before cache free. This now also clears the derived directory-hash key. The function equals pinned LTS, so no separate hardening delta or older ownership code is required."
+    },
+    {
+      "commit": "3ddb60ffd21419ce97ec32c5b337f238d56fb81e",
+      "patch_sha256": "0e68dc7f4b35a4a514de224ed54734de34169b6ebf3e8a7f5444c11539a21144",
+      "paths": [
+        "fs/crypto/fscrypt_private.h",
+        "fs/crypto/inline_crypt.c",
+        "fs/crypto/keysetup.c"
+      ],
+      "unique_remerge_review": false,
+      "assessment": "Native fscrypt_select_encryption_impl selects inline crypto only when mounted inlinecrypt and every filesystem device supports the requested mode, data-unit size, DUN width and raw/wrapped key type. Otherwise raw-key setup retains filesystem-layer crypto fallback; wrapped regular-file keys are rejected if inline crypto is unavailable. Native setup_file_encryption_key performs selection with the correct key type after lookup, or false for v1 subscribed-keyring fallback. Retain native bounded device array and current blk-crypto API rather than old request_queue allocations."
+    },
+    {
+      "commit": "6ed01439dce9110a00264cefc644991f0ae5179e",
+      "patch_sha256": "d4e6281b96ee69288c7f87446164eeda045fa2ab7d56a54c005698e7cb9fb064",
+      "paths": [
+        "fs/crypto/inline_crypt.c"
+      ],
+      "unique_remerge_review": false,
+      "assessment": "Native fscrypt_get_dun_bytes returns nonce-inclusive width for DIRECT_KEY, eight bytes for IV_INO_LBLK_64, four for IV_INO_LBLK_32, and a size/data-unit-based width otherwise. This preserves the more precise capability request while retaining later sub-block-data-unit calculations; no old inode/lblk callback is needed."
+    },
+    {
+      "commit": "a79db694f392f1d1fe3f8192dc998378b73397cf",
+      "patch_sha256": "e28a35d99cb645e70f48669683192ed1b3d4160ce7fc2357591e03e87268eefd",
+      "paths": [
+        "fs/crypto/bio.c",
+        "fs/crypto/inline_crypt.c"
+      ],
+      "unique_remerge_review": false,
+      "assessment": "Native inline selection still rejects IV_INO_LBLK_32 with sub-page filesystem blocks. The retained zeroout code tests fscrypt_mergeable_bio at each page boundary, and native fscrypt_limit_io_blocks limits DUN wrap for iomap callers. Native DIO support/extent alignment are reviewed separately in the ext4 ledger. The later asynchronous zeroout implementation in 2fbc2da4ade3 retains the contiguity fix; extracted wrap-boundary regression checks are recorded in fscrypt-zeroout-check.json."
+    },
+    {
+      "commit": "d628e385c6f3b1bd7950935f3a8d2176f6a773e9",
+      "patch_sha256": "c94e4162338d74455cbac70eefa246732a710c10b6af2a92ad2ac29c30389340",
+      "paths": [
+        "fs/crypto/keysetup.c"
+      ],
+      "unique_remerge_review": false,
+      "assessment": "This single hunk only wraps the old prepare-key call for checkpatch. The helper has since evolved to fscrypt_prepare_key(prep_key, raw_key, ci); its native implementation explicitly supplies raw key size and false to the inline helper. Native fscrypt_set_per_file_enc_key has no old overlong call or semantic omission. Retain current source formatting and interface."
+    },
+    {
+      "commit": "869d6f07523379689a1d1186fc8a54bfa13ba5f8",
+      "patch_sha256": "c83091f75a3195d4a05bf4a9267913a67302194b5d7004eee8dd2d669f0b8398",
+      "paths": [
+        "fs/crypto/keysetup.c"
+      ],
+      "unique_remerge_review": false,
+      "assessment": "The patch repairs __FSCRYPT_MODE_MAX to FSCRYPT_MODE_MAX in the old wrapped-key array scan. Native source uses the correct FSCRYPT_MODE_MAX and validates mode_num against it. Per-mode keys now use the native keyed list rather than the superseded array scan, with hkdf context, mode, data-unit size and inline implementation in the lookup key. Retain current correctly bounded setup and locking."
+    },
+    {
+      "commit": "80e50a8d5b35058a484e6630c47eeff158cbc86b",
+      "patch_sha256": "531dd12ccdff4a186efb9f7d5884d285f2f59bc3226f8f050be959fb7b9735f3",
+      "paths": [
+        "fs/crypto/inline_crypt.c",
+        "fs/crypto/keyring.c",
+        "fs/crypto/keysetup.c"
+      ],
+      "unique_remerge_review": true,
+      "assessment": "All three unique merge paths examined: drop redundant blk-crypto include, correctly initialize the passed dummy-secret object using the standard/raw key size, and adopt fscrypt_policy_to_key_spec without selecting crypto too early. Native code keeps those effects, now using FSCRYPT_MAX_RAW_KEY_SIZE and sizeof(test_key); secret setup and key-selection sequencing equal LTS. No obsolete local shadow secret or removed enum switch is restored."
+    },
+    {
+      "commit": "d572ffd59885223d968ba844b0b2df61596ba858",
+      "patch_sha256": "99a47331c1a5a066d3e3e7b526cde9ae2904f0425fef2709803dafe57b4ec202",
+      "paths": [
+        "fs/crypto/inline_crypt.c"
+      ],
+      "unique_remerge_review": true,
+      "assessment": "All unique merge hunks examined: combine wrapped key type/size with device discovery, key setup and software-secret derivation. These internal interfaces have evolved upstream: native bounded device arrays replace temporary allocations, raw/wrapped type and size are passed to blk_crypto_init_key, and native derivation uses sb->s_bdev. Keep the final upstream/ACK behavior rather than reintroducing obsolete queue-reference storage, allocation cleanup or profile-pointer comparisons. The selected helpers are identical to LTS; the final ACK has these same helpers apart from its excluded historical get_devices KMI alias."
+    },
+    {
+      "commit": "757978fb25165306a130e88c5a179ce6888ea307",
+      "patch_sha256": "c18b3ac244498a2a0aee3d5409add695b441d3c62ea85b19d3e2ebaf3db7fede",
+      "paths": [
+        "fs/crypto/fscrypt_private.h",
+        "fs/crypto/inline_crypt.c",
+        "fs/crypto/keyring.c",
+        "fs/crypto/keysetup.c"
+      ],
+      "unique_remerge_review": false,
+      "assessment": "Complete four-file v7 update reviewed. Native helpers retain size_t key lengths, raw versus wrapped key separation, inlinecrypto eligibility/error messages, standard-sized dummy secret and direct wrapped-key setup. The historical multi-device compatibility wrapper was superseded in both final ACK and LTS by current sb-device secret derivation; no old block-layer call is resurrected. Native key preparation and per-mode list locking replace the former published-pointer implementation. Android legacy flag/KDF compatibility is a separate retained delta, not removed by this decision."
+    },
+    {
+      "commit": "c17f89cb7480b9e0c3a2d6080781c25d3b59217d",
+      "patch_sha256": "716527af7f1adcdf025c29cb127fa11e70335bb6e94c076ede73f067908b6067",
+      "paths": [
+        "fs/crypto/fscrypt_private.h",
+        "fs/crypto/inline_crypt.c"
+      ],
+      "unique_remerge_review": true,
+      "assessment": "All unique declaration/stub/definition and key-init merge hunks examined. Native source consistently uses fscrypt_inode_info, size_t key size and wrapped-key parameter in enabled and disabled declarations. blk_crypto_init_key uses 1U << ci_data_unit_bits rather than filesystem block size. Preserve these current native interfaces and sub-block units; no unique merge behavior is missing."
+    },
+    {
+      "commit": "833eabbb5856d10b668ae19a2adaf4633bed8b8f",
+      "patch_sha256": "10f6c36557c471b4a5a00889f05f264c4615c94742fae8b87ee533fd20378411",
+      "paths": [
+        "fs/crypto/hkdf.c",
+        "fs/crypto/keyring.c"
+      ],
+      "unique_remerge_review": false,
+      "assessment": "Native hkdf.c already lacks the obsolete introduction paragraph; native add_master_key and dummy-key callers omit the unused flags parameter. The public ioctl still validates flags before adding a key; the separate Android legacy flag/KDF adapter is preserved. This cleanup is represented without undoing native key handling or the retained compatibility adapter."
+    },
+    {
+      "commit": "b52f2a4f2d075a901b1cbac223905ca2ea83fe4f",
+      "patch_sha256": "83910f78562d55451487b175837befaed203f25de84e8135bed2a245f1e9eb1f",
+      "paths": [
+        "fs/crypto/bio.c"
+      ],
+      "unique_remerge_review": false,
+      "assessment": "Retain the integrated sector-unit correction: the outer routine converts physical filesystem blocks once, the inline helper takes true 512-byte sector units and advances by bytes >> SECTOR_SHIFT. This preserves addressing for 1/2/4 KiB blocks and avoids accidental double conversion. The complete current bio.c matches final ACK; fscrypt-zeroout-check.json exercises extracted code with large sector values and rejects wrong-unit increments."
+    },
+    {
+      "commit": "adcf6597b9c87ccb9fbcab9607e89e64f2b6a468",
+      "patch_sha256": "5b745baf041b003156b33027fadd283271cf8b078b885d105218d258918b087d",
+      "paths": [
+        "fs/crypto/bio.c"
+      ],
+      "unique_remerge_review": false,
+      "assessment": "Retain the integrated parallel zeroout submission for the configured generic inline-crypto path. Every bio has crypto context and DUN-contiguous pages, a completion callback and a pending reference acquired before submit. The producer reference prevents premature completion during submission; the function waits for all submitted bios and returns the first nonzero completion status. All bios are released. Existing non-inline crypto remains native. Extracted tests cover immediate/deferred reverse-order/mixed completions, errors, sector progression and wrap splits; no real concurrent-I/O or performance claim. See SECURITY.md and fscrypt-zeroout-check.json."
+    },
+    {
+      "commit": "b136a98d7c68fbee97943bbd47bd878956dcdeb3",
+      "patch_sha256": "7da74864467e65717b54c8f2064cf51150c731cb9db4c44d1a808ff19688ee33",
+      "paths": [
+        "fs/crypto/fscrypt_private.h",
+        "fs/crypto/keyring.c"
+      ],
+      "unique_remerge_review": false,
+      "assessment": "Already present as native stable commit 9d1dc507b99ceb1c15036c9382fb001b919a614b (upstream 696c030e1e3438955aba443b308ee8b6faa3983e). Every affected list/claim function matches LTS. Keep mk_sem-protected UID claims, quota keys, synchronous claim cleanup, RCU master cleanup, v1/v2 distinctions, other-user protection and status accounting. Retain native kzalloc_obj rather than ACK allocation spelling. The separate Android legacy flag/KDF fields do not alter this list implementation."
+    }
+  ],
+  "native_function_witnesses": [
+    {
+      "path": "fs/crypto/keysetup.c",
+      "function": "put_crypt_info",
+      "identical_to_pinned_lts": true,
+      "sha256": "a7c1d9861bd122f59ab2a936dc82619682ae3efabbe0a4a329f2c05e910c6029"
+    },
+    {
+      "path": "fs/crypto/keysetup.c",
+      "function": "fscrypt_prepare_key",
+      "identical_to_pinned_lts": true,
+      "sha256": "3c13301d5002a698d3c6c86dd0500fce69f263990428e44aafb1a47fbe540e54"
+    },
+    {
+      "path": "fs/crypto/keysetup.c",
+      "function": "fscrypt_set_per_file_enc_key",
+      "identical_to_pinned_lts": true,
+      "sha256": "477c9ae838d5d67bd599209950cfa4efbeb4d1bb88224e0a0f9234e6ed43906d"
+    },
+    {
+      "path": "fs/crypto/keysetup.c",
+      "function": "setup_per_mode_enc_key",
+      "identical_to_pinned_lts": true,
+      "sha256": "5ec5059478c9e57f90d29798ae6f27c22cfedcc0df2af952c9b8dc17d9a5769a"
+    },
+    {
+      "path": "fs/crypto/keysetup.c",
+      "function": "setup_file_encryption_key",
+      "identical_to_pinned_lts": true,
+      "sha256": "76b22f6eeb78bf18869ce5201b24639fcc6419765e4aaa2b7d313474c34be6c1"
+    },
+    {
+      "path": "fs/crypto/inline_crypt.c",
+      "function": "fscrypt_get_dun_bytes",
+      "identical_to_pinned_lts": true,
+      "sha256": "4b999ab527c0a57cb2f48924fae790b5fac04bdb6b9fd6b69d3d7d156e06dfe4"
+    },
+    {
+      "path": "fs/crypto/inline_crypt.c",
+      "function": "fscrypt_select_encryption_impl",
+      "identical_to_pinned_lts": true,
+      "sha256": "dba5e512034532317c015232d845f4b06dabc00562616947099c5463b8e8ae7e"
+    },
+    {
+      "path": "fs/crypto/inline_crypt.c",
+      "function": "fscrypt_prepare_inline_crypt_key",
+      "identical_to_pinned_lts": true,
+      "sha256": "e3209f151afb7cfad85d8a33b89616bfa2bf224c36626aa5398c2188b7da8540"
+    },
+    {
+      "path": "fs/crypto/inline_crypt.c",
+      "function": "fscrypt_derive_sw_secret",
+      "identical_to_pinned_lts": true,
+      "sha256": "c565cf9fc8a6b3b3069de88473bc9636b64c6735c223fe2ddbca3f71ff475068"
+    },
+    {
+      "path": "fs/crypto/keyring.c",
+      "function": "fscrypt_get_test_dummy_secret",
+      "identical_to_pinned_lts": true,
+      "sha256": "b3221219761829f8eb638f8425d568f49d6fc3080a20457bb3e813d7f074af16"
+    },
+    {
+      "path": "fs/crypto/keyring.c",
+      "function": "fscrypt_add_test_dummy_key",
+      "identical_to_pinned_lts": true,
+      "sha256": "c57c103248f64fe8fab151970e4f01e5b1b7ae14d80831f291d254c28bfb1c55"
+    },
+    {
+      "path": "fs/crypto/keyring.c",
+      "function": "fscrypt_put_master_key",
+      "identical_to_pinned_lts": true,
+      "sha256": "baf30259d045ebe49c9199f9b049dd2c694c875375a1aa811fcec02435c65a79"
+    },
+    {
+      "path": "fs/crypto/keyring.c",
+      "function": "find_master_key_user",
+      "identical_to_pinned_lts": true,
+      "sha256": "c4bde94d628ee42d23495f6ae17d69df1fe5d46846f0f0693564643afa650273"
+    },
+    {
+      "path": "fs/crypto/keyring.c",
+      "function": "add_master_key_user",
+      "identical_to_pinned_lts": true,
+      "sha256": "70e42514ef17cbf83c1fb2680acb231c1a4b60f0dbfdb96258c97a8e12d40b30"
+    },
+    {
+      "path": "fs/crypto/keyring.c",
+      "function": "unlink_and_free_mk_user",
+      "identical_to_pinned_lts": true,
+      "sha256": "811275bfc51cd4fd8296f8689b012edc4aa1fbdfee7d20f4f6c61718ee571503"
+    },
+    {
+      "path": "fs/crypto/keyring.c",
+      "function": "remove_master_key_user",
+      "identical_to_pinned_lts": true,
+      "sha256": "021346a36b638a52f9f208f73e716d5ce9ef7c7353e2dd6902e16a22b572c187"
+    },
+    {
+      "path": "fs/crypto/keyring.c",
+      "function": "clear_mk_users",
+      "identical_to_pinned_lts": true,
+      "sha256": "94e8686c32b488cf4da3538bbeb34d199d96c3766783208fdd2c165e99f50621"
+    },
+    {
+      "path": "fs/crypto/keyring.c",
+      "function": "add_new_master_key",
+      "identical_to_pinned_lts": true,
+      "sha256": "9f510b69be49a3dd3e494c09691cb88a72b305e781a213095669267dccf4d867"
+    },
+    {
+      "path": "fs/crypto/keyring.c",
+      "function": "add_existing_master_key",
+      "identical_to_pinned_lts": true,
+      "sha256": "74842ce05d18e0232edaae00437a06f73680ee91f61c538cce7157c2c3e96d30"
+    },
+    {
+      "path": "fs/crypto/keyring.c",
+      "function": "fscrypt_verify_key_added",
+      "identical_to_pinned_lts": true,
+      "sha256": "afabe08620427ad68e7d5fc7f9e3e330b88d0c899724af2d70da2c81a0432031"
+    },
+    {
+      "path": "fs/crypto/keyring.c",
+      "function": "do_remove_key",
+      "identical_to_pinned_lts": true,
+      "sha256": "28814b022715e1ead9700bd3c78bbb2623823d04fe5b50eb105a3ba673976ccf"
+    },
+    {
+      "path": "fs/crypto/keyring.c",
+      "function": "fscrypt_ioctl_get_key_status",
+      "identical_to_pinned_lts": true,
+      "sha256": "6a3737e0ce9fa9c4c4ac59d52c3c33167eb79c0fd607a071ec89dc71e9d367ed"
+    }
+  ],
+  "source_blobs": {
+    "fs/crypto/bio.c": "c2b3ca100f8d02019e63586cf7c096972fe4da70",
+    "fs/crypto/fscrypt_private.h": "414fe95c76defd6a63bf921e957db754d68d17dc",
+    "fs/crypto/hkdf.c": "706f56d0076eed33fb046df2baae5500184218a3",
+    "fs/crypto/inline_crypt.c": "20db6e55b8a01df761332d4142dca5386520c11f",
+    "fs/crypto/keyring.c": "37ed356c5602f99ffd5d1eab84c7800e2ee00040",
+    "fs/crypto/keysetup.c": "f27997ef9a08c567c7e7be3622de84e552fd22b9"
+  },
+  "zeroout_file_matches_final_ack": true,
+  "native_key_claim_stable_commit": "9d1dc507b99ceb1c15036c9382fb001b919a614b",
+  "scope": "Full original/unique merge patches and current source reviewed. Mocked zeroout checks and native source comparisons are not live crypto/I/O validation.",
+  "remote_resources": []
+}

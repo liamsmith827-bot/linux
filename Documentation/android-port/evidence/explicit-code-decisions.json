@@ -2765,5 +2765,95 @@
     "disposition": "merge-resolution-reconciled-to-lts",
     "rationale": "The unique merge resolution preserves fscrypt_limit_io_blocks while adding flags to ext4_set_iomap. Both are already in native ext4_iomap_begin. It additionally checks atomic-write mapping coverage after DUN limiting and before returning the mapping. Keep this native sequence; replaying the older merge result would discard newer I/O constraints. Complete original patch/remerge and current ACK/LTS/port evidence: evidence/ext4-historical-review.json. Native LTS fixes remain; no remote resource used.",
     "result_commits": []
+  },
+  {
+    "commit": "7ab69374a588fbf71aa9fec5c429b80123c004e0",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native put_crypt_info retains memzero_explicit over the complete inode crypto object after releasing its key/master references and before cache free. This now also clears the derived directory-hash key. The function equals pinned LTS, so no separate hardening delta or older ownership code is required. Full original/remerge review and native witnesses: evidence/fscrypt-local-review.json. Only local sources used.",
+    "result_commits": []
+  },
+  {
+    "commit": "3ddb60ffd21419ce97ec32c5b337f238d56fb81e",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native fscrypt_select_encryption_impl selects inline crypto only when mounted inlinecrypt and every filesystem device supports the requested mode, data-unit size, DUN width and raw/wrapped key type. Otherwise raw-key setup retains filesystem-layer crypto fallback; wrapped regular-file keys are rejected if inline crypto is unavailable. Native setup_file_encryption_key performs selection with the correct key type after lookup, or false for v1 subscribed-keyring fallback. Retain native bounded device array and current blk-crypto API rather than old request_queue allocations. Full original/remerge review and native witnesses: evidence/fscrypt-local-review.json. Only local sources used.",
+    "result_commits": []
+  },
+  {
+    "commit": "6ed01439dce9110a00264cefc644991f0ae5179e",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native fscrypt_get_dun_bytes returns nonce-inclusive width for DIRECT_KEY, eight bytes for IV_INO_LBLK_64, four for IV_INO_LBLK_32, and a size/data-unit-based width otherwise. This preserves the more precise capability request while retaining later sub-block-data-unit calculations; no old inode/lblk callback is needed. Full original/remerge review and native witnesses: evidence/fscrypt-local-review.json. Only local sources used.",
+    "result_commits": []
+  },
+  {
+    "commit": "a79db694f392f1d1fe3f8192dc998378b73397cf",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Native inline selection still rejects IV_INO_LBLK_32 with sub-page filesystem blocks. The retained zeroout code tests fscrypt_mergeable_bio at each page boundary, and native fscrypt_limit_io_blocks limits DUN wrap for iomap callers. Native DIO support/extent alignment are reviewed separately in the ext4 ledger. The later asynchronous zeroout implementation in 2fbc2da4ade3 retains the contiguity fix; extracted wrap-boundary regression checks are recorded in fscrypt-zeroout-check.json. Full original/remerge review and native witnesses: evidence/fscrypt-local-review.json. Only local sources used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "d628e385c6f3b1bd7950935f3a8d2176f6a773e9",
+    "disposition": "already-represented-upstream",
+    "rationale": "This single hunk only wraps the old prepare-key call for checkpatch. The helper has since evolved to fscrypt_prepare_key(prep_key, raw_key, ci); its native implementation explicitly supplies raw key size and false to the inline helper. Native fscrypt_set_per_file_enc_key has no old overlong call or semantic omission. Retain current source formatting and interface. Full original/remerge review and native witnesses: evidence/fscrypt-local-review.json. Only local sources used.",
+    "result_commits": []
+  },
+  {
+    "commit": "869d6f07523379689a1d1186fc8a54bfa13ba5f8",
+    "disposition": "already-represented-upstream",
+    "rationale": "The patch repairs __FSCRYPT_MODE_MAX to FSCRYPT_MODE_MAX in the old wrapped-key array scan. Native source uses the correct FSCRYPT_MODE_MAX and validates mode_num against it. Per-mode keys now use the native keyed list rather than the superseded array scan, with hkdf context, mode, data-unit size and inline implementation in the lookup key. Retain current correctly bounded setup and locking. Full original/remerge review and native witnesses: evidence/fscrypt-local-review.json. Only local sources used.",
+    "result_commits": []
+  },
+  {
+    "commit": "80e50a8d5b35058a484e6630c47eeff158cbc86b",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "rationale": "All three unique merge paths examined: drop redundant blk-crypto include, correctly initialize the passed dummy-secret object using the standard/raw key size, and adopt fscrypt_policy_to_key_spec without selecting crypto too early. Native code keeps those effects, now using FSCRYPT_MAX_RAW_KEY_SIZE and sizeof(test_key); secret setup and key-selection sequencing equal LTS. No obsolete local shadow secret or removed enum switch is restored. Full original/remerge review and native witnesses: evidence/fscrypt-local-review.json. Only local sources used.",
+    "result_commits": []
+  },
+  {
+    "commit": "d572ffd59885223d968ba844b0b2df61596ba858",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "rationale": "All unique merge hunks examined: combine wrapped key type/size with device discovery, key setup and software-secret derivation. These internal interfaces have evolved upstream: native bounded device arrays replace temporary allocations, raw/wrapped type and size are passed to blk_crypto_init_key, and native derivation uses sb->s_bdev. Keep the final upstream/ACK behavior rather than reintroducing obsolete queue-reference storage, allocation cleanup or profile-pointer comparisons. The selected helpers are identical to LTS; the final ACK has these same helpers apart from its excluded historical get_devices KMI alias. Full original/remerge review and native witnesses: evidence/fscrypt-local-review.json. Only local sources used.",
+    "result_commits": []
+  },
+  {
+    "commit": "757978fb25165306a130e88c5a179ce6888ea307",
+    "disposition": "already-represented-upstream",
+    "rationale": "Complete four-file v7 update reviewed. Native helpers retain size_t key lengths, raw versus wrapped key separation, inlinecrypto eligibility/error messages, standard-sized dummy secret and direct wrapped-key setup. The historical multi-device compatibility wrapper was superseded in both final ACK and LTS by current sb-device secret derivation; no old block-layer call is resurrected. Native key preparation and per-mode list locking replace the former published-pointer implementation. Android legacy flag/KDF compatibility is a separate retained delta, not removed by this decision. Full original/remerge review and native witnesses: evidence/fscrypt-local-review.json. Only local sources used.",
+    "result_commits": []
+  },
+  {
+    "commit": "c17f89cb7480b9e0c3a2d6080781c25d3b59217d",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "rationale": "All unique declaration/stub/definition and key-init merge hunks examined. Native source consistently uses fscrypt_inode_info, size_t key size and wrapped-key parameter in enabled and disabled declarations. blk_crypto_init_key uses 1U << ci_data_unit_bits rather than filesystem block size. Preserve these current native interfaces and sub-block units; no unique merge behavior is missing. Full original/remerge review and native witnesses: evidence/fscrypt-local-review.json. Only local sources used.",
+    "result_commits": []
+  },
+  {
+    "commit": "833eabbb5856d10b668ae19a2adaf4633bed8b8f",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native hkdf.c already lacks the obsolete introduction paragraph; native add_master_key and dummy-key callers omit the unused flags parameter. The public ioctl still validates flags before adding a key; the separate Android legacy flag/KDF adapter is preserved. This cleanup is represented without undoing native key handling or the retained compatibility adapter. Full original/remerge review and native witnesses: evidence/fscrypt-local-review.json. Only local sources used.",
+    "result_commits": []
+  },
+  {
+    "commit": "b52f2a4f2d075a901b1cbac223905ca2ea83fe4f",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain the integrated sector-unit correction: the outer routine converts physical filesystem blocks once, the inline helper takes true 512-byte sector units and advances by bytes >> SECTOR_SHIFT. This preserves addressing for 1/2/4 KiB blocks and avoids accidental double conversion. The complete current bio.c matches final ACK; fscrypt-zeroout-check.json exercises extracted code with large sector values and rejects wrong-unit increments. Full original/remerge review and native witnesses: evidence/fscrypt-local-review.json. Only local sources used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "adcf6597b9c87ccb9fbcab9607e89e64f2b6a468",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain the integrated parallel zeroout submission for the configured generic inline-crypto path. Every bio has crypto context and DUN-contiguous pages, a completion callback and a pending reference acquired before submit. The producer reference prevents premature completion during submission; the function waits for all submitted bios and returns the first nonzero completion status. All bios are released. Existing non-inline crypto remains native. Extracted tests cover immediate/deferred reverse-order/mixed completions, errors, sector progression and wrap splits; no real concurrent-I/O or performance claim. See SECURITY.md and fscrypt-zeroout-check.json. Full original/remerge review and native witnesses: evidence/fscrypt-local-review.json. Only local sources used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "b136a98d7c68fbee97943bbd47bd878956dcdeb3",
+    "disposition": "already-represented-upstream",
+    "rationale": "Already present as native stable commit 9d1dc507b99ceb1c15036c9382fb001b919a614b (upstream 696c030e1e3438955aba443b308ee8b6faa3983e). Every affected list/claim function matches LTS. Keep mk_sem-protected UID claims, quota keys, synchronous claim cleanup, RCU master cleanup, v1/v2 distinctions, other-user protection and status accounting. Retain native kzalloc_obj rather than ACK allocation spelling. The separate Android legacy flag/KDF fields do not alter this list implementation. Full original/remerge review and native witnesses: evidence/fscrypt-local-review.json. Only local sources used.",
+    "result_commits": []
   }
 ]
