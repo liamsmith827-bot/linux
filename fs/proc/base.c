@@ -2199,6 +2199,22 @@ static int dname_to_vma_addr(struct dentry *dentry,
 	return 0;
 }
 
+static struct vm_area_struct *find_map_files_vma(struct mm_struct *mm,
+					       unsigned long start,
+					       unsigned long end)
+{
+	struct vm_area_struct *vma = vma_lookup(mm, start);
+
+	if (!vma || vma->vm_start != start || start >= end)
+		return NULL;
+
+	/* Accept the displayed data range and the native full-VMA range. */
+	if (vma->vm_end != end && VMA_PAD_START(vma) != end)
+		return NULL;
+
+	return vma;
+}
+
 static int map_files_d_revalidate(struct inode *dir, const struct qstr *name,
 				  struct dentry *dentry, unsigned int flags)
 {
@@ -2224,8 +2240,8 @@ static int map_files_d_revalidate(struct inode *dir, const struct qstr *name,
 	if (!dname_to_vma_addr(dentry, &vm_start, &vm_end)) {
 		status = mmap_read_lock_killable(mm);
 		if (!status) {
-			exact_vma_exists = !!find_exact_vma(mm, vm_start,
-							    vm_end);
+			exact_vma_exists = !!find_map_files_vma(mm, vm_start,
+							        vm_end);
 			mmap_read_unlock(mm);
 		}
 	}
@@ -2273,7 +2289,7 @@ static int map_files_get_link(struct dentry *dentry, struct path *path,
 		goto out_mmput;
 
 	rc = -ENOENT;
-	vma = find_exact_vma(mm, vm_start, vm_end);
+	vma = find_map_files_vma(mm, vm_start, vm_end);
 	if (vma && vma->vm_file) {
 		*path = *file_user_path(vma->vm_file);
 		path_get(path);
@@ -2371,7 +2387,7 @@ static struct dentry *proc_map_files_lookup(struct inode *dir,
 		goto out_put_mm;
 
 	result = ERR_PTR(-ENOENT);
-	vma = find_exact_vma(mm, vm_start, vm_end);
+	vma = find_map_files_vma(mm, vm_start, vm_end);
 	if (!vma)
 		goto out_no_vma;
 
@@ -2446,7 +2462,7 @@ proc_map_files_readdir(struct file *file, struct dir_context *ctx)
 	pos = 2;
 	vma_iter_init(&vmi, mm, 0);
 	for_each_vma(vmi, vma) {
-		if (!vma->vm_file)
+		if (!vma->vm_file || !vma_data_pages(vma))
 			continue;
 		if (++pos <= ctx->pos)
 			continue;
