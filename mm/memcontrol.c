@@ -667,12 +667,6 @@ unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
 }
 EXPORT_SYMBOL_GPL(memcg_page_state);
 
-/* For type visibility of memcg_page_state indices */
-const enum node_stat_item ANDROID_GKI_node_stat_item;
-EXPORT_SYMBOL_GPL(ANDROID_GKI_node_stat_item);
-const enum memcg_stat_item ANDROID_GKI_memcg_stat_item;
-EXPORT_SYMBOL_GPL(ANDROID_GKI_memcg_stat_item);
-
 static int memcg_page_state_unit(int item);
 
 /*
@@ -2277,6 +2271,8 @@ retry_reclaim:
 	if (task_is_dying())
 		goto out;
 
+	nr_reclaimed = 0;
+	skip_reclaim = false;
 	trace_android_vh_mem_cgroup_over_high_reclaim(
 		memcg, nr_pages, in_retry, &nr_reclaimed, &skip_reclaim);
 
