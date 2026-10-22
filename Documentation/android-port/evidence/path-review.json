@@ -17939,7 +17939,9 @@
       "a74676f115900136fab661be2d712d58f0e4e027"
     ],
     "normalized_ack_blob": "b432280beeb4b16c70c8294999ff1848033331e7",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Retain ASHMEM as a bool requiring SHMEM and RUST, matching the actual SDK enabled ashmem implementation and positive libcutils older-app fallback. This builds in the Rust driver; no unloadable global-lock/module lifetime is introduced and no future device is enabled.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/staging/android/Makefile": {
     "ack_blob": "0732228e3aabeec157f5aa6b01318581ff3a8d6a",
@@ -17951,7 +17953,9 @@
       "a74676f115900136fab661be2d712d58f0e4e027"
     ],
     "normalized_ack_blob": "0732228e3aabeec157f5aa6b01318581ff3a8d6a",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Retain CONFIG_ASHMEM selection of the Rust ashmem object and its C export bridge with local include path. Actual unchanged emulator build compiles this implementation; it does not run an ashmem client or OS.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/staging/android/TODO": {
     "ack_blob": "f74eb44d8e45894c36d1835ad294b8dd49121bc8",
@@ -17995,19 +17999,24 @@
       "a74676f115900136fab661be2d712d58f0e4e027"
     ],
     "normalized_ack_blob": "ca4e82b02e6bceb69883cb36ab72963c21aed5bb",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Retain source declarations/exports, fixed legacy compat ioctl encodings and shrinker binding constants for the actual Rust ashmem build. Native 32-bit GET_FILE_ID writes u32 and native-width path writes usize; GET_PIN_STATUS payload is two u32 values despite size-zero command encoding. No historical vendor layout/CRC preservation.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/staging/android/ashmem.rs": {
     "ack_blob": "8d4e156d40e541da5a33230eaeb2a098f54ee511",
     "lts_blob": null,
-    "port_blob": "8d4e156d40e541da5a33230eaeb2a098f54ee511",
+    "port_blob": "0c6af979bcf00ffab0efe0a472dd109690b5d4b4",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "9c710998db9abbd219b66df0014232cbe21d5a66",
       "a74676f115900136fab661be2d712d58f0e4e027"
     ],
     "normalized_ack_blob": "8d4e156d40e541da5a33230eaeb2a098f54ee511",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Retain the Android ashmem device and memfd ioctl compatibility for positive local libcutils consumers: memfd selection depends on property, policy capability, vendor API and application target SDK, so older applications still require ashmem. Full implementation reviewed: per-file mutex, immutable backing size after mmap, name bounds/termination, monotonic protection masks, VMA MAY permission checks, fixed-width pin ranges with checked bounds, CAP_SYS_ADMIN purge, compat inode width, fdinfo and referenced backing-file export. 9c710998db9a sizes all legacy pin commands from struct ashmem_pin because GET_PIN_STATUS encodes zero size; the preceding C implementation copies sizeof(pin) regardless of encoding. Memfd compatibility remains separately no-op for pinning and uses native memfd_fcntl sealing, retaining FMODE_WRITE, seal and inode-lock checks. User-space libcutils verifies GROW/SHRINK seals for memfd validity; the compatibility ioctls do not establish validity of arbitrary fds. Page-emulated mmap alignment is retained; shared EOF-tail questions remain separately recorded, not claimed resolved. Host dispatch checks use actual UAPI constants, not a kernel ioctl test.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/staging/android/ashmem_exports.c": {
     "ack_blob": "373110484c164777810796a10955a2c8fd61a29d",
@@ -18019,7 +18028,9 @@
       "a74676f115900136fab661be2d712d58f0e4e027"
     ],
     "normalized_ack_blob": "373110484c164777810796a10955a2c8fd61a29d",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Retain four GPL exports for Rust ashmem symbols used by rebuilt modules: identity, name, size and backing file. The backing-file accessor increments its reference and requires the caller to fput; the source wrapper checks identity and locks per-file data. The C export list is necessary because this build only auto-exports Rust crates under rust/. No existing vendor binary compatibility is promised.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/staging/android/ashmem_range.rs": {
     "ack_blob": "63dc215019969c54cf8dcada7ab27f4eb3676069",
@@ -18031,7 +18042,9 @@
       "a74676f115900136fab661be2d712d58f0e4e027"
     ],
     "normalized_ack_blob": "63dc215019969c54cf8dcada7ab27f4eb3676069",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Full added range/LRU implementation reviewed. Keep sorted disjoint unpinned ranges, reference-owned dual list links, one preallocated split/merge range, purge status, global mutex-protected transitions and atomic advisory count. Contiguous pin operations need at most one split allocation. File references survive shrinker operations; Area destruction removes its LRU links under the global guard. Shrinker uses try_lock and refuses filesystem-disallowed reclaim, holds pin/unpin exclusion through hole punching and yields to waiting pin callers. Toggle serialization owns shrinker registration and destruction. Existing randomized in-kernel test was read but not run; no runtime range/reclaim validation is claimed.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/staging/android/ashmem_rust.rs": {
     "ack_blob": null,
@@ -18063,19 +18076,25 @@
       "a74676f115900136fab661be2d712d58f0e4e027"
     ],
     "normalized_ack_blob": "11584a051b6e36820c9dae9146cfa2c8bd91bd7a",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Full local Rust shrinker wrapper reviewed: allocation/register ownership transfer, callback/private-data borrowing, bounded count/scan encodings, GFP filesystem/IO permission access and registration destructor. Native LTS shrinker_free waits for callback completion before returning and schedules only structural freeing through RCU, so dropping private data afterwards is valid. This is internal support for configured ashmem, not a new binary interface; no native shrinker implementation is replaced.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/staging/android/ashmem_toggle.rs": {
     "ack_blob": "42b13c119f80db6d1ab7a5492b8b59ac427c9c38",
     "lts_blob": null,
-    "port_blob": "42b13c119f80db6d1ab7a5492b8b59ac427c9c38",
+    "port_blob": "94e2c5251b4c315ea9bf1f7772f58ca5af91de38",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "3ea7a304b5dc436d878053200c03609b692c6006",
+      "9c710998db9abbd219b66df0014232cbe21d5a66",
       "a74676f115900136fab661be2d712d58f0e4e027"
     ],
     "normalized_ack_blob": "42b13c119f80db6d1ab7a5492b8b59ac427c9c38",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Retain enabled shrinker control and optional read/exec transition controls (ignore flags initially false). 9c710998db9a uses the existing iterator helper for short reads and actual copied-byte counts. 3ea7a304b5dc requires CAP_SYS_ADMIN before control writes: local ueventd /dev/ashmem* 0666 and SELinux /dev/ashmem(.*)? labeling also match these global devices, with write/open permissions for allowed ashmem client domains. Default miscdevice mode alone is insufficient under that userspace policy. This closes unprivileged global reclaim/protection-policy changes while retaining administrative controls and ordinary ashmem access; no Android policy modification or GrapheneOS kernel patch is imported. Extracted Rust checks reproduce the prior unprivileged write and short-read mismatch; actual SELinux/runtime execution not performed.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/staging/android/debug_kinfo.c": {
     "ack_blob": null,
@@ -18307,7 +18326,9 @@
       "a74676f115900136fab661be2d712d58f0e4e027"
     ],
     "normalized_ack_blob": "7d7b27f31dbfb077ded09f4f981dfe0d50c59462",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Full ashmem backing-file wrapper reviewed: ARef file ownership, native shmem_file_setup, private inode lockdep class, synchronized one-time immutable copied file operations, and referenced VMA file replacement. Direct backing-file mmap rejects EPERM; get_unmapped_area uses native mm_get_unmapped_area. Reads/seeks retain their caller synchronization contract; hole punching is serialized by ashmem range mutex. Dentry-name snapshot is pinned, bounded by its recorded length and released by pinned destructor. Keep native shmem/seal/security handling elsewhere; shared EOF-tail compatibility remains separate. No runtime backing-file I/O test.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/staging/android/uapi/ashmem.h": {
     "ack_blob": "db88011e5ef347a842ddbea3bc7b2609e50c139b",
@@ -18319,7 +18340,9 @@
       "a74676f115900136fab661be2d712d58f0e4e027"
     ],
     "normalized_ack_blob": "db88011e5ef347a842ddbea3bc7b2609e50c139b",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Preserve Android ashmem ioctl numbers and fixed two-u32 pin payload used by libcutils/bionic. This is userspace ABI, not excluded historical vendor KMI. GET_PIN_STATUS deliberately keeps its legacy size-zero encoding; adapt its reader rather than changing the ioctl number. Positive local bionic UAPI and historical C ashmem sizeof(pin) reader establish the contract.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/staging/android/uapi/ion.h": {
     "ack_blob": null,
@@ -24160,7 +24183,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "b6291a8d9dc84abfd2746e6f9d3c96ed8b1c3f5e",
-    "common_ancestor_blob": "4c79f170ac0d27887f21adcfd54669fd31c6c612"
+    "common_ancestor_blob": "4c79f170ac0d27887f21adcfd54669fd31c6c612",
+    "specific_evidence": "Full LTS/normalized-ACK deltas reviewed. Initialize cleancache_poolid to disabled and invalidate before final filesystem shutdown; generic put_super hook runs while sb remains valid. Retain Android filesystem-only export namespace for source module infrastructure, with no binary KMI promise. Preserve native LTS passive-reference filesystem lifetime, SB_DEAD checks under sb_lock, mount delegation flags, emergency-thaw active references and lock order, remaining-freezer success and warnings. No LTS mount/namespace/security behavior is replaced by old ACK code; GCMA backend teardown is separately fixed in 57131aee4cb9.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "fs/sync.c": {
     "ack_blob": "841733fdac0b5e1b230bd45966031728d5cc817e",
@@ -25821,14 +25846,17 @@
   "include/linux/cleancache.h": {
     "ack_blob": "075b2b58576e0741b3d02ecfd884f184e9d6335d",
     "lts_blob": null,
-    "port_blob": "075b2b58576e0741b3d02ecfd884f184e9d6335d",
+    "port_blob": "532fb454a8bac413e5b3151ddc714a077d5efcc4",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "b1ae0b82acce45f4dd5c1d76afb08bcd060c2672",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "075b2b58576e0741b3d02ecfd884f184e9d6335d",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Keep source operations, negative pool states and disabled-config wrappers. Large folios remain excluded from base-page cache get/put storage. b1ae0b82acce invalidates the inode when putting or invalidating a compound folio so older base-page entries cannot survive replacement and return stale contents. This conservative fallback can reduce cache hit rate; it preserves coherence and uses the supplied mapping on invalidation when page->mapping is null. Focused extracted-wrapper host checks reproduce the previous stale put/invalidate results and verify ordinary/disabled paths.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "include/linux/clk-provider.h": {
     "ack_blob": "143d47ea388e663706118cc4fd064083dc95b0f5",
@@ -25852,7 +25880,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "211c52bc3899cc6e873a91057f3f652c340aef6d",
-    "common_ancestor_blob": "2e6931735880bdf34ad8eb425de770b07a2a6a70"
+    "common_ancestor_blob": "2e6931735880bdf34ad8eb425de770b07a2a6a70",
+    "specific_evidence": "Retain exported __cma_alloc with GFP argument and gcma selection on reserved-area initialization. Native cma_alloc_folio and other LTS interfaces remain. In-tree constructors explicitly pass false for ordinary/multi-range pools, while existing DT initialization propagates its GCMA property. 57131aee4cb9 restores acceptance of native folio GFP flags; no historical binary signature is preserved.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "include/linux/compaction.h": {
     "ack_blob": "0679dd713b03b8d62dbd8b30eb407cfc7bff8b9c",
@@ -26382,7 +26412,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "8f727480c0d05135a39132798b9dd65238c1f65b",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Retain GCMA reservation/allocation/free and readonly statistics interfaces with disabled-config stubs. The reserved-page/exclusive-ownership contract is functional for mm/cma.c integration, not historical KMI. Inputs are trusted kernel callers, not a userspace physical-memory allocation API. No future platform is enabled.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "include/linux/genhd.h": {
     "ack_blob": null,
@@ -34239,19 +34271,24 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "5a29c72231f018d5f2b5505f040a41cae2226dc7",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Full added frontend reviewed: a single cmpxchg-published permanent backend, active-superblock initialization, negative disabled pool IDs, zero-initialized inode/export-filehandle keys, native PAGE_SIZE copies and page/inode/fs invalidation. Retain configured Android cleancache with GCMA/CMA and ext4/F2FS lifecycle consumers. Backend registration has no unregister API: operation storage/code must remain resident; supplied backend is built-in. Debug counters are approximate information, not security/accounting state. Native LTS filesystem permission/verity checks remain, with cache-hit verification in 1e4401eda113. b1ae0b82acce corrects wrapper invalidation for large folios; no actual cache I/O validation is claimed.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/cma.c": {
     "ack_blob": "eb914428fa78c3c09d76cbb2a98bf69c9cb11673",
     "lts_blob": "90d3ab262dae02ece83a13548a302c12008f0f8c",
-    "port_blob": "a3234dd9e316a3d8e99b0506681861aaf7352344",
+    "port_blob": "0bb838b69883f2a75196d35935a41d5af908930d",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "57131aee4cb9d81124e5fc74570e38b1c3aec656",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "eb914428fa78c3c09d76cbb2a98bf69c9cb11673",
-    "common_ancestor_blob": "813e6dc7b0954864c9ef8cf7adc6a2293241de47"
+    "common_ancestor_blob": "813e6dc7b0954864c9ef8cf7adc6a2293241de47",
+    "specific_evidence": "Retain Android CMA exports, retry/timing/bypass/bitmap hooks and GCMA selection for existing configuration and vendor source interfaces. Preserve native multi-range bitmap accounting, contiguous struct-page range checks, zones validation and LTS activation-failure cleanup across all ranges. 57131aee4cb9 checks optional CMA pointers before GCMA fields, preserves native folio GFP flags including __GFP_COMP, saves/restores incoming IRQ state and permits retry sleeping only with direct reclaim. Callback modules must obey bitmap bounds/alignment, ownership, accounting and context; bypass is trusted kernel policy. Actual SDK CMA/GCMA are enabled with CMA_AREAS=16, default reserved size zero, HUGETLBFS disabled. No new physical platform or reserved pool is enabled. Exact runtime GCMA pool provisioning remains unconfirmed and is recorded separately; configuration/source compatibility is the conservative retention basis. Host extracted allocator checks cover negative controls and atomic/native contracts; no runtime allocator test.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/cma.h": {
     "ack_blob": "be2f26e8f72fd2e6ef62f0c28d46b5956baa0d4a",
@@ -34263,7 +34300,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "be2f26e8f72fd2e6ef62f0c28d46b5956baa0d4a",
-    "common_ancestor_blob": "c70180c36559c295d837725e26596cf546cd8b7e"
+    "common_ancestor_blob": "c70180c36559c295d837725e26596cf546cd8b7e",
+    "specific_evidence": "Retain GCMA selection and Android vendor/OEM scratch fields used by generic allocation hooks. These are source customization state, not a promise of historical offsets or CRCs. Keep native LTS multi-range, NUMA and accounting layout; cma activation initializes vendor state. Actual SDK enables CMA and OEM data.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/cma_sysfs.c": {
     "ack_blob": "4ecc36270a4d41af1884a2af9ad7c8a488418ded",
@@ -34275,7 +34314,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "4ecc36270a4d41af1884a2af9ad7c8a488418ded",
-    "common_ancestor_blob": "97acd3e5a6a5cbd3eec9976ac1a226f8a08a4b01"
+    "common_ancestor_blob": "97acd3e5a6a5cbd3eec9976ac1a226f8a08a4b01",
+    "specific_evidence": "Only net addition is readonly gcma attribute reporting each CMA area selection. Native statistics, lifetime, group creation and failure cleanup remain. This supports the enabled Android allocator configuration and exposes no pointers or mutation API.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/compaction.c": {
     "ack_blob": "ee5bfd627dd667bb18dbf15c9e841f90480ca07d",
@@ -34342,14 +34383,17 @@
   "mm/gcma.c": {
     "ack_blob": "ca14d855fb37c8fa30e810e3c21e56684e83423e",
     "lts_blob": null,
-    "port_blob": "ca14d855fb37c8fa30e810e3c21e56684e83423e",
+    "port_blob": "6953e15026fdbe25092a7826133e47fc721086b4",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "57131aee4cb9d81124e5fc74570e38b1c3aec656",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "ca14d855fb37c8fa30e810e3c21e56684e83423e",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Full added backend reviewed: reserved-area allocation/free, cache key/inode hash, XArray page ownership, eviction, stats and cleancache operations. Keep generic Android GCMA source/configuration support conservatively; runtime SDK reserved-pool provisioning is unconfirmed, not inferred from BTF type declarations. 57131aee4cb9 uses reclaim permission instead of exact GFP_ATOMIC comparison and drains unmount inodes by taking references under the hash lock before acquiring page locks. This preserves pages-to-hash lock order and prevents background eviction from invalidating an unprotected hash iterator. Cache pages have XArray/temporary refs, inodes have linked-hash and operation refs, freeing uses RCU; after drain, workers cannot find removed pages and final inode freeing does not access gcma_fs. Existing built-in backend rejects missing areas or a different native PAGE_SIZE. Area registration must precede use and receive valid reserved, aligned memory; free requires exclusive caller ownership. No backend runtime race test; host simulated eviction/IRQ/ref checks and limitations are in SECURITY.md.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/gcma_sysfs.c": {
     "ack_blob": "1dd313c2e333beda27a724aab8f6a46b9bc31a62",
@@ -34361,7 +34405,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "1dd313c2e333beda27a724aab8f6a46b9bc31a62",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Retain readonly atomic counters for allocated/stored/loaded/evicted/cached/discarded/total native pages and exported gcma_stat_get. The static object is installed under mm_kobj; no userspace write API or pointer exposure is introduced. Counter enum indexes are a trusted in-kernel contract. Actual GCMA_SYSFS=y; no runtime consumer or nonzero pool is asserted.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/gcma_sysfs.h": {
     "ack_blob": "b1dedf5804d88997bb1ef0bd7629ad77935a0875",
@@ -34373,7 +34419,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "b1dedf5804d88997bb1ef0bd7629ad77935a0875",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Internal declarations and disabled-config no-op accounting match gcma.c and readonly GCMA sysfs implementation. Retain enabled Android configuration support; no native LTS implementation is replaced.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/gup.c": {
     "ack_blob": "c2d201cfd0ce2ea4631c61487792a151c3589cdb",
@@ -35114,7 +35162,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "2924371857332d79ae9cfe1ec4ede4a966c9cb4a",
-    "common_ancestor_blob": "4bf64fd610c9495196b16dd98eb6cb4a8554e180"
+    "common_ancestor_blob": "4bf64fd610c9495196b16dd98eb6cb4a8554e180",
+    "specific_evidence": "Full deltas and partial-folio/range paths reviewed. Retain cleancache invalidation even when page cache is empty, after partial zeroing, and after range invalidation; b1ae0b82acce handles old base-page entries beneath compound folios. Preserve native split-or-unmap SIGBUS handling, dirty/writeback and DAX ordering. Vendor split-result and advisory pagevec-skip hooks remain for source customization; callbacks must report actual split state and must not claim success if native unmapping is still needed. The skip affects advisory mapping_try_invalidate, not mandatory truncate/invalidate_inode_pages2. Default no-listener behavior remains native plus cache coherence.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/userfaultfd.c": {
     "ack_blob": "028af6e77a1f7f69da13435bb52669d8d9bcae94",

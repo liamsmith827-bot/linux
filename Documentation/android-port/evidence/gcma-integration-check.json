@@ -1,0 +1,28 @@
+{
+  "source_commit": "57131aee4cb9d81124e5fc74570e38b1c3aec656",
+  "negative_control_commit": "05ae9392c7c8cc0c314662828698a04db2f2ca8d",
+  "excerpts_sha256": "baa2d4b8bc76cb278cf3510c1bf057eec9c11d32d3ac758cf3b9bc03149e86a5",
+  "compiler_flags": [
+    "-std=gnu11",
+    "-Wall",
+    "-Wextra",
+    "-Wno-unused-variable",
+    "-Wno-unused-parameter",
+    "-Wno-unused-function",
+    "-Wno-sign-compare",
+    "-fsanitize=address,undefined",
+    "-fno-omit-frame-pointer"
+  ],
+  "result": "GCMA teardown references and CMA native/atomic contract checks passed; old guard, sleep and IRQ controls reproduced",
+  "negative_controls": [
+    {
+      "mode": "old-unmount",
+      "sanitizer_finding": "heap-use-after-free"
+    },
+    {
+      "mode": "old-null",
+      "sanitizer_finding": "null pointer"
+    }
+  ],
+  "scope": "Check GCMA teardown and CMA guards with extracted source and host shims.\n\nModels background eviction at hash-unlock boundaries, reference ownership and\nlock order. Exercises full CMA allocation/range functions with mocked bitmaps,\nmigration and IRQ state. Checks the extracted GCMA discard reschedule condition.\nOld-source controls expose teardown UAF, null dereference, rejected native flags,\natomic retry sleep and IRQ-state loss. No real kernel allocator, RCU or race runs."
+}

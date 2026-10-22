@@ -1521,3 +1521,101 @@ Build 47 completed at 69eb820a7f4c, generating both images and 100 common plus
 was rejected. Protected exports and module flag/CRC tables matched. Build 48
 checks 05ae9392c7c8 after the completed local common fast-forward and manifest
 pin update. No dependency changes were needed for these corrections.
+
+
+57131aee4cb9 restores native CMA allocation contracts: validate an optional CMA
+pointer before reading its GCMA flag; preserve native GFP flags, including the
+__GFP_COMP required by cma_alloc_folio; restrict the downstream mask only to
+GCMA. Native LTS range/zone checks and activation-error cleanup remain. Preserve
+incoming IRQ state in allocation/diagnostics, suppress sleeping retries without
+__GFP_DIRECT_RECLAIM, and decide GCMA discard rescheduling from that flag rather
+than exact equality with GFP_ATOMIC (which fails with NOWARN/NORETRY additions).
+The actual SDK has HUGETLBFS disabled; this is a correction to the shared native
+API, not a newly enabled hugepage platform.
+
+The same commit fixes GCMA unmount versus its background eviction worker. Pin
+one inode under the hash lock, release it before acquiring inode->pages, drain
+and drop the reference. A linked hash entry owns an inode reference; the worker
+cannot free the selected inode after that pin. The pages-to-hash lock order
+remains. Emptying every XArray prevents later workers from erasing another page
+through the dying gcma_fs; final inode RCU freeing does not dereference gcma_fs.
+The former saved-next hash traversal had neither a lock nor a reference while
+the worker could delete entries. Host extracted-function checks reproduce that
+UAF and the earlier null dereference under ASan/UBSan, plus native-flag rejection,
+atomic retry sleep and IRQ-state loss controls. They model locks and eviction;
+real RCU scheduling, allocator concurrency and reserved pools are not executed.
+
+b1ae0b82acce invalidates the inode cache when a compound folio is put or
+invalidated. Merely skipping it can leave older base-page entries available
+later with stale file contents. Large folios still fall back to filesystem reads;
+ordinary base-page caching remains. Whole-inode invalidation may reduce hit rate,
+but avoids implementing a new multi-page backend protocol and preserves data
+coherence. Supplied mapping is used for invalidation when page->mapping can be
+null. Host extracted wrappers reproduce old stale results and check disabled,
+ordinary and compound paths. Native verity cache-hit verification remains.
+
+CMA/GCMA/cleancache are retained for the existing Android configuration and
+vendor source interfaces. Exact SDK GCMA reserved-pool provisioning is not yet
+established: current config enables the code with default CMA size zero, and
+local mm/cma.c is an actual consumer, while BTF declarations alone are not
+runtime evidence. This uncertainty is recorded in unresolved-feature-questions.
+No new memory pool or future platform is enabled. Cleancache backend registration
+has no unregister mechanism; registered operation storage and code must remain
+resident. The supplied GCMA backend is built-in. No historical layout is promised.
+
+Build 48 succeeded at 05ae9392c7c8, including both images, 100 common modules and
+45 virtual-device modules; all signatures and module/export tables checked and
+the altered payload was rejected. Build 49 checks b1ae0b82acce after completed
+common fast-forward and manifest pinning. All review and build inputs in this
+checkpoint were local; no additional remote resource was accessed.
+
+
+The complete ashmem Rust driver, range/shrinker/backing-file wrappers and UAPI
+were reviewed against local Android libcutils/bionic and native LTS helpers.
+libcutils deliberately keeps ashmem for older application targets and gates
+memfd on runtime/vendor/policy conditions, so the device API remains necessary.
+Memfd compatibility ioctls retain native memfd_fcntl seal checks and only expose
+shmem memfds through the existing SHMEM_FL_MEMFD gate. Pinning is a no-op for
+memfd as required by local libcutils tests; real ashmem retains purge tracking.
+The in-tree randomized kernel range test was read but was not executed.
+
+9c710998db9a fixes legacy GET_PIN_STATUS input sizing. Its UAPI encodes _IO
+(size zero), but the old C driver copies struct ashmem_pin for all three pin
+commands. Rust previously bounded its reader to zero bytes and rejected the
+query. Use the fixed two-u32 payload size without changing the ABI number.
+The same commit uses the existing iterator helper for actual toggle-read byte
+counts and partial-read positions. The host Rust check compiles numbers from the
+actual C UAPI and executes extracted dispatch/read methods with usercopy shims;
+old-source controls reproduce both failures. It uses the already pinned local
+1.91.1.p3 Rust toolchain and performs no kernel syscall or Android OS build.
+
+3ea7a304b5dc gates global ashmem toggle writes with CAP_SYS_ADMIN. The supplied
+system/core/rootdir/ueventd.rc grants /dev/ashmem* mode 0666, and SELinux
+private/file_contexts labels /dev/ashmem(.*)? as ashmem_libcutils_device. The
+source policy grants write and, for allowed ashmem client domains, open access.
+Those patterns also match ashmem_unpinning_enable and the ignore-protection
+controls. The original control driver had no capability check, so relying on
+the default miscdevice mode would not protect these global operations. Check
+privilege before consuming input or changing state. Ordinary ashmem APIs and
+control reads remain; administrative global policy changes still work. Host
+extracted-write checks cover denied/no-input-consumption, privileged success,
+invalid data and the old unprivileged mutation control. This is an integration
+security correction, not a port of GrapheneOS kernel hardening. No compiled
+SELinux-policy or running-device claim is made.
+
+Native LTS shrinker_free callback completion protects Rust private-data cleanup;
+range lists own backing files and serialize reclaim with pin/unpin. Registered
+ashmem is built-in. The shared EOF-tail issue under page-size emulation remains
+separately unresolved; this source review does not certify that corner case.
+Build 49 completed at b1ae0b82acce with both images, 100 common and 45 virtual
+modules, all 145 signatures verified, tampered payload rejected and matching
+export/module tables. Build 50 checks the ashmem changes at 3ea7a304b5dc after
+common and manifest were advanced. All resources used here were local; referenced
+URLs in source comments were not accessed.
+
+Build 50 completed successfully at 3ea7a304b5dc with both kernel images, 100
+common modules and 45 virtual-device modules. All 145 module signatures verified
+against the build certificate, the altered-payload control was rejected, and
+659 protected exports plus all module flag/CRC tables matched. The original
+emulator build command was used. Compilation and artifact checks do not verify
+runtime ashmem behavior or SDK compatibility. No remote resource was accessed.
