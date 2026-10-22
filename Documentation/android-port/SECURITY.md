@@ -2334,3 +2334,46 @@ block-device pagecache folio orders are bounded (SDK maximum order 9), so the
 native divisor is the same positive page count. These are per-patch source
 findings, not blanket approval of the remaining F2FS delta. No runtime tests or
 remote resources were used for these decisions.
+
+## F2FS checkpoint-enable retry policy
+
+Local `grapheneos-17/system/vold/Checkpoint.cpp:314` explicitly remounts F2FS
+with `checkpoint=enable` when committing filesystem checkpoints. Retain ACK's
+full-inode synchronous writeback and skipped-write retry accounting for this
+Android runtime interface. The SDK enables F2FS, although actual SDK use of this
+mount operation remains unverified; this is conservative retention of generic
+configured behavior, not a claim about the emulator's mounted filesystems.
+
+The adapted loop performs at most four full sync passes (one initial pass plus
+three retries), stopping once dirty data is cleared or no new skipped writes
+were recorded. Concurrent new dirties alone do not force more passes. This
+replaces native LTS's chunked writeback/time check followed by a full sync. The
+native 16-second check was not a hard wall-clock bound: writeback and the final
+sync could block. The new pass bound is likewise not a time bound. It preserves
+the purpose of avoiding an indefinite attempt to catch continuous new dirties,
+while intentionally selecting ACK's Android checkpoint retry policy. Remaining
+dirty/skipped pages are warned about; neither this code nor native LTS treats
+that observation alone as a fatal error. Do not infer a persistence guarantee.
+Native gc_lock ordering, checkpoint state transition, sync_fs error propagation
+and checkpoint-thread flush are preserved. More full passes can increase latency;
+no runtime latency or durability measurement is claimed.
+
+Skipped-page accounting is active only during checkpoint enable and synchronous
+writeback. It is an atomic heuristic count, not a census of distinct pages. A
+vendor callback can bypass native writeback's internal retries: the adaptation
+therefore counts its reported skipped pages even on success, and initializes
+its result before invoking the hook. Native error returns are unchanged. The
+withdrawn cp_enable_rwsem series stays absent: the final ACK revert documents
+a folio-lock/checkpoint-lock inversion, and both pinned final trees omit it.
+The separate disable-checkpoint changes add diagnostics without changing its
+GC, error, lock or persistence control flow.
+
+`check_f2fs_checkpoint.py` extracts the actual three relevant functions and
+checks 38 deterministic cases / 338 assertions with host C shims and undefined-
+behavior sanitization. It covers the pass bound, dirty/skipped policy, callback
+and native errors, cleanup, and propagated sync failure. A negative control
+omitting callback skipped-write accounting fails seven assertions. These tests
+do not exercise kernel concurrency, locks, actual storage or remount latency.
+The existing large-folio extracted-function checks still pass after the data.c
+change. Inputs are local kernel/userspace sources and host C headers; no remote
+resources were used.
