@@ -936,3 +936,49 @@ The generic module-symbol helper removes ACK's special __kvm_nvhe_ prefix
 handling, which only supports ARM64 EL2 symbols excluded from this target; native
 LTS mapping-symbol recognition and the required Android symbol flags remain.
 Other build-rule review does not approve unrelated ARM64 hypervisor code.
+
+## C Binder scheduling, hooks and implementation selection
+
+The complete C Binder allocation/transaction/header net deltas retain ACK's
+scheduling-policy and real-time inheritance contract. Pinned GrapheneOS
+frameworks/native/libs/binder/Binder.cpp exposes setMinSchedulerPolicy and
+setInheritRt; Parcel.cpp encodes the policy/priority and INHERIT_RT flags. The
+local binderLibTest.cpp also constructs a service using both. These tests were
+read, not executed. The kernel preserves recipient CAP_SYS_NICE and
+RLIMIT_RTPRIO/RLIMIT_NICE checks, uses SCHED_RESET_ON_FORK for policy changes,
+and strips inherited RT policy when the destination node does not opt in.
+Per-thread task references and prio_lock protect saved/pending/aborted restoration
+state across nested transactions. This extends scheduling behavior intentionally;
+it is not a claim that RT inheritance is side-effect-free or runtime-verified.
+
+Generic Binder hooks retain trusted module customization of work queues,
+allocation refusal, thread spawning, priority and transaction observation.
+Without callbacks, native queue and allocation checks remain. A vendor callback
+that redirects work or changes an allocation budget must honor the documented
+locking and ownership contract; arbitrary kernel callbacks are not sandboxed.
+Runtime vendor/OEM fields remain actual storage for source-built hooks, with no
+padding wrappers or promise of an old structure layout.
+
+Later LTS cleanup remains: replacing an outdated asynchronous transaction uses
+failure-mode buffer release and frees pending descriptor fixups; aligned LSM
+context size is tracked separately so released context metadata does not corrupt
+scatter-gather bounds. The previously repaired duplicate target snapshot/tmpref
+is absent, leaving one balanced native-LTS target-reference acquisition.
+
+The selected SDK has C Binder built in, Rust Binder as a module, and binderfs
+enabled. The selector serializes a C binderfs mount against switching to Rust;
+once a C mount is attempted it keeps C, including when the later mount allocation
+fails. Legacy misc-device registration is explicitly skipped when binderfs is
+configured. The trace-event cleanup follows native trace locking and removes
+only matching Binder events belonging to the selected module/builtin owner.
+
+Source review found one failure-path issue in ACK's added unload routine: if
+built-in C initialization fails, its native error paths have already released
+the shrinker, netlink family or filesystem resources. A later authorized Rust
+module switch must not release them a second time. Record successful C
+initialization and perform resource teardown only in that case, while always
+removing the statically registered C trace events needed for the new driver.
+This preserves LTS's single-unwind guarantee and avoids double cleanup. No
+allocation-failure injection or driver-selection runtime test was performed.
+As in ACK, a Rust initialization failure after C has been unloaded does not
+restore C automatically; that availability limitation is not validated here.

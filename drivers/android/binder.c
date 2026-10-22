@@ -125,6 +125,7 @@ module_param_named(debug_mask, binder_debug_mask, uint, 0644);
 
 char *binder_devices_param = CONFIG_ANDROID_BINDER_DEVICES;
 module_param_named(devices, binder_devices_param, charp, 0444);
+static bool binder_initialized;
 
 static DECLARE_WAIT_QUEUE_HEAD(binder_user_error_wait);
 static int binder_stop_on_user_error;
@@ -7440,6 +7441,7 @@ static int __init binder_init(void)
 	if (ret)
 		goto err_init_binderfs_failed;
 
+	binder_initialized = true;
 	return ret;
 
 err_init_binderfs_failed:
@@ -7463,10 +7465,14 @@ err_alloc_device_names_failed:
 
 void binder_unload_builtin(void)
 {
-	genl_unregister_family(&binder_nl_family);
-	unload_binderfs();
-	debugfs_remove_recursive(binder_debugfs_dir_entry_root);
-	binder_alloc_shrinker_exit();
+	/* A failed built-in init has already unwound these resources. */
+	if (binder_initialized) {
+		genl_unregister_family(&binder_nl_family);
+		unload_binderfs();
+		debugfs_remove_recursive(binder_debugfs_dir_entry_root);
+		binder_alloc_shrinker_exit();
+		binder_initialized = false;
+	}
 	binder_remove_trace_events(THIS_MODULE);
 }
 
