@@ -35,9 +35,7 @@
 #include "internal.h"
 #include "swap.h"
 
-#ifndef __GENSYMS__
 #include <trace/hooks/syscall_check.h>
-#endif
 
 /**
  * kfree_const - conditionally free memory
@@ -350,7 +348,9 @@ unsigned long randomize_stack_top(unsigned long stack_top)
 	if (current->flags & PF_RANDOMIZE) {
 		random_variable = get_random_long();
 		random_variable &= STACK_RND_MASK;
-		random_variable <<= __PAGE_SHIFT;
+		/* Keep the native randomization span used by mmap layout sizing. */
+		random_variable <<= PAGE_SHIFT;
+		random_variable &= __PAGE_MASK;
 	}
 #ifdef CONFIG_STACK_GROWSUP
 	return __PAGE_ALIGN(stack_top) + random_variable;

@@ -146,7 +146,7 @@ int create_init_stack_vma(struct mm_struct *mm, struct vm_area_struct **vmap,
 	if (err)
 		goto err;
 
-	mm->stack_vm = mm->total_vm = 1;
+	mm->stack_vm = mm->total_vm = vma_pages(vma);
 	mmap_write_unlock(mm);
 	*vmap = vma;
 	*top_mem_p = vma->vm_end - sizeof(void *);
