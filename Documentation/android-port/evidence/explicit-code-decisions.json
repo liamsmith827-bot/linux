@@ -2337,5 +2337,37 @@
       "76ef735061e249f9b3bd1a02affec7bb85d84b45",
       "ccf9db6a49be6edcc978fab06469a551895b72b1"
     ]
+  },
+  {
+    "commit": "5d30bda7072a7e5d561c37500665f3a0c6aa6a84",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain the eviction split as the basis of the configured F2FS asynchronous record implementation. Full before/after source review retains native deletion error retries, corrupt-inode cleanup, quota-repair marking, freeze protection, device-alias extent lifetime and fscrypt/fsverity cleanup. No binary-layout compatibility requirement. See SECURITY.md eviction section.",
+    "result_commits": [
+      "9fb98df8864715cd9d4ef5fa3e1ac945314ffaa9"
+    ]
+  },
+  {
+    "commit": "3ed358df1ef6c0bf30df3ff3c7686564a1cc3976",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Adapt asynchronous recording with separate WQ_MEM_RECLAIM queue and allocation unwind, preserving the kswapd synchronous path and mempool ownership. Correct ACK overwrite of APPEND by UPDATE to bitwise OR. Native VFS iget_locked waits for old eviction before reloading: flush pending records before publishing all ordinary new inodes, not only directories, and before APPEND/UPDATE queries. Removal has no added reclaim-path flush. Release drains queued records before clearing. No inode pointer survives eviction. SDK F2FS is configured; actual mount/use remains unconfirmed and behavior is retained conservatively. Extracted record/publication checks and queue failure/completion checks pass; runtime concurrency/reclaim untested.",
+    "result_commits": [
+      "9fb98df8864715cd9d4ef5fa3e1ac945314ffaa9"
+    ]
+  },
+  {
+    "commit": "92d46ac21eb2f038079b25fc1a76cab6ab03bf56",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain internal add/remove wrappers needed to select payload lists versus membership bitmaps. All current users reviewed: orphan/multi-device flush retain list payloads and counting; append/update/transaction-directory/xattr-directory use membership. No new UAPI or KMI preservation. Integrated with adapted async publication and bitmap checks, native LTS fsync consumers retained.",
+    "result_commits": [
+      "9fb98df8864715cd9d4ef5fa3e1ac945314ffaa9"
+    ]
+  },
+  {
+    "commit": "c9b33047f288a6931454fe037bce7ec927f72a6b",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Adapt bitmap packing for membership-only records while retaining orphan/flush payload lists. Restore native ino_num membership accounting (increment only new bits, decrement only present bits, reset on clear), needed by node.c memory-pressure heuristic and debug reporting; old sizeof estimate remains conservative for packed storage. Move pending-work flush before both release loops; ACK placed it only in ORPHAN/FLUSH loop where helper returns without flushing. Preserve LTS fsync durability decisions with all-inode publication and query barriers. Extracted checks cover duplicate records, slot boundaries, clear/reload ordering and three rejected regression controls. No on-disk change or runtime verification.",
+    "result_commits": [
+      "9fb98df8864715cd9d4ef5fa3e1ac945314ffaa9"
+    ]
   }
 ]

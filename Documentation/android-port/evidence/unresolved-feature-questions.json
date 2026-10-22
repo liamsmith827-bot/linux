@@ -139,11 +139,14 @@
   },
   {
     "topic": "F2FS asynchronous eviction records and bitmap representation",
-    "status": "unresolved adaptation; candidate decisions remain provisional",
+    "status": "resolved adaptation; optional runtime use unconfirmed and conservatively retained",
     "candidates": [
       "3ed358df1ef6c0bf30df3ff3c7686564a1cc3976",
       "c9b33047f288a6931454fe037bce7ec927f72a6b"
     ],
-    "evidence": "Full local 5d30bda7072a/3ed358df1ef6/92d46ac21eb2/c9b33047f288 patches, current eviction, inode acquisition, record APIs and fsync consumers examined. ACK assigns record_bits separately for APPEND and UPDATE instead of OR, losing APPEND when both flags are set. Later bitmap conversion leaves f2fs_wait_for_inode_record only in the ORPHAN/FLUSH loop, where its mode guard always returns; pending record work can repopulate a cleared checkpoint bitmap. New regular-file iget also lacks a pending-record flush before fsync reads APPEND/UPDATE. Need preserve both flags and publication/clear ordering plus reclaim-worker forward progress if retaining asynchronous behavior. Native synchronous records remain for now; no claim that the feature is unnecessary. All evidence local."
+    "evidence": "Full local patches and VFS inode lifetime, F2FS init/unwind/teardown, fsync, memory-pressure and debug consumers examined. Correct lost APPEND flag, drain queued records before publishing any ordinary reloaded inode and before APPEND/UPDATE queries/bitmap clearing, and retain ino_num counts. Do not flush on deletion in reclaim. Separate reclaim-capable queue plus existing mempool/kswapd fallback; native crypto/verity cleanup and LTS error/freeze behavior retained. Extracted checks pass 436 cases/21514 assertions and queue/completion checks 104/1096; negative controls rejected. These modeled checks do not establish actual concurrency/reclaim/storage behavior. SECURITY.md explains the conservative memory estimate and publication ordering. No remote access.",
+    "result_commits": [
+      "9fb98df8864715cd9d4ef5fa3e1ac945314ffaa9"
+    ]
   }
 ]
