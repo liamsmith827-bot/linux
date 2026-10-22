@@ -891,4 +891,48 @@ privileged kernel code and must respect allocator context; no module-sandbox
 claim is made. Include the actual native gfp_t definition instead of ACK's
 unrelated `struct gfp_t` forward declaration. Later LTS DMA mapping, restoration,
 cache attributes and failure cleanup remain in place. Build verification for
-this source change is recorded separately from build 30.
+this source change is recorded as build 31: the original workflow succeeded,
+all 145 module signatures verified, and the tampered-payload control was rejected.
+
+The complete retained hook registry has 766 declarations and 766 corresponding
+exports, including the separate Rust Binder registry and LMK trace event.
+`evidence/vendor-hook-registry-review.json` records declarations, exports and
+literal call sites. Rust's generated wrappers and the externally triggered LMK
+event explain four nonliteral invocation paths. The remaining two scheduler
+interfaces, check_preempt_tick and sched_getaffinity, also lack in-tree calls in
+final ACK; their source declarations remain without inventing new scheduler
+behavior. This is an interface and registry review, not final approval of each
+call site's memory lifetime or locking. Those implementation candidates are
+reviewed independently. No userspace hook-registration interface is added.
+
+## Module build and linker integration review
+
+The root Makefile preserves native LTS versioning, Rust frame-pointer workaround,
+GCOV concurrent-counter safeguards, compiler-option checks and hidden LTO
+visibility. Android additions retain mixed kernel/module builds, external-module
+header installation and the configured Rust inline-helper pipeline. The mixed
+input check is corrected to use GNU Make's addprefix and require both supplied
+vmlinux.symvers and System.map. Out-of-tree DT build overrides and the ARM64-only
+FIPS140 module postlink step are outside this x86 SDK workflow; native LTS paths
+remain. The inline-helper pipeline explicitly restores traps for unreachable
+Rust paths when Clang performs final code generation, preserving objtool's
+control-flow interpretation. CFI remains enabled and nonpermissive in the build.
+
+Module scripts retain source-version metadata, external modules.order records,
+protected-export generation and final-ACK source module support. The external
+module order suffix uses MD5 only to distinguish source paths, not to authenticate
+modules. Module signing uses SHA-256 as recorded above. Modpost keeps LTS's
+object-suffix check before ELF parsing and fatal handling for negative/truncated
+vsnprintf results. It also keeps LTS's warnings for empty unexpected nonallocated
+sections rather than suppressing them as ACK does. Signature-protected module
+names are processed without ABI trimming; the previously documented lack of a
+historical import whitelist in the untrimmed build remains an explicit difference.
+
+The symbol generator, module linker and kernel linker use the same sorted symbol,
+CRC and flag tables, with GPL-only status represented in flags instead of a
+separate table. The corresponding loader uses that same representation. This is
+source-built module functionality, not preservation of old binary formats.
+The generic module-symbol helper removes ACK's special __kvm_nvhe_ prefix
+handling, which only supports ARM64 EL2 symbols excluded from this target; native
+LTS mapping-symbol recognition and the required Android symbol flags remain.
+Other build-rule review does not approve unrelated ARM64 hypervisor code.
