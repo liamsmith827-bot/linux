@@ -1,0 +1,113 @@
+{
+  "source_head": "e0935585c30614c953dbc4d9d130ef98402c3d95",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "port_blob": "9ccb9666ef52abf2c6af1d38465be81c169d8be0",
+  "ack_blob": "588855bd360454fe560e5f5839f90ef963e0cb0a",
+  "lts_path_absent": true,
+  "records": [
+    {
+      "commit": "3f7bd17fcca351c8ba05ad5b4af271b1913147ef",
+      "patch_sha256": "1935150ef8c83a2a0dfd8952c0039782a74fb4fdaa4abcd03d925fa5df799be3",
+      "assessment": "Retain static on message_kill, target_poll/release/put and channel_alloc/free. These helpers are private to the target and remain called by the registered runtime operations; exposing unused global symbols is unnecessary. Later timeout/lifetime adaptations preserve their roles."
+    },
+    {
+      "commit": "c89c14af14f07fb9714c225646c3c2dc902f64ca",
+      "patch_sha256": "12467713c7b86bde46c12f0bbc4388b58fefe764928bce07d04f26a7077b476e",
+      "assessment": "Retain from_user as the container member when releasing messages on a channel reply list. The to_user offset is different, so the historical member would derive the wrong object and corrupt lifetime handling. Current channel_free uses the correct member and a safe walk."
+    },
+    {
+      "commit": "35f9e6bee13168655141057f8187b8b34c7543d9",
+      "patch_sha256": "a2bd1853267ece68206078c2fdb9f81c843094868b48f1e37a47cc2f2882d72d",
+      "assessment": "Retain deletion-safe channel reply lookup/cleanup. Adapt target_release further: safe iteration is not safe across dropping its lock while asynchronous workers can free the saved next entry. Claim and detach one current first entry, cancel its initialized work outside the lock, release it, then reacquire the current list head. The callback skips detached entries, and cancellation false is not treated as proof of message destruction."
+    },
+    {
+      "commit": "5a8bf62fd781b17ddb70e59245383e593e7b16fa",
+      "patch_sha256": "8a4cbe680ff0bd0b37a8f2ed0c177b38e787813e6210a3fc0cca5705564dc283",
+      "assessment": "Retain exactly one initial target reference, one per successfully allocated channel, and release through DM teardown/channel close. Remove the historical unowned extra constructor reference. Adapt daemon-existence detection to subtract the DM reference only before dm_destroyed, and free the allocated misc-device name at final target release."
+    },
+    {
+      "commit": "9d7af7fed52c3b2a2d7e042908cd942d359fb60b",
+      "patch_sha256": "6a4ecfc3d5737bee8183d665c10d2ad29a3b17bab946facba12c918b333f8816",
+      "assessment": "Retain the configurable initial 4000ms no-daemon grace period and immediate failure after the last daemon channel closes. Adapt ownership: initialize work once per message, detach/claim before cancel, have callbacks skip detached entries, cancel unconditionally before handing ownership to a channel or final destruction, and rearm with mod_delayed_work on last close even after an earlier callback returned while a daemon existed. Prevent pool waits under the lock required by progress, and reject pool construction failure. The old per-message delayed flag and cached-next teardown assumptions are not retained. Seven negative controls cover the focused regression hazards; actual kernel concurrency is untested. A callback rearmed while already running leaves the message to its pending invocation; the pending-work guard prevents a second callback on freed memory."
+    },
+    {
+      "commit": "b5b78b130149537882aa10605871de8bb419e32c",
+      "patch_sha256": "05205e2afd543bf570266589b54529bad778be8b824e92dcc425a1b8789309a4",
+      "assessment": "Retain the correctly sized 64-bit sector diagnostic and I/O spelling in the no-daemon error path. Its sector argument is sector_t in the configured 64-bit build. This has no independent data-format or permission change; it does not claim runtime failure statistics."
+    },
+    {
+      "commit": "d5da625ac44495db06077289295b7b6c3889cda8",
+      "patch_sha256": "c1df5b9b15439efe6948ada1e35cf5868cdfd45bd36799ac8bda5ce26c805d02",
+      "assessment": "Retain removing REQ_OP_WRITE_SAME from payload-length and operation translation switches because that block operation no longer exists in LTS. Existing READ/WRITE/FLUSH/DISCARD/SECURE_ERASE/WRITE_ZEROES mappings remain. The UAPI numeric constant is not repurposed, preserving the userspace message numbering."
+    },
+    {
+      "commit": "a9715862824a44df54bbb2fe326188dacab9053a",
+      "patch_sha256": "2ac41fe949cad9b18897b72f871a066993d60cdb1d23c3b9c5e6caafb456c4ef",
+      "assessment": "Retain removing the target-local bio_get/bio_put pair. The map callback takes responsibility for its supplied DM bio by returning DM_MAPIO_SUBMITTED and completes it exactly once with bio_endio in response or error cleanup. Native DM owns final clone disposal; no extra bio_put runs after endio. The extracted timeout tests check single completion under cancellation interleavings."
+    },
+    {
+      "commit": "5f2bd2d95dbf7bddf0d886dc6f8ae7a431e6b6ff",
+      "patch_sha256": "ab9079a62ec8755f56e0f5be52033249e8b962465ab6ddeaecd026b951c90520",
+      "assessment": "Retain removing no_llseek from file_operations to match the native API. This streaming request/response control device has no seek operation; read_iter/write_iter/open/release are preserved. No Android userspace message or ioctl is removed."
+    },
+    {
+      "commit": "d38f979d28dcfb4ed5bd787aeb38ffc8e299bed2",
+      "patch_sha256": "6baf5bd5a29cd95d96f03fa34be7028447644cfbc99a5303b4a6f6b05d12e954",
+      "assessment": "Retain removing the unused target_from_miscdev helper. dev_open directly obtains the target from the miscdevice stored in private_data and allocates a referenced channel under the target lock. The actual open path remains intact."
+    }
+  ],
+  "function_witnesses": [
+    {
+      "function": "channel_alloc",
+      "identical_to_final_ack": true,
+      "sha256": "c33ad16f38dd92ca1ea085877c3cb8ee9cc1b8ab8fe27bf8336f9ccd89db367b"
+    },
+    {
+      "function": "channel_free",
+      "identical_to_final_ack": true,
+      "sha256": "ac57ebfa27913892d6ee5da0b7c4ffa8606a395b87a19676260976af9b48347f"
+    },
+    {
+      "function": "msg_get_from_user",
+      "identical_to_final_ack": true,
+      "sha256": "c20aa64dbb2966e2a9d4d91888d3ef629ba243ade9e4f9a1e1139c558431c1db"
+    },
+    {
+      "function": "dev_write",
+      "identical_to_final_ack": true,
+      "sha256": "cfcca43dd4ab185db3d229a6071b960306213ffa76a9a2cd9a4cea57fec8ffe7"
+    },
+    {
+      "function": "bio_bytes_needed_to_user",
+      "identical_to_final_ack": true,
+      "sha256": "9c14946bf7e5a91ff099effb6e9bd62c91ca4d51e6a6eeee2b31e41113c11514"
+    },
+    {
+      "function": "bio_bytes_needed_from_user",
+      "identical_to_final_ack": true,
+      "sha256": "3af85aa05f66abec2f1e514d23cff2f015ef1ee63d99a20d7abdec7282953eb0"
+    },
+    {
+      "function": "bio_type_to_user_type",
+      "identical_to_final_ack": true,
+      "sha256": "67471f0994c98d587587e83ae8e7d9cb3fc2624d209580e10b248ff5bfd3b375"
+    }
+  ],
+  "checks": [
+    "dm-user-lifetime-check.json"
+  ],
+  "local_consumers": [
+    "../grapheneos-17/system/fs/fs_mgr/libsnapshot/snapshot.cpp: HandleDmUserDeviceCreation",
+    "../grapheneos-17/system/fs/fs_mgr/libsnapshot/snapuserd/dm_user_block_server.cpp",
+    "../grapheneos-17/system/sepolicy/private/snapuserd.te",
+    "../kernel_manifest-6.18/common_dist/kernel_x86_64_dot_config"
+  ],
+  "native_interfaces_examined": [
+    "drivers/md/dm.c: __map_bio/completion",
+    "mm/mempool.c: mempool_init_node/mempool_alloc",
+    "kernel/workqueue.c: mod_delayed_work_on",
+    "include/linux/mempool.h"
+  ],
+  "limits": "No real kernel concurrency, live block target or snapshot protocol test. The daemon documents inability to signal a read error after a successful partial reply header; protocol remains unchanged. Original target integration is a separate multi-file candidate."
+}

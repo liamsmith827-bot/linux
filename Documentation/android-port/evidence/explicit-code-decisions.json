@@ -3518,5 +3518,105 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
       "698b14841c5eabad75ac7d6cea667b928e2a2b90"
     ]
+  },
+  {
+    "commit": "3f7bd17fcca351c8ba05ad5b4af271b1913147ef",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain static on message_kill, target_poll/release/put and channel_alloc/free. These helpers are private to the target and remain called by the registered runtime operations; exposing unused global symbols is unnecessary. Later timeout/lifetime adaptations preserve their roles. Evidence: evidence/dm-user-local-review.json; SECURITY.md: dm-user timeout ownership and allocation progress. Local snapshot.cpp and snapuserd control-device protocol are positive consumers; SDK OTA use is unconfirmed. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6917a945ff7663a76829d024224b6fa747cdc784",
+      "e0935585c30614c953dbc4d9d130ef98402c3d95"
+    ]
+  },
+  {
+    "commit": "c89c14af14f07fb9714c225646c3c2dc902f64ca",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain from_user as the container member when releasing messages on a channel reply list. The to_user offset is different, so the historical member would derive the wrong object and corrupt lifetime handling. Current channel_free uses the correct member and a safe walk. Evidence: evidence/dm-user-local-review.json; SECURITY.md: dm-user timeout ownership and allocation progress. Local snapshot.cpp and snapuserd control-device protocol are positive consumers; SDK OTA use is unconfirmed. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6917a945ff7663a76829d024224b6fa747cdc784",
+      "e0935585c30614c953dbc4d9d130ef98402c3d95"
+    ]
+  },
+  {
+    "commit": "35f9e6bee13168655141057f8187b8b34c7543d9",
+    "disposition": "adapted",
+    "rationale": "Retain deletion-safe channel reply lookup/cleanup. Adapt target_release further: safe iteration is not safe across dropping its lock while asynchronous workers can free the saved next entry. Claim and detach one current first entry, cancel its initialized work outside the lock, release it, then reacquire the current list head. The callback skips detached entries, and cancellation false is not treated as proof of message destruction. Evidence: evidence/dm-user-local-review.json; SECURITY.md: dm-user timeout ownership and allocation progress. Local snapshot.cpp and snapuserd control-device protocol are positive consumers; SDK OTA use is unconfirmed. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6917a945ff7663a76829d024224b6fa747cdc784",
+      "e0935585c30614c953dbc4d9d130ef98402c3d95"
+    ]
+  },
+  {
+    "commit": "5a8bf62fd781b17ddb70e59245383e593e7b16fa",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain exactly one initial target reference, one per successfully allocated channel, and release through DM teardown/channel close. Remove the historical unowned extra constructor reference. Adapt daemon-existence detection to subtract the DM reference only before dm_destroyed, and free the allocated misc-device name at final target release. Evidence: evidence/dm-user-local-review.json; SECURITY.md: dm-user timeout ownership and allocation progress. Local snapshot.cpp and snapuserd control-device protocol are positive consumers; SDK OTA use is unconfirmed. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6917a945ff7663a76829d024224b6fa747cdc784",
+      "e0935585c30614c953dbc4d9d130ef98402c3d95"
+    ]
+  },
+  {
+    "commit": "9d7af7fed52c3b2a2d7e042908cd942d359fb60b",
+    "disposition": "adapted",
+    "rationale": "Retain the configurable initial 4000ms no-daemon grace period and immediate failure after the last daemon channel closes. Adapt ownership: initialize work once per message, detach/claim before cancel, have callbacks skip detached entries, cancel unconditionally before handing ownership to a channel or final destruction, and rearm with mod_delayed_work on last close even after an earlier callback returned while a daemon existed. Prevent pool waits under the lock required by progress, and reject pool construction failure. The old per-message delayed flag and cached-next teardown assumptions are not retained. Seven negative controls cover the focused regression hazards; actual kernel concurrency is untested. Evidence: evidence/dm-user-local-review.json; SECURITY.md: dm-user timeout ownership and allocation progress. Local snapshot.cpp and snapuserd control-device protocol are positive consumers; SDK OTA use is unconfirmed. Only local sources were used. The follow-up pending-work guard prevents freeing a message with a rearmed callback still queued.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6917a945ff7663a76829d024224b6fa747cdc784",
+      "e0935585c30614c953dbc4d9d130ef98402c3d95"
+    ]
+  },
+  {
+    "commit": "b5b78b130149537882aa10605871de8bb419e32c",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain the correctly sized 64-bit sector diagnostic and I/O spelling in the no-daemon error path. Its sector argument is sector_t in the configured 64-bit build. This has no independent data-format or permission change; it does not claim runtime failure statistics. Evidence: evidence/dm-user-local-review.json; SECURITY.md: dm-user timeout ownership and allocation progress. Local snapshot.cpp and snapuserd control-device protocol are positive consumers; SDK OTA use is unconfirmed. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6917a945ff7663a76829d024224b6fa747cdc784",
+      "e0935585c30614c953dbc4d9d130ef98402c3d95"
+    ]
+  },
+  {
+    "commit": "d5da625ac44495db06077289295b7b6c3889cda8",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain removing REQ_OP_WRITE_SAME from payload-length and operation translation switches because that block operation no longer exists in LTS. Existing READ/WRITE/FLUSH/DISCARD/SECURE_ERASE/WRITE_ZEROES mappings remain. The UAPI numeric constant is not repurposed, preserving the userspace message numbering. Evidence: evidence/dm-user-local-review.json; SECURITY.md: dm-user timeout ownership and allocation progress. Local snapshot.cpp and snapuserd control-device protocol are positive consumers; SDK OTA use is unconfirmed. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6917a945ff7663a76829d024224b6fa747cdc784",
+      "e0935585c30614c953dbc4d9d130ef98402c3d95"
+    ]
+  },
+  {
+    "commit": "a9715862824a44df54bbb2fe326188dacab9053a",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain removing the target-local bio_get/bio_put pair. The map callback takes responsibility for its supplied DM bio by returning DM_MAPIO_SUBMITTED and completes it exactly once with bio_endio in response or error cleanup. Native DM owns final clone disposal; no extra bio_put runs after endio. The extracted timeout tests check single completion under cancellation interleavings. Evidence: evidence/dm-user-local-review.json; SECURITY.md: dm-user timeout ownership and allocation progress. Local snapshot.cpp and snapuserd control-device protocol are positive consumers; SDK OTA use is unconfirmed. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6917a945ff7663a76829d024224b6fa747cdc784",
+      "e0935585c30614c953dbc4d9d130ef98402c3d95"
+    ]
+  },
+  {
+    "commit": "5f2bd2d95dbf7bddf0d886dc6f8ae7a431e6b6ff",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain removing no_llseek from file_operations to match the native API. This streaming request/response control device has no seek operation; read_iter/write_iter/open/release are preserved. No Android userspace message or ioctl is removed. Evidence: evidence/dm-user-local-review.json; SECURITY.md: dm-user timeout ownership and allocation progress. Local snapshot.cpp and snapuserd control-device protocol are positive consumers; SDK OTA use is unconfirmed. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6917a945ff7663a76829d024224b6fa747cdc784",
+      "e0935585c30614c953dbc4d9d130ef98402c3d95"
+    ]
+  },
+  {
+    "commit": "d38f979d28dcfb4ed5bd787aeb38ffc8e299bed2",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain removing the unused target_from_miscdev helper. dev_open directly obtains the target from the miscdevice stored in private_data and allocates a referenced channel under the target lock. The actual open path remains intact. Evidence: evidence/dm-user-local-review.json; SECURITY.md: dm-user timeout ownership and allocation progress. Local snapshot.cpp and snapuserd control-device protocol are positive consumers; SDK OTA use is unconfirmed. Only local sources were used.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6917a945ff7663a76829d024224b6fa747cdc784",
+      "e0935585c30614c953dbc4d9d130ef98402c3d95"
+    ]
   }
 ]
