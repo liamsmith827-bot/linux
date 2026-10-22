@@ -8,6 +8,7 @@ Device Mapper
     cache-policies
     cache
     delay
+    dm-bow
     dm-clone
     dm-crypt
     dm-dust

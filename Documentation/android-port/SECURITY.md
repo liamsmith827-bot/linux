@@ -3183,8 +3183,8 @@ checkpoint discard policy. Preserve the zero-length flush passthrough and
 committed-device discard-capability handling. Read the atomic state through its
 API instead of accessing its counter directly.
 
-`check_dm_bow.py` executes extracted constructor/destructor/queue/map code with
-allocation and I/O-ownership shims: 272 cases, 1261 assertions and five rejected
+The initial `check_dm_bow.py` executed extracted constructor/destructor/queue/map
+code with allocation and I/O-ownership shims: 272 cases, 1261 assertions and five rejected
 regression controls. It does not execute real block I/O, kernel concurrency,
 range splitting or crash recovery. The status-walk locking and first-range guard
 were reviewed directly; they are not covered by that harness.
@@ -3196,9 +3196,9 @@ an uninitialized buffer on dm_bufio_new failure. The state-change workqueue drai
 waits for backup workers, which submit writes without waiting for their endio;
 its subject's claim about write completion is therefore not sufficient evidence.
 Bufio caches may also need invalidation before rereading blocks modified through
-normal bios. These findings require follow-up before completing the checkpoint
-protocol review. The a95d721f13a4 disposition remains provisional; the targeted
-lifetime/discard fixes above do not establish crash consistency.
+normal bios. These findings were provisional at the initial lifetime checkpoint and are
+addressed by the subsequent dm-bow checkpoint I/O ordering and error propagation
+section below. The focused checks still do not establish runtime crash consistency.
 
 ## dm-user timeout ownership and allocation progress
 
@@ -3284,3 +3284,61 @@ data-vector access on no-payload bios, and the old vector-based extent calculati
 The vector-access shim traps a no-vector dereference; this is a host model and
 not a real uaccess fault or device test. No upstream code is replaced by these
 ACK-target corrections.
+
+## dm-bow checkpoint I/O ordering and error propagation
+
+Follow-up local inspection resolved the previously recorded implementation
+questions. Vold's cp_prepareCheckpoint performs FITRIM and writes state 1;
+cp_commitChanges writes state 2 without explicitly waiting for every in-flight
+block I/O. The earlier ACK state_lock plus flush_workqueue only waited for
+workers to submit their bios, while sector-zero writes bypassed those workers.
+That does not establish completion before relocating or committing sector zero.
+
+Route checkpoint-sensitive I/O through an ordered WQ_MEM_RECLAIM workqueue,
+including TRIM-phase mutations, zero-length flushes and sector-zero reads/writes.
+Each worker uses a referenced bio clone and submit_bio_wait, preserving the DM
+bio's original completion fields and completing it once after lower completion.
+Keep nonzero reads and committed I/O as passthrough. State changes hold state_lock
+to stop queue submissions, drain the queue without holding ranges_lock, and only
+then take ranges_lock for copying and publishing the next state. Range preparation
+and lower I/O remain serialized. This reduces concurrent checkpoint write
+throughput; no runtime performance measurement is claimed. The stronger ordering
+is justified by the need to preserve backup/commit contents, without weakening
+native LTS DM, bio, workqueue or bufio implementations.
+
+For I/O crossing sector zero, prepare the remainder before choosing the live
+sector-zero destination: backing up the remainder can itself move that live
+block. Submit the relocated first block and remainder in order. Use the current
+LTS bio_split error-pointer contract, and GFP_NOWAIT for the second allocation
+from the shared bio pool so the worker cannot wait for another reserve while
+holding its first allocation. Clone allocation/splitting failure before mutation
+completes the original bio with the corresponding block error. Normalize nonempty
+bio sectors with dm_target_offset before range lookup. Current fs_mgr creates a
+single target starting at zero; this also prevents an accepted nonzero target
+start from being mistaken for an index into a zero-based range tree.
+
+Before copying a source block, forget its clean bufio cache entry so an earlier
+ordinary bio cannot leave a stale cached backup image. All target bufio access is
+under ranges_lock, and successful copy/log operations flush dirty buffers before
+returning. Copy read/allocation/write/flush errors propagate as block status;
+sysfs converts them to negative errno. A failed dm_bufio_new has no buffer to
+release. Latch backup/log I/O failures and failed state transitions, rejecting
+further I/O/state changes through that target rather than pretending the partly
+updated metadata is trustworthy. Queue/clone allocation failure before mutation
+is retryable; pure backup-space exhaustion during normal checkpoint writes still
+permits a commit. Actual backing I/O ENOSPC is distinguished by the helper's
+failure latch. Invalid range lookup and failed trim splitting cannot silently
+permit a write to a range still considered free.
+
+The expanded check_dm_bow.py executes extracted construction, teardown, map and
+worker code in 1,214 cases with 5,616 assertions and eight regression controls.
+Its range preparation and lower completion are shims. check_dm_bow_buffers.py
+executes extracted copy_data/add_log_entry/state_store in 198 cases with 3,029
+assertions and four regression controls for stale cache, swallowed write error,
+positive sysfs error and retrying a failed checkpoint. Storage, CRC and queue
+execution are modeled; these checks do not establish real concurrency, actual
+crash recovery, encryption correctness or durable-media behavior. The build is
+the required integration verification. The original Android log layout remains
+unchanged and its documentation is adapted to the current native documentation
+location and the corrected behavior. No remote source was consulted; the URL in
+the original ACK commit message was not accessed.

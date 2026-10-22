@@ -93,6 +93,7 @@ struct bow_context {
 	struct log_sector *log_sector;
 	struct list_head trimmed_list;
 	bool forward_trims;
+	bool failed;
 };
 
 static sector_t range_top(struct bow_range *br)
@@ -272,11 +273,11 @@ static sector_t sector_to_page(struct bow_context const *bc, sector_t sector)
 	return sector >> (bc->block_shift - SECTOR_SHIFT);
 }
 
-static int copy_data(struct bow_context const *bc,
+static int copy_data(struct bow_context *bc,
 		     struct bow_range *source, struct bow_range *dest,
 		     u32 *checksum)
 {
-	int i;
+	int i, ret;
 
 	if (range_size(source) != range_size(dest)) {
 		WARN_ON(1);
@@ -291,11 +292,14 @@ static int copy_data(struct bow_context const *bc,
 		u8 *read, *write;
 		sector_t page = sector_to_page(bc, source->sector) + i;
 
+		/* Ordinary bios may have updated a previously cached backup block. */
+		dm_bufio_forget(bc->bufio, page);
 		read = dm_bufio_read(bc->bufio, page, &read_buffer);
 		if (IS_ERR(read)) {
 			DMERR("Cannot read page %llu",
 			      (unsigned long long)page);
-			return PTR_ERR(read);
+			WRITE_ONCE(bc->failed, true);
+			return errno_to_blk_status(PTR_ERR(read));
 		}
 
 		if (checksum)
@@ -307,7 +311,8 @@ static int copy_data(struct bow_context const *bc,
 		if (IS_ERR(write)) {
 			DMERR("Cannot write sector");
 			dm_bufio_release(read_buffer);
-			return PTR_ERR(write);
+			WRITE_ONCE(bc->failed, true);
+			return errno_to_blk_status(PTR_ERR(write));
 		}
 
 		memcpy(write, read, bc->block_size);
@@ -317,8 +322,10 @@ static int copy_data(struct bow_context const *bc,
 		dm_bufio_release(read_buffer);
 	}
 
-	dm_bufio_write_dirty_buffers(bc->bufio);
-	return BLK_STS_OK;
+	ret = dm_bufio_write_dirty_buffers(bc->bufio);
+	if (ret)
+		WRITE_ONCE(bc->failed, true);
+	return errno_to_blk_status(ret);
 }
 
 /****** logging functions ******/
@@ -379,6 +386,7 @@ static int add_log_entry(struct bow_context *bc, sector_t source, sector_t dest,
 {
 	struct dm_buffer *sector_buffer;
 	u8 *sector;
+	int ret;
 
 	if (sizeof(struct log_sector)
 	    + sizeof(struct log_entry) * (bc->log_sector->count + 1)
@@ -392,8 +400,8 @@ static int add_log_entry(struct bow_context *bc, sector_t source, sector_t dest,
 	sector = dm_bufio_new(bc->bufio, 0, &sector_buffer);
 	if (IS_ERR(sector)) {
 		DMERR("Cannot write boot sector");
-		dm_bufio_release(sector_buffer);
-		return BLK_STS_NOSPC;
+		WRITE_ONCE(bc->failed, true);
+		return errno_to_blk_status(PTR_ERR(sector));
 	}
 
 	bc->log_sector->entries[bc->log_sector->count].source = source;
@@ -405,8 +413,10 @@ static int add_log_entry(struct bow_context *bc, sector_t source, sector_t dest,
 	memcpy(sector, bc->log_sector, bc->block_size);
 	dm_bufio_mark_buffer_dirty(sector_buffer);
 	dm_bufio_release(sector_buffer);
-	dm_bufio_write_dirty_buffers(bc->bufio);
-	return BLK_STS_OK;
+	ret = dm_bufio_write_dirty_buffers(bc->bufio);
+	if (ret)
+		WRITE_ONCE(bc->failed, true);
+	return errno_to_blk_status(ret);
 }
 
 static int prepare_log(struct bow_context *bc)
@@ -534,6 +544,10 @@ static ssize_t state_store(struct kobject *kobj, struct kobj_attribute *attr,
 	flush_workqueue(bc->workqueue);
 
 	mutex_lock(&bc->ranges_lock);
+	if (bc->failed) {
+		ret = -EIO;
+		goto bad;
+	}
 	original_state = atomic_read(&bc->state);
 	if (state != original_state + 1) {
 		DMERR("Invalid state change from %d to %d",
@@ -546,9 +560,10 @@ static ssize_t state_store(struct kobject *kobj, struct kobj_attribute *attr,
 	       : state == COMMITTED ? "Committed" : "Unknown");
 
 	if (state == CHECKPOINT) {
-		ret = prepare_log(bc);
+		ret = blk_status_to_errno(prepare_log(bc));
 		if (ret) {
 			DMERR("Failed to switch to checkpoint state");
+			WRITE_ONCE(bc->failed, true);
 			goto bad;
 		}
 	} else if (state == COMMITTED) {
@@ -557,9 +572,10 @@ static ssize_t state_store(struct kobject *kobj, struct kobj_attribute *attr,
 			container_of(rb_first(&bc->ranges), struct bow_range,
 				     node);
 
-		ret = copy_data(bc, br, sector0_br, 0);
+		ret = blk_status_to_errno(copy_data(bc, br, sector0_br, 0));
 		if (ret) {
 			DMERR("Failed to switch to committed state");
+			WRITE_ONCE(bc->failed, true);
 			goto bad;
 		}
 	}
@@ -762,9 +778,7 @@ static int dm_bow_ctr(struct dm_target *ti, unsigned int argc, char **argv)
 		goto bad;
 	}
 
-	bc->workqueue = alloc_workqueue("dm-bow",
-					WQ_CPU_INTENSIVE | WQ_MEM_RECLAIM
-					| WQ_UNBOUND, num_online_cpus());
+	bc->workqueue = alloc_ordered_workqueue("dm-bow", WQ_MEM_RECLAIM);
 	if (!bc->workqueue) {
 		ti->error = "Cannot allocate workqueue";
 		ret = -ENOMEM;
@@ -929,6 +943,9 @@ static int prepare_one_range(struct bow_context *bc,
 {
 	struct bow_range *br = find_first_overlapping_range(&bc->ranges,
 							    bi_iter);
+
+	if (!br)
+		return BLK_STS_IOERR;
 	switch (br->type) {
 	case CHANGED:
 		return prepare_changed_range(bc, br, bi_iter);
@@ -961,35 +978,117 @@ struct write_work {
 	struct bio *bio;
 };
 
+static int add_trim(struct bow_context *bc, struct bio *bio);
+static int remove_trim(struct bow_context *bc, struct bio *bio);
+
+/*
+ * Serialize checkpoint-sensitive I/O through completion, not just submission.
+ * state_store blocks new work and drains this ordered queue before copying the
+ * live sector zero or publishing a new state. Clones keep DM's endio/private
+ * fields intact while submit_bio_wait owns the lower I/O completion.
+ */
 static void bow_write(struct work_struct *work)
 {
 	struct write_work *ww = container_of(work, struct write_work, work);
 	struct bow_context *bc = ww->bc;
 	struct bio *bio = ww->bio;
-	struct bvec_iter bi_iter = bio->bi_iter;
+	struct bio *clone, *first = NULL;
+	struct bvec_iter bi_iter;
 	int ret = BLK_STS_OK;
+	enum state state;
 
 	kfree(ww);
+	clone = bio_alloc_clone(bc->dev->bdev, bio, GFP_NOIO, &fs_bio_set);
+	if (!clone) {
+		bio->bi_status = BLK_STS_RESOURCE;
+		bio_endio(bio);
+		return;
+	}
 
 	mutex_lock(&bc->ranges_lock);
-	do {
-		ret = prepare_one_range(bc, &bi_iter);
-		bi_iter.bi_sector += bi_iter.bi_size / SECTOR_SIZE;
-		bi_iter.bi_size = bio->bi_iter.bi_size
-			- (bi_iter.bi_sector - bio->bi_iter.bi_sector)
-			  * SECTOR_SIZE;
-	} while (!ret && bi_iter.bi_size);
-
-	mutex_unlock(&bc->ranges_lock);
-
-	if (!ret) {
-		bio_set_dev(bio, bc->dev->bdev);
-		submit_bio(bio);
-	} else {
-		DMERR("Write failure with error %d", -ret);
-		bio->bi_status = ret;
-		bio_endio(bio);
+	if (bc->failed) {
+		ret = BLK_STS_IOERR;
+		goto out;
 	}
+
+	state = atomic_read(&bc->state);
+	if (!clone->bi_iter.bi_size)
+		goto submit;
+
+	if (state == TRIM) {
+		if (bio_op(clone) == REQ_OP_DISCARD) {
+			ret = add_trim(bc, clone);
+			goto prepared;
+		}
+		if (bio_data_dir(clone) == WRITE)
+			ret = remove_trim(bc, clone);
+		if (ret)
+			goto prepared;
+		goto submit;
+	}
+
+	if (state != CHECKPOINT) {
+		ret = BLK_STS_IOERR;
+		goto out;
+	}
+	/* Discards must never destroy checkpoint data, including sector zero. */
+	if (bio_op(clone) == REQ_OP_DISCARD)
+		goto out;
+
+	if (clone->bi_iter.bi_sector == 0) {
+		if (clone->bi_iter.bi_size > bc->block_size) {
+			/* Do not wait for a second bio from the shared pool. */
+			first = bio_split(clone, bc->block_size >> SECTOR_SHIFT,
+					  GFP_NOWAIT, &fs_bio_set);
+			if (IS_ERR(first)) {
+				ret = errno_to_blk_status(PTR_ERR(first));
+				first = NULL;
+				goto out;
+			}
+		} else {
+			clone->bi_iter.bi_sector = bc->log_sector->sector0;
+			goto submit;
+		}
+	}
+
+	if (bio_data_dir(clone) == WRITE) {
+		bi_iter = clone->bi_iter;
+		do {
+			ret = prepare_one_range(bc, &bi_iter);
+			bi_iter.bi_sector += bi_iter.bi_size / SECTOR_SIZE;
+			bi_iter.bi_size = clone->bi_iter.bi_size
+				- (bi_iter.bi_sector - clone->bi_iter.bi_sector)
+				  * SECTOR_SIZE;
+		} while (!ret && bi_iter.bi_size);
+	}
+	if (ret)
+		goto prepared;
+
+	if (first) {
+		/* Preparing the tail may have relocated the live sector again. */
+		first->bi_iter.bi_sector = bc->log_sector->sector0;
+		ret = errno_to_blk_status(submit_bio_wait(first));
+		if (ret) {
+			WRITE_ONCE(bc->failed, true);
+			goto out;
+		}
+	}
+submit:
+	ret = errno_to_blk_status(submit_bio_wait(clone));
+	if (ret)
+		WRITE_ONCE(bc->failed, true);
+	goto out;
+prepared:
+	/* Ordinary backup-space exhaustion can still be resolved by commit. */
+	if (ret && ret != BLK_STS_NOSPC)
+		WRITE_ONCE(bc->failed, true);
+out:
+	mutex_unlock(&bc->ranges_lock);
+	if (first)
+		bio_put(first);
+	bio_put(clone);
+	bio->bi_status = ret;
+	bio_endio(bio);
 }
 
 static int queue_write(struct bow_context *bc, struct bio *bio)
@@ -1010,40 +1109,11 @@ static int queue_write(struct bow_context *bc, struct bio *bio)
 	return DM_MAPIO_SUBMITTED;
 }
 
-static int handle_sector0(struct bow_context *bc, struct bio *bio)
-{
-	int ret = DM_MAPIO_REMAPPED;
-
-	if (bio->bi_iter.bi_size > bc->block_size) {
-		struct bio * split = bio_split(bio,
-					       bc->block_size >> SECTOR_SHIFT,
-					       GFP_NOIO,
-					       &fs_bio_set);
-		if (!split) {
-			DMERR("Failed to split bio");
-			bio->bi_status = BLK_STS_RESOURCE;
-			bio_endio(bio);
-			return DM_MAPIO_SUBMITTED;
-		}
-
-		bio_chain(split, bio);
-		split->bi_iter.bi_sector = bc->log_sector->sector0;
-		bio_set_dev(split, bc->dev->bdev);
-		submit_bio(split);
-
-		if (bio_data_dir(bio) == WRITE)
-			ret = queue_write(bc, bio);
-	} else {
-		bio->bi_iter.bi_sector = bc->log_sector->sector0;
-	}
-
-	return ret;
-}
-
 static int add_trim(struct bow_context *bc, struct bio *bio)
 {
 	struct bow_range *br;
 	struct bvec_iter bi_iter = bio->bi_iter;
+	int ret;
 
 	DMDEBUG("add_trim: %llu, %u",
 		(unsigned long long)bio->bi_iter.bi_sector,
@@ -1051,11 +1121,15 @@ static int add_trim(struct bow_context *bc, struct bio *bio)
 
 	do {
 		br = find_first_overlapping_range(&bc->ranges, &bi_iter);
+		if (!br)
+			return BLK_STS_IOERR;
 
 		switch (br->type) {
 		case UNCHANGED:
-			if (!split_range(bc, &br, &bi_iter))
-				set_type(bc, &br, TRIMMED);
+			ret = split_range(bc, &br, &bi_iter);
+			if (ret)
+				return ret;
+			set_type(bc, &br, TRIMMED);
 			break;
 
 		case TRIMMED:
@@ -1065,7 +1139,7 @@ static int add_trim(struct bow_context *bc, struct bio *bio)
 		default:
 			/* No other case is legal in TRIM state */
 			WARN_ON(true);
-			break;
+			return BLK_STS_IOERR;
 		}
 
 		bi_iter.bi_sector += bi_iter.bi_size / SECTOR_SIZE;
@@ -1075,14 +1149,14 @@ static int add_trim(struct bow_context *bc, struct bio *bio)
 
 	} while (bi_iter.bi_size);
 
-	bio_endio(bio);
-	return DM_MAPIO_SUBMITTED;
+	return BLK_STS_OK;
 }
 
 static int remove_trim(struct bow_context *bc, struct bio *bio)
 {
 	struct bow_range *br;
 	struct bvec_iter bi_iter = bio->bi_iter;
+	int ret;
 
 	DMDEBUG("remove_trim: %llu, %u",
 		(unsigned long long)bio->bi_iter.bi_sector,
@@ -1090,6 +1164,8 @@ static int remove_trim(struct bow_context *bc, struct bio *bio)
 
 	do {
 		br = find_first_overlapping_range(&bc->ranges, &bi_iter);
+		if (!br)
+			return BLK_STS_IOERR;
 
 		switch (br->type) {
 		case UNCHANGED:
@@ -1097,14 +1173,16 @@ static int remove_trim(struct bow_context *bc, struct bio *bio)
 			break;
 
 		case TRIMMED:
-			if (!split_range(bc, &br, &bi_iter))
-				set_type(bc, &br, UNCHANGED);
+			ret = split_range(bc, &br, &bi_iter);
+			if (ret)
+				return ret;
+			set_type(bc, &br, UNCHANGED);
 			break;
 
 		default:
 			/* No other case is legal in TRIM state */
 			WARN_ON(true);
-			break;
+			return BLK_STS_IOERR;
 		}
 
 		bi_iter.bi_sector += bi_iter.bi_size / SECTOR_SIZE;
@@ -1114,7 +1192,7 @@ static int remove_trim(struct bow_context *bc, struct bio *bio)
 
 	} while (bi_iter.bi_size);
 
-	return DM_MAPIO_REMAPPED;
+	return BLK_STS_OK;
 }
 
 static int remap_unless_illegal_trim(struct bow_context *bc, struct bio *bio)
@@ -1133,63 +1211,29 @@ static int remap_unless_illegal_trim(struct bow_context *bc, struct bio *bio)
 
 static int dm_bow_map(struct dm_target *ti, struct bio *bio)
 {
-	int ret = DM_MAPIO_REMAPPED;
 	struct bow_context *bc = ti->private;
+	int ret;
 
-	/* Fast path when already committed or when performing a read. */
+	if (unlikely(READ_ONCE(bc->failed)))
+		return DM_MAPIO_KILL;
+	if (bio->bi_iter.bi_size)
+		bio->bi_iter.bi_sector = dm_target_offset(ti, bio->bi_iter.bi_sector);
 
 	if (likely(atomic_read(&bc->state) == COMMITTED))
 		return remap_unless_illegal_trim(bc, bio);
-
-	if (bio_data_dir(bio) == READ && bio->bi_iter.bi_sector != 0)
+	if (bio_data_dir(bio) == READ && bio->bi_iter.bi_size &&
+	    bio->bi_iter.bi_sector != 0)
 		return remap_unless_illegal_trim(bc, bio);
 
-	if (bio->bi_iter.bi_size == 0)
-		return remap_unless_illegal_trim(bc, bio);
-
-	/*
-	 * Fall back to the slower path when we may be in TRIM/CHECKPOINT.
-	 * Operations must wait for any pending state changes to complete.
-	 */
-
+	/* Serialize queueing against state_store's drain and state publication. */
 	mutex_lock(&bc->state_lock);
-
-	if (atomic_read(&bc->state) != COMMITTED) {
-		enum state state;
-
-		mutex_lock(&bc->ranges_lock);
-		state = atomic_read(&bc->state);
-		if (state == TRIM) {
-			if (bio_op(bio) == REQ_OP_DISCARD)
-				ret = add_trim(bc, bio);
-			else if (bio_data_dir(bio) == WRITE)
-				ret = remove_trim(bc, bio);
-			/* else pass-through */
-		} else if (state == CHECKPOINT) {
-			if (bio_op(bio) == REQ_OP_DISCARD) {
-				/*
-				 * Ignore discard requests in CHECKPOINT state.
-				 * Passing them through would physically erase data that we
-				 * are trying to protect, creating a state mismatch.
-				 * We complete the bio with success and stop processing.
-				 */
-				bio_endio(bio);
-				ret = DM_MAPIO_SUBMITTED;
-			} else if (bio->bi_iter.bi_sector == 0)
-				ret = handle_sector0(bc, bio);
-			else if (bio_data_dir(bio) == WRITE)
-				ret = queue_write(bc, bio);
-			/* else pass-through */
-		}
-		/* else pass-through */
-		mutex_unlock(&bc->ranges_lock);
-	}
-
+	if (READ_ONCE(bc->failed))
+		ret = DM_MAPIO_KILL;
+	else if (atomic_read(&bc->state) == COMMITTED)
+		ret = remap_unless_illegal_trim(bc, bio);
+	else
+		ret = queue_write(bc, bio);
 	mutex_unlock(&bc->state_lock);
-
-	if (ret == DM_MAPIO_REMAPPED)
-		return remap_unless_illegal_trim(bc, bio);
-
 	return ret;
 }
 
