@@ -344,7 +344,9 @@ impl kernel::Module for BinderModule {
         let publish_log = crate::transaction::TRANSACTION_LOG.prepare()?;
         let publish_failed_log = crate::transaction::FAILED_TRANSACTION_LOG.prepare()?;
 
-        let netlink = crate::netlink::BINDER_NL_FAMILY.register()?;
+        // SAFETY: Init runs once, and no reporting can access this family's runtime
+        // identifiers until binderfs is published after successful registration.
+        let netlink = unsafe { crate::netlink::BINDER_NL_FAMILY.register()? };
         BINDER_SHRINKER.register(kernel::c_str!("android-binder"))?;
 
         // SAFETY: The module is being loaded, so we can initialize binderfs.

@@ -66,7 +66,12 @@ impl NetlinkSkBuff {
     }
 
     /// Puts a generic netlink header into the `NetlinkSkBuff`.
-    pub fn genlmsg_put(
+    ///
+    /// # Safety
+    ///
+    /// `family` must remain registered for this call. Registration, unregistration,
+    /// and re-registration must not race with it.
+    pub unsafe fn genlmsg_put(
         self,
         portid: u32,
         seq: u32,
@@ -139,8 +144,13 @@ impl GenlMsg {
     }
 
     /// Sends the generic netlink message as a multicast message.
+    ///
+    /// # Safety
+    ///
+    /// `family` must remain registered for this call, without racing registration
+    /// or unregistration, so its multicast group identifiers remain valid.
     #[inline]
-    pub fn multicast(
+    pub unsafe fn multicast(
         self,
         family: &'static Family,
         portid: u32,
@@ -260,7 +270,12 @@ impl Family {
     }
 
     /// Checks if there are any listeners for the given multicast group.
-    pub fn has_listeners(&self, group: u32) -> bool {
+    ///
+    /// # Safety
+    ///
+    /// This family must remain registered for this call, without racing
+    /// registration or unregistration.
+    pub unsafe fn has_listeners(&self, group: u32) -> bool {
         if !self.has_group(group) {
             return false;
         }
@@ -328,7 +343,13 @@ pub struct Registration {
 
 impl Family {
     /// Registers the generic netlink family with the kernel.
-    pub fn register(&'static self) -> Result<Registration> {
+    ///
+    /// # Safety
+    ///
+    /// No operation may access this family's runtime identifiers until registration
+    /// succeeds. Any previous registration and its unregistration must be complete;
+    /// no other registration or unregistration of this family may race this call.
+    pub unsafe fn register(&'static self) -> Result<Registration> {
         // SAFETY: `self.as_raw()` is a valid pointer to a `genl_family` struct.
         // The `genl_family` struct is static, so it will outlive the registration.
         to_result(unsafe { bindings::genl_register_family(self.as_raw()) })?;

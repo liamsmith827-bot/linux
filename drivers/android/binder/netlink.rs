@@ -41,18 +41,22 @@ impl Report {
     ) -> Result<Self, kernel::alloc::AllocError> {
         const BINDER_CMD_REPORT: u8 = kernel::uapi::BINDER_CMD_REPORT as u8;
         let skb = NetlinkSkBuff::new(size, flags)?;
-        let skb = skb.genlmsg_put(portid, seq, &BINDER_NL_FAMILY, BINDER_CMD_REPORT)?;
+        // SAFETY: Reporting begins only after binderfs publication. The active
+        // driver pins its module and retains the family registration permanently.
+        let skb = unsafe { skb.genlmsg_put(portid, seq, &BINDER_NL_FAMILY, BINDER_CMD_REPORT)? };
         Ok(Self { skb })
     }
 
     /// Broadcast this message.
     pub fn multicast(self, portid: u32, flags: kernel::alloc::Flags) -> Result {
-        self.skb.multicast(&BINDER_NL_FAMILY, portid, 0, flags)
+        // SAFETY: The active driver retains its registration while reporting.
+        unsafe { self.skb.multicast(&BINDER_NL_FAMILY, portid, 0, flags) }
     }
 
     /// Check if this message type has listeners.
     pub fn has_listeners() -> bool {
-        BINDER_NL_FAMILY.has_listeners(0)
+        // SAFETY: The active driver retains its registration while reporting.
+        unsafe { BINDER_NL_FAMILY.has_listeners(0) }
     }
 
     /// The enum binder_driver_return_protocol returned to the sender.
