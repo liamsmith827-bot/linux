@@ -2601,3 +2601,53 @@ The 972 GC freezer/refcount cases still pass after adapting only the helper shim
 signatures; that harness does not execute the internal migration phases. These
 are source/control-flow checks, with no filesystem mount, concurrency, device
 discard or allocation test. All evidence is local.
+
+## F2FS eviction record publication and bitmap storage
+
+Retain the configured filesystem's generic ACK inode-record optimization as a
+coherent adaptation of 5d30bda7072a, 3ed358df1ef6, 92d46ac21eb2 and c9b33047f288.
+Its optional SDK runtime use is unconfirmed (the supplied data fstab uses ext4);
+retention preserves Android configuration and filesystem runtime behavior.
+The eviction split preserves native crypto/verity cleanup, corrupt-inode error
+handling, freeze exclusion, quota repair marking and device-alias extent lifetime.
+No historical structure layout or binary KMI is preserved.
+
+Async work owns only the superblock, inode number and record bits, never the freed
+inode. Preserve BOTH append and update bits with OR: ACK's successive assignments
+lose append when both flags are set. A dedicated WQ_MEM_RECLAIM eviction queue,
+separate from read processing and write completion, provides a reserved worker
+for the reclaim path. The eight-item mempool and synchronous kswapd recording
+are retained. Queue creation unwinds all preceding allocations; filesystem exit
+unregisters before freeing the pool. Mount failure and unmount release records
+before destroying queues and superblock state. This does not establish a bounded
+latency or prove memory-pressure forward progress under every workload.
+
+The native VFS find_inode_fast/iget_locked waits for I_FREEING to finish; evict
+calls the filesystem eviction method before removing the old inode from the
+hash. Flush already queued records before publishing EVERY newly loaded ordinary
+inode, extending ACK's directory-only barrier to regular and other inodes. This
+prevents a prior incarnation's queued work from arriving after a later fsync or
+deletion removes its records. Internal mount inodes bypass this wait because
+metadata inode creation precedes queue initialization. Deletion itself does not
+flush the queue, avoiding an extra reclaim-path wait. APPEND/UPDATE queries also
+flush outside the record spinlock. Checkpoint/unmount record release flushes once
+BEFORE clearing bitmaps; ACK's converted loop invokes the helper only for
+ORPHAN/FLUSH, where it does nothing. Concurrent later eviction retains the native
+checkpoint exclusion rules; the flush is not a ban on all future record work.
+
+Only membership-only records become radix-tree value bitmaps. Orphan and
+multi-device-flush records keep their native lists and payloads. Count each newly
+set bit and each actually cleared bit, and reset counts on destruction. ACK's
+bitmap conversion left these counts zero, disabling the native INO_ENTRIES
+pressure estimate and debug accounting. The retained estimate multiplies record
+count by the old entry size, so it conservatively overestimates packed storage
+rather than claiming exact allocated bytes. No on-disk format changes.
+
+Extracted host checks execute record submission, publication, lookup, removal,
+bitmap boundaries and clearing: 436 cases / 21,514 assertions pass. Controls
+reintroducing lost append flags, absent publication waits and uncounted bitmaps
+fail. Queue/completion checks pass 104 cases / 1,096 assertions, cover failure at
+all three queue allocations and confirm native completion-body identity. These
+use modeled trees/workqueues and do not execute kernel concurrency, reclaim,
+fsync, storage recovery or a mounted filesystem. All evidence is local, including
+Documentation/core-api/workqueue.rst; no additional remote source was accessed.

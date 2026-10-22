@@ -4592,18 +4592,30 @@ int f2fs_init_wq(struct f2fs_sb_info *sbi)
 	/* Reclaim may wait for writes while a read worker allocates memory. */
 	sbi->write_wq = alloc_workqueue("f2fs_write_wq",
 			WQ_UNBOUND | WQ_HIGHPRI | WQ_MEM_RECLAIM, 0);
-	if (!sbi->write_wq) {
-		destroy_workqueue(sbi->wq);
-		sbi->wq = NULL;
-		return -ENOMEM;
-	}
+	if (!sbi->write_wq)
+		goto destroy_read_wq;
+
+	sbi->evict_wq = alloc_workqueue("f2fs_evict_wq",
+			WQ_UNBOUND | WQ_HIGHPRI | WQ_MEM_RECLAIM, 0);
+	if (!sbi->evict_wq)
+		goto destroy_write_wq;
 	return 0;
+
+destroy_write_wq:
+	destroy_workqueue(sbi->write_wq);
+	sbi->write_wq = NULL;
+destroy_read_wq:
+	destroy_workqueue(sbi->wq);
+	sbi->wq = NULL;
+	return -ENOMEM;
 }
 
 void f2fs_destroy_wq(struct f2fs_sb_info *sbi)
 {
 	if (sbi->wq)
 		destroy_workqueue(sbi->wq);
+	if (sbi->evict_wq)
+		destroy_workqueue(sbi->evict_wq);
 	if (sbi->write_wq)
 		destroy_workqueue(sbi->write_wq);
 }

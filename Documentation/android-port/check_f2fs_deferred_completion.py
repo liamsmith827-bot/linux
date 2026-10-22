@@ -39,14 +39,14 @@ prefix = r'''
 #define container_of(p,t,m) ((t *)((char *)(p)-offsetof(t,m)))
 struct work_struct { void (*fn)(struct work_struct *); };
 struct workqueue_struct { unsigned flags; bool live; };
-struct f2fs_sb_info { unsigned max_atc_write_bio_size; struct workqueue_struct *wq, *write_wq; };
+struct f2fs_sb_info { unsigned max_atc_write_bio_size; struct workqueue_struct *wq, *write_wq, *evict_wq; };
 struct bio { void *bi_private; struct { unsigned bi_size; } bi_iter; int bi_status; };
 struct f2fs_bio { struct work_struct work; struct bio bio; };
 static unsigned cases, assertions, failures;
 #define CHECK(x) do { assertions++; if (!(x)) { failures++; \
     if (failures < 10) fprintf(stderr,"line %d: %s\n",__LINE__,#x); } } while(0)
 #define INIT_WORK(w,f) ((w)->fn=(f))
-static struct workqueue_struct queues[2];
+static struct workqueue_struct queues[3];
 static int allocs, fail_at, destroyed, unbound, finished;
 static bool atomic_context;
 static struct work_struct *pending;
@@ -56,7 +56,7 @@ static int expected_status;
 static int num_online_cpus(void) { return 4; }
 static struct workqueue_struct *alloc_workqueue(const char *name, unsigned flags, int n) {
     int i=allocs++; if (allocs==fail_at) return NULL;
-    CHECK(i<2); queues[i]=(struct workqueue_struct){flags,true}; return &queues[i];
+    CHECK(i<3); queues[i]=(struct workqueue_struct){flags,true}; return &queues[i];
 }
 static void destroy_workqueue(struct workqueue_struct *q) {
     CHECK(q && q->live); q->live=false; destroyed++;
@@ -77,12 +77,12 @@ static void queue_work(struct workqueue_struct *q, struct work_struct *w) {
 '''
 suffix = r'''
 int main(void) {
-    for (int failure=0; failure<=2; failure++) {
+    for (int failure=0; failure<=3; failure++) {
         struct f2fs_sb_info sbi={0};
         allocs=destroyed=0; fail_at=failure;
         CHECK(f2fs_init_wq(&sbi)==(failure ? -ENOMEM:0));
         if (!failure) f2fs_destroy_wq(&sbi);
-        CHECK(destroyed==(failure ? failure-1:2));
+        CHECK(destroyed==(failure ? failure-1:3));
         for (int i=0;i<allocs;i++) CHECK(!queues[i].live); cases++;
     }
     struct f2fs_sb_info sbi={0}; allocs=0; fail_at=0;

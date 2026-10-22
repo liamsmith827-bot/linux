@@ -1,0 +1,29 @@
+{
+  "scope": "Exercise extracted inode-record publication and bitmap control flow. Captures actual post-eviction record block and new-inode publication barrier; deletion follows modeled VFS eviction/reload ordering. Fake radix tree/workqueue and empty orphan/flush lists. No real kernel allocation, RCU, locking, concurrency, fsync or storage.",
+  "source_sha256": {
+    "fs/f2fs/checkpoint.c": "39d9c9f11f2027878e9bb91cbd72bc7e7da0443ea08752b51ac81481b9d1e1b7",
+    "fs/f2fs/inode.c": "33e08a3988ff7dae22019cf9b408e3e38d4044e17876e24c409176eb167d039f"
+  },
+  "results": {
+    "port": {
+      "exit_code": 0,
+      "stdout": "436 cases, 21514 assertions, 0 failures\n",
+      "stderr": ""
+    },
+    "ack_lost_append_control": {
+      "exit_code": 1,
+      "stdout": "436 cases, 20848 assertions, 36 failures\n",
+      "stderr": "line 301: f2fs_exist_written_data(&s,inode.i_ino,APPEND_INO)==append\nline 303: s.im[APPEND_INO].ino_num==append && s.im[UPDATE_INO].ino_num==update\nline 301: f2fs_exist_written_data(&s,inode.i_ino,APPEND_INO)==append\nline 303: s.im[APPEND_INO].ino_num==append && s.im[UPDATE_INO].ino_num==update\nline 301: f2fs_exist_written_data(&s,inode.i_ino,APPEND_INO)==append\nline 303: s.im[APPEND_INO].ino_num==append && s.im[UPDATE_INO].ino_num==update\nline 301: f2fs_exist_written_data(&s,inode.i_ino,APPEND_INO)==append\n"
+    },
+    "missing_publication_barrier_control": {
+      "exit_code": 1,
+      "stdout": "436 cases, 21496 assertions, 171 failures\n",
+      "stderr": "line 301: f2fs_exist_written_data(&s,inode.i_ino,APPEND_INO)==append\nline 303: s.im[APPEND_INO].ino_num==append && s.im[UPDATE_INO].ino_num==update\nline 318: !s.im[i].ino_num\nline 309: !f2fs_exist_written_data(&s,inode.i_ino,APPEND_INO)\nline 311: !s.im[APPEND_INO].ino_num\nline 314: !f2fs_exist_written_data(&s,inode.i_ino,APPEND_INO)\nline 302: f2fs_exist_written_data(&s,inode.i_ino,UPDATE_INO)==update\n"
+    },
+    "ack_uncounted_bitmap_control": {
+      "exit_code": 1,
+      "stdout": "436 cases, 21514 assertions, 98 failures\n",
+      "stderr": "line 303: s.im[APPEND_INO].ino_num==append && s.im[UPDATE_INO].ino_num==update\nline 311: !s.im[APPEND_INO].ino_num\nline 303: s.im[APPEND_INO].ino_num==append && s.im[UPDATE_INO].ino_num==update\nline 311: !s.im[APPEND_INO].ino_num\nline 303: s.im[APPEND_INO].ino_num==append && s.im[UPDATE_INO].ino_num==update\nline 303: s.im[APPEND_INO].ino_num==append && s.im[UPDATE_INO].ino_num==update\nline 303: s.im[APPEND_INO].ino_num==append && s.im[UPDATE_INO].ino_num==update\n"
+    }
+  }
+}
