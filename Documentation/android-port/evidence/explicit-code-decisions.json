@@ -4818,5 +4818,149 @@
       "evidence/rust-container-api-review.json",
       "SECURITY.md: Rust Binder container and identity dependencies"
     ]
+  },
+  {
+    "commit": "8a49b2b2ca3184e286f79416c72e009cae264869",
+    "disposition": "adapted",
+    "rationale": "Retain the miscdevice llseek callback and conditional vtable entry used by the selected Rust ashmem driver. The callback borrows live private data and a LocalFile for the position-synchronized llseek operation, returning native offsets or negative errno. Ashmem pins its backing shmem file through the call and propagates the resulting file position under the existing VFS serialization contract. The final API uses fs::file::Offset rather than the temporary local loff_t alias. The two ACK candidate patches are byte-identical and their effect is retained once. This adds source API/runtime compatibility, not binary layout preservation; no change to native LTS VFS seeking is required.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-ashmem-build-helper-review.json",
+      "SECURITY.md: Rust ashmem and build helpers"
+    ]
+  },
+  {
+    "commit": "3a7f0dc5a3927031d3c75fa605e38152d77e5d0e",
+    "disposition": "adapted",
+    "rationale": "Retain the miscdevice llseek callback and conditional vtable entry used by the selected Rust ashmem driver. The callback borrows live private data and a LocalFile for the position-synchronized llseek operation, returning native offsets or negative errno. Ashmem pins its backing shmem file through the call and propagates the resulting file position under the existing VFS serialization contract. The final API uses fs::file::Offset rather than the temporary local loff_t alias. The two ACK candidate patches are byte-identical and their effect is retained once. This adds source API/runtime compatibility, not binary layout preservation; no change to native LTS VFS seeking is required.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-ashmem-build-helper-review.json",
+      "SECURITY.md: Rust ashmem and build helpers"
+    ]
+  },
+  {
+    "commit": "90c9015fd2d6f5d7607637179ca5d616fd6437b3",
+    "disposition": "adapted",
+    "rationale": "Retain the rw_semaphore lockdep-class helper and public LockClassKey::as_ptr used by Rust ashmem ShmemFile::new. Before publishing the newly allocated backing file, it assigns its inode semaphore a static class and name: ordinary write syscalls do not operate on this backing file, so the documented fs_reclaim/write-lock dependency does not apply. Native lockdep behavior is used, and the unsafe caller must keep the class key valid (the selected caller uses static_lock_class). The SDK configuration disables DEBUG_LOCK_ALLOC, but the source dependency and diagnostic configuration compatibility remain. The two ACK patches are byte-identical; apply their effect once.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-ashmem-build-helper-review.json",
+      "SECURITY.md: Rust ashmem and build helpers"
+    ]
+  },
+  {
+    "commit": "35046dde367e7541d4fcbc96f0919b52b40130c4",
+    "disposition": "adapted",
+    "rationale": "Retain the rw_semaphore lockdep-class helper and public LockClassKey::as_ptr used by Rust ashmem ShmemFile::new. Before publishing the newly allocated backing file, it assigns its inode semaphore a static class and name: ordinary write syscalls do not operate on this backing file, so the documented fs_reclaim/write-lock dependency does not apply. Native lockdep behavior is used, and the unsafe caller must keep the class key valid (the selected caller uses static_lock_class). The SDK configuration disables DEBUG_LOCK_ALLOC, but the source dependency and diagnostic configuration compatibility remain. The two ACK patches are byte-identical; apply their effect once.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-ashmem-build-helper-review.json",
+      "SECURITY.md: Rust ashmem and build helpers"
+    ]
+  },
+  {
+    "commit": "ab1f55d11900b6e736610870fab4ca7e86a1f67f",
+    "disposition": "adapted",
+    "rationale": "Retain Rust page-size-compat bindings and helpers for ashmem mapping size checks. The local SDK goldfish x86_64_16k_cmdline.txt selects page_shift=14, and ashmem mmap uses __page_align. The C boot parser restricts the shift to supported values on a 4 KiB kernel and stores it read-only after initialization. The selected ashmem caller rejects zero or size>=usize::MAX>>1 before alignment, so its addition cannot overflow at the supported shifts; the generic helper is not a checked-overflow API for arbitrary usize input. This decision covers the Rust helper and module/binding registration, not the still-unresolved shared EOF semantics of the wider 16 KiB emulation family. No native LTS arithmetic or fault handling is reverted.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-ashmem-build-helper-review.json",
+      "SECURITY.md: Rust ashmem and build helpers"
+    ]
+  },
+  {
+    "commit": "6a186c748a73901405450ef264383ca8d2fdd8dd",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the helper whose sole purpose is making bindings::is_vmalloc_addr available on CONFIG_MMU=n kernels. The required x86_64 SDK configuration has CONFIG_MMU=y; include/linux/mm.h exposes the native external function and the generated SDK bindings contain that declaration. Remove only the redundant NOMMU wrapper/include from the initial integration, retaining vrealloc_node_align and its helper annotation. KVVec::shrink_to continues using native is_vmalloc_addr on this target. This excludes a different memory-management configuration under the current-target requirement; it does not infer dispensability from a failed consumer search or change allocator runtime behavior.",
+    "result_commits": [
+      "5123d876580b6c20a74b1cde17bceca8049104ca"
+    ],
+    "evidence": [
+      "evidence/rust-ashmem-build-helper-review.json",
+      "SECURITY.md: Rust ashmem and build helpers"
+    ]
+  },
+  {
+    "commit": "02a4a20a57bda9cd39995335e59182320bf68ec5",
+    "disposition": "merge-resolution-adapted-net-state",
+    "rationale": "Retain the unique rust/Makefile merge resolution combining ACK inline C-helper linking with the LTS -Zunstable-options flag for custom Rust targets. The complete remerge diff has one hunk; both branches of the conflict remain represented. Final integration also uses the selected inline-helper compiler flags, filters C LTO flags at that stage and runs ld_single within the helper-link path. Native LTS Rust 1.95 compatibility is preserved even though the pinned SDK toolchain is Rust 1.91.1. This resolution supports the existing Kleaf workflow and does not replace a stable fix with the older ACK recipe.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-ashmem-build-helper-review.json",
+      "SECURITY.md: Rust ashmem and build helpers"
+    ]
+  },
+  {
+    "commit": "8d8b0521e153d462e91e047341a353dcf0997d0d",
+    "disposition": "adapted",
+    "rationale": "Retain the clamp of the unsigned RLIMIT_NICE value to 40 before signed conversion and subtraction. Configured Rust Binder Thread::do_set_priority calls this method for a fair-policy task without CAP_SYS_NICE. RLIM_INFINITY or an arbitrary high raw limit otherwise permits signed subtraction overflow and a kernel panic with Rust overflow checks. Values 1..40 map to nice 19..-20; zero maps to 20 and the Binder caller rejects it as unset. Limits above 40 grant no priority beyond the legal minimum nice. This is a concrete safety fix for the selected Android priority API; native LTS scheduler checks are not weakened by this change.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-poll-dependency-review.json",
+      "SECURITY.md: Rust publication, poll and priority helpers"
+    ]
+  },
+  {
+    "commit": "9c71b7c4595082d5abb577f039e71d7b240f3e71",
+    "disposition": "adapted",
+    "rationale": "Retain module! imports_ns parsing and import_ns modinfo emission, positively consumed by the configured WrapFD module for DMA_BUF. It uses the existing ASCII string-array parser and escaped byte-string modinfo emitter for both built-in and loadable modules. The built SDK modules.builtin.modinfo contains wrapfd.import_ns=DMA_BUF. This preserves native modpost namespace checking rather than bypassing it, and is generic module source infrastructure, not historical binary KMI.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-poll-dependency-review.json",
+      "SECURITY.md: Rust publication, poll and priority helpers"
+    ]
+  },
+  {
+    "commit": "f4bf2ca6bd0759e7788f599e32c449df1c976e45",
+    "disposition": "adapted",
+    "rationale": "Retain SetOnce used by Rust Binder process poll queues and transaction logs. Exactly one successful 0->1 atomic compare-exchange owns initialization; a Release store publishes state 2 and Acquire readers only then borrow initialized data. Losing populate calls drop their unused input, and exclusive Drop only destroys the initialized value. Binder poll allocates outside its node_refs lock, serializes population and re-reads the published queue; transaction logging tolerates an unpopulated container. The complete selected implementation matches ACK; no native LTS atomic implementation is replaced.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-poll-dependency-review.json",
+      "SECURITY.md: Rust publication, poll and priority helpers"
+    ]
+  },
+  {
+    "commit": "52d6455fe59760b632de2286e2eb0e3432ab52ad",
+    "disposition": "adapted",
+    "rationale": "Retain SetOnce Send only for T:Send and Sync only for T:Send+Sync. The bounds cover both shared references returned to readers and movement/destruction of an inserted value on another thread. These are required by the selected shared Binder process/log containers; the atomic publication protocol is reviewed with f4bf2ca6bd07. Do not treat atomic initialization alone as sufficient for arbitrary non-Sync payloads.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-poll-dependency-review.json",
+      "SECURITY.md: Rust publication, poll and priority helpers"
+    ]
+  },
+  {
+    "commit": "d21c42516a883f62ad636aee01b69da81b7fe0a1",
+    "disposition": "adapted",
+    "rationale": "Retain PollCondVarBox with an embedded RCU callback head for the configured Rust Binder process poll queue. The box remains pinned, manually transfers its unique allocation on drop, wakes/removes poll waiters via native __wake_up_pollfree, then defers reclamation through native kvfree_call_rcu. It deliberately replaces the synchronous PollCondVar destructor while preserving its required grace period; CondVar has no additional owning resource destructor to skip. This also permits dropping a losing SetOnce population while the Binder node_refs spinlock is held, without synchronize_rcu sleeping there. The non-null embedded callback head avoids the native headless might_sleep path. Ordinary PollCondVar retains synchronous destruction. Native LTS RCU freeing and waitqueue wake implementation remain; actual epoll/RCU races have not been executed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-poll-dependency-review.json",
+      "SECURITY.md: Rust publication, poll and priority helpers"
+    ]
   }
 ]

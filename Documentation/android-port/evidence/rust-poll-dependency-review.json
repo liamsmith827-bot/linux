@@ -1,0 +1,131 @@
+{
+  "source_head": "5123d876580b6c20a74b1cde17bceca8049104ca",
+  "records": [
+    {
+      "commit": "8d8b0521e153d462e91e047341a353dcf0997d0d",
+      "disposition": "adapted",
+      "rationale": "Retain the clamp of the unsigned RLIMIT_NICE value to 40 before signed conversion and subtraction. Configured Rust Binder Thread::do_set_priority calls this method for a fair-policy task without CAP_SYS_NICE. RLIM_INFINITY or an arbitrary high raw limit otherwise permits signed subtraction overflow and a kernel panic with Rust overflow checks. Values 1..40 map to nice 19..-20; zero maps to 20 and the Binder caller rejects it as unset. Limits above 40 grant no priority beyond the legal minimum nice. This is a concrete safety fix for the selected Android priority API; native LTS scheduler checks are not weakened by this change.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-poll-dependency-review.json",
+        "SECURITY.md: Rust publication, poll and priority helpers"
+      ],
+      "subject": "ANDROID: rust: fix overflow in rlimit_nice()",
+      "patch_sha256": "7da9b626597f4fa5b363a4d650ed45aae8faf3c8c1ee4126c705f7fb7466b57d",
+      "paths": {
+        "rust/kernel/task.rs": {
+          "ack_blob": "ad5efcfe5bd660d5cb433c0642b29599aede5c24",
+          "port_blob": "ad5efcfe5bd660d5cb433c0642b29599aede5c24",
+          "lts_to_port_sha256": "11a09a657043a5c9db13d62df7b7009f0d0af0d68f403ffd89f9b18a771874b6"
+        }
+      }
+    },
+    {
+      "commit": "9c71b7c4595082d5abb577f039e71d7b240f3e71",
+      "disposition": "adapted",
+      "rationale": "Retain module! imports_ns parsing and import_ns modinfo emission, positively consumed by the configured WrapFD module for DMA_BUF. It uses the existing ASCII string-array parser and escaped byte-string modinfo emitter for both built-in and loadable modules. The built SDK modules.builtin.modinfo contains wrapfd.import_ns=DMA_BUF. This preserves native modpost namespace checking rather than bypassing it, and is generic module source infrastructure, not historical binary KMI.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-poll-dependency-review.json",
+        "SECURITY.md: Rust publication, poll and priority helpers"
+      ],
+      "subject": "UPSTREAM: rust: macros: Add support for 'imports_ns' to module!",
+      "patch_sha256": "df3341e5d6caa093d9439c01b858d664cfdcc488330e7096e25b4e236913f7ad",
+      "paths": {
+        "rust/macros/module.rs": {
+          "ack_blob": "a5aa1f449829cd4472862d3c2df267fc80e66bf7",
+          "port_blob": "a5aa1f449829cd4472862d3c2df267fc80e66bf7",
+          "lts_to_port_sha256": "bb1c71037f6555949b6f4527735d1c8bf3bee689762854c9c0c0caa1436a6bd1"
+        }
+      }
+    },
+    {
+      "commit": "f4bf2ca6bd0759e7788f599e32c449df1c976e45",
+      "disposition": "adapted",
+      "rationale": "Retain SetOnce used by Rust Binder process poll queues and transaction logs. Exactly one successful 0->1 atomic compare-exchange owns initialization; a Release store publishes state 2 and Acquire readers only then borrow initialized data. Losing populate calls drop their unused input, and exclusive Drop only destroys the initialized value. Binder poll allocates outside its node_refs lock, serializes population and re-reads the published queue; transaction logging tolerates an unpopulated container. The complete selected implementation matches ACK; no native LTS atomic implementation is replaced.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-poll-dependency-review.json",
+        "SECURITY.md: Rust publication, poll and priority helpers"
+      ],
+      "subject": "UPSTREAM: rust: sync: add `SetOnce`",
+      "patch_sha256": "e86ebad543e0067e72f93f527f7e3be369a657b4731254844b67487dcc6480bb",
+      "paths": {
+        "rust/kernel/sync.rs": {
+          "ack_blob": "da5733f0783dc00d9c084d423f8ed55958f03ac7",
+          "port_blob": "da5733f0783dc00d9c084d423f8ed55958f03ac7",
+          "lts_to_port_sha256": "e3543e13866759661228797be22c48a9be1e15a51072d31d03a103497cbe4ae5"
+        },
+        "rust/kernel/sync/set_once.rs": {
+          "ack_blob": "139cef05e935f73fb32b57f9a68eb3107e16dd4a",
+          "port_blob": "139cef05e935f73fb32b57f9a68eb3107e16dd4a",
+          "lts_to_port_sha256": "fda2b3d5653d991626271cc01829e85e4d74036c1f82484f61bedbdbdf70799d"
+        }
+      }
+    },
+    {
+      "commit": "52d6455fe59760b632de2286e2eb0e3432ab52ad",
+      "disposition": "adapted",
+      "rationale": "Retain SetOnce Send only for T:Send and Sync only for T:Send+Sync. The bounds cover both shared references returned to readers and movement/destruction of an inserted value on another thread. These are required by the selected shared Binder process/log containers; the atomic publication protocol is reviewed with f4bf2ca6bd07. Do not treat atomic initialization alone as sufficient for arbitrary non-Sync payloads.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-poll-dependency-review.json",
+        "SECURITY.md: Rust publication, poll and priority helpers"
+      ],
+      "subject": "UPSTREAM: rust: sync: set_once: Implement Send and Sync",
+      "patch_sha256": "6cf8163542c613682e3f4187a4471aa75d95c3d4f0157a80adc568aa87ce89c5",
+      "paths": {
+        "rust/kernel/sync/set_once.rs": {
+          "ack_blob": "139cef05e935f73fb32b57f9a68eb3107e16dd4a",
+          "port_blob": "139cef05e935f73fb32b57f9a68eb3107e16dd4a",
+          "lts_to_port_sha256": "fda2b3d5653d991626271cc01829e85e4d74036c1f82484f61bedbdbdf70799d"
+        }
+      }
+    },
+    {
+      "commit": "d21c42516a883f62ad636aee01b69da81b7fe0a1",
+      "disposition": "adapted",
+      "rationale": "Retain PollCondVarBox with an embedded RCU callback head for the configured Rust Binder process poll queue. The box remains pinned, manually transfers its unique allocation on drop, wakes/removes poll waiters via native __wake_up_pollfree, then defers reclamation through native kvfree_call_rcu. It deliberately replaces the synchronous PollCondVar destructor while preserving its required grace period; CondVar has no additional owning resource destructor to skip. This also permits dropping a losing SetOnce population while the Binder node_refs spinlock is held, without synchronize_rcu sleeping there. The non-null embedded callback head avoids the native headless might_sleep path. Ordinary PollCondVar retains synchronous destruction. Native LTS RCU freeing and waitqueue wake implementation remain; actual epoll/RCU races have not been executed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-poll-dependency-review.json",
+        "SECURITY.md: Rust publication, poll and priority helpers"
+      ],
+      "subject": "UPSTREAM: rust: poll: use kfree_rcu() for PollCondVar",
+      "patch_sha256": "03fa4034816c6e3ca8e84c6297912ac32899df4eab470fe3f86e96dd2e547559",
+      "paths": {
+        "rust/kernel/sync/poll.rs": {
+          "ack_blob": "684dfa242b1aa21611a6c38baf0130787f030fb7",
+          "port_blob": "684dfa242b1aa21611a6c38baf0130787f030fb7",
+          "lts_to_port_sha256": "36cf5a64ade596b8c677bccdf7f5e299253181ed5ebadf4fbe58ef27be246914"
+        }
+      }
+    }
+  ],
+  "scope": "Full five candidate patches; complete SetOnce and PollCondVarBox implementations; selected task clamp and caller; module namespace parser/emitter and WrapFD declaration; native waitqueue/RCU reclamation and CondVar fields examined. Other task priority, module-parameter and whole-driver changes are independently audited.",
+  "exact_ACK_files": [
+    "rust/kernel/task.rs",
+    "rust/kernel/sync/set_once.rs",
+    "rust/kernel/sync/poll.rs",
+    "rust/macros/module.rs"
+  ],
+  "local_callers": [
+    "drivers/android/binder/process.rs: poll, notify_poll",
+    "drivers/android/binder/transaction.rs: TransactionLog init/add/debug_print",
+    "drivers/android/binder/thread.rs: do_set_priority",
+    "drivers/android/wrapfd/rust_wrapfd.rs: imports_ns DMA_BUF"
+  ],
+  "native_comparison": "mm/slab_common.c changes are only separate slabinfo vendor hooks; kvfree_call_rcu code is native LTS. kernel/sched/wait.c __wake_up_pollfree implementation remains native with an exported symbol. CondVar fields are the raw wait queue and PhantomPinned.",
+  "validation": "Selected implementations compiled in successful build 90; native DMA_BUF import observed in built-in modinfo. No source change for these five decisions and no claim of runtime concurrency testing.",
+  "remote_sources_used": []
+}

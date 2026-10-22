@@ -3599,3 +3599,46 @@ corrections and the selected shrink implementation. Other task-priority and
 Binder driver changes remain independently reviewed. No allocation-fault,
 Binder runtime or concurrency test was performed for this group, and no
 remote source was accessed.
+
+## Rust ashmem and build helpers
+
+Seven candidates are individually reviewed in
+`evidence/rust-ashmem-build-helper-review.json`. The miscdevice seek callback and
+rwsem lockdep-class helpers have direct consumers in the selected Rust ashmem
+implementation. Duplicate ACK commits have identical patches and are represented
+once. The backing-file class is assigned before publication using a static key;
+its exclusion from ordinary write syscalls explains the separate diagnostic
+class. The seek callback retains the VFS position-serialization contract and
+propagates native errors, without changing file ownership.
+
+The Rust page-size helpers support the SDK's explicitly configured `page_shift=14`
+mode. Ashmem validates the size below `usize::MAX >> 1` before rounding it, and the
+C parser bounds the shift before enabling the read-only-after-init setting. The
+helper does not promise overflow-safe rounding of arbitrary addresses. This
+review does not settle the separately tracked shared-mapping EOF question.
+
+The NOMMU-only `is_vmalloc_addr` wrapper is removed by `5123d876580b`: the selected
+MMU kernel already supplies the native external declaration. Its retained
+KVVec caller continues using the native function; no allocator policy is changed.
+The `02a4a20a57bd` merge's one unique resolution preserves both inline C-helper
+linking and the LTS `-Zunstable-options` fix. The final SDK build is recorded
+separately; compilation is not a runtime or lockdep test.
+
+## Rust publication, poll and priority helpers
+
+Five candidates are reviewed in `evidence/rust-poll-dependency-review.json`.
+Rust Binder's NICE limit conversion keeps the unsigned clamp before conversion:
+`RLIM_INFINITY` must not cause an overflow panic. Zero still produces the caller's
+unset-limit rejection; a high limit cannot exceed the legal nice priority range.
+WrapFD's namespace declaration generates the observed `wrapfd.import_ns=DMA_BUF`
+metadata and preserves native namespace verification.
+
+SetOnce uses exclusive atomic acquisition and Release/Acquire publication, with
+Send/Sync bounds covering the stored value's movement, sharing and destruction.
+The selected Binder poll caller allocates before its spinlock, and a losing
+population can drop the unused queue while that lock is held. PollCondVarBox's
+embedded RCU head allows this without the synchronous destructor sleeping: it
+first removes poll waiters, then lets native LTS RCU defer freeing the pinned
+allocation. Ordinary PollCondVar keeps its original synchronous destructor.
+The native reclamation and wake implementations are retained. Source review and
+successful compilation do not verify epoll races or kernel execution.

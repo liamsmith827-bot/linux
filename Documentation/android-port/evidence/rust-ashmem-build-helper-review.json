@@ -1,0 +1,204 @@
+{
+  "source_head": "5123d876580b6c20a74b1cde17bceca8049104ca",
+  "records": [
+    {
+      "commit": "8a49b2b2ca3184e286f79416c72e009cae264869",
+      "disposition": "adapted",
+      "rationale": "Retain the miscdevice llseek callback and conditional vtable entry used by the selected Rust ashmem driver. The callback borrows live private data and a LocalFile for the position-synchronized llseek operation, returning native offsets or negative errno. Ashmem pins its backing shmem file through the call and propagates the resulting file position under the existing VFS serialization contract. The final API uses fs::file::Offset rather than the temporary local loff_t alias. The two ACK candidate patches are byte-identical and their effect is retained once. This adds source API/runtime compatibility, not binary layout preservation; no change to native LTS VFS seeking is required.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-ashmem-build-helper-review.json",
+        "SECURITY.md: Rust ashmem and build helpers"
+      ],
+      "subject": "ANDROID: rust: miscdevice: add llseek",
+      "patch_sha256": "90a1abc4ce32857f403f7f16f10ffec65d9bb1323bfa22a1817b14a9a2bd3320",
+      "paths": {
+        "rust/kernel/miscdevice.rs": {
+          "ack_blob": "10fe1606b49e84b994763e50d763ff661da6903c",
+          "port_blob": "10fe1606b49e84b994763e50d763ff661da6903c",
+          "lts_to_port_sha256": "000ba5d344599f0a0aaecdca2c2b18f5191d094f1e5ad5ec3a51e773ecfafa95"
+        }
+      }
+    },
+    {
+      "commit": "3a7f0dc5a3927031d3c75fa605e38152d77e5d0e",
+      "disposition": "adapted",
+      "rationale": "Retain the miscdevice llseek callback and conditional vtable entry used by the selected Rust ashmem driver. The callback borrows live private data and a LocalFile for the position-synchronized llseek operation, returning native offsets or negative errno. Ashmem pins its backing shmem file through the call and propagates the resulting file position under the existing VFS serialization contract. The final API uses fs::file::Offset rather than the temporary local loff_t alias. The two ACK candidate patches are byte-identical and their effect is retained once. This adds source API/runtime compatibility, not binary layout preservation; no change to native LTS VFS seeking is required.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-ashmem-build-helper-review.json",
+        "SECURITY.md: Rust ashmem and build helpers"
+      ],
+      "subject": "ANDROID: rust: miscdevice: add llseek",
+      "patch_sha256": "a12d1472ef24d7222ba20e587c44f353c3592d6d4f2ec92d119f8e413bedc5e8",
+      "paths": {
+        "rust/kernel/miscdevice.rs": {
+          "ack_blob": "10fe1606b49e84b994763e50d763ff661da6903c",
+          "port_blob": "10fe1606b49e84b994763e50d763ff661da6903c",
+          "lts_to_port_sha256": "000ba5d344599f0a0aaecdca2c2b18f5191d094f1e5ad5ec3a51e773ecfafa95"
+        }
+      }
+    },
+    {
+      "commit": "90c9015fd2d6f5d7607637179ca5d616fd6437b3",
+      "disposition": "adapted",
+      "rationale": "Retain the rw_semaphore lockdep-class helper and public LockClassKey::as_ptr used by Rust ashmem ShmemFile::new. Before publishing the newly allocated backing file, it assigns its inode semaphore a static class and name: ordinary write syscalls do not operate on this backing file, so the documented fs_reclaim/write-lock dependency does not apply. Native lockdep behavior is used, and the unsafe caller must keep the class key valid (the selected caller uses static_lock_class). The SDK configuration disables DEBUG_LOCK_ALLOC, but the source dependency and diagnostic configuration compatibility remain. The two ACK patches are byte-identical; apply their effect once.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-ashmem-build-helper-review.json",
+        "SECURITY.md: Rust ashmem and build helpers"
+      ],
+      "subject": "ANDROID: rust: Add helper to set lockdep class for rw_semaphores",
+      "patch_sha256": "71bf4db1fc7da8b8d27c2b7d0b59a31ca454596e57ad3230d2519bd0d17e03da",
+      "paths": {
+        "rust/helpers/helpers.c": {
+          "ack_blob": "3b33dca096e6c5abb9f8e8f55945afdc92d32866",
+          "port_blob": "3b33dca096e6c5abb9f8e8f55945afdc92d32866",
+          "lts_to_port_sha256": "b734371a8b2100e5b3d47c5abcef00e21cf0fc787b89842f0916c0d5b9a6e1ca"
+        },
+        "rust/helpers/mman.c": {
+          "ack_blob": "1ebcf420e46c5309a1fb610b8fbbb87861bf8f47",
+          "port_blob": "1ebcf420e46c5309a1fb610b8fbbb87861bf8f47",
+          "lts_to_port_sha256": "4780b3cf3887df89345110042b3be7e07fa1e7307bef80b0d6d10c07b303446a"
+        },
+        "rust/kernel/sync.rs": {
+          "ack_blob": "da5733f0783dc00d9c084d423f8ed55958f03ac7",
+          "port_blob": "da5733f0783dc00d9c084d423f8ed55958f03ac7",
+          "lts_to_port_sha256": "e3543e13866759661228797be22c48a9be1e15a51072d31d03a103497cbe4ae5"
+        }
+      }
+    },
+    {
+      "commit": "35046dde367e7541d4fcbc96f0919b52b40130c4",
+      "disposition": "adapted",
+      "rationale": "Retain the rw_semaphore lockdep-class helper and public LockClassKey::as_ptr used by Rust ashmem ShmemFile::new. Before publishing the newly allocated backing file, it assigns its inode semaphore a static class and name: ordinary write syscalls do not operate on this backing file, so the documented fs_reclaim/write-lock dependency does not apply. Native lockdep behavior is used, and the unsafe caller must keep the class key valid (the selected caller uses static_lock_class). The SDK configuration disables DEBUG_LOCK_ALLOC, but the source dependency and diagnostic configuration compatibility remain. The two ACK patches are byte-identical; apply their effect once.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-ashmem-build-helper-review.json",
+        "SECURITY.md: Rust ashmem and build helpers"
+      ],
+      "subject": "ANDROID: rust: Add helper to set lockdep class for rw_semaphores",
+      "patch_sha256": "281c82026f55fdbdd9126c338981b359e25ab41d49cdaa783566e21b6a68c4f7",
+      "paths": {
+        "rust/helpers/helpers.c": {
+          "ack_blob": "3b33dca096e6c5abb9f8e8f55945afdc92d32866",
+          "port_blob": "3b33dca096e6c5abb9f8e8f55945afdc92d32866",
+          "lts_to_port_sha256": "b734371a8b2100e5b3d47c5abcef00e21cf0fc787b89842f0916c0d5b9a6e1ca"
+        },
+        "rust/helpers/mman.c": {
+          "ack_blob": "1ebcf420e46c5309a1fb610b8fbbb87861bf8f47",
+          "port_blob": "1ebcf420e46c5309a1fb610b8fbbb87861bf8f47",
+          "lts_to_port_sha256": "4780b3cf3887df89345110042b3be7e07fa1e7307bef80b0d6d10c07b303446a"
+        },
+        "rust/kernel/sync.rs": {
+          "ack_blob": "da5733f0783dc00d9c084d423f8ed55958f03ac7",
+          "port_blob": "da5733f0783dc00d9c084d423f8ed55958f03ac7",
+          "lts_to_port_sha256": "e3543e13866759661228797be22c48a9be1e15a51072d31d03a103497cbe4ae5"
+        }
+      }
+    },
+    {
+      "commit": "ab1f55d11900b6e736610870fab4ca7e86a1f67f",
+      "disposition": "adapted",
+      "rationale": "Retain Rust page-size-compat bindings and helpers for ashmem mapping size checks. The local SDK goldfish x86_64_16k_cmdline.txt selects page_shift=14, and ashmem mmap uses __page_align. The C boot parser restricts the shift to supported values on a 4 KiB kernel and stores it read-only after initialization. The selected ashmem caller rejects zero or size>=usize::MAX>>1 before alignment, so its addition cannot overflow at the supported shifts; the generic helper is not a checked-overflow API for arbitrary usize input. This decision covers the Rust helper and module/binding registration, not the still-unresolved shared EOF semantics of the wider 16 KiB emulation family. No native LTS arithmetic or fault handling is reverted.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-ashmem-build-helper-review.json",
+        "SECURITY.md: Rust ashmem and build helpers"
+      ],
+      "subject": "ANDROID: 16K: Introduce rust __page_*() helpers",
+      "patch_sha256": "87e87c5000db2c83a7d8929ffff686d9d78436b08730e53686252c18f79c913d",
+      "paths": {
+        "rust/bindings/bindings_helper.h": {
+          "ack_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "port_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "lts_to_port_sha256": "219f093804081c8c8f7117e4b73acb1c4f423fcea4392f92079e0a21d9b299ed"
+        },
+        "rust/kernel/lib.rs": {
+          "ack_blob": "c19c5ecbaf6eb1f399d9e4f731817c90abaa9073",
+          "port_blob": "c19c5ecbaf6eb1f399d9e4f731817c90abaa9073",
+          "lts_to_port_sha256": "cab23f5bc8f04cd78304720af4ae1ed4284a8eb6c9607e2b534eda903749fc99"
+        },
+        "rust/kernel/page_size_compat.rs": {
+          "ack_blob": "28f2b6a7e7daaf494a5ef43038fa88b071840a66",
+          "port_blob": "28f2b6a7e7daaf494a5ef43038fa88b071840a66",
+          "lts_to_port_sha256": "d0552e77bdc2454f9e709f37a10732f9bdd8f6ec72acc8107c57db0c38cf9c7f"
+        }
+      }
+    },
+    {
+      "commit": "6a186c748a73901405450ef264383ca8d2fdd8dd",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the helper whose sole purpose is making bindings::is_vmalloc_addr available on CONFIG_MMU=n kernels. The required x86_64 SDK configuration has CONFIG_MMU=y; include/linux/mm.h exposes the native external function and the generated SDK bindings contain that declaration. Remove only the redundant NOMMU wrapper/include from the initial integration, retaining vrealloc_node_align and its helper annotation. KVVec::shrink_to continues using native is_vmalloc_addr on this target. This excludes a different memory-management configuration under the current-target requirement; it does not infer dispensability from a failed consumer search or change allocator runtime behavior.",
+      "result_commits": [
+        "5123d876580b6c20a74b1cde17bceca8049104ca"
+      ],
+      "evidence": [
+        "evidence/rust-ashmem-build-helper-review.json",
+        "SECURITY.md: Rust ashmem and build helpers"
+      ],
+      "subject": "UPSTREAM: rust: helpers: add is_vmalloc_addr wrapper for NOMMU builds",
+      "patch_sha256": "ee58244e6ecd1724b191c37e77666cfcc10eed1a6ee053bcd8c3cc2e06024e40",
+      "paths": {
+        "rust/helpers/vmalloc.c": {
+          "ack_blob": "6aed1329231394ce18f9d92c181ed3f98eb41f5c",
+          "port_blob": "326b030487a2b2199283b64b3b427e57cf5fb14a",
+          "lts_to_port_sha256": "45bf10f8dcfbffe5069cff564b73a1ec4b6d671f0e102dd888ef5b0c0680d3b5"
+        }
+      }
+    },
+    {
+      "commit": "02a4a20a57bda9cd39995335e59182320bf68ec5",
+      "disposition": "merge-resolution-adapted-net-state",
+      "rationale": "Retain the unique rust/Makefile merge resolution combining ACK inline C-helper linking with the LTS -Zunstable-options flag for custom Rust targets. The complete remerge diff has one hunk; both branches of the conflict remain represented. Final integration also uses the selected inline-helper compiler flags, filters C LTO flags at that stage and runs ld_single within the helper-link path. Native LTS Rust 1.95 compatibility is preserved even though the pinned SDK toolchain is Rust 1.91.1. This resolution supports the existing Kleaf workflow and does not replace a stable fix with the older ACK recipe.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-ashmem-build-helper-review.json",
+        "SECURITY.md: Rust ashmem and build helpers"
+      ],
+      "subject": "Merge f843be764204 (\"rust: kbuild: pass `-Zunstable-options` for Rust 1.95.0\") into android17-6.18",
+      "patch_sha256": "0bde95d4d4028fd652f608295f107573b923224ca18df9848a1ce0e2e21b7819",
+      "paths": {
+        "rust/Makefile": {
+          "ack_blob": "04a9ea334432585eef08694d3be6adac0edf0161",
+          "port_blob": "04a9ea334432585eef08694d3be6adac0edf0161",
+          "lts_to_port_sha256": "0d3ae299025900bf68db07d05bbe491c69ec8df35d4454c9bc3a705531b79c3f"
+        }
+      }
+    }
+  ],
+  "scope": "Full patches for seven candidates, including the single unique merge-resolution hunk; final miscdevice callback, lockdep class initialization, page-size helpers/parser and bounded ashmem caller inspected. Duplicate patch identity checked. No general finalization of other changes in shared files.",
+  "local_evidence": [
+    "drivers/staging/android/ashmem.rs: mmap size validation and llseek",
+    "drivers/staging/android/shmem.rs: ShmemFile::new and set_inode_lockdep_class",
+    "mm/page_size_compat.c: early_page_shift_compat",
+    "include/linux/page_size_compat_defs.h: __MAX_PAGE_SHIFT",
+    "../grapheneos-17/device/generic/goldfish/board/kernel/x86_64_16k_cmdline.txt",
+    "include/linux/mm.h: MMU external is_vmalloc_addr declaration",
+    "build 90 generated rust/bindings/bindings_generated.rs: native is_vmalloc_addr declaration"
+  ],
+  "duplicate_patch_pairs": [
+    [
+      "8a49b2b2ca31",
+      "3a7f0dc5a392"
+    ],
+    [
+      "90c9015fd2d6",
+      "35046dde367e"
+    ]
+  ],
+  "validation": "Successful SDK build 91 includes the wrapper removal and retained helpers: both kernel images, 100 common and 45 virtual-device modules; all 145 signatures verified with a rejected modified-payload control, 659 protected exports and all module flag/CRC tables checked. See build-results.json and module-tables-build-91.json. No runtime or lockdep execution claimed.",
+  "remote_sources_used": []
+}
