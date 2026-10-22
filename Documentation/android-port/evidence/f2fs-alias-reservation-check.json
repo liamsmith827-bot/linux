@@ -1,0 +1,38 @@
+{
+  "scope": "Check extracted alias reservation accounting, ioctl unwind and geometry. Lock/allocation/GC/bitmap/storage shims, no actual filesystem, quota, concurrency, IO or crash recovery. Native per-block SIT and resize/GC function identity checked separately.",
+  "native_baseline": "334f9060783c42bd9d9e274d39ec4e84b9eb9ed9",
+  "identical_native_functions_sha256": {
+    "update_sit_entry_for_alloc": "64795a237ed08ad2d510140adae0460860cddee090f77875f42fee8dc1490d4d",
+    "update_sit_entry": "287be50ac5b4d00b113507edb984e34fa2020afbf12e165623cf834098298258",
+    "free_segment_range": "408beeef7ebc996201d15ef39b3f12f449f06d8658e1466ec1e5bc67604d135c",
+    "f2fs_gc_range": "aeafb24593d8d69cad14251ef7a4ac2273806d664ad38b78620f1b55e7fabf3e"
+  },
+  "source_sha256": {
+    "fs/f2fs/f2fs.h": "f661b43767239b041343d17cbda4763f778028f42a300874cee2713afd72b4f7",
+    "fs/f2fs/file.c": "97b32d89acac693cfd66c965ab2e81b5eda8bdc4cf34d275d1081068c1f7841e",
+    "fs/f2fs/segment.c": "54bc07a24fc6b5130630ec4668bc79e7eb776ae9e4a2f8e51b23f9f459be63ed",
+    "fs/f2fs/gc.c": "c44f41d05f0cd62a338e7dfbc9a60f01278ec5b62bdee05d2b42e6051e561847"
+  },
+  "results": {
+    "port": {
+      "exit_code": 0,
+      "stdout": "16442 cases, 17552 assertions, 0 failures\n",
+      "stderr": ""
+    },
+    "unsigned_capacity_wrap_control": {
+      "exit_code": 1,
+      "stdout": "16442 cases, 17575 assertions, 1 failures\n",
+      "stderr": "line 512: !moved && !s.alias_reserved_blocks && !s.devs[1].is_reserving\n"
+    },
+    "persistent_curseg_only_control": {
+      "exit_code": 1,
+      "stdout": "16442 cases, 17551 assertions, 20 failures\n",
+      "stderr": "line 94: s->gc_lock==1 && op_locks==1 && !lock && !dry && !secs && moved==255\nline 94: s->gc_lock==1 && op_locks==1 && !lock && !dry && !secs && moved==255\nline 484: r==expected\nline 486: checkpoints==changed\nline 488: i.blocks==initial_blocks && i.size==initial_size\nline 488: s.total_valid_block_count==initial_valid\nline 489: quota==(changed?32:0) && s.alloc_valid_block_count==(changed?32:0)\n"
+    },
+    "checkpoint_without_write_hold_control": {
+      "exit_code": 1,
+      "stdout": "16442 cases, 17552 assertions, 21 failures\n",
+      "stderr": "line 103: mount_writes==1 && !s->gc_lock && !op_locks && !inode_locks\nline 103: mount_writes==1 && !s->gc_lock && !op_locks && !inode_locks\nline 103: mount_writes==1 && !s->gc_lock && !op_locks && !inode_locks\nline 103: mount_writes==1 && !s->gc_lock && !op_locks && !inode_locks\nline 103: mount_writes==1 && !s->gc_lock && !op_locks && !inode_locks\nline 103: mount_writes==1 && !s->gc_lock && !op_locks && !inode_locks\nline 103: mount_writes==1 && !s->gc_lock && !op_locks && !inode_locks\n"
+    }
+  }
+}

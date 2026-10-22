@@ -432,6 +432,9 @@ static int f2fs_link(struct dentry *old_dentry, struct inode *dir,
 	if (!f2fs_is_checkpoint_ready(sbi))
 		return -ENOSPC;
 
+	if (IS_DEVICE_ALIASING(inode))
+		return -EPERM;
+
 	err = fscrypt_prepare_link(old_dentry, dir, dentry);
 	if (err)
 		return err;
@@ -609,6 +612,15 @@ static int __do_unlink(struct inode *dir, struct inode *inode,
 		goto err_out;
 	}
 	f2fs_delete_entry(de, folio, dir, inode);
+	if (IS_DEVICE_ALIASING(inode) && !inode->i_nlink) {
+		int i;
+
+		spin_lock(&FREE_I(sbi)->segmap_lock);
+		for (i = 1; i < sbi->s_ndevs; i++)
+			if (FDEV(i).alias_ino == inode->i_ino)
+				WRITE_ONCE(FDEV(i).alias_ino, 0);
+		spin_unlock(&FREE_I(sbi)->segmap_lock);
+	}
 	f2fs_unlock_op(sbi, &lc);
 	return 0;
 
@@ -975,6 +987,9 @@ static int f2fs_rename(struct mnt_idmap *idmap, struct inode *old_dir,
 	bool old_is_dir = S_ISDIR(old_inode->i_mode);
 	int err;
 
+	if (IS_DEVICE_ALIASING(old_inode))
+		return -EPERM;
+
 	if (unlikely(f2fs_cp_error(sbi)))
 		return -EIO;
 	if (!f2fs_is_checkpoint_ready(sbi))
@@ -1045,6 +1060,10 @@ static int f2fs_rename(struct mnt_idmap *idmap, struct inode *old_dir,
 	}
 
 	if (new_inode) {
+		if (IS_DEVICE_ALIASING(new_inode)) {
+			err = -EPERM;
+			goto out_dir;
+		}
 
 		err = -ENOTEMPTY;
 		if (old_is_dir && !f2fs_empty_dir(new_inode))
@@ -1174,6 +1193,9 @@ static int f2fs_cross_rename(struct inode *old_dir, struct dentry *old_dentry,
 	struct f2fs_lock_context lc;
 	int old_nlink = 0, new_nlink = 0;
 	int err;
+
+	if (IS_DEVICE_ALIASING(old_inode) || IS_DEVICE_ALIASING(new_inode))
+		return -EPERM;
 
 	if (unlikely(f2fs_cp_error(sbi)))
 		return -EIO;

@@ -709,7 +709,8 @@ static inline bool has_enough_free_blks(struct f2fs_sb_info *sbi)
 	spin_lock(&sbi->stat_lock);
 
 	avail_user_block_count = get_available_block_count(sbi, NULL, true);
-	total_free_blocks = avail_user_block_count - (unsigned int)valid_user_blocks(sbi);
+	total_free_blocks = avail_user_block_count > valid_user_blocks(sbi) ?
+		avail_user_block_count - valid_user_blocks(sbi) : 0;
 
 	spin_unlock(&sbi->stat_lock);
 
@@ -965,10 +966,33 @@ static inline block_t sum_blk_addr(struct f2fs_sb_info *sbi, int base, int type)
 				- (base + 1) + type;
 }
 
+static inline bool f2fs_dev_is_reserving(struct f2fs_sb_info *sbi, int devi)
+{
+	if (!f2fs_sb_has_device_alias(sbi))
+		return false;
+	return READ_ONCE(FDEV(devi).is_reserving);
+}
+
+static inline bool f2fs_dev_is_alloc_blocked(struct f2fs_sb_info *sbi,
+					int devi, bool pinning)
+{
+	if (!f2fs_sb_has_device_alias(sbi))
+		return false;
+	return (pinning && READ_ONCE(FDEV(devi).alias_ino)) ||
+		READ_ONCE(FDEV(devi).is_reserving);
+}
+
 static inline bool sec_usage_check(struct f2fs_sb_info *sbi, unsigned int secno)
 {
 	if (is_cursec(sbi, secno) || (sbi->cur_victim_sec == secno))
 		return true;
+	if (f2fs_sb_has_device_alias(sbi)) {
+		block_t start_blk = START_BLOCK(sbi, GET_SEG_FROM_SEC(sbi, secno));
+		int devi = f2fs_target_device_index(sbi, start_blk);
+
+		if (f2fs_dev_is_reserving(sbi, devi))
+			return true;
+	}
 	return false;
 }
 

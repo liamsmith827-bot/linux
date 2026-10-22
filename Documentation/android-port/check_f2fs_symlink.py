@@ -39,6 +39,10 @@ prefix = r'''
 #define IS_ERR(x) ((uintptr_t)(x) > (uintptr_t)-4096)
 #define PTR_ERR(x) ((int)(intptr_t)(x))
 #define ERR_PTR(x) ((void *)(intptr_t)(x))
+#define IS_DEVICE_ALIASING(i) ((i)->alias)
+#define FREE_I(s) (s)
+#define FDEV(i) (sbi->devs[i])
+#define WRITE_ONCE(x,v) ((x)=(v))
 #define F2FS_I_SB(i) ((i)->i_sb->sbi)
 #define IS_ENCRYPTED(i) encrypted
 #define IS_DIRSYNC(i) dirsync
@@ -53,11 +57,11 @@ prefix = r'''
 #define trace_f2fs_unlink_exit(...) ((void)0)
 struct mnt_idmap { int unused; };
 struct f2fs_lock_context { int unused; };
-struct f2fs_sb_info { struct super_block *sb; };
+struct f2fs_sb_info { struct super_block *sb; int segmap_lock,s_ndevs; struct { unsigned long alias_ino; } devs[3]; };
 struct super_block { struct f2fs_sb_info *sbi; unsigned s_blocksize; };
 struct mapping { void *a_ops; };
 struct inode { struct super_block *i_sb; struct mapping *i_mapping; void *i_op;
-    unsigned long i_ino; unsigned i_mode, i_nlink; bool fresh; };
+    unsigned long i_ino; unsigned i_mode, i_nlink; bool fresh, alias; };
 struct qstr { const char *name; };
 struct dentry { struct qstr d_name; struct inode *inode; };
 struct fscrypt_str { unsigned char *name; size_t len; };
@@ -91,6 +95,8 @@ static struct inode *f2fs_new_inode(struct mnt_idmap *m,struct inode *d,unsigned
     child=(struct inode){.i_sb=d->i_sb,.i_mapping=&mapping,.i_ino=99,.i_mode=mode,.i_nlink=1,.fresh=true};
     return &child;
 }
+static void spin_lock(int *l) { CHECK(!(*l)++); }
+static void spin_unlock(int *l) { CHECK(--(*l)==0); }
 static void inode_nohighmem(struct inode *i) {}
 static void f2fs_lock_op(struct f2fs_sb_info *s,struct f2fs_lock_context *c) { CHECK(!locked++); }
 static void f2fs_unlock_op(struct f2fs_sb_info *s,struct f2fs_lock_context *c) { CHECK(--locked==0); }
@@ -139,7 +145,7 @@ static void reset(void) {
 '''
 suffix = r'''
 int main(void) {
-    struct f2fs_sb_info s={0};struct super_block sb={.sbi=&s,.s_blocksize=4096};s.sb=&sb;
+    struct f2fs_sb_info s={.s_ndevs=3};struct super_block sb={.sbi=&s,.s_blocksize=4096};s.sb=&sb;
     struct inode dir={.i_sb=&sb,.i_mode=S_IFDIR,.i_nlink=2};
     for(stage=0;stage<=10;stage++) for(rollback_error=0;rollback_error<=6;rollback_error++)
     for(int flags=0;flags<8;flags++) {
@@ -159,12 +165,15 @@ int main(void) {
     /* Ordinary unlink remains available to static device-alias consumers. */
     for(stage=0;stage<=10;stage+=10) for(rollback_error=0;rollback_error<=6;rollback_error++) {
         reset();dirsync=casefold=true;rolling_back=entry=true;
-        child=(struct inode){.i_sb=&sb,.i_ino=99,.i_mode=S_IFREG,.i_nlink=1};
+        child=(struct inode){.i_sb=&sb,.i_ino=99,.i_mode=S_IFREG,.i_nlink=1,.alias=true};
+        s.devs[1].alias_ino=99;s.devs[2].alias_ino=100;
         struct dentry d={.inode=&child,.d_name={.name="alias"}};
         int r=f2fs_unlink(&dir,&d);
         int errs[]={stage==10?-EIO:0,-EIO,-EDQUOT,-EDQUOT,-EIO,-ENOENT,-ENOSPC};
         CHECK(r==errs[rollback_error]);CHECK(!locked && !folio_refs);
-        CHECK(deletes==!rollback_error);cases++;
+        CHECK(deletes==!rollback_error);
+        CHECK(s.devs[1].alias_ino==(rollback_error?99:0));
+        CHECK(s.devs[2].alias_ino==100 && !s.segmap_lock);cases++;
     }
     printf("%u cases, %u assertions, %u failures\n",cases,assertions,failures);
     return !!failures;

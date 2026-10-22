@@ -2221,6 +2221,24 @@ next:
 	return 0;
 }
 
+void f2fs_reset_gc_victim_resource(struct f2fs_sb_info *sbi,
+			unsigned int start, unsigned int end)
+{
+	int i;
+
+	mutex_lock(&DIRTY_I(sbi)->seglist_lock);
+	for (i = 0; i < MAX_GC_POLICY; i++)
+		if (SIT_I(sbi)->last_victim[i] >= start &&
+			SIT_I(sbi)->last_victim[i] <= end)
+			SIT_I(sbi)->last_victim[i] = 0;
+
+	for (i = BG_GC; i <= FG_GC; i++)
+		if (sbi->next_victim_seg[i] >= start &&
+			sbi->next_victim_seg[i] <= end)
+			sbi->next_victim_seg[i] = NULL_SEGNO;
+	mutex_unlock(&DIRTY_I(sbi)->seglist_lock);
+}
+
 static int free_segment_range(struct f2fs_sb_info *sbi,
 				unsigned int secs, bool dry_run)
 {

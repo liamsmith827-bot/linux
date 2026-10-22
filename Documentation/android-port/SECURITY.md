@@ -2697,3 +2697,77 @@ broken symlink; callers still receive the error. This is an explicit failure-
 semantics tradeoff, not an assertion that durability improved. Native encryption,
 block initialization and read error handling are unchanged; no new access right
 is granted. The earlier payload-failure path instead unlinks before publication.
+
+## F2FS dynamic device aliasing with static unlink compatibility
+
+Adapt 8b4be13c97ad and the rename cleanup in 0b3c285a9221. Retain the generic
+CAP_SYS_ADMIN reserve/release ioctls, status query and compat dispatch for the
+configured filesystem. These operate on preformatted alias control files; they
+do not enable a new device/platform or invent a format. Native LTS already has
+static device aliases. GrapheneOS vold/fs_mgr and f2fs-tools provide positive
+static alias evidence; searches of local system and f2fs-tools do not establish
+a dynamic-ioctl consumer. Dynamic runtime use remains unconfirmed and is retained
+conservatively for Android filesystem/API compatibility. The SDK fstab is ext4.
+
+Preserve the actual fs_mgr userdata_alias_remove.cpp unlink route, which ACK's
+blanket alias-unlink ban would break. Track the restored control inode number
+instead of only a has_alias bit. Last-link deletion clears that device's pinning
+restriction; existing allocated blocks still remain unavailable until native
+inode truncation frees them. A reserve ioctl on an unlinked inode is rejected,
+so an old descriptor cannot recreate an unregistered alias after deletion.
+The dynamic matcher requires the registered inode and device basename, validates
+nonzero 32-bit length, exact device bounds, non-zoned storage and section
+alignment. Reserve/release require a regular alias inode. ACK's hardlink, rename,
+replacement and flag/size-change restrictions remain for control-file identity;
+rename replacement uses out_dir cleanup rather than leaking looked-up folios.
+These restrictions affect alias files only. Status reads take the inode shared
+lock. No binary KMI layout is retained.
+
+Restore alias identities after recovery and before initializing in-memory pinned
+segments. Lookup/read failures abort through existing mount cleanup rather than
+silently permitting pinning into an unrecognized alias device. Invalid alias
+inode type/link state is rejected. Source review covers the corresponding mount
+failure labels, which precede starting GC and joining the shrinker.
+
+Reserve holds native gc_lock while reading device geometry, checking capacity,
+resetting victims, moving ALL NR_CURSEG_TYPE logs and performing range GC with
+its native sixth lock argument false. The entire existing free_segment_range and
+f2fs_gc_range functions are unchanged by this feature, including freed-section
+accounting, all-curseg handling and native lock/unpin behavior. The reserve SIT
+walk calls the unchanged native update_sit_entry once per block, preserving its
+bitmap/accounting checks instead of importing ACK's bulk-allocation rewrite.
+Zero-length invalidation is harmless, and alias truncation locks/snapshots and
+clears the extent tree so repeated release cannot double-decrement blocks.
+
+Use 64-bit capacity addition and saturating subtraction for reserved capacity;
+concurrent reserved_blocks changes must not turn insufficient space into a huge
+unsigned free count. The free-block predicate likewise avoids subtraction wrap.
+Pending alias reservation is transferred to valid-block accounting only on
+successful quota/allocation checks and returned on every earlier failure.
+Reservation flags are published under the segment-map lock with explicit single
+accesses for lockless readers. Both ioctls retain the mount write reference
+through the final checkpoint, preventing filesystem freeze from overtaking that
+persistence step. A checkpoint failure is returned with the already changed
+in-memory alias state; no atomic crash-rollback guarantee is claimed. Privileged
+users of the raw device must still coordinate release with their external use,
+as with static alias ownership.
+
+The segment selector skips reserving devices and keeps pinned allocations off
+registered alias devices. Fix ACK's premature exhaustion after wrap: the fallback
+pass stops preferring a different zone, so it cannot skip the last usable zone
+and falsely return ENOSPC. Existing native zone/hint behavior remains: a hint can
+override ONLY_SEQ preference, and zone separation can ask a pinned caller to
+retry even with a conventional section available. Both limits were reproduced
+against the pre-alias selector; they are not asserted to be new port guarantees.
+
+Extracted reservation/accounting/geometry tests pass 16,442 cases / 17,552
+assertions, with controls rejecting capacity wrap, persistent-curseg-only
+relocation and dropping mount-write protection before checkpoint. Full-function
+identity is checked against pre-alias 334f9060783c for SIT allocation/update and
+resize/range-GC. Segment selection passes 98,306 cases / 692,645 assertions;
+controls ignoring device reservations or restoring premature exhaustion fail.
+The extended symlink/unlink test passes 630 cases / 5,114 assertions, including
+clearing only the deleted alias identity. These use modeled maps, locks, quota,
+GC and storage; actual concurrency, multi-device operation, crash recovery and
+SDK runtime use have not been executed. All sources are local; no additional
+remote resource was accessed.
