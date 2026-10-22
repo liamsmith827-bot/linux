@@ -12,6 +12,7 @@
 
 #include <linux/pgsize_migration.h>
 
+#include <linux/atomic.h>
 #include <linux/init.h>
 #include <linux/jump_label.h>
 #include <linux/kobject.h>
@@ -114,25 +115,25 @@ late_initcall(init_pgsize_migration);
 void vma_set_pad_pages(struct vm_area_struct *vma,
 		       unsigned long nr_pages)
 {
+	vm_flags_t old_flags, new_flags;
+
 	if (!is_pgsize_migration_enabled())
 		return;
 
+	if (WARN_ON_ONCE(nr_pages > VM_TOTAL_PAD_PAGES || nr_pages > vma_pages(vma)))
+		return;
+
 	/*
-	 * Usually to modify vm_flags we need to take exclusive mmap_lock but here
-	 * only have the lock in read mode, to avoid all DONTNEED/DONTNEED_LOCKED
-	 * calls needing the write lock.
-	 *
-	 * A race to the flags update can only happen with another MADV_DONTNEED on
-	 * the same process and same range (VMA).
-	 *
-	 * In practice, this specific scenario is not possible because the action that
-	 * could cause it is usually performed at most once per VMA and only by the
-	 * dynamic linker.
-	 *
-	 * Forego protection for this case, to avoid penalties in the common cases.
+	 * MADV_DONTNEED holds only an mmap/VMA read lock. Replace the whole
+	 * padding field atomically so concurrent hints cannot combine counts,
+	 * and preserve concurrent native flag updates such as VM_MAYBE_GUARD.
+	 * The caller's lock keeps the VMA bounds stable. Split callers already
+	 * hold the write lock or own an unpublished VMA.
 	 */
-	__vm_flags_mod(vma, 0, VM_PAD_MASK);
-	__vm_flags_mod(vma, nr_pages << VM_PAD_SHIFT, 0);
+	old_flags = READ_ONCE(vma->vm_flags);
+	do {
+		new_flags = (old_flags & ~VM_PAD_MASK) | (nr_pages << VM_PAD_SHIFT);
+	} while (!try_cmpxchg(&ACCESS_PRIVATE(vma, __vm_flags), &old_flags, new_flags));
 }
 
 /**
@@ -165,7 +166,7 @@ static unsigned long __vma_pad_pages(struct vm_area_struct *vma,
 	if (!is_pgsize_migration_enabled())
 		return 0;
 
-	nr_pad = (vma->vm_flags & VM_PAD_MASK) >> VM_PAD_SHIFT;
+	nr_pad = (READ_ONCE(vma->vm_flags) & VM_PAD_MASK) >> VM_PAD_SHIFT;
 	if (!nr_pad)
 		return 0;
 
