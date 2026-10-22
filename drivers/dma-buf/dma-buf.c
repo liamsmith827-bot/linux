@@ -535,6 +535,7 @@ static struct task_dma_buf_info *compute_dmabuf_info(struct task_struct *task)
 		return dmabuf_info;
 
 	if (!task_dmabuf_records_preload(count)) {
+		trim_task_dmabuf_records();
 		kfree(dmabuf_info);
 		return NULL;
 	}
@@ -570,6 +571,7 @@ static struct task_dma_buf_info *compute_dmabuf_info(struct task_struct *task)
 		rcu_read_unlock();
 	}
 
+	trim_task_dmabuf_records_locked();
 	task_dmabuf_records_preload_end();
 
 	return dmabuf_info;
