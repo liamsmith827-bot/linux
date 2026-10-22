@@ -2532,3 +2532,34 @@ consumer. Every device must support an explicit stream; automatic placement
 uses each bio's target device. Native write hints and the statistics wrapper
 remain. Host flush/stream checks pass 88,729 cases / 2,535,370 assertions;
 statistics ownership checks also still pass. All sources are local.
+
+## F2FS optional deferred write completion
+
+Retain the max_atc_write_bio_size sysfs interface with ACK's UINT_MAX default,
+which leaves completion synchronous. A smaller threshold defers large write
+bios arriving in atomic context. Bio front padding owns the work item until
+the native completion body releases the bio. The only allocator installing
+f2fs_write_end_io uses this bioset; direct-I/O completion uses its separate
+iomap callback and does not interpret the padding. Statistics are unbound
+exactly once before dispatch. The complete native write-completion body,
+including node-footer validation, checkpoint errors, encryption/compression
+cleanup and page-count-before-end-writeback ordering, is preserved verbatim
+after extracting the wrapper.
+
+Adapt ACK's shared read/write workqueue into separate read and write queues.
+The write queue has WQ_MEM_RECLAIM and its own execution context because reclaim
+may wait for write completion, while post-read decompression can allocate memory.
+The local Documentation/core-api/workqueue.rst requires reserved execution for
+reclaim-dependent work and separate queues for dependencies. This avoids adding
+a dependency on a potentially memory-blocked read worker; it is a source-derived
+forward-progress precaution, not a reproduced kernel deadlock. Both allocations
+and unwind paths are handled, and superblock cleanup drains/destroys the queues
+before releasing their owner. No new permissions or historical ABI are added.
+
+The extracted host check passes 103 cases / 1,082 assertions covering allocation
+failure at either queue, native-body identity, atomic/process contexts, thresholds
+including zero and UINT_MAX, completion errors and single cleanup. A control
+routing completion onto the shared queue fails the separation/reserve checks.
+It does not model actual worker scheduling, reclaim or device I/O. Optional SDK
+runtime use is unconfirmed; the configured generic Android interface is retained
+conservatively. Sources and documentation were local; no remote was accessed.
