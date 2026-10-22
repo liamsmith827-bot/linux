@@ -605,6 +605,38 @@ TRACE_EVENT(f2fs_file_write_iter,
 		__entry->ret)
 );
 
+TRACE_EVENT(f2fs_fadvise,
+
+	TP_PROTO(struct inode *inode, loff_t offset, loff_t len, int advice),
+
+	TP_ARGS(inode, offset, len, advice),
+
+	TP_STRUCT__entry(
+		__field(dev_t,	dev)
+		__field(ino_t,	ino)
+		__field(loff_t, size)
+		__field(loff_t,	offset)
+		__field(loff_t,	len)
+		__field(int,	advice)
+	),
+
+	TP_fast_assign(
+		__entry->dev	= inode->i_sb->s_dev;
+		__entry->ino	= inode->i_ino;
+		__entry->size	= i_size_read(inode);
+		__entry->offset	= offset;
+		__entry->len	= len;
+		__entry->advice	= advice;
+	),
+
+	TP_printk("dev = (%d,%d), ino = %lu, i_size = %lld offset:%llu, len:%llu, advise:%d",
+		show_dev_ino(__entry),
+		(unsigned long long)__entry->size,
+		__entry->offset,
+		__entry->len,
+		__entry->advice)
+);
+
 TRACE_EVENT(f2fs_map_blocks,
 	TP_PROTO(struct inode *inode, struct f2fs_map_blocks *map, int flag,
 		 int ret),
@@ -2574,6 +2606,34 @@ DEFINE_EVENT(f2fs_priority_update, f2fs_priority_restore,
 		int new_prio),
 
 	TP_ARGS(sbi, lock_name, is_write, p, orig_prio, new_prio)
+);
+
+TRACE_EVENT(f2fs_fault_report,
+
+	TP_PROTO(struct super_block *sb, unsigned int err_code,
+		const char *func, unsigned int data),
+
+	TP_ARGS(sb, err_code, func, data),
+
+	TP_STRUCT__entry(
+		__field(dev_t, dev)
+		__field(unsigned int, err_code)
+		__string(func, func)
+		__field(unsigned int, data)
+	),
+
+	TP_fast_assign(
+		__entry->dev		= sb->s_dev;
+		__entry->err_code	= err_code;
+		__assign_str(func);
+		__entry->data		= data;
+	),
+
+	TP_printk("dev = (%d,%d), err_code = %u, func = %s, data = %u",
+		show_dev(__entry->dev),
+		__entry->err_code,
+		__get_str(func),
+		__entry->data)
 );
 
 #endif /* _TRACE_F2FS_H */

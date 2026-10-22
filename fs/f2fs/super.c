@@ -4666,6 +4666,12 @@ void f2fs_handle_critical_error(struct f2fs_sb_info *sbi, unsigned char reason)
 	 */
 }
 
+void f2fs_fault_report(struct super_block *sb, unsigned int err_code,
+			const char *func, unsigned int data)
+{
+	trace_f2fs_fault_report(sb, err_code, func, data);
+}
+
 static void f2fs_record_error_work(struct work_struct *work)
 {
 	struct f2fs_sb_info *sbi = container_of(work,

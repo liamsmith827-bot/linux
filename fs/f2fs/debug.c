@@ -645,6 +645,8 @@ static int stat_show(struct seq_file *s, void *v)
 				si->bg_node_blks);
 		seq_printf(s, "BG skip : IO: %u, Other: %u\n",
 				si->io_skip_bggc, si->other_skip_bggc);
+		seq_printf(s, "defrag blocks : %u\n",
+				(unsigned int)atomic_read(&si->defrag_blks));
 		seq_puts(s, "\nExtent Cache (Read):\n");
 		seq_printf(s, "  - Hit Count: L1-1:%llu L1-2:%llu L2:%llu\n",
 				si->hit_largest, si->hit_cached[EX_READ],
@@ -783,6 +785,7 @@ int f2fs_build_stats(struct f2fs_sb_info *sbi)
 	si->main_area_sections = le32_to_cpu(raw_super->section_count);
 	si->main_area_zones = si->main_area_sections /
 				le32_to_cpu(raw_super->secs_per_zone);
+	atomic_set(&si->defrag_blks, 0);
 	si->sbi = sbi;
 	sbi->stat_info = si;
 
