@@ -2563,3 +2563,41 @@ routing completion onto the shared queue fails the separation/reserve checks.
 It does not model actual worker scheduling, reclaim or device I/O. Optional SDK
 runtime use is unconfirmed; the configured generic Android interface is retained
 conservatively. Sources and documentation were local; no remote was accessed.
+
+## F2FS free-space and device geometry
+
+Retain the ACK free-section estimator, with an argument-order correction.
+get_additional_blocks_required declares node/data/dentry output arguments, but
+ACK calls it with node/dentry/data. That subtracts spare capacity from the wrong
+class, including subtracting the unused dentry capacity from combined data under
+active_logs=2/6. The port passes the matching classes. Native reserved-section
+accounting and mount/segment geometry validation remain. Missing current segments
+leave full demand outstanding; the new estimator handles exact capacity and
+combines directory/data demand according to active_logs. It is a worst-case
+space estimate, not a proof that arbitrary concurrent allocations will succeed.
+
+Trim minimum granularity includes every ordinary device. ACK's loop condition
+stops at the first zoned device, so the port skips each zoned device and continues
+through the remaining bounded list. Native privilege, mount-write, range and
+corruption checks remain. The existing primary-device granularity and minlen
+conversion are retained. Zone-count rounding uses bdev_is_zone_start rather than
+a power-of-two mask, preserving ordinary power-of-two results while handling the
+configured generic block API's other supported geometries. No device is added.
+The configured zoned filesystem interface retains max_open_zones reporting and
+the one-time GC default ratio of 80; SDK use of zoned storage is unconfirmed.
+
+GC now selects the representative type from the first segment actually migrated,
+instead of an empty leading segment, and keeps SSA/SIT consistency checks for
+subsequent segments. Checkpoint-disabled victim selection skips empty sections
+before age calculations. Readahead phases finish/restart their plug to dispatch
+pending reads. The previously adapted freezer path still drains every prefetched
+summary reference, and native six-argument gc_range locking and resize free-space
+corrections remain intact.
+
+Extracted space/trim calculations pass 263,934 host cases, including differing
+class capacities, active_logs modes, missing current segments and mixed device
+orders. Controls restoring ACK's swapped arguments or stop-at-zoned loop fail.
+The 972 GC freezer/refcount cases still pass after adapting only the helper shim
+signatures; that harness does not execute the internal migration phases. These
+are source/control-flow checks, with no filesystem mount, concurrency, device
+discard or allocation test. All evidence is local.

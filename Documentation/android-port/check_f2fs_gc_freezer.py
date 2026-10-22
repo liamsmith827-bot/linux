@@ -88,10 +88,10 @@ static unsigned get_valid_blocks(struct f2fs_sb_info *s,unsigned n,bool sec) { r
 static void f2fs_err(struct f2fs_sb_info *s,const char *fmt,...) {}
 static void f2fs_bug_on(struct f2fs_sb_info *s,bool b) { CHECK(!b); }
 static void f2fs_stop_checkpoint(struct f2fs_sb_info *s,bool end,unsigned reason) {}
-static int gc_node_segment(struct f2fs_sb_info *s,int *e,unsigned n,int type)
+static int gc_node_segment(struct f2fs_sb_info *s,int *e,unsigned n,int type,struct blk_plug *plug)
 { visited++; return 1; }
 static int gc_data_segment(struct f2fs_sb_info *s,int *e,struct gc_inode_list *l,
-                          unsigned n,int type,bool force)
+                          unsigned n,int type,bool force,struct blk_plug *plug)
 { visited++; return 1; }
 static void stat_inc_gc_seg_count(struct f2fs_sb_info *s,int d,int t) {}
 static void stat_inc_gc_sec_count(struct f2fs_sb_info *s,int d,int t) {}
