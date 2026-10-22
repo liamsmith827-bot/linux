@@ -4698,5 +4698,125 @@
       "evidence/rust-dmabuf-attachment-check.json",
       "SECURITY.md: Rust DMA-buf source interfaces"
     ]
+  },
+  {
+    "commit": "ecfc32d0972b5f1a5f735b7a1d3e0cb9b9463d55",
+    "disposition": "adapted",
+    "rationale": "Retain BitmapVec MAX_LEN=i32::MAX and MAX_INLINE_LEN=usize::BITS with consistent constructor/deref/drop and IdPool bounds. The configured Rust Binder handle pool consumes these APIs. For x86_64 usize::BITS and native BITS_PER_LONG are both 64; the conversion preserves the inline/allocation boundary and rejects oversized bitmaps before u32 conversion. Complete selected BitmapVec/IdPool implementations and LTS deltas were reviewed; native bitmap bounds and allocation behavior remain.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-container-api-review.json",
+      "SECURITY.md: Rust Binder container and identity dependencies"
+    ]
+  },
+  {
+    "commit": "ce6cda6e770032c5233e6f1ea5602c6c39be0672",
+    "disposition": "adapted",
+    "rationale": "Retain the zero-initialized maximal inline bitmap constructor for IdPool::new used by configured Rust Binder. It initializes the inline union arm and exactly MAX_INLINE_LEN bits without allocation; existing deref/drop branches use that same threshold. This avoids a needless fallible startup allocation without weakening bounds checks or changing the native C bitmap implementation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-container-api-review.json",
+      "SECURITY.md: Rust Binder container and identity dependencies"
+    ]
+  },
+  {
+    "commit": "e251454463912c0554e0f0a92d6f8f56ba41242e",
+    "disposition": "adapted",
+    "rationale": "Retain the capacity-taking constructor as with_capacity alongside the later zero-argument new constructor. The full patch renames the function and its examples without changing allocation or size validation. Final source still contains with_capacity despite later commit-message wording suggesting removal; the decision follows actual code. This provides coherent source API compatibility for the selected IdPool implementation, not a historical binary ABI.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-container-api-review.json",
+      "SECURITY.md: Rust Binder container and identity dependencies"
+    ]
+  },
+  {
+    "commit": "f3ee0cd8c41a2e717e92816cf4d0fe6562b92400",
+    "disposition": "adapted",
+    "rationale": "Retain allocation-free IdPool::new and Default using BitmapVec::new_inline. Configured Rust Binder NodeRefs::new calls this constructor. The capacity remains one native word and all bits start unused; explicit capacity construction remains available. No device or future-platform dependency is introduced.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-container-api-review.json",
+      "SECURITY.md: Rust Binder container and identity dependencies"
+    ]
+  },
+  {
+    "commit": "a8e2b67f197a8997856a14cec519c1efdd4d0e8c",
+    "disposition": "adapted",
+    "rationale": "Retain deferred ID acquisition via UnusedId holding an exclusive mutable IdPool borrow. Rust Binder insert_or_update_handle performs fallible reservations/rechecks before committing its handle; only acquire sets the bit. Dropping an unused token leaves the bit free, while the borrow prevents another safe mutable pool access from racing it. as_u32 is bounded by the pool MAX_LEN=i32::MAX invariant. Grow/shrink allocate outside the caller lock and revalidate before replacing/copying the bitmap. Native C bitmap bounds checks remain; this review does not independently certify all Binder lock interleavings.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-container-api-review.json",
+      "SECURITY.md: Rust Binder container and identity dependencies"
+    ]
+  },
+  {
+    "commit": "ee32f5508f0ff7ae6091d8fe6fc3577a710a8b6e",
+    "disposition": "adapted",
+    "rationale": "Retain ARef equality delegated to the referenced type, for both ARef and borrowed references. This adds no reference transfer, dereference without ownership or new allocation. Configured Rust Binder compares its pinned process Task with the current group leader to reject operations from another process; the matching Task equality uses object identity. Generic ARef equality is not unconditionally pointer equality and the rationale does not assume it is.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-container-api-review.json",
+      "SECURITY.md: Rust Binder container and identity dependencies"
+    ]
+  },
+  {
+    "commit": "fc4a7a305c33c7f37298233b68fa70e064fff005",
+    "disposition": "adapted",
+    "rationale": "Retain Task PartialEq/Eq as raw task pointer identity under the existing live Task reference invariant. Configured Binder get_current_thread and mmap reject a process whose pinned task differs from current.group_leader. Identity comparison avoids confusing numeric PID reuse with the same live task and does not change task reference lifetimes. Other priority/runtime additions in task.rs remain separately audited.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-container-api-review.json",
+      "SECURITY.md: Rust Binder container and identity dependencies"
+    ]
+  },
+  {
+    "commit": "52343dd40fd938a8f6ceaf78d6b7f91094671c82",
+    "disposition": "adapted",
+    "rationale": "Retain KVVec::shrink_to used by configured Rust Binder Context::deregister_process to release excess process-list capacity. It clamps capacity to at least len/minimum, handles ZST/no-op/empty cases, and leaves the original vector intact on allocation failure. Kmalloc delegates to the native allocator; vmalloc allocates first, copies initialized elements without dropping them, frees old raw storage, and preserves alignment/layout. Size arithmetic is bounded by the existing valid ArrayLayout and target_cap<=capacity. LTS reserve/extend documentation corrections remain. This is a source review and successful compilation, not allocator fault-injection or runtime shrinking verification.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-container-api-review.json",
+      "SECURITY.md: Rust Binder container and identity dependencies"
+    ]
+  },
+  {
+    "commit": "89a1af8a2fb5c260a58aa1c8bacc027ac6b9af4e",
+    "disposition": "adapted",
+    "rationale": "Retain repr(transparent) Error over NonZeroI32 and its ZeroableOption implementation. Configured Rust Binder TransactionInfo stores Option<Error> and is zero-initialized. The transparent nonzero representation gives None the zero niche; it does not make Error itself zeroable or permit errno=0. Existing constructor range validation remains. This supports the selected diagnostic/error representation without relaxing transaction error checks.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-container-api-review.json",
+      "SECURITY.md: Rust Binder container and identity dependencies"
+    ]
+  },
+  {
+    "commit": "7e49923f3eb0ee8346ebd471b602ed4abdcd8afa",
+    "disposition": "adapted",
+    "rationale": "Retain the generic impl_flags macro and module registration: configured Rust Binder debug.rs instantiates DebugMasks/DebugMask with it. The complete generated operations were reviewed: contains tests declared flag bits, OR/AND combine values, XOR/NOT mask to declared all_bits, and conversions preserve the selected integer representation. This is used for diagnostic categories, not userspace access-control authorization. No unsafe operation or historical KMI layout shim is added; ordinary native module debug-mask behavior is reviewed with Binder separately.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-container-api-review.json",
+      "SECURITY.md: Rust Binder container and identity dependencies"
+    ]
   }
 ]

@@ -3570,3 +3570,32 @@ modules. All 145 signatures and all module/export table checks passed; the
 tampered signature control was rejected.
 All reviewed sources were local. URLs embedded in original commit messages
 were not accessed.
+
+## Rust Binder container and identity dependencies
+
+Ten source dependency decisions are recorded in
+`evidence/rust-container-api-review.json`. All candidate patches were read in
+full, together with final bitmap/ID-pool operations and their configured Rust
+Binder callers. The ID pool uses one native word inline, bounds allocated
+bitmaps by `i32::MAX`, and defers bit acquisition until a mutable-borrow token
+is committed. Binder uses that interval for fallible handle preparation and
+rechecks after dropping/reacquiring its lock. Allocation and copying remain
+bounded; a stale resize request is revalidated before replacement. This does
+not independently certify every Binder lock interleaving.
+
+ARef equality delegates to its referenced type, while Task equality compares
+live task object identity. Binder uses these together for current-process
+checks, rather than equating reused numeric PIDs. KVVec shrinking preserves
+initialized elements and leaves the original vector intact on allocation
+failure; its selected caller treats shrinking as an optional memory reduction.
+The new Error `ZeroableOption` implementation relies on transparent NonZeroI32
+layout to represent `None` as zero and does not permit zero as an Error.
+The bitflag macro is concretely used for Binder diagnostic masks.
+
+These APIs remain the compiled source from successful build 90. No source edit
+or new build was required for these decisions. Five complete helper files
+match ACK exactly; KVVec retains two LTS documentation/safety-comment
+corrections and the selected shrink implementation. Other task-priority and
+Binder driver changes remain independently reviewed. No allocation-fault,
+Binder runtime or concurrency test was performed for this group, and no
+remote source was accessed.
