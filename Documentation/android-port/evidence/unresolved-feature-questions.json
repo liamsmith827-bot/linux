@@ -54,14 +54,15 @@
   },
   {
     "topic": "Pagemap aggregate metadata under page-size emulation",
-    "status": "unresolved compatibility; candidate remains provisional",
+    "status": "resolved source-selection decision with known lossy metadata limits; runtime not verified",
     "candidates": [
       "1b1a4ce9cfb18211367a9fc5e5434274df023e89",
       "58e399dbc4c103529fbbe7b939b79dd06c34b374"
     ],
-    "evidence": "Goldfish page_shift=14 and libmeminfo PageMap/ReadVmaStats are positive consumers. d65b1b963b41 fixes offset/count/error handling while retaining ACK aggregate masks. Noncontiguous native PFNs and swap offsets cannot be represented by a single emulated-page identity. libmeminfo optional ReadVmaStats uses PFNs and swap offsets; zeroing them is an ACK limitation, not proof of no need. ACK also omits UFFD-WP and guard bits from aggregate entries. The port fs/userfaultfd.c equals native LTS and does not itself disable those features for emulation. Review representation/consumer compatibility before finalizing these candidates. Native 4 KiB pagemap behavior remains. Local commit-message URL r.android.com/3424862 was not accessed. Further local review establishes explicit PFN fallback in system/memory/libmeminfo/pageacct.cpp: x86 getpagesize()!=4096 skips PFN-file opens, returns zero flags and mapcount one, and bypasses idle tracking. This resolves the earlier uncertainty for that PFN consumer and supports retaining 6acc26714c0e. It does not resolve swap_offsets_ aggregation in ReadVmaStats or UFFD-WP/guard status representation; those remain provisional.",
+    "evidence": "Full local 1b1a4ce9cfb1 explicitly suppresses PFN and swap identities because independent base-page identities cannot be encoded in one entry. Preserve this ACK representation instead of inventing a shared offset: local procmeminfo ReadVmaStats stores each reported swap offset, and libsmapinfo treats equal offsets as genuinely shared swap slots. Fabricating offset zero would falsely merge unrelated slots. Therefore pagemap-derived swap identity/accounting is intentionally unavailable under emulation, an existing ACK limitation, not proof of absent consumers; native 4 KiB reporting and separate native smaps byte accounting remain. pageacct.cpp explicitly has an x86 non-4096 PFN fallback. The historical claim that UFFD-WP is unavailable is not valid as a kernel assumption: actual config enables USERFAULTFD/HAVE_ARCH_USERFAULTFD_WP, native fs/userfaultfd.c is retained, and local Linux selftests inspect PM_UFFD_WP. 110e353eded3 preserves UFFD-WP and guard status with the existing ACK any-subpage OR convention. This reports presence somewhere in the group, not exact per-subpage metadata or wholly exclusive ownership. Native authorization and page-table operation paths remain. d65b1b963b41 fixes offset/count/lseek/pread consistently in the file reader. Extracted reader/aggregation tests cover 64 flag combinations, original failure controls and native-mode identity; no runtime userfaultfd or Android tools executed. Local commit-message link r.android.com/3424862 was not accessed.",
     "result_commits": [
-      "d65b1b963b41a4833eab058c8f825742ba3b1614"
+      "d65b1b963b41a4833eab058c8f825742ba3b1614",
+      "110e353eded3771d163bc8c4f13aa29a9bfaff1d"
     ]
   },
   {
@@ -73,5 +74,10 @@
       "57131aee4cb9d81124e5fc74570e38b1c3aec656",
       "b1ae0b82acce45f4dd5c1d76afb08bcd060c2672"
     ]
+  },
+  {
+    "topic": "Large-folio fault-around and ELF padding boundaries",
+    "status": "resolved source-selection decision; preserve existing ACK and LTS granularity, runtime not verified",
+    "evidence": "Exact full-function comparison establishes that filemap_map_folio_range, filemap_map_pmd, finish_fault, do_set_pmd and thp_vma_suitable_order are identical in pinned ACK, LTS, normalized ACK and port. Thus the large-folio expansion is existing behavior on both inputs, not a regression introduced by the port. Keep native reference/accounting/PMD behavior and the ACK do_fault_around padding-fault skip plus requested-range clamp. The hint limits requested fault-around; it is not a strict prohibition on every larger-folio mapping or access to the real VMA. Local bionic linker_phdr.cpp DropPaddingPages treats this as MADV_DONTNEED memory/reclaim optimization, not a permission change. A new global THP constraint would add behavior absent from both inputs and is unnecessary to preserve their current compatibility. Smaps partial-range double counting is independently corrected in 20730118bf05. Evidence: evidence/large-folio-padding-comparison.json and complete local cd8dfe2cb388 patch. No runtime fault/THP test or remote access."
   }
 ]

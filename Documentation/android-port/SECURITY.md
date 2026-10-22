@@ -1619,3 +1619,107 @@ against the build certificate, the altered-payload control was rejected, and
 659 protected exports plus all module flag/CRC tables matched. The original
 emulator build command was used. Compilation and artifact checks do not verify
 runtime ashmem behavior or SDK compatibility. No remote resource was accessed.
+
+15bccdfefe6d skips mmap readahead for faults in ELF padding, including VMAs
+containing only padding after split_pad_vma. Previously the executable path could
+subtract a start inside padding from an earlier data end, underflowing ra->size
+and requesting a huge prefetch window. Snapshot the data end once while the
+fault lock is held; use that snapshot for both bounds and executable size.
+Asynchronous padding faults also skip prefetch. This leaves real fault handling,
+file access checks and the default-off VMA-boundary control intact. It prevents
+unnecessary I/O/memory pressure without weakening an LTS fix. Extracted complete
+functions with UBSan exercise data/padding/split VMAs, both control states,
+executable/readaround/sequential/THP/async paths and old-source failure controls;
+no actual page faults, disk I/O or kernel lock races are executed.
+
+The default-off /sys/kernel/mm/vma_readahead_boundary/enabled interface is kept
+for generic Android runtime compatibility. Local system/bionic/goldfish searches
+did not establish a writer; this is uncertainty, not evidence of dispensability.
+Owner-only writes, boolean validation and native static-key synchronization are
+retained. Ordinary read callers default to no VMA limit. Native minimum-folio
+alignment remains and can span a requested boundary at mandatory folio granularity;
+the control is prefetch policy, not an access-control boundary. No benchmark or
+runtime compatibility claim is made. Build 51 checks 15bccdfefe6d with the unchanged
+workflow. All sources examined were local, including complete ACK patches;
+commit-message URLs were not visited.
+
+Build 51 completed at 15bccdfefe6d: both kernel images, 100 common modules and
+45 virtual-device modules, all 145 signatures verified, altered payload rejected,
+and 659 protected exports plus module flag/CRC tables matched.
+
+20730118bf05 fixes partial-PMD smaps accounting. Android splits a padded ELF VMA
+into displayed data/padding ranges, but the native PMD callback counted the full
+huge page for either subrange. Count the requested byte range and use native
+per-page accounting for partial PMDs; whole-PMD requests retain the original fast
+path. Native absent/special-entry checks and migration-safe PSS accounting stay
+intact. Host extracted accounting functions check all 511 splits across file,
+anonymous, shmem and device categories, both present and migration entries; the
+old implementation doubles resident bytes across the display split. No real
+page tables or running-kernel concurrency were tested.
+
+The per-VMA smaps/numa_maps/rollup series retains native pagewalk lock verification
+and bounds. RCU is dropped for potentially sleeping walks while the real VMA
+stays read-locked; reacquiring RCU resets the iterator. Fallback holds mmap_lock,
+gate VMAs skip walking, and errors unwind references/locks. Padded display copies
+are never inserted into the tree; data output uses the actual VMA. Partial and
+COW shmem ranges use the page-table walker instead of whole-inode swap counts.
+Local libmeminfo actively reads smaps and rollup; its excluded-name list only
+contains vectors/vsyscall, not padding. ACK rollup excludes the padding region,
+whereas individual smaps has its separate padding record; preserve that existing
+policy without claiming an atomic cross-file snapshot. Extracted range tests
+cover endpoints, COW selection and modeled RCU/mmap paths. Native LTS guard-bit,
+PMD absence, pagemap scan/write-protection and PFN authorization fixes remain.
+
+A separate large-folio prefault-padding interaction is recorded as pending in
+unresolved-feature-questions.json; this review does not silently certify it.
+Build 52 checks 20730118bf05. All evidence and toolchains used here were local;
+source and commit-message remote links were not accessed.
+
+The large-folio prefault-padding question above is now resolved at source-selection
+level: five complete mapping/suitability helpers are byte-identical across ACK,
+LTS and the port (large-folio-padding-comparison.json). Keep this common behavior
+and ACK's requested-range clamp/padding-fault skip. Bionic's local DropPaddingPages
+uses the hint to reduce reclaim work; the real VMA remains mapped. No new global
+THP restriction is needed to preserve either input's behavior. The hint is not a
+strict ban on larger-folio population, nor an access-control boundary. This does
+not resolve the separately documented shared EOF-tail issue. No new runtime or
+remote-resource claim is made.
+
+Build 52 completed at 20730118bf05 with both kernel images, 100 common and 45
+virtual-device modules. All signatures verified, the altered-payload control
+was rejected, and protected-export/module tables matched.
+
+110e353eded3 preserves PM_UFFD_WP and PM_GUARD_REGION during emulated pagemap
+aggregation. ACK's original commit suppresses UFFD status on the premise that
+x86 16 KiB emulation does not support it, but this port retains native userfaultfd
+and actual configuration enables USERFAULTFD and HAVE_ARCH_USERFAULTFD_WP. Local
+Linux selftests actively inspect that bit. Keep the existing any-subpage OR rule
+and include native protection/guard status; enforcement paths and authorization
+are unchanged. Extracted reader tests cover all 64 combinations of aggregate
+status flags and demonstrate the earlier lost bits. Native-mode entries remain
+untouched. No real userfaultfd/guard syscall test was performed.
+
+The emulated entry still deliberately suppresses PFN and swap identities, matching
+ACK: independent base pages need not have contiguous or shared identities. Local
+libmeminfo's PFN fallback handles the former. Its ReadVmaStats and libsmapinfo
+proportional-swap code really consume swap offsets; therefore pagemap-derived swap
+identity/accounting remains unavailable under emulation. Reporting fabricated
+zero offsets would falsely identify unrelated swap slots as shared. This is a
+known ACK compatibility limitation, not evidence of no consumer or accurate
+replacement statistics. Native 4 KiB pagemap and separate smaps byte accounting
+remain. Likewise, ACK's ORed present/exclusive flags describe any subpage rather
+than a guarantee of full-group residency/exclusivity. No new UAPI or Android OS
+changes are introduced. Build 53 checks 110e353eded3. All resources used were local;
+r.android.com/3424862 and other source-message URLs were not visited.
+
+Build 53 completed at 110e353eded3 with both images, 100 common and 45 virtual
+device modules. All 145 signatures verified against the build certificate, the
+modified-payload control was rejected, and 659 protected exports plus module
+flag/CRC tables matched. No running-kernel test was performed.
+
+Full filemap/shmem source selection now records the prior reference-lifetime,
+readahead, reclaim, cache-coherence and native LTS preservation checks together.
+Generic vendor callbacks are retained with native lock/reference contracts;
+module callbacks remain trusted kernel code, not a userspace security boundary.
+The shared EOF-tail emulation candidate b3c77090341c is explicitly excluded from
+this scoped finalization and remains unresolved. All evidence was local.

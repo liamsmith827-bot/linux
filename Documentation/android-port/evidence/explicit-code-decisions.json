@@ -971,5 +971,136 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "review_status": "reviewed"
+  },
+  {
+    "commit": "4c2a10aa6266bee1772041fdb50de03bc59ced92",
+    "disposition": "adapted",
+    "rationale": "Retain the data-only readahead boundary for Android ELF padding. The complete patch changes only this boundary; local split_pad_vma explicitly permits all-padding VMAs. 15bccdfefe6d snapshots the data end once and skips faults in padding before subtracting endpoints, preventing an unsigned executable readahead length from underflowing into an enormous window. Actual fault handling and access permissions remain native. Host extracted sync/async functions reproduce the old underflow and test mixed/all-padding, ordinary/executable/sequential/THP paths and both control states; no actual mmap fault/I/O executed. Evidence: SECURITY.md; evidence/mmap-readahead-bounds-check.json; evidence/readahead-integration-check.json; complete local ACK/LTS/source diffs.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "15bccdfefe6dab136de759c0048289ab89784f19"
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "commit": "266191fa3abd4996a7f495797de5ced9c828d6c3",
+    "disposition": "adapted",
+    "rationale": "Retain the complete default-off sysfs/static-key/build integration for Android runtime/source compatibility. The optional generic control is present in ACK independent of a future platform. Local GrapheneOS system/bionic/goldfish search did not establish its writer; this uncertainty is explicitly conservative retention, not a dispensability conclusion. Owner-writable __ATTR_RW, boolean parser and native static-key synchronization remain. 15bccdfefe6d makes both callers safe for padding-only/data-exhausted VMAs; root control does not authorize access beyond normal file permissions. Evidence: SECURITY.md; evidence/mmap-readahead-bounds-check.json; evidence/readahead-integration-check.json; complete local ACK/LTS/source diffs.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "15bccdfefe6dab136de759c0048289ab89784f19"
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "commit": "fa6d5fcc3926d5f2df5c15f2f915896f0385782c",
+    "disposition": "adapted",
+    "rationale": "Retain the functional request max-index field, ordinary-read ULONG_MAX default, bounded EOF/read-order machinery and mmap clamp through final ACK state. The later default-off sysfs policy 266191fa3abd and padding boundary 4c2a10aa6266 supersede its originally unconditional VMA limit. 15bccdfefe6d prevents padding-fault length underflow; 05ae9392c7c8 completes caller-lock/lifetime adaptations in the combined readahead path. Local complete patch and all initializers/callers examined. Native minimum-folio alignment remains, so a mandatory larger folio may straddle a requested bound. This is prefetch policy, not a file-access authorization boundary. No cited commit-message remote URL was accessed. Evidence: SECURITY.md; evidence/mmap-readahead-bounds-check.json; evidence/readahead-integration-check.json; complete local ACK/LTS/source diffs.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "15bccdfefe6dab136de759c0048289ab89784f19"
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "commit": "9d0b0494d7f48ea6aed34d8093016b1f93007f5a",
+    "disposition": "adapted",
+    "rationale": "Keep VMA-specific range walking for smaps. Native walk_page_range_vma accepts an already stabilized VMA without traversing the maple tree under only a VMA lock. Final ACK 939f27ee395a also replaces the remaining partial-range call, so both paths now satisfy this contract. Padded display copies retain the mm/anon metadata while the real VMA remains locked; they are not inserted into the VMA tree or used to change mappings. Evidence: full local ACK/LTS/normalized source diffs; SECURITY.md; evidence/smaps-ranges-check.json and padding-flags-check.json. Commit-message URLs were not accessed. Other pagemap/shared-tail compatibility questions remain separately provisional.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "20730118bf05217556bafa9e9e1f645ffd19e82f"
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "commit": "c206202e7b1a9ee3bd7090b3c795c6f5c80c5faa",
+    "disposition": "adapted",
+    "rationale": "Keep Android smaps/numa_maps collection under per-VMA locking to preserve runtime contention behavior for positively identified local libmeminfo readers. Native LTS already supplies PGWALK_VMA_RDLOCK_VERIFY and walk_page_range_vma. RCU protects tree iteration, is dropped before the potentially sleeping walk, and is reacquired with iterator reset while the original VMA stays referenced/read-locked. mmap fallback selects PGWALK_RDLOCK; gate VMAs skip walking. Error paths retain lock/ref cleanup. No actual contention improvement or runtime concurrency test is claimed. Evidence: full local ACK/LTS/normalized source diffs; SECURITY.md; evidence/smaps-ranges-check.json and padding-flags-check.json. Commit-message URLs were not accessed. Other pagemap/shared-tail compatibility questions remain separately provisional.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "20730118bf05217556bafa9e9e1f645ffd19e82f"
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "commit": "b9de8a08ab40b0d7fa5c85d93d6e1dffd9c47fb6",
+    "disposition": "adapted",
+    "rationale": "Keep equivalent per-VMA traversal for the smaps_rollup API used by local libmeminfo. Complete patch/control flow reviewed: task/mm/mempolicy references balance; iterator errors unwind the held RCU/VMA or mmap lock; contention releases mmap lock and restarts at last_vma_end, counting only an unreported suffix after a merge. No-native-lock mode retains killable mmap acquisition. Whole walk need not be an atomic address-space snapshot, as with native contention restarts; LTS page-table checks and PSS migration safety remain. Evidence: full local ACK/LTS/normalized source diffs; SECURITY.md; evidence/smaps-ranges-check.json and padding-flags-check.json. Commit-message URLs were not accessed. Other pagemap/shared-tail compatibility questions remain separately provisional.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "20730118bf05217556bafa9e9e1f645ffd19e82f"
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "commit": "fa7dcecb9711e66f569914ad0c3dba00d12b26c7",
+    "disposition": "adapted",
+    "rationale": "Keep the final explicit shmem COW predicate VM_MAYWRITE && !VM_SHARED rather than current VM_WRITE: a presently read-only private mapping can still contain earlier COW pages. Whole non-COW/no-swap mappings use the native inode swap total; partial and padded ranges use the shmem page walker. Positive Android smaps consumers depend on correct counters. Host extracted range selection checks cover these branches without kernel swap/page-table execution. Evidence: full local ACK/LTS/normalized source diffs; SECURITY.md; evidence/smaps-ranges-check.json and padding-flags-check.json. Commit-message URLs were not accessed. Other pagemap/shared-tail compatibility questions remain separately provisional.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "20730118bf05217556bafa9e9e1f645ffd19e82f"
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "commit": "939f27ee395a4d41459209ae4505f4ef1d4bf26d",
+    "disposition": "adapted",
+    "rationale": "Keep explicit full/range helpers and range validation; start zero no longer has a second implicit meaning. Both callers use native walk_page_range_vma, enabling the later rollup VMA locking safely. Full local patch and final call sites reviewed, including invalid/all-padding ranges and iterator restart. Extracted range tests exercise correct endpoints and RCU/mmap branch balance. Evidence: full local ACK/LTS/normalized source diffs; SECURITY.md; evidence/smaps-ranges-check.json and padding-flags-check.json. Commit-message URLs were not accessed. Other pagemap/shared-tail compatibility questions remain separately provisional.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "20730118bf05217556bafa9e9e1f645ffd19e82f"
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "commit": "d87d05e3802782407fdd8544f2d23bad2f157dec",
+    "disposition": "adapted",
+    "rationale": "Keep final ACK removal of the copied data VMA; use the actual locked VMA and data boundary for data output/walks, with a separate display-only padding copy. Later ACK replaces heap allocation by stack storage and handles padding-only VMAs. Real VMA references/locks stabilize copied pointers, vm_file is cleared before pad display and padding flags are cleared to prevent recursion. 20730118bf05 fixes whole-PMD double accounting when the display split cuts a huge mapping; native full-PMD and migration/PSS safeguards remain. Host extracted accounting checks cover all split points, not real MM concurrency. Evidence: full local ACK/LTS/normalized source diffs; SECURITY.md; evidence/smaps-ranges-check.json and padding-flags-check.json. Commit-message URLs were not accessed. Other pagemap/shared-tail compatibility questions remain separately provisional.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "20730118bf05217556bafa9e9e1f645ffd19e82f"
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "commit": "93bd807f85e46a96fca2cf381d31c87489b60890",
+    "disposition": "adapted",
+    "rationale": "Keep pad=NkB reporting and suppress the four padding metadata bits in VmFlags output for the Android ELF-migration contract. Native VM_MAYBE_GUARD and VM_SEALED mnemonics remain at their actual separate bits. This changes reporting only, not VMA access permissions or native flag state; full local patch and current mnemonic table checked. Evidence: full local ACK/LTS/normalized source diffs; SECURITY.md; evidence/smaps-ranges-check.json and padding-flags-check.json. Commit-message URLs were not accessed. Other pagemap/shared-tail compatibility questions remain separately provisional.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "20730118bf05217556bafa9e9e1f645ffd19e82f"
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "commit": "cd8dfe2cb388fea83940c2a80a88c868e42dcd60",
+    "disposition": "adapted",
+    "rationale": "Retain complete ACK padding-fault skip and snapshot data-page count before computing the requested fault-around end. It avoids unsigned bounds calculations when the fault is inside padding or a split VMA contains only padding. Native filemap large-folio/PMD expansion helpers are exactly identical in ACK and LTS and remain unchanged; the hint is a requested-range optimization, not a prohibition on all larger-folio mappings or a security permission boundary. Positive local bionic DropPaddingPages uses MADV_DONTNEED to avoid reclaim work. No native guard/userfaultfd/fault lock check is weakened. Evidence: full local patch, mm/memory.c do_fault_around, evidence/large-folio-padding-comparison.json, SECURITY.md; no remote access or runtime fault test.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "commit": "1b1a4ce9cfb18211367a9fc5e5434274df023e89",
+    "disposition": "adapted",
+    "rationale": "Adapt the emulated pagemap API for the positively enabled Goldfish page_shift=14 target. d65b1b963b41 performs address conversion inside pagemap_read, retaining user-byte offsets/counts, native mem_lseek errors, complete final entries and cleanup. 110e353eded3 also preserves native UFFD-WP/guard status because the port keeps those features available; the historical unavailable-UFFD assertion does not justify losing status. Keep ACK any-subpage aggregation for other flags and its deliberate PFN/swap-identity suppression: independent base-page identities cannot fit one emulated entry. Local libmeminfo has an explicit PFN fallback; libsmapinfo genuinely consumes swap identities, so this is a known ACK emulation limitation, not absent-consumer evidence. Do not fabricate a zero swap identity that would alias unrelated slots. Native 4 KiB reporting, ptrace/CAP_SYS_ADMIN restrictions, pagewalk bounds and scan/write-protection semantics remain. Evidence: complete local patches and native call paths, evidence/pagemap-emulation-check.json, unresolved-feature-questions.json and SECURITY.md. No remote links were visited.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "d65b1b963b41a4833eab058c8f825742ba3b1614",
+      "110e353eded3771d163bc8c4f13aa29a9bfaff1d"
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "commit": "58e399dbc4c103529fbbe7b939b79dd06c34b374",
+    "disposition": "adapted",
+    "rationale": "Adapt the entire pagemap pread behavior in d65b1b963b41 by converting positions inside pagemap_read for every read caller. Omit the ACK syscall-specific pread64 multiplication and helper declaration/definition, which would double-scale positions after that adaptation and leave other read interfaces inconsistent. Keep native mem_lseek handling, overflow limits and non-pagemap VFS behavior. Extracted reader tests cover pread-style independent positions, ordinary read/seek progression, nonaligned/end offsets and failures; no kernel syscall or Android runtime executed. Evidence: complete local patches and native call paths, evidence/pagemap-emulation-check.json, unresolved-feature-questions.json and SECURITY.md. No remote links were visited.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "d65b1b963b41a4833eab058c8f825742ba3b1614",
+      "110e353eded3771d163bc8c4f13aa29a9bfaff1d"
+    ],
+    "review_status": "reviewed"
   }
 ]

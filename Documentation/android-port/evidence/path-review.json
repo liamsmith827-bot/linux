@@ -23782,15 +23782,19 @@
   "fs/proc/task_mmu.c": {
     "ack_blob": "eaec9901056eca69f510d16ea62b217f983becf1",
     "lts_blob": "5c3d966b70f26148d13e9e6e4a8e281a7ad66833",
-    "port_blob": "20b5056bf299c8ffb0f2c3ebde36f64edc6705c0",
+    "port_blob": "9fe9f749bec065eb98a97f85b464f9dd4b91be9f",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "110e353eded3771d163bc8c4f13aa29a9bfaff1d",
+      "20730118bf05217556bafa9e9e1f645ffd19e82f",
       "d65b1b963b41a4833eab058c8f825742ba3b1614",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "eaec9901056eca69f510d16ea62b217f983becf1",
-    "common_ancestor_blob": "b490245ff9be7cede20a78a70a4a7ca6093b72d1"
+    "common_ancestor_blob": "b490245ff9be7cede20a78a70a4a7ca6093b72d1",
+    "specific_evidence": "Full LTS and normalized-ACK deltas reviewed with page-size helpers, native pagewalk/mmap/VMA reference paths and positive local libmeminfo/bionic consumers. Keep Android statm units, ELF data/padding display, per-VMA smaps/numa/rollup iteration and statistics hooks. Original VMA remains locked while display padding is copied; data uses the real VMA. RCU is dropped around sleeping walks and iterator reset follows reacquisition, with mmap-lock fallback and gate skip. Native COW shmem accounting is retained with VM_MAYWRITE-aware refinement; partial ranges never use full inode swap totals. 20730118bf05 prevents whole-PMD double counting across displayed data/padding, retaining migration-safe native PSS and full-PMD fast path. d65b1b963b41 makes all pagemap read/seek offsets consistent and 110e353eded3 retains native WP/guard status in aggregates. ACK PFN/swap identities are intentionally suppressed under emulation because a single entry cannot encode noncontiguous pages; local PFN fallback and real swap-offset consumers were examined. This is a documented known lossy ACK interface, not a missing-consumer justification. Any-subpage present/exclusive flags are not a per-subpage/whole-group ownership guarantee. Native 4 KiB behavior and native LTS PMD absence, guard flag, THP pagemap, userfaultfd/hugetlb scan-write-protection and file ptrace/CAP_SYS_ADMIN checks remain. Callback statistics are trusted-module additions with live mm/seq/counter inputs. Host extracted reader/range/PMD checks passed, but no real kernel concurrency, procfs syscall or runtime SDK verification occurred.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "fs/proc/uid.c": {
     "ack_blob": null,
@@ -27540,7 +27544,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "7350be8eed5d6dfdabd88c5a998c16bbaadcec44",
-    "common_ancestor_blob": "09b581c1d878d3b59aa7018ca0c3e82b3c774f7c"
+    "common_ancestor_blob": "09b581c1d878d3b59aa7018ca0c3e82b3c774f7c",
+    "specific_evidence": "Full native and normalized deltas reviewed. Keep generic mapping-shrinkability and non-NUMA allocation-failure hooks, outlined readahead GFP hook, OEM request storage and functional max-index field. Restricted shrinkability overrides must obey inode/page-cache lifetime invariants; trusted callback safety is not supplied by an ABI guarantee. DEFINE_READAHEAD initializes max to ULONG_MAX; a complete local C/header search found no other aggregate initializer for this type. Native cache lookup/folio ownership helpers otherwise remain. No historical binary layout contract is retained; the new field is functional.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "include/linux/pci.h": {
     "ack_blob": "3d27460906e2c05c8e03eea1be76b5b6f9130030",
@@ -28750,7 +28756,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "e91b14b46a7d5f504b4ed1207d47a2b113b798ed",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Retain static-key declaration and inline query for the default-off generic Android readahead control. Reviewed with complete implementation, build integration and both mmap callers. 15bccdfefe6d skips padding faults before calculating lengths/limits without removing the control. Native 4 KiB VMA boundaries and ordinary read behavior remain; no KMI-only content.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "include/linux/vmalloc.h": {
     "ack_blob": "e9a81f52b62082bb1502943e12d047f4474d5c86",
@@ -34369,16 +34377,19 @@
   "mm/filemap.c": {
     "ack_blob": "2258b4dcd86a6cc4a28b18f9688e5bf94ffe45a8",
     "lts_blob": "1a035881060906d46ff279e8c55944d97742aa64",
-    "port_blob": "720e9f456fef8f5cd64da6310317990c303e4dd9",
+    "port_blob": "9fde0eaafa416772826def1ccb84f19ae1319dfd",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "15bccdfefe6dab136de759c0048289ab89784f19",
       "8d75f9fa7f08e9c64741d10288ffeb914a2009b6",
       "7f9fdddd5bf89fe656e25c3e4069c2df2091706d",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "2258b4dcd86a6cc4a28b18f9688e5bf94ffe45a8",
-    "common_ancestor_blob": "e3339cf37a1f03bf35df0e9766513318b3cf79a6"
+    "common_ancestor_blob": "e3339cf37a1f03bf35df0e9766513318b3cf79a6",
+    "specific_evidence": "Complete LTS-to-port and normalized-ACK-to-port deltas reviewed with native folio/reference/lock callers and local Android ELF/page-size consumers. Retain generic Android allocation, memcg, cache/readahead, I/O statistics, locking and mapping callbacks and source exports; they operate on live references and preserve default behavior without registered trusted modules. Restricted allocation callbacks must honor native order/context and ordinary callbacks must not sleep under page-table/XArray locks or retain unowned pointers. The lock-drop callbacks explicitly receive fpin; a dropped fault lock means the VMA is unavailable. 8d75f9fa7f08 passes NULL after that drop, pins the unlocked mapped-folio callback, and snapshots index before write_end can free the folio. 15bccdfefe6d skips prefetch for all-padding VMAs and snapshots data bounds before unlock, preventing unsigned executable-window underflow; host extracted checks cover old-source failures. Cleancache uses b1ae0b82acce large-folio invalidation to avoid stale base-page cache data. Keep native xas_nomem original-order reset, mapped-folio dropbehind protection and file_owner_or_capable cachestat authorization. Cachestat units follow Android emulation while native permission checks remain. 7f9fdddd5bf8 fixes EOF snapshot/ref cleanup; shared EOF-tail semantics remain specifically provisional under b3c77090341c and are not certified by this path review. Large-folio mapping granularity is byte-identical to both inputs as separately recorded. This review covers generic Android source/configuration compatibility, not historical module binary layout. Successful workflow and focused host checks do not verify real page faults, concurrency or runtime SDK behavior.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/gcma.c": {
     "ack_blob": "ca14d855fb37c8fa30e810e3c21e56684e83423e",
@@ -34711,7 +34722,7 @@
     ],
     "normalized_ack_blob": "b1a3f42618af2c6a338e9225657c51d07e9f5a19",
     "common_ancestor_blob": "42e3dde73e741ca43525423ee55a450ee2d2cca1",
-    "specific_evidence": "Both the normalized ACK net delta and the port delta were checked: the only substantive changes are exports of lock_vma_under_rcu. Keep these generic native-LTS source interfaces for rebuilt Android modules. Function bodies, locking, validation, and LTS fixes are unchanged. Exports expand trusted-module reach, not unprivileged userspace authority. No existing vendor binary ABI is promised; exact optional vendor use remains unresolved and is conservatively retained.",
+    "specific_evidence": "Only native delta is GPL export of lock_vma_under_rcu for source-built vendor modules. Retain native lookup, RCU/read-reference validation, retry/fallback and VMA lifetime behavior. Current Android linker-context check itself uses the native API without taking mmap_lock beneath a VMA read lock. Export adds no userspace permission or locking bypass; callers must release the returned VMA read reference. No KMI-only layout preservation.",
     "review_record": "evidence/generic-source-review.json"
   },
   "mm/mmu_notifier.c": {
@@ -34947,7 +34958,7 @@
     ],
     "normalized_ack_blob": "c7b97a8bfb611dbc3bb17f0c98ea7238d1a8f3e9",
     "common_ancestor_blob": "2d19d6a9b034d1328e545901df33d62d16397e06",
-    "specific_evidence": "Both the normalized ACK net delta and the port delta were checked: the only substantive changes are exports of walk_page_range. Keep these generic native-LTS source interfaces for rebuilt Android modules. Function bodies, locking, validation, and LTS fixes are unchanged. Exports expand trusted-module reach, not unprivileged userspace authority. No existing vendor binary ABI is promised; exact optional vendor use remains unresolved and is conservatively retained.",
+    "specific_evidence": "Only native delta is GPL export of walk_page_range for vendor source modules. Read native lock dispatch/range bounds and the separate walk_page_range_vma API used by Android smaps. Export does not bypass RDLOCK/WRLOCK/VMA lock assertions, ops validation or mapping checks; callers must hold the documented lock and preserve callback constraints. No historical binary layout obligation. Ordinary generic source interface retention, not future platform support.",
     "review_record": "evidence/generic-source-review.json"
   },
   "mm/percpu.c": {
@@ -35014,7 +35025,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "b3ed60aa35c1a04122ab564f1f390ba1a1b33bcb",
-    "common_ancestor_blob": "3a4b5d58eeb6fe266fbfc4dd1c6033e016915ead"
+    "common_ancestor_blob": "3a4b5d58eeb6fe266fbfc4dd1c6033e016915ead",
+    "specific_evidence": "Full LTS and normalized-ACK deltas reviewed together with filemap/pagemap and every page_cache_ra_unbounded caller. Retain source-vendor allocation/GFP/retry/window/bypass/statistics hooks and OEM per-request storage; default callbacks leave native policy. Callback modules must preserve allocation-order limits, valid nonzero windows, execution context and forward progress; restricted forced-RA bypass must perform its own valid operation. Android forced-prefetch PG_oem_reserved_5 marking retains referenced-folio lookup and the existing MGLRU policy; related vmscan policy commits still require their independent review. 05ae9392c7c8 supplies a reference around the existing-folio callback and restores the new invalidate-lock contract in native ext4/F2FS callers. Bound-aware reads clamp to EOF/request max and suppress terminal async markers. Optional VMA boundary control is default off; ordinary read callers use ULONG_MAX. Native folio minimum-order alignment may span a boundary at granularity of a mandatory folio. No change to native filesystem permission checks or page-cache access authority. Extracted caller/lifetime tests and mmap-boundary tests cover adaptations, not real I/O/concurrency.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/rmap.c": {
     "ack_blob": "b159aed7cade5aa2f7f0f0c3b9dbc4e6d62ebaf5",
@@ -35040,7 +35053,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "c83f7f79f64cc7dd4ab7dcfa9ae245ce1d01a3e6",
-    "common_ancestor_blob": "94c5b0d78ac31e4ab35acab8a13589823e7d2874"
+    "common_ancestor_blob": "94c5b0d78ac31e4ab35acab8a13589823e7d2874",
+    "specific_evidence": "Complete LTS-to-port and normalized-ACK-to-port deltas reviewed with shmem allocation/swap/cache callers, Rust ashmem, native memfd flags/seals and local Android libcutils consumers. Keep the memfd-only ashmem ioctl gate (SHMEM_FL_MEMFD), fixed-width compat dispatch and native seal enforcement. Generic Android accounting callbacks receive live mapping/folio state: XArray-locked deletion reports before clearing mapping, successful swap transitions report their actual page count. Allocation/order policy callbacks remain trusted source interfaces and must return referenced correctly sized folios/valid supported order masks; mempolicy references are released on both paths. Vendor inode state is initialized. THP-off guards retain build correctness; native forced-collapse handling that bypasses sysfs remains. reclaim_shmem_address_space is retained conservatively for generic vendor source compatibility; 69eb820a7f4c replaces unowned RCU XArray pointers with referenced folio batches, preserves isolation ownership, releases lookup refs before reclaim, reschedules outside RCU and saturates its int result. Existing host extracted checks cover reference/isolation failures and signed count bounds; actual configuration enables SHMEM/THP/ASHMEM. EOF size is read once in 7f9fdddd5bf8, but the separate shared EOF-tail question in b3c77090341c remains provisional with the native shared-anonymous guard restored in c75a4c447656. This path review cannot finalize that candidate. No kernel runtime or external resource was used.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/show_mem.c": {
     "ack_blob": "15209d78e51ed76945c60eff795318304fff5ed6",
@@ -35230,7 +35245,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "df44abea83473379051732885204f9aff5023ac4",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Retain default-off Android generic VMA-boundary runtime control, not tied to a future platform. Full implementation reviewed: kstrtobool rejects malformed input, __ATTR_RW limits writes to owner/root, static-key enable/disable is the native synchronized API, sysfs initialization reports failure. Full local ACK 266191fa3abd and fa6d5fcc3926 patches explain performance/memory intent. Searches of local GrapheneOS system, bionic and goldfish did not establish a runtime writer; this is uncertainty and not a reason for omission. Conservatively preserve optional runtime/configuration compatibility. No access-control override or new platform enabled; no benchmark/runtime claim; source-message links were not visited.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/vmalloc.c": {
     "ack_blob": "78a2c62103077b255d85e2da0e2fff830c1addec",

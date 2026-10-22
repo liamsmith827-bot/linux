@@ -3,6 +3,8 @@
 
 Checks native/emulated offsets, complete entries at task-size boundaries,
 chunk crossings, seek errors, overflow-sized offsets, access masking and cleanup.
+Also checks native UFFD-WP/guard flags survive emulated aggregation while PFN
+and swap identities remain suppressed under the existing ACK convention.
 Pre-adaptation source provides negative controls. Page walking, locks, capability
 and user-copy operations are simulated; this does not validate MM concurrency.
 """
@@ -45,7 +47,9 @@ excerpts = [declarations, function(current, 'static inline void __collapse_pagem
             function(current, 'static ssize_t pagemap_read('),
             function(old, 'static ssize_t pagemap_read(').replace('pagemap_read(', 'old_pagemap_read(', 1),
             function(read('fs/proc/base.c'), 'loff_t mem_lseek('),
-            function(old, 'static loff_t __pagemap_lseek(')]
+            function(old, 'static loff_t __pagemap_lseek('),
+            function(old, 'static inline void __collapse_pagemap_result(').replace(
+                '__collapse_pagemap_result(', 'old_collapse_pagemap_result(', 1)]
 shim = r'''
 #include <assert.h>
 #include <errno.h>
@@ -134,6 +138,27 @@ static void reset(void) {
 '''
 checks = r'''
 int main(void) {
+    const u64 status_bits[] = {PM_SOFT_DIRTY, PM_MMAP_EXCLUSIVE, PM_UFFD_WP,
+                              PM_GUARD_REGION, PM_FILE, PM_PRESENT};
+    for (unsigned int mask = 0; mask < 64; mask++) {
+        pagemap_entry_t native[8] = {}, aggregate[2] = {}, control[2] = {};
+        u64 expected = 0;
+        for (unsigned int bit = 0; bit < 6; bit++) if (mask & (1U << bit)) {
+            native[bit % 4].pme |= status_bits[bit];
+            expected |= status_bits[bit];
+        }
+        for (unsigned int i = 0; i < 4; i++) native[i].pme |= PM_SWAP | (i + 100);
+        native[4].pme = PM_UFFD_WP | PM_GUARD_REGION | 1234;
+        __collapse_pagemap_result(native, aggregate, 5, 4);
+        assert(aggregate[0].pme == expected);
+        assert(aggregate[1].pme == (PM_UFFD_WP | PM_GUARD_REGION));
+        old_collapse_pagemap_result(native, control, 5, 4);
+        assert(control[0].pme == (expected & ~(PM_UFFD_WP | PM_GUARD_REGION)));
+        assert(!control[1].pme);
+        u64 saved = native[0].pme;
+        __collapse_pagemap_result(native, native, 5, 1);
+        assert(native[0].pme == saved); /* native PFN/swap/flags untouched */
+    }
     struct mm_struct mm = { .task_size = 32 * PMD_SIZE, .alive = true };
     struct file f = { .private_data = &mm };
     uint64_t buf[1024];
@@ -198,7 +223,7 @@ int main(void) {
         assert(pagemap_read(&f, (char *)buf, 8, &pos) == -EFAULT);
         assert(mm.refs == 0 && allocations == 0 && pos == 0);
     }
-    puts("Extracted pagemap reader checks passed; old seek/offset/short-entry controls reproduced");
+    puts("Extracted pagemap reader and 64 aggregate-flag checks passed; old seek/offset/short-entry/missing-flag controls reproduced");
 }
 '''
 program = shim + excerpts[0] + walker + ''.join(excerpts[1:]) + checks

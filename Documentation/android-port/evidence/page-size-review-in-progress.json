@@ -1,6 +1,6 @@
 {
   "status": "in-progress; no blanket final dispositions for MM/proc files",
-  "source_head": "3ea7a304b5dc436d878053200c03609b692c6006",
+  "source_head": "110e353eded3771d163bc8c4f13aa29a9bfaff1d",
   "positive_consumers": [
     "grapheneos-17/device/generic/goldfish/board/kernel/x86_64_16k_cmdline.txt: page_shift=14",
     "grapheneos-17/bionic/linker/linker_phdr.cpp: ELF padding MADV_DONTNEED and 64 KiB alignment bound"
@@ -24,14 +24,15 @@
     "Complete filemap/shmem LTS and normalized ACK deltas; callback lifetimes, shmem reclaim reference contract, native filemap_get_folios batching, with host teardown/reference tests. Full feature disposition still pending cleancache/readahead/ashmem integration review.",
     "Full readahead LTS/normalized-ACK deltas, all unbounded-read callers and local ACK locking/refcount patches. 05ae9392c7c8 restores caller locks and pins callback folios. Filemap/cleancache integration remains in review.",
     "Full CMA/GCMA/cleancache and superblock/truncate integration; native allocator contracts, teardown references and large-folio stale-cache invalidation corrected with extracted-function checks.",
-    "Full ashmem Rust driver and UAPI/backing-file/range/shrinker/global-control integration; positive local libcutils consumers and ueventd/SELinux source policy examined. Legacy ioctl sizing, short reads and global-control privilege corrected. Shared EOF-tail compatibility remains unresolved."
+    "Full ashmem Rust driver and UAPI/backing-file/range/shrinker/global-control integration; positive local libcutils consumers and ueventd/SELinux source policy examined. Legacy ioctl sizing, short reads and global-control privilege corrected. Shared EOF-tail compatibility remains unresolved.",
+    "Readahead boundary implementation/header/build integration and complete local feature patches; native and normalized deltas and every request initializer. 15bccdfefe6d skips padding faults to prevent length underflow.",
+    "Full smaps/numa_maps/rollup per-VMA locking series, native mmap/pagewalk lock contracts, gate/iterator/error paths, padding-display copying and shmem COW/range selection. 20730118bf05 accounts only the walked PMD portion, retaining native full-PMD fast path and migration safeguards. Positive local libmeminfo maps/smaps/rollup readers examined.",
+    "Large-folio fault-around/PMD expansion comparison: five full helper bodies exactly match ACK and LTS. Preserve shared behavior, and describe padding hints as request/optimization boundaries rather than a strict mapping prohibition; evidence/large-folio-padding-comparison.json.",
+    "Pagemap aggregate selection completed: retain existing ACK PFN/swap-identity suppression as a known lossy interface for actual libmeminfo/procrank consumers; preserve native UFFD-WP/guard flags in 110e353eded3. Full task_mmu.c source review and focused tests recorded."
   ],
   "remaining": [
     "Shared-tail compatibility question is recorded in unresolved-feature-questions.json",
-    "Filemap/shmem unrelated hooks and source differences remain separate reviews",
-    "Page-size helpers in other consumers; per-VMA smaps/pagewalk locking changes require cross-file review",
-    "Pagemap aggregate metadata limitations (PFN/swap/UFFD-WP/guard) require explicit compatibility disposition; recorded separately",
-    "Remaining padding display/merge integration with per-VMA smaps and page walking"
+    "Filemap/shmem unrelated hooks and source differences remain separate reviews"
   ],
   "adaptations": [
     "7f9fdddd5bf89fe656e25c3e4069c2df2091706d",
@@ -53,7 +54,10 @@
     "57131aee4cb9d81124e5fc74570e38b1c3aec656",
     "b1ae0b82acce45f4dd5c1d76afb08bcd060c2672",
     "9c710998db9abbd219b66df0014232cbe21d5a66",
-    "3ea7a304b5dc436d878053200c03609b692c6006"
+    "3ea7a304b5dc436d878053200c03609b692c6006",
+    "15bccdfefe6dab136de759c0048289ab89784f19",
+    "20730118bf05217556bafa9e9e1f645ffd19e82f",
+    "110e353eded3771d163bc8c4f13aa29a9bfaff1d"
   ],
   "test_evidence": [
     "evidence/page-emulation-check.json",
@@ -69,7 +73,9 @@
     "evidence/readahead-integration-check.json",
     "evidence/gcma-integration-check.json",
     "evidence/cleancache-large-folios-check.json",
-    "evidence/ashmem-io-check.json"
+    "evidence/ashmem-io-check.json",
+    "evidence/mmap-readahead-bounds-check.json",
+    "evidence/smaps-ranges-check.json"
   ],
   "remote_resources_used": []
 }
