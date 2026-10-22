@@ -511,7 +511,7 @@ static void __gcma_discard_range(struct gcma_area *area,
 		struct gcma_inode *inode;
 		unsigned long index;
 again:
-		if (!(++scanned % XA_CHECK_SCHED) && (gfp != GFP_ATOMIC)) {
+		if (!(++scanned % XA_CHECK_SCHED) && gfpflags_allow_blocking(gfp)) {
 			/* let in any pending interrupt */
 			local_irq_restore(flags);
 			cond_resched();
@@ -970,7 +970,7 @@ static void gcma_cc_invalidate_fs(int hash_id)
 	struct gcma_fs *gcma_fs;
 	struct gcma_inode *inode;
 	int cursor, i;
-	struct hlist_node *tmp;
+	unsigned long flags;
 
 	gcma_fs = find_gcma_fs(hash_id);
 	if (!gcma_fs)
@@ -979,11 +979,24 @@ static void gcma_cc_invalidate_fs(int hash_id)
 	VM_BUG_ON(irqs_disabled());
 
 	/*
-	 * No need to hold any lock here since this function is called when
-	 * fs is unmounted. IOW, inode insert/delete race cannot happen.
+	 * Filesystem users have gone, but background eviction can still remove
+	 * inodes. Pin one under the hash lock, then drop the lock before taking
+	 * its pages lock to preserve the pages -> hash lock ordering.
 	 */
-	hash_for_each_safe(gcma_fs->inode_hash, cursor, tmp, inode, hash)
-		__gcma_cc_invalidate_inode(gcma_fs, &inode->key);
+	for (;;) {
+		spin_lock_irqsave(&gcma_fs->hash_lock, flags);
+		hash_for_each(gcma_fs->inode_hash, cursor, inode, hash) {
+			get_gcma_inode(inode);
+			break;
+		}
+		spin_unlock_irqrestore(&gcma_fs->hash_lock, flags);
+		if (!inode)
+			break;
+
+		gcma_erase_all_pages(inode);
+		put_gcma_inode(inode);
+		cond_resched();
+	}
 
 	synchronize_rcu();
 

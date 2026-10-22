@@ -783,10 +783,11 @@ static void cma_debug_show_areas(struct cma *cma)
 	unsigned long start, end;
 	unsigned long nr_part;
 	unsigned long nbits;
+	unsigned long flags;
 	int r;
 	struct cma_memrange *cmr;
 
-	spin_lock_irq(&cma->lock);
+	spin_lock_irqsave(&cma->lock, flags);
 	pr_info("number of available pages: ");
 	for (r = 0; r < cma->nranges; r++) {
 		cmr = &cma->ranges[r];
@@ -802,7 +803,7 @@ static void cma_debug_show_areas(struct cma *cma)
 	}
 	pr_cont("=> %lu free of %lu total pages\n", cma->available_count,
 			cma->count);
-	spin_unlock_irq(&cma->lock);
+	spin_unlock_irqrestore(&cma->lock, flags);
 }
 
 static int cma_range_alloc(struct cma *cma, struct cma_memrange *cmr,
@@ -811,6 +812,7 @@ static int cma_range_alloc(struct cma *cma, struct cma_memrange *cmr,
 {
 	unsigned long bitmap_maxno, bitmap_no, bitmap_count;
 	unsigned long start, pfn, mask, offset;
+	unsigned long flags;
 	int ret = -EBUSY;
 	struct page *page = NULL;
 	int num_attempts = 0;
@@ -827,13 +829,13 @@ static int cma_range_alloc(struct cma *cma, struct cma_memrange *cmr,
 	trace_android_vh_cma_alloc_retry(cma->name, &max_retries);
 	for (start = 0; ; start = bitmap_no + mask + 1) {
 retry:
-		spin_lock_irq(&cma->lock);
+		spin_lock_irqsave(&cma->lock, flags);
 		/*
 		 * If the request is larger than the available number
 		 * of pages, stop right away.
 		 */
 		if (count > cma->available_count) {
-			spin_unlock_irq(&cma->lock);
+			spin_unlock_irqrestore(&cma->lock, flags);
 			break;
 		}
 		bitmap_no = bitmap_find_next_zero_area_off(cmr->bitmap,
@@ -846,9 +848,10 @@ retry:
 #endif
 		if (bitmap_no >= bitmap_maxno) {
 			if ((num_attempts < max_retries) && (ret == -EBUSY)) {
-				spin_unlock_irq(&cma->lock);
+				spin_unlock_irqrestore(&cma->lock, flags);
 
-				if (fatal_signal_pending(current) ||
+				if (!gfpflags_allow_blocking(gfp) ||
+				    fatal_signal_pending(current) ||
 				    (gfp & __GFP_NORETRY))
 					break;
 
@@ -865,7 +868,7 @@ retry:
 				num_attempts++;
 				goto retry;
 			} else {
-				spin_unlock_irq(&cma->lock);
+				spin_unlock_irqrestore(&cma->lock, flags);
 				break;
 			}
 		}
@@ -879,7 +882,7 @@ retry:
 		 * about these corner cases.
 		 */
 		if (!page_range_contiguous(page, count)) {
-			spin_unlock_irq(&cma->lock);
+			spin_unlock_irqrestore(&cma->lock, flags);
 			pr_warn_ratelimited("%s: %s: skipping incompatible area [0x%lx-0x%lx]",
 					    __func__, cma->name, pfn, pfn + count - 1);
 			continue;
@@ -892,7 +895,7 @@ retry:
 		 * our exclusive use. If the migration fails we will take the
 		 * lock again and unmark it.
 		 */
-		spin_unlock_irq(&cma->lock);
+		spin_unlock_irqrestore(&cma->lock, flags);
 
 		if (cma->gcma) {
 			gcma_alloc_range(pfn, pfn + count - 1, gfp);
@@ -925,23 +928,22 @@ struct page *__cma_alloc(struct cma *cma, unsigned long count,
 {
 	struct page *page = NULL;
 	int ret = -ENOMEM, r;
-	gfp_t gfp_allowed;
 	unsigned long i;
 	const char *name = cma ? cma->name : NULL;
 	bool bypass = false;
 	u64 stime = 0;
 
-	/*
-	 * GCMA allows GFP_ATOMIC, while CMA can only do GFP_KERNEL.
-	 * Both support optional flags NOWARN|NORETRY
-	 */
-	gfp_allowed = GFP_KERNEL | (cma->gcma ? GFP_ATOMIC : 0);
-	if (WARN_ON_ONCE((gfp & gfp_allowed) == 0 ||
-		(gfp & ~(gfp_allowed | __GFP_NOWARN | __GFP_NORETRY)) != 0))
-		return page;
-
 	if (!cma || !cma->count)
 		return page;
+
+	/* Keep native CMA flags; its folio callers also require __GFP_COMP. */
+	if (cma->gcma) {
+		gfp_t allowed = GFP_KERNEL | GFP_ATOMIC;
+
+		if (WARN_ON_ONCE(!(gfp & allowed) ||
+			(gfp & ~(allowed | __GFP_NOWARN | __GFP_NORETRY))))
+			return page;
+	}
 
 	trace_android_vh_cma_alloc_bypass(cma, count, align, gfp,
 				&page, &bypass);
