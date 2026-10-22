@@ -3257,3 +3257,30 @@ is reviewed against native mempool_init_node cleanup, not fault-injected in this
 harness. The local daemon also documents that a mid-payload read error cannot be
 reported after a successful reply header; this protocol limitation is unchanged
 and is not claimed solved by the timeout fixes.
+
+The subsequent dm-user integration review found two more boundary defects.
+`bio_copy_from_iter` and `bio_copy_to_iter` returned only the last segment's
+short-copy count, losing bytes already copied in preceding segments. Return the
+accumulated count, so bio advancement and message positions match the bytes
+actually transferred. A three-byte first segment followed by a one-byte partial
+copy of the next now reports four bytes instead of one. The unfixed extracted
+helpers failed 7,440 assertions in the boundary matrix.
+
+Use bi_iter.bi_size for the request extent instead of walking data vectors:
+discard, secure-erase and write-zeroes bios carry a nonzero extent without data
+vectors. Reject data-copy attempts on these bios with bio_has_data before any
+vector access, including an unexpected payload after their reply header.
+Completion's sanity check applies only to successful data-bearing bios; an error
+reply or a completed no-payload operation can legitimately retain an extent.
+Keep all UAPI opcode numbers and the five-u64 message header unchanged. Local
+snapuserd's packed header has the same 40-byte layout on the SDK target and
+serves read requests; the no-payload safeguards protect the target's already
+advertised operations rather than adding a new platform feature.
+
+`check_dm_user_copy.py` executes extracted size/copy helpers for both directions,
+segment lengths, offsets, capacities and fault positions: 41,856 cases and
+429,488 assertions. Three regression controls reject loss of preceding bytes,
+data-vector access on no-payload bios, and the old vector-based extent calculation.
+The vector-access shim traps a no-vector dereference; this is a host model and
+not a real uaccess fault or device test. No upstream code is replaced by these
+ACK-target corrections.

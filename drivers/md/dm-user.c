@@ -288,13 +288,7 @@ static inline struct target *target_from_channel(struct channel *c)
 
 static inline size_t bio_size(struct bio *bio)
 {
-	struct bio_vec bvec;
-	struct bvec_iter iter;
-	size_t out = 0;
-
-	bio_for_each_segment (bvec, bio, iter)
-		out += bio_iter_len(bio, iter);
-	return out;
+	return bio->bi_iter.bi_size;
 }
 
 static inline size_t bio_bytes_needed_to_user(struct bio *bio)
@@ -466,6 +460,9 @@ static ssize_t bio_copy_from_iter(struct bio *bio, struct iov_iter *iter)
 	struct bvec_iter biter;
 	ssize_t out = 0;
 
+	if (!bio_has_data(bio))
+		return 0;
+
 	bio_for_each_segment (bvec, bio, biter) {
 		ssize_t ret;
 
@@ -485,7 +482,7 @@ static ssize_t bio_copy_from_iter(struct bio *bio, struct iov_iter *iter)
 			break;
 
 		if (ret < bvec.bv_len)
-			return ret;
+			break;
 	}
 
 	return out;
@@ -496,6 +493,9 @@ static ssize_t bio_copy_to_iter(struct bio *bio, struct iov_iter *iter)
 	struct bio_vec bvec;
 	struct bvec_iter biter;
 	ssize_t out = 0;
+
+	if (!bio_has_data(bio))
+		return 0;
 
 	bio_for_each_segment (bvec, bio, biter) {
 		ssize_t ret;
@@ -511,7 +511,7 @@ static ssize_t bio_copy_to_iter(struct bio *bio, struct iov_iter *iter)
 			break;
 
 		if (ret < bvec.bv_len)
-			return ret;
+			break;
 	}
 
 	return out;
@@ -974,7 +974,8 @@ finish_bio:
 	 * message size, if that's not still the case then something
 	 * has gone off the rails.
 	 */
-	WARN_ON(bio_size(c->cur_from_user->bio) != 0);
+	WARN_ON(!c->cur_from_user->bio->bi_status &&
+		bio_has_data(c->cur_from_user->bio));
 	bio_endio(c->cur_from_user->bio);
 
 	/*
