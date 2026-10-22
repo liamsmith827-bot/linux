@@ -3199,3 +3199,58 @@ Bufio caches may also need invalidation before rereading blocks modified through
 normal bios. These findings require follow-up before completing the checkpoint
 protocol review. The a95d721f13a4 disposition remains provisional; the targeted
 lifetime/discard fixes above do not establish crash consistency.
+
+## dm-user timeout ownership and allocation progress
+
+Retain the enabled Android `user` device-mapper target and its message protocol.
+Local `system/fs/fs_mgr/libsnapshot/snapshot.cpp` constructs DmTargetUser devices
+and waits for `/dev/dm-user/<name>`; `snapuserd/dm_user_block_server.cpp` reads
+requests and returns snapshot data through those control nodes. Local
+`system/sepolicy/private/snapuserd.te` grants that daemon access. This establishes
+a concrete Android consumer, but does not establish that this SDK instance uses
+dm-user for an OTA. The source capability is retained conservatively. No external
+resource was used in this review.
+
+Adapt the no-daemon timeout implementation rather than importing its lifetime
+assumptions unchanged. Every message initializes its delayed work once. Taking a
+message for a channel or for final target destruction removes and reinitializes
+its list node while holding the target lock, then cancels/waits for work outside
+that lock. A callback skips a detached message. Teardown repeatedly takes the
+current first entry instead of preserving a next-entry pointer across unlocking:
+another timeout callback could free that saved entry. Cancellation returning
+false is not evidence that the callback freed a message; it may have observed a
+live daemon and returned without freeing anything. Always release the claimed
+message after cancellation completes. Finally free the allocated misc-device
+name along with the target.
+
+On the last channel close, rearm every still-queued message with zero delay using
+mod_delayed_work. This also handles an earlier timer that observed a daemon and
+returned, or a pending initial-connection timer. Do not reinitialize a work item
+that may still be executing. Count live channels from references with the
+DM-owned reference excluded only while that reference actually exists. Keep the
+initial configurable 4000 ms daemon grace period and normal daemon-serviced I/O.
+
+An exhausted message pool must not wait under the target lock: readers and
+callbacks need that lock to make progress. Use GFP_NOWAIT and the existing
+DM_MAPIO_REQUEUE path, checking NULL before initializing a message. Check pool
+construction failure before exposing the misc device. The native LTS mempool,
+workqueue and device-mapper implementations remain unchanged. These are source
+adaptations to an ACK-only target, not reversals of upstream fixes.
+
+The retained channel cleanup uses the from_user member and deletion-safe walks;
+constructor references start at one plus one per channel; completion uses
+bio_endio without an extra bio_put. Current operation mapping excludes removed
+REQ_OP_WRITE_SAME, and the file operations do not reference removed no_llseek.
+The unused misc-device conversion helper stays removed, and private helpers
+retain static scope.
+
+`check_dm_user_lifetime.py` executes the extracted message, timeout, allocation,
+channel-dequeue and target-release routines against deterministic scheduling
+shims: 101 cases, 4465 assertions and six rejected regression controls. It covers
+callbacks running during cancellation, callbacks removing following list entries,
+last-channel rearming, pool exhaustion and references after DM teardown. This is
+not a real kernel concurrency or snapshot-protocol test. Constructor pool failure
+is reviewed against native mempool_init_node cleanup, not fault-injected in this
+harness. The local daemon also documents that a mid-payload read error cannot be
+reported after a successful reply header; this protocol limitation is unchanged
+and is not claimed solved by the timeout fixes.

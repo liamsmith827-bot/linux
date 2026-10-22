@@ -59,8 +59,8 @@ MODULE_PARM_DESC(dm_user_daemon_timeout_msec,
  *
  * 1) miscdevice's global lock.  This is held around dev_open, so it has to be
  *    the outermost lock.
- * 2) target->lock
- * 3) channel->lock
+ * 2) channel->lock
+ * 3) target->lock
  */
 
 struct message {
@@ -89,7 +89,6 @@ struct message {
 	u64 return_flags;
 
 	struct delayed_work work;
-	bool delayed;
 	struct target *t;
 };
 
@@ -194,7 +193,8 @@ static void message_kill(struct message *m, mempool_t *pool)
 static inline bool is_user_space_thread_present(struct target *t)
 {
 	lockdep_assert_held(&t->lock);
-	return (kref_read(&t->references) > 1);
+	/* DM's reference is absent after user_dtr(), but channels can remain. */
+	return kref_read(&t->references) > !t->dm_destroyed;
 }
 
 static void process_delayed_work(struct work_struct *work)
@@ -209,7 +209,7 @@ static void process_delayed_work(struct work_struct *work)
 	/*
 	 * There is at least one thread to process the IO.
 	 */
-	if (is_user_space_thread_present(t)) {
+	if (list_empty(&msg->to_user) || is_user_space_thread_present(t)) {
 		mutex_unlock(&t->lock);
 		return;
 	}
@@ -217,7 +217,7 @@ static void process_delayed_work(struct work_struct *work)
 	/*
 	 * Terminate the IO with an error
 	 */
-	list_del(&msg->to_user);
+	list_del_init(&msg->to_user);
 	pr_err("I/O error: sector %llu: no user-space daemon for %s target\n",
 	       msg->bio->bi_iter.bi_sector,
 	       t->miscdev.name);
@@ -228,9 +228,6 @@ static void process_delayed_work(struct work_struct *work)
 static void enqueue_delayed_work(struct message *m, bool is_delay)
 {
 	unsigned long delay = 0;
-
-	m->delayed = true;
-	INIT_DELAYED_WORK(&m->work, process_delayed_work);
 
 	/*
 	 * Snapuserd daemon is the user-space process
@@ -266,7 +263,7 @@ static void enqueue_delayed_work(struct message *m, bool is_delay)
 	if (is_delay)
 		delay = msecs_to_jiffies(daemon_timeout_msec);
 
-	queue_delayed_work(system_wq, &m->work, delay);
+	mod_delayed_work(system_wq, &m->work, delay);
 }
 
 static inline struct target *target_from_target(struct dm_target *target)
@@ -571,10 +568,14 @@ static struct message *msg_get_map(struct target *t)
 
 	lockdep_assert_held(&t->lock);
 
-	m = mempool_alloc(&t->message_pool, GFP_NOIO);
+	/* Readers and timeout workers need this lock to return pool entries. */
+	m = mempool_alloc(&t->message_pool, GFP_NOWAIT);
+	if (!m)
+		return NULL;
 	m->msg.seq = t->next_seq_to_map++;
 	INIT_LIST_HEAD(&m->to_user);
 	INIT_LIST_HEAD(&m->from_user);
+	INIT_DELAYED_WORK(&m->work, process_delayed_work);
 	return m;
 }
 
@@ -589,7 +590,7 @@ static struct message *msg_get_to_user(struct target *t)
 
 	m = list_first_entry(&t->to_user, struct message, to_user);
 
-	list_del(&m->to_user);
+	list_del_init(&m->to_user);
 
 	/*
 	 * If the IO was queued to workqueue since there
@@ -602,11 +603,9 @@ static struct message *msg_get_to_user(struct target *t)
 	 * that the IO will not be terminated by the work
 	 * queue thread.
 	 */
-	if (unlikely(m->delayed)) {
-		mutex_unlock(&t->lock);
-		cancel_delayed_work_sync(&m->work);
-		mutex_lock(&t->lock);
-	}
+	mutex_unlock(&t->lock);
+	cancel_delayed_work_sync(&m->work);
+	mutex_lock(&t->lock);
 	return m;
 }
 
@@ -642,31 +641,28 @@ static int target_poll(struct target *t)
 static void target_release(struct kref *ref)
 {
 	struct target *t = container_of(ref, struct target, references);
-	struct list_head *cur, *tmp;
 
 	/*
 	 * There may be outstanding BIOs that have not yet been given to
 	 * userspace.  At this point there's nothing we can do about them, as
 	 * there are and will never be any channels.
 	 */
-	list_for_each_safe (cur, tmp, &t->to_user) {
-		struct message *m = list_entry(cur, struct message, to_user);
+	while (!list_empty(&t->to_user)) {
+		struct message *m = list_first_entry(&t->to_user,
+						    struct message, to_user);
 
-		if (unlikely(m->delayed)) {
-			bool ret;
-
-			mutex_unlock(&t->lock);
-			ret = cancel_delayed_work_sync(&m->work);
-			mutex_lock(&t->lock);
-			if (!ret)
-				continue;
-		}
+		/* Claim it before dropping the lock; workers skip detached entries. */
+		list_del_init(&m->to_user);
+		mutex_unlock(&t->lock);
+		cancel_delayed_work_sync(&m->work);
+		mutex_lock(&t->lock);
 		message_kill(m, &t->message_pool);
 	}
 
 	mempool_exit(&t->message_pool);
 	mutex_unlock(&t->lock);
 	mutex_destroy(&t->lock);
+	kfree(t->miscdev.name);
 	kfree(t);
 }
 
@@ -694,8 +690,7 @@ static void target_put(struct target *t)
 				struct message *m = list_entry(cur,
 							       struct message,
 							       to_user);
-				if (!m->delayed)
-					enqueue_delayed_work(m, false);
+				enqueue_delayed_work(m, false);
 			}
 			/*
 			 * Daemon attached to this target is terminated.
@@ -1050,8 +1045,10 @@ static int user_ctr(struct dm_target *ti, unsigned int argc, char **argv)
 	mutex_init(&t->lock);
 	init_waitqueue_head(&t->wq);
 	INIT_LIST_HEAD(&t->to_user);
-	mempool_init_kmalloc_pool(&t->message_pool, MAX_OUTSTANDING_MESSAGES,
-				  sizeof(struct message));
+	r = mempool_init_kmalloc_pool(&t->message_pool, MAX_OUTSTANDING_MESSAGES,
+				     sizeof(struct message));
+	if (r)
+		goto cleanup_target;
 
 	t->miscdev.minor = MISC_DYNAMIC_MINOR;
 	t->miscdev.fops = &file_operations;
@@ -1091,6 +1088,8 @@ cleanup_misc_name:
 	kfree(t->miscdev.name);
 cleanup_message_pool:
 	mempool_exit(&t->message_pool);
+cleanup_target:
+	mutex_destroy(&t->lock);
 	kfree(t);
 cleanup_none:
 	return r;
@@ -1224,7 +1223,6 @@ static int user_map(struct dm_target *ti, struct bio *bio)
 	entry->total_to_user = bio_bytes_needed_to_user(bio);
 	entry->posn_from_user = 0;
 	entry->total_from_user = bio_bytes_needed_from_user(bio);
-	entry->delayed = false;
 	entry->t = t;
 	/* Pairs with the barrier in dev_read() */
 	smp_wmb();
