@@ -1856,7 +1856,7 @@ struct f2fs_sb_info {
 	unsigned int total_valid_node_count;	/* valid node block count */
 	int dir_level;				/* directory level */
 	bool readdir_ra;			/* readahead inode in readdir */
-	u64 max_io_bytes;			/* max io bytes to merge IOs */
+	unsigned int max_io_bytes;		/* max io bytes to merge IOs */
 
 	/* variable summary block units */
 	unsigned int sum_blocksize;		/* sum block size */
@@ -2013,7 +2013,7 @@ struct f2fs_sb_info {
 	unsigned int gc_segment_mode;		/* GC state for reclaimed segments */
 	unsigned int gc_reclaimed_segs[MAX_GC_MODE];	/* Reclaimed segs for each mode */
 
-	unsigned long seq_file_ra_mul;		/* multiplier for ra_pages of seq. files in fadvise */
+	unsigned int seq_file_ra_mul;		/* multiplier for ra_pages of seq. files in fadvise */
 
 	int max_fragment_chunk;			/* max chunk size for block fragmentation mode */
 	int max_fragment_hole;			/* max hole size for block fragmentation mode */
@@ -2936,7 +2936,7 @@ static inline block_t __start_sum_addr(struct f2fs_sb_info *sbi)
 }
 
 static inline bool __has_cursum_space(struct f2fs_sb_info *sbi,
-			struct f2fs_journal *journal, int size, int type)
+		struct f2fs_journal *journal, unsigned int size, int type)
 {
 	if (type == NAT_JOURNAL)
 		return size <= MAX_NAT_JENTRIES(sbi, journal);
@@ -5065,16 +5065,16 @@ static inline bool is_journalled_quota(struct f2fs_sb_info *sbi)
 	return false;
 }
 
-static inline bool f2fs_quota_file(struct inode *inode)
+static inline bool f2fs_quota_file(struct f2fs_sb_info *sbi, nid_t ino)
 {
 #ifdef CONFIG_QUOTA
 	int i;
 
-	if (!f2fs_sb_has_quota_ino(F2FS_I_SB(inode)))
+	if (!f2fs_sb_has_quota_ino(sbi))
 		return false;
 
 	for (i = 0; i < MAXQUOTAS; i++) {
-		if (f2fs_qf_ino(F2FS_I_SB(inode)->sb, i) == inode->i_ino)
+		if (f2fs_qf_ino(sbi->sb, i) == ino)
 			return true;
 	}
 #endif

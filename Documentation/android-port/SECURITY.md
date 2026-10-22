@@ -2377,3 +2377,41 @@ do not exercise kernel concurrency, locks, actual storage or remount latency.
 The existing large-folio extracted-function checks still pass after the data.c
 change. Inputs are local kernel/userspace sources and host C headers; no remote
 resources were used.
+
+## F2FS inode validation and write-range compatibility
+
+Retain ACK's directory single-link rejection in inode loading and unlink before
+the directory's two decrements, and quota-inode NAT diagnostics for reserved or
+null block addresses. The latter marks NEED_FSCK and records the error; it does
+not itself return a new error. Existing generic NAT validation and its fatal
+EFSCORRUPTED result remain intact. The unlink label conflicts are resolved by
+keeping the port's sync_fs error assignment and traced lock contexts while
+adding the corruption cleanup path. No blanket ACK conflict choice was used.
+
+Pinned-file overwrite validation and forced-buffered O_DIRECT cleanup now use
+the position/count after f2fs_write_checks adjusts append and maximum sizes.
+The original request remains available for tracing. This avoids validating or
+invalidating the wrong file range. Keep native write errors, inode locking,
+preallocation cleanup and sync ordering. FOP_DONTCACHE enables native generic
+uncached reads; f2fs_file_write_iter explicitly rejects IOCB_DONTCACHE writes.
+The local bionic UAPI exposes RWF_DONTCACHE; actual SDK invocation is unverified,
+so this is conservative retention of the configured filesystem's public API.
+
+ACK's unsigned journal-size parameter prevents signed narrowing of unsigned
+entry counts before capacity comparisons. Its 32-bit max_io_bytes and bounded
+seq_file_ra_mul types follow final ACK's control representation. The native
+size-aware sysfs accessor writes the matching field width; seq_file_ra_mul
+already accepts only 2..256. As in ACK, generic stores cast larger max_io_bytes
+inputs to the field width: this is an I/O aggregation hint, not a block-address
+validation boundary. No historical binary layout is preserved.
+
+Separately reviewed helper-only changes retain native list initialization,
+unused private parameters and constant-valued META arguments. Native quota
+loading retains duplicate checks rather than removing them. The native fscrypt
+mempool/on-stack request design makes the removed bounce-allocation ENOMEM path
+unnecessary, but its defensive retry code remains. Native LTS already selects
+the original inode's crypto context for COW data reads and migrates unaligned
+swap extents before activation. Each decision identifies its actual functions
+and callers. These are source-review findings; successful build results are
+recorded by exact commit separately, and no runtime or mounted-filesystem test
+is claimed. All sources are local; no remote resources were accessed.
