@@ -442,12 +442,10 @@ struct module {
 	/* GPL-only exported symbols. */
 	bool using_gplonly_symbols;
 
-	/*
-	 * Signature was verified. Unconditionally compiled in Android to
-	 * preserve ABI compatibility between kernels without module
-	 * signing enabled and signed modules.
-	 */
+#ifdef CONFIG_MODULE_SIG
+	/* Signature was verified. */
 	bool sig_ok;
+#endif
 
 	bool async_probe_requested;
 
