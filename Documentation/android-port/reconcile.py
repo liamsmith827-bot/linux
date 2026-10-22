@@ -56,7 +56,7 @@ from inventory import render
 from policy_text import POLICIES
 assert not unknown, unknown
 head=subprocess.check_output(['git','rev-parse','HEAD']).decode().strip()
-history=subprocess.check_output(['git','log','--format=@@%H','--name-only',L+'..HEAD']).decode()
+history=subprocess.check_output(['git','log','--format=@@%H','--name-only','--no-renames',L+'..HEAD']).decode()
 result_ids=collections.defaultdict(list)
 for line in history.splitlines():
  if line.startswith('@@'): sha=line[2:]
@@ -175,6 +175,22 @@ if completed_path.exists():
    if ev not in r['evidence']:r['evidence'].append(ev)
   else:
    r.pop('final_net_review',None)
+text_completed_path=D/'evidence/final-text-presence-decisions.json'
+if text_completed_path.exists():
+ report=json.loads(text_completed_path.read_text())
+ completed={x['commit']:x for x in report['decisions']}
+ for r in rows:
+  r.pop('final_text_review',None)
+  decision=completed.get(r['commit'])
+  if not decision or not r.get('net_reconciled'):continue
+  if set(decision['path_witnesses'])!=set(r['files']):continue
+  if not all(all(out[p].get(k)==v for k,v in witness.items())
+             for p,witness in decision['path_witnesses'].items()):continue
+  r.update(disposition='already-represented-upstream',review_status='reviewed',
+           rationale='The complete post-change textual patch is present in both pinned LTS and the port, verified by reverse-apply checks against temporary committed-tree indexes. No additional application is required. This is code-presence evidence, not a claim of identical upstream commit identity or runtime validation. For a deletion/revert, it establishes that the removed text is absent at the matching surrounding code. Later unrelated edits remain in place.',result_commits=[])
+  r['final_text_review']={'source_head':report['source_head'],'patch_sha256':decision['patch_sha256'],'method':report['method']}
+  ev='evidence/final-text-presence-decisions.json: '+r['commit']
+  if ev not in r['evidence']:r['evidence'].append(ev)
 assert len(rows)==11731
 assert all(r['disposition']!='pending' and r['rationale'] for r in rows)
 (D/'candidates.jsonl').write_text(''.join(json.dumps(r)+'\n' for r in rows));render(rows)

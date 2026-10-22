@@ -1,8 +1,8 @@
 {
   "base": "7d0a66e4bb9081d75c82ec4957c50034cb0ea449",
   "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
-  "port": "c7aeaf39ed7f163c7b3a11f83219d0612c53d5db",
-  "commits_examined": 1692,
+  "port": "45014ef115ff23b096180f9e681ff358a95be8e0",
+  "commits_examined": 1698,
   "overlaps": [
     {
       "commit": "71cbad138969edecef01b28dff87d91b56db538d",
@@ -238,6 +238,22 @@
       "status": "reviewed-source-adaptation",
       "assessment": "cfg80211_check_station_change still tests ext_capab, link_sta_params.eht_capa and link_sta_params.uhr_capa; line wrapping differs.",
       "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "196a8f954ae6d16b2f70abb71b321a8f7f681c3a",
+      "subject": "blk-crypto: optimize bio splitting in blk_crypto_fallback_encrypt_bio",
+      "lts_added_line_absent": [
+        {
+          "path": "block/blk-crypto-fallback.c",
+          "port_path": "block/blk-crypto-fallback.c",
+          "hunk": "@@ -167,4 +165,2 @@ static struct bio *blk_crypto_fallback_clone_bio(struct bio *bio_src)",
+          "line": "GFP_NOIO, &enc_bio_set);"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed; effects preserved or explicitly adapted",
+      "assessment": "e2fc28947c38 intentionally makes the bioset allocation GFP_NOWAIT during recursive submission, retaining GFP_NOIO for the rescue worker. The LTS optimized multi-bio splitting, source iterator progression and completion reference accounting remain. Additional partial splits under page pressure and the ACK-derived rescue work prevent allocation from waiting for queued/unsubmitted bios; see SECURITY.md: Software encryption fallback forward progress. This is a deliberate availability fix, not an accidental reversal of the LTS optimization.",
+      "assessment_source_head": "45014ef115ff23b096180f9e681ff358a95be8e0"
     },
     {
       "commit": "69d57dbadb27ffd5eef34fd184bab145500cdabc",
@@ -597,6 +613,22 @@
       "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
     },
     {
+      "commit": "c3e8c75fcb2ef63c99727eadddd2bb577c386506",
+      "subject": "block: use trylock to avoid lockdep circular dependency in sysfs",
+      "lts_added_line_absent": [
+        {
+          "path": "block/elevator.c",
+          "port_path": "block/elevator.c",
+          "hunk": "@@ -809 +809,10 @@ ssize_t elv_iosched_store(struct gendisk *disk, const char *buf,",
+          "line": "if (!down_read_trylock(&set->update_nr_hwq_lock)) {"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "requires semantic review; literal line overlap is not proof of regression",
+      "assessment": "9b6a6086498e replaces down_read_trylock/up_read with the writer equivalents to serialize both stages of elevator switching. The trylock, EBUSY path, and module reference cleanup remain, so the LTS kernfs/disk-deletion lock-cycle fix is preserved; no blocking lock is introduced.",
+      "assessment_source_head": "9b6a6086498e6588213f8614949d6bf9454d11ca"
+    },
+    {
       "commit": "ee54b5ba72d421a7d51c9d580b7b015b45ff8846",
       "subject": "sched/fair: Only set slice protection at pick time",
       "lts_added_line_absent": [
@@ -759,6 +791,22 @@
       "status": "reviewed-source-adaptation",
       "assessment": "Interface change still calls the leave cleanup via cfg80211_leave_locked(..., -1), under the revised locking API. NAN interface type changes are explicitly rejected because that path cannot satisfy NAN leave locking.",
       "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "6acd144fa8b115d4e7078e3882ac30151d01219a",
+      "subject": "f2fs: revert summary entry count from 2048 to 512 in 16kb block support",
+      "lts_added_line_absent": [
+        {
+          "path": "fs/f2fs/gc.c",
+          "port_path": "fs/f2fs/gc.c",
+          "hunk": "@@ -1840,3 +1833,10 @@ static int do_garbage_collect(struct f2fs_sb_info *sbi,",
+          "line": "\"[%d, %d] in SSA and SIT\","
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed; effects preserved or explicitly adapted",
+      "assessment": "45014ef115ff only corrects the printed order SSA and SIT to SIT and SSA to match the diagnostic arguments. The native LTS packed-SSA summary entry counts, validation and block-size handling are unchanged. This textual overlap is not a reversal of the 16KB summary-count fix.",
+      "assessment_source_head": "45014ef115ff23b096180f9e681ff358a95be8e0"
     }
   ]
 }

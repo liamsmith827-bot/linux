@@ -451,3 +451,163 @@ upstream fixes without adding ACK-only support for future platforms. This rule
 does not decide a commit that also changes an unresolved shared path. Nonempty
 merge resolutions are subject to the same path restriction and retain their
 original patches and hunk evidence in the audit.
+
+## POLYVAL and block scheduler follow-up
+
+`e859afda9a8a` retains the generic and x86 POLYVAL library, HCTR2 conversion,
+removal of the superseded crypto_shash implementation, and accompanying test
+sources. The exact ACK candidates are in `evidence/explicit-code-decisions.json`.
+This is not merely a performance refactor: the old generic implementation
+explicitly warns that it is not constant-time and uses data-dependent table
+lookups. The replacement uses carryless multiplication built from ordinary
+arithmetic without those table lookups. Its x86 implementation checks PCLMUL/AVX
+availability and `irq_fpu_usable()`, falls back to the generic implementation when
+needed, and permits rescheduling between 4 KiB chunks. ARM64-specific library
+code is outside the current target and was not added.
+
+The SDK fstab currently selects AES-XTS/AES-CTS, while the Android kernel
+configuration enables HCTR2 and exposes that alternative encryption mode.
+Actual HCTR2 use on this SDK image is unresolved; preserving the configured
+algorithm with ACK's safer fallback is a conservative compatibility decision.
+The HCTR2 algorithm and encrypted-data format remain the same. The obsolete
+standalone POLYVAL crypto_shash interface is removed consistently with ACK;
+this is a source/API transition, not historical binary KMI preservation.
+The KUnit test sources and generator are retained with the library but are not
+enabled or executed by the SDK workflow. Compilation does not establish timing
+behavior, vector correctness, or runtime filesystem compatibility. No linked
+papers or web pages in the source comments were accessed.
+
+`9b6a6086498e` applies ACK `5494cba9e2111f56122ebc84f85a608ba5d71ed4`.
+The pinned LTS block scheduler retains a two-stage switch whose completion can
+manipulate kobjects outside the elevator lock. Concurrent sysfs switches can
+therefore race under the shared reader lock. Use a writer trylock for the whole
+switch to prevent memory corruption and hangs. Keep the LTS nonblocking trylock
+and `-EBUSY` result that prevent the kernfs/disk-deletion lock cycle. No zoned
+storage feature is needed to trigger or fix this generic race.
+
+## Physical leaf-driver scope
+
+The specific reviews in `evidence/generic-source-review.json` distinguish leaf
+drivers from shared frameworks. AMD/Intel display drivers, Cirrus amplifier
+codecs, Qualcomm clock controllers and MediaTek pin controllers implement
+physical devices outside the selected emu64x platform. The SDK module rules
+explicitly supply virtio-gpu, goldfish transports, vkms, virtio_snd and snd-aloop.
+The common configuration disables the named AMD/Intel display and Cirrus codec
+drivers. ARM SMMU/GIC/firmware implementations have architecture/platform
+dependencies outside the ordinary x86_64 guest. UFS controller changes are
+excluded because the SDK storage topology is virtio block, even though some
+generic UFS configuration options remain enabled. None of these exclusions
+means that generic DRM, sound, block, IRQ, IOMMU or device-core changes can be
+omitted by filename alone. Those shared paths have separate reviews, and an
+unresolved shared path prevents finalizing the entire candidate.
+
+`bf631ea74abf` adapts the newly added POLYVAL KUnit option to the later LTS
+policies in `ce2a263bc57c`, `95c05443aa34`, and `c846ed5ac80f`: depend on the
+library, use the explicit enable-all helper for library selection, and do not
+enable the test implicitly through `CRYPTO_SELFTESTS`. This preserves the effect
+of the LTS configuration fixes even though POLYVAL was not present when they
+were applied to that branch.
+
+`306c6c42db66` adapts ACK's F2FS sync-error propagation. Directory-synchronous
+operations and read-only remounts return checkpoint failures instead of silently
+reporting success. The unlink conflict keeps native LTS cleanup and does not
+import an unrelated device-alias path. The remount adaptation clears the temporary
+`SBI_IS_CLOSE` flag before handling failure, preserving the LTS cleanup behavior
+that the literal ACK error branch would skip.
+
+
+## Binder lifetime reconciliation
+
+The per-commit review of ACK `b4dc66f073c721fcb82870312f017d79dfca440f`
+and `f19efebeefa36474874024c698a15f4dc2d3a7bf` found an integration defect:
+`binder_free_transaction()` contained two copies of the LTS transaction-lock
+snapshot and temporary thread-reference acquisition, but only one release.
+Commit `a658d19bb7fa` removes the duplicate. The resulting function equals the
+pinned LTS implementation plus the Android free-oem-structure hook. It keeps
+one protected snapshot, one acquisition, and one release. The duplicate could
+leak the first reference and take a second, different snapshot while concurrent
+thread exit changes the transaction. This correction preserves both LTS UAF
+fixes; earlier successful builds did not detect this semantic error.
+
+A source scan after that correction compared adjacent repeated blocks of 4–40
+nonblank lines in changed C/Rust/assembly sources with both pinned input trees.
+It found no additional newly duplicated blocks. This is a limited diagnostic,
+not proof that all integration mistakes are absent. Binder race behavior has
+not been exercised at runtime.
+
+## Software encryption fallback forward progress
+
+ACK `34cb3812e87a5b125ebc50a3ff7414948af70d80` fixes a recursive-submit
+resource deadlock. The SDK configuration enables both
+`CONFIG_BLK_INLINE_ENCRYPTION_FALLBACK` and `CONFIG_DM_DEFAULT_KEY`.
+Inspection of local LTS `block/blk-core.c` establishes that `__submit_bio()`
+prepares encryption while `current->bio_list` is active. Bounce bios submitted
+from this context cannot drain until the current call returns. Waiting for
+resources held by those bios can therefore prevent forward progress. This
+conclusion does not depend on the dm-inlinecrypt example in the ACK message;
+that source file is absent from both supplied kernel trees.
+
+Commit `e2fc28947c38` adapts the rescue queue/work item to the native LTS
+per-page allocator. Recursive submission uses nonblocking bio/page allocation.
+On exhaustion it queues the remaining source bio, preserving the advanced
+iterator and matching DUN, to the existing reclaim-capable crypto workqueue.
+A partially populated bounce bio is submitted before requesting more memory;
+an additional source completion reference covers each such partial submission.
+Only a worker bio with no allocated bounce pages may wait for a page. Thus the
+current call does not wait while retaining unsubmitted pages needed for its own
+progress. The worker releases its crypto keyslot normally on return.
+
+The ACK bulk-mempool allocation/refactoring series is not a dependency of this
+adaptation. Keep LTS mempool behavior and APIs, including the newer noreserve
+and kvmalloc helpers. Keep early LTS alignment validation, on-stack cipher
+requests, error completion, and the Android default-key skip bit. The adaptation
+can create smaller bios and schedule work under memory pressure; latency and
+throughput are unmeasured. Availability under memory pressure is the intended
+security benefit. No fault-injection or runtime forward-progress test is claimed.
+
+## Reviewed physical-device and export-only subsets
+
+The path records in `evidence/generic-source-review.json` identify 126 examined
+physical-device paths outside the SDK hardware model: AMD/Intel GPU drivers,
+ARM SMMU/GIC and firmware transports, Qualcomm clocks, MediaTek pin/SoC control,
+physical UFS host controllers, and Cirrus amplifier codecs. Configuration and
+the goldfish/virtual-device build definitions are affirmative target evidence;
+absence of a searched consumer is not the rationale. Some UFS host options
+remain enabled in the common configuration, so exclusion is based on the SDK's
+virtio storage model, not an assertion that all these files are uncompiled.
+Shared DRM, memory, IRQ, IOMMU and sound-core paths are reviewed separately.
+
+For 24 separately recorded generic paths, both the normalized ACK delta from
+the common ancestor and the port delta from LTS contain only symbol or tracepoint
+export declarations. Native LTS implementations are unchanged. Retain these
+entry points for vendor-module source compatibility. They grant trusted loaded
+modules additional interfaces, without a new userspace operation or a promise
+of historical binary layouts/CRCs. Final candidate decisions in these subsets
+are tied to exact path blobs and invalidate if the source or rationale changes.
+
+
+## Additional F2FS error-path review
+
+`98004f465e41` narrows the NEED_FSCK flag after a failed resize only when
+`free_segment_range()` failed before resize metadata was changed and restored
+its range counters. User-block accounting and the resize-in-progress flag are
+still restored. Superblock/checkpoint failures retain the repair flag, and
+corruption checks are unchanged. This is an intentional change from the pinned
+LTS error policy: transient inability to evacuate the range no longer forces an
+unnecessary repair. `917f7badcc2e` keeps reclaim within the requested budget;
+`84641ed72ff4` limits encryption bounce cleanup to encrypted compressed writes;
+`45014ef115ff` corrects the SIT/SSA order in a corruption diagnostic.
+
+The local review also confirmed native LTS current-segment migration, GC-lock
+scope, pinning-space reclamation and node-footer validation fixes. Separate
+large-folio/lock-tracing and device-alias feature questions remain unresolved in
+`evidence/unresolved-feature-questions.json`; their fixes have not been declared
+unnecessary merely because those features are absent from the current port.
+
+The resize change does not clear an existing NEED_FSCK indication, and it does
+not bypass lower-level GC validation or checkpoint I/O error handling. The
+phrase "before resize metadata changes" refers to shrinking the superblock
+and filesystem geometry: free_segment_range itself can perform GC/checkpoint
+I/O. Their own error state remains authoritative; the adaptation removes the
+additional unconditional repair flag from this caller. No recovery behavior
+has been exercised with injected I/O errors.

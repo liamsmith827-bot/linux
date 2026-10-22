@@ -1,7 +1,7 @@
 {
   "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
   "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
-  "port": "c7aeaf39ed7f163c7b3a11f83219d0612c53d5db",
+  "port": "45014ef115ff23b096180f9e681ff358a95be8e0",
   "method": "Record every remerge hunk and its literal relationship to the selected trees.\n\nLiteral presence is evidence for review, never a semantic equivalence verdict.\nThe remerge preimage includes conflict markers and is NOT either parent tree.\n",
   "counts": {
     "hunks": 10450,
@@ -100,7 +100,7 @@
           "path": "drivers/firmware/arm_ffa/driver.c",
           "old_path": "drivers/firmware/arm_ffa/driver.c",
           "policy": "physical-device",
-          "specific_evidence": null,
+          "specific_evidence": "ARM SMMU/GIC/firmware implementation. Local Kconfig constrains these to ARM/ARM64 or explicit compile-test, and the SDK is the ordinary x86_64 product. Exclude ACK ARM/protected-host additions while retaining pinned LTS. Generic IOMMU/IRQ interfaces and hooks are reviewed and ported separately.",
           "result_commits": [],
           "hunks": [
             {
@@ -992,7 +992,7 @@
           "path": "drivers/gpu/drm/xe/display/xe_hdcp_gsc.c",
           "old_path": "drivers/gpu/drm/xe/display/xe_hdcp_gsc.c",
           "policy": "lts-graphics",
-          "specific_evidence": null,
+          "specific_evidence": "Physical AMD/Intel graphics driver changes. The recorded common x86 configuration disables DRM_AMDGPU, DRM_I915 and DRM_XE, while the virtual-device module set explicitly supplies virtio-gpu, goldfish display transport and vkms. A host GPU used to accelerate the emulator is not an AMD/Intel PCI display device assigned to this SDK guest. Keep native LTS driver code; generic DRM APIs are separate decisions.",
           "result_commits": [],
           "hunks": [
             {
@@ -1058,6 +1058,7 @@
           "policy": "ported-net-source",
           "specific_evidence": "1e4401eda113 initializes the configured F2FS cleancache pool. The adjacent ACK f2fs_restore_device_alias call is deliberately not imported: that separate alias-storage mode is outside the ext4 SDK storage target. LTS mounting and cleanup remain.",
           "result_commits": [
+            "306c6c42db66007be4d40af2d09a64326a4247e3",
             "1e4401eda113f631464a0fe141890e1a9efe55f3",
             "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
           ],
@@ -1704,6 +1705,8 @@
           "policy": "ported-net-source",
           "specific_evidence": null,
           "result_commits": [
+            "45014ef115ff23b096180f9e681ff358a95be8e0",
+            "98004f465e41d922c40491ae899c0eca1da8bb5a",
             "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
           ],
           "hunks": [
@@ -1793,7 +1796,7 @@
           "path": "drivers/firmware/arm_ffa/driver.c",
           "old_path": "drivers/firmware/arm_ffa/driver.c",
           "policy": "physical-device",
-          "specific_evidence": null,
+          "specific_evidence": "ARM SMMU/GIC/firmware implementation. Local Kconfig constrains these to ARM/ARM64 or explicit compile-test, and the SDK is the ordinary x86_64 product. Exclude ACK ARM/protected-host additions while retaining pinned LTS. Generic IOMMU/IRQ interfaces and hooks are reviewed and ported separately.",
           "result_commits": [],
           "hunks": [
             {
@@ -165861,7 +165864,7 @@
           "path": "mm/pgtable-generic.c",
           "old_path": "mm/pgtable-generic.c",
           "policy": "ported-net-source",
-          "specific_evidence": null,
+          "specific_evidence": "Both the normalized ACK net delta and the port delta were checked: the only substantive changes are exports of pmd_clear_bad, __pte_offset_map_lock. Keep these generic native-LTS source interfaces for rebuilt Android modules. Function bodies, locking, validation, and LTS fixes are unchanged. Exports expand trusted-module reach, not unprivileged userspace authority. No existing vendor binary ABI is promised; exact optional vendor use remains unresolved and is conservatively retained.",
           "result_commits": [
             "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
           ],
@@ -172506,6 +172509,7 @@
           "policy": "ported-net-source",
           "specific_evidence": "1e4401eda113 initializes the configured F2FS cleancache pool. The adjacent ACK f2fs_restore_device_alias call is deliberately not imported: that separate alias-storage mode is outside the ext4 SDK storage target. LTS mounting and cleanup remain.",
           "result_commits": [
+            "306c6c42db66007be4d40af2d09a64326a4247e3",
             "1e4401eda113f631464a0fe141890e1a9efe55f3",
             "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
           ],
@@ -176751,6 +176755,7 @@
           "policy": "ported-net-source",
           "specific_evidence": null,
           "result_commits": [
+            "a658d19bb7fab3a676acf5bc466fdd7bb68358d8",
             "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
           ],
           "hunks": [
@@ -178468,6 +178473,7 @@
           "policy": "ported-net-source",
           "specific_evidence": null,
           "result_commits": [
+            "a658d19bb7fab3a676acf5bc466fdd7bb68358d8",
             "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
           ],
           "hunks": [
@@ -178749,6 +178755,7 @@
           "policy": "ported-net-source",
           "specific_evidence": null,
           "result_commits": [
+            "a658d19bb7fab3a676acf5bc466fdd7bb68358d8",
             "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
           ],
           "hunks": [
@@ -181143,7 +181150,7 @@
           "path": "drivers/ufs/host/ufs-qcom.c",
           "old_path": "drivers/ufs/host/ufs-qcom.c",
           "policy": "physical-device",
-          "specific_evidence": null,
+          "specific_evidence": "UFS host-controller implementation. The SDK fstab maps storage to virtio block devices, not UFS devices. Some generic UFS options remain configured, so this is not a claim that the file cannot be compiled. Omit ACK-only UFS hardware support for this target while preserving all native LTS controller code. Shared block/SCSI/crypto code is reviewed separately.",
           "result_commits": [],
           "hunks": [
             {
@@ -189213,7 +189220,7 @@
           "path": "drivers/irqchip/irq-gic-v3.c",
           "old_path": "drivers/irqchip/irq-gic-v3.c",
           "policy": "physical-device",
-          "specific_evidence": null,
+          "specific_evidence": "ARM SMMU/GIC/firmware implementation. Local Kconfig constrains these to ARM/ARM64 or explicit compile-test, and the SDK is the ordinary x86_64 product. Exclude ACK ARM/protected-host additions while retaining pinned LTS. Generic IOMMU/IRQ interfaces and hooks are reviewed and ported separately.",
           "result_commits": [],
           "hunks": [
             {
@@ -192272,6 +192279,7 @@
           "policy": "ported-net-source",
           "specific_evidence": null,
           "result_commits": [
+            "e2fc28947c380543e5375eb9919ba13b31d63c09",
             "c45528667984b4e52f1281f8135db42fc8903033"
           ],
           "hunks": [
@@ -192375,6 +192383,7 @@
           "policy": "ported-net-source",
           "specific_evidence": null,
           "result_commits": [
+            "a658d19bb7fab3a676acf5bc466fdd7bb68358d8",
             "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
           ],
           "hunks": [
@@ -192968,7 +192977,7 @@
           "path": "drivers/irqchip/irq-gic-v3.c",
           "old_path": "drivers/irqchip/irq-gic-v3.c",
           "policy": "physical-device",
-          "specific_evidence": null,
+          "specific_evidence": "ARM SMMU/GIC/firmware implementation. Local Kconfig constrains these to ARM/ARM64 or explicit compile-test, and the SDK is the ordinary x86_64 product. Exclude ACK ARM/protected-host additions while retaining pinned LTS. Generic IOMMU/IRQ interfaces and hooks are reviewed and ported separately.",
           "result_commits": [],
           "hunks": [
             {
@@ -197071,6 +197080,7 @@
           "policy": "ported-net-source",
           "specific_evidence": null,
           "result_commits": [
+            "e2fc28947c380543e5375eb9919ba13b31d63c09",
             "c45528667984b4e52f1281f8135db42fc8903033"
           ],
           "hunks": [
@@ -198748,6 +198758,7 @@
           "policy": "ported-net-source",
           "specific_evidence": null,
           "result_commits": [
+            "a658d19bb7fab3a676acf5bc466fdd7bb68358d8",
             "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
           ],
           "hunks": [
@@ -199586,6 +199597,7 @@
           "policy": "ported-net-source",
           "specific_evidence": null,
           "result_commits": [
+            "a658d19bb7fab3a676acf5bc466fdd7bb68358d8",
             "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
           ],
           "hunks": [
@@ -205919,7 +205931,7 @@
           "path": "drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c",
           "old_path": "drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c",
           "policy": "lts-graphics",
-          "specific_evidence": null,
+          "specific_evidence": "Physical AMD/Intel graphics driver changes. The recorded common x86 configuration disables DRM_AMDGPU, DRM_I915 and DRM_XE, while the virtual-device module set explicitly supplies virtio-gpu, goldfish display transport and vkms. A host GPU used to accelerate the emulator is not an AMD/Intel PCI display device assigned to this SDK guest. Keep native LTS driver code; generic DRM APIs are separate decisions.",
           "result_commits": [],
           "hunks": [
             {
@@ -205979,7 +205991,7 @@
           "path": "drivers/gpu/drm/i915/gem/i915_gem_ttm.c",
           "old_path": "drivers/gpu/drm/i915/gem/i915_gem_ttm.c",
           "policy": "lts-graphics",
-          "specific_evidence": null,
+          "specific_evidence": "Physical AMD/Intel graphics driver changes. The recorded common x86 configuration disables DRM_AMDGPU, DRM_I915 and DRM_XE, while the virtual-device module set explicitly supplies virtio-gpu, goldfish display transport and vkms. A host GPU used to accelerate the emulator is not an AMD/Intel PCI display device assigned to this SDK guest. Keep native LTS driver code; generic DRM APIs are separate decisions.",
           "result_commits": [],
           "hunks": [
             {
@@ -206368,7 +206380,7 @@
           "path": "kernel/irq_work.c",
           "old_path": "kernel/irq_work.c",
           "policy": "ported-net-source",
-          "specific_evidence": null,
+          "specific_evidence": "Both the normalized ACK net delta and the port delta were checked: the only substantive changes are exports of irq_work_queue_on. Keep these generic native-LTS source interfaces for rebuilt Android modules. Function bodies, locking, validation, and LTS fixes are unchanged. Exports expand trusted-module reach, not unprivileged userspace authority. No existing vendor binary ABI is promised; exact optional vendor use remains unresolved and is conservatively retained.",
           "result_commits": [
             "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
           ],
@@ -210164,6 +210176,7 @@
           "policy": "ported-net-source",
           "specific_evidence": null,
           "result_commits": [
+            "a658d19bb7fab3a676acf5bc466fdd7bb68358d8",
             "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
           ],
           "hunks": [
@@ -214846,6 +214859,7 @@
           "policy": "ported-net-source",
           "specific_evidence": null,
           "result_commits": [
+            "a658d19bb7fab3a676acf5bc466fdd7bb68358d8",
             "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
           ],
           "hunks": [
@@ -217200,6 +217214,7 @@
           "policy": "ported-net-source",
           "specific_evidence": "1e4401eda113 initializes the configured F2FS cleancache pool. The adjacent ACK f2fs_restore_device_alias call is deliberately not imported: that separate alias-storage mode is outside the ext4 SDK storage target. LTS mounting and cleanup remain.",
           "result_commits": [
+            "306c6c42db66007be4d40af2d09a64326a4247e3",
             "1e4401eda113f631464a0fe141890e1a9efe55f3",
             "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
           ],
@@ -219787,7 +219802,7 @@
           "path": "drivers/irqchip/irq-gic-v3.c",
           "old_path": "drivers/irqchip/irq-gic-v3.c",
           "policy": "physical-device",
-          "specific_evidence": null,
+          "specific_evidence": "ARM SMMU/GIC/firmware implementation. Local Kconfig constrains these to ARM/ARM64 or explicit compile-test, and the SDK is the ordinary x86_64 product. Exclude ACK ARM/protected-host additions while retaining pinned LTS. Generic IOMMU/IRQ interfaces and hooks are reviewed and ported separately.",
           "result_commits": [],
           "hunks": [
             {
@@ -223386,6 +223401,7 @@
           "policy": "ported-net-source",
           "specific_evidence": null,
           "result_commits": [
+            "306c6c42db66007be4d40af2d09a64326a4247e3",
             "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
           ],
           "hunks": [
@@ -225068,6 +225084,7 @@
           "policy": "ported-net-source",
           "specific_evidence": null,
           "result_commits": [
+            "e2fc28947c380543e5375eb9919ba13b31d63c09",
             "c45528667984b4e52f1281f8135db42fc8903033"
           ],
           "hunks": [
@@ -227018,6 +227035,7 @@
           "policy": "ported-net-source",
           "specific_evidence": "1e4401eda113 initializes the configured F2FS cleancache pool. The adjacent ACK f2fs_restore_device_alias call is deliberately not imported: that separate alias-storage mode is outside the ext4 SDK storage target. LTS mounting and cleanup remain.",
           "result_commits": [
+            "306c6c42db66007be4d40af2d09a64326a4247e3",
             "1e4401eda113f631464a0fe141890e1a9efe55f3",
             "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
           ],
@@ -233415,6 +233433,7 @@
           "policy": "ported-net-source",
           "specific_evidence": "1e4401eda113 initializes the configured F2FS cleancache pool. The adjacent ACK f2fs_restore_device_alias call is deliberately not imported: that separate alias-storage mode is outside the ext4 SDK storage target. LTS mounting and cleanup remain.",
           "result_commits": [
+            "306c6c42db66007be4d40af2d09a64326a4247e3",
             "1e4401eda113f631464a0fe141890e1a9efe55f3",
             "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
           ],
@@ -234322,6 +234341,7 @@
           "policy": "ported-net-source",
           "specific_evidence": null,
           "result_commits": [
+            "a658d19bb7fab3a676acf5bc466fdd7bb68358d8",
             "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
           ],
           "hunks": [
@@ -235566,6 +235586,7 @@
           "policy": "ported-net-source",
           "specific_evidence": null,
           "result_commits": [
+            "a658d19bb7fab3a676acf5bc466fdd7bb68358d8",
             "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
           ],
           "hunks": [

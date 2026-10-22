@@ -1,0 +1,27 @@
+[
+  {
+    "topic": "F2FS large-folio read support and lock tracing",
+    "status": "unresolved necessity; candidate decisions remain provisional",
+    "candidates": [
+      "5acc164ef3e9858f0ed6fdc8dc85acbcd786021d",
+      "95575ea99ac73e2d70ad21144c2f8201ad32e137",
+      "15b2b6aabc5c3f15c178f7b2938a769c72236fe8",
+      "8e46340d6f0f18bf0a4def2af6da7485a99fc17d",
+      "a27f036e45615fa7921a1687abf3dbabbaac3a4b"
+    ],
+    "evidence": "SDK common config enables F2FS and IOSTAT; goldfish x86 fstab uses ext4. LTS lacks ACK f2fs_read_data_large_folio and read_folio_count telemetry, so these fixes target code not currently ported. A missing SDK caller is not proof the optional generic feature can be omitted. Review the full feature series and Android configuration/consumer contracts before finalizing."
+  },
+  {
+    "topic": "F2FS device-alias mode",
+    "status": "unresolved necessity; candidate decisions remain provisional",
+    "candidates": [
+      "0b3c285a9221498d782bf3cdbf8b989d5c8b1f1a"
+    ],
+    "evidence": "ACK namei.c error-unwind fix concerns IS_DEVICE_ALIASING paths absent from native LTS. The current source keeps the native LTS filesystem and SDK ext4/virtio storage path, but absence of the alias feature is a pending feature-selection decision; do not use its absence to claim this fix unnecessary without completing that review."
+  },
+  {
+    "topic": "Page-pinner higher-order iteration",
+    "status": "source-review question, not runtime verified",
+    "evidence": "In __free_page_pinner, page_ext_next is skipped by continue when an entry is unflagged, and capture_page_state uses the original page pointer. This follows ACK but may miss later pages in a higher-order allocation. The reference-lifetime fix is retained; verify iteration semantics separately before claiming optional debug tracking correctness."
+  }
+]
