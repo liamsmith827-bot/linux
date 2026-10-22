@@ -215,7 +215,7 @@ static ssize_t process_vm_rw_core(pid_t pid, struct iov_iter *iter,
 
 	trace_android_rvh_process_vm_rw_core(task, vm_write, &rc);
 	if (rc)
-		goto put_task_struct;
+		goto put_mm;
 
 	for (i = 0; i < riovcnt && iov_iter_count(iter) && !rc; i++)
 		rc = process_vm_rw_single_vec(
@@ -231,6 +231,7 @@ static ssize_t process_vm_rw_core(pid_t pid, struct iov_iter *iter,
 	if (total_len)
 		rc = total_len;
 
+put_mm:
 	mmput(mm);
 
 put_task_struct:
