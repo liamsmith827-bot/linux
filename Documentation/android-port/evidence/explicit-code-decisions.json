@@ -2224,5 +2224,118 @@
     "result_commits": [
       "0e583bb7ddb4d8f97e19d1581673758f1d3cbffd"
     ]
+  },
+  {
+    "commit": "ebe4c102f35e7b8d60a4e8492296a46a10638f53",
+    "disposition": "adapted",
+    "rationale": "Retain bioset front padding to own deferred write work through native bio_put. Every installed f2fs_write_end_io originates from __bio_alloc using this bioset; iomap direct I/O has a separate callback. Keep earlier large-folio read_failed field in context. No historical KMI padding retained.",
+    "result_commits": [
+      "ccf9db6a49be6edcc978fab06469a551895b72b1"
+    ]
+  },
+  {
+    "commit": "54f63ce8fe3e90b0326f79ec1840ce5d25968d00",
+    "disposition": "adapted",
+    "rationale": "Adapt common read workqueue initialization/lifetime for the new completion infrastructure, but isolate write jobs on write_wq with WQ_MEM_RECLAIM. Read/decompression workers may allocate while reclaim waits for writes; native local workqueue documentation requires independent reserved execution for dependent reclaim work. Both queue allocation failures unwind correctly. Optional configured F2FS behavior retained conservatively; no runtime pressure test.",
+    "result_commits": [
+      "ccf9db6a49be6edcc978fab06469a551895b72b1"
+    ]
+  },
+  {
+    "commit": "ec7d50bb686f66070526dbf7d1b26fbb10a6c6d9",
+    "disposition": "adapted",
+    "rationale": "Split the write completion wrapper without changing the native LTS body: statistics unbind remains exactly once before either direct call or queue dispatch. Full-body identity check against 4903c0055594 preserves native footer validation, checkpoint errors, compression/crypto cleanup and reference/count ordering. This is needed by deferred completion, not a wholesale ACK replacement.",
+    "result_commits": [
+      "ccf9db6a49be6edcc978fab06469a551895b72b1"
+    ]
+  },
+  {
+    "commit": "9a756155dce88be3f3f64e42cf2078522f710803",
+    "disposition": "adapted",
+    "rationale": "Retain max_atc_write_bio_size sysfs control, UINT_MAX default, and large atomic-context completion deferral. Adapt dispatch onto dedicated reclaim-capable write_wq rather than ACK shared read queue; work memory stays with bio until native cleanup. Preserve nice-0 documentation in the conflict. Extracted dispatch/unwind check passes 103 cases/1082 assertions and rejects shared-queue control; native completion body identity proven. No actual kernel worker scheduling, I/O or reclaim tested.",
+    "result_commits": [
+      "ccf9db6a49be6edcc978fab06469a551895b72b1"
+    ]
+  },
+  {
+    "commit": "beef7e594fc05ced9a614390e172b30d00790c1a",
+    "disposition": "adapted",
+    "rationale": "Flush and restart the existing GC plug between node/data readahead phases, retaining final plug completion, migration checks and native LTS locking. Pass the live outer plug into the two static migration helpers; no additional platform is required. The freezer reference-drain harness still passes 972 cases with shim signature updates; it does not execute internal migration phases or real block dispatch.",
+    "result_commits": [
+      "333fce653b69f50d61f205fd01497ee077093d46"
+    ]
+  },
+  {
+    "commit": "d8f833aedf49d408dcc2f673f6e16527ff7e6c95",
+    "disposition": "adapted",
+    "rationale": "In checkpoint-disabled victim selection, skip sections with zero valid blocks before age/GC cost evaluation, avoiding invalid mtime/panic paths. Preserve the surrounding LTS checkpointed-data, pinned-section and search-bound checks. The actual hunk is within the CP_DISABLED branch; no broader always-on skip is claimed.",
+    "result_commits": [
+      "333fce653b69f50d61f205fd01497ee077093d46"
+    ]
+  },
+  {
+    "commit": "ae7fb9547502fff7eb247a182b20a442c2f8ae5f",
+    "disposition": "adapted",
+    "rationale": "Choose GC representative data/node type from the first valid segment processed after empty-segment and migration-limit skips. Preserve native SSA/SIT consistency checks, configured summary geometry, freezer reference drain and final merged write submission. This avoids treating an empty obsolete first segment as authoritative without removing corruption validation. No power-loss/recovery runtime test.",
+    "result_commits": [
+      "333fce653b69f50d61f205fd01497ee077093d46"
+    ]
+  },
+  {
+    "commit": "2290050bcedd6efdf2c03cc0c5b30b67be8ff03d",
+    "disposition": "adapted",
+    "rationale": "Retain all-device trim granularity calculation, adapting ACK loop termination to continue past each zoned device so later ordinary devices are included. Native bounded device array, capability/mount-write/range/corruption checks and primary-device/minlen conversion remain. Extracted mixed-device tests pass; original ACK stop-at-first-zoned control fails. Generic configured filesystem behavior retained without adding any storage platform.",
+    "result_commits": [
+      "333fce653b69f50d61f205fd01497ee077093d46"
+    ]
+  },
+  {
+    "commit": "f443e22882c57e5a82da8b790c22fb8bb310bc3b",
+    "disposition": "adapted",
+    "rationale": "Retain one-time GC valid-block threshold default of 80 in the configured generic F2FS implementation. Reviewed f2fs_start_gc_thread and f2fs_get_victim: the value applies only to one-time selection with enough free sections; native low-space bypass and validity checks remain. BLK_DEV_ZONED is enabled, SDK zoned-storage runtime use unconfirmed, and no device or new platform is added. This is conservative runtime-policy retention.",
+    "result_commits": [
+      "333fce653b69f50d61f205fd01497ee077093d46"
+    ]
+  },
+  {
+    "commit": "9d94c700ed8a66fd92dc995cfbf4a3214da0a79c",
+    "disposition": "adapted",
+    "rationale": "Retain read-only max_open_zones sysfs report and documentation under existing CONFIG_BLK_DEV_ZONED=y. It exposes the existing per-superblock value without changing limits, allocation or permissions. SDK zoned-device use remains unconfirmed; generic configured diagnostic interface retained conservatively.",
+    "result_commits": [
+      "333fce653b69f50d61f205fd01497ee077093d46"
+    ]
+  },
+  {
+    "commit": "456df4e239c81fad0683e3c8044b18f613786a63",
+    "disposition": "adapted",
+    "rationale": "Replace power-of-two zone-sector mask with native bdev_is_zone_start for final partial-zone counting. Full local init_blkz_info and block helper reviewed; ordinary power-of-two results remain and supported non-power-of-two geometry is handled consistently. Preserve all native size/capacity validation and bounded zone bitmap allocation; no new storage device or platform enabled.",
+    "result_commits": [
+      "333fce653b69f50d61f205fd01497ee077093d46"
+    ]
+  },
+  {
+    "commit": "bf3a58aa533525b83707f9b16b5bb06259361387",
+    "disposition": "adapted",
+    "rationale": "Retain active_logs-aware free-section estimator, but correct ACK call passing node/dentry/data to helper declared node/data/dentry. Without adaptation spare capacity is deducted from the wrong class, including combined data under logs=2/6. Native geometry and reserved-space checks remain; missing current segment leaves full demand. Extracted class-capacity, log-mode and boundary tests pass; original ACK swapped-argument control fails. This is a worst-case estimate, not concurrent-allocation or runtime proof.",
+    "result_commits": [
+      "333fce653b69f50d61f205fd01497ee077093d46"
+    ]
+  },
+  {
+    "commit": "26338bc2ca5532c6c1889335efe55772ebca77ff",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Retain native unusable_blocks_per_sec field position and capacity macros. SDK CONFIG_BLK_DEV_ZONED=y makes the moved field and existing capacity calculations identical in meaning; the patch only removes an unused zero-valued field for other configurations. No historical ABI layout is being preserved, and no current-target behavior depends on this private layout cleanup.",
+    "result_commits": []
+  },
+  {
+    "commit": "fa7f694f34bede7df51456d84585978cccb12f36",
+    "disposition": "partially-adapted",
+    "rationale": "The integration retains read/write completion footer validation and exported internal helper, with native newer node-type checks. Adapted read completion validates only successful I/O, avoiding diagnostics on failed/uninitialized read data, and preserves sticky large-folio errors. __write_node_folio retains LTS cd2fec912a0f comparison against folio->index rather than the footer-derived nid from ACK context, with checkpoint-stop adaptation in 76ef735061e2. Native error persistence and corruption checks remain; function body preserved through deferred completion split.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "ce7f50c5967d3417371d2585486e177dce384b94",
+      "76ef735061e249f9b3bd1a02affec7bb85d84b45",
+      "ccf9db6a49be6edcc978fab06469a551895b72b1"
+    ]
   }
 ]
