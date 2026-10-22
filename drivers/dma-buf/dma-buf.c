@@ -2108,7 +2108,8 @@ int dma_buf_end_cpu_access_partial(struct dma_buf *dmabuf,
 {
 	int ret = 0;
 
-	WARN_ON(!dmabuf);
+	if (WARN_ON(!dmabuf))
+		return -EINVAL;
 
 	if (dmabuf->ops->end_cpu_access_partial)
 		ret = dmabuf->ops->end_cpu_access_partial(dmabuf, direction,
@@ -2303,6 +2304,7 @@ int dma_buf_get_flags(struct dma_buf *dmabuf, unsigned long *flags)
 	if (WARN_ON(!dmabuf) || !flags)
 		return -EINVAL;
 
+	*flags = 0;
 	if (dmabuf->ops->get_flags)
 		ret = dmabuf->ops->get_flags(dmabuf, flags);
 
