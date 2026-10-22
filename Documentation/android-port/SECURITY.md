@@ -785,3 +785,53 @@ delegation. Their omission follows the same explicit runtime-backend boundary.
 Shared Intel IOMMU changes and pKVM guest support are not covered by this decision.
 Per-path evidence and exact blobs are in `evidence/generic-source-review.json` and
 `evidence/final-net-decisions.json`; merge resolutions retain their hunk indexes.
+
+## GKI hidden configuration and SDK build rules
+
+The SDK keeps generic Android hidden selections for source-built modules: DRM,
+media, audio, IRQ, regmap, networking, balloon/MM and other shared APIs. These
+select otherwise hidden dependencies that an external module cannot select by
+being present in this kernel tree. They are source-build support, not a promise
+of old binary layout or KMI. Optional generic interfaces are retained where their
+precise SDK runtime use is unresolved. Dynamic task vendor storage remains
+limited by the existing configurable maximum; its code requires separate review.
+
+The Qualcomm-specific hidden group and the ARM64 MediaTek timer group are removed
+from this x86 SDK port. The former otherwise forces QCOM_SMEM_STATE=y despite
+there being no Qualcomm remote-processor/shared-memory hardware in the SDK target;
+its other selections require ARCH_QCOM. The latter selects the physical MediaTek
+timer and is selected only on ARM64. Also remove the ARM64-only DRM bridge selector
+and PrimeCell ARM-AMBA GPIO selector. Their native LTS definitions remain in the
+tree. Generic DT pinctrl, regmap and GPIO APIs remain configured for vendor source
+customization; this is not a blanket removal of DT support or all optional drivers.
+The change removes platform-specific configuration glue without replacing LTS
+implementations or weakening a stable security fix. Build 30 will validate the
+resulting configuration and module set; it has not yet run at this checkpoint.
+
+A structural comparison of BUILD.bazel against pinned ACK finds 119 retained
+top-level statements: 117 are AST-identical, and two are adapted. The SDK kernel
+rule removes historical ABI inputs/enforcement/strict trimming and cross-architecture
+AutoFDO profile input, and adds the SHA-256 signing fragment. Protected-module
+name handling and the full x86 module source/header/export machinery remain. The
+other change removes a nonexistent LTS timer-test helper header from its input
+list; the existing workflow compiles the retained selftest package. Runtime tests
+are not executed. Omitted rules are outside the SDK target/dependency closure:
+other architectures/boards, Microdroid/crashdump images, ABI enforcement, optional
+allmodconfig/analysis/DDK tests and convenience install/alias targets. The unchanged
+emulator workflow and external virtual-device modules use the retained labels.
+
+The public module-list wrappers, private list implementation and ABI-directory
+packaging helpers retain exact ACK content. Their architecture switches are
+metadata for generic helper functions; this port does not add or build the listed
+ARM64 implementations. The constants retain pinned Clang/Rust/NDK versions while
+using lts-sdk-6.18 and an empty KMI generation. MODVERSIONS/GENDWARFKSYMS remain for
+matching modules built from this source, without preserving historical CRCs or
+layouts. Deprecated build.config.common only prints a migration error and exits;
+its constants symlink and unused DDK test rules are outside the Bazel SDK workflow.
+The actual constants and DDK header archive used by that workflow are retained.
+
+See evidence/sdk-build-rule-structure.json for exact retained/omitted statements
+and evidence/sdk-build-rule-adaptations.patch for the two normalized changes.
+Successful builds through attempt 29 verify this build-rule selection; subsequent
+configuration changes require their own recorded build. URLs present in copied
+source comments were not accessed as remote resources.
