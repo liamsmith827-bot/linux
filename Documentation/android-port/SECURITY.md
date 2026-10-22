@@ -419,9 +419,7 @@ system/fs/fs_mgr/libdm and system/update_engine files; that does not prove it
 unnecessary. It is a generic device-mapper status ABI for a configured SDK
 verified-storage target, so compatibility is retained conservatively.
 
-## Additional filesystem fixes found during final review
-
-### dm-verity final source selection
+## dm-verity final source selection
 
 `evidence/dm-verity-local-review.json` gives individual decisions for 38 complete
 patches, including the indentation-only resolution in merge f04c05a5f5a0.
@@ -459,6 +457,8 @@ ACK; its source and every integration point remain absent, with native corruptio
 restart/panic handling retained. No kernel runtime or corruption-injection test
 was executed. All resources for this review were local; embedded URLs were not
 accessed.
+
+## Additional filesystem fixes found during final review
 
 `22157454367a` applies ACK `86daefb58da53955d746f5d0b1e9c89f2f64e6ff`.
 The LTS ext4 rmdir path still held its journal transaction across dentry
@@ -3381,3 +3381,47 @@ the required integration verification. The original Android log layout remains
 unchanged and its documentation is adapted to the current native documentation
 location and the corrected behavior. No remote source was consulted; the URL in
 the original ACK commit message was not accessed.
+
+## dm-default-key IV bounds and source compatibility
+
+The supplied goldfish userdata fstab requests metadata encryption. Local
+vold/MetadataCrypt.cpp creates a DmTargetDefaultKey, and libdm emits IV offset
+zero, 4096-byte sectors, iv_large_sectors and allow_discards. Preserve this target,
+its fscrypt skip-default-key dependency, key-size/type parser, source crypto APIs,
+status redaction, ioctl restrictions and explicit key wiping. Wrapped-key options
+remain part of this generic Android interface: vold has concrete raw and wrapped
+branches, but a wrapped-key-capable SDK device has not been demonstrated. The
+block fallback advertises RAW only; retaining the parser does not permit software
+fallback to interpret wrapped material as a raw key. End-to-end wrapped-key
+operation remains unverified.
+
+The original maximum-DUN calculation could wrap iv_offset + len - 1. Reject that
+range during construction using checked addition; also reject IV offsets that
+would make every encrypted request fail the existing alignment check. These
+checks prevent a partly usable/wrapped mapping and do not relax encryption or
+access checks. The DM core already rejects zero-length targets. A valid single
+data unit at DUN zero needs at least one DUN byte: use a minimum of one instead
+of passing zero to blk_crypto_init_key, which rejects zero. Normal vold's zero-IV,
+4096-byte-sector mapping is unchanged. No LTS implementation is replaced by
+these changes: dm-default-key is an ACK-added target.
+
+check_dm_default_key.py executes the actual constructor, optional parser,
+destructor and map code with host shims. It checks 3,432 cases and 18,193
+assertions against a 128-bit IV-range oracle, including allocation/key-setup
+failure cleanup, target-relative mapping, data-less requests, skip flags and
+existing crypto-context rejection. Four negative controls reproduce zero-width,
+unchecked wrapping, unaligned-IV acceptance and uninitialized-key eviction.
+Crypto, devices and bio allocation are shims; actual encryption, key erasure in
+kernel memory, device table validation, concurrency and hardware are not tested.
+
+Keep the existing report_zones callback and append-emulation safety condition
+with the generic target for the selected CONFIG_BLK_DEV_ZONED build. Native DM
+honors emulate_zone_append before calling the mapping that derives the IV, so a
+zoned append must have a known final sector before encryption. This conservatively
+retains an existing generic block interface; the supplied userdata is conventional
+virtio storage, and actual SDK zoned use is unresolved. No platform driver is
+added for it. Do not copy the ACK BLK_FEAT_ORDERED_HWQ assertion: that flag belongs
+to a different block-layer ordering optimization and is absent from the native
+LTS interface. Retain native queue/zone serialization instead. These narrow
+target decisions do not finalize the separate multi-file block-crypto candidates.
+Only local checkouts were used.

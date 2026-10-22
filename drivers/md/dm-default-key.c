@@ -6,6 +6,7 @@
 #include <linux/blk-crypto.h>
 #include <linux/device-mapper.h>
 #include <linux/module.h>
+#include <linux/overflow.h>
 
 #define DM_MSG_PREFIX		"default-key"
 
@@ -245,10 +246,23 @@ static int default_key_ctr(struct dm_target *ti, unsigned int argc, char **argv)
 		err = -EINVAL;
 		goto bad;
 	}
+	if (dkc->iv_offset & ((dkc->sector_size >> SECTOR_SHIFT) - 1)) {
+		ti->error = "IV offset is not a multiple of sector_size";
+		err = -EINVAL;
+		goto bad;
+	}
 
-	dkc->max_dun = (dkc->iv_offset + ti->len - 1) >>
-		       (dkc->sector_bits - SECTOR_SHIFT);
-	dun_bytes = DIV_ROUND_UP(fls64(dkc->max_dun), 8);
+	/* The DM core rejects zero-length targets before calling the constructor. */
+	if (check_add_overflow(dkc->iv_offset, (u64)ti->len - 1,
+			       &dkc->max_dun)) {
+		ti->error = "IV range overflows";
+		err = -EINVAL;
+		goto bad;
+	}
+	dkc->max_dun >>= dkc->sector_bits - SECTOR_SHIFT;
+	/* A single data unit at DUN zero still needs a nonzero DUN width. */
+	dun_bytes = max_t(unsigned int, 1,
+			  DIV_ROUND_UP(fls64(dkc->max_dun), 8));
 
 	err = blk_crypto_init_key(&dkc->key, key_bytes, key_size,
 				  dkc->key_type, cipher->mode_num,
