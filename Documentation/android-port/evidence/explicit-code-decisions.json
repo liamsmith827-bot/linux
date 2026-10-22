@@ -3629,5 +3629,59 @@
       "e0935585c30614c953dbc4d9d130ef98402c3d95",
       "a890dee123e738d74365ee20de1fbc25cf773fa1"
     ]
+  },
+  {
+    "commit": "0ce3eb37e9eab307def1bad31c028d86ae7b2ea1",
+    "disposition": "adapted",
+    "rationale": "Retain the generic backup-on-write target, Kconfig and build rule, using the later block-size, crypto, API and lifetime fixes. Local fs_mgr constructs it below metadata encryption for block checkpoints, and vold uses its state/free attributes and log format. The SDK enables it; actual activation is unconfirmed, so retain compatible source behavior conservatively. Full original source and evolution reviewed. Adapt ordered I/O through completion, live-sector-zero relocation after tail preparation, cache invalidation, buffer errors, sysfs errno conversion and failure latching. Adapt the original documentation to Documentation/admin-guide/device-mapper/dm-bow.rst and correct its claim that committing immediately frees ranges. Native LTS DM/bio/workqueue/bufio remain intact. Lower concurrent checkpoint write throughput is accepted to preserve data ordering; no throughput or actual crash-recovery claim is made. Evidence: evidence/dm-bow-local-review.json; SECURITY.md: dm-bow checkpoint I/O ordering and error propagation. All evidence is local; URLs in original commit messages were not accessed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "698b14841c5eabad75ac7d6cea667b928e2a2b90",
+      "25f97fccb3ca42cf9d9104b233ada2a944c7483d"
+    ]
+  },
+  {
+    "commit": "da8143d0fedbaf0c9191def30a363d1679682838",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "This removal is reversed by dcb994383d2b. The restored source and original documentation blobs exactly match their pre-removal versions; the target Kconfig stanza, Makefile rule and both configuration lines are restored despite unrelated intervening file changes. Do not apply the temporary removal: retain the evolved and corrected target for the concrete local Android checkpoint consumers. This does not imply the whole intervening configuration files are identical. Evidence: evidence/dm-bow-local-review.json; SECURITY.md: dm-bow checkpoint I/O ordering and error propagation. All evidence is local; URLs in original commit messages were not accessed.",
+    "result_commits": []
+  },
+  {
+    "commit": "dcb994383d2b1641ebe7b518caab88d2d9dbfa72",
+    "disposition": "partially-adapted",
+    "rationale": "Retain the restoration of dm-bow source, target Kconfig, build rule and x86 GKI configuration, with the later API/security adaptations and rewritten native-location documentation. Omit only the arm64 GKI configuration addition because the current implementation target is the x86_64 SDK emulator; do not introduce a future-platform configuration for it. Exact source/doc reversal and feature-specific configuration/build witnesses were checked. This preserves the Android source capability without preserving its inherited asynchronous completion and error-handling defects. Evidence: evidence/dm-bow-local-review.json; SECURITY.md: dm-bow checkpoint I/O ordering and error propagation. All evidence is local; URLs in original commit messages were not accessed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "698b14841c5eabad75ac7d6cea667b928e2a2b90",
+      "25f97fccb3ca42cf9d9104b233ada2a944c7483d"
+    ]
+  },
+  {
+    "commit": "a95d721f13a42c0ec4eb248effb964cae88c4254",
+    "disposition": "adapted",
+    "rationale": "Retain state_lock to block new submissions, but complete its serialization purpose: use an ordered queue for checkpoint-sensitive I/O, including TRIM mutations, sector-zero reads/writes and flushes. Workers submit referenced lower bio clones synchronously through completion before finishing. state_store drains without ranges_lock before copying and publishing state. This fixes the ACK gap where flush_workqueue only waited until asynchronous submission and sector-zero writes bypassed the queue. Preserve nonzero-read and committed fast paths, native clone/split/error semantics and the log layout. Propagate/fail closed on backup/log or transition failures; pure backup-space exhaustion still permits commit. Tests model ownership/order/error/cache paths; real concurrency, crypto and durability remain unverified. Evidence: evidence/dm-bow-local-review.json; SECURITY.md: dm-bow checkpoint I/O ordering and error propagation. All evidence is local; URLs in original commit messages were not accessed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "698b14841c5eabad75ac7d6cea667b928e2a2b90",
+      "25f97fccb3ca42cf9d9104b233ada2a944c7483d"
+    ]
+  },
+  {
+    "commit": "47c6ba1030d3216c732db686b27f7bd711e7210b",
+    "disposition": "partially-adapted",
+    "rationale": "Both original one-line additions were reviewed. Inline crypto passthrough in dm-linear is already represented by the native DM_TARGET_PASSES_CRYPTO feature, and the entire ported dm-linear.c equals LTS. Retain that feature for the added dm-bow target instead of restoring the obsolete per-target may_passthrough_inline_crypto member. The native-style table capability intersection and no-capability-widening checks remain. Local fs_mgr places dm-bow below dm-default-key, providing a positive encrypted-stack consumer. New bow clones use the existing bio_alloc_clone/bio_split helpers: __bio_clone calls bio_crypt_clone, preserving crypto context and the Android skip-default-key marker; split advances the DUN through native bio_advance. This does not assert actual hardware crypto or emulator runtime validation. Evidence: evidence/dm-target-api-review.json; local fs_mgr/fs_mgr.cpp; SECURITY.md dm-bow ordering review. Local sources only.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "25f97fccb3ca42cf9d9104b233ada2a944c7483d"
+    ]
+  },
+  {
+    "commit": "80977293cf687c7d13bf147da6db1e4426e3de34",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Both callback signature changes are retained in dm-bow and dm-default-key: cmd, arg and bool *forward match the native LTS target API. These targets leave forward unchanged, so the native caller initializes and preserves normal forwarding. Keep the return-1 restrictions for a partial backing device (and nonzero default-key start); native dm_blk_ioctl still requires CAP_SYS_RAWIO for that case. No ioctl interception or privilege relaxation is added. The enabled callbacks are compiled by the existing SDK workflow; no ioctl runtime test is claimed. Evidence: evidence/dm-target-api-review.json; local fs_mgr/fs_mgr.cpp; SECURITY.md dm-bow ordering review. Local sources only.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "25f97fccb3ca42cf9d9104b233ada2a944c7483d"
+    ]
   }
 ]

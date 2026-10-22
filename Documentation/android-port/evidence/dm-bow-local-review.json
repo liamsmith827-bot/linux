@@ -97,5 +97,70 @@
     "../grapheneos-17/device/generic/goldfish/board/fstab/x86",
     "../kernel_manifest-6.18/common_dist/kernel_x86_64_dot_config"
   ],
-  "limits": "No live device-mapper setup, block I/O or crash-recovery test. a95d721f13a4 and original target integration remain provisional while checkpoint I/O completion, cache and error propagation are reviewed."
+  "limits": "Initial lifetime review snapshot retained above; subsequent protocol selection is recorded in protocol_review. Runtime limits remain explicit.",
+  "protocol_review": {
+    "source_head": "25f97fccb3ca42cf9d9104b233ada2a944c7483d",
+    "records": [
+      {
+        "commit": "0ce3eb37e9eab307def1bad31c028d86ae7b2ea1",
+        "files": [
+          "Documentation/device-mapper/dm-bow.txt",
+          "drivers/md/Kconfig",
+          "drivers/md/Makefile",
+          "drivers/md/dm-bow.c"
+        ],
+        "patch_sha256": "233e006eda3b93d04fc8040d3a5c40e4f92e25d2557ff4c23e8c45470b064555",
+        "assessment": "Retain the generic backup-on-write target, Kconfig and build rule, using the later block-size, crypto, API and lifetime fixes. Local fs_mgr constructs it below metadata encryption for block checkpoints, and vold uses its state/free attributes and log format. The SDK enables it; actual activation is unconfirmed, so retain compatible source behavior conservatively. Full original source and evolution reviewed. Adapt ordered I/O through completion, live-sector-zero relocation after tail preparation, cache invalidation, buffer errors, sysfs errno conversion and failure latching. Adapt the original documentation to Documentation/admin-guide/device-mapper/dm-bow.rst and correct its claim that committing immediately frees ranges. Native LTS DM/bio/workqueue/bufio remain intact. Lower concurrent checkpoint write throughput is accepted to preserve data ordering; no throughput or actual crash-recovery claim is made."
+      },
+      {
+        "commit": "da8143d0fedbaf0c9191def30a363d1679682838",
+        "files": [
+          "Documentation/device-mapper/dm-bow.txt",
+          "arch/arm64/configs/gki_defconfig",
+          "arch/x86/configs/gki_defconfig",
+          "drivers/md/Kconfig",
+          "drivers/md/Makefile",
+          "drivers/md/dm-bow.c"
+        ],
+        "patch_sha256": "c466cd16573ccfc2a22e133c2d7087d6661b54881d92344f44ce65ada5a04bf5",
+        "assessment": "This removal is reversed by dcb994383d2b. The restored source and original documentation blobs exactly match their pre-removal versions; the target Kconfig stanza, Makefile rule and both configuration lines are restored despite unrelated intervening file changes. Do not apply the temporary removal: retain the evolved and corrected target for the concrete local Android checkpoint consumers. This does not imply the whole intervening configuration files are identical."
+      },
+      {
+        "commit": "dcb994383d2b1641ebe7b518caab88d2d9dbfa72",
+        "files": [
+          "Documentation/device-mapper/dm-bow.txt",
+          "arch/arm64/configs/gki_defconfig",
+          "arch/x86/configs/gki_defconfig",
+          "drivers/md/Kconfig",
+          "drivers/md/Makefile",
+          "drivers/md/dm-bow.c"
+        ],
+        "patch_sha256": "8ad08e0fe650e73c28fff57ee33cd07f14c82644e714b11c71ddcced9f98043b",
+        "assessment": "Retain the restoration of dm-bow source, target Kconfig, build rule and x86 GKI configuration, with the later API/security adaptations and rewritten native-location documentation. Omit only the arm64 GKI configuration addition because the current implementation target is the x86_64 SDK emulator; do not introduce a future-platform configuration for it. Exact source/doc reversal and feature-specific configuration/build witnesses were checked. This preserves the Android source capability without preserving its inherited asynchronous completion and error-handling defects."
+      },
+      {
+        "commit": "a95d721f13a42c0ec4eb248effb964cae88c4254",
+        "files": [
+          "drivers/md/dm-bow.c"
+        ],
+        "patch_sha256": "ec626e59aa8888bb88bc10ba8f0e380c7076f370abc03f0e04f84673523b57d0",
+        "assessment": "Retain state_lock to block new submissions, but complete its serialization purpose: use an ordered queue for checkpoint-sensitive I/O, including TRIM mutations, sector-zero reads/writes and flushes. Workers submit referenced lower bio clones synchronously through completion before finishing. state_store drains without ranges_lock before copying and publishing state. This fixes the ACK gap where flush_workqueue only waited until asynchronous submission and sector-zero writes bypassed the queue. Preserve nonzero-read and committed fast paths, native clone/split/error semantics and the log layout. Propagate/fail closed on backup/log or transition failures; pure backup-space exhaustion still permits commit. Tests model ownership/order/error/cache paths; real concurrency, crypto and durability remain unverified."
+      }
+    ],
+    "port_blob": "a432e3d9d498e907fde4b04b82955b429cbf3186",
+    "reviewed_evolution_sha256": "e38fc6e78e5e5f2f16b5990d789685a2e59ecbc20c52ef330d3f8ccf18a0a857",
+    "restored_source_doc_exact_to_pre_removal": true,
+    "restored_feature_config_and_make_rule": true,
+    "checks": [
+      "dm-bow-check.json",
+      "dm-bow-buffers-check.json"
+    ],
+    "native_interfaces": [
+      "block/bio.c: bio_alloc_clone/bio_split/submit_bio_wait/fs_bio_set",
+      "drivers/md/dm-bufio.c: forget_buffer/write_dirty_buffers",
+      "drivers/md/dm.c: __map_bio",
+      "drivers/md/dm-table.c: dm_get_device"
+    ],
+    "limits": "Host models and compilation only. Real locking, crash recovery, durable media, encryption and checkpoint performance unverified. Generic Android capability retained conservatively; SDK activation unconfirmed."
+  }
 }

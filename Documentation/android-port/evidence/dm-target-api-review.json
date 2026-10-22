@@ -1,0 +1,30 @@
+{
+  "source_head": "25f97fccb3ca42cf9d9104b233ada2a944c7483d",
+  "records": [
+    {
+      "commit": "47c6ba1030d3216c732db686b27f7bd711e7210b",
+      "patch_sha256": "3069ee0ef81918de82ff130f13b5a2d059d8a89dd4269c6cd5cdeb291d3228b5",
+      "assessment": "Both original one-line additions were reviewed. Inline crypto passthrough in dm-linear is already represented by the native DM_TARGET_PASSES_CRYPTO feature, and the entire ported dm-linear.c equals LTS. Retain that feature for the added dm-bow target instead of restoring the obsolete per-target may_passthrough_inline_crypto member. The native-style table capability intersection and no-capability-widening checks remain. Local fs_mgr places dm-bow below dm-default-key, providing a positive encrypted-stack consumer. New bow clones use the existing bio_alloc_clone/bio_split helpers: __bio_clone calls bio_crypt_clone, preserving crypto context and the Android skip-default-key marker; split advances the DUN through native bio_advance. This does not assert actual hardware crypto or emulator runtime validation."
+    },
+    {
+      "commit": "80977293cf687c7d13bf147da6db1e4426e3de34",
+      "patch_sha256": "6dd4280c2b8de635a39318c2048731ce5f709cfb083238e17e619a307a11013b",
+      "assessment": "Both callback signature changes are retained in dm-bow and dm-default-key: cmd, arg and bool *forward match the native LTS target API. These targets leave forward unchanged, so the native caller initializes and preserves normal forwarding. Keep the return-1 restrictions for a partial backing device (and nonzero default-key start); native dm_blk_ioctl still requires CAP_SYS_RAWIO for that case. No ioctl interception or privilege relaxation is added. The enabled callbacks are compiled by the existing SDK workflow; no ioctl runtime test is claimed."
+    }
+  ],
+  "linear_lts_identity_blob": "73bf290af18124e122d4edf59eb20cae7956ee38",
+  "callback_witnesses": [
+    {
+      "path": "drivers/md/dm-bow.c",
+      "function": "dm_bow_prepare_ioctl",
+      "identical_to_final_ack": true,
+      "sha256": "0bed771c1b8d1a2f9af33433fde525c8e3f9fbf88158db6cceab68affbbf7990"
+    },
+    {
+      "path": "drivers/md/dm-default-key.c",
+      "function": "default_key_prepare_ioctl",
+      "identical_to_final_ack": true,
+      "sha256": "f17085afe0c62faea2d4c7079587c0826302895f9ee12099d3531a58dc5e09bd"
+    }
+  ]
+}
