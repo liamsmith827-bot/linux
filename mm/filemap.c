@@ -3344,6 +3344,7 @@ static struct file *do_sync_mmap_readahead(struct vm_fault *vmf)
 	DEFINE_READAHEAD(ractl, file, ra, mapping, vmf->pgoff);
 	struct file *fpin = NULL;
 	vm_flags_t vm_flags = vmf->vma->vm_flags;
+	pgoff_t data_end;
 	unsigned short mmap_miss;
 	bool skip = false;
 
@@ -3351,8 +3352,13 @@ static struct file *do_sync_mmap_readahead(struct vm_fault *vmf)
 	if (skip)
 		return fpin;
 
+	/* A split VMA may contain only ELF padding. Never prefetch padding. */
+	data_end = vmf->vma->vm_pgoff + vma_data_pages(vmf->vma);
+	if (vmf->pgoff >= data_end)
+		return fpin;
+
 	if (is_vma_readahead_boundary_enabled())
-		ractl._max_index = vmf->vma->vm_pgoff + vma_data_pages(vmf->vma) - 1;
+		ractl._max_index = data_end - 1;
 
 #ifdef CONFIG_TRANSPARENT_HUGEPAGE
 	/* Use the readahead code, even if readahead is disabled */
@@ -3417,14 +3423,13 @@ static struct file *do_sync_mmap_readahead(struct vm_fault *vmf)
 		 */
 		struct vm_area_struct *vma = vmf->vma;
 		unsigned long start = vma->vm_pgoff;
-		unsigned long end = start + vma_data_pages(vma);
 		unsigned long ra_end;
 
 		ra->order = exec_folio_order();
 		ra->start = round_down(vmf->pgoff, 1UL << ra->order);
 		ra->start = max(ra->start, start);
 		ra_end = round_up(ra->start + ra->ra_pages, 1UL << ra->order);
-		ra_end = min(ra_end, end);
+		ra_end = min(ra_end, data_end);
 		ra->size = ra_end - ra->start;
 		ra->async_size = 0;
 	} else {
@@ -3489,8 +3494,12 @@ static struct file *do_async_mmap_readahead(struct vm_fault *vmf,
 	}
 
 	if (folio_test_readahead(folio)) {
+		pgoff_t data_end = vmf->vma->vm_pgoff + vma_data_pages(vmf->vma);
+
+		if (vmf->pgoff >= data_end)
+			return fpin;
 		if (is_vma_readahead_boundary_enabled())
-			ractl._max_index = vmf->vma->vm_pgoff + vma_data_pages(vmf->vma) - 1;
+			ractl._max_index = data_end - 1;
 		fpin = maybe_unlock_mmap_for_io(vmf, fpin);
 		trace_android_vh_page_cache_readahead_start(file, vmf->pgoff,
 				ra->ra_pages, false);
