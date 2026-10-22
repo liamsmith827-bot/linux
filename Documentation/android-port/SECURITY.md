@@ -3226,7 +3226,10 @@ name along with the target.
 On the last channel close, rearm every still-queued message with zero delay using
 mod_delayed_work. This also handles an earlier timer that observed a daemon and
 returned, or a pending initial-connection timer. Do not reinitialize a work item
-that may still be executing. Count live channels from references with the
+that may still be executing. A running callback checks for a pending rearm
+before freeing its message: last-close may have queued another invocation while
+the current callback was waiting for the target lock. That earlier invocation
+must leave ownership to the pending one. Count live channels from references with the
 DM-owned reference excluded only while that reference actually exists. Keep the
 initial configurable 4000 ms daemon grace period and normal daemon-serviced I/O.
 
@@ -3246,7 +3249,7 @@ retain static scope.
 
 `check_dm_user_lifetime.py` executes the extracted message, timeout, allocation,
 channel-dequeue and target-release routines against deterministic scheduling
-shims: 101 cases, 4465 assertions and six rejected regression controls. It covers
+shims: 102 cases, 4495 assertions and seven rejected regression controls. It covers
 callbacks running during cancellation, callbacks removing following list entries,
 last-channel rearming, pool exhaustion and references after DM teardown. This is
 not a real kernel concurrency or snapshot-protocol test. Constructor pool failure

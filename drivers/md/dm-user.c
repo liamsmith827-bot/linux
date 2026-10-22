@@ -207,9 +207,11 @@ static void process_delayed_work(struct work_struct *work)
 	mutex_lock(&t->lock);
 
 	/*
-	 * There is at least one thread to process the IO.
+	 * A claimant owns detached messages. If last-close rearmed this work
+	 * while it was running, leave the message for the pending invocation.
 	 */
-	if (list_empty(&msg->to_user) || is_user_space_thread_present(t)) {
+	if (list_empty(&msg->to_user) || delayed_work_pending(&msg->work) ||
+	    is_user_space_thread_present(t)) {
 		mutex_unlock(&t->lock);
 		return;
 	}

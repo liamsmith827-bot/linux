@@ -41,6 +41,7 @@ static int kref_read(struct kref *r){return r->count;}
 static int kref_put(struct kref *r,void (*release)(struct kref *)){CHECK(r->count>0);if(!--r->count){release(r);return 1;}return 0;}
 struct work_struct {void (*fn)(struct work_struct *);};
 struct delayed_work {struct work_struct work;int initialized,pending;unsigned long delay;};
+#define delayed_work_pending(w) ((w)->pending)
 #define to_delayed_work(w) container_of(w,struct delayed_work,work)
 #define INIT_DELAYED_WORK(w,f) ((w)->initialized=1,(w)->work.fn=(f))
 static int system_wq;
@@ -103,10 +104,19 @@ int main(void){
   run_work(m);CHECK(!m->live && m->bio->ended==1 && list_empty(&t.to_user));
   mutex_lock(&t.lock);t.dm_destroyed=1;target_put(&t);CHECK(freed_names==1 && freed_targets==1);cases++;
  }
+ /* Last-close rearms a callback already dispatched but waiting for the target lock. */
+ {struct target t=make_target(1,0);INIT_LIST_HEAD(&t.to_user);interleave=0;mutex_lock(&t.lock);
+  struct message *m=make_message(&t,1);m->work.pending=0;
+  target_put(&t);CHECK(m->work.pending && !m->work.delay);
+  process_delayed_work(&m->work.work);CHECK(m->live && !m->bio->ended && m->work.pending);
+  run_work(m);CHECK(!m->live && m->bio->ended==1 && list_empty(&t.to_user));
+  mutex_lock(&t.lock);t.dm_destroyed=1;target_put(&t);cases++;
+ }
  printf("%u %u %u\n",cases,checks,failures);return !!failures;
 }
 '''
 controls={
+ 'free_rearmed_running_work':body.replace('delayed_work_pending(&msg->work) ||\n\t    ',''),
  'release_without_claim':body.replace('list_del_init(&m->to_user);\n\t\tmutex_unlock','/* no claim */\n\t\tmutex_unlock'),
  'callback_ignores_claim':body.replace('list_empty(&msg->to_user) || ',''),
  'missing_name_release':body.replace('kfree(t->miscdev.name);',''),
