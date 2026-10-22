@@ -6078,34 +6078,32 @@ EXPORT_SYMBOL_GPL(shmem_read_mapping_page_gfp);
 int reclaim_shmem_address_space(struct address_space *mapping)
 {
 	pgoff_t start = 0;
-	struct page *page;
-	LIST_HEAD(page_list);
-	XA_STATE(xas, &mapping->i_pages, start);
+	struct folio_batch fbatch;
+	unsigned long reclaimed = 0;
 
 	if (!shmem_mapping(mapping))
 		return -EINVAL;
 
 	lru_add_drain();
+	folio_batch_init(&fbatch);
 
-	rcu_read_lock();
-	xas_for_each(&xas, page, ULONG_MAX) {
-		if (xas_retry(&xas, page))
-			continue;
-		if (xa_is_value(page))
-			continue;
-		if (!folio_isolate_lru(page_folio(page)))
-			continue;
+	while (filemap_get_folios(mapping, &start, ULONG_MAX, &fbatch)) {
+		LIST_HEAD(folio_list);
+		unsigned int i;
 
-		list_add(&page->lru, &page_list);
+		for (i = 0; i < folio_batch_count(&fbatch); i++) {
+			struct folio *folio = fbatch.folios[i];
 
-		if (need_resched()) {
-			xas_pause(&xas);
-			cond_resched_rcu();
+			if (folio_isolate_lru(folio))
+				list_add(&folio->lru, &folio_list);
 		}
+		/* Isolation holds its own reference; release lookup references. */
+		folio_batch_release(&fbatch);
+		reclaimed += reclaim_pages(&folio_list);
+		cond_resched();
 	}
-	rcu_read_unlock();
 
-	return reclaim_pages(&page_list);
+	return min_t(unsigned long, reclaimed, INT_MAX);
 }
 EXPORT_SYMBOL_GPL(reclaim_shmem_address_space);
 #endif
