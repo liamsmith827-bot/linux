@@ -3306,9 +3306,45 @@ __weak unsigned long arch_max_swapfile_size(void)
 	return generic_max_swapfile_size();
 }
 
+/*
+ * mkswap uses the userspace page size for the signature and page numbers.
+ * Translate in a private header copy; never move or clear cached signatures.
+ */
+static union swap_header *read_swap_header_compat(struct file *file,
+		struct address_space *mapping, union swap_header *header,
+		unsigned int *header_pages)
+{
+	unsigned int nr_pages = __PAGE_SIZE / PAGE_SIZE;
+	union swap_header *magic_header, *copy;
+	struct page *page;
+	bool compatible;
+
+	*header_pages = 1;
+	if (nr_pages == 1 || !memcmp(header->magic.magic, "SWAPSPACE2", 10))
+		return NULL;
+
+	page = read_mapping_page(mapping, nr_pages - 1, file);
+	if (IS_ERR(page))
+		return ERR_CAST(page);
+	magic_header = kmap_local_page(page);
+	compatible = !memcmp(magic_header->magic.magic, "SWAPSPACE2", 10);
+	kunmap_local(magic_header);
+	put_page(page);
+	if (!compatible)
+		return NULL;
+
+	copy = kmemdup(header, sizeof(*copy), GFP_KERNEL);
+	if (!copy)
+		return ERR_PTR(-ENOMEM);
+	memcpy(copy->magic.magic, "SWAPSPACE2", 10);
+	*header_pages = nr_pages;
+	return copy;
+}
+
 static unsigned long read_swap_header(struct swap_info_struct *si,
 					union swap_header *swap_header,
-					struct inode *inode)
+					struct inode *inode,
+					unsigned int header_pages)
 {
 	int i;
 	unsigned long maxpages;
@@ -3343,6 +3379,9 @@ static unsigned long read_swap_header(struct swap_info_struct *si,
 		pr_warn("Empty swap-file\n");
 		return 0;
 	}
+	/* Emulation is x86_64-only; this product fits in unsigned long. */
+	if (header_pages > 1)
+		last_page = (last_page + 1) * header_pages - 1;
 	if (last_page > maxpages) {
 		pr_warn("Truncating oversized swap area, only using %luk out of %luk\n",
 			K(maxpages), K(last_page));
@@ -3353,6 +3392,8 @@ static unsigned long read_swap_header(struct swap_info_struct *si,
 		if ((unsigned int)maxpages == 0)
 			maxpages = UINT_MAX;
 	}
+	/* The translated page count can exceed the native header's u32 range. */
+	maxpages = min(maxpages, (unsigned long)UINT_MAX);
 
 	if (!maxpages)
 		return 0;
@@ -3372,17 +3413,26 @@ static unsigned long read_swap_header(struct swap_info_struct *si,
 static int setup_swap_map(struct swap_info_struct *si,
 			  union swap_header *swap_header,
 			  unsigned char *swap_map,
-			  unsigned long maxpages)
+			  unsigned long maxpages, unsigned int header_pages)
 {
 	unsigned long i;
 
-	swap_map[0] = SWAP_MAP_BAD; /* omit header page */
+	if (maxpages <= header_pages)
+		return -EINVAL;
+	/* Omit the entire userspace header, including its signature page. */
+	memset(swap_map, SWAP_MAP_BAD, header_pages);
+	si->pages -= header_pages - 1;
 	for (i = 0; i < swap_header->info.nr_badpages; i++) {
 		unsigned int page_nr = swap_header->info.badpages[i];
+		unsigned long first, page;
+
 		if (page_nr == 0 || page_nr > swap_header->info.last_page)
 			return -EINVAL;
-		if (page_nr < maxpages) {
-			swap_map[page_nr] = SWAP_MAP_BAD;
+		first = (unsigned long)page_nr * header_pages;
+		if (first >= maxpages)
+			continue;
+		for (page = first; page < min(first + header_pages, maxpages); page++) {
+			swap_map[page] = SWAP_MAP_BAD;
 			si->pages--;
 		}
 	}
@@ -3397,7 +3447,8 @@ static int setup_swap_map(struct swap_info_struct *si,
 
 static struct swap_cluster_info *setup_clusters(struct swap_info_struct *si,
 						union swap_header *swap_header,
-						unsigned long maxpages)
+						unsigned long maxpages,
+						unsigned int header_pages)
 {
 	unsigned long nr_clusters = DIV_ROUND_UP(maxpages, SWAPFILE_CLUSTER);
 	struct swap_cluster_info *cluster_info;
@@ -3428,17 +3479,23 @@ static struct swap_cluster_info *setup_clusters(struct swap_info_struct *si,
 	 * See setup_swap_map(): header page, bad pages,
 	 * and the EOF part of the last cluster.
 	 */
-	err = inc_cluster_info_page(si, cluster_info, 0);
-	if (err)
-		goto err;
-	for (i = 0; i < swap_header->info.nr_badpages; i++) {
-		unsigned int page_nr = swap_header->info.badpages[i];
-
-		if (page_nr >= maxpages)
-			continue;
-		err = inc_cluster_info_page(si, cluster_info, page_nr);
+	for (i = 0; i < header_pages; i++) {
+		err = inc_cluster_info_page(si, cluster_info, i);
 		if (err)
 			goto err;
+	}
+	for (i = 0; i < swap_header->info.nr_badpages; i++) {
+		unsigned long first = (unsigned long)swap_header->info.badpages[i] *
+				      header_pages;
+		unsigned long page;
+
+		if (first >= maxpages)
+			continue;
+		for (page = first; page < min(first + header_pages, maxpages); page++) {
+			err = inc_cluster_info_page(si, cluster_info, page);
+			if (err)
+				goto err;
+		}
 	}
 	for (i = maxpages; i < round_up(maxpages, SWAPFILE_CLUSTER); i++) {
 		err = inc_cluster_info_page(si, cluster_info, i);
@@ -3484,6 +3541,8 @@ SYSCALL_DEFINE2(swapon, const char __user *, specialfile, int, swap_flags)
 	int prio;
 	int error;
 	union swap_header *swap_header;
+	union swap_header *mapped_header = NULL, *compat_header = NULL;
+	unsigned int header_pages = 1;
 	int nr_extents;
 	sector_t span;
 	unsigned long maxpages;
@@ -3567,20 +3626,22 @@ SYSCALL_DEFINE2(swapon, const char __user *, specialfile, int, swap_flags)
 		goto bad_swap_unlock_inode;
 	}
 
-	error = __fixup_swap_header(swap_file, mapping);
-	if (error) {
-		pgcompat_err("Failed __fixup_swap_header");
-		goto bad_swap_unlock_inode;
-	}
-
 	folio = read_mapping_folio(mapping, 0, swap_file);
 	if (IS_ERR(folio)) {
 		error = PTR_ERR(folio);
 		goto bad_swap_unlock_inode;
 	}
-	swap_header = kmap_local_folio(folio, 0);
+	mapped_header = kmap_local_folio(folio, 0);
+	compat_header = read_swap_header_compat(swap_file, mapping, mapped_header,
+					      &header_pages);
+	if (IS_ERR(compat_header)) {
+		error = PTR_ERR(compat_header);
+		compat_header = NULL;
+		goto bad_swap_unlock_inode;
+	}
+	swap_header = compat_header ?: mapped_header;
 
-	maxpages = read_swap_header(si, swap_header, inode);
+	maxpages = read_swap_header(si, swap_header, inode, header_pages);
 	if (unlikely(!maxpages)) {
 		error = -EINVAL;
 		goto bad_swap_unlock_inode;
@@ -3614,7 +3675,7 @@ SYSCALL_DEFINE2(swapon, const char __user *, specialfile, int, swap_flags)
 
 	trace_android_vh_check_hibernation_swap(si->swap_file, &hibernation_swap);
 
-	error = setup_swap_map(si, swap_header, swap_map, maxpages);
+	error = setup_swap_map(si, swap_header, swap_map, maxpages, header_pages);
 	if (error)
 		goto bad_swap_unlock_inode;
 
@@ -3644,7 +3705,7 @@ SYSCALL_DEFINE2(swapon, const char __user *, specialfile, int, swap_flags)
 		inced_nr_rotate_swap = true;
 	}
 
-	cluster_info = setup_clusters(si, swap_header, maxpages);
+	cluster_info = setup_clusters(si, swap_header, maxpages, header_pages);
 	if (IS_ERR(cluster_info)) {
 		error = PTR_ERR(cluster_info);
 		cluster_info = NULL;
@@ -3740,8 +3801,9 @@ bad_swap:
 	if (swap_file)
 		filp_close(swap_file, NULL);
 out:
+	kfree(compat_header);
 	if (!IS_ERR_OR_NULL(folio))
-		folio_release_kmap(folio, swap_header);
+		folio_release_kmap(folio, mapped_header);
 	if (name)
 		putname(name);
 	if (inode)
