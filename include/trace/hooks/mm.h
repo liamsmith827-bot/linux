@@ -551,7 +551,7 @@ DECLARE_HOOK(android_vh_do_fault_around,
 	TP_ARGS(vmf, nr_pages));
 
 DECLARE_HOOK(android_vh_alloc_contig_range_not_isolated,
-	TP_PROTO(unsigned long start, unsigned end),
+	TP_PROTO(unsigned long start, unsigned long end),
 	TP_ARGS(start, end));
 DECLARE_HOOK(android_vh_warn_alloc_tune_ratelimit,
 	TP_PROTO(struct ratelimit_state *rs),
