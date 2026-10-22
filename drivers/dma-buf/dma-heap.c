@@ -43,7 +43,7 @@ struct dma_heap {
 	void *priv;
 	dev_t heap_devt;
 	struct list_head list;
-	struct cdev heap_cdev;
+	struct cdev *heap_cdev;
 	struct kref refcount;
 	struct device *heap_dev;
 };
@@ -83,6 +83,7 @@ struct dma_buf *dma_heap_buffer_alloc(struct dma_heap *heap, size_t len,
 				      u64 heap_flags)
 {
 	struct dma_buf *dma_buf;
+	typeof(heap->ops->allocate) allocate;
 	u64 stime = 0;
 
 	if (fd_flags & ~DMA_HEAP_VALID_FD_FLAGS)
@@ -101,7 +102,8 @@ struct dma_buf *dma_heap_buffer_alloc(struct dma_heap *heap, size_t len,
 	trace_android_vh_dma_heap_buffer_alloc_start(heap->name, len,
 			fd_flags, heap_flags);
 	trace_android_vh_dma_heap_buffer_alloc_lat_start(&stime);
-	dma_buf = heap->ops->allocate(heap, len, fd_flags, heap_flags);
+	allocate = smp_load_acquire(&heap->ops->allocate);
+	dma_buf = allocate(heap, len, fd_flags, heap_flags);
 	trace_android_vh_dma_heap_buffer_alloc_end(heap->name, len);
 	trace_android_vh_dma_heap_buffer_alloc_lat_end(stime, len, dma_buf);
 
@@ -135,7 +137,11 @@ static int dma_heap_open(struct inode *inode, struct file *file)
 {
 	struct dma_heap *heap;
 
+	mutex_lock(&heap_list_lock);
 	heap = xa_load(&dma_heap_minors, iminor(inode));
+	if (heap)
+		kref_get(&heap->refcount);
+	mutex_unlock(&heap_list_lock);
 	if (!heap) {
 		pr_err("dma_heap: minor %d unknown.\n", iminor(inode));
 		return -ENODEV;
@@ -145,6 +151,12 @@ static int dma_heap_open(struct inode *inode, struct file *file)
 	file->private_data = heap;
 	nonseekable_open(inode, file);
 
+	return 0;
+}
+
+static int dma_heap_file_release(struct inode *inode, struct file *file)
+{
+	dma_heap_put(file->private_data);
 	return 0;
 }
 
@@ -257,6 +269,7 @@ err:
 static const struct file_operations dma_heap_fops = {
 	.owner          = THIS_MODULE,
 	.open		= dma_heap_open,
+	.release	= dma_heap_file_release,
 	.unlocked_ioctl = dma_heap_ioctl,
 #ifdef CONFIG_COMPAT
 	.compat_ioctl	= dma_heap_ioctl,
@@ -283,10 +296,11 @@ static void dma_heap_release(struct kref *ref)
 
 	/* Note, we already holding the heap_list_lock here */
 	list_del(&heap->list);
+	xa_erase(&dma_heap_minors, minor);
 
 	device_destroy(dma_heap_class, heap->heap_devt);
-	cdev_del(&heap->heap_cdev);
-	xa_erase(&dma_heap_minors, minor);
+	cdev_del(heap->heap_cdev);
+	put_device(heap->heap_dev);
 
 	kfree(heap);
 }
@@ -358,6 +372,17 @@ struct dma_heap *dma_heap_add(const struct dma_heap_export_info *exp_info)
 	heap->ops = exp_info->ops;
 	heap->priv = exp_info->priv;
 
+	/* Serialize publication and failure cleanup against open and find. */
+	mutex_lock(&heap_list_lock);
+	list_for_each_entry(h, &heap_list, list) {
+		if (!strcmp(h->name, exp_info->name)) {
+			pr_err("dma_heap: Already registered heap named %s\n",
+			       exp_info->name);
+			err_ret = ERR_PTR(-EINVAL);
+			goto err0;
+		}
+	}
+
 	/* Find unused minor number */
 	ret = xa_alloc(&dma_heap_minors, &minor, heap,
 		       XA_LIMIT(0, NUM_HEAP_MINORS - 1), GFP_KERNEL);
@@ -370,11 +395,19 @@ struct dma_heap *dma_heap_add(const struct dma_heap_export_info *exp_info)
 	/* Create device */
 	heap->heap_devt = MKDEV(MAJOR(dma_heap_devt), minor);
 
-	cdev_init(&heap->heap_cdev, &dma_heap_fops);
-	ret = cdev_add(&heap->heap_cdev, heap->heap_devt, 1);
+	/* The cdev can outlive the heap while a racing open holds its kobject. */
+	heap->heap_cdev = cdev_alloc();
+	if (!heap->heap_cdev) {
+		err_ret = ERR_PTR(-ENOMEM);
+		goto err1;
+	}
+	heap->heap_cdev->ops = &dma_heap_fops;
+	heap->heap_cdev->owner = THIS_MODULE;
+	ret = cdev_add(heap->heap_cdev, heap->heap_devt, 1);
 	if (ret < 0) {
 		pr_err("dma_heap: Unable to add char device\n");
 		err_ret = ERR_PTR(ret);
+		kobject_put(&heap->heap_cdev->kobj);
 		goto err1;
 	}
 
@@ -392,32 +425,18 @@ struct dma_heap *dma_heap_add(const struct dma_heap_export_info *exp_info)
 	/* Make sure it doesn't disappear on us */
 	heap->heap_dev = get_device(heap->heap_dev);
 
-	mutex_lock(&heap_list_lock);
-	/* check the name is unique */
-	list_for_each_entry(h, &heap_list, list) {
-		if (!strcmp(h->name, exp_info->name)) {
-			mutex_unlock(&heap_list_lock);
-			pr_err("dma_heap: Already registered heap named %s\n",
-			       exp_info->name);
-			err_ret = ERR_PTR(-EINVAL);
-			put_device(heap->heap_dev);
-			goto err3;
-		}
-	}
-
 	/* Add heap to the list */
 	list_add(&heap->list, &heap_list);
 	mutex_unlock(&heap_list_lock);
 
 	return heap;
 
-err3:
-	device_destroy(dma_heap_class, heap->heap_devt);
 err2:
-	cdev_del(&heap->heap_cdev);
+	cdev_del(heap->heap_cdev);
 err1:
 	xa_erase(&dma_heap_minors, minor);
 err0:
+	mutex_unlock(&heap_list_lock);
 	kfree(heap);
 	return err_ret;
 }
