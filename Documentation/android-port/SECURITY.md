@@ -2651,3 +2651,38 @@ all three queue allocations and confirm native completion-body identity. These
 use modeled trees/workqueues and do not execute kernel concurrency, reclaim,
 fsync, storage recovery or a mounted filesystem. All evidence is local, including
 Documentation/core-api/workqueue.rst; no additional remote source was accessed.
+
+## F2FS symlink creation failure ownership
+
+Adapt dabf5c69c7f3 so encryption/page-symlink failures remove the directory entry
+before instantiating the new dentry, then retire the new inode with the orphan
+reservation already established by deletion. Other failed-inode callers still
+acquire their own orphan reservation. This avoids publishing an already unlinked
+inode and double-accounting its orphan slot. The native failed-inode cleanup,
+quota/error checks, corrupt link-count checks and filesystem-operation exclusion
+remain. New inode insertion sets I_CREATING; native find_inode_fast rejects it,
+so GC's f2fs_iget does not wait on this creator's I_NEW while rollback balances.
+
+Once the target is written and the dentry instantiated, later writeback or
+DIRSYNC failure is reported without undoing the created link. Unlike ACK's
+separate ret variable, the port preserves native writeback error propagation;
+it does not report a failed flush as success. A missing rollback directory entry
+returns ENOENT rather than pretending an orphan reservation was obtained. This
+also makes ordinary unlink report ENOENT for that inconsistent/missing-entry
+case instead of its old success result. If rollback itself fails (for example
+checkpoint error, I/O failure or exhausted orphan slots), the ACK fallback can
+still publish a broken symlink while returning the original creation error.
+That residual failure behavior is explicit, not a successful-rollback claim.
+
+The conflict context's ban on unlinking device-alias files is NOT imported.
+Pinned GrapheneOS system/fs/fs_mgr/userdata_alias_remove.cpp concretely unlinks
+/data/<alias>; native LTS static alias teardown remains compatible. Retain the
+original inode pointer for unlink tracing and the existing casefold invalidation
+outside the operation lock. No encryption format or authorization change.
+
+Extracted symlink, unlink and failed-inode control flow passes 630 modeled
+failure/flag cases and 5,082 assertions. Negative controls for lost writeback
+errors, duplicate orphan reservation and missing-entry false success all fail.
+The shims do not execute actual encryption, quota, I/O, GC or crash recovery.
+All source evidence is local, including fs/crypto/hooks.c, fs/inode.c and the
+GrapheneOS consumer; no additional remote source was accessed.

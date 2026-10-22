@@ -1,0 +1,29 @@
+{
+  "scope": "Exercise extracted F2FS symlink rollback, unlink and failed-inode control flow. Models VFS, quota, encryption, storage and orphan operations; no actual filesystem, concurrency, crash recovery or I/O.",
+  "source_sha256": {
+    "fs/f2fs/namei.c": "e05531abb4194b348f2505112a9a61872a5cb88e352d731384475379cbf5585f",
+    "fs/f2fs/inode.c": "78820c5606aad8522b90bba3a37050c77aca4004df623dcec670b1b9400c0cf2"
+  },
+  "results": {
+    "port": {
+      "exit_code": 0,
+      "stdout": "630 cases, 5082 assertions, 0 failures\n",
+      "stderr": ""
+    },
+    "lost_writeback_error_control": {
+      "exit_code": 1,
+      "stdout": "630 cases, 5082 assertions, 84 failures\n",
+      "stderr": "line 349: r==expected[stage]\nline 349: r==expected[stage]\nline 349: r==expected[stage]\nline 356: sync_calls==((stage==0 || stage==10) && dirsync)\nline 349: r==expected[stage]\nline 356: sync_calls==((stage==0 || stage==10) && dirsync)\nline 349: r==expected[stage]\n"
+    },
+    "double_orphan_control": {
+      "exit_code": 1,
+      "stdout": "630 cases, 5114 assertions, 48 failures\n",
+      "stderr": "line 108: orphan_count==1\nline 109: orphan_count==1\nline 353: !entry && !instantiated && iputs==1 && acquires==1 && !orphan_count && deletes==1\nline 108: orphan_count==1\nline 109: orphan_count==1\nline 353: !entry && !instantiated && iputs==1 && acquires==1 && !orphan_count && deletes==1\nline 108: orphan_count==1\n"
+    },
+    "missing_entry_success_control": {
+      "exit_code": 1,
+      "stdout": "630 cases, 5148 assertions, 36 failures\n",
+      "stderr": "line 109: orphan_count==1\nline 354: entry && instantiated==1 && !iputs && !orphan_count && !deletes\nline 109: orphan_count==1\nline 354: entry && instantiated==1 && !iputs && !orphan_count && !deletes\nline 109: orphan_count==1\nline 354: entry && instantiated==1 && !iputs && !orphan_count && !deletes\nline 109: orphan_count==1\n"
+    }
+  }
+}
