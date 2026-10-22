@@ -50,8 +50,6 @@
 #include <trace/events/kmem.h>
 #include <trace/hooks/mm.h>
 
-#include <trace/hooks/mm.h>
-
 #include "internal.h"
 
 /*

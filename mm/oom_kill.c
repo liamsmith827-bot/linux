@@ -55,9 +55,6 @@
 #undef CREATE_TRACE_POINTS
 #include <trace/hooks/mm.h>
 
-#undef CREATE_TRACE_POINTS
-#include <trace/hooks/mm.h>
-
 EXPORT_TRACEPOINT_SYMBOL_GPL(mark_victim);
 
 static int sysctl_panic_on_oom;
