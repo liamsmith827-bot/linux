@@ -2864,8 +2864,10 @@ static int f2fs_read_data_folio(struct file *file, struct folio *folio)
 	/* If the file has inline data, try to read it directly */
 	if (f2fs_has_inline_data(inode))
 		ret = f2fs_read_inline_data(inode, folio);
-	if (ret == -EAGAIN)
+	if (ret == -EAGAIN) {
+		fsverity_readahead(inode, folio->index, folio_nr_pages(folio));
 		ret = f2fs_mpage_readpages(inode, NULL, folio);
+	}
 	return ret;
 }
 
@@ -2882,6 +2884,7 @@ static void f2fs_readahead(struct readahead_control *rac)
 	if (f2fs_has_inline_data(inode))
 		return;
 
+	fsverity_readahead(inode, readahead_index(rac), readahead_count(rac));
 	f2fs_mpage_readpages(inode, rac, NULL);
 }
 

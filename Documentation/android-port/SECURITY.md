@@ -2930,6 +2930,46 @@ historical binary layout: they avoid internal storage/argument refactors that ad
 no target integrity operation. The cross-inode rhashtable-chain use-after-free
 fixed by efe665b77332 cannot arise without that hash chain; its complete fix and
 introducing patch were reviewed. This is not a blanket claim about every possible
-verity lifetime issue. The optional earlier Merkle readahead policy is a separate
-candidate still under review, not dismissed by these representation decisions.
+verity lifetime issue. Earlier Merkle readahead is adapted separately below;
+it does not depend on these representation changes.
 No additional remote resources were used.
+
+## Early Merkle-tree prefetch with native verification retained
+
+Partially adapt 5c0658a3a258 for configured ext4 and F2FS. Their read_folio and
+readahead methods start hash prefetch before data I/O submission, with the
+mapping invalidate lock already held by the native filemap/readahead callers.
+The new optional filesystem operation translates the Merkle-relative page index
+to the existing per-filesystem metadata offset. The shared prefetch helper
+issues readahead only for a missing or stale cache folio, drops any acquired
+reference exactly once, and leaves other lookup failures for the demand reader.
+The mandatory verification/read path still reports those errors; speculative
+prefetch cannot mark data or hashes verified or suppress an integrity failure.
+
+Use native fsverity_get_info's acquire load rather than raw pointer access.
+Reject absent info, empty/negative file sizes, absent callbacks and zero-length
+ranges. Bound prefetch to the data-covered tree: clamp the page count before
+addition, reject indices at or beyond EOF, and clip partial-page data blocks.
+These guards prevent unsigned wrap/underflow and recursive Merkle prefetch when
+the same mapping is read beyond the file's visible size. Native validated tree
+parameters and metadata offsets remain; no alternate tree ownership is added.
+
+Retain the three-argument native Merkle reader and completion-time readahead
+fallback, including the preceding non-ENOENT error fix. Existing verification
+code is byte-identical to 6cd9fcdf600d after removing the new helper. Retain
+read_metadata's native sequential prefetch capped by bdi io_pages instead of
+the ACK whole-request prefetch and reader-signature reduction. This preserves
+bounded metadata-ioctl I/O and minimizes changes to the LTS integrity path while
+providing early prefetch on the target data path. Btrfs is disabled for the SDK
+and keeps its native reader signature; no future-platform-only adaptation is
+needed. Cached first pages can cause speculative prefetch to skip a range,
+as in ACK; native demand reads and fallback continue to provide correctness.
+
+Extracted 64-bit, 4 KiB-page tests pass 9,220 cases for SHA-256/SHA-512 geometry,
+1/2/4 KiB blocks, partial/empty files, EOF, maximal index/count inputs, absent
+info/callback and modeled cache/error/reference states. Four negative controls
+reject zero-range underflow, unbounded ranges, reference leaks and retries of
+other lookup errors. The check compares range endpoints against an independent
+integer-division oracle and confirms existing verification code is unchanged.
+These checks do not establish real concurrent I/O behavior or performance;
+compilation is recorded separately. Only supplied local sources were used.

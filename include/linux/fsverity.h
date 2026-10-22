@@ -113,6 +113,10 @@ struct fsverity_operations {
 					      pgoff_t index,
 					      unsigned long num_ra_pages);
 
+	/* Optional prefetch; caller holds mapping->invalidate_lock. */
+	void (*readahead_merkle_tree)(struct inode *inode, pgoff_t index,
+				      unsigned long nr_pages);
+
 	/**
 	 * Write a Merkle tree block to the given inode.
 	 *
@@ -204,8 +208,15 @@ static inline void fsverity_cleanup_inode(struct inode *inode)
 
 int fsverity_ioctl_read_metadata(struct file *filp, const void __user *uarg);
 
+/* pagecache.c */
+
+void generic_readahead_merkle_tree(struct inode *inode, pgoff_t index,
+				   unsigned long nr_pages);
+
 /* verify.c */
 
+void fsverity_readahead(struct inode *inode, pgoff_t index,
+			unsigned long nr_pages);
 bool fsverity_verify_blocks(struct folio *folio, size_t len, size_t offset);
 void fsverity_verify_bio(struct bio *bio);
 void fsverity_enqueue_verify_work(struct work_struct *work);
@@ -263,6 +274,11 @@ static inline int fsverity_ioctl_read_metadata(struct file *filp,
 }
 
 /* verify.c */
+
+static inline void fsverity_readahead(struct inode *inode, pgoff_t index,
+				      unsigned long nr_pages)
+{
+}
 
 static inline bool fsverity_verify_blocks(struct folio *folio, size_t len,
 					  size_t offset)

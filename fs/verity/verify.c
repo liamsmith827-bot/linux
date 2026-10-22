@@ -37,6 +37,63 @@ struct fsverity_verification_context {
 
 static struct workqueue_struct *fsverity_read_workqueue;
 
+/**
+ * fsverity_readahead() - kick off readahead on fsverity hashes
+ * @inode:		inode that is being read
+ * @index:		first file data page index that is being read
+ * @nr_pages:		number of file data pages to be read
+ *
+ * Start readahead on the fsverity hashes that are needed to verify the file
+ * data in the range from @index to @index + @nr_pages (exclusive upper bound).
+ *
+ * To be called from the file systems' ->read_folio and ->readahead methods to
+ * ensure that the hashes are already cached on completion of the file data
+ * read if possible.
+ *
+ * The caller holds the mapping's invalidate lock.  Ranges are restricted to
+ * existing file data, so reads of the Merkle tree do not recursively prefetch.
+ */
+void fsverity_readahead(struct inode *inode, pgoff_t index,
+			unsigned long nr_pages)
+{
+	const struct fsverity_info *vi = fsverity_get_info(inode);
+	const struct merkle_tree_params *params;
+	loff_t size = i_size_read(inode);
+	u64 data_pages, start_hidx, end_hidx;
+	int level;
+
+	if (!vi || size <= 0 || !nr_pages ||
+	    !inode->i_sb->s_vop->readahead_merkle_tree)
+		return;
+
+	params = &vi->tree_params;
+	data_pages = DIV_ROUND_UP_ULL((u64)size, PAGE_SIZE);
+	if (index >= data_pages)
+		return;
+	nr_pages = min_t(u64, nr_pages, data_pages - index);
+	start_hidx = (u64)index << params->log_blocks_per_page;
+	end_hidx = min_t(u64,
+		(((u64)index + nr_pages) << params->log_blocks_per_page) - 1,
+		DIV_ROUND_UP_ULL((u64)size, params->block_size) - 1);
+
+	for (level = 0; level < params->num_levels; level++) {
+		unsigned long level_start = params->level_start[level];
+		unsigned long next_start_hidx = start_hidx >> params->log_arity;
+		unsigned long next_end_hidx = end_hidx >> params->log_arity;
+		pgoff_t start_idx = (level_start + next_start_hidx) >>
+				    params->log_blocks_per_page;
+		pgoff_t end_idx = (level_start + next_end_hidx) >>
+				  params->log_blocks_per_page;
+
+		inode->i_sb->s_vop->readahead_merkle_tree(
+			inode, start_idx, end_idx - start_idx + 1);
+
+		start_hidx = next_start_hidx;
+		end_hidx = next_end_hidx;
+	}
+}
+EXPORT_SYMBOL_GPL(fsverity_readahead);
+
 /*
  * Returns true if the hash block with index @hblock_idx in the tree, located in
  * @hpage, has already been verified.
