@@ -524,6 +524,8 @@ static struct bio *__bio_alloc(struct f2fs_io_info *fio, int npages)
 		bio->bi_private = sbi;
 		bio->bi_write_hint = f2fs_io_type_to_rw_hint(sbi,
 						fio->type, fio->temp);
+		bio->bi_write_stream = f2fs_io_type_to_write_stream(bdev, fio->type,
+								    fio->temp);
 	}
 	iostat_alloc_and_bind_ctx(sbi, bio, NULL);
 
@@ -704,10 +706,11 @@ unlock_out:
 
 static void __submit_merged_write_cond(struct f2fs_sb_info *sbi,
 				struct inode *inode, struct folio *folio,
-				nid_t ino, enum page_type type, bool force)
+				nid_t ino, enum page_type type, bool writeback)
 {
 	enum temp_type temp;
 	bool ret = true;
+	bool force = !inode && !folio && !ino;
 
 	for (temp = HOT; temp < NR_TEMP_TYPE; temp++) {
 		if (!force)	{
@@ -719,8 +722,16 @@ static void __submit_merged_write_cond(struct f2fs_sb_info *sbi,
 			ret = __has_merged_page(io->bio, inode, folio, ino);
 			f2fs_up_read_trace(&io->io_rwsem, &lc);
 		}
-		if (ret)
+		if (ret) {
 			__f2fs_submit_merged_write(sbi, type, temp);
+			/*
+			 * For waitting writebck case, if the bio owned by the
+			 * folio is already submitted, we do not need to submit
+			 * other types of bios.
+			 */
+			if (writeback)
+				break;
+		}
 
 		/* TODO: use HOT temp only for meta pages now. */
 		if (type >= META)
@@ -730,7 +741,7 @@ static void __submit_merged_write_cond(struct f2fs_sb_info *sbi,
 
 void f2fs_submit_merged_write(struct f2fs_sb_info *sbi, enum page_type type)
 {
-	__submit_merged_write_cond(sbi, NULL, NULL, 0, type, true);
+	__submit_merged_write_cond(sbi, NULL, NULL, 0, type, false);
 }
 
 void f2fs_submit_merged_write_cond(struct f2fs_sb_info *sbi,
@@ -738,6 +749,12 @@ void f2fs_submit_merged_write_cond(struct f2fs_sb_info *sbi,
 				nid_t ino, enum page_type type)
 {
 	__submit_merged_write_cond(sbi, inode, folio, ino, type, false);
+}
+
+void f2fs_submit_merged_write_folio(struct f2fs_sb_info *sbi,
+				struct folio *folio, enum page_type type)
+{
+	__submit_merged_write_cond(sbi, NULL, folio, 0, type, true);
 }
 
 void f2fs_flush_merged_writes(struct f2fs_sb_info *sbi)
@@ -3567,6 +3584,8 @@ static inline bool __should_serialize_io(struct inode *inode,
 	if (IS_NOQUOTA(inode))
 		return false;
 
+	if (f2fs_is_pinned_file(inode))
+		return false;
 	if (f2fs_need_compress_data(inode))
 		return true;
 	if (wbc->sync_mode != WB_SYNC_ALL)
@@ -3731,6 +3750,11 @@ static int prepare_write_begin(struct f2fs_sb_info *sbi,
 	bool locked = false;
 	int flag = F2FS_GET_BLOCK_PRE_AIO;
 	int err = 0;
+
+	if (!f2fs_has_inline_data(inode) && !f2fs_compressed_file(inode) &&
+	    (pos & PAGE_MASK) < i_size_read(inode) &&
+	    f2fs_lookup_read_extent_cache_block(inode, index, blk_addr))
+		return 0;
 
 	/*
 	 * If a whole page is being written and we already preallocated all the
@@ -3974,7 +3998,8 @@ repeat:
 	 * Will wait that below with our IO control.
 	 */
 	folio = __filemap_get_folio(mapping, index,
-				FGP_LOCK | FGP_WRITE | FGP_CREAT, GFP_NOFS);
+				FGP_LOCK | FGP_WRITE | FGP_CREAT,
+				mapping_gfp_mask(mapping));
 	if (IS_ERR(folio)) {
 		err = PTR_ERR(folio);
 		goto fail;

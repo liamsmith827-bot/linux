@@ -564,21 +564,59 @@ static int __submit_flush_wait(struct f2fs_sb_info *sbi,
 	return ret;
 }
 
+static void f2fs_flush_end_io(struct bio *bio)
+{
+	complete(bio->bi_private);
+}
+
+struct f2fs_flush_bio {
+	struct bio bio;
+	struct completion wait;
+};
+
 static int submit_flush_wait(struct f2fs_sb_info *sbi, nid_t ino)
 {
+	struct f2fs_flush_bio *flush_bio;
+	unsigned long devices = 0;
 	int ret = 0;
 	int i;
 
 	if (!f2fs_is_multi_device(sbi))
 		return __submit_flush_wait(sbi, sbi->sb->s_bdev);
 
+	flush_bio = kmalloc(array_size(sbi->s_ndevs, sizeof(*flush_bio)),
+				GFP_NOFS | __GFP_NOFAIL);
+
 	for (i = 0; i < sbi->s_ndevs; i++) {
 		if (!f2fs_is_dirty_device(sbi, ino, i, FLUSH_INO))
 			continue;
-		ret = __submit_flush_wait(sbi, FDEV(i).bdev);
-		if (ret)
-			break;
+
+		bio_init(&flush_bio[i].bio, FDEV(i).bdev, NULL, 0,
+			 REQ_OP_WRITE | REQ_SYNC | REQ_PREFLUSH);
+		init_completion(&flush_bio[i].wait);
+		flush_bio[i].bio.bi_private = &flush_bio[i].wait;
+		flush_bio[i].bio.bi_end_io = f2fs_flush_end_io;
+		devices |= BIT(i);
+		submit_bio(&flush_bio[i].bio);
 	}
+
+	for (i = 0; i < sbi->s_ndevs; i++) {
+		int err;
+
+		if (!(devices & BIT(i)))
+			continue;
+
+		wait_for_completion(&flush_bio[i].wait);
+		err = blk_status_to_errno(flush_bio[i].bio.bi_status);
+		trace_f2fs_issue_flush(FDEV(i).bdev, test_opt(sbi, NOBARRIER),
+				       test_opt(sbi, FLUSH_MERGE), err);
+		if (!err)
+			f2fs_update_iostat(sbi, NULL, FS_FLUSH_IO, 0);
+		else if (!ret)
+			ret = err;
+		bio_uninit(&flush_bio[i].bio);
+	}
+	kfree(flush_bio);
 	return ret;
 }
 
@@ -3636,6 +3674,19 @@ enum rw_hint f2fs_io_type_to_rw_hint(struct f2fs_sb_info *sbi,
 	}
 }
 
+u8 f2fs_io_type_to_write_stream(struct block_device *bdev,
+				enum page_type type, enum temp_type temp)
+{
+	unsigned short nr = bdev_max_write_streams(bdev);
+
+	if (type != DATA || !nr)
+		return 0;
+	if (nr < NR_TEMP_TYPE)
+		return temp == COLD ? nr : HOT + 1;
+
+	return temp + 1;
+}
+
 static int __get_segment_type_2(struct f2fs_io_info *fio)
 {
 	if (fio->type == DATA)
@@ -4242,7 +4293,7 @@ void f2fs_folio_wait_writeback(struct folio *folio, enum page_type type,
 		struct f2fs_sb_info *sbi = F2FS_F_SB(folio);
 
 		/* submit cached LFS IO */
-		f2fs_submit_merged_write_cond(sbi, NULL, folio, 0, type);
+		f2fs_submit_merged_write_folio(sbi, folio, type);
 		/* submit cached IPU IO */
 		f2fs_submit_merged_ipu_write(sbi, NULL, folio);
 		if (ordered) {

@@ -2487,3 +2487,48 @@ nat_tree_lock. The existing flush function still decides placement, validates
 metadata and handles errors; prefetch does not replace those checks. No block
 layout, permissions or durability ordering changes are introduced. All evidence
 is local, and build verification is recorded separately by source commit.
+
+## F2FS writeback allocation, flush completion and write streams
+
+Use the mapping's GFP mask for write-begin folios, retaining the final ACK
+FGP flags and native __filemap_get_folio call. The omitted fault-injection
+wrapper remains unnecessary with F2FS_FAULT_INJECTION disabled. This permits
+movable/CMA allocation on the configured x86_64 target too; the original patch's
+32-bit motivation does not establish an architecture-only boundary. At this
+allocation point the current data folio and F2FS operation/node locks have not
+been acquired. The write path owns an inode reference and inode lock, and the
+native reclaim/writeback paths do not acquire that inode lock. The quota read
+uses GFP_KERNEL: native dquot_acquire/commit/release bracket their dq_lock-held
+operations with memalloc_nofs_save/restore, preserving the documented recursion
+protection. Allocation pressure and actual reclaim concurrency are not tested.
+
+Pinned-file writes omit the global ordering mutex because native pin checks
+require preexisting mappings and force in-place writes; ordinary/compressed
+write ordering is unchanged. Buffered overwrite can use a read-extent-cache hit
+before inode-folio lookup only for non-inline, non-compressed data whose page
+starts below EOF. Native subsequent block validation and write-end size handling
+remain. Folio writeback waits stop scanning temperatures after submitting the
+matching bio, then retain IPU submission and native ordered/stable waits. The
+force-argument cleanup accompanies that helper; other callers retain full scans.
+
+Multi-device fsync submits all dirty devices before waiting for each result,
+returns the first error and releases all bios even after failure. The device
+count is bounded by MAX_DEVICES=8 in native mount scanning; the small array uses
+GFP_NOFS|__GFP_NOFAIL as ACK. This can wait under memory pressure and is not a
+wall-clock guarantee. Single-device flush and checkpoint-cache flush paths stay
+native. Extracted checks cover all dirty/error masks for 2..8 devices, inline
+and deferred completion, successful-flush accounting and bio release; a control
+breaking the wait loop after error is rejected. No actual storage durability
+or failure injection is claimed.
+
+Generic F2FS stream selection and explicit direct-I/O stream validation use the
+existing native block limits and kiocb field. No new driver/platform is enabled.
+Virtio-blk initializes no write streams and partition devices report zero, so
+normal SDK I/O keeps stream zero and unsupported nonzero direct-I/O requests are
+rejected. NVMe is also configured; its actual SDK use is unconfirmed. Retaining
+the generic configured API conservatively avoids silently discarding requests
+and preserves source/runtime compatibility without claiming an established FDP
+consumer. Every device must support an explicit stream; automatic placement
+uses each bio's target device. Native write hints and the statistics wrapper
+remain. Host flush/stream checks pass 88,729 cases / 2,535,370 assertions;
+statistics ownership checks also still pass. All sources are local.
