@@ -109,6 +109,11 @@ int main(void){
         }
         cases++;
     }
+    for(int dev=-1;dev<3;dev++){
+        struct f2fs_sb_info s={.alias=true,.s_ndevs=0};
+        s.devs[0].is_reserving=true;s.devs[0].alias_ino=99;
+        CHECK(!f2fs_dev_is_reserving(&s,dev));CHECK(!f2fs_dev_is_alloc_blocked(&s,dev,true));cases++;
+    }
     /* Confirm two non-guarantees against the unchanged pre-alias selector. */
     for(int pin=0;pin<2;pin++){
         struct f2fs_sb_info s={.segs_per_sec=1,.secs_per_zone=pin?2:1,.s_ndevs=2,.zoned=true,
@@ -125,7 +130,7 @@ int main(void){
     printf("%u cases, %u assertions, %u failures\n",cases,assertions,failures);return !!failures;
 }
 '''
-variants={'port':body,'premature_zone_exhaustion_control':body.replace('		/* The fallback pass must not skip the last usable zone. */\n		init = false;',''),
+variants={'port':body,'missing_device_table_guard_control':body.replace(' || (unsigned int)devi >= sbi->s_ndevs',''),'premature_zone_exhaustion_control':body.replace('		/* The fallback pass must not skip the last usable zone. */\n		init = false;',''),
           'ignore_device_reservation_control':body.replace('return READ_ONCE(FDEV(devi).is_reserving);','return false;').replace('return (pinning && READ_ONCE(FDEV(devi).alias_ino)) ||\n\t\tREAD_ONCE(FDEV(devi).is_reserving);','return false;')}
 results={}
 with tempfile.TemporaryDirectory(prefix='f2fs-alias-placement-') as tmp:
@@ -140,4 +145,4 @@ report={'scope':__doc__+' Two-device, eight-section modeled maps; new-section se
         'native_baseline':baseline,'native_policy_limits':'Existing allocation hints can override ONLY_SEQ preference; zone separation can return EAGAIN for pinned allocations despite available conventional sections. Both cases executed against the native selector. No full availability guarantee asserted for zoned policies.',
         'source_sha256':{p:hashlib.sha256(s.encode()).hexdigest() for p,s in sources.items()},'results':results}
 (D/'evidence/f2fs-alias-placement-check.json').write_text(json.dumps(report,indent=2)+'\n')
-print(results['port']['stdout'].strip());print('Ignoring device reservation and premature exhaustion controls rejected')
+print(results['port']['stdout'].strip());print('Device-table, reservation and premature exhaustion controls rejected')

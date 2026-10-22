@@ -2771,3 +2771,12 @@ clearing only the deleted alias identity. These use modeled maps, locks, quota,
 GC and storage; actual concurrency, multi-device operation, crash recovery and
 SDK runtime use have not been executed. All sources are local; no additional
 remote resource was accessed.
+
+Follow-up alias bounds review: f2fs_scan_devices returns without allocating a
+device table for ordinary single-device mounts, independently of the on-disk
+alias feature bit. Guard both allocation predicates against an absent/out-of-range
+device index before dereferencing FDEV, including malformed or feature-only
+single-device filesystems. The placement check now passes 98,310 cases / 692,653
+assertions and additionally rejects a missing-table-guard control. This extends
+the prior two-device model with absent-table queries; it is not a mounted-image
+test. The capacity/reservation and symlink source functions are unchanged.

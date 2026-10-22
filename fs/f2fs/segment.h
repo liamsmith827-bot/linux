@@ -968,7 +968,7 @@ static inline block_t sum_blk_addr(struct f2fs_sb_info *sbi, int base, int type)
 
 static inline bool f2fs_dev_is_reserving(struct f2fs_sb_info *sbi, int devi)
 {
-	if (!f2fs_sb_has_device_alias(sbi))
+	if (!f2fs_sb_has_device_alias(sbi) || (unsigned int)devi >= sbi->s_ndevs)
 		return false;
 	return READ_ONCE(FDEV(devi).is_reserving);
 }
@@ -976,7 +976,7 @@ static inline bool f2fs_dev_is_reserving(struct f2fs_sb_info *sbi, int devi)
 static inline bool f2fs_dev_is_alloc_blocked(struct f2fs_sb_info *sbi,
 					int devi, bool pinning)
 {
-	if (!f2fs_sb_has_device_alias(sbi))
+	if (!f2fs_sb_has_device_alias(sbi) || (unsigned int)devi >= sbi->s_ndevs)
 		return false;
 	return (pinning && READ_ONCE(FDEV(devi).alias_ino)) ||
 		READ_ONCE(FDEV(devi).is_reserving);
