@@ -752,3 +752,36 @@ and freeing the page still proceed. It does not change Android userspace APIs,
 page-pinner source signatures or the allocator's return values. This is a
 source-level preservation of LTS availability/reentrancy guarantees; no NMI,
 contention or fault-injection runtime validation has been performed.
+
+## Shared x86 KVM review
+
+The complete normalized ACK deltas in 28 shared KVM source/header/build paths
+were examined separately from the earlier dedicated-hypervisor exclusion. Exact
+LTS code is retained. The added protected VM type is advertised only when
+`enable_pkvm` is true; ordinary creation checks `supported_vm_types`. The SDK
+command line and ACK early-parameter initialization establish that this separate
+protected host mode is outside the supplied target. Native KVM remains available;
+this is not a claim that Android virtualization consumers are absent.
+
+The shared delta includes hypervisor compilation guards, private VMCS ownership,
+protected-register exchange, hypercall emulation and host MMU delegation. Native
+helper extraction/movement supports that reuse without requiring a native behavior
+change. One independent change, ACK `3db14b2db789`, skips unnecessary MMIO-SPTE
+invalidations when caching is disabled. It is an optional performance optimization
+on rare generation wrap; the original safe LTS invalidation is retained.
+
+ACK also changes `enlightened_vmcs` from true to `!CONFIG_PKVM_INTEL`, which can
+affect ordinary Hyper-V KVM even when runtime pKVM is disabled. Keep LTS behavior.
+Do not import hypervisor-specific omissions of L1D/CPU-buffer clearing, native
+MSR filters, nested virtualization, PMU support or interrupt locking into ordinary
+KVM. Later LTS VMCS, MMU and mitigation code remains byte-identical in these paths.
+This is source review and compilation evidence, not runtime virtualization testing.
+
+The six private interface/host service files `kvm_pkvm.h`, `pkvm_hypercalls.h`,
+`pkvm.c`, `pkvm_debugfs.c` and Intel `pkvm_iommu.[ch]` were then examined in full.
+They implement private host/hypervisor register marshalling, memory donation,
+firmware capability and console setup, vmexit tracing and protected IOMMU
+delegation. Their omission follows the same explicit runtime-backend boundary.
+Shared Intel IOMMU changes and pKVM guest support are not covered by this decision.
+Per-path evidence and exact blobs are in `evidence/generic-source-review.json` and
+`evidence/final-net-decisions.json`; merge resolutions retain their hunk indexes.

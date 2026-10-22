@@ -6372,7 +6372,7 @@
     "result_commits": [],
     "normalized_ack_blob": "5bc2a0f86d125d195f4b9c28d8b53f699b79fd1f",
     "common_ancestor_blob": "fdf178443f850a45735daf810135ea1aa5b60820",
-    "specific_evidence": "The inspected residual supplies pKVM host/protected-guest support: hypervisor identity, memory visibility, paravirtual MMIO/PCI access, protected FPU context, host transitions or private image/text patching. Omit with that complete platform, retaining native LTS mitigations, FPU isolation and ordinary virtualization. SDK x86 page-size and generic memory adaptations are handled separately.",
+    "specific_evidence": "The sole new optional prepare_switch_to_host callback is consumed by the omitted pKVM vCPU loop; preserve native LTS ops set. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
     "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/include/asm/kvm_host.h": {
@@ -6384,7 +6384,7 @@
     "result_commits": [],
     "normalized_ack_blob": "65b5fc5088b5678ade69ea209f867d4beeaeb4fe",
     "common_ancestor_blob": "03866683ac336f95265f75514663291face481e6",
-    "specific_evidence": "The inspected residual supplies pKVM host/protected-guest support: hypervisor identity, memory visibility, paravirtual MMIO/PCI access, protected FPU context, host transitions or private image/text patching. Omit with that complete platform, retaining native LTS mitigations, FPU isolation and ordinary virtualization. SDK x86 page-size and generic memory adaptations are handled separately.",
+    "specific_evidence": "Reviewed pKVM VM/vCPU/memcache storage, flags and prototypes, helper visibility, segment-count enum, host-return ops and __PKVM_HYP__ indirect-call replacement. The kzalloc alternative is guarded by enable_pkvm; preserve native LTS kvzalloc fallback and static calls. These are source changes for the omitted hypervisor, not generic vendor-hook or historical KMI requirements. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
     "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/include/asm/kvm_para.h": {
@@ -6407,7 +6407,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "f7fdc55cfaf1735c5b5bc76731e6a541b2048a72",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Complete new header examined: CONFIG_PKVM_X86 guards private host/hypervisor data, register hypercall marshalling, memblock reservations, donated-page memcaches, protected VM type checks and mapping interval-tree helpers. The CONFIG-off stubs return false. No generic userspace syscall or vendor hook is defined here; keep this separate backend absent with its private source API. The supplied SDK command line does not enable ACK early_param(\"kvm-intel.pkvm\"), and enable_pkvm defaults false. Omit this separate protected-host backend for the current SDK target; no claim is made that Android lacks virtualization consumers or that this backend is unnecessary for future platforms. Exact pinned LTS absence is retained.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/include/asm/msr-index.h": {
     "ack_blob": "dee3b79ebe672243431aea642e1ace84b87f9cb1",
@@ -6555,7 +6557,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "adbc0b6d4039381444ced030d2b080e080b48979",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Complete host-to-pKVM hypercall enumeration examined: init, tracing, KVM operations, MMU and Intel IOMMU register/domain calls; macro re-inclusion generates private wrappers/dispatch. These are not ordinary guest KVM paravirtual hypercalls. They depend on the omitted protected host implementation. The supplied SDK command line does not enable ACK early_param(\"kvm-intel.pkvm\"), and enable_pkvm defaults false. Omit this separate protected-host backend for the current SDK target; no claim is made that Android lacks virtualization consumers or that this backend is unnecessary for future platforms. Exact pinned LTS absence is retained.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/include/asm/pkvm_image.h": {
     "ack_blob": "4b369aeec44e454497f148f49ac407399f7b333a",
@@ -6957,7 +6961,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "8b855f96e12b2ab509fca35825083a0bf8282000",
-    "common_ancestor_blob": "615d6ff35c009336b260dff7bd0b2d2fe171bddd"
+    "common_ancestor_blob": "615d6ff35c009336b260dff7bd0b2d2fe171bddd",
+    "specific_evidence": "Only pKVM generated linker/retpoline/constants files and broader generated asm-offset header ignore are added. With that separate build omitted these patterns are unnecessary. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/Kconfig": {
     "ack_blob": "80dbd39f7417a576e159fe31dcee084df46751ce",
@@ -6967,7 +6973,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "80dbd39f7417a576e159fe31dcee084df46751ce",
-    "common_ancestor_blob": "278f08194ec87b9481500b8b800c3ccec1c2dc76"
+    "common_ancestor_blob": "278f08194ec87b9481500b8b800c3ccec1c2dc76",
+    "specific_evidence": "The residual entries introduce PKVM_X86/PKVM_INTEL and a development-only debug variant. They are separate host-hypervisor enablement; ordinary KVM_INTEL/KVM_AMD remain available. No new generic Android hook or userspace requirement is in this Kconfig delta. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/Makefile": {
     "ack_blob": "5d4fe0ffeadfdd0ffe0a3849c9b6bf29b67f271f",
@@ -6977,7 +6985,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "5d4fe0ffeadfdd0ffe0a3849c9b6bf29b67f271f",
-    "common_ancestor_blob": "c4b8950c7abeeb252ca4d7344d65e1deea7ef707"
+    "common_ancestor_blob": "c4b8950c7abeeb252ca4d7344d65e1deea7ef707",
+    "specific_evidence": "Residual objects, generated headers, includes and linker rules build the separate Intel pKVM hypervisor. Native LTS KVM build remains intact; none of this machinery is required by the unchanged emulator kernel/module build. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/cpuid.c": {
     "ack_blob": "b437f41f10e817cabd2ddef3d183142bc308e95f",
@@ -6987,7 +6997,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "b437f41f10e817cabd2ddef3d183142bc308e95f",
-    "common_ancestor_blob": "913ffb995279af8317daba9e692d30e31b595203"
+    "common_ancestor_blob": "913ffb995279af8317daba9e692d30e31b595203",
+    "specific_evidence": "Reviewed the full 391-line addition: shared compilation under __PKVM_HYP__, protected-vCPU CPUID signature/paravirtual feature/clock filtering, and hypervisor CPUID enforcement. Protected-vCPU checks distinguish this from native KVM capability exposure. Retain exact LTS CPUID validation and capabilities for ordinary KVM. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/cpuid.h": {
     "ack_blob": "62deec1f82ace2c09ed64d0615450fd8ac9c1fcf",
@@ -6997,7 +7009,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "62deec1f82ace2c09ed64d0615450fd8ac9c1fcf",
-    "common_ancestor_blob": "d3f5ae15a7ca314675ad0b4e7347ddd2c205a69f"
+    "common_ancestor_blob": "d3f5ae15a7ca314675ad0b4e7347ddd2c205a69f",
+    "specific_evidence": "Only three __PKVM_HYP__ CPUID helper prototypes are added for the omitted compilation environment. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/debugfs.c": {
     "ack_blob": "dd26f49c540af1e97bb8061b6f052aa72c2d5cfc",
@@ -7007,7 +7021,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "dd26f49c540af1e97bb8061b6f052aa72c2d5cfc",
-    "common_ancestor_blob": "999227fc7c6659158051525bcf819ae2f9edc5f0"
+    "common_ancestor_blob": "999227fc7c6659158051525bcf819ae2f9edc5f0",
+    "specific_evidence": "The only added call is pkvm_create_vm_debugfs; its ACK definition returns immediately when enable_pkvm is false. The new diagnostic interface belongs to the omitted hypervisor; native MMU debugfs remains LTS. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/kvm_cache_regs.h": {
     "ack_blob": "874de1493d3d1a211f9f0f544b69847b219f156c",
@@ -7017,7 +7033,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "874de1493d3d1a211f9f0f544b69847b219f156c",
-    "common_ancestor_blob": "8ddb01191d6f6c1a8a4005504f358efbd1aada0a"
+    "common_ancestor_blob": "8ddb01191d6f6c1a8a4005504f358efbd1aada0a",
+    "specific_evidence": "Only __PKVM_HYP__ removes the native register-cache context lockdep assertion. Preserve the native LTS assertion. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/kvm_onhyperv.h": {
     "ack_blob": "6c5be685696bdf7a2a1b8c0478c8d1107c692b1e",
@@ -7027,7 +7045,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "6c5be685696bdf7a2a1b8c0478c8d1107c692b1e",
-    "common_ancestor_blob": "eefab3dc8498b79cb083b827ec8c415315aaae14"
+    "common_ancestor_blob": "eefab3dc8498b79cb083b827ec8c415315aaae14",
+    "specific_evidence": "Only excludes Hyper-V implementation declarations from __PKVM_HYP__. Native Hyper-V support remains LTS. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/lapic.c": {
     "ack_blob": "b288f145459a92ebb5a7ea49c3e977225f4771d7",
@@ -7037,7 +7057,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "b288f145459a92ebb5a7ea49c3e977225f4771d7",
-    "common_ancestor_blob": "0e842dad4194aa73ae44635ce50c1bb16244e248"
+    "common_ancestor_blob": "0e842dad4194aa73ae44635ce50c1bb16244e248",
+    "specific_evidence": "Hypervisor compilation guards, protected-APIC readable mask and protected-VM x2APIC requirement belong to pKVM. kvm_apic_calc_nr_lvt_entries is moved unchanged to lapic.h only for reuse. Native LTS APIC implementation and interrupt validation remain intact. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/lapic.h": {
     "ack_blob": "a95522dfcdcc36d47437a4ec62de69f8fd7fd139",
@@ -7047,7 +7069,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "a95522dfcdcc36d47437a4ec62de69f8fd7fd139",
-    "common_ancestor_blob": "e5f5a222eced0f30bdd29e23c4fd6c8db2545460"
+    "common_ancestor_blob": "e5f5a222eced0f30bdd29e23c4fd6c8db2545460",
+    "specific_evidence": "Only hypervisor include/prototype, alternate protected shared-APIC register reads and the unchanged LVT-count helper moved from lapic.c. Native static-key/APIC behavior remains LTS. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/mmu.h": {
     "ack_blob": "a104994bf0c2ff2411f0d36a9296fef18f315e95",
@@ -7057,7 +7081,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "a104994bf0c2ff2411f0d36a9296fef18f315e95",
-    "common_ancestor_blob": "f63074048ec61dd2f7f5acec1c9fe4fecf23fe5e"
+    "common_ancestor_blob": "f63074048ec61dd2f7f5acec1c9fe4fecf23fe5e",
+    "specific_evidence": "Only suppresses native rmap availability when enable_pkvm is true; retain ordinary LTS rmap policy. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/mmu/mmu.c": {
     "ack_blob": "c223e6ad5727dbf6ba4693c51b91a4b794e4bf38",
@@ -7067,7 +7093,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "c223e6ad5727dbf6ba4693c51b91a4b794e4bf38",
-    "common_ancestor_blob": "0bd0cb8992c9fd61e1609527e94abb0ab7497d86"
+    "common_ancestor_blob": "0bd0cb8992c9fd61e1609527e94abb0ab7497d86",
+    "specific_evidence": "Reviewed all residual MMU changes: enable_pkvm branches replace native MMU roots/rmaps/notifiers/fault mapping with hypercalls and a host mapping interval tree; protected VM faults add FOLL_WRITE. Native MMU/TDP/NX mitigation remain LTS. The independent 3db14b2db789 MMIO-generation optimization is separately reviewed: skipping costly all-page zapping when caching is disabled is optional performance behavior, not a missing correctness fix; preserve native safe invalidation on rare generation wrap. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/mmu/page_track.c": {
     "ack_blob": "70de27fb82313a4bbf4c3695805353bee200c878",
@@ -7077,7 +7105,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "70de27fb82313a4bbf4c3695805353bee200c878",
-    "common_ancestor_blob": "1b17b12393a8cb2d8624d39a7b419433debe9516"
+    "common_ancestor_blob": "1b17b12393a8cb2d8624d39a7b419433debe9516",
+    "specific_evidence": "Only rejects external write tracking under enable_pkvm; native LTS tracking, including its TDX restriction, is unchanged. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/mmu/spte.c": {
     "ack_blob": "a83427486017dbe6d3b3a61d71751b98cc599398",
@@ -7087,7 +7117,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "a83427486017dbe6d3b3a61d71751b98cc599398",
-    "common_ancestor_blob": "37647afde7d3acfa1301a771ac44792eab879495"
+    "common_ancestor_blob": "37647afde7d3acfa1301a771ac44792eab879495",
+    "specific_evidence": "Only disables MMIO caching under enable_pkvm; retain LTS ordinary MMIO caching policy. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/mmu/spte.h": {
     "ack_blob": "a974c56224521cb0b27a0f73beecbd0b04e1e751",
@@ -7097,7 +7129,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "a974c56224521cb0b27a0f73beecbd0b04e1e751",
-    "common_ancestor_blob": "3133f066927e14999dd2b726c4ee086031745af8"
+    "common_ancestor_blob": "3133f066927e14999dd2b726c4ee086031745af8",
+    "specific_evidence": "Only adds WARN-and-NULL for root_to_sp when enable_pkvm is true; omitted runtime environment has no such roots. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/pkvm.c": {
     "ack_blob": "ea28ce3a466a8352db686cb3816ed8c3aedde056",
@@ -7107,7 +7141,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "ea28ce3a466a8352db686cb3816ed8c3aedde056",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Complete new file examined: early host memory reservation returns when enable_pkvm is false; memcache allocation serves donated hypervisor pages; protected-VM firmware capability ioctl rejects ordinary VM types. ChromeOS GOOG9999 ramoops/Google-coreboot GSMI code configures pKVM-private console/firmware state. These are services for the separate Intel protected host mode, not replacements for native SDK KVM, pstore or generic firmware handling. The supplied SDK command line does not enable ACK early_param(\"kvm-intel.pkvm\"), and enable_pkvm defaults false. Omit this separate protected-host backend for the current SDK target; no claim is made that Android lacks virtualization consumers or that this backend is unnecessary for future platforms. Exact pinned LTS absence is retained.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/pkvm/Makefile": {
     "ack_blob": "245cbe3be13477a8be3c2b01fc5ac85e7032bac3",
@@ -7681,7 +7717,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "13b6dc2963a3cad000233aef858bd2ad8bcc2926",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Complete new file examined: vmexit tracing is transported through pKVM hypercalls, per-VM debugfs returns without enable_pkvm, and global debugfs is initialized by successful pKVM setup. Its VM lifetime/error handling fixes concern this omitted diagnostic interface; native KVM debugfs remains unchanged. The supplied SDK command line does not enable ACK early_param(\"kvm-intel.pkvm\"), and enable_pkvm defaults false. Omit this separate protected-host backend for the current SDK target; no claim is made that Android lacks virtualization consumers or that this backend is unnecessary for future platforms. Exact pinned LTS absence is retained.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/svm/sev.c": {
     "ack_blob": "4b778e71b4c3667b97c1142011ea867c634a3a77",
@@ -7701,7 +7739,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "6e92c048faf3a39b84101017a978f4f15fa12c1a",
-    "common_ancestor_blob": "02aadb9d730e79cfc5eb6fc79e4d00acfe49a3de"
+    "common_ancestor_blob": "02aadb9d730e79cfc5eb6fc79e4d00acfe49a3de",
+    "specific_evidence": "Only disables guest PEBS under __PKVM_HYP__; retain LTS native PMU feature behavior. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/vmx/main.c": {
     "ack_blob": "00e757f287e5d866bf8ff20df5fdaac77da17ee9",
@@ -7711,7 +7751,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "00e757f287e5d866bf8ff20df5fdaac77da17ee9",
-    "common_ancestor_blob": "0eb2773b2ae235ffdce889d815a6919eaacd2c64"
+    "common_ancestor_blob": "0eb2773b2ae235ffdce889d815a6919eaacd2c64",
+    "specific_evidence": "Only hypervisor compilation guards around vt operations and a new prepare_switch_to_host entry for pKVM reuse. Ordinary LTS VMX/TDX dispatch remains unchanged. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/vmx/nested.h": {
     "ack_blob": "1b0d62bc0a3e6e2fef62f8d2174ef65791a2d6e0",
@@ -7721,7 +7763,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "1b0d62bc0a3e6e2fef62f8d2174ef65791a2d6e0",
-    "common_ancestor_blob": "983484d42ebf9d4a6f28d4916fa8262fffd8fb26"
+    "common_ancestor_blob": "983484d42ebf9d4a6f28d4916fa8262fffd8fb26",
+    "specific_evidence": "Only adds __PKVM_HYP__ nested-VMX stubs for a backend which disables nesting. Retain complete native LTS nested virtualization. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/vmx/pkvm_host.c": {
     "ack_blob": "65c42732476dd96582d9b464bacf670f4b7ea949",
@@ -7755,7 +7799,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "6f89de0ba8fce55e3b81cb1e2915e8fd344fc1af",
-    "common_ancestor_blob": "4a6d9a17da238ccca9d408d5c1750f987a4d92f6"
+    "common_ancestor_blob": "4a6d9a17da238ccca9d408d5c1750f987a4d92f6",
+    "specific_evidence": "Only selects pkvm_interrupt_blocked when enable_pkvm, preserving the native branch otherwise. Keep native LTS posted-interrupt behavior. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/vmx/vmenter.S": {
     "ack_blob": "5ab72724187d9fc8bd2ac0f32e900ebcdb4a7538",
@@ -7765,7 +7811,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "5ab72724187d9fc8bd2ac0f32e900ebcdb4a7538",
-    "common_ancestor_blob": "bc255d709d8a16ae22b5bc401965d209a89a8692"
+    "common_ancestor_blob": "bc255d709d8a16ae22b5bc401965d209a89a8692",
+    "specific_evidence": "Only excludes native NMI irqoff entry from __PKVM_HYP__; preserve LTS assembly and entry mitigations. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/vmx/vmx.c": {
     "ack_blob": "67e957fdd3bcc9c2c929e409fcc47a0f46c10766",
@@ -7775,7 +7823,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "67e957fdd3bcc9c2c929e409fcc47a0f46c10766",
-    "common_ancestor_blob": "c084f48e2b0b98c9a6068993218381a2028946cd"
+    "common_ancestor_blob": "c084f48e2b0b98c9a6068993218381a2028946cd",
+    "specific_evidence": "Full residual diff reviewed: __PKVM_HYP__ sharing, protected-vCPU state transfer and VM exits, host/hyp VMCS/IO bitmap ownership, capability requirements, and runtime enable_pkvm ops selection. Non-hyp helper visibility and VMCS-configuration extraction support that reuse, with equivalent native constants. ACK also makes enlightened_vmcs false when CONFIG_PKVM_INTEL is compiled, even when runtime pKVM is off: deliberately retain native LTS Hyper-V behavior. Keep native LTS L1D/CPU-buffer clearing, speculative-execution mitigations, nested virtualization, PMU, event validation, VMCS lifecycle and error handling; do not import hypervisor-specific mitigation bypasses or feature restrictions. Dedicated pKVM fixes (e.g. duplicate injection cancellation, PID-table unshare, protected register leakage) have no residual implementation here because the pKVM execution environment itself is omitted. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/vmx/vmx.h": {
     "ack_blob": "86eef7ba32661551d63d2f39089ed6ea6cecff95",
@@ -7785,7 +7835,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "86eef7ba32661551d63d2f39089ed6ea6cecff95",
-    "common_ancestor_blob": "ea93121029f913fdb8b64505f4807745b41b36ca"
+    "common_ancestor_blob": "ea93121029f913fdb8b64505f4807745b41b36ca",
+    "specific_evidence": "Protected exit data/IO bitmap fields, page counts and helper declarations support pKVM; segment enum equals eight original slots. VMCS control macros split required versus optional bits for __PKVM_HYP__, while native constants are equivalent. Retain native LTS layout and control policy. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/vmx/vmx_onhyperv.h": {
     "ack_blob": "c07c485c7510fbc1009a69a2a71fda680e93f3d1",
@@ -7795,7 +7847,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "c07c485c7510fbc1009a69a2a71fda680e93f3d1",
-    "common_ancestor_blob": "cdf8cbb69209dea9fbd6b8f9007ed4af2fafac45"
+    "common_ancestor_blob": "cdf8cbb69209dea9fbd6b8f9007ed4af2fafac45",
+    "specific_evidence": "Only routes __PKVM_HYP__ through existing no-Hyper-V stubs; retain LTS Hyper-V behavior. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/vmx/vmx_ops.h": {
     "ack_blob": "903822bce8147935ee00299989f5f44c7694b922",
@@ -7805,7 +7859,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "903822bce8147935ee00299989f5f44c7694b922",
-    "common_ancestor_blob": "96677576c836d5cf00820e11d125baea8f9fc7a0"
+    "common_ancestor_blob": "96677576c836d5cf00820e11d125baea8f9fc7a0",
+    "specific_evidence": "Only adds vmcs_store with exception-table handling; the pinned ACK call site is arch/x86/kvm/pkvm/vmx/idt.c in the omitted hypervisor exception handler. This helper has no independent native behavioral fix. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/vmx/x86_ops.h": {
     "ack_blob": "5735df4562715c8f170fabeff2e91219164e6f01",
@@ -7825,7 +7881,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "cbe49ea3b662cbb07be81e525390176930b7bad2",
-    "common_ancestor_blob": "ad2b7158b9c8eab5880aa390cee2038f5623c07c"
+    "common_ancestor_blob": "ad2b7158b9c8eab5880aa390cee2038f5623c07c",
+    "specific_evidence": "Full residual diff reviewed: __PKVM_HYP__ compilation guards, hypervisor-specific MSR/emulation/event/FPU handling and new protected VM hypercalls. KVM_X86_PKVM_PROTECTED_VM is advertised only when enable_pkvm is true, and existing VM creation validates supported_vm_types. Native helpers/macros moved to headers retain equivalent behavior; MCE allocation size macros equal prior constant allocations. Preserve LTS host MSR filtering, interrupt locking, FPU ownership, mitigation reporting and user-return state. No need to substitute pKVM behavior for ordinary KVM. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kvm/x86.h": {
     "ack_blob": "663fed049123a000012d973ff35c9dd8afea5a8f",
@@ -7835,7 +7893,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "663fed049123a000012d973ff35c9dd8afea5a8f",
-    "common_ancestor_blob": "c8a561c17e9ad3ba35d7b6915e72aa564e7e7f9e"
+    "common_ancestor_blob": "c8a561c17e9ad3ba35d7b6915e72aa564e7e7f9e",
+    "specific_evidence": "MCE size constants, supported XCR0/XSS masks and VM-type validator are moved/extracted without native semantic change for reuse by pKVM; added prototypes expose the corresponding shared helpers. Retain their original LTS definitions. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/lib/getuser.S": {
     "ack_blob": "9d5654b8a72a86fc1834ee886d024bd0f5496f61",
@@ -14208,7 +14268,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "80e82e5a63fb62f5d7c38f9472275296f9ecbbac",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Complete new file examined: checks physical DMAR requirements before pKVM ownership, delegates context/PASID/domain/MMIO/interrupt-remapping operations through private hypercalls, and supplies donated pages/memcaches. This is the host side of the omitted protected IOMMU backend. Native Intel IOMMU implementation is retained; shared iommu.c/pasid.c fixes are reviewed separately, not excluded by filename association. The supplied SDK command line does not enable ACK early_param(\"kvm-intel.pkvm\"), and enable_pkvm defaults false. Omit this separate protected-host backend for the current SDK target; no claim is made that Android lacks virtualization consumers or that this backend is unnecessary for future platforms. Exact pinned LTS absence is retained.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/iommu/intel/pkvm_iommu.h": {
     "ack_blob": "4233b7ea8200079b240c566c43e99d17e9616fd5",
@@ -14218,7 +14280,9 @@
     "rationale": "Omit protected-host/device-assignment and separate Microdroid/crashdump platform additions. This build is the ordinary x86_64 SDK/QEMU guest, not a protected host or the separately configured Microdroid guest. Keep upstream virtualization and its fixes. AVF feature/runtime parity is unresolved and not claimed.",
     "result_commits": [],
     "normalized_ack_blob": "4233b7ea8200079b240c566c43e99d17e9616fd5",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Complete new header examined: CONFIG_PKVM_INTEL/private hypervisor declarations, MMIO wrappers which call native read/write when pkvm_enabled() is false, protected IOMMU validation/ownership helpers, and unsupported stubs. No independent ordinary-IOMMU behavior is required from this interface; shared native callers are reviewed separately. The supplied SDK command line does not enable ACK early_param(\"kvm-intel.pkvm\"), and enable_pkvm defaults false. Omit this separate protected-host backend for the current SDK target; no claim is made that Android lacks virtualization consumers or that this backend is unnecessary for future platforms. Exact pinned LTS absence is retained.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/iommu/intel/prq.c": {
     "ack_blob": "9137f6916bb97e81e05dc56520e95c9530147d3f",
@@ -34462,10 +34526,11 @@
   "mm/page_pinner.c": {
     "ack_blob": "b3c2cbe34aad7fb177dfe249d3c717ea8b0c38f0",
     "lts_blob": null,
-    "port_blob": "d4c7d451a3caf3943fd5f19888e222075a76d4e0",
+    "port_blob": "589e1cb5c279d6f8601fabaf86451ad2101c6825",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "4069c56113281cbed133c66ff50b2017267e1af6",
       "bae607a0be95fdc5e803d358ce6f23b4006cbebf",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],

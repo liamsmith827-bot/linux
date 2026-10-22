@@ -187,10 +187,11 @@
   {
     "commit": "0a6f00cc67a3987fafab80da55bdeaa764aecae6",
     "disposition": "adapted-net-subsystem",
-    "rationale": "Retain the page-extension lifetime protection, including early-return releases, in the optional page-pinner implementation. Single-page paths use native LTS page_ext_get/page_ext_put; higher-order free now uses native LTS for_each_page_ext under an RCU read lock, following page-owner and preserving lifetime protection across section boundaries. This fixes the ACK skipped-entry loop without reverting its use-after-free fix. Runtime necessity remains unresolved and runtime behavior untested.",
+    "rationale": "Retain the page-extension lifetime protection, including early-return releases, in the optional page-pinner implementation. Single-page paths use native LTS page_ext_get/page_ext_put; higher-order free now uses native LTS for_each_page_ext under an RCU read lock, following page-owner and preserving lifetime protection across section boundaries. This fixes the ACK skipped-entry loop without reverting its use-after-free fix. Runtime necessity remains unresolved and runtime behavior untested. The nonblocking adaptation uses __GFP_NOWARN stack-depot saving and a raw buffer trylock to preserve native LTS free_pages_nolock reentrancy. Optional records can be dropped under contention; this diagnostic-fidelity tradeoff is documented in SECURITY.md.",
     "result_commits": [
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
-      "bae607a0be95fdc5e803d358ce6f23b4006cbebf"
+      "bae607a0be95fdc5e803d358ce6f23b4006cbebf",
+      "4069c56113281cbed133c66ff50b2017267e1af6"
     ]
   },
   {
@@ -359,10 +360,11 @@
   {
     "commit": "d3ee64c1de6e796fbc20d9d135fd735212e2df26",
     "disposition": "adapted-net-subsystem",
-    "rationale": "Retain optional page-pinner instrumentation, page-extension state, Kconfig/build wiring and allocation/isolation callbacks for the configured Android kernel and vendor source interface. Its exact SDK runtime necessity is unresolved; this is a conservative retention decision. The final ACK initialization and lifetime fixes supersede the initial implementation. bae607a0be95 adapts higher-order iteration to native LTS RCU/page_ext iteration and fixes debug-buffer initialization, zero-size and resize-index hazards. Native LTS allocation/free and page-extension implementations remain. No runtime tracking verification is claimed.",
+    "rationale": "Retain optional page-pinner instrumentation, page-extension state, Kconfig/build wiring and allocation/isolation callbacks for the configured Android kernel and vendor source interface. Its exact SDK runtime necessity is unresolved; this is a conservative retention decision. The final ACK initialization and lifetime fixes supersede the initial implementation. bae607a0be95 adapts higher-order iteration to native LTS RCU/page_ext iteration and fixes debug-buffer initialization, zero-size and resize-index hazards. Native LTS allocation/free and page-extension implementations remain. No runtime tracking verification is claimed. The nonblocking adaptation uses __GFP_NOWARN stack-depot saving and a raw buffer trylock to preserve native LTS free_pages_nolock reentrancy. Optional records can be dropped under contention; this diagnostic-fidelity tradeoff is documented in SECURITY.md.",
     "result_commits": [
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
-      "bae607a0be95fdc5e803d358ce6f23b4006cbebf"
+      "bae607a0be95fdc5e803d358ce6f23b4006cbebf",
+      "4069c56113281cbed133c66ff50b2017267e1af6"
     ]
   },
   {
@@ -385,10 +387,11 @@
   {
     "commit": "71311fed4580cd0e6186a645ce9a451441ec2206",
     "disposition": "adapted-net-subsystem",
-    "rationale": "Retain put_page_testzero tracking, move failure_tracking checks inside the implementation, and export page_pinner_inited for source-built modules using the inline API. The original decrement result is returned unchanged. Initialization gating and native LTS page_ext lifetime APIs are retained. This preserves optional Android debug/source behavior; it does not establish the necessity or runtime correctness of every tracking path.",
+    "rationale": "Retain put_page_testzero tracking, move failure_tracking checks inside the implementation, and export page_pinner_inited for source-built modules using the inline API. The original decrement result is returned unchanged. Initialization gating and native LTS page_ext lifetime APIs are retained. This preserves optional Android debug/source behavior; it does not establish the necessity or runtime correctness of every tracking path. The nonblocking adaptation uses __GFP_NOWARN stack-depot saving and a raw buffer trylock to preserve native LTS free_pages_nolock reentrancy. Optional records can be dropped under contention; this diagnostic-fidelity tradeoff is documented in SECURITY.md.",
     "result_commits": [
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
-      "bae607a0be95fdc5e803d358ce6f23b4006cbebf"
+      "bae607a0be95fdc5e803d358ce6f23b4006cbebf",
+      "4069c56113281cbed133c66ff50b2017267e1af6"
     ]
   },
   {
@@ -814,5 +817,11 @@
     "result_commits": [
       "fb15ca9e6bc4f11a0caed2109c4deee6baf82a50"
     ]
+  },
+  {
+    "commit": "3db14b2db78928b0a3b1d9d0b83a70d4d6ddead3",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Reviewed original three-line patch and native kvm_mmu_invalidate_mmio_sptes. This skips invalidation only when MMIO caching is disabled, avoiding unnecessary all-page zapping on rare generation wrap. Native LTS already performs safe invalidation and the change is a performance optimization, not a missing correctness/security fix. The pKVM backend which disables MMIO caching is excluded for this supplied SDK target. Retain LTS behavior to minimize unrelated changes; generic KVM and MMIO caching remain supported. The lore URL in the local commit message was not accessed.",
+    "result_commits": []
   }
 ]

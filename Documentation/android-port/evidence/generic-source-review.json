@@ -867,22 +867,20 @@
     "port_blob": "b30e5474c18e1be63b7c69354c26ae6a6cb02731"
   },
   "arch/x86/include/asm/kvm-x86-ops.h": {
-    "review_head": "6ac6df46589dd4cb923f22470de998ed836cb054",
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
     "status": "reviewed-source-selection",
-    "rationale": "The inspected residual supplies pKVM host/protected-guest support: hypervisor identity, memory visibility, paravirtual MMIO/PCI access, protected FPU context, host transitions or private image/text patching. Omit with that complete platform, retaining native LTS mitigations, FPU isolation and ordinary virtualization. SDK x86 page-size and generic memory adaptations are handled separately.",
+    "rationale": "The sole new optional prepare_switch_to_host callback is consumed by the omitted pKVM vCPU loop; preserve native LTS ops set. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
     "normalized_delta_sha256": "fac211b2249653a7385d4e85b598bd9c2979c3de554d8dd1729c3e83997180c1",
     "ack_blob": "5bc2a0f86d125d195f4b9c28d8b53f699b79fd1f",
-    "lts_blob": "617c5a44a96d0d3c4ff6dac70a510ffb2d5b025d",
-    "port_blob": "617c5a44a96d0d3c4ff6dac70a510ffb2d5b025d"
+    "lts_blob": "617c5a44a96d0d3c4ff6dac70a510ffb2d5b025d"
   },
   "arch/x86/include/asm/kvm_host.h": {
-    "review_head": "6ac6df46589dd4cb923f22470de998ed836cb054",
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
     "status": "reviewed-source-selection",
-    "rationale": "The inspected residual supplies pKVM host/protected-guest support: hypervisor identity, memory visibility, paravirtual MMIO/PCI access, protected FPU context, host transitions or private image/text patching. Omit with that complete platform, retaining native LTS mitigations, FPU isolation and ordinary virtualization. SDK x86 page-size and generic memory adaptations are handled separately.",
+    "rationale": "Reviewed pKVM VM/vCPU/memcache storage, flags and prototypes, helper visibility, segment-count enum, host-return ops and __PKVM_HYP__ indirect-call replacement. The kzalloc alternative is guarded by enable_pkvm; preserve native LTS kvzalloc fallback and static calls. These are source changes for the omitted hypervisor, not generic vendor-hook or historical KMI requirements. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
     "normalized_delta_sha256": "8ee5d4111572ea4cf0251d0918e60a947168a1b85a7e8b84905ef3b96e230679",
     "ack_blob": "65b5fc5088b5678ade69ea209f867d4beeaeb4fe",
-    "lts_blob": "3349623985660c07e164ccc244b3fd257f26a183",
-    "port_blob": "3349623985660c07e164ccc244b3fd257f26a183"
+    "lts_blob": "3349623985660c07e164ccc244b3fd257f26a183"
   },
   "arch/x86/include/asm/kvm_para.h": {
     "review_head": "6ac6df46589dd4cb923f22470de998ed836cb054",
@@ -4282,5 +4280,261 @@
       "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
       "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
     ]
+  },
+  "arch/x86/kvm/Kconfig": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "The residual entries introduce PKVM_X86/PKVM_INTEL and a development-only debug variant. They are separate host-hypervisor enablement; ordinary KVM_INTEL/KVM_AMD remain available. No new generic Android hook or userspace requirement is in this Kconfig delta. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "edac218a7a36d5c6ee55f4320ad78474395d1d3d065833eb0cdebd1ecdfa2610",
+    "ack_blob": "80dbd39f7417a576e159fe31dcee084df46751ce",
+    "lts_blob": "278f08194ec87b9481500b8b800c3ccec1c2dc76"
+  },
+  "arch/x86/kvm/Makefile": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Residual objects, generated headers, includes and linker rules build the separate Intel pKVM hypervisor. Native LTS KVM build remains intact; none of this machinery is required by the unchanged emulator kernel/module build. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "d37a800a07728c34e8769a4409aef5126c2f33cea909bff88be55eee1c628997",
+    "ack_blob": "5d4fe0ffeadfdd0ffe0a3849c9b6bf29b67f271f",
+    "lts_blob": "1f823bddbf95de2d04e116551a1a2e1cd21adddb"
+  },
+  "arch/x86/kvm/.gitignore": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Only pKVM generated linker/retpoline/constants files and broader generated asm-offset header ignore are added. With that separate build omitted these patterns are unnecessary. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "5e3d08dad914ccb916079da3a6cc0e0a950e731bfa74dca712b51c2648eeb011",
+    "ack_blob": "8b855f96e12b2ab509fca35825083a0bf8282000",
+    "lts_blob": "615d6ff35c009336b260dff7bd0b2d2fe171bddd"
+  },
+  "arch/x86/kvm/cpuid.c": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed the full 391-line addition: shared compilation under __PKVM_HYP__, protected-vCPU CPUID signature/paravirtual feature/clock filtering, and hypervisor CPUID enforcement. Protected-vCPU checks distinguish this from native KVM capability exposure. Retain exact LTS CPUID validation and capabilities for ordinary KVM. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "c4cdb69928ef464d4ee4a6c89647d6faa5c90475b398b3676b6924eb7d9cfca3",
+    "ack_blob": "b437f41f10e817cabd2ddef3d183142bc308e95f",
+    "lts_blob": "913ffb995279af8317daba9e692d30e31b595203"
+  },
+  "arch/x86/kvm/lapic.c": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Hypervisor compilation guards, protected-APIC readable mask and protected-VM x2APIC requirement belong to pKVM. kvm_apic_calc_nr_lvt_entries is moved unchanged to lapic.h only for reuse. Native LTS APIC implementation and interrupt validation remain intact. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "ea4b6d2c45544d64177a1dcefc2d31ed4f042edb8abc4e4f9da38c4fba717b09",
+    "ack_blob": "b288f145459a92ebb5a7ea49c3e977225f4771d7",
+    "lts_blob": "e6e747507fd3efcb9ef8d0116e7b7180cdad583c"
+  },
+  "arch/x86/kvm/mmu/mmu.c": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed all residual MMU changes: enable_pkvm branches replace native MMU roots/rmaps/notifiers/fault mapping with hypercalls and a host mapping interval tree; protected VM faults add FOLL_WRITE. Native MMU/TDP/NX mitigation remain LTS. The independent 3db14b2db789 MMIO-generation optimization is separately reviewed: skipping costly all-page zapping when caching is disabled is optional performance behavior, not a missing correctness fix; preserve native safe invalidation on rare generation wrap. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "339a3acd80adfb0f13f0274b5f4fd6013f9f865162e4d6dcc8440ef155adbaeb",
+    "ack_blob": "c223e6ad5727dbf6ba4693c51b91a4b794e4bf38",
+    "lts_blob": "205d314a7583c7b4af824f8babed66a7df585f21"
+  },
+  "arch/x86/kvm/vmx/main.c": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Only hypervisor compilation guards around vt operations and a new prepare_switch_to_host entry for pKVM reuse. Ordinary LTS VMX/TDX dispatch remains unchanged. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "e367af1f35fe7a4476bce1c07ce97e2a9b055e0cf1c51643c290ef666fce8321",
+    "ack_blob": "00e757f287e5d866bf8ff20df5fdaac77da17ee9",
+    "lts_blob": "0eb2773b2ae235ffdce889d815a6919eaacd2c64"
+  },
+  "arch/x86/kvm/vmx/vmx.c": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Full residual diff reviewed: __PKVM_HYP__ sharing, protected-vCPU state transfer and VM exits, host/hyp VMCS/IO bitmap ownership, capability requirements, and runtime enable_pkvm ops selection. Non-hyp helper visibility and VMCS-configuration extraction support that reuse, with equivalent native constants. ACK also makes enlightened_vmcs false when CONFIG_PKVM_INTEL is compiled, even when runtime pKVM is off: deliberately retain native LTS Hyper-V behavior. Keep native LTS L1D/CPU-buffer clearing, speculative-execution mitigations, nested virtualization, PMU, event validation, VMCS lifecycle and error handling; do not import hypervisor-specific mitigation bypasses or feature restrictions. Dedicated pKVM fixes (e.g. duplicate injection cancellation, PID-table unshare, protected register leakage) have no residual implementation here because the pKVM execution environment itself is omitted. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "e836d558049799358dc161720097c40fedcb45fffede7ca527547c899fc1d651",
+    "ack_blob": "67e957fdd3bcc9c2c929e409fcc47a0f46c10766",
+    "lts_blob": "5bae3d5ce6eec267e9a5f342714e08723db32513"
+  },
+  "arch/x86/kvm/x86.c": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Full residual diff reviewed: __PKVM_HYP__ compilation guards, hypervisor-specific MSR/emulation/event/FPU handling and new protected VM hypercalls. KVM_X86_PKVM_PROTECTED_VM is advertised only when enable_pkvm is true, and existing VM creation validates supported_vm_types. Native helpers/macros moved to headers retain equivalent behavior; MCE allocation size macros equal prior constant allocations. Preserve LTS host MSR filtering, interrupt locking, FPU ownership, mitigation reporting and user-return state. No need to substitute pKVM behavior for ordinary KVM. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "96b8a2aaf35e492ce6f2a91c878afa0e2566f1a31833a45a96d1a38c508a639d",
+    "ack_blob": "cbe49ea3b662cbb07be81e525390176930b7bad2",
+    "lts_blob": "907efeed6c91dfbf8a5cba223201cf8abb6a272b"
+  },
+  "arch/x86/kvm/debugfs.c": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "The only added call is pkvm_create_vm_debugfs; its ACK definition returns immediately when enable_pkvm is false. The new diagnostic interface belongs to the omitted hypervisor; native MMU debugfs remains LTS. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "d775291a9dbdd3431bf323c8290a499dc28643092ebbc2d8ff93cfe814d85ba5",
+    "ack_blob": "dd26f49c540af1e97bb8061b6f052aa72c2d5cfc",
+    "lts_blob": "999227fc7c6659158051525bcf819ae2f9edc5f0"
+  },
+  "arch/x86/kvm/cpuid.h": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Only three __PKVM_HYP__ CPUID helper prototypes are added for the omitted compilation environment. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "58d770c59b266db676734357df569eaad7aef8e1284abd4cc7bd312c287680a1",
+    "ack_blob": "62deec1f82ace2c09ed64d0615450fd8ac9c1fcf",
+    "lts_blob": "d3f5ae15a7ca314675ad0b4e7347ddd2c205a69f"
+  },
+  "arch/x86/kvm/kvm_cache_regs.h": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Only __PKVM_HYP__ removes the native register-cache context lockdep assertion. Preserve the native LTS assertion. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "f2ccbac6734e9602fe9d8847fb26aebece286732703d2c98e68d48fd448fcb9b",
+    "ack_blob": "874de1493d3d1a211f9f0f544b69847b219f156c",
+    "lts_blob": "8ddb01191d6f6c1a8a4005504f358efbd1aada0a"
+  },
+  "arch/x86/kvm/kvm_onhyperv.h": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Only excludes Hyper-V implementation declarations from __PKVM_HYP__. Native Hyper-V support remains LTS. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "99aa2d56cbe9211ed8be2c1296d7b75ccee39cea8c9cdf10681ec37aef75a7ed",
+    "ack_blob": "6c5be685696bdf7a2a1b8c0478c8d1107c692b1e",
+    "lts_blob": "eefab3dc8498b79cb083b827ec8c415315aaae14"
+  },
+  "arch/x86/kvm/lapic.h": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Only hypervisor include/prototype, alternate protected shared-APIC register reads and the unchanged LVT-count helper moved from lapic.c. Native static-key/APIC behavior remains LTS. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "27bec04e9f5b2a128260d24cb0fe775f628d3e8b08afbdd31ec9c01443398845",
+    "ack_blob": "a95522dfcdcc36d47437a4ec62de69f8fd7fd139",
+    "lts_blob": "7bcf6877c0bc51ab8ba0f0e37836fe7a16fd889f"
+  },
+  "arch/x86/kvm/mmu.h": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Only suppresses native rmap availability when enable_pkvm is true; retain ordinary LTS rmap policy. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "61612c2b2d76fefda11debc9f9811f273adae6589f5d23099ad928c17317d857",
+    "ack_blob": "a104994bf0c2ff2411f0d36a9296fef18f315e95",
+    "lts_blob": "f63074048ec61dd2f7f5acec1c9fe4fecf23fe5e"
+  },
+  "arch/x86/kvm/mmu/page_track.c": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Only rejects external write tracking under enable_pkvm; native LTS tracking, including its TDX restriction, is unchanged. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "9478aaf436d2a74eeab8283d7707c3b6932b1245c57fcdad152a3a52c585c050",
+    "ack_blob": "70de27fb82313a4bbf4c3695805353bee200c878",
+    "lts_blob": "7e8195a311bb028e2af2fa8e2420714886cb74ea"
+  },
+  "arch/x86/kvm/mmu/spte.c": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Only disables MMIO caching under enable_pkvm; retain LTS ordinary MMIO caching policy. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "612ea71211e287a4d2062c1ef3df56e1c09418db5a21e8a2057ea65ac03083d9",
+    "ack_blob": "a83427486017dbe6d3b3a61d71751b98cc599398",
+    "lts_blob": "37647afde7d3acfa1301a771ac44792eab879495"
+  },
+  "arch/x86/kvm/mmu/spte.h": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Only adds WARN-and-NULL for root_to_sp when enable_pkvm is true; omitted runtime environment has no such roots. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "24b846d78e5c347b29b78c816584533b50d91384d9735b91596dcb5388a21513",
+    "ack_blob": "a974c56224521cb0b27a0f73beecbd0b04e1e751",
+    "lts_blob": "3133f066927e14999dd2b726c4ee086031745af8"
+  },
+  "arch/x86/kvm/x86.h": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "MCE size constants, supported XCR0/XSS masks and VM-type validator are moved/extracted without native semantic change for reuse by pKVM; added prototypes expose the corresponding shared helpers. Retain their original LTS definitions. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "1ac3526909425a4a5a687de9dbc2b3210c5a30f97796b88dcf7ed329a1ae7d54",
+    "ack_blob": "663fed049123a000012d973ff35c9dd8afea5a8f",
+    "lts_blob": "6eddad77ab7ce7d8bf51ab844fff777be7f67d7a"
+  },
+  "arch/x86/kvm/vmx/capabilities.h": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Only disables guest PEBS under __PKVM_HYP__; retain LTS native PMU feature behavior. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "18b484d5f927887d38346f13661c0b4add6bbd3a287162607dbdc295f1bead93",
+    "ack_blob": "6e92c048faf3a39b84101017a978f4f15fa12c1a",
+    "lts_blob": "02aadb9d730e79cfc5eb6fc79e4d00acfe49a3de"
+  },
+  "arch/x86/kvm/vmx/nested.h": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Only adds __PKVM_HYP__ nested-VMX stubs for a backend which disables nesting. Retain complete native LTS nested virtualization. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "70ddff71b761865531aa0120c154db364b69a774175e854e0ad80a48b5b7f0a2",
+    "ack_blob": "1b0d62bc0a3e6e2fef62f8d2174ef65791a2d6e0",
+    "lts_blob": "983484d42ebf9d4a6f28d4916fa8262fffd8fb26"
+  },
+  "arch/x86/kvm/vmx/posted_intr.c": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Only selects pkvm_interrupt_blocked when enable_pkvm, preserving the native branch otherwise. Keep native LTS posted-interrupt behavior. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "a9945909c64f64b24dbb6a8b4ee854b8d506000e3de5527005d40e1d7bebbc1a",
+    "ack_blob": "6f89de0ba8fce55e3b81cb1e2915e8fd344fc1af",
+    "lts_blob": "4a6d9a17da238ccca9d408d5c1750f987a4d92f6"
+  },
+  "arch/x86/kvm/vmx/vmenter.S": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Only excludes native NMI irqoff entry from __PKVM_HYP__; preserve LTS assembly and entry mitigations. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "87d1f26dda734c1040568ca222530857367b0f6063d7254a981de1510f10bcbc",
+    "ack_blob": "5ab72724187d9fc8bd2ac0f32e900ebcdb4a7538",
+    "lts_blob": "bc255d709d8a16ae22b5bc401965d209a89a8692"
+  },
+  "arch/x86/kvm/vmx/vmx.h": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Protected exit data/IO bitmap fields, page counts and helper declarations support pKVM; segment enum equals eight original slots. VMCS control macros split required versus optional bits for __PKVM_HYP__, while native constants are equivalent. Retain native LTS layout and control policy. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "5961d3a259b86a8cc6cced88d02a94cca83dc97ed00b23c301962d02ea09e9db",
+    "ack_blob": "86eef7ba32661551d63d2f39089ed6ea6cecff95",
+    "lts_blob": "ea93121029f913fdb8b64505f4807745b41b36ca"
+  },
+  "arch/x86/kvm/vmx/vmx_onhyperv.h": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Only routes __PKVM_HYP__ through existing no-Hyper-V stubs; retain LTS Hyper-V behavior. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "04645b7c7888c467f1afc15f8f6f4faeca1896ca9a344acec4a6d3d751d9425c",
+    "ack_blob": "c07c485c7510fbc1009a69a2a71fda680e93f3d1",
+    "lts_blob": "cdf8cbb69209dea9fbd6b8f9007ed4af2fafac45"
+  },
+  "arch/x86/kvm/vmx/vmx_ops.h": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Only adds vmcs_store with exception-table handling; the pinned ACK call site is arch/x86/kvm/pkvm/vmx/idt.c in the omitted hypervisor exception handler. This helper has no independent native behavioral fix. The pinned SDK uses device/generic/goldfish/board/kernel/x86_64.mk and x86_64_cmdline.txt (8250.nr_uarts=1 clocksource=pit); ACK enable_pkvm is zero-initialized and set by early_param(\"kvm-intel.pkvm\"). The separate Intel pKVM host mode is therefore outside this supplied target. This does not assert absence of Android virtualization consumers or impossibility of nesting. Keep exact pinned LTS for this path; shared guest/IOMMU APIs are assessed separately.",
+    "normalized_delta_sha256": "7288b18a9bb2a6900e39e35605847a73a397b71e366ab9fce64a1c7c01bcb44d",
+    "ack_blob": "903822bce8147935ee00299989f5f44c7694b922",
+    "lts_blob": "e131c7b555dcf04c220b5c94f094a604c1859126"
+  },
+  "arch/x86/kvm/pkvm.c": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Complete new file examined: early host memory reservation returns when enable_pkvm is false; memcache allocation serves donated hypervisor pages; protected-VM firmware capability ioctl rejects ordinary VM types. ChromeOS GOOG9999 ramoops/Google-coreboot GSMI code configures pKVM-private console/firmware state. These are services for the separate Intel protected host mode, not replacements for native SDK KVM, pstore or generic firmware handling. The supplied SDK command line does not enable ACK early_param(\"kvm-intel.pkvm\"), and enable_pkvm defaults false. Omit this separate protected-host backend for the current SDK target; no claim is made that Android lacks virtualization consumers or that this backend is unnecessary for future platforms. Exact pinned LTS absence is retained.",
+    "normalized_delta_sha256": "cb49ec2012de65d0c7dae0fa3d5f690a764613a16b4de507cd6fa5befd26ade5",
+    "ack_blob": "ea28ce3a466a8352db686cb3816ed8c3aedde056",
+    "lts_blob": null
+  },
+  "arch/x86/kvm/pkvm_debugfs.c": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Complete new file examined: vmexit tracing is transported through pKVM hypercalls, per-VM debugfs returns without enable_pkvm, and global debugfs is initialized by successful pKVM setup. Its VM lifetime/error handling fixes concern this omitted diagnostic interface; native KVM debugfs remains unchanged. The supplied SDK command line does not enable ACK early_param(\"kvm-intel.pkvm\"), and enable_pkvm defaults false. Omit this separate protected-host backend for the current SDK target; no claim is made that Android lacks virtualization consumers or that this backend is unnecessary for future platforms. Exact pinned LTS absence is retained.",
+    "normalized_delta_sha256": "296f88dd1d8edf845924151e96f0f221f601a9563b02e93959a254240945d15a",
+    "ack_blob": "13b6dc2963a3cad000233aef858bd2ad8bcc2926",
+    "lts_blob": null
+  },
+  "arch/x86/include/asm/kvm_pkvm.h": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Complete new header examined: CONFIG_PKVM_X86 guards private host/hypervisor data, register hypercall marshalling, memblock reservations, donated-page memcaches, protected VM type checks and mapping interval-tree helpers. The CONFIG-off stubs return false. No generic userspace syscall or vendor hook is defined here; keep this separate backend absent with its private source API. The supplied SDK command line does not enable ACK early_param(\"kvm-intel.pkvm\"), and enable_pkvm defaults false. Omit this separate protected-host backend for the current SDK target; no claim is made that Android lacks virtualization consumers or that this backend is unnecessary for future platforms. Exact pinned LTS absence is retained.",
+    "normalized_delta_sha256": "80e89b6dae83b73a393325875d9411fc3747753e84d7bfe6f2cd41644a82585d",
+    "ack_blob": "f7fdc55cfaf1735c5b5bc76731e6a541b2048a72",
+    "lts_blob": null
+  },
+  "arch/x86/include/asm/pkvm_hypercalls.h": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Complete host-to-pKVM hypercall enumeration examined: init, tracing, KVM operations, MMU and Intel IOMMU register/domain calls; macro re-inclusion generates private wrappers/dispatch. These are not ordinary guest KVM paravirtual hypercalls. They depend on the omitted protected host implementation. The supplied SDK command line does not enable ACK early_param(\"kvm-intel.pkvm\"), and enable_pkvm defaults false. Omit this separate protected-host backend for the current SDK target; no claim is made that Android lacks virtualization consumers or that this backend is unnecessary for future platforms. Exact pinned LTS absence is retained.",
+    "normalized_delta_sha256": "af9cd48faaefc337848f5c06b94c70cd3611f8b0f4a654f33bf7a8bd44c96caa",
+    "ack_blob": "adbc0b6d4039381444ced030d2b080e080b48979",
+    "lts_blob": null
+  },
+  "drivers/iommu/intel/pkvm_iommu.c": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Complete new file examined: checks physical DMAR requirements before pKVM ownership, delegates context/PASID/domain/MMIO/interrupt-remapping operations through private hypercalls, and supplies donated pages/memcaches. This is the host side of the omitted protected IOMMU backend. Native Intel IOMMU implementation is retained; shared iommu.c/pasid.c fixes are reviewed separately, not excluded by filename association. The supplied SDK command line does not enable ACK early_param(\"kvm-intel.pkvm\"), and enable_pkvm defaults false. Omit this separate protected-host backend for the current SDK target; no claim is made that Android lacks virtualization consumers or that this backend is unnecessary for future platforms. Exact pinned LTS absence is retained.",
+    "normalized_delta_sha256": "f9e9d1ffd653fdec78da6c9a942afb8f9e3c7907e65db256d08c9847f3d431a2",
+    "ack_blob": "80e82e5a63fb62f5d7c38f9472275296f9ecbbac",
+    "lts_blob": null
+  },
+  "drivers/iommu/intel/pkvm_iommu.h": {
+    "review_head": "4069c56113281cbed133c66ff50b2017267e1af6",
+    "status": "reviewed-source-selection",
+    "rationale": "Complete new header examined: CONFIG_PKVM_INTEL/private hypervisor declarations, MMIO wrappers which call native read/write when pkvm_enabled() is false, protected IOMMU validation/ownership helpers, and unsupported stubs. No independent ordinary-IOMMU behavior is required from this interface; shared native callers are reviewed separately. The supplied SDK command line does not enable ACK early_param(\"kvm-intel.pkvm\"), and enable_pkvm defaults false. Omit this separate protected-host backend for the current SDK target; no claim is made that Android lacks virtualization consumers or that this backend is unnecessary for future platforms. Exact pinned LTS absence is retained.",
+    "normalized_delta_sha256": "0d5be14dc03bba4ec3e99dc8502f8d4086c4a47c043ab850a4cbca903e9fffd6",
+    "ack_blob": "4233b7ea8200079b240c566c43e99d17e9616fd5",
+    "lts_blob": null
   }
 }
