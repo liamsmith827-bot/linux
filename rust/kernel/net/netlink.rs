@@ -27,13 +27,19 @@ use core::{
 pub const GENLMSG_DEFAULT_SIZE: usize = bindings::GENLMSG_DEFAULT_SIZE;
 
 // Both native message-size helpers use signed int arithmetic and alignment.
+const NLMSG_HDRLEN: usize = size_of::<bindings::nlmsghdr>()
+    .next_multiple_of(bindings::NLMSG_ALIGNTO as usize);
+const GENL_HDRLEN: usize = size_of::<bindings::genlmsghdr>()
+    .next_multiple_of(bindings::NLMSG_ALIGNTO as usize);
+const NLA_HDRLEN: usize = size_of::<bindings::nlattr>()
+    .next_multiple_of(bindings::NLA_ALIGNTO as usize);
 const MAX_GENL_PAYLOAD: usize = ((c_int::MAX as usize)
     & !(bindings::NLMSG_ALIGNTO as usize - 1))
-    - bindings::NLMSG_HDRLEN as usize
-    - bindings::GENL_HDRLEN as usize;
+    - NLMSG_HDRLEN
+    - GENL_HDRLEN;
 
 // nla_len includes the header and is stored in a u16.
-const MAX_ATTR_PAYLOAD: usize = u16::MAX as usize - bindings::NLA_HDRLEN as usize;
+const MAX_ATTR_PAYLOAD: usize = u16::MAX as usize - NLA_HDRLEN;
 
 /// A wrapper around `struct sk_buff` for generic netlink messages.
 ///
@@ -102,7 +108,7 @@ impl GenlMsg {
         let skb = self.skb.skb.as_ptr();
         let len = size_of_val(value);
         if len > MAX_ATTR_PAYLOAD {
-            return Err(EMSGSIZE);
+            return Err(Error::from_errno(-(bindings::EMSGSIZE as c_int)));
         }
         let ptr = core::ptr::from_ref(value).cast::<c_void>();
         // SAFETY: `skb` is valid by `NetlinkSkBuff` type invariants, and the provided value is
