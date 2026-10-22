@@ -26,6 +26,15 @@ use core::{
 /// The default netlink message size.
 pub const GENLMSG_DEFAULT_SIZE: usize = bindings::GENLMSG_DEFAULT_SIZE;
 
+// Both native message-size helpers use signed int arithmetic and alignment.
+const MAX_GENL_PAYLOAD: usize = ((c_int::MAX as usize)
+    & !(bindings::NLMSG_ALIGNTO as usize - 1))
+    - bindings::NLMSG_HDRLEN as usize
+    - bindings::GENL_HDRLEN as usize;
+
+// nla_len includes the header and is stored in a u16.
+const MAX_ATTR_PAYLOAD: usize = u16::MAX as usize - bindings::NLA_HDRLEN as usize;
+
 /// A wrapper around `struct sk_buff` for generic netlink messages.
 ///
 /// This type is intended to be specific for buffers used with netlink only, and other usecases for
@@ -41,7 +50,10 @@ pub struct NetlinkSkBuff {
 impl NetlinkSkBuff {
     /// Creates a new `NetlinkSkBuff` with the given size.
     pub fn new(size: usize, flags: alloc::Flags) -> Result<NetlinkSkBuff, AllocError> {
-        // SAFETY: `genlmsg_new` only requires its arguments to be valid integers.
+        if size > MAX_GENL_PAYLOAD {
+            return Err(AllocError);
+        }
+        // SAFETY: The payload, headers and alignment fit the native signed size arithmetic.
         let skb = unsafe { bindings::genlmsg_new(size, flags.as_raw()) };
         let skb = NonNull::new(skb).ok_or(AllocError)?;
         Ok(NetlinkSkBuff { skb })
@@ -89,9 +101,13 @@ impl GenlMsg {
     {
         let skb = self.skb.skb.as_ptr();
         let len = size_of_val(value);
+        if len > MAX_ATTR_PAYLOAD {
+            return Err(EMSGSIZE);
+        }
         let ptr = core::ptr::from_ref(value).cast::<c_void>();
         // SAFETY: `skb` is valid by `NetlinkSkBuff` type invariants, and the provided value is
-        // readable and initialized for its `size_of` bytes.
+        // readable and initialized for its `size_of` bytes. The complete attribute fits
+        // the native u16 length field and the payload conversion to c_int cannot truncate.
         to_result(unsafe { bindings::nla_put(skb, attrtype, len as c_int, ptr) })
     }
 
@@ -125,6 +141,11 @@ impl GenlMsg {
         group: u32,
         flags: alloc::Flags,
     ) -> Result {
+        // The native helper returns early without consuming the skb for an invalid group.
+        // Keep ownership until that case has been excluded so Drop can cancel and free it.
+        if !family.has_group(group) {
+            return Err(EINVAL);
+        }
         let me = ManuallyDrop::new(self);
         // SAFETY: The `skb` and `family` pointers are valid. We pass ownership of the `skb` to
         // `genlmsg_multicast` by not dropping `self`.
@@ -234,10 +255,18 @@ impl Family {
 
     /// Checks if there are any listeners for the given multicast group.
     pub fn has_listeners(&self, group: u32) -> bool {
+        if !self.has_group(group) {
+            return false;
+        }
         // SAFETY: The family and init_net pointers are valid.
         unsafe {
-            bindings::genl_has_listeners(self.as_raw(), &raw mut bindings::init_net, group) != 0
+            bindings::genl_has_listeners(self.as_raw(), &raw mut bindings::init_net, group) > 0
         }
+    }
+
+    fn has_group(&self, group: u32) -> bool {
+        // SAFETY: n_mcgrps is initialized by const_new and is not changed by registration.
+        group < unsafe { (*self.as_raw()).n_mcgrps as u32 }
     }
 
     /// Returns a raw pointer to the underlying `genl_family` structure.
