@@ -3002,7 +3002,8 @@ SYSCALL_DEFINE1(swapoff, const char __user *, specialfile)
 	if (p->flags & SWP_CONTINUED)
 		free_swap_count_continuations(p);
 
-	if (!p->bdev || hibernation_swap || !bdev_nonrot(p->bdev))
+	/* Match the classification recorded at swapon, even if a hook changed. */
+	if (!(p->flags & SWP_SOLIDSTATE))
 		atomic_dec(&nr_rotate_swap);
 
 	mutex_lock(&swapon_mutex);
@@ -3701,6 +3702,7 @@ SYSCALL_DEFINE2(swapon, const char __user *, specialfile, int, swap_flags)
 	if (si->bdev && !hibernation_swap && bdev_nonrot(si->bdev)) {
 		si->flags |= SWP_SOLIDSTATE;
 	} else {
+		si->flags &= ~SWP_SOLIDSTATE;
 		atomic_inc(&nr_rotate_swap);
 		inced_nr_rotate_swap = true;
 	}
