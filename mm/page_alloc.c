@@ -678,7 +678,7 @@ void __meminit init_pageblock_migratetype(struct page *page,
 	unsigned long flags;
 
 	if (unlikely(page_group_by_mobility_disabled &&
-		     migratetype < MIGRATE_PCPTYPES))
+		     migratetype < MIGRATE_FALLBACKS))
 		migratetype = MIGRATE_UNMOVABLE;
 
 	flags = migratetype;
@@ -818,7 +818,8 @@ static inline unsigned int order_to_pindex(int migratetype, int order)
 
 		movable = migratetype == MIGRATE_MOVABLE;
 #ifdef CONFIG_CMA
-		movable |= migratetype == MIGRATE_CMA;
+		if (migratetype == MIGRATE_CMA)
+			return NR_LOWORDER_PCP_LISTS + 2;
 #endif
 
 		return NR_LOWORDER_PCP_LISTS + movable;
@@ -3613,13 +3614,14 @@ struct page *__rmqueue_pcplist(struct zone *zone, unsigned int order,
 
 	if (cma_redirect_restricted() && alloc_flags & ALLOC_CMA) {
 		struct page *page;
+		struct list_head *cma_list;
 		int cma_migratetype;
 
 		/* Use CMA pcp list */
 		cma_migratetype = get_cma_migrate_type();
-		list = &pcp->lists[order_to_pindex(cma_migratetype, order)];
+		cma_list = &pcp->lists[order_to_pindex(cma_migratetype, order)];
 		page = ___rmqueue_pcplist(zone, order, cma_migratetype,
-					  alloc_flags, pcp, list);
+					  alloc_flags, pcp, cma_list);
 		if (page)
 			return page;
 	}
