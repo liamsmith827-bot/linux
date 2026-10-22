@@ -1784,5 +1784,445 @@
     "disposition": "reconciled-to-lts",
     "rationale": "The sole hunk replaces index % (1 << folio_order) with index % folio_nr_pages in F2FS_SUPER_BLOCK. Its callers use block-device pagecache folios (read_mapping_folio or that mapping), whose order is bounded by MAX_PAGECACHE_ORDER; on the SDK 4-KiB/THP configuration this is PMD order 9. Native shift and page count therefore yield the same positive power-of-two divisor without signed-shift overflow. Retain the native expression to avoid an unnecessary cleanup; no different block/folio indexing or new platform capability is claimed. Evidence: complete local ACK patch and named LTS/port functions; SECURITY.md. No remote access or runtime test.",
     "result_commits": []
+  },
+  {
+    "commit": "caf45855ff773da2ecfb7681cffcb0457bf4b750",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "caf45855ff77 introduces cp_enable_rwsem, 688c9692a412 reverts it, c88a369d5f51 reinstates it, and 1ea2a630f6fc finally removes it. The final revert documents folio-lock/read-lock versus write-lock/sync-inodes inversion. Both pinned final ACK and LTS omit the lock; keep that safe final state. The temporary five-second interval is not retained; the later bounded-full-sync series replaces the time-check policy. Full local patches and final source examined; SECURITY.md checkpoint-enable section and evidence/f2fs-checkpoint-check.json record security tradeoffs and test limits. No remote resources used.",
+    "result_commits": []
+  },
+  {
+    "commit": "688c9692a412b8de2ded11fddde0d8f602a862d1",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "caf45855ff77 introduces cp_enable_rwsem, 688c9692a412 reverts it, c88a369d5f51 reinstates it, and 1ea2a630f6fc finally removes it. The final revert documents folio-lock/read-lock versus write-lock/sync-inodes inversion. Both pinned final ACK and LTS omit the lock; keep that safe final state. The temporary five-second interval is not retained; the later bounded-full-sync series replaces the time-check policy. Full local patches and final source examined; SECURITY.md checkpoint-enable section and evidence/f2fs-checkpoint-check.json record security tradeoffs and test limits. No remote resources used.",
+    "result_commits": []
+  },
+  {
+    "commit": "c88a369d5f51ada9bc2fab28b17e5e1acc9b8cc5",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "caf45855ff77 introduces cp_enable_rwsem, 688c9692a412 reverts it, c88a369d5f51 reinstates it, and 1ea2a630f6fc finally removes it. The final revert documents folio-lock/read-lock versus write-lock/sync-inodes inversion. Both pinned final ACK and LTS omit the lock; keep that safe final state. The temporary five-second interval is not retained; the later bounded-full-sync series replaces the time-check policy. Full local patches and final source examined; SECURITY.md checkpoint-enable section and evidence/f2fs-checkpoint-check.json record security tradeoffs and test limits. No remote resources used.",
+    "result_commits": []
+  },
+  {
+    "commit": "1ea2a630f6fcb03ff1cb856093f00f04afef89fb",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "caf45855ff77 introduces cp_enable_rwsem, 688c9692a412 reverts it, c88a369d5f51 reinstates it, and 1ea2a630f6fc finally removes it. The final revert documents folio-lock/read-lock versus write-lock/sync-inodes inversion. Both pinned final ACK and LTS omit the lock; keep that safe final state. The temporary five-second interval is not retained; the later bounded-full-sync series replaces the time-check policy. Full local patches and final source examined; SECURITY.md checkpoint-enable section and evidence/f2fs-checkpoint-check.json record security tradeoffs and test limits. No remote resources used.",
+    "result_commits": []
+  },
+  {
+    "commit": "4ff70ea40c56196c3d7c30e11571799d27a18381",
+    "disposition": "adapted-net-state",
+    "rationale": "The required pre-enable data flush is retained as sync_inodes_sb on each bounded full-sync pass before gc_lock, dirty-to-prefree and clearing CP_DISABLED. Native LTS already had a full sync after its old chunked loop. The later ACK retry policy replaces that arrangement without removing the final sync_fs error handling. Full local patches and final source examined; SECURITY.md checkpoint-enable section and evidence/f2fs-checkpoint-check.json record security tradeoffs and test limits. No remote resources used.",
+    "result_commits": [
+      "e6897f1d24cd2e29f95460d61a9ea107200dc5ee"
+    ]
+  },
+  {
+    "commit": "775c95ae4f1dbd89b339819f89d4e96d2398b148",
+    "disposition": "adapted-net-state",
+    "rationale": "Replace the native chunked writeback/time-check/final-sync sequence with full sync passes, integrating the later skipped-write break policy and three-retry cap. Both designs avoid indefinitely chasing concurrent dirties; neither is a hard wall-clock bound because synchronous writeback can block. Retain native checkpoint state transitions and error propagation. This intentional policy change is justified by local vold Checkpoint.cpp checkpoint=enable use and conservative configured F2FS runtime compatibility; actual SDK mount use is unverified. Full local patches and final source examined; SECURITY.md checkpoint-enable section and evidence/f2fs-checkpoint-check.json record security tradeoffs and test limits. No remote resources used.",
+    "result_commits": [
+      "e6897f1d24cd2e29f95460d61a9ea107200dc5ee"
+    ]
+  },
+  {
+    "commit": "2fd12856f7172e0a824522036235cd93018d85c2",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain enable flag, synchronous skipped-write count, zero-dirty/no-new-skips stopping conditions, warning and counter cleanup. Adapt the vendor write-cache hook: initialize ret and count its skipped pages even on successful callback completion, since it bypasses native retries. Preserve native errors, locking and checkpoint flush. The count is a heuristic, not unique-page or persistence proof. Full local patches and final source examined; SECURITY.md checkpoint-enable section and evidence/f2fs-checkpoint-check.json record security tradeoffs and test limits. No remote resources used.",
+    "result_commits": [
+      "e6897f1d24cd2e29f95460d61a9ea107200dc5ee"
+    ]
+  },
+  {
+    "commit": "fed4ed3fd740836d91941a088842cafbf6b4aeb3",
+    "disposition": "adapted-net-state",
+    "rationale": "Keep final ACK MAX_FLUSH_RETRY_COUNT=3 (four total passes including the initial pass), bounding repeated full writeback after persistent skipped writes. The extracted-function check verifies the exact off-by-one behavior and eventual state cleanup. It does not establish latency or durability. Full local patches and final source examined; SECURITY.md checkpoint-enable section and evidence/f2fs-checkpoint-check.json record security tradeoffs and test limits. No remote resources used.",
+    "result_commits": [
+      "e6897f1d24cd2e29f95460d61a9ea107200dc5ee"
+    ]
+  },
+  {
+    "commit": "a2000217f66c3adbec01af75f9a9c2a4766e3d9f",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain disable-checkpoint entry, GC, sync, checkpoint-write and exit diagnostics at the native LTS control-flow locations. No GC condition, error result, lock order or persistence operation is removed. Logs expose aggregate dirty/unusable counts to the existing kernel log audience, not file contents. Full local patches and final source examined; SECURITY.md checkpoint-enable section and evidence/f2fs-checkpoint-check.json record security tradeoffs and test limits. No remote resources used.",
+    "result_commits": [
+      "e6897f1d24cd2e29f95460d61a9ea107200dc5ee"
+    ]
+  },
+  {
+    "commit": "d09db6e28dabbbffafefd6fe15b6d29b648283e7",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Native f2fs_recover_fsync_data initializes all three local list heads before any list use; replacing the declarations and INIT_LIST_HEAD with LIST_HEAD is equivalent local initialization. Retain native initialization and lock ordering. Evidence: full local ACK patch and named current/native functions and callers inspected. No remote sources or runtime tests.",
+    "result_commits": []
+  },
+  {
+    "commit": "fe60ac6d8b17968cac4dff90f4fd4519928fffea",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Native f2fs_enable_quotas already obtains/tests each qf_inum; its only quota-enable callee rechecks the same immutable superblock entry and quota feature. Every enable_quotas call site is quota-feature guarded. Keeping those duplicate checks and the native private signature preserves loading, cleanup and error behavior; this cleanup removes no needed interface. Evidence: full local ACK patch and named current/native functions and callers inspected. No remote sources or runtime tests.",
+    "result_commits": []
+  },
+  {
+    "commit": "1aef3af043b57b9a7d5b46f2a58f2269b2baded3",
+    "disposition": "reconciled-to-lts",
+    "rationale": "All five native f2fs_sync_meta_pages calls pass META; the implementation submits using that unchanged parameter. Retain the explicit private parameter and the same metadata I/O type, bounds, sync and error handling instead of replacing it with a constant in the helper. Evidence: full local ACK patch and named current/native functions and callers inspected. No remote sources or runtime tests.",
+    "result_commits": []
+  },
+  {
+    "commit": "a5ab526b3539993e462fad74c3e1c4267a0e9680",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Native f2fs_in_warm_node_list uses only folio, testing node/dnode/cold flags. All three callers supply an already available sbi pointer without side effects. Retain the unused private parameter and identical predicate; no exported userspace or vendor-hook contract is involved. Evidence: full local ACK patch and named current/native functions and callers inspected. No remote sources or runtime tests.",
+    "result_commits": []
+  },
+  {
+    "commit": "e4478f9abfa1325c37619fa6ff5b11ae3ac7b99c",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Native truncate_partial_nodes never reads ri. Its two callers pass F2FS_INODE(folio), a direct address conversion while dn holds the inode folio reference. Retaining the unused parameter changes neither lookup, validation, truncation nor cleanup. Keep native body and callers. Evidence: full local ACK patch and named current/native functions and callers inspected. No remote sources or runtime tests.",
+    "result_commits": []
+  },
+  {
+    "commit": "095681909441771da44f22f97be2741cd9219f3c",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Native fscrypt uses SYNC_SKCIPHER_REQUEST_ON_STACK and a bounce-page mempool; its own API documents that GFP_NOFS direct reclaim guarantees that allocation. The ACK hunk deletes the old ENOMEM retry branch and local gfp variable only. Keep the native defensive branch and all non-ENOMEM error propagation; no newly required encryption operation or user interface is omitted. This does not claim that arbitrary crypto implementations cannot report errors. Evidence: full local ACK patch and named current/native functions and callers inspected. No remote sources or runtime tests.",
+    "result_commits": []
+  },
+  {
+    "commit": "101c19de67a414340dc7cc11ee1454acd592331c",
+    "disposition": "already-represented-upstream",
+    "rationale": "Pinned LTS 7e4ab3907f44 already removes use_cow and reads with the original inode while retaining the COW physical block lookup. Current prepare_atomic_write_begin and f2fs_write_begin retain that correction, matching crypto selection to folio->mapping->host and avoiding the described NULL-context dereference. Do not restore the obsolete COW crypto selector. Evidence: full local ACK patch and named current/native functions and callers inspected. No remote sources or runtime tests.",
+    "result_commits": []
+  },
+  {
+    "commit": "818c9f3083e3af63368b0cb8bfa997f550ad7f51",
+    "disposition": "superseded-no-residual-code",
+    "rationale": "The old two-function alignment warning is superseded by native check_swap_activate: it detects unaligned/sequential extents, migrates blocks and retries mapping before add_swap_extent, and reports not_aligned afterward. Native holes/errors remain fatal. Retain the actual migration solution anticipated by the historical patch, rather than revive the old warning-only split helpers. Evidence: full local ACK patch and named current/native functions and callers inspected. No remote sources or runtime tests.",
+    "result_commits": []
+  },
+  {
+    "commit": "70b4e551fec8feccaed5fa0ba4e7787e808d43d6",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain the exit-label rename as the prerequisite for the adjacent new corruption cleanup path. Resolve the conflict by preserving the existing sync_fs return assignment and traced lock-context arguments. Evidence: complete local ACK patch, native LTS/current source and SECURITY.md inode/write-range section. Compilation recorded separately; no runtime or remote-resource claim.",
+    "result_commits": [
+      "3e9217303cfcacd681018c6078579a293f35a6b6"
+    ]
+  },
+  {
+    "commit": "3d04bbbd8d96f8d9a4ac581468dedb9899269329",
+    "disposition": "adapted-net-state",
+    "rationale": "Add the missing single-link directory checks during inode loading and unlink, returning corruption before the two link decrements. Keep native zero-link handling, folio cleanup and other validation. The unlink conflict preserves sync error propagation. Evidence: complete local ACK patch, native LTS/current source and SECURITY.md inode/write-range section. Compilation recorded separately; no runtime or remote-resource claim.",
+    "result_commits": [
+      "3e9217303cfcacd681018c6078579a293f35a6b6"
+    ]
+  },
+  {
+    "commit": "96945f9d985f1932dfd4c2c77b5b58c9718d1b03",
+    "disposition": "adapted-net-state",
+    "rationale": "Add the missing quota-inode NAT check for null/reserved block addresses and mark/report corruption. Keep native generic block-range validation and fatal return intact. Adapt quota-file lookup to sbi/nid so the check works before inode construction; the existing large-folio quota exclusion passes the same inode identity. Evidence: complete local ACK patch, native LTS/current source and SECURITY.md inode/write-range section. Compilation recorded separately; no runtime or remote-resource claim.",
+    "result_commits": [
+      "3e9217303cfcacd681018c6078579a293f35a6b6"
+    ]
+  },
+  {
+    "commit": "76e277bfa04608cd33695eb9bb2fbd8d94330c7e",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain final ACK unsigned-int widths for max_io_bytes and seq_file_ra_mul. Native size-aware sysfs accessors match the new widths, and readahead multiplier remains restricted to 2..256. Larger generic max_io_bytes stores cast as in ACK; this field is an I/O aggregation hint, not a storage range check. No historical struct layout is preserved. Evidence: complete local ACK patch, native LTS/current source and SECURITY.md inode/write-range section. Compilation recorded separately; no runtime or remote-resource claim.",
+    "result_commits": [
+      "3e9217303cfcacd681018c6078579a293f35a6b6"
+    ]
+  },
+  {
+    "commit": "a5edbaeed4ca836c32fdc9bbd344f5a4c76bdc5b",
+    "disposition": "adapted-net-state",
+    "rationale": "Use unsigned size in the journal-space predicate to match NAT/SIT unsigned entry counts, avoiding narrowing to signed int before comparison. Preserve journal capacities and existing corruption checks; no userspace ABI change. Evidence: complete local ACK patch, native LTS/current source and SECURITY.md inode/write-range section. Compilation recorded separately; no runtime or remote-resource claim.",
+    "result_commits": [
+      "3e9217303cfcacd681018c6078579a293f35a6b6"
+    ]
+  },
+  {
+    "commit": "818c63a5ab99df73fb820490d7b1e9b3e17b0f8d",
+    "disposition": "adapted-net-state",
+    "rationale": "Validate pinned-file overwrites and select forced-buffered direct-write flush/invalidation using the range after f2fs_write_checks adjusts append offset and limits. Preserve native locking, cleanup and errors, and keep original request positions for tracing. Evidence: complete local ACK patch, native LTS/current source and SECURITY.md inode/write-range section. Compilation recorded separately; no runtime or remote-resource claim.",
+    "result_commits": [
+      "3e9217303cfcacd681018c6078579a293f35a6b6"
+    ]
+  },
+  {
+    "commit": "a87cb88872e70e9e898f60a6d5863dbeb2cb22d9",
+    "disposition": "adapted-net-state",
+    "rationale": "Expose ACK FOP_DONTCACHE support for configured F2FS generic buffered reads while explicitly rejecting unsupported IOCB_DONTCACHE writes. Native core flag validation and generic read implementation already exist, and local bionic headers expose the flag. Conservative public-interface retention; actual SDK invocation is unverified. Evidence: complete local ACK patch, native LTS/current source and SECURITY.md inode/write-range section. Compilation recorded separately; no runtime or remote-resource claim.",
+    "result_commits": [
+      "3e9217303cfcacd681018c6078579a293f35a6b6"
+    ]
+  },
+  {
+    "commit": "aae9069d6ba05afe0994293092b2fba4bde7f4ab",
+    "disposition": "already-represented-upstream",
+    "rationale": "Full patch compared with native LTS 97e4f479939e: added/deleted implementation lines match, with only unrelated max_io_bytes/lock-timing context differences. Retain the variable summary size, capacity/access macros and format handling already in LTS. The helper unsigned-size adaptation is separately recorded under a5edbaeed4ca and the stable overlap assessment. Evidence: full local ACK patches and native/current functions, call sites and gates examined; no remote resources or runtime testing.",
+    "result_commits": []
+  },
+  {
+    "commit": "5681cbf902763372a145c9f71815b24e2aec58d3",
+    "disposition": "already-represented-upstream",
+    "rationale": "LTS bedb710b63ae moves dentry marking inside __write_node_folio under node_write. Current source retains this placement, clears stale marks, sets current fsync state and uses the native conditional inode marking. The outer fsync loop no longer races checkpoint by setting the mark. Evidence: full local ACK patches and native/current functions, call sites and gates examined; no remote resources or runtime testing.",
+    "result_commits": []
+  },
+  {
+    "commit": "f16776ad323226d3d9b5fbddc8bd9cd2eb325cf8",
+    "disposition": "already-represented-upstream",
+    "rationale": "LTS cb06a07d835b holds node_write outside nat_tree_lock while examining checkpoint/fsync NAT flags. The port preserves that order with separate traced lc/nlc contexts, as implemented in 0e583bb7ddb4. It does not infer checkpoint completion from unprotected NAT flags. Evidence: full local ACK patches and native/current functions, call sites and gates examined; no remote resources or runtime testing.",
+    "result_commits": []
+  },
+  {
+    "commit": "4f59f23535ce3809704fe61f3ad6c8d6628aeebb",
+    "disposition": "already-represented-upstream",
+    "rationale": "LTS fac9cfad2f90 already provides the per-superblock cp_global_sem lockdep key. The port registers and sets it on internal_rwsem, and unregisters it on both fill_super failure and kill_super cleanup, guarded by CONFIG_DEBUG_LOCK_ALLOC. The traced rwsem keeps this native lifetime. Evidence: full local ACK patches and native/current functions, call sites and gates examined; no remote resources or runtime testing.",
+    "result_commits": []
+  },
+  {
+    "commit": "6d9bf28262da5f524649fe521dbbb8aa0b2f41bd",
+    "disposition": "already-represented-upstream",
+    "rationale": "LTS 1991d49433e9 already reverts the dropbehind eviction in move_data_block. Current source uses f2fs_folio_put(folio,true), then releases the additional atomic inode reference. It does not evict a non-uptodate folio via the withdrawn dropbehind path. Evidence: full local ACK patches and native/current functions, call sites and gates examined; no remote resources or runtime testing.",
+    "result_commits": []
+  },
+  {
+    "commit": "7213e1dc8c9bbeec4f9ce76ce64ded3a56a70e50",
+    "disposition": "already-represented-upstream",
+    "rationale": "LTS 998536c96b6a already implements submit_all_merged_ipu_writes with bio-list detach under the write lock, submit and reference release. Current f2fs_balance_fs flushes both OPU and IPU before either foreground GC path; it preserves the followup gc_merge fix too. Evidence: full local ACK patches and native/current functions, call sites and gates examined; no remote resources or runtime testing.",
+    "result_commits": []
+  },
+  {
+    "commit": "22b9e2d5d3e78019b0f8813840356b0a25d7b0a1",
+    "disposition": "already-represented-upstream",
+    "rationale": "LTS 89479a27fa4e already moves OPU/IPU flushing before the GC_MERGE branch and wait. The port retains those submissions before waking/waiting for its native embedded GC thread or taking gc_lock for direct GC, preventing cached-writeback/folio-lock inversion. Evidence: full local ACK patches and native/current functions, call sites and gates examined; no remote resources or runtime testing.",
+    "result_commits": []
+  },
+  {
+    "commit": "26a8b8b8932c24928592f7416911a448e27e8c69",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Native f2fs_need_dentry_mark returns a bool-valued local through int; all callers consume truth. Native set_cold_node sets COLD exactly when !is_dir, and set_mark writes exactly the requested bit then updates the optional checksum. The proposed bool conversion/common bit helper preserves these operations; retain the native private signatures and helpers. Evidence: full local ACK patches and native/current functions, call sites and gates examined; no remote resources or runtime testing.",
+    "result_commits": []
+  },
+  {
+    "commit": "8baef921e4b43fc298966224bc3ca85cc0e9835a",
+    "disposition": "reconciled-to-lts",
+    "rationale": "The sole hunk reuses raw_super, which is initialized to F2FS_RAW_SUPER(sbi) at function entry. The same object and lengths are copied under error_lock, then persisted after releasing that lock. Keep the native expression with no behavior change. Evidence: full local ACK patches and native/current functions, call sites and gates examined; no remote resources or runtime testing.",
+    "result_commits": []
+  },
+  {
+    "commit": "f777fc9722d7f73beca1055b23c19fae42a478cf",
+    "disposition": "omitted-current-target",
+    "rationale": "The SDK has CONFIG_F2FS_CHECK_FS unset, so the two removed sanity_check_valid_blocks calls already compile to empty helpers. Retain native source and its optional checks for other configs; no validation is weakened in this port. Reviewed set/check helpers also sum the same section entries. Evidence: full local ACK patches and native/current functions, call sites and gates examined; no remote resources or runtime testing.",
+    "result_commits": []
+  },
+  {
+    "commit": "3df079892779da9340ff0ccc2d06bc9f806e36f5",
+    "disposition": "reconciled-to-lts",
+    "rationale": "The only f2fs_compress_write_end_io call is in the f2fs_is_compressed_page true branch of write completion. Keeping the native repeated predicate produces the same WB_DATA_TYPE classification before freeing the compressed page. No reference/error or compression behavior changes. Evidence: full local ACK patches and native/current functions, call sites and gates examined; no remote resources or runtime testing.",
+    "result_commits": []
+  },
+  {
+    "commit": "671b25c7b19908fbdafc2416e773b4bcf4c225a5",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Whole-tree symbol search finds only the static inline definitions of curseg_segno and curseg_alloc_type, with no call or address use. They are internal unused accessors and expose no vendor hook or UAPI. Retaining their native definitions creates no selected runtime behavior or compatibility delta. Evidence: full local ACK patches and native/current functions, call sites and gates examined; no remote resources or runtime testing.",
+    "result_commits": []
+  },
+  {
+    "commit": "34a0d35bc2a2d2ddffa56ac4d18d8150f7a13958",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain GC/discard freezer responsiveness but repair the GC early-exit lifetime: all summary folios are prefetched with references, so skip remaining work and drain every outer-loop reference pair. The raw ACK goto releases only the current pair. Native submission, plug completion and lock cleanup remain. Extracted complete-function tests pass 972 cases and reject the ACK early-exit control; see evidence/f2fs-gc-freezer-check.json. Evidence: full local ACK patch and native/current code, SECURITY.md GC/error section. No remote access or runtime validation.",
+    "result_commits": [
+      "76ef735061e249f9b3bd1a02affec7bb85d84b45"
+    ]
+  },
+  {
+    "commit": "534e337d32d1c557d231b3a6ae049087c851e0ba",
+    "disposition": "adapted-net-state",
+    "rationale": "Synchronize and invalidate primary/additional block-device pagecache on unmount before device references are released in kill_super. Keep native filesystem checkpoint, I/O drain, work flush and manager teardown ordering. This prevents stale raw metadata observations after unmount without granting new device access. Evidence: full local ACK patch and native/current code, SECURITY.md GC/error section. No remote access or runtime validation.",
+    "result_commits": [
+      "76ef735061e249f9b3bd1a02affec7bb85d84b45"
+    ]
+  },
+  {
+    "commit": "d139c07f6dd18fa1f212c9d274b453a0a4297698",
+    "disposition": "adapted-net-state",
+    "rationale": "Reject extension addition when it already exists in the opposite hot/cold list. Native caller enforces name length, sb_lock serialization and persisted-superblock rollback. Existing same-list duplicate detection and capacity checks remain. Evidence: full local ACK patch and native/current code, SECURITY.md GC/error section. No remote access or runtime validation.",
+    "result_commits": [
+      "76ef735061e249f9b3bd1a02affec7bb85d84b45"
+    ]
+  },
+  {
+    "commit": "c79d8369d91753cc6881b58f3ebee60bfccaee76",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain unmount reference-leak diagnostics with err and cp_err context. No cleanup or error policy is altered; output is limited to existing kernel-log diagnostics. Evidence: full local ACK patch and native/current code, SECURITY.md GC/error section. No remote access or runtime validation.",
+    "result_commits": [
+      "76ef735061e249f9b3bd1a02affec7bb85d84b45"
+    ]
+  },
+  {
+    "commit": "3db926c49dafba2c10b9eb821891632483717575",
+    "disposition": "adapted-net-state",
+    "rationale": "Select META/NODE/DATA stop reason on the existing repeated read-error threshold, using final ACK checkpoint-stop behavior. The enum values were already retained in include/linux/f2fs_fs.h and fit its 32-entry array. Native critical-error policy and asynchronous stop-reason persistence remain instead of only setting CP_ERROR. Evidence: full local ACK patch and native/current code, SECURITY.md GC/error section. No remote access or runtime validation.",
+    "result_commits": [
+      "76ef735061e249f9b3bd1a02affec7bb85d84b45"
+    ]
+  },
+  {
+    "commit": "5d18d84f575fb32d2f0b6bec883a52c53258cdea",
+    "disposition": "partially-adapted-net-state",
+    "rationale": "Route page-error threshold and corrupt-node-footer handling through f2fs_stop_checkpoint, retaining its flush and critical-error policy plus the diagnostic hook. Keep the native helper locations/declaration rather than relocating the function solely for a static-helper cleanup; no external symbol export is added. Preserve the native footer index validation and async persistence logic. Evidence: full local ACK patch and native/current code, SECURITY.md GC/error section. No remote access or runtime validation.",
+    "result_commits": [
+      "76ef735061e249f9b3bd1a02affec7bb85d84b45"
+    ]
+  },
+  {
+    "commit": "c685b98ad3fa9a9723b6c619f2f94eba587db0b1",
+    "disposition": "adapted",
+    "rationale": "Retain per-current-segment block offsets in the configured F2FS_STAT_FS debugfs report. Resolve the struct conflict by retaining both the ported atomic defrag counter and new blkoff array, with native segment bounds and existing debugfs permissions. This is generic Android diagnostic compatibility, not proof of SDK runtime use; no allocation policy or disk format changes.",
+    "result_commits": [
+      "ad600244b1a086ffa0c8aa7632684d3fb81bde81"
+    ]
+  },
+  {
+    "commit": "5d637751ce9c24214a7162f7826502de287c7e98",
+    "disposition": "adapted",
+    "rationale": "Retain separate checkpoint latency timestamps for merged writes, NAT and SIT, with native checkpoint ordering and failure branches unchanged. The existing CP_TIME_MAX-sized arrays accommodate the new phases. F2FS statistics are configured, so keep generic Android observability conservatively although SDK runtime invocation is unconfirmed.",
+    "result_commits": [
+      "ad600244b1a086ffa0c8aa7632684d3fb81bde81"
+    ]
+  },
+  {
+    "commit": "e1275750d20ade488c897ba9e9aa57a2515b0df5",
+    "disposition": "adapted",
+    "rationale": "Prefetch NAT blocks that exceed journal capacity before the existing ordered flush under nat_tree_lock. The local f2fs_flush_nat_entries still uses native entry sets and __flush_nat_entry_set validation, placement and error cleanup; readahead is only an optimization and does not bypass validation. Retain Android runtime behavior in configured F2FS despite unconfirmed SDK mounting.",
+    "result_commits": [
+      "ad600244b1a086ffa0c8aa7632684d3fb81bde81"
+    ]
+  },
+  {
+    "commit": "cb88b4d8aae9794ae207625a9413f56f3142f951",
+    "disposition": "adapted",
+    "rationale": "Adapt direct-I/O latency accounting onto native iomap callbacks and preserve the native F2FS write hint; do not import unrelated FDP context. Save iomap bi_private before statistics unbind and restore it for reads and writes before native completion, including errors and runtime enable toggles. Existing trusted vendor-hook suppression cannot bypass cleanup. Typed post_read_ctx carries an opaque pointer without dereference. Extracted lifetime check passes 64 cases/912 assertions and rejects missing-restoration and disabled-allocation controls. No actual kernel I/O or concurrency tested; generic configured feature retained conservatively.",
+    "result_commits": [
+      "ad600244b1a086ffa0c8aa7632684d3fb81bde81"
+    ]
+  },
+  {
+    "commit": "8d422aeb53c96bed57a0c501eba39f42753c88ba",
+    "disposition": "adapted",
+    "rationale": "Apply the runtime iostat_enable guard before allocating a direct-I/O statistics context or replacing completion. Once installed, completion always frees/restores the context even when statistics are subsequently disabled. Existing native mempool GFP_NOFS allocation semantics remain. Extracted tests cover all submission/completion enable combinations and negative disabled-allocation control; runtime allocation pressure is not verified.",
+    "result_commits": [
+      "ad600244b1a086ffa0c8aa7632684d3fb81bde81"
+    ]
+  },
+  {
+    "commit": "721cf1fa05dd6053c6d5013635779f5c468f20aa",
+    "disposition": "adapted",
+    "rationale": "Use mapping_gfp_mask in f2fs_write_begin, making pagecache allocations movable/CMA eligible also on configured x86_64. Final flags follow the subsequently reviewed 5855e5d25c95. Keep native __filemap_get_folio rather than the disabled fault-injection wrapper, and native folio/error handling. Generic runtime behavior retained conservatively; 32-bit motivation is not an exclusion proof.",
+    "result_commits": [
+      "4903c005559456c193cd6e2107ccbeb5594b1f4b"
+    ]
+  },
+  {
+    "commit": "5855e5d25c95af2675072b7ec835922da6737b66",
+    "disposition": "adapted",
+    "rationale": "Retain final ACK write-begin FGP flags without FGP_NOFS, adapting the context to native __filemap_get_folio. Allocation precedes data-folio and F2FS operation/node locking; the caller holds the inode reference/lock and native reclaim/writeback does not take that inode lock. This broadens reclaim choices rather than changing disk access checks. Source locking review only, no memory-pressure/concurrency test; SECURITY.md records scope.",
+    "result_commits": [
+      "4903c005559456c193cd6e2107ccbeb5594b1f4b"
+    ]
+  },
+  {
+    "commit": "df568a99fa23d7fcb6edfd3f300f2e7d26dd2e38",
+    "disposition": "adapted",
+    "rationale": "Use GFP_KERNEL for quota reads, retaining native retry and error handling. Locally examined native fs/quota/dquot.c dquot_acquire, dquot_commit and dquot_release already enclose dq_lock-held operations with memalloc_nofs_save/restore, preserving the recursion protection motivating the former explicit GFP_NOFS. No runtime reclaim test is claimed.",
+    "result_commits": [
+      "4903c005559456c193cd6e2107ccbeb5594b1f4b"
+    ]
+  },
+  {
+    "commit": "28a2645ff41d9f2394cd3de0c3e81646e92232ac",
+    "disposition": "adapted",
+    "rationale": "Skip global writepages ordering for pinned files: native f2fs_file_write_iter validates overwrite-only mappings after write checks, and f2fs_should_update_inplace/outplace force IPU for pinned files. Nonpinned/compressed ordering and individual folio writeback remain. This preserves configured Android runtime policy without importing new platform support.",
+    "result_commits": [
+      "4903c005559456c193cd6e2107ccbeb5594b1f4b"
+    ]
+  },
+  {
+    "commit": "e269276ca25651d85a89d1050e38e304029180dc",
+    "disposition": "adapted",
+    "rationale": "Retain cached overwrite fast path before inode-folio lookup, restricted to non-inline/non-compressed files with page start below EOF. The existing read extent cache supplies the block; subsequent block validation, write-end size handling and the original miss/inline/compression paths remain. It avoids redundant lookup without dropping native on-disk address checks; mounted-filesystem execution is unverified.",
+    "result_commits": [
+      "4903c005559456c193cd6e2107ccbeb5594b1f4b"
+    ]
+  },
+  {
+    "commit": "5b53d79a060e510765110c8840677fa42da30300",
+    "disposition": "adapted",
+    "rationale": "Issue and wait every dirty-device fsync flush even when another device fails, retaining the first error and releasing every initialized bio. Native scan bounds s_ndevs by MAX_DEVICES=8; small GFP_NOFS|__GFP_NOFAIL allocation can wait under pressure, with no timing guarantee. Single-device and checkpoint flush remain native. Extracted exhaustive dirty/error-mask and mixed-completion checks pass; premature-error-exit control fails. See f2fs-flush-streams-check.json; no actual storage durability test.",
+    "result_commits": [
+      "4903c005559456c193cd6e2107ccbeb5594b1f4b"
+    ]
+  },
+  {
+    "commit": "662e75b8f01faea62c190e507544d93c5c69e279",
+    "disposition": "adapted",
+    "rationale": "Retain private force-variable simplification with the folio wait helper. All current conditional callers supply inode, folio or nonzero inode number; unconditional submission supplies none. Native matching and full-scan behavior remain for non-wait callers. No userspace or vendor binary ABI depends on the private parameter.",
+    "result_commits": [
+      "4903c005559456c193cd6e2107ccbeb5594b1f4b"
+    ]
+  },
+  {
+    "commit": "2879ae0443e70687edae2ca40e7520bbc64cddca",
+    "disposition": "adapted",
+    "rationale": "Stop temperature scan after submitting the matching folio bio for writeback waits; preserve traced LTS io_rwsem locking, subsequent IPU submission and ordered/stable waits. Ordinary/unconditional submit helpers still scan all applicable temperatures. Current writable F2FS folios are order zero (large-folio mappings reject writable opens), so the one-folio match does not require splitting completion across larger writable folios.",
+    "result_commits": [
+      "4903c005559456c193cd6e2107ccbeb5594b1f4b"
+    ]
+  },
+  {
+    "commit": "335d2e3305e8bb9a9066bdb5aa4031c2bdf3554a",
+    "disposition": "adapted",
+    "rationale": "Retain generic per-device F2FS DATA temperature-to-stream mapping using native bdev_max_write_streams. Zero streams leaves the bio unchanged at stream zero; NODE/META never receive a stream. Virtio-blk exposes no streams and partitions return zero; NVMe is configured but runtime SDK FDP use is unconfirmed. Conservative source/runtime interface retention adds no platform or driver. Preserve native write hint and iostat wrapper in conflict; host tests cover stream bounds/fallbacks.",
+    "result_commits": [
+      "4903c005559456c193cd6e2107ccbeb5594b1f4b"
+    ]
+  },
+  {
+    "commit": "386e3d3ad0095d2a48f362c50c4e399aab9e6f4b",
+    "disposition": "adapted",
+    "rationale": "Validate explicit direct-I/O stream against every device and propagate through existing iomap private/iocb; reject unsupported requests with EINVAL rather than silently overriding them. Preserve automatic fallback, native hints, iostat completion and native direct-I/O locking/errors. Native io_uring/rw.c supplies ki_write_stream; current SDK virtio rejects nonzero streams. Generic API retained conservatively without asserting SDK FDP execution; extracted all-device bounds cases pass.",
+    "result_commits": [
+      "4903c005559456c193cd6e2107ccbeb5594b1f4b"
+    ]
+  },
+  {
+    "commit": "f7d2b00f2aae88ab13aac581b2f013434bf4f2ec",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Retain native private add_bio_entry page interface and checked bio_add_page. Full patch only replaces that call with bio_add_folio_nofail and converts its sole caller; current F2FS writable mappings use order-zero folios, while retained large-folio mappings reject writable opens in f2fs_file_open. Both submit the same PAGE_SIZE region; no userspace or vendor exported interface changes. Keeping native defensive check minimizes deviation without losing current-target behavior.",
+    "result_commits": []
+  },
+  {
+    "commit": "d6ceb87172287db236d01574e7f815ec180d2d8f",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Retain native private add_ipu_page page interface and PAGE_SIZE bio_add_page comparison. Full patch converts the helper and sole f2fs_merge_page_bio caller to equivalent folio calls; current writable folios are order zero and larger supported folios are read-only. Native crypto mergeability, bio release, fallback and size checks remain. This is a private representation cleanup, not missing large writable-folio support required by ACK.",
+    "result_commits": []
+  },
+  {
+    "commit": "5105b1b7590618603898a6ff9d27a45187d4589a",
+    "disposition": "omitted-current-target",
+    "rationale": "Retain native SIT bitmap mirror/debug checks. Every removed member, allocation, comparison and free is under CONFIG_F2FS_CHECK_FS, which is disabled in the actual SDK configuration. Thus this memory-saving cleanup has no current-target executable effect; native optional corruption checks remain for other configurations. No absence-of-consumer inference.",
+    "result_commits": []
+  },
+  {
+    "commit": "52aa6f8acdde24536e8b4c71402b1a08b6406ee6",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native pinned LTS ca31116fad0954c61a0d38163cc51c48e4981b75 already deducts free sections in the excluded resize range under segmap_lock and restores them on all exits. Full ACK/LTS patches and current free_segment_range reviewed. Keep native inline victim reset, all NR_CURSEG_TYPE relocation and six-argument GC semantics; no older ACK wholesale replacement.",
+    "result_commits": []
+  },
+  {
+    "commit": "ed81699648de58ddf46903de818eb6729bde3a77",
+    "disposition": "partially-adapted",
+    "rationale": "Native LTS 23eee01c732ec8c62b05416a05f0f88129df2960 already embeds GC thread state and updates lifecycle/sysfs users. The only ACK-only context is critical_task_priority, retained using embedded gc_thread.f2fs_gc_task by 0e583bb7ddb4d8f97e19d1581673758f1d3cbffd with s_umount task-lifetime exclusion. Preserve native allocation/error cleanup and embedded-state lifetime rather than duplicate the backport.",
+    "result_commits": [
+      "0e583bb7ddb4d8f97e19d1581673758f1d3cbffd"
+    ]
   }
 ]

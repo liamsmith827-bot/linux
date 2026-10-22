@@ -1,7 +1,7 @@
 {
   "base": "7d0a66e4bb9081d75c82ec4957c50034cb0ea449",
   "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
-  "port": "4a7c4f4e132f869164553e309f2fae519dede989",
+  "port": "4903c005559456c193cd6e2107ccbeb5594b1f4b",
   "commits_examined": 1706,
   "overlaps": [
     {
@@ -791,6 +791,38 @@
       "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
     },
     {
+      "commit": "cd2fec912a0f04390d446ed692f73f2da842855f",
+      "subject": "f2fs: fix to do sanity check on node footer in __write_node_folio()",
+      "lts_added_line_absent": [
+        {
+          "path": "fs/f2fs/node.c",
+          "port_path": "fs/f2fs/node.c",
+          "hunk": "@@ -1754 +1754,5 @@ static bool __write_node_folio(struct folio *folio, bool atomic, bool *submitted",
+          "line": "f2fs_handle_critical_error(sbi, STOP_CP_REASON_CORRUPTED_NID);"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-preserved",
+      "assessment": "Full LTS patch and current footer/error paths examined. The footer validation (using folio index, as corrected by subsequent native code) and redirty exit remain. Replacing the direct critical-error call with f2fs_stop_checkpoint preserves the same handler, CP_ERROR, async reason persistence and mount-error policy; it additionally flushes merged writes via the existing stop interface and reports the diagnostic hook. Validation is not bypassed or downgraded.",
+      "assessment_source_head": "76ef735061e249f9b3bd1a02affec7bb85d84b45"
+    },
+    {
+      "commit": "97e4f479939e5ac6272e2e2473297942c6549ed3",
+      "subject": "f2fs: support non-4KB block size without packed_ssa feature",
+      "lts_added_line_absent": [
+        {
+          "path": "fs/f2fs/f2fs.h",
+          "port_path": "fs/f2fs/f2fs.h",
+          "hunk": "@@ -2801,0 +2815,8 @@ static inline block_t __start_sum_addr(struct f2fs_sb_info *sbi)",
+          "line": "struct f2fs_journal *journal, int size, int type)"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-preserved",
+      "assessment": "Full stable patch examined. The only newly absent stable line is the private journal helper signature: ACK a5edbaeed4ca changes int size to unsigned int, matching its unsigned caller counts. Both MAX_NAT_JENTRIES/MAX_SIT_JENTRIES still use the native per-superblock capacities. Native variable summary sizing, allocation/access macros, format validation and corruption checks are retained; the adaptation neither reinstates fixed layout constants nor changes the on-disk layout. SECURITY.md records the type decision; this textual overlap is not a removal of the stable fix.",
+      "assessment_source_head": "3e9217303cfcacd681018c6078579a293f35a6b6"
+    },
+    {
       "commit": "1251bbdb8f5b2ea86ca9b4268a2e6aa34372ab33",
       "subject": "wifi: mac80211_hwsim: fix typo in frequency notification",
       "lts_added_line_absent": [
@@ -805,6 +837,22 @@
       "status": "reviewed-source-adaptation",
       "assessment": "NAN timing code moved again from mac80211_hwsim_main.c into mac80211_hwsim_nan.c. Its DW notification uses 5745 MHz for channel 149, preserving the corrected frequency. This is a multi-file move beyond the scanner single-path rename map.",
       "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "0b36fae23621a09e772c8adf918b9011158f8511",
+      "subject": "f2fs: ensure node page reads complete before f2fs_put_super() finishes",
+      "lts_added_line_absent": [
+        {
+          "path": "fs/f2fs/super.c",
+          "port_path": "fs/f2fs/super.c",
+          "hunk": "@@ -2008,0 +2001,9 @@ static void f2fs_put_super(struct super_block *sb)",
+          "line": "\"umount, type: %d, count: %lld\", i, get_pages(sbi, i));"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-preserved",
+      "assessment": "Full LTS patch examined, including the difference between its commit-message description and actual moved-check implementation. The reference-count check still follows iput of node and meta inodes, exactly preserving the fix ordering. Only the diagnostic format now includes err and cp_err; no inode/page drain, reference check or teardown was removed.",
+      "assessment_source_head": "76ef735061e249f9b3bd1a02affec7bb85d84b45"
     },
     {
       "commit": "514d605ab6ce88f45f551ebaade2f5e52c1bb6ed",
