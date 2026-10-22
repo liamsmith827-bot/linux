@@ -456,7 +456,7 @@ void __swap_writepage(struct folio *folio, struct swap_iocb **swap_plug)
 {
 	struct swap_info_struct *sis = __swap_entry_to_info(folio->swap);
 	unsigned long sis_flags = 0;
-	unsigned long swap_writepage_start;
+	unsigned long swap_writepage_start = 0;
 
 	VM_BUG_ON_FOLIO(!folio_test_swapcache(folio), folio);
 	trace_android_vh_swap_writepage_start(&swap_writepage_start);
@@ -636,11 +636,11 @@ static void swap_read_folio_bdev_async(struct folio *folio,
 void swap_read_folio(struct folio *folio, struct swap_iocb **plug)
 {
 	struct swap_info_struct *sis = __swap_entry_to_info(folio->swap);
-	bool synchronous = sis->flags & SWP_SYNCHRONOUS_IO;
+	bool synchronous = sis->flags & __SWP_READ_SYNCHRONOUS_IO;
 	bool workingset = folio_test_workingset(folio);
 	unsigned long pflags;
 	bool in_thrashing;
-	unsigned long swapin_start;
+	unsigned long swapin_start = 0;
 
 	VM_BUG_ON_FOLIO(!folio_test_swapcache(folio) && !synchronous, folio);
 	VM_BUG_ON_FOLIO(!folio_test_locked(folio), folio);
