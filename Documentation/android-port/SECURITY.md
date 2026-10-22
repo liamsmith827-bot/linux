@@ -3520,3 +3520,53 @@ payload was rejected, and all protected-export and module table checks passed. `
 result IDs and exact unchanged-function witnesses supporting 28 earlier final
 decisions. All evidence used for this review was local; no remote resource
 was accessed.
+
+## Rust DMA-buf source interfaces
+
+The selected SDK configuration builds Rust wrapfd, and its code directly uses
+`DmaBuf::get`, buffer/file references, vmap, bounded CPU access, fallible CPU
+access closures and locked name reporting. Pinned GrapheneOS
+`system/memory/libwrapfd/rust/lib.rs` opens `/dev/wrapfd` and wraps supplied FDs
+with protection flags. This establishes a local userspace interface and source
+consumer; it does not establish installed product use or runtime behavior.
+The nine decisions in `evidence/rust-dmabuf-local-review.json` retain those
+interfaces and the associated C/bindgen/file helpers. They do not finalize the
+separate whole wrapfd implementation.
+
+`b186055db111` adds an `ARef<Device>` to `DmaBufAttachment`. The native C
+`dma_buf_dynamic_attach` stores `attach->dev` without taking a device reference,
+while the original Rust wrapper returned an independently owned attachment
+from a short-lived `&Device` borrow. Keeping only the buffer alive was
+insufficient: mapping, unmapping or detaching could reach the stored device
+after its last owner released it. The attachment now keeps both objects alive
+through its destructor, including map-error cleanup. Native C behavior remains.
+A device reference does not keep its driver bound or establish safe device
+resource lifetime across unbind; this fix is specifically object lifetime.
+
+CPU access retains checked offset-plus-length bounds and direction-restricted
+copy methods. Begin failure skips the closure; every normally returning closure,
+including an error result, is followed by end access. End-access failure takes
+precedence over the closure result. Kernel panic is fatal, and no unwind cleanup
+contract is promised. Mutable buffer names are exposed only during a closure
+holding `name_lock`; callbacks must not sleep. Exporter-name access follows the
+native explicit non-NULL immutable-name contract. Raw address access still
+requires unsafe use and appropriate lifetime/synchronization obligations.
+No live DMA coherency or file-loading correctness is claimed.
+
+`file::Offset` preserves native signed `loff_t`. File mode constants expose
+native bits used by wrapfd's write-permission checks; the size thunk delegates
+to native `i_size_read` for ashmem memfd compatibility and wrapfd extent checks.
+The two original size-thunk patches are identical and represented once.
+Public `Device::as_raw` visibility is retained conservatively for vendor Rust
+source customization. Its local use inside the kernel crate alone does not
+require public visibility; an SDK external-module consumer is not established.
+No physical reset-controller driver is added on that basis.
+
+The extracted attach/map/drop ownership test passes 36 cases and 350 assertions;
+removing the device reference fails 54 assertions. It uses host FFI/refcount
+shims and the manifest's pinned Rust compiler, not actual DMA operations,
+unbind, kernel concurrency or SDK runtime. Build 90 completed with both kernel images, 100 common and 45 virtual-device
+modules. All 145 signatures and all module/export table checks passed; the
+tampered signature control was rejected.
+All reviewed sources were local. URLs embedded in original commit messages
+were not accessed.

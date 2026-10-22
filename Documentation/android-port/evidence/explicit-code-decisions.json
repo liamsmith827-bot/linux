@@ -4580,5 +4580,123 @@
       "evidence/dmabuf-accounting-check.json",
       "SECURITY.md: DMA-buf accounting under allocation failure"
     ]
+  },
+  {
+    "commit": "ac1ed475ebcccb1c9df9130953af8e5dcb11cd84",
+    "disposition": "adapted",
+    "rationale": "Retain the generic Rust DMA-buf API used by the configured ANDROID_WRAPFD=y driver: get/put references, FD ownership transfer with error rollback, vmap ownership, bounded CPU access and paired begin/end calls. Local wrapfd/content.rs and io_context.rs use these paths and GrapheneOS libwrapfd opens /dev/wrapfd. b186055db111 adapts attachment ownership to retain ARef<Device> through map/unmap/detach, because native dma_buf_dynamic_attach stores a borrowed device pointer without get_device; the original wrapper returned an attachment independent of the borrowed device lifetime. The buffer reference was already retained. Raw addresses still require unsafe use, and device refcounting does not keep a driver bound or certify DMA resource lifetime across unbind. This change does not replace native LTS DMA implementation or add a physical-platform driver.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "b186055db111d90492c44e8c56582c784edeafc1"
+    ],
+    "evidence": [
+      "evidence/rust-dmabuf-local-review.json",
+      "evidence/rust-dmabuf-attachment-check.json",
+      "SECURITY.md: Rust DMA-buf source interfaces"
+    ]
+  },
+  {
+    "commit": "525312e634f6c498a497f7cc417fd733852e6892",
+    "disposition": "adapted",
+    "rationale": "Retain fallible CPU-access closure variants: configured wrapfd DmaBufContent::load uses begin_cpu_access_bidirectional_fallible around io_context.read/complete. The final implementation pairs end_cpu_access after every normally returning closure, including Err; begin failure skips the closure and end, and end failure takes precedence over a closure result. Bounds and read/write const-generic access remain, with offset overflow checked before memcpy. Kernel panic is fatal, so no panic-unwind cleanup guarantee is claimed. No live CPU/device cache-coherency or file-loading test has been run.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-dmabuf-local-review.json",
+      "evidence/rust-dmabuf-attachment-check.json",
+      "SECURITY.md: Rust DMA-buf source interfaces"
+    ]
+  },
+  {
+    "commit": "bdb26050ce3b87996847a76e4adc2a77d766afd7",
+    "disposition": "adapted",
+    "rationale": "Retain exporter_name and with_name for configured wrapfd fdinfo. The native dma_buf.exp_name contract explicitly says non-NULL and immutable; the Rust returned borrow is tied to the held buffer. Mutable name access is under the native name_lock and exposed only inside the closure, so an owned Rust borrow cannot escape the guard. Local wrap.rs uses the callback to format fdinfo. The callback runs under a spinlock and must not sleep; the API does not add a userspace name access bypass or change native replacement/free rules.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-dmabuf-local-review.json",
+      "evidence/rust-dmabuf-attachment-check.json",
+      "SECURITY.md: Rust DMA-buf source interfaces"
+    ]
+  },
+  {
+    "commit": "ab38cbb269483238c79abfd9fefb38fa03693c70",
+    "disposition": "adapted",
+    "rationale": "Retain the dma-buf.h bindgen include and C thunks for get_dma_buf and iosys_map memcpy to/from, together with the helpers.c inclusion. These are compilation dependencies of the selected Rust DMA-buf module and configured wrapfd driver. Native inline C implementations supply file reference increments and RAM/I/O mapping copies; the Rust CPU-access methods perform overflow/end bounds checks before invoking them. This adds no kernel userspace entry point or historical layout preservation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-dmabuf-local-review.json",
+      "evidence/rust-dmabuf-attachment-check.json",
+      "SECURITY.md: Rust DMA-buf source interfaces"
+    ]
+  },
+  {
+    "commit": "a6a568839fc520eb569a2655666abd53e9e5fdfa",
+    "disposition": "adapted",
+    "rationale": "Retain public Device::as_raw visibility as a generic vendor Rust source API. The function body remains the native Opaque raw-pointer accessor; dereferencing or passing the pointer to unsafe FFI still requires an unsafe operation and caller lifetime obligations. The local DMA-buf wrapper uses the accessor inside the kernel crate, which alone does not require public visibility. No SDK external-module consumer of the visibility widening is established; retention is conservative under the explicit vendor source customization priority, not a claim of runtime necessity or a reason to add a future reset-controller driver.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-dmabuf-local-review.json",
+      "evidence/rust-dmabuf-attachment-check.json",
+      "SECURITY.md: Rust DMA-buf source interfaces"
+    ]
+  },
+  {
+    "commit": "41a92573dba2a0f5aa11e48f58bf5d88289f3cf7",
+    "disposition": "adapted",
+    "rationale": "Retain file::Offset as an exact alias of native bindings::loff_t. Configured wrapfd uses it for file/buffer ranges and checks conversions before I/O. This source typing compatibility adds no new representation, offset range or binary KMI contract; native signed offset semantics remain.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-dmabuf-local-review.json",
+      "evidence/rust-dmabuf-attachment-check.json",
+      "SECURITY.md: Rust DMA-buf source interfaces"
+    ]
+  },
+  {
+    "commit": "25c94855369f48473e1820ed734ce15001287999",
+    "disposition": "adapted",
+    "rationale": "Retain bindgen constants for native FMODE_READ/WRITE/CAN_READ/CAN_ODIRECT, Rust mode constants and File::mode accessor. Configured wrapfd checks FMODE_WRITE before creating/upgrading a writable wrapper and checks file capabilities in its I/O path. This exposes existing file mode bits to the source implementation; it does not authorize writes to a read-only source. The File reference pins the native file, and these wrappers do not change native access bits or LTS I/O permissions.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-dmabuf-local-review.json",
+      "evidence/rust-dmabuf-attachment-check.json",
+      "SECURITY.md: Rust DMA-buf source interfaces"
+    ]
+  },
+  {
+    "commit": "ff69fd216cba4787689962113a7c40ee403b69ab",
+    "disposition": "adapted",
+    "rationale": "Retain the C i_size_read thunk, shared with the identical 1910f7c1f78e patch. Configured Rust ashmem uses it for ASHMEM_GET_SIZE on memfds and wrapfd checks source extents through the same native helper. It delegates to LTS i_size_read rather than introducing a raw non-atomic size read; no historical inode layout is retained. The two original patch bodies are byte-identical and represented once in the selected source.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-dmabuf-local-review.json",
+      "evidence/rust-dmabuf-attachment-check.json",
+      "SECURITY.md: Rust DMA-buf source interfaces"
+    ]
+  },
+  {
+    "commit": "1910f7c1f78eafa6491d2533af8a861e93c9f3cc",
+    "disposition": "adapted",
+    "rationale": "Retain the same i_size_read thunk as ff69fd216cba; their original patch bodies are byte-identical. Configured Rust ashmem memfd size compatibility and wrapfd extent validation call this native LTS helper. One implementation satisfies both candidates without duplicate functions or a raw inode-size load; no ABI layout preservation is added.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-dmabuf-local-review.json",
+      "evidence/rust-dmabuf-attachment-check.json",
+      "SECURITY.md: Rust DMA-buf source interfaces"
+    ]
   }
 ]
