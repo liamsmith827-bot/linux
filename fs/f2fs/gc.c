@@ -1867,7 +1867,9 @@ static int do_garbage_collect(struct f2fs_sb_info *sbi,
 			goto next_block;
 		}
 
-		if (!folio_test_uptodate(sum_folio) ||
+		/* Drain references to every prefetched summary when freezing. */
+		if (unlikely(freezing(current)) ||
+		    !folio_test_uptodate(sum_folio) ||
 		    unlikely(f2fs_cp_error(sbi)))
 			goto next_block;
 
@@ -1921,6 +1923,9 @@ freed:
 				sbi->next_victim_seg[gc_type] =
 					(cur_segno + 1 < sec_end_segno) ?
 					cur_segno + 1 : NULL_SEGNO;
+
+			if (unlikely(freezing(current)))
+				goto next_block;
 		}
 next_block:
 		folio_put_refs(sum_folio, 2);
@@ -2000,6 +2005,10 @@ gc_more:
 		goto stop;
 	}
 retry:
+	if (unlikely(freezing(current))) {
+		ret = 0;
+		goto stop;
+	}
 	ret = __get_victim(sbi, &segno, gc_type, gc_control->one_time);
 	if (ret) {
 		/* allow to search victim from sections has pinned data */

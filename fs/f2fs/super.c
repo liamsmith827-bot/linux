@@ -2015,7 +2015,8 @@ static void f2fs_put_super(struct super_block *sb)
 		if (!get_pages(sbi, i))
 			continue;
 		f2fs_err(sbi, "detect filesystem reference count leak during "
-			"umount, type: %d, count: %lld", i, get_pages(sbi, i));
+			"umount, type: %d, count: %lld, err: %d, cp_err: %d",
+			i, get_pages(sbi, i), err, f2fs_cp_error(sbi));
 		f2fs_bug_on(sbi, 1);
 	}
 
@@ -2051,6 +2052,12 @@ static void f2fs_put_super(struct super_block *sb)
 #if IS_ENABLED(CONFIG_UNICODE)
 	utf8_unload(sb->s_encoding);
 #endif
+	sync_blockdev(sb->s_bdev);
+	invalidate_bdev(sb->s_bdev);
+	for (i = 1; i < sbi->s_ndevs; i++) {
+		sync_blockdev(FDEV(i).bdev);
+		invalidate_bdev(FDEV(i).bdev);
+	}
 }
 
 int f2fs_sync_fs(struct super_block *sb, int sync)

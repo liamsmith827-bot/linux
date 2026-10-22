@@ -2415,3 +2415,44 @@ swap extents before activation. Each decision identifies its actual functions
 and callers. These are source-review findings; successful build results are
 recorded by exact commit separately, and no runtime or mounted-filesystem test
 is claimed. All sources are local; no remote resources were accessed.
+
+## F2FS GC freezer cleanup and critical-error handling
+
+Retain ACK's GC/discard freezer checks, which let background work return toward
+the existing freeze points without starting further migration/discard work.
+Native lock release, bio submission, plug completion and error handling remain.
+The GC inner-loop early exit needs an adaptation: do_garbage_collect first takes
+one extra reference on every summary folio, then gets a second reference as each
+is processed. ACK's early goto releases the current pair only, leaving later
+prefetched references unreleased. The port instead skips remaining migration
+and walks the outer loop to release each pair. This avoids accumulating pinned
+folios on repeated freeze requests; no kernel runtime leak test is claimed.
+
+`check_f2fs_gc_freezer.py` extracts the entire current GC function and exercises
+972 deterministic host cases / 89,508 assertions: freeze positions, both data
+and node GC, foreground/background paths, summary block geometries, prefetch
+failures and non-uptodate summaries. All references, plugs and submissions are
+checked. A control restoring ACK's early-exit behavior fails, including explicit
+remaining-reference checks. The harness does not run actual reclamation,
+locking, concurrency, storage or suspend. Host C headers/compiler are local.
+
+Repeated page read errors now select the existing META/NODE/DATA stop-reason
+values and call the native checkpoint-stop path, rather than setting CP_ERROR
+alone. Corrupt node-footer writes use that path too. It retains native async
+error persistence, mount-error policy, reboot handling and the port's report
+trace; function relocation/static cleanup is omitted. Existing enum values fit
+the native 32-entry reason array. Fault injection remains disabled in the SDK.
+
+Unmount synchronizes then invalidates the primary and additional block-device
+pagecaches while the device references remain owned by the superblock. This
+prevents stale raw metadata reads after unmount; it adds no new access to those
+devices. Error diagnostics include checkpoint status. Extension updates reject
+an extension already in the opposite hot/cold list under the existing sb_lock,
+retaining native length/count validation and superblock commit rollback.
+
+The historical NAT marking/locking, GC cached-bio deadlock and dropbehind-revert
+patches are already represented by the named LTS fixes in their individual
+ledger entries. Their safe ordering is retained with the port's trace wrappers.
+Native per-superblock lockdep-key lifetime is likewise preserved. No new remote
+sources were accessed, and compilation artifacts remain the only platform-level
+verification.

@@ -1794,7 +1794,7 @@ static bool __write_node_folio(struct folio *folio, bool atomic, bool do_fsync,
 
 	if (f2fs_sanity_check_node_footer(sbi, folio, folio->index,
 					NODE_TYPE_REGULAR, false)) {
-		f2fs_handle_critical_error(sbi, STOP_CP_REASON_CORRUPTED_NID);
+		f2fs_stop_checkpoint(sbi, false, STOP_CP_REASON_CORRUPTED_NID);
 		goto redirty_out;
 	}
 
