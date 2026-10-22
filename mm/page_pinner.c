@@ -89,7 +89,7 @@ static void init_page_pinner(void)
 	if (!page_pinner_enabled)
 		return;
 
-	pp_buffer.buffer = kvmalloc_array(pp_buf_size, sizeof(*pp_buffer.buffer),
+	pp_buffer.buffer = kvcalloc(pp_buf_size, sizeof(*pp_buffer.buffer),
 				GFP_KERNEL);
 	if (!pp_buffer.buffer)
 		return;
@@ -142,7 +142,7 @@ static void add_record(struct page_pinner_buffer *pp_buf,
 		       struct captured_pinner *record)
 {
 	unsigned long flags;
-	unsigned int idx;
+	unsigned long idx;
 
 	spin_lock_irqsave(&pp_buf->lock, flags);
 	idx = pp_buf->index++;
@@ -155,17 +155,14 @@ void __free_page_pinner(struct page *page, unsigned int order)
 {
 	struct page_pinner *page_pinner;
 	struct page_ext *page_ext;
-	int i;
+	struct page_ext_iter iter;
 
 	/* free_page could be called before buffer is initialized */
-	if (!pp_buffer.buffer)
+	if (!READ_ONCE(pp_buffer.buffer))
 		return;
 
-	page_ext = page_ext_get(page);
-	if (unlikely(!page_ext))
-		return;
-
-	for (i = 0; i < (1 << order); i++) {
+	rcu_read_lock();
+	for_each_page_ext(page, 1 << order, page_ext, iter) {
 		struct captured_pinner record;
 
 		if (!test_bit(PAGE_EXT_PINNER_MIGRATION_FAILED, &page_ext->flags))
@@ -176,16 +173,15 @@ void __free_page_pinner(struct page *page, unsigned int order)
 		record.handle = save_stack(GFP_NOWAIT|__GFP_NOWARN);
 		record.ts_usec = (u64)ktime_to_us(ktime_get_boottime());
 		record.state = PP_FREE;
-		capture_page_state(page, &record);
+		capture_page_state(page + iter.index, &record);
 
 		add_record(&pp_buffer, &record);
 
 		atomic_set(&page_pinner->count, 0);
 		page_pinner->ts_usec = 0;
 		clear_bit(PAGE_EXT_PINNER_MIGRATION_FAILED, &page_ext->flags);
-		page_ext = page_ext_next(page_ext);
 	}
-	page_ext_put(page_ext);
+	rcu_read_unlock();
 }
 
 static ssize_t
@@ -324,16 +320,22 @@ EXPORT_SYMBOL_GPL(__page_pinner_put_page);
 static ssize_t read_buffer(struct file *file, char __user *buf,
 					size_t count, loff_t *ppos)
 {
-	u64 tmp;
-	loff_t i, idx;
+	loff_t i;
+	unsigned long idx;
 	struct captured_pinner record;
 	unsigned long flags;
 
 	if (!static_branch_unlikely(&failure_tracking))
 		return -EINVAL;
 
-	if (*ppos >= pp_buf_size)
+	if (*ppos < 0)
+		return -EINVAL;
+
+	spin_lock_irqsave(&pp_buffer.lock, flags);
+	if (*ppos >= pp_buf_size) {
+		spin_unlock_irqrestore(&pp_buffer.lock, flags);
 		return 0;
+	}
 
 	i = *ppos;
 	*ppos = i + 1;
@@ -342,10 +344,8 @@ static ssize_t read_buffer(struct file *file, char __user *buf,
 	 * reading the records in the reverse order with newest one
 	 * being read first followed by older ones
 	 */
-	tmp = pp_buffer.index - 1 - i + pp_buf_size;
-	idx = do_div(tmp, pp_buf_size);
+	idx = (pp_buffer.index + pp_buf_size - 1 - i) % pp_buf_size;
 
-	spin_lock_irqsave(&pp_buffer.lock, flags);
 	record = pp_buffer.buffer[idx];
 	spin_unlock_irqrestore(&pp_buffer.lock, flags);
 	if (!record.handle)
@@ -384,7 +384,10 @@ static int buffer_size_set(void *data, u64 val)
 	unsigned long flags;
 	struct captured_pinner *new, *old;
 
-	new = kvmalloc_array(val, sizeof(*new), GFP_KERNEL);
+	if (!val || val > SIZE_MAX / sizeof(*new))
+		return -EINVAL;
+
+	new = kvcalloc(val, sizeof(*new), GFP_KERNEL);
 	if (!new)
 		return -ENOMEM;
 
@@ -392,7 +395,7 @@ static int buffer_size_set(void *data, u64 val)
 	old = pp_buffer.buffer;
 	pp_buffer.buffer = new;
 	pp_buffer.index = 0;
-	pp_buf_size = val;
+	WRITE_ONCE(pp_buf_size, val);
 	spin_unlock_irqrestore(&pp_buffer.lock, flags);
 	kvfree(old);
 
@@ -401,7 +404,7 @@ static int buffer_size_set(void *data, u64 val)
 
 static int buffer_size_get(void *data, u64 *val)
 {
-	*val = pp_buf_size;
+	*val = READ_ONCE(pp_buf_size);
 	return 0;
 }
 DEFINE_DEBUGFS_ATTRIBUTE(buffer_size_fops,

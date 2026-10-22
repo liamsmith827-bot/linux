@@ -630,3 +630,25 @@ and files. Shared KVM/MM/IOMMU changes and pKVM guest support require separate
 review. AVF userspace exists in the platform; no assertion is made that protected
 VM behavior would work without this backend or that other boot parameters could
 never request it. Such a target change requires revisiting this exclusion.
+
+## Page-pinner adaptation and debug-buffer safety
+
+Page-pinner remains compiled for Android configuration and vendor source
+compatibility; initialization is gated by the early `page_pinner` parameter.
+The selected SDK command line does not enable it. Its wider runtime necessity
+remains unresolved, so absence of a found consumer is not used to remove it.
+The final implementation retains the ACK initialization-before-static-key and
+page-extension lifetime fixes. Higher-order freeing now uses the native LTS
+`for_each_page_ext` iterator under RCU, as page-owner does. This advances even
+when an extension is unflagged, handles memory-section boundaries, and records
+the corresponding subpage rather than repeatedly recording the head page.
+
+Source review also found that ACK's debug buffer could expose uninitialized
+records and compute an index using the old size before a concurrent resize.
+Initial and replacement buffers are zeroed; the size, index and record copy are
+covered by one lock. Zero/overflowing sizes are rejected, and indexing uses the
+full native size instead of the old 32-bit divisor/index. These changes prevent
+invalid record decoding, out-of-bounds access during resize and division by
+zero in this optional debug interface. This is a source-level finding, not an
+exploit demonstration or a runtime-tested claim. Native LTS page-extension
+lifetime and allocation/free logic are retained.
