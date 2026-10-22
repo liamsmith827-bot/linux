@@ -2352,14 +2352,17 @@ static inline void __collapse_pagemap_result(pagemap_entry_t *src_vec,
 	for (i = 0; i < entries; i++) {
 		/*
 		 * Zero the PFN since there is no guarantee that the PFNs are contiguous.
-		 * Zero the flags - applicable flags are derived from the sub-entries,
-		 *                  inapplicable flags are kept zeroed.
+		 * Swap identities cannot represent multiple independent subpages either.
+		 * Preserve the ACK any-subpage flag convention, including native
+		 * write-protection and guard state: those features remain available.
 		 */
 		if (i % nr_subpages == 0)
 			res_vec[i / nr_subpages] = make_pme(0, 0);
 
 		res_vec[i / nr_subpages].pme
-			|= src_vec[i].pme & (PM_SOFT_DIRTY|PM_MMAP_EXCLUSIVE|PM_FILE|PM_PRESENT);
+			|= src_vec[i].pme & (PM_SOFT_DIRTY | PM_MMAP_EXCLUSIVE |
+					    PM_UFFD_WP | PM_GUARD_REGION |
+					    PM_FILE | PM_PRESENT);
 	}
 }
 
