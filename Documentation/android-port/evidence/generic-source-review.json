@@ -630,13 +630,10 @@
     "port_blob": "14eeb16f668b2807ef8588cb5050d2088959ebf0"
   },
   "drivers/usb/host/xhci-plat.c": {
-    "review_head": "f9dd0aa8659c46264586d82bb15da11ca7fadf8b",
-    "status": "reviewed-source-selection",
-    "rationale": "The bypass hooks are in the physical platform-controller runtime suspend/resume callbacks. The selected SDK guest uses virtual USB, not a DT-created xHCI platform controller. Keep native LTS platform code; do not infer this from lack of a userspace caller.",
-    "normalized_delta_sha256": "38dea56e765c9719334bfa456ec281f432fb4c5d91cc196fdc4712b7641bbca1",
-    "ack_blob": "d575e99d69a23ef2dc83631a9ff092c36263fdaa",
-    "lts_blob": "074d9c731639fa5a2fbca06b7dfb938a243d824b",
-    "port_blob": "074d9c731639fa5a2fbca06b7dfb938a243d824b"
+    "rationale": "Retain runtime suspend/resume hooks for the configured USB_XHCI_PLATFORM=y driver, which supports ACPI as well as DT matching. Exact SDK hardware/runtime use remains unresolved; preserve the generic vendor customization contract conservatively. A trusted callback can set bypass to skip native runtime PM, an explicit power-state/availability tradeoff. Native quirk-error propagation, system-suspend sideband behavior and LTS controller fixes remain. Omit KABI declaration hiding and require modules to rebuild. Compilation does not establish callback runtime safety.",
+    "result_commits": [
+      "86a7c4d43344a3e11ab0940c3bd95da279d34abc"
+    ]
   },
   "drivers/usb/host/xhci-dbgcap.c": {
     "review_head": "f9dd0aa8659c46264586d82bb15da11ca7fadf8b",
@@ -657,13 +654,10 @@
     "port_blob": "5426c971d2d39db681287d1a3df0fb12e32e690f"
   },
   "drivers/mfd/syscon.c": {
-    "review_head": "f9dd0aa8659c46264586d82bb15da11ca7fadf8b",
-    "status": "reviewed-source-selection",
-    "rationale": "The added regmap hook occurs in of_syscon_register for DT-described system-controller MMIO. This is outside the selected ACPI/virtio SDK topology. Generic regmap hooks in actual retained core paths remain available.",
-    "normalized_delta_sha256": "e035cbb2346bff5b3b659b0325bb4b6dd83f2bbe5c86cc4a69484bd6c84f405d",
-    "ack_blob": "3ff11b7acc06b32f96ca5a32b9781cbfba8d2691",
-    "lts_blob": "ae71a2710bed8bb6522d8be0624c3941c12715f1",
-    "port_blob": "ae71a2710bed8bb6522d8be0624c3941c12715f1"
+    "rationale": "Retain the configured generic syscon vendor source interface conservatively because MFD_SYSCON=y and OF=y; exact SDK runtime necessity remains unresolved. The original UNISOC register-access use does not cause any new SoC driver enablement. Preserve native LTS resource-size validation, cleanup guards and clock/reset failure handling. Adapt config.name lifetime with automatic cleanup so the callback never receives the freed name present in ACK. Callbacks execute under syscon_list_lock and cannot retain the stack config/name. Compilation does not establish callback runtime safety.",
+    "result_commits": [
+      "86a7c4d43344a3e11ab0940c3bd95da279d34abc"
+    ]
   },
   "drivers/remoteproc/remoteproc_core.c": {
     "review_head": "f9dd0aa8659c46264586d82bb15da11ca7fadf8b",
@@ -3562,5 +3556,731 @@
     "lts_blob": null,
     "port_blob": null,
     "local_target_evidence": "GrapheneOS device/generic/goldfish/board/kernel/{x86_64.mk,x86_64_cmdline.txt}; ACK arch/x86/kvm/{Kconfig,pkvm.c,vmx/pkvm_init.c}"
+  },
+  "block/blk-rq-qos.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\t\ttrace_android_rvh_rq_qos_wait(NULL);"
+    ]
+  },
+  "block/holder.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\ttrace_android_vh_bd_link_disk_holder(bdev, disk);"
+    ]
+  },
+  "drivers/tty/sysrq.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\ttrace_android_vh_sysrq_crash(current);"
+    ]
+  },
+  "fs/fcntl.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\t\ttrace_android_rvh_do_fcntl(filp, cmd, arg, &err);"
+    ]
+  },
+  "fs/file_table.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\ttrace_android_rvh_security_file_free(file);"
+    ]
+  },
+  "fs/iomap/direct-io.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\t\ttrace_android_vh_io_statistics(inode->i_mapping, pos >> inode->i_blkbits,"
+    ]
+  },
+  "fs/proc/meminfo.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\ttrace_android_vh_meminfo_cache_adjust(&cached);",
+      "+\ttrace_android_vh_meminfo_proc_show(m);",
+      "+\ttrace_android_rvh_meminfo_proc_show(m);"
+    ]
+  },
+  "kernel/futex/syscalls.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\ttrace_android_vh_do_futex(uaddr, cmd, &flags, uaddr2);"
+    ]
+  },
+  "kernel/ptrace.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\t\ttrace_android_rvh_ptrace(current, request);",
+      "+\ttrace_android_rvh_ptrace(child, request);",
+      "+\t\ttrace_android_rvh_ptrace(current, request);",
+      "+\ttrace_android_rvh_ptrace(child, request);"
+    ]
+  },
+  "kernel/reboot.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\ttrace_android_rvh_hw_protection_shutdown(reason);"
+    ]
+  },
+  "kernel/sys.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\ttrace_android_vh_security_audit_log_setid(4, old->gid.val, new->gid.val);",
+      "+\ttrace_android_vh_security_audit_log_setid(3, old->gid.val, gid);",
+      "+\ttrace_android_vh_security_audit_log_setid(1, old->uid.val, new->uid.val);",
+      "+\ttrace_android_vh_security_audit_log_setid(0, old->uid.val, uid);",
+      "+\ttrace_android_vh_security_audit_log_setid(2, old->uid.val, new->uid.val);",
+      "+\ttrace_android_vh_security_audit_log_setid(5, old->gid.val, new->gid.val);",
+      "+\ttrace_android_vh_syscall_prctl_finished(option, me);"
+    ]
+  },
+  "kernel/time/hrtimer.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\ttrace_android_vh_check_nanosleep_syscall(&tu);",
+      "+\ttrace_android_vh_check_nanosleep_syscall(&tu);"
+    ]
+  },
+  "kernel/time/sched_clock.c": {
+    "rationale": "Restore native LTS exactly. The residual ACK change contains only two GPL exports and suspend/resume epoch hooks. This implementation is built only under hidden GENERIC_SCHED_CLOCK, which no x86 Kconfig selects; the SDK config does not enable it. These particular additions only support excluded architectures, not the selected SDK kernel. Generic timekeeping and x86 sched_clock remain native."
+  },
+  "kernel/time/tick-common.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\t\ttrace_android_vh_jiffies_update(NULL);"
+    ]
+  },
+  "kernel/user.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\ttrace_android_vh_free_user(up);",
+      "+\t\ttrace_android_vh_alloc_uid(new);"
+    ]
+  },
+  "kernel/watchdog.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\t\ttrace_android_vh_watchdog_timer_softlockup(duration, regs, !!softlockup_panic);"
+    ]
+  },
+  "lib/bug.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\ttrace_android_rvh_report_bug(file, line, bugaddr);"
+    ]
+  },
+  "mm/fadvise.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\t\ttrace_android_vh_page_cache_readahead_start(file,",
+      "+\t\ttrace_android_vh_page_cache_readahead_end(file, start_index);"
+    ]
+  },
+  "mm/page-writeback.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\ttrace_android_vh_wb_dirty_limits(&dtc->wb_dirty, wb);",
+      "+\ttrace_android_rvh_ctl_dirty_rate(inode);",
+      "+\ttrace_android_vh_wb_dirty_limits(&dtc->wb_dirty, wb);",
+      "+\t\ttrace_android_rvh_folio_prepare_wb_folio_wait(folio);",
+      "+\ttrace_android_vh_folio_start_writeback(folio);"
+    ]
+  },
+  "mm/workingset.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\ttrace_android_vh_count_workingset_refault(folio);",
+      "+\ttrace_android_vh_workingset_active(folio);"
+    ]
+  },
+  "net/core/skbuff.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\ttrace_android_vh_build_skb_around(skb);",
+      "+\ttrace_android_vh_build_skb_around(skb);"
+    ]
+  },
+  "net/ipv4/inet_connection_sock.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\ttrace_android_vh_inet_csk_clone_lock(newsk, req);"
+    ]
+  },
+  "net/ipv4/ip_fragment.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\t\ttrace_android_vh_reasm_timer_adjust(&qp->q, skb);"
+    ]
+  },
+  "net/ipv4/tcp.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\ttrace_android_vh_uplink_send_msg(sk);",
+      "+\ttrace_android_rvh_tcp_sendmsg(sk, msg, size);",
+      "+\ttrace_android_rvh_tcp_recvmsg(sk, msg, len, flags, &msg->msg_namelen);",
+      "+\ttrace_android_vh_tcp_state_change(sk, TCP_STATE_CHANGE_REASON_NORMAL, state);"
+    ]
+  },
+  "net/ipv4/tcp_input.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\ttrace_android_vh_tcp_rcv_rtt_update(tp, sample, win_dep);",
+      "+\ttrace_android_vh_tcp_rtt_estimator(sk, mrtt_us);",
+      "+\ttrace_android_vh_tcp_update_rtt(sk, seq_rtt_us);",
+      "+\ttrace_android_vh_tcp_clean_rtx_queue(sk, flag, seq_rtt_us);",
+      "+\t\ttrace_android_vh_tcp_sock_error(sk);",
+      "+\t trace_android_rvh_tcp_rcv_spurious_retrans(sk);",
+      "+\t\t\ttrace_android_vh_tcp_rcv_established_fast_path(sk);",
+      "+\ttrace_android_vh_tcp_rcv_established_slow_path(sk);",
+      "+\t\t\ttrace_android_vh_tcp_state_change(sk, TCP_STATE_CHANGE_REASON_SYN_RST, 0);",
+      "+\t\ttrace_android_vh_tcp_rcv_synack(icsk);"
+    ]
+  },
+  "net/ipv4/tcp_ipv4.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\ttrace_android_vh_tcp_v4_connect(sk, uaddr);"
+    ]
+  },
+  "net/ipv4/tcp_timer.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\t\t\ttrace_android_vh_tcp_write_timeout_estab_retrans(sk);",
+      "+\t\ttrace_android_vh_tcp_state_change(sk, TCP_STATE_CHANGE_REASON_SYN_TIMEOUT, 0);",
+      "+\ttrace_android_vh_tcp_state_change(sk, TCP_STATE_CHANGE_REASON_RETRANSMIT, 0);",
+      "+\t\ttrace_android_vh_tcp_fastsyn(sk);"
+    ]
+  },
+  "net/ipv4/udp.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\ttrace_android_rvh_udp_sendmsg(sk, msg, len);",
+      "+\ttrace_android_vh_uplink_send_msg(sk);",
+      "+\ttrace_android_vh_udp_v4_connect(sk, daddr, dport, AF_INET);",
+      "+\ttrace_android_vh_udp_enqueue_schedule_skb(sk, skb);",
+      "+\ttrace_android_rvh_udp_recvmsg(sk, msg, len, flags, &msg->msg_namelen);",
+      "+\ttrace_android_vh_udp_unicast_rcv_skb(skb, sk);"
+    ]
+  },
+  "net/ipv6/netfilter/nf_conntrack_reasm.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\t\ttrace_android_vh_reasm_timer_adjust(&fq->q, skb);"
+    ]
+  },
+  "net/ipv6/reassembly.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\t\ttrace_android_vh_reasm_timer_adjust(&fq->q, skb);"
+    ]
+  },
+  "net/ipv6/tcp_ipv6.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\ttrace_android_vh_tcp_v6_connect(sk, uaddr);"
+    ]
+  },
+  "net/ipv6/udp.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\ttrace_android_rvh_udpv6_recvmsg(sk, msg, len, flags, &msg->msg_namelen);",
+      "+\ttrace_android_vh_udp6_unicast_rcv_skb(skb, sk);",
+      "+\ttrace_android_rvh_udpv6_sendmsg(sk, msg, len);",
+      "+\ttrace_android_vh_udp_v6_connect(sk, sin6);"
+    ]
+  },
+  "net/socket.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\ttrace_android_vh_sock_create(sock->sk);"
+    ]
+  },
+  "security/selinux/ss/services.c": {
+    "rationale": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "source_head": "f9c4d1582398f706b40706b0d59bc52e92960a98",
+    "reviewed_call_additions": [
+      "+\t\ttrace_android_rvh_selinux_is_initialized(state);"
+    ]
+  },
+  "include/trace/hooks/debug.h": {
+    "rationale": "The only ACK call site is arch/arm64/kernel/smp.c; the target is x86_64. Remove the entire architecture-only hook header and registry export."
+  },
+  "include/trace/hooks/fault.h": {
+    "rationale": "All call sites are arch/arm64/mm/fault.c; retain native LTS ARM64 sources and omit these definitions/exports for the x86 target."
+  },
+  "include/trace/hooks/epoch.h": {
+    "rationale": "kernel/time/sched_clock.c requires hidden GENERIC_SCHED_CLOCK, not selected by any x86 Kconfig; restore that file exactly to LTS and omit its hook definitions/exports."
+  },
+  "Documentation/devicetree/bindings/firmware/gunyah-cma-mem.yaml": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "Documentation/devicetree/bindings/firmware/gunyah-hypervisor.yaml": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "Documentation/devicetree/bindings/firmware/mediatek,geniezone.yaml": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "Documentation/virt/geniezone/introduction.rst": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "Documentation/virt/gunyah/index.rst": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "Documentation/virt/gunyah/message-queue.rst": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/coco/gunyah-guest/Kconfig": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/coco/gunyah-guest/Makefile": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/coco/gunyah-guest/gunyah-guest.c": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/geniezone/Kconfig": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/geniezone/Makefile": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/geniezone/gzvm_common.h": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/geniezone/gzvm_exception.c": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/geniezone/gzvm_ioeventfd.c": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/geniezone/gzvm_irqfd.c": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/geniezone/gzvm_main.c": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/geniezone/gzvm_mmu.c": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/geniezone/gzvm_vcpu.c": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/geniezone/gzvm_vm.c": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/gunyah/Kconfig": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/gunyah/Makefile": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/gunyah/guest_memfd.c": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/gunyah/gunyah.c": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/gunyah/gunyah_ioeventfd.c": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/gunyah/gunyah_irqfd.c": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/gunyah/gunyah_platform_hooks.c": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/gunyah/gunyah_qcom.c": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/gunyah/gunyah_qtvm.c": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/gunyah/gunyah_vcpu.c": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/gunyah/rsc_mgr.c": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/gunyah/rsc_mgr.h": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/gunyah/rsc_mgr_rpc.c": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/gunyah/trace_vcpu.h": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/gunyah/vm_mgr.c": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/gunyah/vm_mgr.h": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/gunyah/vm_mgr_cma_mem.c": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "drivers/virt/gunyah/vm_mgr_mem.c": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "include/linux/gunyah.h": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "include/linux/gunyah_qtvm.h": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "include/linux/soc/mediatek/gzvm_drv.h": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "include/trace/events/geniezone.h": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "include/trace/hooks/gunyah.h": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "include/uapi/linux/gunyah.h": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
+  },
+  "include/uapi/linux/gzvm.h": {
+    "rationale": "Pinned ACK GUNYAH and GUNYAH_GUEST Kconfigs depend on ARM64; MTK_GZVM depends on ARM64 && EVENTFD and documents MediaTek-only support. Their hypercall/interrupt backends are in arch/arm64. The SDK builds x86_64, so omit these backend-specific drivers, private/UAPI headers and documentation while retaining exact LTS state. GrapheneOS does contain Gunyah/GenieZone userspace support: virtmgr/crosvm.rs add_gunyah_specific_arg is gated by hypervisor_props::is_gunyah, which checks the hypervisor version property. Thus this is an architecture/backend selection decision, not a claim of absent Android consumers or absent virtualization generally. Ordinary KVM and shared MM/IOMMU APIs are reviewed separately.",
+    "evidence": [
+      "ACK drivers/virt/gunyah/Kconfig",
+      "ACK drivers/virt/coco/gunyah-guest/Kconfig",
+      "ACK drivers/virt/geniezone/Kconfig",
+      "GrapheneOS packages/modules/Virtualization/android/virtmgr/src/crosvm.rs: add_gunyah_specific_arg",
+      "GrapheneOS packages/modules/Virtualization/libs/hypervisor_props/src/lib.rs: is_gunyah"
+    ]
   }
 }

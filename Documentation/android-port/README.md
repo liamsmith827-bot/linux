@@ -1,7 +1,7 @@
 # Android 6.18 SDK emulator port audit
 
-Status: work in progress. The complete emulator workflow succeeded in attempt 26
-at Linux 1ea0f86bf0fe, including final signing. All 145 generated module signatures
+Status: work in progress. The complete emulator workflow succeeded in attempt 27
+at Linux f9c4d1582398, including final signing. All 145 generated module signatures
 were cryptographically verified against the build certificate; a modified-payload
 control was rejected. The exhaustive commit audit remains unfinished. No runtime compatibility is claimed.
 
@@ -87,7 +87,7 @@ repository URLs when transporting the manifest elsewhere. The reason for the
 Kleaf modification is documented in SECURITY.md. Other dependency projects
 retain their original sources and commits.
 
-The successful attempts 19 through 26 source/dependency pins, artifact hashes and signature
+The successful attempts 19 through 27 source/dependency pins, artifact hashes and signature
 verification are recorded in `evidence/build-results.json`. This result applies
 to its recorded source commit, not automatically to later changes. Build logs
 are in the workspace root as `sdk-build-attempt-*.log`.

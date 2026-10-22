@@ -133,5 +133,32 @@
       "android_vh_ttm_pool_alloc_page_flags"
     ],
     "rationale": "Architecture-specific or physical-device/protected-host implementation excluded from SDK target; matching hook definitions and registry exports removed. No ported in-tree trace call remains."
+  },
+  {
+    "header": "include/trace/hooks/debug.h",
+    "symbols": [
+      "android_vh_ipi_stop"
+    ],
+    "rationale": "The only ACK call site is arch/arm64/kernel/smp.c; the target is x86_64. Remove the entire architecture-only hook header and registry export."
+  },
+  {
+    "header": "include/trace/hooks/fault.h",
+    "symbols": [
+      "android_rvh_die_kernel_fault",
+      "android_rvh_do_sea",
+      "android_vh_try_fixup_sea",
+      "android_rvh_do_sp_pc_abort",
+      "android_vh_arm64_user_fault_lock_vma",
+      "android_vh_arm64_do_page_fault_retry_vma_lock"
+    ],
+    "rationale": "All call sites are arch/arm64/mm/fault.c; retain native LTS ARM64 sources and omit these definitions/exports for the x86 target."
+  },
+  {
+    "header": "include/trace/hooks/epoch.h",
+    "symbols": [
+      "android_vh_show_suspend_epoch_val",
+      "android_vh_show_resume_epoch_val"
+    ],
+    "rationale": "kernel/time/sched_clock.c requires hidden GENERIC_SCHED_CLOCK, not selected by any x86 Kconfig; restore that file exactly to LTS and omit its hook definitions/exports."
   }
 ]

@@ -713,3 +713,21 @@ this callback; the port instead gives the allocated name automatic cleanup at
 function exit, so it is valid during the callback on success and freed on every
 error exit. Callbacks must not retain the stack config/name after return or
 recursively take the syscon mutex. Runtime hook execution is not verified.
+
+## ARM64-only hypervisor backends
+
+GUNYAH, GUNYAH_GUEST and MTK_GZVM are explicitly ARM64-only in the pinned ACK
+Kconfigs; GenieZone further documents MediaTek hardware and ARM64 support.
+Their hypercall and interrupt backends live under arch/arm64. The x86 SDK does
+not select those implementations. Dedicated drivers, backend UAPI/private
+headers, bindings and documentation remain exactly at LTS, with each path
+recorded in generic-source-review.json. This exclusion does not extend to shared
+KVM, MM or IOMMU code.
+
+There are real Android consumers: GrapheneOS virtmgr/crosvm.rs selects its
+Gunyah-specific arguments only after hypervisor_props::is_gunyah checks the
+hypervisor version property, and libhypervisor_backends includes GenieZone
+support. Those consumers are acknowledged, not treated as missing. Their
+existence on other platforms does not make an ARM64 hypervisor implementation
+part of the currently selected x86 SDK kernel. No AVF runtime claim follows
+from this architecture exclusion.

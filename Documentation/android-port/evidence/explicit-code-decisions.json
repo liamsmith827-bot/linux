@@ -187,9 +187,10 @@
   {
     "commit": "0a6f00cc67a3987fafab80da55bdeaa764aecae6",
     "disposition": "adapted-net-subsystem",
-    "rationale": "Retain page_ext_get/page_ext_put lifetime protection in the optional Android page-pinner implementation, including early-return releases, as part of the final ACK source integration. Native LTS page_ext lifetime API is used. Optional page-pinner necessity remains unresolved; it is retained for Android configuration/source compatibility, not asserted required by a found consumer. The old unprotected lookup must not be reintroduced. Runtime tracking behavior has not been tested.",
+    "rationale": "Retain the page-extension lifetime protection, including early-return releases, in the optional page-pinner implementation. Single-page paths use native LTS page_ext_get/page_ext_put; higher-order free now uses native LTS for_each_page_ext under an RCU read lock, following page-owner and preserving lifetime protection across section boundaries. This fixes the ACK skipped-entry loop without reverting its use-after-free fix. Runtime necessity remains unresolved and runtime behavior untested.",
     "result_commits": [
-      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "bae607a0be95fdc5e803d358ce6f23b4006cbebf"
     ]
   },
   {
@@ -353,6 +354,465 @@
     "upstream_effect_commits": [
       "133684982dd0c24359fcc641d19d89cc17d6e5ef",
       "a1b7a843f12a0c3e9d3a2ca607ce451916ef42cf"
+    ]
+  },
+  {
+    "commit": "d3ee64c1de6e796fbc20d9d135fd735212e2df26",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain optional page-pinner instrumentation, page-extension state, Kconfig/build wiring and allocation/isolation callbacks for the configured Android kernel and vendor source interface. Its exact SDK runtime necessity is unresolved; this is a conservative retention decision. The final ACK initialization and lifetime fixes supersede the initial implementation. bae607a0be95 adapts higher-order iteration to native LTS RCU/page_ext iteration and fixes debug-buffer initialization, zero-size and resize-index hazards. Native LTS allocation/free and page-extension implementations remain. No runtime tracking verification is claimed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "bae607a0be95fdc5e803d358ce6f23b4006cbebf"
+    ]
+  },
+  {
+    "commit": "f06721fdb9d154c4187028e2ed0bcf33435c8212",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain page_pinner_inited guards for put/failure tracking. failure_tracking defaults true while page-pinner defaults disabled, so the initialization guard is required to avoid accessing an uninitialized buffer/lock. The final ACK moves the failure-tracking check into the implementation while preserving this guard. No new userspace enablement is introduced.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "c43eed338125e171687135f4349007b9a72403bd",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain buffer allocation and spinlock initialization before enabling page_pinner_inited in page_ext_ops.init. This closes the documented early-contiguous-allocation race. The port additionally zeroes buffers and locks resize-sensitive reader state; debugfs creation remains a later step after successful initialization.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "bae607a0be95fdc5e803d358ce6f23b4006cbebf"
+    ]
+  },
+  {
+    "commit": "71311fed4580cd0e6186a645ce9a451441ec2206",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain put_page_testzero tracking, move failure_tracking checks inside the implementation, and export page_pinner_inited for source-built modules using the inline API. The original decrement result is returned unchanged. Initialization gating and native LTS page_ext lifetime APIs are retained. This preserves optional Android debug/source behavior; it does not establish the necessity or runtime correctness of every tracking path.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "bae607a0be95fdc5e803d358ce6f23b4006cbebf"
+    ]
+  },
+  {
+    "commit": "7f62740112ef7260d399a340e210f3a49bc4177e",
+    "disposition": "partially-adapted-net-subsystem",
+    "rationale": "Retain generic vendor-hook Kconfig/Makefile/registry, x86 GKI enablement and the final normal/restricted hook source APIs. Exclude the ARM64 defconfig change for the x86 SDK target. Later ACK revisions supersede the original single-callback restricted implementation with two callbacks and native tracepoint/static-call integration. This is required by the requested vendor-customization compatibility priority; callbacks are trusted kernel code and increase audit surface.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "e706f27c765b7fb40ed6febc1f8e85ed44ce4623",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain the deliberately multi-included vendor_hooks.h and restricted-hook macro redefinition rules. CREATE_TRACE_POINTS instantiates many hook headers in one translation unit; an ordinary include guard breaks that source build. This is build correctness for the retained interface, with no separate userspace or binary-KMI promise.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "5e767aa07eea8d663a09c02c7bd02119b469c171",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain restricted-hook static-call keys, iterator and trampolines using native LTS tracepoint structures. The x86 SDK supports static calls. Final multi-callback and extended-structure revisions supersede the intermediate one-callback macro; ordinary LTS tracepoint synchronization remains native. Restricted callbacks cannot detach and must remain resident.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "4cc2f83c77aa06d6cea3b27bb0fcfec334e8c9d4",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain quoted __section arguments for vendor-hook tracepoint strings and objects, matching the native LTS compiler macro. This is required for compilation of the retained vendor interface and has no independent runtime policy change.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "943c3b3124d228abbc2d0be8adc868eced1c5c53",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain central DECLARE_EVENT_NOP stubs when tracepoints/vendor hooks are disabled and remove the obsolete hand-written scheduler stub block through the final ACK header. This keeps the retained source configurable without changing enabled SDK hook behavior. No alternate-configuration build is claimed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "51681321c0efdf5cf394d0a1822e6f66ce281dca",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain restricted-hook static_call/iterator dispatch, conditional evaluation and source prototypes matching native tracepoint refactoring. The x86 SDK takes the static-call path; the generic fallback remains part of the shared macro, not a separately imported future-platform implementation. Native LTS ordinary tracepoint behavior is unchanged.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "e0cfc5fd8c9358c2d85fa65167794c2657f7656e",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain two restricted-hook attachments for vendor/OEM coexistence and the preallocated, never-detached callback array. Adapt registration: validate the non-NULL second-data restriction under tracepoints_mutex, reject NULL probes, return negative ENOMEM, and unwind optional first-registration setup on failure like native LTS. This prevents silently discarded callback data during concurrent registration and fixes error cleanup. No runtime concurrency test is claimed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "f9c4d1582398f706b40706b0d59bc52e92960a98"
+    ]
+  },
+  {
+    "commit": "d0165600482bf40fef63f6a9c603251f983b6785",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain STATIC_KEY_FALSE_INIT, static_branch_unlikely and static_branch_enable in the Android hook implementation to match native LTS tracepoint key types and API. This preserves configured hook behavior without an old-layout wrapper.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "2e5252e0086c9920acda6f0dd49aa96bd00f2ddc",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain tracepoint_ext construction and optional ext->regfunc handling for Android restricted hooks, matching native LTS struct tracepoint. The registration-failure path additionally invokes ext->unregfunc following the native LTS cleanup pattern. No historical tracepoint layout is retained.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "f9c4d1582398f706b40706b0d59bc52e92960a98"
+    ]
+  },
+  {
+    "commit": "c96325618362dac6be74f83bf20b3dfaefaebd5c",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain DECLARE_TRACE_EVENT as DECLARE_HOOK so native LTS tracepoint macros generate the Android trace_android_vh_* source names without an extra _tp suffix. Existing call sites and rebuilt vendor source modules require those names; this does not preserve binary CRCs or structure layouts.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
+  },
+  {
+    "commit": "317f0cc6bf52c66d061e534a2d991611462abc33",
+    "disposition": "omitted-kmi-only",
+    "rationale": "The __GENKSYMS__ include-hiding exists solely to suppress module CRC churn and is removed. Native tracepoint definitions are visible during version generation; modules must be rebuilt. Redundant includes need not be restored because vendor_hooks.h unconditionally supplies the header. Excluded platform hook headers remain excluded. There is no runtime hook functionality to preserve from this CRC workaround.",
+    "result_commits": [
+      "f9c4d1582398f706b40706b0d59bc52e92960a98"
+    ]
+  },
+  {
+    "commit": "0d8928ed6ee38f00f3595e1f3b623de0d99c311d",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep sysrq crash notification after releasing the RCU read lock and before panic. Native sysrq access controls, enable mask and panic behavior remain; callbacks must tolerate crash context. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "reviewed_patch_sha256": "39434bfe3a33ed006b6d2afc9b297eb51531b2bde62abf383ed60a0bba3d958f"
+  },
+  {
+    "commit": "76b58ff07b29541231a8e0781ef0e3865495a4f6",
+    "disposition": "omitted-current-target",
+    "rationale": "The epoch hooks are only called from kernel/time/sched_clock.c, built under hidden GENERIC_SCHED_CLOCK. No x86 Kconfig selects that option and the SDK configuration does not enable it. Restore this implementation to native LTS and remove its dedicated hook header/exports. This is affirmative build/architecture selection evidence, not absence of a found caller. Native x86 scheduling/timekeeping and LTS fixes remain.",
+    "result_commits": [
+      "fb15ca9e6bc4f11a0caed2109c4deee6baf82a50"
+    ],
+    "reviewed_patch_sha256": "09d1798abbd74e16541d70d183a4becd86d6e224bfb15448f86fd044107c650c"
+  },
+  {
+    "commit": "583b91c3ea0a3d3e73cbfb4a01d2382f837e3599",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep the prctl completion notification after the command switch. The return error is not passed by reference, and native command handling and validation remain. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "reviewed_patch_sha256": "05b933640e6b64707671c3fb646c35a44902e759f55b839c4610f4f086fad592"
+  },
+  {
+    "commit": "f2d4bb3c0e9a4167dec56df5ca1ec03bfae7ad97",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep the first-policy-load notification after selinux_mark_initialized and selinux_complete_init. It cannot directly rewrite a permission result and is not placed before successful initialization; native policy replacement and RCU cleanup remain. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "reviewed_patch_sha256": "f75f5c33b161a0db3cd162383c2b17ad576274dcdf2561efeb7af8ba1b45e08a"
+  },
+  {
+    "commit": "ef98638eeeb04f0b360a4319803827112a0af6c3",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep the TCP timeout notification in the established-retransmission branch after native timeout detection and MTU probing. It exposes the socket to trusted vendor code; native timeout limits and destination advice remain. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "reviewed_patch_sha256": "f61ac725610e3b255715cb18afb0b6a50632639346d5cbf0847f77747c430c74"
+  },
+  {
+    "commit": "70f288f01fc502be510cb658e10ea8250358b9be",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep the protection-shutdown reason notification after the one-shot atomic guard and before backup shutdown scheduling. Native emergency shutdown/reboot paths remain, subject to the trusted callback returning. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "reviewed_patch_sha256": "30f07c203bda10a7339e1878d994eb92b457f2e5d84f3c2f85c338edf944fce1"
+  },
+  {
+    "commit": "c1c232eb360bff06bbf595f285b4156951a6efb6",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep set-ID audit notifications after the LSM credential checks and, for UID changes, successful ucounts setup. Scalar IDs are passed by value; native commit_creds/abort_creds and process-limit handling remain. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "reviewed_patch_sha256": "7ae09fb0053e728a672dc730e9f26ae3741a788cb6e35f3605aeca19e394164f"
+  },
+  {
+    "commit": "f72729174abad27013a88b74c3410aa5c289d670",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep the dirty-rate customization callback after the writeback-capability check and before writeback-owner selection. Native dirty accounting/throttling follows. A trusted callback can change inode-related policy; this is explicit vendor customization, not a sandbox. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "reviewed_patch_sha256": "d88d75b804b44f49aff0142599fe5f1275f8b9aa6b3156f558cad9e9e410e931"
+  },
+  {
+    "commit": "39ccae7ccf852d43c3cc1e3aed73174bace6f82b",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep refault-count notification on the locked folio before the MGLRU/ordinary workingset split. Native generation/refault accounting and recent-shadow checks remain; callbacks must respect folio locking/lifetime. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "reviewed_patch_sha256": "e849277d1a32fc99f8e18ba321fdd8ee06b344a7b0aaf2b3c16f45b152b8b7a9"
+  },
+  {
+    "commit": "f3252a0cb633054a892353d5d8c31719dc28b172",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep BUG-report notification with file/line/address values after native reporting and before returning BUG_TRAP_TYPE_BUG. Native warning/BUG classification remains; callbacks must be safe in fault context. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "reviewed_patch_sha256": "55cb7b5d73d685489146bc9516072ac903fd45bc73ec4fcd304274e589fda9ec"
+  },
+  {
+    "commit": "ef7a528164c10428d84ea1bafddad21fe5e2326c",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep TCP/UDP connect/send-destination hooks for the generic IPv4/IPv6 stack. Native address-family/length checks remain at their respective call sites; UDPv6 callbacks must accept a NULL sin6 for an already-connected socket. Mutable socket/address access is privileged vendor policy, and does not replace native LTS routing/cleanup. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "reviewed_patch_sha256": "c7593b2e2a57f51adc80c43715e57ce0e071d4f784db513210c1c02b9bb86942"
+  },
+  {
+    "commit": "474b4bfd6a0a8b243267ef11ee5650c857b95b8c",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep UDPv4/v6 receive hooks before queueing and after optional checksum conversion. Native checksum, queue ownership, drop/error and resubmission behavior remain. Callbacks must neither free nor retain an unreferenced skb/socket. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "reviewed_patch_sha256": "9883eedfd71768f2f8b7d867c351451f27a0c6f7b1d681c0736a57dd353ee2f5"
+  },
+  {
+    "commit": "de8a56286ffef6af0bdb142ce2ff4d239de587ef",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep native and compat nanosleep hooks after input timespec validation. The pointer intentionally permits a trusted callback to adjust the interval; no post-hook revalidation exists, so callbacks must preserve a valid timespec. This expands kernel customization beyond unmodified LTS while retaining userspace-copy validation and restart behavior. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "reviewed_patch_sha256": "3e70a02471cd8c3e6dbd9ec9d403a805343b4b083a36b6922cfaaae81684586e"
+  },
+  {
+    "commit": "1794ee49d17df1f5a5aa7fbb9a2a86d479277292",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep TCP retransmit-queue/RTT and SYN-ACK observation hooks in their native LTS processing positions. The ACK/sequence validation, sample calculation and subsequent state updates remain; socket pointers require the existing networking lifetime/locking discipline. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "reviewed_patch_sha256": "ce297a50fc44a9e0cc9e12268fb3b53464d5061842790a2bff6cfc66a842be75"
+  },
+  {
+    "commit": "492273b2f85fc9f911023889c0966238bcde6393",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep established TCP fast/slow-path observation hooks after accepted-data processing. Native checksum/error labels, skb disposal and data-ready notifications remain. No callback can be assumed side-effect-free merely because its return type is void. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "reviewed_patch_sha256": "a569c997320b5af35f5b68798de24d08df8af77d07ce9dbb57f8ad6cec74a07f"
+  },
+  {
+    "commit": "93d274385bba05890ebf4ee253baa8a56c2449f4",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep the receive RTT hook with sample/window-dependency values passed by value. Native RTT arithmetic remains; callbacks may inspect or customize trusted socket state and must respect networking context. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "reviewed_patch_sha256": "852b5dbb3f79bf3df38ffd43985fbf88d81ceedd8377c95e875fd5e853027e02"
+  },
+  {
+    "commit": "f9675536e92872f696e2216ce0582ffabe0f5dbd",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep restricted TCP/UDPv4/UDPv6 send/receive QoS hooks. Adapt receive address-length arguments to &msg->msg_namelen, the native LTS API, instead of restoring the historical addr_len parameter. Native socket locking, receive completion and skb consumption remain. Send callbacks can mutate message/socket state, and receive callbacks must maintain address-length bounds; they are trusted kernel code. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "8242b417aec08d75d53b6e0350ad01d38988c7f1"
+    ],
+    "reviewed_patch_sha256": "601ec8c7c40571b628d633dfce7dbd4c7cdc6966914e627e7e9e4c2a8a15dd01"
+  },
+  {
+    "commit": "c82439ce6ab1e9bf31d165dbbc6b14633517a939",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep the restricted spurious-retransmission hook before native IPv6 flow-label/repath tests. Native retransmission safeguards and rehash conditions remain, while the callback can customize socket state as requested. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "reviewed_patch_sha256": "3af9c790ba56c073aa3c95295656193f38a1ee2f57c3c43b3de373e6175d2114"
+  },
+  {
+    "commit": "49fe365cc8e3391a6e1da945df8bdceaa83dda4c",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep soft-lockup notification after diagnostics/backtrace and before taint/panic. Native watchdog detection and panic policy remain; the callback must tolerate timer/fault context and possibly absent saved registers. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "reviewed_patch_sha256": "71578fc11019541f21c3fcb3b91712102587f1afe5d1a60070c51cbdabb0e420"
+  },
+  {
+    "commit": "2534b906d5e4dcc4cbeb72ce764b0b2b93676aa0",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep block-holder notification only after both symlinks succeed and the holder is linked, while blk_holder_mutex is still held. Native failure unwinding and holder lifetimes remain; callbacks must avoid recursive holder locking. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "reviewed_patch_sha256": "e9317cc6491748359d9381cf9276e0221e75cc3b30dae17badbb3235b5434d41"
+  },
+  {
+    "commit": "f97958c0be8193ccbab6673e202222e7d47a5cf4",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep the added futex uaddr argument and matching call site. It is a source-interface extension, not historical KMI preservation. Existing command/clock validation remains before the callback; it can mutate flags and must treat both addresses as userspace pointers, using proper access helpers rather than dereferencing directly. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "reviewed_patch_sha256": "6ac36dd7162fb3efab0f707ca1ff9ce97f7201265241f96470a777dfdb208e32"
+  },
+  {
+    "commit": "d3d9e1f49e57f41a4b9fcf25f1825dcb8f476d8b",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep folio-writeback-start notification after writeback tags/statistics are established and before architecture accessibility handling. Native writeback and accessibility assertions remain; callbacks must respect folio lifetime and writeback state. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "reviewed_patch_sha256": "3f484d4e568450050bd1380ee923c34b52569f634a48c26325270a3d9917f9b5"
+  },
+  {
+    "commit": "24117ebd98ef6bb9a5f5fe1fe9d2ae78ca25038c",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep readahead start/end notifications around force_page_cache_readahead after native fadvise range/overflow calculation. Native readahead operation and error policy are unchanged; callbacks receive the existing file reference. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "reviewed_patch_sha256": "a46c1ebc921f37369050052430f73b23ee556e0296ef5f29b9ab9e045d11ed6f"
+  },
+  {
+    "commit": "8295b1727b1807072b59c9819b60bbf8012d65a5",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep UID allocation/free notifications. Allocation notification follows UID/refcount initialization but precedes epoll setup; failed/racing allocations do not guarantee a paired free notification. Free notification runs with IRQs disabled under uidhash_lock. Vendor callbacks must accommodate that contract; native reference counting, hash locking and epoll cleanup remain. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "reviewed_patch_sha256": "97d20f878a26f0bcf7da9117cb9001a61c13871f2a4088f23b52e8ba235eed38"
+  },
+  {
+    "commit": "fab9634150dc0d3de81e23659b1b05071af04fc4",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep the restricted meminfo seq_file notification alongside the ordinary hook. It permits trusted vendor code to append statistics; native LTS counters and later fields remain. This can affect proc output and must obey seq_file APIs, not expose arbitrary kernel data. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "reviewed_patch_sha256": "198a0fe6365dd6df42d409999529ed92d16888aa56d1078536728c44b2812e2e"
+  },
+  {
+    "commit": "e898d0ffa5090475d2de9016b46b3a119a27798e",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Keep reassembly-timer customization for IPv4, IPv6 and IPv6 conntrack after native final-fragment consistency checks. Native overlap/length validation and queue lifetime rules remain. A trusted callback can change timeout/resource-retention policy and must synchronize with fragment expiration. Retained for the requested Android vendor source/customization compatibility on shared SDK-relevant subsystems. No individual vendor runtime consumer or callback safety is inferred from compilation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "reviewed_patch_sha256": "9e382f82ab80b33b3e00c1ebabb8d5873ea2b12a6e1abd94d4511adafe38f391"
+  },
+  {
+    "commit": "11eb3792b7a5c25024c4b78d672a31499b50f686",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain the configured generic syscon vendor source interface conservatively because MFD_SYSCON=y and OF=y; exact SDK runtime necessity remains unresolved. The original UNISOC register-access use does not cause any new SoC driver enablement. Preserve native LTS resource-size validation, cleanup guards and clock/reset failure handling. Adapt config.name lifetime with automatic cleanup so the callback never receives the freed name present in ACK. Callbacks execute under syscon_list_lock and cannot retain the stack config/name. Compilation does not establish callback runtime safety.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "86a7c4d43344a3e11ab0940c3bd95da279d34abc"
+    ]
+  },
+  {
+    "commit": "8a1cdefd7a7de2f2d051747a0007716a6786e7a5",
+    "disposition": "adapted-net-subsystem",
+    "rationale": "Retain runtime suspend/resume hooks for the configured USB_XHCI_PLATFORM=y driver, which supports ACPI as well as DT matching. Exact SDK hardware/runtime use remains unresolved; preserve the generic vendor customization contract conservatively. A trusted callback can set bypass to skip native runtime PM, an explicit power-state/availability tradeoff. Native quirk-error propagation, system-suspend sideband behavior and LTS controller fixes remain. Omit KABI declaration hiding and require modules to rebuild. Compilation does not establish callback runtime safety.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "86a7c4d43344a3e11ab0940c3bd95da279d34abc"
+    ]
+  },
+  {
+    "commit": "56da24e7a9ba0f5bab4a0c90de964ce1541b1695",
+    "disposition": "omitted-current-target",
+    "rationale": "The original patch changes only ARM64 IPI/fault behavior or its dedicated hook declarations/registry exports. Those call sites are in arch/arm64/kernel/smp.c or arch/arm64/mm/fault.c, outside the selected x86_64 SDK architecture. Retain exact native LTS architecture code and remove the matching hook definitions/exports rather than provide an interface with no selected implementation. ARM fault recovery/locking semantics are not imported or weakened. This is architecture selection evidence, not a failed consumer search.",
+    "result_commits": [
+      "fb15ca9e6bc4f11a0caed2109c4deee6baf82a50"
+    ]
+  },
+  {
+    "commit": "0f4869e93e52f527076e97645ace0fea3fae063a",
+    "disposition": "omitted-current-target",
+    "rationale": "The original patch changes only ARM64 IPI/fault behavior or its dedicated hook declarations/registry exports. Those call sites are in arch/arm64/kernel/smp.c or arch/arm64/mm/fault.c, outside the selected x86_64 SDK architecture. Retain exact native LTS architecture code and remove the matching hook definitions/exports rather than provide an interface with no selected implementation. ARM fault recovery/locking semantics are not imported or weakened. This is architecture selection evidence, not a failed consumer search.",
+    "result_commits": [
+      "fb15ca9e6bc4f11a0caed2109c4deee6baf82a50"
+    ]
+  },
+  {
+    "commit": "40b6d003baf94dd386daf932ca22664d0690d61e",
+    "disposition": "omitted-current-target",
+    "rationale": "The original patch changes only ARM64 IPI/fault behavior or its dedicated hook declarations/registry exports. Those call sites are in arch/arm64/kernel/smp.c or arch/arm64/mm/fault.c, outside the selected x86_64 SDK architecture. Retain exact native LTS architecture code and remove the matching hook definitions/exports rather than provide an interface with no selected implementation. ARM fault recovery/locking semantics are not imported or weakened. This is architecture selection evidence, not a failed consumer search.",
+    "result_commits": [
+      "fb15ca9e6bc4f11a0caed2109c4deee6baf82a50"
+    ]
+  },
+  {
+    "commit": "ea91edfe959277004a12820737efd09a01e1abc5",
+    "disposition": "omitted-current-target",
+    "rationale": "The original patch changes only ARM64 IPI/fault behavior or its dedicated hook declarations/registry exports. Those call sites are in arch/arm64/kernel/smp.c or arch/arm64/mm/fault.c, outside the selected x86_64 SDK architecture. Retain exact native LTS architecture code and remove the matching hook definitions/exports rather than provide an interface with no selected implementation. ARM fault recovery/locking semantics are not imported or weakened. This is architecture selection evidence, not a failed consumer search.",
+    "result_commits": [
+      "fb15ca9e6bc4f11a0caed2109c4deee6baf82a50"
+    ]
+  },
+  {
+    "commit": "23272a9c08731247016a81ac26003b7ec37f47a6",
+    "disposition": "omitted-current-target",
+    "rationale": "The original patch changes only ARM64 IPI/fault behavior or its dedicated hook declarations/registry exports. Those call sites are in arch/arm64/kernel/smp.c or arch/arm64/mm/fault.c, outside the selected x86_64 SDK architecture. Retain exact native LTS architecture code and remove the matching hook definitions/exports rather than provide an interface with no selected implementation. ARM fault recovery/locking semantics are not imported or weakened. This is architecture selection evidence, not a failed consumer search.",
+    "result_commits": [
+      "fb15ca9e6bc4f11a0caed2109c4deee6baf82a50"
+    ]
+  },
+  {
+    "commit": "d635f528673e3001ef1fb8805b27930dad652f7c",
+    "disposition": "omitted-current-target",
+    "rationale": "The original patch changes only ARM64 IPI/fault behavior or its dedicated hook declarations/registry exports. Those call sites are in arch/arm64/kernel/smp.c or arch/arm64/mm/fault.c, outside the selected x86_64 SDK architecture. Retain exact native LTS architecture code and remove the matching hook definitions/exports rather than provide an interface with no selected implementation. ARM fault recovery/locking semantics are not imported or weakened. This is architecture selection evidence, not a failed consumer search.",
+    "result_commits": [
+      "fb15ca9e6bc4f11a0caed2109c4deee6baf82a50"
+    ]
+  },
+  {
+    "commit": "c5ffe5aa567025fdb2b1c42ca5420fb35c6953ae",
+    "disposition": "omitted-current-target",
+    "rationale": "The original patch changes only ARM64 IPI/fault behavior or its dedicated hook declarations/registry exports. Those call sites are in arch/arm64/kernel/smp.c or arch/arm64/mm/fault.c, outside the selected x86_64 SDK architecture. Retain exact native LTS architecture code and remove the matching hook definitions/exports rather than provide an interface with no selected implementation. ARM fault recovery/locking semantics are not imported or weakened. This is architecture selection evidence, not a failed consumer search.",
+    "result_commits": [
+      "fb15ca9e6bc4f11a0caed2109c4deee6baf82a50"
+    ]
+  },
+  {
+    "commit": "2bdbed7c1e3e964a0beeec620c8ff39a9cf14e8c",
+    "disposition": "partially-adapted-net-subsystem",
+    "rationale": "Retain central vendor-hook configuration stubs for the generic ftrace_dump header; its local CONFIG_TRACEPOINTS conditional and manual stubs are obsolete with vendor_hooks.h. Omit the debug.h portion because that entire IPI hook is ARM64-only and excluded. This keeps generic tracing source configuration compatible without adding architecture-only interfaces.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "fb15ca9e6bc4f11a0caed2109c4deee6baf82a50"
+    ]
+  },
+  {
+    "commit": "c1b74fb404349d9e8a2e5bf58b399554cde65d55",
+    "disposition": "omitted-current-target",
+    "rationale": "The two exports belong to kernel/time/sched_clock.c, built only under hidden GENERIC_SCHED_CLOCK; x86 does not select that option and the supplied SDK config does not enable it. Retain exact LTS file instead of exporting functions from an excluded architecture implementation. This does not remove native x86 scheduler-clock behavior.",
+    "result_commits": [
+      "fb15ca9e6bc4f11a0caed2109c4deee6baf82a50"
+    ]
+  },
+  {
+    "commit": "85e3a67903c7e71b22cd83438553ab65b6e37efe",
+    "disposition": "omitted-current-target",
+    "rationale": "The hook bypasses firmware SCMI performance-limit handling in ARM_SCMI_CPUFREQ, which depends on ARM_SCMI_PROTOCOL or COMPILE_TEST and is not selected by the SDK. Omit that call-site change and matching declaration/export; retain native LTS firmware handling and generic cpufreq hooks separately. The incidental registry sorting in this patch has no independent semantic requirement and remains only as final formatting.",
+    "result_commits": [
+      "fb15ca9e6bc4f11a0caed2109c4deee6baf82a50"
     ]
   }
 ]

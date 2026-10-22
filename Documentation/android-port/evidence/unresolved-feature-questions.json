@@ -21,7 +21,18 @@
   },
   {
     "topic": "Page-pinner higher-order iteration",
-    "status": "source-review question, not runtime verified",
-    "evidence": "In __free_page_pinner, page_ext_next is skipped by continue when an entry is unflagged, and capture_page_state uses the original page pointer. This follows ACK but may miss later pages in a higher-order allocation. The reference-lifetime fix is retained; verify iteration semantics separately before claiming optional debug tracking correctness."
+    "status": "resolved by source adaptation; runtime not verified",
+    "evidence": "bae607a0be95 replaces the skipped-entry loop with native LTS for_each_page_ext under RCU and captures page + iter.index. Reviewed against include/linux/page_ext.h and mm/page_owner.c. The same commit zeroes debug buffers and serializes size/index/record access against resizing. Optional runtime necessity remains unresolved and conservatively retained; no runtime test was performed.",
+    "result_commits": [
+      "bae607a0be95fdc5e803d358ce6f23b4006cbebf"
+    ]
+  },
+  {
+    "topic": "Configured xHCI-platform and syscon-regmap hooks",
+    "status": "runtime necessity unresolved; final conservative retention decision",
+    "evidence": "SDK config enables USB_XHCI_PLATFORM and MFD_SYSCON. xhci-plat has native ACPI matches PNP0D10/PNP0D15; syscon is configured with OF. Port the generic hook call sites for vendor source/customization compatibility without adding any SoC controller. Native LTS control flow remains unless the trusted xHCI callback deliberately sets bypass. syscon config.name stays live through the callback using automatic cleanup. Exact SDK runtime consumers were not established and no hook execution test was performed.",
+    "result_commits": [
+      "86a7c4d43344a3e11ab0940c3bd95da279d34abc"
+    ]
   }
 ]
