@@ -2973,3 +2973,31 @@ other lookup errors. The check compares range endpoints against an independent
 integer-division oracle and confirms existing verification code is unchanged.
 These checks do not establish real concurrent I/O behavior or performance;
 compilation is recorded separately. Only supplied local sources were used.
+
+## Historical ext4 encryption/casefold merges
+
+Fourteen historical ext4-only candidates are reconciled against the current
+native implementation, including every unique resolution in six merges. The
+evidence records complete original patch hashes and 24 exact native-function
+comparisons. The stable-inode encryption feature and current fscrypt policy
+constraints, encrypted direct-I/O alignment and DUN limiting, casefold hash
+preparation, key-presence checks, generic name comparison and encrypted_casefold
+sysfs advertisement are already represented. Keep the current implementations,
+including native shortname snapshots during rename and key-add race guards.
+
+The 5.9 merge introduced an inline-directory bounds error by selecting
+bh->b_size instead of the actual search buffer size. Its follow-up correction is
+present in LTS, along with later hash-tail, inline-header and readdir bounds
+checks. Do not replay the historical merge regression. The old lblk argument
+plumbing and private ext4 casefold callbacks were superseded; their removal does
+not remove directory validation or encrypted filename matching. The unlink API
+has also evolved to perform key setup before starting its transaction; retain
+native lock, transaction and cleanup ordering. Preserve the newer encrypted
+inode/DAX/inline-data setup and direct-I/O atomic mapping checks. The separate
+casefold rmdir deadlock fix remains applied.
+
+The supplied goldfish fstab selects ext4 encrypted userdata with fsverity, and
+vold contains a concrete encrypted/casefolded directory preparation path. This
+review does not infer dispensability from missing consumers. It preserves native
+capabilities and does not test live encrypted filesystem behavior. Only local
+sources were read; a URL embedded in a vold comment was not accessed.

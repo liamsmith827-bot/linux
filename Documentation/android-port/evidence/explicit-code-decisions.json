@@ -2681,5 +2681,89 @@
     "disposition": "reconciled-to-lts",
     "rationale": "Complete ext4 lookup-consolidation patch examined. It caches the verity pointer in bio_post_read_ctx and changes helper arguments to amortize the later hash-table lookup. The port retains inode-owned native acquire-load lookups instead of the hash table, so retain native ext4_need_verity, inode-based context setup and native verification calls. Early prefetch is separately adapted, with active/EOF guards. Both holes and the separately retained cleancache hit path verify before marking a folio uptodate, and verity_work frees its mempool context before nested read/decrypt work. No new security or Android-visible operation from this internal argument refactor is omitted; real performance was not measured. See evidence/ext4-verity-refactor-review.json. Only local sources used.",
     "result_commits": []
+  },
+  {
+    "commit": "2735b44d172f4a246cd65a9aca5537fbcdcf9665",
+    "disposition": "already-represented-upstream",
+    "rationale": "Stable-inode feature bit 0x0800 and ext4_has_feature_stable_inodes remain in the native header. The cryptops moved to fs/ext4/crypto.c and use has_stable_inodes plus has_32bit_inodes=1; fscrypt policy validation checks stable numbers, 32-bit inode numbers and maximum data-unit index. Keep these native evolved interfaces instead of restoring the old get_ino_and_lblk_bits callback. This preserves policy eligibility and IV uniqueness constraints. Complete original patch/remerge and current ACK/LTS/port evidence: evidence/ext4-historical-review.json. Native LTS fixes remain; no remote resource used.",
+    "result_commits": []
+  },
+  {
+    "commit": "158748fac284d4f545ef1db6b2e0e486a5ac0ee3",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "rationale": "Both unique merge hunks examined. Native ext4_should_use_dio and ext4_dio_alignment retain encryption alignment/eligibility checks and shared/exclusive unlock selection before buffered-write fallback. Native readpage bio setup retains both fscrypt_set_bio_crypt_ctx and ext4_set_bio_post_read_ctx, with the mempool-backed post-read context and native error completion. Historical helper names and bio allocation ordering need not be restored; no inline crypto or verity step is lost. Complete original patch/remerge and current ACK/LTS/port evidence: evidence/ext4-historical-review.json. Native LTS fixes remain; no remote resource used.",
+    "result_commits": []
+  },
+  {
+    "commit": "8b67e802e36d40885ffb41a5d1a1c9e51fdbcf1f",
+    "disposition": "already-represented-upstream",
+    "rationale": "All five files reviewed. Native superblock owns encoding/flags and unloads encoding on teardown and mount failure. generic_set_sb_d_ops selects generic casefold operations with fscrypt revalidation; native name setup/hash use sb encoding and generic_ci_validate_strict_name. generic_ci_d_compare keeps the safe shortname snapshot for concurrent rename and generic_ci_match handles decrypt/compare/free. These native implementations preserve generic casefold functionality with later fixes; do not reintroduce per-ext4 callbacks or old strict-mode macros. Complete original patch/remerge and current ACK/LTS/port evidence: evidence/ext4-historical-review.json. Native LTS fixes remain; no remote resource used.",
+    "result_commits": []
+  },
+  {
+    "commit": "48b5fe661194071db3fba57b3ab8ece0ff3a00fb",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native ext4_fname_setup_ci_filename computes SipHash once, returns allocation/hash errors, and retains the full ext4_filename result. dx_probe/index creation and insertion use the precomputed hashes. ext4_match checks hash/minor-hash only when casefold state was initialized and compatibility fallback permits it, then performs generic_ci_match. Keep the later key-add race and casefold compatibility guards, rather than reverting to the historical unconditional encrypted hash fast path. Complete original patch/remerge and current ACK/LTS/port evidence: evidence/ext4-historical-review.json. Native LTS fixes remain; no remote resource used.",
+    "result_commits": []
+  },
+  {
+    "commit": "e6d1601bb0f23e38d176e62a8147fbe56c39a1ce",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "rationale": "All unique remerge hunks examined: inline deletion adopts the no-handle generic helper, directory search/delete receive buffer bounds, and unlink error paths coexist with the old lblk argument. The merge incorrectly used bh->b_size for inline search; 7dda6587abc7 fixes this to buf_size. Native search retains that correction plus the newer hash-tail bounds check; native inline/delete/unlink paths use the evolved no-lblk interfaces, correct error return and fast-commit replay logic. Do not replay the merge-introduced bounds regression. Complete original patch/remerge and current ACK/LTS/port evidence: evidence/ext4-historical-review.json. Native LTS fixes remain; no remote resource used.",
+    "result_commits": []
+  },
+  {
+    "commit": "7dda6587abc7c7ba372db6b1bf5816701ff01e8b",
+    "disposition": "already-represented-upstream",
+    "rationale": "The single-hunk mis-merge fix is present in native ext4_search_dir: ext4_check_dir_entry receives search_buf and buf_size, not bh->b_size. The obsolete lblk parameter was removed by the upstream-aligned directory implementation. Newer native directory-hash-tail bounds validation is also retained; applying the old patch literally would only conflict with these corrected interfaces. Complete original patch/remerge and current ACK/LTS/port evidence: evidence/ext4-historical-review.json. Native LTS fixes remain; no remote resource used.",
+    "result_commits": []
+  },
+  {
+    "commit": "862e667eb76542fc22b0406b1a16dc993f67bbf6",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "rationale": "All unique resolutions examined across dir.c/ext4.h/namei.c. The removed private d_compare/d_hash callbacks are replaced by native generic operations; generic_ci_d_compare preserves stable shortname handling during rename. Native __ext4_unlink keeps fast-commit skip_remove_dentry, normal error paths and journal/reference cleanup. The old lblk plumbing was superseded by name-based fake-dirent validation in the upstream-aligned series; do not reintroduce it or duplicate private casefold callbacks. Complete original patch/remerge and current ACK/LTS/port evidence: evidence/ext4-historical-review.json. Native LTS fixes remain; no remote resource used.",
+    "result_commits": []
+  },
+  {
+    "commit": "25eea2387885df954ca72f59764d31806ee2183f",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "rationale": "All unique resolutions examined. Generic dentry operations now include casefold and fscrypt revalidation and are selected by generic_set_sb_d_ops, replacing both the suppressed ext4 table and old mount-time assignment. The old decrypt/compare/free logic is native generic_ci_match, which frees decrypted storage on failures and after comparison, and enforces strict encoding. Preserve that native helper and its caller error handling instead of reintroducing ext4_ci_compare. Complete original patch/remerge and current ACK/LTS/port evidence: evidence/ext4-historical-review.json. Native LTS fixes remain; no remote resource used.",
+    "result_commits": []
+  },
+  {
+    "commit": "4358dcf4e2112c37f4147f9a7e5771f0d7799110",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native ext4fs_dirhash, ext4_fname_setup_ci_filename and ext4_match retain the encryption-key guards from this fix. No-key name matching uses fscrypt_match_name. Native matching additionally prevents use of uninitialized precomputed hashes if a key appeared after name preparation. Keep both missing-key behavior and the subsequent key-add race fix; code already represented upstream. Complete original patch/remerge and current ACK/LTS/port evidence: evidence/ext4-historical-review.json. Native LTS fixes remain; no remote resource used.",
+    "result_commits": []
+  },
+  {
+    "commit": "7f6480e40c8fb578ac388deb1955305620d46f5c",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "rationale": "The unique header resolution changed the historical __ext4_unlink handle argument and omitted the obsolete ext4_ci_compare declaration. Current LTS header/implementation agree on the later no-handle unlink API, where lookup/key setup occur before the internally started transaction to avoid unsafe allocation context. The private comparison helper is superseded by generic_ci_match. Keep current call/definition coherence and native transaction lifetime, not the old intermediate declaration. Complete original patch/remerge and current ACK/LTS/port evidence: evidence/ext4-historical-review.json. Native LTS fixes remain; no remote resource used.",
+    "result_commits": []
+  },
+  {
+    "commit": "328a492ae5c5d0e2943b73c0fda4921f180656da",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native ext4_should_use_dio delegates to ext4_dio_alignment, which rejects verity/journal-data/inline-data and requires fscrypt_dio_supported for encrypted files with filesystem-block alignment. Both read and write paths use the predicate. Native ext4_iomap_begin calls fscrypt_limit_io_blocks before ext4_set_iomap to preserve DUN contiguity; the native limit helper handles IV_INO_LBLK_32 wrap. Keep evolved interfaces and subsequent atomic-write coverage checks. No direct-I/O encryption capability from the original patch is omitted. Complete original patch/remerge and current ACK/LTS/port evidence: evidence/ext4-historical-review.json. Native LTS fixes remain; no remote resource used.",
+    "result_commits": []
+  },
+  {
+    "commit": "d38b2c674055ae87c721f373ad94f2cf141ff7ea",
+    "disposition": "already-represented-upstream",
+    "rationale": "The original fix supplied a fifth NULL argument to the then-ACK-only ext4_find_entry signature during rename rollback. The old lblk argument was removed by 7491ab39cbb2; current native ext4_resetent uses the correct four-argument signature and retrieves old.inlined, handles errors and releases the reacquired buffer. Preserve the actual rollback operation and newer inline state tracking, not the superseded signature shim. Complete original patch/remerge and current ACK/LTS/port evidence: evidence/ext4-historical-review.json. Native LTS fixes remain; no remote resource used.",
+    "result_commits": []
+  },
+  {
+    "commit": "7491ab39cbb2fc015a3f47ec1068a3e9a5604d21",
+    "disposition": "already-represented-upstream",
+    "rationale": "Complete seven-file upstream-sync patch reviewed: native dir.c uses fake-dirent names/checksum types and validates record bounds; all declarations/callers omit obsolete lblk arguments; ialloc uses HALF_MD4 group placement; sysfs advertises encrypted_casefold. Native inline read and search bounds include later LTS fixes, and encrypted-inode creation forbids inline data before context installation. Keep those fixes and the upstream-aligned casefold representation. The only separate namei change is the already-applied casefold rmdir transaction-deadlock fix 22157454367a. Complete original patch/remerge and current ACK/LTS/port evidence: evidence/ext4-historical-review.json. Native LTS fixes remain; no remote resource used.",
+    "result_commits": []
+  },
+  {
+    "commit": "bc3b11859070065b9a9242827c006928ec879a12",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "rationale": "The unique merge resolution preserves fscrypt_limit_io_blocks while adding flags to ext4_set_iomap. Both are already in native ext4_iomap_begin. It additionally checks atomic-write mapping coverage after DUN limiting and before returning the mapping. Keep this native sequence; replaying the older merge result would discard newer I/O constraints. Complete original patch/remerge and current ACK/LTS/port evidence: evidence/ext4-historical-review.json. Native LTS fixes remain; no remote resource used.",
+    "result_commits": []
   }
 ]

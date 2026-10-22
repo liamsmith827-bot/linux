@@ -1,0 +1,322 @@
+{
+  "source_head": "6501bac9a2437cdb6f0a85b675eed3df38a9732c",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "records": [
+    {
+      "commit": "2735b44d172f4a246cd65a9aca5537fbcdcf9665",
+      "patch_sha256": "6879fb94d9e23559ea6f95636cbf5ab16ef03d737890627ca1624ebd3708a73c",
+      "unique_remerge_review": false,
+      "paths": [
+        "fs/ext4/ext4.h",
+        "fs/ext4/super.c"
+      ],
+      "assessment": "Stable-inode feature bit 0x0800 and ext4_has_feature_stable_inodes remain in the native header. The cryptops moved to fs/ext4/crypto.c and use has_stable_inodes plus has_32bit_inodes=1; fscrypt policy validation checks stable numbers, 32-bit inode numbers and maximum data-unit index. Keep these native evolved interfaces instead of restoring the old get_ino_and_lblk_bits callback. This preserves policy eligibility and IV uniqueness constraints."
+    },
+    {
+      "commit": "158748fac284d4f545ef1db6b2e0e486a5ac0ee3",
+      "patch_sha256": "e59ca0e97c233d519197c85adfd368765851c4ce1c60b7d7cf5f6d1c2c87e3a3",
+      "unique_remerge_review": true,
+      "paths": [
+        "fs/ext4/file.c",
+        "fs/ext4/readpage.c"
+      ],
+      "assessment": "Both unique merge hunks examined. Native ext4_should_use_dio and ext4_dio_alignment retain encryption alignment/eligibility checks and shared/exclusive unlock selection before buffered-write fallback. Native readpage bio setup retains both fscrypt_set_bio_crypt_ctx and ext4_set_bio_post_read_ctx, with the mempool-backed post-read context and native error completion. Historical helper names and bio allocation ordering need not be restored; no inline crypto or verity step is lost."
+    },
+    {
+      "commit": "8b67e802e36d40885ffb41a5d1a1c9e51fdbcf1f",
+      "patch_sha256": "7f82b3e8437521e4209c6d08dd2f24463dd1e4bd6182594f7f419adcf1954413",
+      "unique_remerge_review": false,
+      "paths": [
+        "fs/ext4/dir.c",
+        "fs/ext4/ext4.h",
+        "fs/ext4/hash.c",
+        "fs/ext4/namei.c",
+        "fs/ext4/super.c"
+      ],
+      "assessment": "All five files reviewed. Native superblock owns encoding/flags and unloads encoding on teardown and mount failure. generic_set_sb_d_ops selects generic casefold operations with fscrypt revalidation; native name setup/hash use sb encoding and generic_ci_validate_strict_name. generic_ci_d_compare keeps the safe shortname snapshot for concurrent rename and generic_ci_match handles decrypt/compare/free. These native implementations preserve generic casefold functionality with later fixes; do not reintroduce per-ext4 callbacks or old strict-mode macros."
+    },
+    {
+      "commit": "48b5fe661194071db3fba57b3ab8ece0ff3a00fb",
+      "patch_sha256": "41243641cd978d595c9e1099ba2bba426118d7021c1ca7055cf4601e0606c568",
+      "unique_remerge_review": false,
+      "paths": [
+        "fs/ext4/ext4.h",
+        "fs/ext4/namei.c"
+      ],
+      "assessment": "Native ext4_fname_setup_ci_filename computes SipHash once, returns allocation/hash errors, and retains the full ext4_filename result. dx_probe/index creation and insertion use the precomputed hashes. ext4_match checks hash/minor-hash only when casefold state was initialized and compatibility fallback permits it, then performs generic_ci_match. Keep the later key-add race and casefold compatibility guards, rather than reverting to the historical unconditional encrypted hash fast path."
+    },
+    {
+      "commit": "e6d1601bb0f23e38d176e62a8147fbe56c39a1ce",
+      "patch_sha256": "05a1930c99d5c66c41171f1809abc7b0bf979b9c491fde66a83783279f11e47e",
+      "unique_remerge_review": true,
+      "paths": [
+        "fs/ext4/inline.c",
+        "fs/ext4/namei.c"
+      ],
+      "assessment": "All unique remerge hunks examined: inline deletion adopts the no-handle generic helper, directory search/delete receive buffer bounds, and unlink error paths coexist with the old lblk argument. The merge incorrectly used bh->b_size for inline search; 7dda6587abc7 fixes this to buf_size. Native search retains that correction plus the newer hash-tail bounds check; native inline/delete/unlink paths use the evolved no-lblk interfaces, correct error return and fast-commit replay logic. Do not replay the merge-introduced bounds regression."
+    },
+    {
+      "commit": "7dda6587abc7c7ba372db6b1bf5816701ff01e8b",
+      "patch_sha256": "060a2380920709839678dc2fcb52d9989285e2fd52aab63d38fc7db34a07952c",
+      "unique_remerge_review": false,
+      "paths": [
+        "fs/ext4/namei.c"
+      ],
+      "assessment": "The single-hunk mis-merge fix is present in native ext4_search_dir: ext4_check_dir_entry receives search_buf and buf_size, not bh->b_size. The obsolete lblk parameter was removed by the upstream-aligned directory implementation. Newer native directory-hash-tail bounds validation is also retained; applying the old patch literally would only conflict with these corrected interfaces."
+    },
+    {
+      "commit": "862e667eb76542fc22b0406b1a16dc993f67bbf6",
+      "patch_sha256": "c68f073c7800ccf1c7a9f9d4fa98e12b7f17de8f4e5f5c0e56680d0591870e59",
+      "unique_remerge_review": true,
+      "paths": [
+        "fs/ext4/dir.c",
+        "fs/ext4/ext4.h",
+        "fs/ext4/namei.c"
+      ],
+      "assessment": "All unique resolutions examined across dir.c/ext4.h/namei.c. The removed private d_compare/d_hash callbacks are replaced by native generic operations; generic_ci_d_compare preserves stable shortname handling during rename. Native __ext4_unlink keeps fast-commit skip_remove_dentry, normal error paths and journal/reference cleanup. The old lblk plumbing was superseded by name-based fake-dirent validation in the upstream-aligned series; do not reintroduce it or duplicate private casefold callbacks."
+    },
+    {
+      "commit": "25eea2387885df954ca72f59764d31806ee2183f",
+      "patch_sha256": "7c33c2fe1fec47bf3529ce5606632ddcdf323269cd4aa68d00ca2f2736d41c4b",
+      "unique_remerge_review": true,
+      "paths": [
+        "fs/ext4/dir.c",
+        "fs/ext4/namei.c",
+        "fs/ext4/super.c"
+      ],
+      "assessment": "All unique resolutions examined. Generic dentry operations now include casefold and fscrypt revalidation and are selected by generic_set_sb_d_ops, replacing both the suppressed ext4 table and old mount-time assignment. The old decrypt/compare/free logic is native generic_ci_match, which frees decrypted storage on failures and after comparison, and enforces strict encoding. Preserve that native helper and its caller error handling instead of reintroducing ext4_ci_compare."
+    },
+    {
+      "commit": "4358dcf4e2112c37f4147f9a7e5771f0d7799110",
+      "patch_sha256": "320170e75edf33b6c90ea237bd7c0f7ea5ece2891228b06bcd80be1588cd3c66",
+      "unique_remerge_review": false,
+      "paths": [
+        "fs/ext4/hash.c",
+        "fs/ext4/namei.c"
+      ],
+      "assessment": "Native ext4fs_dirhash, ext4_fname_setup_ci_filename and ext4_match retain the encryption-key guards from this fix. No-key name matching uses fscrypt_match_name. Native matching additionally prevents use of uninitialized precomputed hashes if a key appeared after name preparation. Keep both missing-key behavior and the subsequent key-add race fix; code already represented upstream."
+    },
+    {
+      "commit": "7f6480e40c8fb578ac388deb1955305620d46f5c",
+      "patch_sha256": "8b1cbaf1b9f7c46d3e7883425286c4f8615445b620bc22bd21a6461bc6047fd5",
+      "unique_remerge_review": true,
+      "paths": [
+        "fs/ext4/ext4.h"
+      ],
+      "assessment": "The unique header resolution changed the historical __ext4_unlink handle argument and omitted the obsolete ext4_ci_compare declaration. Current LTS header/implementation agree on the later no-handle unlink API, where lookup/key setup occur before the internally started transaction to avoid unsafe allocation context. The private comparison helper is superseded by generic_ci_match. Keep current call/definition coherence and native transaction lifetime, not the old intermediate declaration."
+    },
+    {
+      "commit": "328a492ae5c5d0e2943b73c0fda4921f180656da",
+      "patch_sha256": "696ab97ffb12858c11654c674e515f4423f49203e4757816d6fe6f6d7912793f",
+      "unique_remerge_review": false,
+      "paths": [
+        "fs/ext4/file.c",
+        "fs/ext4/inode.c"
+      ],
+      "assessment": "Native ext4_should_use_dio delegates to ext4_dio_alignment, which rejects verity/journal-data/inline-data and requires fscrypt_dio_supported for encrypted files with filesystem-block alignment. Both read and write paths use the predicate. Native ext4_iomap_begin calls fscrypt_limit_io_blocks before ext4_set_iomap to preserve DUN contiguity; the native limit helper handles IV_INO_LBLK_32 wrap. Keep evolved interfaces and subsequent atomic-write coverage checks. No direct-I/O encryption capability from the original patch is omitted."
+    },
+    {
+      "commit": "d38b2c674055ae87c721f373ad94f2cf141ff7ea",
+      "patch_sha256": "8db0b048e0798ccc8c28522f3d79194c0048b867261e60943bbc76d79ea524db",
+      "unique_remerge_review": false,
+      "paths": [
+        "fs/ext4/namei.c"
+      ],
+      "assessment": "The original fix supplied a fifth NULL argument to the then-ACK-only ext4_find_entry signature during rename rollback. The old lblk argument was removed by 7491ab39cbb2; current native ext4_resetent uses the correct four-argument signature and retrieves old.inlined, handles errors and releases the reacquired buffer. Preserve the actual rollback operation and newer inline state tracking, not the superseded signature shim."
+    },
+    {
+      "commit": "7491ab39cbb2fc015a3f47ec1068a3e9a5604d21",
+      "patch_sha256": "5cd7b7c4a069acbcada1f704e9bb023b6bc086845bacbdfeb60999f6878d06d3",
+      "unique_remerge_review": false,
+      "paths": [
+        "fs/ext4/dir.c",
+        "fs/ext4/ext4.h",
+        "fs/ext4/hash.c",
+        "fs/ext4/ialloc.c",
+        "fs/ext4/inline.c",
+        "fs/ext4/namei.c",
+        "fs/ext4/sysfs.c"
+      ],
+      "assessment": "Complete seven-file upstream-sync patch reviewed: native dir.c uses fake-dirent names/checksum types and validates record bounds; all declarations/callers omit obsolete lblk arguments; ialloc uses HALF_MD4 group placement; sysfs advertises encrypted_casefold. Native inline read and search bounds include later LTS fixes, and encrypted-inode creation forbids inline data before context installation. Keep those fixes and the upstream-aligned casefold representation. The only separate namei change is the already-applied casefold rmdir transaction-deadlock fix 22157454367a."
+    },
+    {
+      "commit": "bc3b11859070065b9a9242827c006928ec879a12",
+      "patch_sha256": "4fdaaa0d22885b017b87a5e1b826efe9f89c50929ec663038a2c99477c17c38d",
+      "unique_remerge_review": true,
+      "paths": [
+        "fs/ext4/inode.c"
+      ],
+      "assessment": "The unique merge resolution preserves fscrypt_limit_io_blocks while adding flags to ext4_set_iomap. Both are already in native ext4_iomap_begin. It additionally checks atomic-write mapping coverage after DUN limiting and before returning the mapping. Keep this native sequence; replaying the older merge result would discard newer I/O constraints."
+    }
+  ],
+  "native_function_witnesses": [
+    {
+      "path": "fs/ext4/namei.c",
+      "function": "ext4_fname_setup_ci_filename",
+      "identical_to_pinned_lts": true,
+      "sha256": "97b0bd9585337163ffd594d807153735c39a0808fe515e5eab1ca012016235f2"
+    },
+    {
+      "path": "fs/ext4/namei.c",
+      "function": "ext4_match",
+      "identical_to_pinned_lts": true,
+      "sha256": "47173f9c853e0e59b3e45c485374cd84fc2786746581a360b1191e1cb063b0d9"
+    },
+    {
+      "path": "fs/ext4/namei.c",
+      "function": "ext4_search_dir",
+      "identical_to_pinned_lts": true,
+      "sha256": "5149de6640b05644f9b93ddbf27c441b250fe43fee254150bbe2f4445b536323"
+    },
+    {
+      "path": "fs/ext4/namei.c",
+      "function": "ext4_generic_delete_entry",
+      "identical_to_pinned_lts": true,
+      "sha256": "70320583adbed419ae617afe3471e1489348f71c767a5ad0bc71431bbc214ab0"
+    },
+    {
+      "path": "fs/ext4/namei.c",
+      "function": "__ext4_unlink",
+      "identical_to_pinned_lts": true,
+      "sha256": "efd14b2e42d7b29ef5d8f71796a556d183248dfbd385e811e7df5a2e9a62dc3b"
+    },
+    {
+      "path": "fs/ext4/namei.c",
+      "function": "ext4_resetent",
+      "identical_to_pinned_lts": true,
+      "sha256": "1f222dc1006d718e35eb3ed5dddc5b4697b0bbc9137fa9ea564e60471beeeff9"
+    },
+    {
+      "path": "fs/ext4/namei.c",
+      "function": "ext4_insert_dentry",
+      "identical_to_pinned_lts": true,
+      "sha256": "75d2bfa9becd1737701711de1f234a4bee242c10363a181669adbc1c9eaa4f41"
+    },
+    {
+      "path": "fs/ext4/namei.c",
+      "function": "dx_probe",
+      "identical_to_pinned_lts": true,
+      "sha256": "89697d5ea91521d14d73cc702cb98929f5c4f5701445027bb56f1080bc779812"
+    },
+    {
+      "path": "fs/ext4/namei.c",
+      "function": "make_indexed_dir",
+      "identical_to_pinned_lts": true,
+      "sha256": "09532779c607bd3121957242f080efa3993539a4ab11a65705364ebbeb3a03c3"
+    },
+    {
+      "path": "fs/ext4/file.c",
+      "function": "ext4_should_use_dio",
+      "identical_to_pinned_lts": true,
+      "sha256": "36c9d5addf4089af9325fd0ce55d56fac9ccb044cab139de2fbe9de603fc8321"
+    },
+    {
+      "path": "fs/ext4/file.c",
+      "function": "ext4_dio_read_iter",
+      "identical_to_pinned_lts": true,
+      "sha256": "c8cdb1d5aec14a43a55bed3422840312611f73c1aa6c1e64012d58b6ce5b4a11"
+    },
+    {
+      "path": "fs/ext4/file.c",
+      "function": "ext4_dio_write_iter",
+      "identical_to_pinned_lts": true,
+      "sha256": "fe3e39f3907ec73d779ccd8415bfd43d10ebc3d7e5766e3c61fcd7753929f110"
+    },
+    {
+      "path": "fs/ext4/inode.c",
+      "function": "ext4_iomap_begin",
+      "identical_to_pinned_lts": true,
+      "sha256": "6f85868234c691acacd1308d084bd4f264a243fa1e9447e75598207e5a2278cb"
+    },
+    {
+      "path": "fs/ext4/inode.c",
+      "function": "ext4_dio_alignment",
+      "identical_to_pinned_lts": true,
+      "sha256": "b491cc3be2a4db729b66982f8823119e63df2e4e858390bbb90d551156b4b661"
+    },
+    {
+      "path": "fs/ext4/crypto.c",
+      "function": "ext4_has_stable_inodes",
+      "identical_to_pinned_lts": true,
+      "sha256": "5c42c72d480f549b055829e9d437d45e35bf90160180fa0a41df9f11b773d886"
+    },
+    {
+      "path": "fs/ext4/crypto.c",
+      "function": "ext4_fname_setup_filename",
+      "identical_to_pinned_lts": true,
+      "sha256": "b6b7b622638838ff2fe282f11fb3c43d3fb7b16d41334d1e6c1638cf677d551e"
+    },
+    {
+      "path": "fs/ext4/crypto.c",
+      "function": "ext4_fname_prepare_lookup",
+      "identical_to_pinned_lts": true,
+      "sha256": "e1122e2edd48269153b42ceb8a80ed0a40ac65aae183fd6549b0d8f7fbfe09ce"
+    },
+    {
+      "path": "fs/libfs.c",
+      "function": "generic_ci_match",
+      "identical_to_pinned_lts": true,
+      "sha256": "4be72282ae775fdedcaf0ed475d32a0be7f6f83c03bb416d6b515d37ff60433a"
+    },
+    {
+      "path": "fs/libfs.c",
+      "function": "generic_ci_d_hash",
+      "identical_to_pinned_lts": true,
+      "sha256": "ab6d5cacbb88b5184d2fcf7024852f4d283f7bf5d6d59a2d2a86a8c43e28916e"
+    },
+    {
+      "path": "fs/libfs.c",
+      "function": "generic_ci_d_compare",
+      "identical_to_pinned_lts": true,
+      "sha256": "574a08e7c424cba7b138d0a4a8a1b73c971348334d4d9b31b05ac0789a208be8"
+    },
+    {
+      "path": "fs/libfs.c",
+      "function": "generic_set_sb_d_ops",
+      "identical_to_pinned_lts": true,
+      "sha256": "cb22b7ec93ce12453a7f067ddbdc679271327550e00f52bc5aa44b1f755d69c6"
+    },
+    {
+      "path": "fs/crypto/inline_crypt.c",
+      "function": "fscrypt_dio_supported",
+      "identical_to_pinned_lts": true,
+      "sha256": "7dbe9c08e990c04787d4c0a134cd7f9eb12de131582413ea8391b6431f51b139"
+    },
+    {
+      "path": "fs/crypto/inline_crypt.c",
+      "function": "fscrypt_limit_io_blocks",
+      "identical_to_pinned_lts": true,
+      "sha256": "e9ecb1e2160960b5510f55f1a61fae8c36c8bce2731eec6d70683d1f9e22b8b6"
+    },
+    {
+      "path": "fs/crypto/policy.c",
+      "function": "supported_iv_ino_lblk_policy",
+      "identical_to_pinned_lts": true,
+      "sha256": "4118320e3fbdabc53b8fc8677d7e2fddaf9f88be5fb829f16d4517efd74dbff1"
+    }
+  ],
+  "source_blobs": {
+    "fs/crypto/inline_crypt.c": "20db6e55b8a01df761332d4142dca5386520c11f",
+    "fs/crypto/policy.c": "254a251f94bcd9f47741ed8fe002634aaca04384",
+    "fs/ext4/crypto.c": "3971986de02897ace60d0f0034f9f340d78a0acf",
+    "fs/ext4/dir.c": "290a9aeac15f1f0ea7b05c12c4b02856b0a2d0ff",
+    "fs/ext4/ext4.h": "da6428312c36b5c0591084a1d7805392f70e2433",
+    "fs/ext4/file.c": "149a7fe5a0962949fcc5f5c204f2360cf2f2792a",
+    "fs/ext4/hash.c": "33cd5b6b02d59fb749844fe481022f5f44244bb6",
+    "fs/ext4/ialloc.c": "d8620dfd44ff922e002eec5efa59ccbc37d61cf7",
+    "fs/ext4/inline.c": "672085e4ec24f28892a6b9c6b6aa5bfa1a10cf19",
+    "fs/ext4/inode.c": "65eb8b5fccbce8788c46dbc427e2309be55ca0ad",
+    "fs/ext4/namei.c": "49bd70aab2255293552cb7252ae0c1fbc94f4cad",
+    "fs/ext4/readpage.c": "a4b211360daf56de999d9f70caecc3817a1dced5",
+    "fs/ext4/super.c": "2b9e8055bbb53888bb95fa108d2ee3c05e9ddc67",
+    "fs/ext4/sysfs.c": "3ec79a33d246edbaeaa58b822aed241b57f4b870",
+    "fs/libfs.c": "8976d1623c05dcf2f82ed96d5652cfeed677ee1d"
+  },
+  "final_ack_to_lts_patch_sha256": "ca5774e6eec1803f0109b27b8d86c96081722885d4ef421ecce126a10a1e3fe2",
+  "local_consumer_evidence": [
+    "grapheneos-17/device/generic/goldfish/board/fstab/x86: ext4 userdata with AES-256-XTS/AES-256-CTS and fsverity",
+    "grapheneos-17/system/vold/FsCrypt.cpp: prepare_dir_with_policy and encrypted/casefolded-directory rename workaround; embedded URL not accessed"
+  ],
+  "scope": "Full original patches and unique remerge deltas, final ACK/LTS delta and native function equivalence; no live encrypted filesystem test.",
+  "remote_resources": []
+}
