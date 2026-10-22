@@ -1102,5 +1102,34 @@
       "110e353eded3771d163bc8c4f13aa29a9bfaff1d"
     ],
     "review_status": "reviewed"
+  },
+  {
+    "commit": "8e42b0c8e44c919188b96bf05218eeea929a7bf8",
+    "disposition": "adapted",
+    "rationale": "Preserve SDK emulated-page alignment with the existing worst-case gap reservation. Full ACK patch and native vma_iter_area_highest/vma_iter_end plus x86 mmap_base were examined locally: iterator end is exclusive and mmap_base is only base-page aligned. ACK upward rounding on top-down selection can move the mapping beyond the free interval/high limit, potentially overlapping adjacent VMAs before mmap setup. 8a7a4fcdab67 rounds down before stack-guard checks, retaining native limit/guard logic and bottom-up behavior. The extracted complete-function host shim passes 27648 interval/guard/alignment cases, including native 4 KiB equivalence and 1920 old-source failures. Actual Maple Tree, mmap syscall and concurrency were not tested. See check_unmapped_area_bounds.py, its evidence and SECURITY.md. This fixes an introduced bounds violation without weakening an LTS check. No remote source accessed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "8a7a4fcdab67fd9340bb2a4194fb84b20e2d2724"
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "commit": "73037b1bedd1dd194c6fc31b723d73d185dd6134",
+    "disposition": "reconciled-to-lts",
+    "rationale": "The complete local ACK patch replaces the internal __vm_map_pages per-page insertion loop with the existing vm_insert_pages batching helper to reduce PTE lock operations. Both expose the same API, offset/count checks, page validation, VMA protections and partial-failure contract; native insert_page and insert_page_in_batch_locked both call validate_page_before_insert and insert_page_into_pte_locked. No Android userspace or vendor source contract depends on the internal locking optimization. Restore the exact pinned LTS helper to minimize unnecessary deviation. This decision rests on the complete code/API comparison, not failure to locate a consumer; the ACK message describes a ChromeOS MTK performance test and does not define an Android ABI. No performance or runtime equivalence test is claimed. The message lkml URL was not visited.",
+    "result_commits": [
+      "623c51beadea8fe7dcc1d0cad8f555b5bb9b6f58"
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "commit": "e6061531a425c91e8cb52e992da261e5f93a5de8",
+    "review_status": "reviewed",
+    "disposition": "partially-adapted-net-state",
+    "rationale": "Keep the GPL memcg_page_state source API for Android vendor proactive reclaim. Omit the two ANDROID_GKI_* enum-visibility objects: the full local patch identifies their sole purpose as exposing index types for ABI tooling, while callers use the function and native enum declarations in headers. There is no historical KMI requirement and all modules are rebuilt. 769c2a3ea3f5 removes only those marker objects. This is a purpose/code-based split, not a no-consumer heuristic; module compilation/import checks verify the target build. No memory limits, permissions or statistics implementation is removed. All evidence local.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "769c2a3ea3f5512b82f2d7779488431b756b3c59"
+    ]
   }
 ]

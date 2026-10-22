@@ -1723,3 +1723,61 @@ Generic vendor callbacks are retained with native lock/reference contracts;
 module callbacks remain trusted kernel code, not a userspace security boundary.
 The shared EOF-tail emulation candidate b3c77090341c is explicitly excluded from
 this scoped finalization and remains unresolved. All evidence was local.
+
+8a7a4fcdab67 corrects top-down emulated mapping alignment. The native iterator
+returns an exclusive upper bound, and x86 mmap_base can be only 4 KiB aligned.
+Rounding a selected address upward can move its end outside the chosen free
+interval, with a possible overlap of an adjacent mapping. Round down before
+checking the previous stack guard; retain the extra alignment reservation,
+limit checks and bottom-up behavior. The complete extracted functions pass
+27,648 host interval/guard/alignment cases, including 1,920 old-source failures
+and unchanged native 4 KiB results. This is an interval shim, not a real Maple
+Tree or mmap execution. Build 54 checks this source with the unchanged workflow.
+
+The vm_map_pages batching optimization in ACK 73037b1bedd1 is omitted: the
+existing API and per-page validity/protection/partial-failure contracts are
+unchanged, so Android compatibility does not require replacing the LTS loop.
+The result commit is recorded in explicit-code-decisions.json. This conclusion
+comes from both complete insertion paths, not from an absent consumer search.
+
+A separate DMA-buf OOM accounting issue is now explicitly recorded for further
+review: nonfatal allocation failures can leave a later unaccount operation
+without a matching increment and undercount still-live references. Native
+file/buffer lifetime references are separate, but lmkd consumes these statistics.
+Cross-file VMA lifecycle candidates remain provisional while that policy is
+reviewed. All sources here were local; source-message URLs were not accessed.
+
+Builds 54 (8a7a4fcdab67) and 55 (623c51beadea) each produced both images,
+100 common and 45 virtual-device modules. All signatures verified, altered
+payloads were rejected, and all export/module tables matched.
+
+ab9389a3d802 initializes compaction/migration callback state and resets the
+PSI bypass each work cycle. A completion-only callback must not receive an
+uninitialized cookie, and a removed callback must not leave old policy active.
+The current SDK also enables stack initialization, but explicit defaults avoid
+depending on that compiler setting. Native compaction capture, free validation,
+RCU progress and migration cleanup fixes remain. Source review and compilation
+are the checks here; no migration or compaction runtime test was performed.
+
+769c2a3ea3f5 resets memory.high hook results on each retry. Previously a callback
+that skipped reclaim once could leave the skip/progress values active after it
+was removed. The extracted control-path check restores native reclaim, checks
+PSI entry/exit pairing, default delay bounds and CSS cleanup, and reproduces the
+old stale bypass. It does not perform actual reclaim or PSI measurement. The
+same commit omits two KMI enum-visibility marker objects while retaining the
+callable memcg_page_state export and native enum headers.
+
+ACK's intentional default to exclude memory.high throttle delays from PSI is
+retained. Local lmkd registers system PSI pressure monitors and libprocessgroup
+configures memory.high; treating artificial throttling as global memory scarcity
+can alter Android killing behavior. Actual reclaim and native hard-limit checks
+remain. Vendor hooks can opt back into PSI and tune reclaim/delay policy; they
+are trusted kernel code and must preserve CSS ownership and LRU/list/folio
+contracts. This policy choice does not claim measured LMK behavior. Build 56
+checks the latest hook/marker changes. All evidence and tools were local.
+
+Build 56 completed at 769c2a3ea3f5 with both kernel images, 100 common and
+45 virtual-device modules. All 145 signatures verified against the build
+certificate, the altered-payload control was rejected, and 659 protected exports
+plus module flag/CRC tables matched. Compilation and artifacts were checked;
+no runtime memory-pressure or migration test was performed.

@@ -1,6 +1,6 @@
 {
   "status": "in-progress; no blanket final dispositions for MM/proc files",
-  "source_head": "110e353eded3771d163bc8c4f13aa29a9bfaff1d",
+  "source_head": "769c2a3ea3f5512b82f2d7779488431b756b3c59",
   "positive_consumers": [
     "grapheneos-17/device/generic/goldfish/board/kernel/x86_64_16k_cmdline.txt: page_shift=14",
     "grapheneos-17/bionic/linker/linker_phdr.cpp: ELF padding MADV_DONTNEED and 64 KiB alignment bound"
@@ -21,18 +21,22 @@
     "Full LTS/normalized-ACK deltas for mincore, mlock, mprotect and msync; mincore aggregation adaptation with host tests",
     "Full madvise/mremap/proc stat/exec deltas, madvise bypass cleanup and DMA-buf exec ownership integration",
     "Full stack/util/mseal/vmstat, x86 ELF/randomization/vsyscall/vDSO layout and PFN proc/idle deltas; positive libmeminfo explicit PFN fallback and lmkd watermark units",
-    "Complete filemap/shmem LTS and normalized ACK deltas; callback lifetimes, shmem reclaim reference contract, native filemap_get_folios batching, with host teardown/reference tests. Full feature disposition still pending cleancache/readahead/ashmem integration review.",
-    "Full readahead LTS/normalized-ACK deltas, all unbounded-read callers and local ACK locking/refcount patches. 05ae9392c7c8 restores caller locks and pins callback folios. Filemap/cleancache integration remains in review.",
+    "Complete filemap/shmem LTS and normalized ACK deltas; callback lifetimes, shmem reclaim reference contract, native filemap_get_folios batching, with host teardown/reference tests. Cleancache/readahead/ashmem integration subsequently reviewed; shared EOF-tail compatibility remains unresolved.",
+    "Full readahead LTS/normalized-ACK deltas, all unbounded-read callers and local ACK locking/refcount patches. 05ae9392c7c8 restores caller locks and pins callback folios. Filemap/cleancache integration subsequently reviewed.",
     "Full CMA/GCMA/cleancache and superblock/truncate integration; native allocator contracts, teardown references and large-folio stale-cache invalidation corrected with extracted-function checks.",
     "Full ashmem Rust driver and UAPI/backing-file/range/shrinker/global-control integration; positive local libcutils consumers and ueventd/SELinux source policy examined. Legacy ioctl sizing, short reads and global-control privilege corrected. Shared EOF-tail compatibility remains unresolved.",
     "Readahead boundary implementation/header/build integration and complete local feature patches; native and normalized deltas and every request initializer. 15bccdfefe6d skips padding faults to prevent length underflow.",
     "Full smaps/numa_maps/rollup per-VMA locking series, native mmap/pagewalk lock contracts, gate/iterator/error paths, padding-display copying and shmem COW/range selection. 20730118bf05 accounts only the walked PMD portion, retaining native full-PMD fast path and migration safeguards. Positive local libmeminfo maps/smaps/rollup readers examined.",
     "Large-folio fault-around/PMD expansion comparison: five full helper bodies exactly match ACK and LTS. Preserve shared behavior, and describe padding hints as request/optimization boundaries rather than a strict mapping prohibition; evidence/large-folio-padding-comparison.json.",
-    "Pagemap aggregate selection completed: retain existing ACK PFN/swap-identity suppression as a known lossy interface for actual libmeminfo/procrank consumers; preserve native UFFD-WP/guard flags in 110e353eded3. Full task_mmu.c source review and focused tests recorded."
+    "Pagemap aggregate selection completed: retain existing ACK PFN/swap-identity suppression as a known lossy interface for actual libmeminfo/procrank consumers; preserve native UFFD-WP/guard flags in 110e353eded3. Full task_mmu.c source review and focused tests recorded.",
+    "Full top-down unmapped-area search and exclusive iterator bounds; 8a7a4fcdab67 rounds the emulated start downward within its free gap, with extracted-search host boundary checks.",
+    "Full fault/mmap and memfd/inode flag/LSM integration review, preserving native LTS insertion and seal ordering. DMA-buf accounting under record allocation failure remains a separate unresolved question.",
+    "Compaction, migration, GUP and memcg full net deltas reviewed; ab9389a3d802 and 769c2a3ea3f5 initialize/reset hook state, retain source interfaces and omit ABI-only enum markers. Allocator/reclaim core remains under review."
   ],
   "remaining": [
     "Shared-tail compatibility question is recorded in unresolved-feature-questions.json",
-    "Filemap/shmem unrelated hooks and source differences remain separate reviews"
+    "DMA-buf accounting after nonfatal record allocation failure is recorded in unresolved-feature-questions.json",
+    "Allocator and reclaim core, remaining MM paths and cross-file interactions require independent source review"
   ],
   "adaptations": [
     "7f9fdddd5bf89fe656e25c3e4069c2df2091706d",
@@ -57,7 +61,11 @@
     "3ea7a304b5dc436d878053200c03609b692c6006",
     "15bccdfefe6dab136de759c0048289ab89784f19",
     "20730118bf05217556bafa9e9e1f645ffd19e82f",
-    "110e353eded3771d163bc8c4f13aa29a9bfaff1d"
+    "110e353eded3771d163bc8c4f13aa29a9bfaff1d",
+    "8a7a4fcdab67fd9340bb2a4194fb84b20e2d2724",
+    "623c51beadea8fe7dcc1d0cad8f555b5bb9b6f58",
+    "ab9389a3d802ec4da3b03c0e0c6e0969ec94efc5",
+    "769c2a3ea3f5512b82f2d7779488431b756b3c59"
   ],
   "test_evidence": [
     "evidence/page-emulation-check.json",
@@ -75,7 +83,9 @@
     "evidence/cleancache-large-folios-check.json",
     "evidence/ashmem-io-check.json",
     "evidence/mmap-readahead-bounds-check.json",
-    "evidence/smaps-ranges-check.json"
+    "evidence/smaps-ranges-check.json",
+    "evidence/unmapped-area-bounds-check.json",
+    "evidence/memcg-high-hooks-check.json"
   ],
   "remote_resources_used": []
 }

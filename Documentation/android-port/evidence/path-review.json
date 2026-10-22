@@ -25898,7 +25898,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "0679dd713b03b8d62dbd8b30eb407cfc7bff8b9c",
-    "common_ancestor_blob": "173d9c07a8952a3da51520e747e649f3d74ad841"
+    "common_ancestor_blob": "173d9c07a8952a3da51520e747e649f3d74ad841",
+    "specific_evidence": "Full delta adds only the compact_node_async source declaration under CONFIG_COMPACTION, matching its reviewed implementation and actual enabled SDK configuration. Native LTS capture_control API and all existing declarations remain. Runtime async-node usage is unconfirmed; retain the generic Android vendor customization interface conservatively rather than assuming lack of a caller proves it unnecessary.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "include/linux/compat.h": {
     "ack_blob": "56cebaff0c910fda853a0e2b3d6d0517e55f8b38",
@@ -27049,7 +27051,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "44598cc2d5c1da49cbbcbc1f6353ee78378e7535",
-    "common_ancestor_blob": "133591199933acb1847213389e61cf669d0be6f1"
+    "common_ancestor_blob": "133591199933acb1847213389e61cf669d0be6f1",
+    "specific_evidence": "Full header delta adds generic OEM/vendor per-memcg state and the reviewed traversal declaration. mem_cgroup_alloc uses kmem_cache_zalloc on memcg_cachep, whose size is struct_size_t(struct mem_cgroup, nodeinfo, nr_node_ids), including the enlarged fixed portion and nodeinfo flexible array, so added fields are initialized; native nodeinfo layout follows rebuilt source definitions. Native fields, types and helpers remain. This is retained customization storage, not historical KMI padding or enum-marker ABI artifacts.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "include/linux/memfd.h": {
     "ack_blob": "cc74de3dbcfe93d327f45748439e9cf604bba5e7",
@@ -27061,7 +27065,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "cc74de3dbcfe93d327f45748439e9cf604bba5e7",
-    "common_ancestor_blob": "6f606d9573c385a28c315559e0ebcceb9f46c08c"
+    "common_ancestor_blob": "6f606d9573c385a28c315559e0ebcceb9f46c08c",
+    "specific_evidence": "Complete LTS delta adds only MEMFD_ANON_NAME with the fixed [memfd] spelling used by the locally reviewed memfd anonymous-inode security initialization and SELinux class selection. Native declarations/seal helpers remain; this defines a runtime labeling contract consumed by Android memfd_class policy, not historical KMI.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "include/linux/mempool.h": {
     "ack_blob": "08f5a2142681960ccc361d5b90354896831ae85d",
@@ -27097,7 +27103,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "08b929b0d6a94b66c1c9814dd421a08f911d3480",
-    "common_ancestor_blob": "f6a2b2d2001623aac7f9677b56f3d4c0d5be1593"
+    "common_ancestor_blob": "f6a2b2d2001623aac7f9677b56f3d4c0d5be1593",
+    "specific_evidence": "Full LTS delta adds default-false Android LRU/MGLRU add/remove bypass hooks before the native operations. All native list/generation/statistics code remains for ordinary calls. A callback setting skip explicitly assumes responsibility for the corresponding list membership, flags and accounting under the existing LRU lock; returning true is a handled-operation signal, not evidence that the native action ran. Retain generic vendor memory policy compatibility with actual LRU_GEN support, without assuming any SDK callback consumer. No untrusted userspace interface or historical layout promise is added; no runtime LRU race tested.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "include/linux/mm_types.h": {
     "ack_blob": "f2552e68a18eca18debd34783f28c3959e04e4c6",
@@ -27110,7 +27118,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "e58d528edfefe06f1271da442f9266541b71c109",
-    "common_ancestor_blob": "8b1045c51e0a68f3487988675a9215a8c8030b6e"
+    "common_ancestor_blob": "8b1045c51e0a68f3487988675a9215a8c8030b6e",
+    "specific_evidence": "Full LTS and normalized-ACK header deltas reviewed. Keep mm_struct DMA-buf accounting pointer and initialized Android vendor storage for generic runtime/source customization; layout is rebuilt from native LTS, with no historical KMI padding. kernel/fork.c initializes the accounting pointer and vendor state and owns lifecycle references as separately reviewed. Preserve native softleaf_t alias and all native struct changes. The emulation-specific VM_FAULT_NEED_ANONPAGE bit is moved by 7f9fdddd5bf8 to unused 0x008000, outside HINDEX_MASK, and included in error/trace definitions so fault callers unwind before private-tail fallback. Its shared-tail behavior remains explicitly unresolved; b3c77090341c and predecessor EOF feature rows are excluded from scoped finalization. DMA-buf nonfatal OOM statistics limitations remain under cross-file review; this header alone does not claim those semantics correct.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "include/linux/mman.h": {
     "ack_blob": "0ba8a7e8b90aedeb503894536e979d79ddabe820",
@@ -28134,7 +28144,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "93971ac56da71d6be77f09003a85dc27d82b4b3b",
-    "common_ancestor_blob": "0e47465ef0fd506638c0b972e1e98a9815208b1a"
+    "common_ancestor_blob": "0e47465ef0fd506638c0b972e1e98a9815208b1a",
+    "specific_evidence": "Complete LTS and normalized-ACK deltas inspected. Retain source-visible Android vendor inode storage and SHMEM_FL_MEMFD marker. __shmem_get_inode explicitly initializes the vendor field beyond vfs_inode; inode flags start with only VM_NORESERVE, and memfd alloc_file marks shmem-backed memfds before publication. The marker is in internal flags, whereas user FS_IOC flags use separate fsflags and cannot create the marker. Existing internal flag consumers test VM_LOCKED/VM_NORESERVE masks; the chosen bit does not collide with those. The resulting shmem ioctl gate restricts ashmem compatibility to real memfds. Native quota/lifetime fields and source layout remain; no historical module binary promise.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "include/linux/skbuff.h": {
     "ack_blob": "a444f220d05903f94274b55f6d7042339835da3d",
@@ -34329,14 +34341,17 @@
   "mm/compaction.c": {
     "ack_blob": "ee5bfd627dd667bb18dbf15c9e841f90480ca07d",
     "lts_blob": "7bb638df5db933880077c139fb4f7ab486a9d304",
-    "port_blob": "b2e460fc3b2fc4c4cf5e185b2603f08837ac2b56",
+    "port_blob": "f7946030474b0089d6d9292db56807d110b13a70",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "ab9389a3d802ec4da3b03c0e0c6e0969ec94efc5",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "ee5bfd627dd667bb18dbf15c9e841f90480ca07d",
-    "common_ancestor_blob": "1e8f8eca318c6844c27682677a0a9ea552316828"
+    "common_ancestor_blob": "1e8f8eca318c6844c27682677a0a9ea552316828",
+    "specific_evidence": "Full LTS/normalized-ACK deltas, compaction entry/exit and free/isolated-list paths reviewed. Retain generic vendor zone/target/abort/cookie hooks, async node compaction source API and Android file-page target policy for configured CMA/COMPACTION; no runtime reserved pool is assumed. New async API traverses populated zones, checks fatal signal, reuses native compact_zone initialization/cleanup and requires a valid online nid from trusted caller. Native source-block ALLOC_CMA checks, whole-block fallback policy, capture_control zone/page ordering and failed free_pages_prepare exclusion remain. The file-page preference obeys existing ignore_block_suitable semantics and is not an absolute ban on every CMA migration; fast free-page selection uses MOVABLE lists. ab9389a3d802 initializes cookie/file-page count per zone and resets PSI bypass each work cycle; formerly completion-only hooks could observe uninitialized state and removed callbacks could leave persistent bypass. Actual SDK INIT_STACK_ALL_ZERO also zeroes automatic storage, but source defaults must not rely on that. Hooks can alter compaction policy but are trusted and must preserve ownership/list/lock contracts. No real compaction, fragmentation or hotplug test performed.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/damon/ops-common.c": {
     "ack_blob": "f61d6dde13dc775f3acd20e5219d5128b4f5945f",
@@ -34444,7 +34459,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "c2d201cfd0ce2ea4631c61487792a151c3589cdb",
-    "common_ancestor_blob": "95d948c8e86c92dd74d781d8cdf0d049143ffc95"
+    "common_ancestor_blob": "95d948c8e86c92dd74d781d8cdf0d049143ffc95",
+    "specific_evidence": "Full LTS and normalized-ACK deltas reviewed with folio_is_longterm_pinnable, longterm migration and cleanup. Retain the generic source hook wrapper and failure notification. Native FOLL_PIN validation, pin bias accounting and folio isolation/drain logic remain, including newer LTS GUP_PIN_COUNTING_BIAS versus compound pincount handling. The longterm eligibility hook can explicitly override native CMA/movable/device/DAX exclusions; it is a trusted kernel policy contract requiring the callback to guarantee safe longterm ownership/migration behavior. Without an override all native exclusions remain. The failure notification occurs after migration cleanup: its pages array is diagnostic only, may contain cleared/unowned entries, and grants no live page pins; callbacks must not dereference it as owned pages. No consumer was inferred from the absence of SDK registrations; retain generic Android vendor source compatibility conservatively. No runtime GUP test.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/huge_memory.c": {
     "ack_blob": "45d02f49d43114be4f26de99fcaf1ac0e73d82c8",
@@ -34468,7 +34485,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "ba524f504362c420c52f562752e1b44fc0a06d2b",
-    "common_ancestor_blob": "f5c0d927924d0fb71e579dca41fb4948a6bff0ca"
+    "common_ancestor_blob": "f5c0d927924d0fb71e579dca41fb4948a6bff0ca",
+    "specific_evidence": "Complete header deltas inspected with compaction and filemap callers. Retain the Android compact_control file-page counter, initialized/reset in ab9389a3d802, for the reviewed target policy. Keep native LTS capture_control zone/migratetype/request-order representation and newer capture API; do not restore ACK historical pointer layout. maybe_unlock_mmap_for_io adds a default-false trusted bypass while preserving the native first-retry/NOWAIT predicates, get_file before releasing the fault lock and reuse of an existing file pin. With no callback native lock-drop behavior is identical; an override keeps the lock held and cannot silently pretend it was dropped. Filemap callbacks after a real drop receive NULL VMA in 8d75f9fa7f08. Rebuilt source modules, not historical binary KMI.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/khugepaged.c": {
     "ack_blob": "aa2119f3d75e9c1ce23c6e996ff63068473c6a3b",
@@ -34526,14 +34545,17 @@
   "mm/memcontrol.c": {
     "ack_blob": "bce4ce0634614e0d02eae0d65e3fa231c144a3e3",
     "lts_blob": "82ad23d689c7fed5ef885fe492ab212f2684a162",
-    "port_blob": "43852912ee59cbb97d68b06fcaffa0e4bdb35b10",
+    "port_blob": "cebb4f85f50645687623d246c5cf917b4ba328ed",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "769c2a3ea3f5512b82f2d7779488431b756b3c59",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "bce4ce0634614e0d02eae0d65e3fa231c144a3e3",
-    "common_ancestor_blob": "61cf6af26f3c962faf600c9516192e8dd75fa23e"
+    "common_ancestor_blob": "61cf6af26f3c962faf600c9516192e8dd75fa23e",
+    "specific_evidence": "Full LTS/normalized-ACK deltas and allocator/iterator/charge/over-high paths reviewed. Keep generic vendor statistics exports, lruvec traversal and lifecycle/policy hooks. Traversal owns mem_cgroup_iter references, releases them on early stop and intentionally visits the global lruvec with NULL memcg when disabled; callbacks must obey native LRU locking. A charge-replacement hook must transfer the owned CSS reference and return a live memcg, preserving the later charge/get/put contract. 769c2a3ea3f5 removes only two ANDROID_GKI enum-visibility objects while retaining memcg_page_state; rebuilt source modules use native enum headers. Preserve deliberate ACK 6fd1bc1e14da PSI default: artificial memory.high throttling is not counted as global pressure, while actual reclaim/limits remain. Positive local lmkd init_mp_psi and libprocessgroup memory.high configuration substantiate this Android runtime policy; hook can opt back into PSI. Penalty/reclaim tuning is trusted module policy and may override the default delay cap/skip reclaim; memory.max/native authorization are unaffected. Reset reclaimed/skip state every retry in 769c2a3ea3f5 so removed callbacks resume native reclaim; extracted full-function checks cover stale-bypass failure controls, PSI pairs, delay cap and CSS cleanup. Preserve newer LTS internal rstat API, round-robin stock drain, OOM-victim charge bailout, try_charge slab path, v1 failcnt, NMI local/global statistics and changed-limit loop exits. No real memory-pressure/LMK or loaded-policy test.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/memfd-ashmem-shim-internal.h": {
     "ack_blob": null,
@@ -34575,7 +34597,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "e68efd43a19598841e211901824eb6116b2442d7",
-    "common_ancestor_blob": "a405eaa451ee8b309e6f3d5c85296ef5f8be3b00"
+    "common_ancestor_blob": "a405eaa451ee8b309e6f3d5c85296ef5f8be3b00",
+    "specific_evidence": "Complete LTS and normalized-ACK deltas reviewed with shmem internal flags, security_inode_init_security_anon/SELinux handler and positive local libcutils/sepolicy. Set SHMEM_FL_MEMFD only for shmem memfds before publishing the file, enabling the ashmem compatibility ioctl gate without granting it to arbitrary tmpfs files or accessing hugetlb inode data as shmem. Invoke anonymous security initialization with the fixed internal [memfd] class name, not user-controlled file name; errors fput the newly allocated file and propagate. Local libcutils explicitly tests the memfd_class capability before selecting memfd, and Android policy defines memfd_file permissions. SELinux retains the policy-capability gate and creation authorization; full SELinux changes are independently reviewed. Keep native seals/noexec sanitization and the newer LTS ordering that applies implied SEAL_WRITE before mapping_deny_writable, preventing the old execute-seal bypass. No permission test on loaded Android policy or running kernel was executed.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/memory-failure.c": {
     "ack_blob": "b9e3af2a0f00d489426c3b0c99876ed62a9ae316",
@@ -34592,15 +34616,18 @@
   "mm/memory.c": {
     "ack_blob": "39228114ccc55425ffc6f5a5b10d4a1fa6d56616",
     "lts_blob": "72793ec631072542ab6913e7c99e1e16c0c1a193",
-    "port_blob": "323d08073978bcdf1e2c5239baec96505d5ce89c",
+    "port_blob": "7d4f6e76d631ce85eeb054fee00da8d3422cf407",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "623c51beadea8fe7dcc1d0cad8f555b5bb9b6f58",
       "c75a4c4476567c8284454fe8d1eb861de7cafdde",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "39228114ccc55425ffc6f5a5b10d4a1fa6d56616",
-    "common_ancestor_blob": "42b733b7852364282ca0f55b32c66772c538bd72"
+    "common_ancestor_blob": "42b733b7852364282ca0f55b32c66772c538bd72",
+    "specific_evidence": "Full LTS and normalized-ACK deltas reviewed with fault/COW/swap/zap/folio insertion callers. Retain Android source exports, RSS trace export and default-no-op allocation/fault/swap policy hooks. Native VMA/PTE ownership, memcg charging, zeroing, pte_same rechecks, swap-device pins, exclusivity/UFFD protection and cleanup remain. Swap wait bypass still exits through owned-folio cleanup; start/done callbacks are paired when the swap cache pin was acquired, after clearing it on either exit. Trusted callbacks must preserve valid folio orders, VMA containment and protection bits; swapmem gather bypass takes responsibility for releasing exactly the skipped native entries and must tolerate unmaps outside the exit gather bracket. Keep CMA eligibility for movable swap-in allocations alongside Android explicit __GFP_CMA policy; no SDK reservation is assumed. Native LTS VM_COPY_ON_FORK/guard copying and absent/nonpresent PMD handling remain. 623c51beadea restores exact LTS __vm_map_pages: ACK lock batching has no required ABI effect. Padding fault-around skip/clamp preserves common native/ACK larger-folio mapping granularity. VM_FAULT_NEED_ANONPAGE is handled after private COW cleanup and preallocated page tables are released; shared EOF-tail compatibility remains provisional with the native shared-anonymous guard restored. This scope explicitly excludes b3c77090341c and predecessor EOF extension candidates. No runtime faults/concurrency tested.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/memory_hotplug.c": {
     "ack_blob": "b7030bcd9b03ec35c404089b6dabaff13d548d7d",
@@ -34649,14 +34676,17 @@
   "mm/migrate.c": {
     "ack_blob": "476356de7cb9995684061dbb782fca0a3a0d6f52",
     "lts_blob": "3159be53a00d36ff6697afaeef5f7a76de1bf40e",
-    "port_blob": "7ae85e53ce9c0ca153cd101641925ffc6c1afc7d",
+    "port_blob": "a0bdcdfa4705503b93bde2b83b6cd0136beeb751",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "ab9389a3d802ec4da3b03c0e0c6e0969ec94efc5",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "476356de7cb9995684061dbb782fca0a3a0d6f52",
-    "common_ancestor_blob": "ad7af66a4450aa02c5e002e660acd6a64e3e9ca2"
+    "common_ancestor_blob": "ad7af66a4450aa02c5e002e660acd6a64e3e9ca2",
+    "specific_evidence": "Full LTS/normalized-ACK deltas and complete batch cleanup reviewed. Keep native migration/isolation exports for rebuilt vendor modules plus statistics, policy and bypass hooks. Entry-wait start runs while the page-table lock still stabilizes the entry; end only uses copied scalar time/zone. Folio-state hooks run with native owned folios. Split bypass returns EBUSY through ordinary failure handling. Batch-break occurs after paired source/destination lists are populated and still performs TLB flush, move retries and undo; callbacks must supply a valid remaining count and preserve list ownership. ab9389a3d802 defaults the break count to zero before each callback. Migration batch size remains trusted policy and must be positive. A remove-migration-PTE bypass takes responsibility for the skipped operation, not a permission granted to userspace. Retain newer LTS enum ttu_flags/TTU_RMAP_LOCKED/TTU_USE_SHARED_ZEROPAGE semantics, PMD migration predicate and cond_resched_tasks_rcu_qs. Source selection only; no runtime migration or race test.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/mincore.c": {
     "ack_blob": "5110d7da036d6c587505b3c54499420a2915cc53",
@@ -34709,7 +34739,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "8b82c8d3910f186017f8a066f980c169d9c9aa43",
-    "common_ancestor_blob": "5fd3b80fda1d5151c230321cb3228e935e4fa84b"
+    "common_ancestor_blob": "5fd3b80fda1d5151c230321cb3228e935e4fa84b",
+    "specific_evidence": "Full LTS and normalized-ACK deltas reviewed with x86 address selection, page-size initialization, BPF ring classification, profiling notifiers, native security and VMA setup. Retain reported-page brk/mmap-hint/munmap lengths and alignment for the positively configured Goldfish page_shift=14 target. ASLR limits are writable only during boot then read-only; native-mode values remain and the documented emulation tradeoff preserves byte span with fewer aligned placements. BPF pgoff adjustment is limited to a genuine bpf_map_fops file with kernel/user ring map type; ordinary files retain offsets and all native bounds/permission/seal checks. Keep default-no-op mapping-count/swap teardown hooks and native trace/helper exports for source-built vendor customization. A gather bypass callback must itself release the native swap entries; default native release remains. Preserve native MAP_DROPPABLE EOPNOTSUPP, MAP_FIXED_NOREPLACE, mmap_min_addr/LSM, file access and mapping cleanup. The generic profile_munmap notifier has a separately reviewed blocking chain. VM_NO_REMAP_FILE_PAGES positively protects local wrapfd read-only VMAs from deprecated remap_file_pages restoring VM_MAYWRITE; its kernel check is retained. Related unresolved shared EOF-tail semantics are not certified by this path review. No real syscall or SDK runtime test performed.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/mmap_lock.c": {
     "ack_blob": "b1a3f42618af2c6a338e9225657c51d07e9f5a19",
@@ -35211,10 +35243,11 @@
   "mm/vma.c": {
     "ack_blob": "0167b28771e1e10885ed1a382061ff3a96ee2f4b",
     "lts_blob": "d1158fdcde287313aa92d2f5d4392492484f8f88",
-    "port_blob": "df382317d5566997b2480b07d9f33fe00daaf368",
+    "port_blob": "d027da7b65d4435bd1d3cca98b0ffd68909abd71",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "8a7a4fcdab67fd9340bb2a4194fb84b20e2d2724",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "0167b28771e1e10885ed1a382061ff3a96ee2f4b",

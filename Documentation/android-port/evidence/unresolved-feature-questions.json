@@ -79,5 +79,15 @@
     "topic": "Large-folio fault-around and ELF padding boundaries",
     "status": "resolved source-selection decision; preserve existing ACK and LTS granularity, runtime not verified",
     "evidence": "Exact full-function comparison establishes that filemap_map_folio_range, filemap_map_pmd, finish_fault, do_set_pmd and thp_vma_suitable_order are identical in pinned ACK, LTS, normalized ACK and port. Thus the large-folio expansion is existing behavior on both inputs, not a regression introduced by the port. Keep native reference/accounting/PMD behavior and the ACK do_fault_around padding-fault skip plus requested-range clamp. The hint limits requested fault-around; it is not a strict prohibition on every larger-folio mapping or access to the real VMA. Local bionic linker_phdr.cpp DropPaddingPages treats this as MADV_DONTNEED memory/reclaim optimization, not a permission change. A new global THP constraint would add behavior absent from both inputs and is unnecessary to preserve their current compatibility. Smaps partial-range double counting is independently corrected in 20730118bf05. Evidence: evidence/large-folio-padding-comparison.json and complete local cd8dfe2cb388 patch. No runtime fault/THP test or remote access."
+  },
+  {
+    "topic": "DMA-buf accounting after nonfatal record allocation failure",
+    "status": "cross-file failure behavior under review; VMA lifecycle candidates remain provisional",
+    "candidates": [
+      "7586bc159720",
+      "09725f5bd79d",
+      "dd1b8c5c86bb"
+    ],
+    "evidence": "Full local __dma_buf_account_task, preload, unaccount, fd_install, do_dup2, dma_buf_mmap/internal, __split_vma and copy_vma were examined. Preload may fail before finding an already existing record. fd_install/mmap/split/copy deliberately log and continue without a count; later close/unmap decrements any existing record, so failure can undercount other still-live references. These counters are statistics, separate from the native file/buffer lifetime references, but local lmkd uses them in victim sizing. Need decide whether to retain/document ACK best-effort OOM accounting or adapt failure tracking without changing successful mmap/fd-install contracts. No actual allocation fault, mmap or LMK test has run. Prior path review explicitly described nonfatal errors but did not establish balanced counts after such a failure. No source change for this question yet; no remote access."
   }
 ]
