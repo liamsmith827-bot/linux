@@ -82,15 +82,6 @@ static inline unsigned long __bpf_pgoff_fixup(struct file *file, unsigned long p
 	return pgoff;
 }
 
-#ifdef CONFIG_PROC_PAGE_MONITOR
-extern bool __is_emulated_pagemap_file(struct file *file);
-#else
-static inline bool __is_emulated_pagemap_file(struct file *file)
-{
-	return false;
-}
-#endif
-
 static __always_inline void __adjust_cachestat_counters(struct cachestat *cs)
 {
 	unsigned int nr_sub_pages = __PAGE_SIZE / PAGE_SIZE;
