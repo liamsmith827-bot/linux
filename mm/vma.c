@@ -3012,6 +3012,8 @@ retry:
 
 	gap = vma_iter_end(&vmi) - info->length;
 	gap -= (gap - info->align_offset) & info->align_mask;
+	/* Stay below the end of the gap, including with emulated page sizes. */
+	gap = __PAGE_ALIGN_DOWN(gap);
 	gap_end = vma_iter_end(&vmi);
 	tmp = vma_next(&vmi);
 	if (tmp && (tmp->vm_flags & VM_STARTGAP_FLAGS)) { /* Avoid prev check if possible */
@@ -3029,7 +3031,7 @@ retry:
 		}
 	}
 
-	return __PAGE_ALIGN(gap);
+	return gap;
 }
 
 /*
