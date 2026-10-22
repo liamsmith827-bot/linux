@@ -83,6 +83,10 @@ static struct workqueue_struct *blk_crypto_wq;
 static mempool_t *blk_crypto_bounce_page_pool;
 static struct bio_set enc_bio_set;
 
+static DEFINE_SPINLOCK(enc_rescue_list_lock);
+static struct bio_list enc_rescue_list = BIO_EMPTY_LIST;
+static struct work_struct enc_rescue_work;
+
 /*
  * This is the key we set when evicting a keyslot. This *should* be the all 0's
  * key, but AES-XTS rejects that key, so we use some random bytes instead.
@@ -163,7 +167,9 @@ static struct bio *blk_crypto_alloc_enc_bio(struct bio *bio_src,
 	struct bio *bio;
 
 	bio = bio_alloc_bioset(bio_src->bi_bdev, nr_segs, bio_src->bi_opf,
-			GFP_NOIO, &enc_bio_set);
+			current->bio_list ? GFP_NOWAIT : GFP_NOIO, &enc_bio_set);
+	if (unlikely(!bio))
+		return NULL;
 	if (bio_flagged(bio_src, BIO_REMAPPED))
 		bio_set_flag(bio, BIO_REMAPPED);
 	bio->bi_private		= bio_src;
@@ -200,6 +206,25 @@ static void blk_crypto_dun_to_iv(const u64 dun[BLK_CRYPTO_DUN_ARRAY_SIZE],
 		iv->dun[i] = cpu_to_le64(dun[i]);
 }
 
+static void blk_crypto_fallback_encrypt_bio(struct bio *src_bio);
+
+/* Retry encryption outside the recursive submit_bio() context. */
+static void blk_crypto_fallback_encrypt_work_fn(struct work_struct *work)
+{
+	struct bio_list list;
+	struct bio *src_bio;
+
+	WARN_ON_ONCE(current->bio_list);
+
+	spin_lock(&enc_rescue_list_lock);
+	list = enc_rescue_list;
+	bio_list_init(&enc_rescue_list);
+	spin_unlock(&enc_rescue_list_lock);
+
+	while ((src_bio = bio_list_pop(&list)))
+		blk_crypto_fallback_encrypt_bio(src_bio);
+}
+
 static void __blk_crypto_fallback_encrypt_bio(struct bio *src_bio,
 		struct crypto_sync_skcipher *tfm)
 {
@@ -233,14 +258,31 @@ static void __blk_crypto_fallback_encrypt_bio(struct bio *src_bio,
 new_bio:
 	nr_enc_pages = min(bio_segments(src_bio), BIO_MAX_VECS);
 	enc_bio = blk_crypto_alloc_enc_bio(src_bio, nr_enc_pages);
+	if (unlikely(!enc_bio))
+		goto rescue;
 	enc_idx = 0;
 	for (;;) {
 		struct bio_vec src_bv =
 			bio_iter_iovec(src_bio, src_bio->bi_iter);
 		struct page *enc_page;
 
+		/*
+		 * Do not wait for pages while holding an unsubmitted bounce
+		 * bio, or while earlier bounce bios are on current->bio_list.
+		 * A partial bio can be submitted now; an empty one must be
+		 * retried by the rescue worker outside recursive submission.
+		 */
 		enc_page = mempool_alloc(blk_crypto_bounce_page_pool,
-				GFP_NOIO);
+				enc_idx || current->bio_list ? GFP_NOWAIT : GFP_NOIO);
+		if (unlikely(!enc_page)) {
+			if (enc_idx) {
+				bio_inc_remaining(src_bio);
+				submit_bio(enc_bio);
+				goto new_bio;
+			}
+			bio_put(enc_bio);
+			goto rescue;
+		}
 		__bio_add_page(enc_bio, enc_page, src_bv.bv_len,
 				src_bv.bv_offset);
 
@@ -288,6 +330,16 @@ new_bio:
 	}
 
 	submit_bio(enc_bio);
+	return;
+
+rescue:
+	/* The remaining source iterator and DUN must advance together. */
+	WARN_ON_ONCE(!current->bio_list);
+	memcpy(bc->bc_dun, curr_dun, sizeof(curr_dun));
+	spin_lock(&enc_rescue_list_lock);
+	bio_list_add(&enc_rescue_list, src_bio);
+	spin_unlock(&enc_rescue_list_lock);
+	queue_work(blk_crypto_wq, &enc_rescue_work);
 }
 
 /*
@@ -533,6 +585,8 @@ static int blk_crypto_fallback_init(void)
 					 bio_fallback_crypt_ctx_cache);
 	if (!bio_fallback_crypt_ctx_pool)
 		goto fail_free_crypt_ctx_cache;
+
+	INIT_WORK(&enc_rescue_work, blk_crypto_fallback_encrypt_work_fn);
 
 	blk_crypto_fallback_inited = true;
 
