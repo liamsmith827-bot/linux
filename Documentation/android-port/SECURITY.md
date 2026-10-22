@@ -3148,3 +3148,54 @@ The checks model VFS/reference operations and do not establish concurrent
 replacement safety. These fixes adapt retained ACK error paths; no native LTS
 fix or access check is removed. Source review also checked all seven callers of
 fuse_iget_backing against its NULL-return contract. Only local sources were used.
+
+## dm-bow construction, teardown and checkpoint discard
+
+The supplied SDK configuration enables DM_BOW. Local fs_mgr builds `bow` targets
+for block checkpoints and selects a 4096-byte block size below dm-default-key;
+local vold changes `bow/state`, monitors `bow/free`, and implements rollback.
+The supplied x86 goldfish fstab does not request a block checkpoint. This does
+not establish that the generic Android capability is dispensable: retain it for
+userspace/configuration compatibility, with current SDK runtime use unconfirmed.
+Sources examined are `system/fs/fs_mgr/fs_mgr.cpp`,
+`system/fs/fs_mgr/libdm/dm_target.cpp`, `system/vold/Checkpoint.cpp`, and
+`device/generic/goldfish/board/fstab/x86` in the pinned GrapheneOS checkout.
+No additional remote source was consulted.
+
+Keep ACK's kobject-removal/wait before workqueue and bufio destruction: a sysfs
+callback must not access destroyed helpers. Adapt early construction failure
+paths by initializing both locks, the list, tree and completion before device
+lookup can fail, and explicitly return ENOMEM when log allocation fails.
+Pair dm_get_device with dm_put_device after draining helpers; destroy both locks.
+The original log-allocation path could report successful construction after
+freeing the context. The original early teardown could operate on an
+uninitialized mutex; the omitted device put leaked a table-device reference.
+
+Extend range locking to the entire table-status list/tree walk, including its
+initial validation and all error exits. Guard an absent previous range when
+coalescing the first range. Keep the native device-mapper map-result contract:
+queue-allocation failure completes the bio with BLK_STS_RESOURCE and returns
+DM_MAPIO_SUBMITTED. Returning -ENOMEM instead reaches the LTS dm core's default
+BUG branch; the core is deliberately unchanged. In CHECKPOINT state, acknowledge
+all nonempty discards before sector-zero relocation, including requests beginning
+at zero. Those requests must not discard live relocated data or bypass the
+checkpoint discard policy. Preserve the zero-length flush passthrough and
+committed-device discard-capability handling. Read the atomic state through its
+API instead of accessing its counter directly.
+
+`check_dm_bow.py` executes extracted constructor/destructor/queue/map code with
+allocation and I/O-ownership shims: 272 cases, 1261 assertions and five rejected
+regression controls. It does not execute real block I/O, kernel concurrency,
+range splitting or crash recovery. The status-walk locking and first-range guard
+were reviewed directly; they are not covered by that harness.
+
+This review also identified separate, unresolved checkpoint-integrity questions:
+`copy_data`/`add_log_entry` currently ignore dirty-buffer write/flush errors,
+several internal returns mix errno and block status, and `add_log_entry` releases
+an uninitialized buffer on dm_bufio_new failure. The state-change workqueue drain
+waits for backup workers, which submit writes without waiting for their endio;
+its subject's claim about write completion is therefore not sufficient evidence.
+Bufio caches may also need invalidation before rereading blocks modified through
+normal bios. These findings require follow-up before completing the checkpoint
+protocol review. The a95d721f13a4 disposition remains provisional; the targeted
+lifetime/discard fixes above do not establish crash consistency.

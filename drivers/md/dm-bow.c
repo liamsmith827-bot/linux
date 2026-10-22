@@ -244,7 +244,7 @@ static void set_type(struct bow_context *bc, struct bow_range **br, int type)
 		kfree(next);
 	}
 
-	if (prev->type == type) {
+	if (prev && prev->type == type) {
 		if (type == TRIMMED)
 			list_del(&(*br)->trimmed_list);
 		rb_erase(&(*br)->node, &bc->ranges);
@@ -632,6 +632,9 @@ static void dm_bow_dtr(struct dm_target *ti)
 	mutex_unlock(&bc->ranges_lock);
 
 	mutex_destroy(&bc->ranges_lock);
+	mutex_destroy(&bc->state_lock);
+	if (bc->dev)
+		dm_put_device(ti, bc->dev);
 	kfree(bc->log_sector);
 	kfree(bc);
 }
@@ -717,6 +720,11 @@ static int dm_bow_ctr(struct dm_target *ti, unsigned int argc, char **argv)
 		ti->error = "Cannot allocate bow context";
 		return -ENOMEM;
 	}
+	init_completion(&bc->kobj_holder.completion);
+	mutex_init(&bc->state_lock);
+	mutex_init(&bc->ranges_lock);
+	bc->ranges = RB_ROOT;
+	INIT_LIST_HEAD(&bc->trimmed_list);
 
 	ti->num_flush_bios = 1;
 	ti->num_discard_bios = 1;
@@ -741,13 +749,10 @@ static int dm_bow_ctr(struct dm_target *ti, unsigned int argc, char **argv)
 	bc->log_sector = kzalloc(bc->block_size, GFP_KERNEL);
 	if (!bc->log_sector) {
 		ti->error = "Cannot allocate log sector";
+		ret = -ENOMEM;
 		goto bad;
 	}
 
-	init_completion(&bc->kobj_holder.completion);
-	mutex_init(&bc->state_lock);
-	mutex_init(&bc->ranges_lock);
-	bc->ranges = RB_ROOT;
 	bc->bufio = dm_bufio_client_create(bc->dev->bdev, bc->block_size, 1, 0,
 					   NULL, NULL, 0);
 	if (IS_ERR(bc->bufio)) {
@@ -765,8 +770,6 @@ static int dm_bow_ctr(struct dm_target *ti, unsigned int argc, char **argv)
 		ret = -ENOMEM;
 		goto bad;
 	}
-
-	INIT_LIST_HEAD(&bc->trimmed_list);
 
 	br = kzalloc(sizeof(*br), GFP_KERNEL);
 	if (!br) {
@@ -995,7 +998,9 @@ static int queue_write(struct bow_context *bc, struct bio *bio)
 					| __GFP_NOMEMALLOC | __GFP_NOWARN);
 	if (!ww) {
 		DMERR("Failed to allocate write_work");
-		return -ENOMEM;
+		bio->bi_status = BLK_STS_RESOURCE;
+		bio_endio(bio);
+		return DM_MAPIO_SUBMITTED;
 	}
 
 	INIT_WORK(&ww->work, bow_write);
@@ -1133,7 +1138,7 @@ static int dm_bow_map(struct dm_target *ti, struct bio *bio)
 
 	/* Fast path when already committed or when performing a read. */
 
-	if (likely(bc->state.counter == COMMITTED))
+	if (likely(atomic_read(&bc->state) == COMMITTED))
 		return remap_unless_illegal_trim(bc, bio);
 
 	if (bio_data_dir(bio) == READ && bio->bi_iter.bi_sector != 0)
@@ -1161,9 +1166,7 @@ static int dm_bow_map(struct dm_target *ti, struct bio *bio)
 				ret = remove_trim(bc, bio);
 			/* else pass-through */
 		} else if (state == CHECKPOINT) {
-			if (bio->bi_iter.bi_sector == 0)
-				ret = handle_sector0(bc, bio);
-			else if (bio_op(bio) == REQ_OP_DISCARD) {
+			if (bio_op(bio) == REQ_OP_DISCARD) {
 				/*
 				 * Ignore discard requests in CHECKPOINT state.
 				 * Passing them through would physically erase data that we
@@ -1172,7 +1175,9 @@ static int dm_bow_map(struct dm_target *ti, struct bio *bio)
 				 */
 				bio_endio(bio);
 				ret = DM_MAPIO_SUBMITTED;
-			} else if (bio_data_dir(bio) == WRITE)
+			} else if (bio->bi_iter.bi_sector == 0)
+				ret = handle_sector0(bc, bio);
+			else if (bio_data_dir(bio) == WRITE)
 				ret = queue_write(bc, bio);
 			/* else pass-through */
 		}
@@ -1202,28 +1207,28 @@ static void dm_bow_tablestatus(struct dm_target *ti, char *result,
 		return;
 	result[0] = 0;
 
+	mutex_lock(&bc->ranges_lock);
 	list_for_each_entry(br, &bc->trimmed_list, trimmed_list)
 		if (br->type == TRIMMED) {
 			++trimmed_list_length;
 		} else {
 			scnprintf(result, end - result,
 				  "ERROR: non-trimmed entry in trimmed_list");
-			return;
+			goto unlock;
 		}
 
 	if (!rb_first(&bc->ranges)) {
 		scnprintf(result, end - result, "ERROR: Empty ranges");
-		return;
+		goto unlock;
 	}
 
 	if (container_of(rb_first(&bc->ranges), struct bow_range, node)
 	    ->sector) {
 		scnprintf(result, end - result,
 			 "ERROR: First range does not start at sector 0");
-		return;
+		goto unlock;
 	}
 
-	mutex_lock(&bc->ranges_lock);
 	for (i = rb_first(&bc->ranges); i; i = rb_next(i)) {
 		struct bow_range *br = container_of(i, struct bow_range, node);
 
