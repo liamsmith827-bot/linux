@@ -11293,7 +11293,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "e6e5b299cd3c2bc763529a0cc8571bc981bf4449",
-    "common_ancestor_blob": "78702a08364f320c15d0040ce3bd3a6cbdce6a7b"
+    "common_ancestor_blob": "78702a08364f320c15d0040ce3bd3a6cbdce6a7b",
+    "specific_evidence": "Full LTS delta introduces CPU_FREQ_TIMES and CPUFREQ_DUMMY only. Keep configured Android task-time statistics and the positive virtual-device module consumer. Native architecture-specific selections/defaults remain; file equals normalized ACK.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/cpufreq/Kconfig.arm": {
     "ack_blob": "7ef5650f568961a5a9cb0b5954cae3ee02b570f6",
@@ -11315,7 +11317,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "d87b40018c9b8d8ab8156a0c80a41aba471d830b",
-    "common_ancestor_blob": "681d687b5a18e9d954a545b976dc1c43feb987d4"
+    "common_ancestor_blob": "681d687b5a18e9d954a545b976dc1c43feb987d4",
+    "specific_evidence": "Full net delta adds cpufreq_times.o and dummy-cpufreq.o under their specific Kconfig settings, plus whitespace. These are required by configured task statistics and the unchanged SDK virtual-device target. Native driver/governor object selection is retained.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/cpufreq/TEST_MAPPING": {
     "ack_blob": "947e83a54e1fa3e78106f24ca1362f56ca0f6dc4",
@@ -11340,14 +11344,17 @@
   "drivers/cpufreq/cpufreq.c": {
     "ack_blob": "9178e502fc7f28da58e9bab080d8a1be07b2a3de",
     "lts_blob": "ec577a20567b1ae41e98dd1bf50e8eeb3fe59c20",
-    "port_blob": "95ab685662b8ce25a2fdce26783faa3bf6f41107",
+    "port_blob": "a30464487470b763934ed7f50d66ed42d48ddeb6",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "71542ccb67edd36a7c45c602d75f2b4740cd0ffa",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "5c9c986b00d81949d1704530109b8b09019fb1b3",
-    "common_ancestor_blob": "1ed528e34bab45f7e8e1e76c95b5bec0e293c91d"
+    "common_ancestor_blob": "1ed528e34bab45f7e8e1e76c95b5bec0e293c91d",
+    "specific_evidence": "Reviewed complete LTS/normalized-ACK deltas. Keep task-time policy creation/transition updates and trusted Android frequency/online/transition hooks; no-hook behavior is native. Hook callbacks can override requested frequency policy and remain trusted module code. 71542ccb67ed restores native LTS max_freq_req reactivation update: ACK fe0fb52b0590 calls it redundant after generic boost synchronization, but this cleanup provides no required Android behavior. Keep both native LTS paths and the original 1608f0230510 hotplug/reboost fix. Preserve later LTS zeroed policy cpumask, rwsem initialization before sysfs publication, and nonzero reference-frequency fallback. No native fix is weakened.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/cpufreq/cpufreq_conservative.c": {
     "ack_blob": "cce6a8d113e12fdc450bced4b3614cc2d5c8196d",
@@ -11389,7 +11396,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "aeb7b7b0bbdad7a88415fdf6e94e34fbcb429a4f",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Reviewed complete added file; matches normalized ACK. Retain task CPU time-in-state arrays, CPU policy frequency tables, transition accounting and vendor accounting callback. Pinned framework KernelCpuThreadReader reads /proc/self and per-thread time_in_state. CPU_FREQ_TIMES=y; the actual virtual-device fragment builds dummy-cpufreq with its synthetic two-frequency table. Array reads/updates/free use task_time_in_state_lock and atomic allocation in accounting; allocation failure leaves missing statistics rather than a task failure. No claim of hardware frequency/energy accuracy for synthetic SDK frequencies. Policy tables persist and reuse existing CPU entries; dynamic driver replacement and runtime concurrency are not verified.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/cpufreq/dummy-cpufreq.c": {
     "ack_blob": "173b84157524d5c486dce83c152a30b8b335a7c2",
@@ -11401,7 +11410,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "173b84157524d5c486dce83c152a30b8b335a7c2",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Reviewed complete driver. Retain because existing virtual_device.fragment explicitly selects CPUFREQ_DUMMY=m and BUILD.bazel distributes dummy-cpufreq.ko. It registers a generic synthetic 1/2 frequency table, a no-op target operation and fixed get value, providing the existing emulator CPUfreq surface without physical hardware control. Native cpufreq registration/teardown remains. This is current SDK build compatibility, not a future platform addition; no real power-management accuracy claimed.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/cpufreq/freq_table.c": {
     "ack_blob": "2de11c3c83d7e5ea86d499c9a5abc7e8863e5cee",
@@ -11548,26 +11559,34 @@
   "drivers/dma-buf/dma-buf.c": {
     "ack_blob": "8e379f21b5d20571b29f182c5fba7331b6507cda",
     "lts_blob": "2bcf9ceca99758fa0ee89a4d281b49925676899e",
-    "port_blob": "8e379f21b5d20571b29f182c5fba7331b6507cda",
+    "port_blob": "7cb5465f23b86f77c49157fbba715cbf1bd722db",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "90d9af708feaa6f3603718f42d3e12956547a039",
+      "54fdb0c6e4bdf41d156a38ad133b30b0ae2f46c3",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "8e379f21b5d20571b29f182c5fba7331b6507cda",
-    "common_ancestor_blob": "2bcf9ceca99758fa0ee89a4d281b49925676899e"
+    "common_ancestor_blob": "2bcf9ceca99758fa0ee89a4d281b49925676899e",
+    "specific_evidence": "Full LTS and normalized-ACK residuals reviewed. Retain accounting for per-process DMA-buf RSS/PSS and high-water marks: pinned GrapheneOS lmkd.cpp reads dmabuf_pss for victim sizing, and libmeminfo has procfs API tests (read, not executed). State uses refcounts and locks, counts actual child FDs/VMAs, shares only when both MM/files are shared, and intentionally leaves partial sharing/kernel threads unaccounted. Preallocation avoids sleeping under the accounting spinlock; 54fdb0c6e4bd trims unused records after fork and failed preallocation so duplicate FDs/VMAs cannot leave an unbounded per-CPU cache. Keep Android buffer iteration, naming, partial CPU-access and flags APIs plus release hook; 90d9af708fea guards NULL partial-end access and supplies zero default flags. Native LTS mapping bounds, reservation/fence waits, poll, sync-file ioctls and release behavior remain. Accounting failures on mmap log and preserve successful mapping; fork/exec allocations can fail with ENOMEM. Cross-file VMA/fd/fork lifecycle paths retain separate candidate reviews. No runtime correctness or OOM-policy test claim.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/dma-buf/dma-heap.c": {
     "ack_blob": "d374807f554e4c0292b86a87773f5a6c487976d4",
     "lts_blob": "0c628e4146e2638f8988dd354b4053032dfa54a7",
-    "port_blob": "3fd08a9794b9e38d4820d941b596292954a5e1bf",
+    "port_blob": "818b68c47a3ec206a1f80c568060bdb988378137",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "eecae28e83be9b3498c24cc31daebea893bfb0a5",
+      "5694a9ef32df63155c9f87586c2639603aff697b",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "d374807f554e4c0292b86a87773f5a6c487976d4",
-    "common_ancestor_blob": "8ab49924f8b71a0272dc89a609539a429feaf6c8"
+    "common_ancestor_blob": "8ab49924f8b71a0272dc89a609539a429feaf6c8",
+    "specific_evidence": "Full LTS/normalized-ACK delta and native cdev/device lifetime machinery reviewed. Retain source find/put/alloc/get-device APIs and allocation hooks for Android heap customization. Preserve native LTS fd reservation, result copy and only then installation, with cleanup on copy failure; never call the early-install helper from ioctl. 5694a9ef32df makes open files hold heap references, serializes publication/error cleanup/open/find/final removal, separates cdev kobject allocation from heap storage to survive racing opens, and balances the extra device reference. Acquire-load allocation callback pairs with system heap release publication. Exporters still own callback/module lifetime; no arbitrary module unload guarantee is introduced. Existing flag validation and real-page allocation alignment remain. Compilation verification is separate from runtime allocation/race testing. eecae28e83be corrects the callback local declaration after build 36 showed that typeof inherited const from the operations table; acquire/release semantics remain. Build 37 passed common kernel compilation; build 38 completed the full workflow after declaring the external heap cleanup import, with all 145 signatures verified. No runtime allocation/race test.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/dma-buf/heaps/Kconfig": {
     "ack_blob": "d025ae2bd0ffa3b3e45a95486a2679930a64f5c8",
@@ -11579,7 +11598,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "d025ae2bd0ffa3b3e45a95486a2679930a64f5c8",
-    "common_ancestor_blob": "bb369b38b001af51721b56e065df92825022f1f1"
+    "common_ancestor_blob": "bb369b38b001af51721b56e065df92825022f1f1",
+    "specific_evidence": "Full change permits system and CMA heap drivers as tristates. The actual manifest virtual-device fragment enables DMABUF_HEAPS_SYSTEM=m and BUILD.bazel distributes system_heap.ko, even though the common kernel config has it unset. Keep modular source support; do not mistake the copied common config in virt_dist for the external-module configuration. CMA remains optional source compatibility, not added physical-platform implementation.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/dma-buf/heaps/Makefile": {
     "ack_blob": "974467791032ffb8a7aba17b1407d9a19b3f3b44",
@@ -11601,7 +11622,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "336e7bdf52753480200fd7a733385d583c293546",
-    "common_ancestor_blob": "0df007111975447d555714d61ead9699287fd65a"
+    "common_ancestor_blob": "0df007111975447d555714d61ead9699287fd65a",
+    "specific_evidence": "Full residual forwards caller DMA mapping attributes symmetrically on map/unmap and supplies module license/namespace imports needed by tristate source builds. Native LTS CMA allocation, zeroing and unwind remain. Preserve generic optional allocator source compatibility without claiming the SDK instantiates a CMA heap or adding a platform-specific CMA region.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/dma-buf/heaps/heap-helpers.c": {
     "ack_blob": null,
@@ -11626,14 +11649,17 @@
   "drivers/dma-buf/heaps/system_heap.c": {
     "ack_blob": "193cfb624ba9dcf9ee547794de9925982a3c4139",
     "lts_blob": "bbe7881f13601ddc2906af3d6a6bff527cba7137",
-    "port_blob": "193cfb624ba9dcf9ee547794de9925982a3c4139",
+    "port_blob": "fcc6df7da0d5401ebefbb5d3675c63144aa63c78",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "df0acacabb956a93dcd75abb5deb063e5461917f",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "193cfb624ba9dcf9ee547794de9925982a3c4139",
-    "common_ancestor_blob": "bbe7881f13601ddc2906af3d6a6bff527cba7137"
+    "common_ancestor_blob": "bbe7881f13601ddc2906af3d6a6bff527cba7137",
+    "specific_evidence": "Full LTS delta reviewed. Preserve cached and system-uncached heaps: pinned GrapheneOS BufferAllocator::AllocSystem selects the latter for no-CPU-access requests and explicitly falls back to system when absent; actual virtual-device rules build this module. Keep write-combined user/kernel mappings, zeroed pages, matching DMA attributes, and refuse uncached SWIOTLB mappings that cannot maintain the intended coherence contract. df0acacabb95 checks every SG entry instead of repeatedly checking the first, propagates initial map failure and releases the exported buffer without invalid unmap, validates DMA setup and release-publishes the allocator. If optional uncached registration fails after cached publication, retain cached service and successful module initialization so callbacks cannot point into freed failed-init module text. Mask-setup failure drops the uncached registration reference; existing open references may delay disappearance and see EBUSY. On x86 PAGE_SHIFT=12 allocation orders remain the LTS 8/4/0 values. No runtime allocation, cache-coherence, IOMMU/SWIOTLB or fault-injection validation.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/dma/mmp_pdma.c": {
     "ack_blob": "d12e729ee12c5688bc54ca312eaa4b9e3e1a83d4",
@@ -15122,26 +15148,32 @@
   "drivers/misc/Kconfig": {
     "ack_blob": "d6d96080950a372192f904dff701f64bb472033d",
     "lts_blob": "b9c11f67315f0bc0b5a4a4100ebd315fac25927e",
-    "port_blob": "d6d96080950a372192f904dff701f64bb472033d",
+    "port_blob": "432047fe3401f067c3133f602bbe4af057f5eeeb",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "c81b372de983799e2895b0c9aed24086d2a192d3",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "d6d96080950a372192f904dff701f64bb472033d",
-    "common_ancestor_blob": "b9c11f67315f0bc0b5a4a4100ebd315fac25927e"
+    "common_ancestor_blob": "b9c11f67315f0bc0b5a4a4100ebd315fac25927e",
+    "specific_evidence": "Full net delta retains only UID_SYS_STATS, requiring PROFILING and TASK_IO_ACCOUNTING; both satisfy the current Android statistics build. c81b372de983 removes dangling PKVM_SMC_FILTER and PKVM_IOMMU_TEMPLATE entries, which explicitly require ARM64 and describe templates. Their directories are already absent from this x86 SDK port. Native LTS misc options remain. This scoped exclusion does not assess shared generic virtualization paths.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/misc/Makefile": {
     "ack_blob": "b8b5710c308fc8f77fd0b65480782593da9adefd",
     "lts_blob": "b32a2597d2467bc8883ef81a89ab76544c3c9285",
-    "port_blob": "b8b5710c308fc8f77fd0b65480782593da9adefd",
+    "port_blob": "09c70d950b7072ea42b65a8094ebe5249241dcbd",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "c81b372de983799e2895b0c9aed24086d2a192d3",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "b8b5710c308fc8f77fd0b65480782593da9adefd",
-    "common_ancestor_blob": "b32a2597d2467bc8883ef81a89ab76544c3c9285"
+    "common_ancestor_blob": "b32a2597d2467bc8883ef81a89ab76544c3c9285",
+    "specific_evidence": "Full net delta retains only UID_SYS_STATS object selection. c81b372de983 removes two dangling build paths for explicitly ARM64-only hypervisor template directories already omitted from SDK. Native LTS misc objects remain unchanged.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/misc/lkdtm/Makefile": {
     "ack_blob": "03ebe33185f9d0f32a3a47392db9b9b593a2c78c",
@@ -15346,14 +15378,17 @@
   "drivers/misc/uid_sys_stats.c": {
     "ack_blob": "5802a9cf8c260f0eb3e8d5d075b2ac90b7a8c34f",
     "lts_blob": null,
-    "port_blob": "5802a9cf8c260f0eb3e8d5d075b2ac90b7a8c34f",
+    "port_blob": "74a8258d24b90373edad499975dce4069d5ab5f6",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "643c4957dc4827f95d1797368ffc5f969d076e05",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "5802a9cf8c260f0eb3e8d5d075b2ac90b7a8c34f",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Reviewed entire added implementation and full normalized-ACK delta. Retain per-UID CPU/IO snapshots and foreground/background controls: pinned KernelCpuUidTimeReader and StoragedUidIoStatsReader consume these exact proc formats; system_server has SELinux write rules and genfs labels. Existing 0444 read/0222 write modes are retained for Android policy compatibility and require SELinux for intended access isolation. 643c4957dc48 validates range endpoints and replaces unbounded integer enumeration with one pass over 1024 buckets plus stored entries, rescheduling between buckets; this prevents range-size CPU exhaustion and signed-long wrap. Host checks execute the actual function with a hash shim under ASan/UBSan, including UINT_MAX/full-range and malformed bounds. UID data/worker locking and copied exit statistics avoid task-pointer lifetime dependence; failed allocation or a deferred update whose UID entry was removed/missing can lose statistics. Counters are observational, not security/resource limits; namespace attribution and concurrent snapshots are not runtime-certified. Final ACK reverted fsync syscall tracking, leaving those format columns zero. Runtime OEM fields have actual hook consumers; no KMI padding retained.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/mmc/core/block.c": {
     "ack_blob": "6113bb927946dcb794d7b3d3a69477b82d1627ad",
@@ -18756,7 +18791,9 @@
     "rationale": "Keep LTS for the omitted physical-device, firmware, peripheral or platform-hook feature. Some containing files are generic and compiled for the SDK; this does not assert that an entire file is unused. The omitted feature requires the separate physical topology or controller identified by the source review. Generic Android interfaces and module exports are assessed separately. This is a target boundary, not a claim that no Android product consumes the feature.",
     "result_commits": [],
     "normalized_ack_blob": "e0af107e8ae110ce0dbcd835ad25d65ac51a0934",
-    "common_ancestor_blob": "cf820fa09a0483a57409d5ff7f43dfff96cdb538"
+    "common_ancestor_blob": "cf820fa09a0483a57409d5ff7f43dfff96cdb538",
+    "specific_evidence": "The sole normalized ACK change links ufs-txeq.o into ufshcd-core for physical UFS link equalization. Retain native LTS object selection. Current-target decision: pinned GrapheneOS device/generic/goldfish/board/fstab/x86 maps userdata to /dev/block/vdc and SD storage to vdf; board/kernel/x86_64.mk loads virtio_blk and virtio_pci for second stage. Omit additional UFS hardware-backend behavior for this SDK storage model, not because a consumer search was empty. SCSI_UFSHCD/PCI/PLATFORM/BSG/CRYPTO remain enabled in build 34, so this is explicitly not an uncompiled-code claim. Port equals pinned LTS at this path (or both absent). All LTS fixes remain; shared SCSI, block, crypto and their vendor hooks require separate decisions. No runtime hardware inventory or UFS support claim is made.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/ufs/core/ufs-debugfs.c": {
     "ack_blob": "e3dd81d6fe828ecb36eab03c4a639115aa35a29b",
@@ -18766,7 +18803,9 @@
     "rationale": "Keep LTS for the omitted physical-device, firmware, peripheral or platform-hook feature. Some containing files are generic and compiled for the SDK; this does not assert that an entire file is unused. The omitted feature requires the separate physical topology or controller identified by the source review. Generic Android interfaces and module exports are assessed separately. This is a target boundary, not a claim that no Android product consumes the feature.",
     "result_commits": [],
     "normalized_ack_blob": "e3dd81d6fe828ecb36eab03c4a639115aa35a29b",
-    "common_ancestor_blob": "e3baed6c70bd9b839319f106169ee05f35e6e6db"
+    "common_ancestor_blob": "e3baed6c70bd9b839319f106169ee05f35e6e6db",
+    "specific_evidence": "The complete residual adds per-HBA TX equalization settings/records and retraining controls, guarded by UFSHCD_CAP_TX_EQUALIZATION and UFS device state. This is UFS PHY diagnostics, not a generic Android debugfs interface. Current-target decision: pinned GrapheneOS device/generic/goldfish/board/fstab/x86 maps userdata to /dev/block/vdc and SD storage to vdf; board/kernel/x86_64.mk loads virtio_blk and virtio_pci for second stage. Omit additional UFS hardware-backend behavior for this SDK storage model, not because a consumer search was empty. SCSI_UFSHCD/PCI/PLATFORM/BSG/CRYPTO remain enabled in build 34, so this is explicitly not an uncompiled-code claim. Port equals pinned LTS at this path (or both absent). All LTS fixes remain; shared SCSI, block, crypto and their vendor hooks require separate decisions. No runtime hardware inventory or UFS support claim is made.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/ufs/core/ufs-mcq.c": {
     "ack_blob": "709396f2f38d7b25aba0b05502351146beaa60e7",
@@ -18776,7 +18815,9 @@
     "rationale": "Keep LTS for the omitted physical-device, firmware, peripheral or platform-hook feature. Some containing files are generic and compiled for the SDK; this does not assert that an entire file is unused. The omitted feature requires the separate physical topology or controller identified by the source review. Generic Android interfaces and module exports are assessed separately. This is a target boundary, not a claim that no Android product consumes the feature.",
     "result_commits": [],
     "normalized_ack_blob": "2fef6af6d4ef09da54ef0713c152787e7cde2523",
-    "common_ancestor_blob": "c9bdd4140fd04bbdef616d7c047822583dad34bb"
+    "common_ancestor_blob": "c9bdd4140fd04bbdef616d7c047822583dad34bb",
+    "specific_evidence": "The complete residual adds UFS queue-cleanup callbacks and the UPIU initiator ID in the hardware SQ cleanup register. All operate on a probed UFS HBA and MCQ MMIO, not virtio block queues. Current-target decision: pinned GrapheneOS device/generic/goldfish/board/fstab/x86 maps userdata to /dev/block/vdc and SD storage to vdf; board/kernel/x86_64.mk loads virtio_blk and virtio_pci for second stage. Omit additional UFS hardware-backend behavior for this SDK storage model, not because a consumer search was empty. SCSI_UFSHCD/PCI/PLATFORM/BSG/CRYPTO remain enabled in build 34, so this is explicitly not an uncompiled-code claim. Port equals pinned LTS at this path (or both absent). All LTS fixes remain; shared SCSI, block, crypto and their vendor hooks require separate decisions. No runtime hardware inventory or UFS support claim is made.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/ufs/core/ufs-sysfs.c": {
     "ack_blob": "ec83b2e027160a30a64c7d070ab23563721ded1b",
@@ -18786,7 +18827,9 @@
     "rationale": "Keep LTS for the omitted physical-device, firmware, peripheral or platform-hook feature. Some containing files are generic and compiled for the SDK; this does not assert that an entire file is unused. The omitted feature requires the separate physical topology or controller identified by the source review. Generic Android interfaces and module exports are assessed separately. This is a target boundary, not a claim that no Android product consumes the feature.",
     "result_commits": [],
     "normalized_ack_blob": "ec83b2e027160a30a64c7d070ab23563721ded1b",
-    "common_ancestor_blob": "0086816b27cd9041b4289d8a292f8b3fd511e17c"
+    "common_ancestor_blob": "0086816b27cd9041b4289d8a292f8b3fd511e17c",
+    "specific_evidence": "The complete residual adds UFS DME QoS notification and quad-word device-attribute access. These sysfs nodes belong to the UFS HBA and issue UFS protocol commands; they do not implement generic Android storage properties. Current-target decision: pinned GrapheneOS device/generic/goldfish/board/fstab/x86 maps userdata to /dev/block/vdc and SD storage to vdf; board/kernel/x86_64.mk loads virtio_blk and virtio_pci for second stage. Omit additional UFS hardware-backend behavior for this SDK storage model, not because a consumer search was empty. SCSI_UFSHCD/PCI/PLATFORM/BSG/CRYPTO remain enabled in build 34, so this is explicitly not an uncompiled-code claim. Port equals pinned LTS at this path (or both absent). All LTS fixes remain; shared SCSI, block, crypto and their vendor hooks require separate decisions. No runtime hardware inventory or UFS support claim is made.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/ufs/core/ufs-txeq.c": {
     "ack_blob": "7cc07e92d104410e49935e437a72e3ed7c0b9bf3",
@@ -18796,7 +18839,9 @@
     "rationale": "Keep LTS for the omitted physical-device, firmware, peripheral or platform-hook feature. Some containing files are generic and compiled for the SDK; this does not assert that an entire file is unused. The omitted feature requires the separate physical topology or controller identified by the source review. Generic Android interfaces and module exports are assessed separately. This is a target boundary, not a claim that no Android product consumes the feature.",
     "result_commits": [],
     "normalized_ack_blob": "7cc07e92d104410e49935e437a72e3ed7c0b9bf3",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Scope review of the new implementation, function inventory, capability gate, DME access, entry points, and read/write setting paths establishes UFS PHY equalization/training only. ufshcd_is_tx_eq_supported requires controller capability plus UFSHCI/device version 5.0; hardware lane settings use DME and UFS query attributes. No full algorithm correctness claim is made for this excluded file. Current-target decision: pinned GrapheneOS device/generic/goldfish/board/fstab/x86 maps userdata to /dev/block/vdc and SD storage to vdf; board/kernel/x86_64.mk loads virtio_blk and virtio_pci for second stage. Omit additional UFS hardware-backend behavior for this SDK storage model, not because a consumer search was empty. SCSI_UFSHCD/PCI/PLATFORM/BSG/CRYPTO remain enabled in build 34, so this is explicitly not an uncompiled-code claim. Port equals pinned LTS at this path (or both absent). All LTS fixes remain; shared SCSI, block, crypto and their vendor hooks require separate decisions. No runtime hardware inventory or UFS support claim is made.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/ufs/core/ufs_trace.h": {
     "ack_blob": "c0e08798088090380f38b24c6cccd4f8476f1372",
@@ -18806,7 +18851,9 @@
     "rationale": "Keep LTS for the omitted physical-device, firmware, peripheral or platform-hook feature. Some containing files are generic and compiled for the SDK; this does not assert that an entire file is unused. The omitted feature requires the separate physical topology or controller identified by the source review. Generic Android interfaces and module exports are assessed separately. This is a target boundary, not a claim that no Android product consumes the feature.",
     "result_commits": [],
     "normalized_ack_blob": "c0e08798088090380f38b24c6cccd4f8476f1372",
-    "common_ancestor_blob": "584c2b5c6ad998675d05345ab18df241c9588244"
+    "common_ancestor_blob": "584c2b5c6ad998675d05345ab18df241c9588244",
+    "specific_evidence": "The full normalized residual adds ZBC_IN/ZBC_OUT labels to UFS command tracing. Retain native LTS trace definitions; these labels do not change generic SCSI/block dispatch. Current-target decision: pinned GrapheneOS device/generic/goldfish/board/fstab/x86 maps userdata to /dev/block/vdc and SD storage to vdf; board/kernel/x86_64.mk loads virtio_blk and virtio_pci for second stage. Omit additional UFS hardware-backend behavior for this SDK storage model, not because a consumer search was empty. SCSI_UFSHCD/PCI/PLATFORM/BSG/CRYPTO remain enabled in build 34, so this is explicitly not an uncompiled-code claim. Port equals pinned LTS at this path (or both absent). All LTS fixes remain; shared SCSI, block, crypto and their vendor hooks require separate decisions. No runtime hardware inventory or UFS support claim is made.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/ufs/core/ufshcd-crypto.c": {
     "ack_blob": "572080b7f729bdee96388fb6a1e3ef0919d97740",
@@ -18816,7 +18863,9 @@
     "rationale": "Keep LTS for the omitted physical-device, firmware, peripheral or platform-hook feature. Some containing files are generic and compiled for the SDK; this does not assert that an entire file is unused. The omitted feature requires the separate physical topology or controller identified by the source review. Generic Android interfaces and module exports are assessed separately. This is a target boundary, not a claim that no Android product consumes the feature.",
     "result_commits": [],
     "normalized_ack_blob": "572080b7f729bdee96388fb6a1e3ef0919d97740",
-    "common_ancestor_blob": "9e63a9d3cb7e2c2e3a467f2d3ad131e5c9cab634"
+    "common_ancestor_blob": "9e63a9d3cb7e2c2e3a467f2d3ad131e5c9cab634",
+    "specific_evidence": "The full normalized residual adds a restricted vendor override for reprogramming this UFS HBA crypto profile. Native implementation programs controller keyslots through MMIO and requires UFSHCD_CAP_CRYPTO. Retain LTS UFS crypto; generic Android block encryption and software fallback remain separate retained/reviewed paths. Current-target decision: pinned GrapheneOS device/generic/goldfish/board/fstab/x86 maps userdata to /dev/block/vdc and SD storage to vdf; board/kernel/x86_64.mk loads virtio_blk and virtio_pci for second stage. Omit additional UFS hardware-backend behavior for this SDK storage model, not because a consumer search was empty. SCSI_UFSHCD/PCI/PLATFORM/BSG/CRYPTO remain enabled in build 34, so this is explicitly not an uncompiled-code claim. Port equals pinned LTS at this path (or both absent). All LTS fixes remain; shared SCSI, block, crypto and their vendor hooks require separate decisions. No runtime hardware inventory or UFS support claim is made.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/ufs/core/ufshcd-crypto.h": {
     "ack_blob": "b438730af5d651fa3b510b88d8be5167d65fef09",
@@ -18826,7 +18875,9 @@
     "rationale": "Keep LTS for the omitted physical-device, firmware, peripheral or platform-hook feature. Some containing files are generic and compiled for the SDK; this does not assert that an entire file is unused. The omitted feature requires the separate physical topology or controller identified by the source review. Generic Android interfaces and module exports are assessed separately. This is a target boundary, not a claim that no Android product consumes the feature.",
     "result_commits": [],
     "normalized_ack_blob": "b438730af5d651fa3b510b88d8be5167d65fef09",
-    "common_ancestor_blob": "89bb97c14c15b6c14a5ff3a9bdeeb1ac2c81eeb7"
+    "common_ancestor_blob": "89bb97c14c15b6c14a5ff3a9bdeeb1ac2c81eeb7",
+    "specific_evidence": "The only normalized residual removes a private UFS header include. Keep native LTS include/API organization with the unchanged LTS UFS core. Current-target decision: pinned GrapheneOS device/generic/goldfish/board/fstab/x86 maps userdata to /dev/block/vdc and SD storage to vdf; board/kernel/x86_64.mk loads virtio_blk and virtio_pci for second stage. Omit additional UFS hardware-backend behavior for this SDK storage model, not because a consumer search was empty. SCSI_UFSHCD/PCI/PLATFORM/BSG/CRYPTO remain enabled in build 34, so this is explicitly not an uncompiled-code claim. Port equals pinned LTS at this path (or both absent). All LTS fixes remain; shared SCSI, block, crypto and their vendor hooks require separate decisions. No runtime hardware inventory or UFS support claim is made.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/ufs/core/ufshcd-priv.h": {
     "ack_blob": "6ba126dc052824efa73a8a41540151a1e2cecaa1",
@@ -18836,7 +18887,9 @@
     "rationale": "Keep LTS for the omitted physical-device, firmware, peripheral or platform-hook feature. Some containing files are generic and compiled for the SDK; this does not assert that an entire file is unused. The omitted feature requires the separate physical topology or controller identified by the source review. Generic Android interfaces and module exports are assessed separately. This is a target boundary, not a claim that no Android product consumes the feature.",
     "result_commits": [],
     "normalized_ack_blob": "6ba126dc052824efa73a8a41540151a1e2cecaa1",
-    "common_ancestor_blob": "1f0d38aa37f920784a3484208cadf9598937dacd"
+    "common_ancestor_blob": "1f0d38aa37f920784a3484208cadf9598937dacd",
+    "specific_evidence": "Full normalized residual is HBA-private state, UFS query/power/PHY training declarations and variant wrappers, plus movement of UFS runtime-PM helpers to a public UFS header. Keep native LTS organization. None is a shared block or software encryption interface. Current-target decision: pinned GrapheneOS device/generic/goldfish/board/fstab/x86 maps userdata to /dev/block/vdc and SD storage to vdf; board/kernel/x86_64.mk loads virtio_blk and virtio_pci for second stage. Omit additional UFS hardware-backend behavior for this SDK storage model, not because a consumer search was empty. SCSI_UFSHCD/PCI/PLATFORM/BSG/CRYPTO remain enabled in build 34, so this is explicitly not an uncompiled-code claim. Port equals pinned LTS at this path (or both absent). All LTS fixes remain; shared SCSI, block, crypto and their vendor hooks require separate decisions. No runtime hardware inventory or UFS support claim is made.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/ufs/core/ufshcd.c": {
     "ack_blob": "2cf7aa8e0a9472f9024d4251ac2f9d7da830e219",
@@ -18846,7 +18899,9 @@
     "rationale": "Keep LTS for the omitted physical-device, firmware, peripheral or platform-hook feature. Some containing files are generic and compiled for the SDK; this does not assert that an entire file is unused. The omitted feature requires the separate physical topology or controller identified by the source review. Generic Android interfaces and module exports are assessed separately. This is a target boundary, not a claim that no Android product consumes the feature.",
     "result_commits": [],
     "normalized_ack_blob": "2cf7aa8e0a9472f9024d4251ac2f9d7da830e219",
-    "common_ancestor_blob": "5371f173e28b9e4378fa60f263832d4e8cfffe0e"
+    "common_ancestor_blob": "5371f173e28b9e4378fa60f263832d4e8cfffe0e",
+    "specific_evidence": "Read the complete normalized ACK delta and native HBA allocation/init path. Residuals are UFS-only hooks/exports, UPIU/IID and quad-word queries, MCQ completion/reset handling, DME error/QoS reporting, UFS PHY training/power/clock/regulator sequencing and UFS-specific zoned capabilities. ufshcd_init requires HBA MMIO/IRQ, reads controller capabilities and initializes a UFS SCSI host. Keep the exact LTS file including all newer fixes; do not import normalization artefacts or older ACK completion/interrupt code. Exported functions still require a UFS HBA; this does not exclude generic vendor module interfaces. Current-target decision: pinned GrapheneOS device/generic/goldfish/board/fstab/x86 maps userdata to /dev/block/vdc and SD storage to vdf; board/kernel/x86_64.mk loads virtio_blk and virtio_pci for second stage. Omit additional UFS hardware-backend behavior for this SDK storage model, not because a consumer search was empty. SCSI_UFSHCD/PCI/PLATFORM/BSG/CRYPTO remain enabled in build 34, so this is explicitly not an uncompiled-code claim. Port equals pinned LTS at this path (or both absent). All LTS fixes remain; shared SCSI, block, crypto and their vendor hooks require separate decisions. No runtime hardware inventory or UFS support claim is made.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "drivers/ufs/host/ufs-exynos.c": {
     "ack_blob": "3230c8ffff0ba56899450aabe73eaac3d22c3dd2",
@@ -22106,7 +22161,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "054476fc405c824960b45316df4d085ae02fcc33",
-    "common_ancestor_blob": "28743b742e3cf65b36227033d4e3ecd643108bd3"
+    "common_ancestor_blob": "28743b742e3cf65b36227033d4e3ecd643108bd3",
+    "specific_evidence": "Reviewed all LTS and normalized-ACK differences and complete do_dup2/close/fd-install paths with DMA accounting implementation. Retain accounting before fd publication, unaccount before last file release, files_struct ownership, and removal of task accounting on partial sharing. do_dup2 holds a file reference while dropping file_lock for preallocation; on relock it re-reads the table and preserves native reserved-slot EBUSY/nospec checks. Rollback unaccounts and drops the added file reference; replaced files are unaccounted before close. Allocation failure in fd_install is best effort: it logs and installs the descriptor, so counters can undercount under OOM and are not resource limits. Retain GPL file_close_fd export and Android close_fd source namespace. Remaining file equals normalized ACK; no historical KMI layout retained. Positive lmkd dmabuf PSS/RSS and libmeminfo proc consumers are documented in SECURITY.md.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "fs/file_attr.c": {
     "ack_blob": "d2721c7d6933a690d49dd58faac5ee555b02fd9c",
@@ -22131,7 +22188,7 @@
     ],
     "normalized_ack_blob": "9e899370a5390bd06cb2fc776f336aa844ebf676",
     "common_ancestor_blob": "762f03dcbcd77883bab794a51bcf975b0d029d34",
-    "specific_evidence": "Reviewed native-LTS-to-port and base-to-normalized-ACK differences: the only nonblank changes are Android hook includes/calls and any listed symbol exports. Surrounding LTS control flow remains. Callback pointers expose mutable kernel state and must honor callsite locking/lifetime; there is no claim of callback runtime safety. The specific 26 examined candidate patches are recorded in explicit-code-decisions.json; other candidates remain separately reviewed.",
+    "specific_evidence": "Full LTS delta is the restricted security_file_free vendor hook after native security_file_release. Keep it for module customization; it is a trusted callback, not a replacement for LSM mediation. Full normalized-ACK residual retains LTS backing-file security storage, allocation with the user_file context, cleanup and native signatures. Native release/fasync/file lifetime ordering is preserved.",
     "review_record": "evidence/generic-source-review.json"
   },
   "fs/freevxfs/vxfs_super.c": {
@@ -24822,10 +24879,11 @@
   "gki/x86_64/symbols/virtual_device": {
     "ack_blob": "a1e41747f1e6038cbbe10bcf81b06f52f88c49e9",
     "lts_blob": null,
-    "port_blob": "73d732e873ec2295a503466e801bc4405fe868cc",
+    "port_blob": "f548f7afaa1c53b0c2dbfcb15815c91a4141ff47",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "0b7e6baa8c22e9fdaa86c6938377509fef6f937e",
       "4a8a3df378adac785ec69310ac8d396c60d04286",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
@@ -25874,7 +25932,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "38272a5f3163fc9427fef476487cdae3894cb6bd",
-    "common_ancestor_blob": null
+    "common_ancestor_blob": null,
+    "specific_evidence": "Reviewed whole header. Declares the retained task-time/policy/transition interfaces and no-op disabled-feature stubs. Matches normalized ACK and the concrete fork/proc/cputime/cpufreq call sites. These are rebuilt source interfaces, not historical ABI wrappers.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "include/linux/cpuhotplug.h": {
     "ack_blob": "62cd7b35a29c94f214fec3b55f9462eceffad694",
@@ -26004,7 +26064,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "326a96e6092d64d197f9f1d7e4200f8bf0459686",
-    "common_ancestor_blob": "d58e329ac0e71c40aead90c425f0e617e3e5ee2c"
+    "common_ancestor_blob": "d58e329ac0e71c40aead90c425f0e617e3e5ee2c",
+    "specific_evidence": "Full LTS and normalized-ACK deltas reviewed. Keep source API declarations for accounting, buffer flags/naming, partial CPU access and DMA mapping attributes plus concrete runtime counters and state, without KABI padding. The native LTS fd publication helper is represented by a local fd_install wrapper because this selected tree has no fd tracepoint; ioctl still installs only after copy succeeds. Disabled-config stubs leave native paths unchanged. Partial access remains a trusted kernel/exporter contract, with range/coherence obligations at callers and callbacks; it is not a new userspace partial-access ioctl.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "include/linux/dma-direct.h": {
     "ack_blob": "6263d6f2fddca0cb478bad9f060c1d77e670722b",
@@ -26028,7 +26090,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "2047fced3a48bad06f7a128b453687d3e02d69f0",
-    "common_ancestor_blob": "27d15f60950a2093e592be1b961c02e672826e58"
+    "common_ancestor_blob": "27d15f60950a2093e592be1b961c02e672826e58",
+    "specific_evidence": "Full residual declares actual source-built heap reference/lookup/allocation/device APIs and documents get/put ownership. Preserve this contract with 5694a9ef32df fixing open/removal lifetime and device reference balancing, rather than preserving old internal layout. Source callers must keep heap references and exporter callback/module lifetime while in use. Existing userspace UAPI is unchanged.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "include/linux/dma-iommu.h": {
     "ack_blob": null,
@@ -26166,7 +26230,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "2dcf2b9570c606eba96075bb6c6b7352d3c6be20",
-    "common_ancestor_blob": "c45306a9f00723f971692aef26ecbe4b3bc75449"
+    "common_ancestor_blob": "c45306a9f00723f971692aef26ecbe4b3bc75449",
+    "specific_evidence": "The complete net delta is the task_dma_buf_info pointer owned by files_struct. dup_fd starts with NULL, copy_dmabuf_info/exec attach owned references, and put_files_struct releases after closing descriptors. This is functional accounting metadata consumed by proc/lmkd, not padding or historical binary-layout preservation.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "include/linux/fileattr.h": {
     "ack_blob": "3780904a63a6c760f3ad684a72361001bf1bf2c9",
@@ -27074,15 +27140,18 @@
   "include/linux/module.h": {
     "ack_blob": "80b4695a9c21628e8c928988793669158fd47c5b",
     "lts_blob": "4decae2b16755165eab2719ca9fcfdd17618bca2",
-    "port_blob": "41a915c1fe8eb7abf4b09b72c6b8c829bc623a32",
+    "port_blob": "472e3e886e866c1872dba694f768d18379bb5503",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "b9307c13e253ae50776dcbd06ae5476832f5d8f3",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
       "3f883645bffc455cb9f72d34cb0cdeaee7f472ae"
     ],
     "normalized_ack_blob": "41a915c1fe8eb7abf4b09b72c6b8c829bc623a32",
-    "common_ancestor_blob": "4decae2b16755165eab2719ca9fcfdd17618bca2"
+    "common_ancestor_blob": "4decae2b16755165eab2719ca9fcfdd17618bca2",
+    "specific_evidence": "Read full LTS-to-port and normalized-ACK deltas. Keep real SCM identity and parallel export-flag metadata, with GPL status represented by per-symbol flags rather than a separate GPL table. b9307c13e253 restores the native CONFIG_MODULE_SIG guard: ACK b19c4dfb4ba7 explicitly retained sig_ok only to preserve layout across signed/unsigned build configurations, which the user excludes. All source uses are correctly guarded or call native module_sig_ok; rebuilt modules share this config. Native LTS memory/state/refcount fields remain.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "include/linux/module_symbol.h": {
     "ack_blob": "61492dc7b652af63dcf77b70d62b710521dbbbd1",
@@ -27644,7 +27713,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "0ca3ee578b0243d5b5ea33832fa1b80385c448ef",
-    "common_ancestor_blob": "3f53cdb0c27c1a2be13d63199f2949a2033f174c"
+    "common_ancestor_blob": "3f53cdb0c27c1a2be13d63199f2949a2033f174c",
+    "specific_evidence": "Only net additions declare profile event enum/APIs and disabled-PROFILING stubs. Match retained notifier implementation and UID stats consumer; UID_SYS_STATS depends on PROFILING. No historical binary layout shim or change to native profile-hit behavior.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "include/linux/pwm.h": {
     "ack_blob": "0a9662ce76b158846fc8ca1d301778338521a0a3",
@@ -31120,7 +31191,9 @@
     "rationale": "Keep LTS for the omitted physical-device, firmware, peripheral or platform-hook feature. Some containing files are generic and compiled for the SDK; this does not assert that an entire file is unused. The omitted feature requires the separate physical topology or controller identified by the source review. Generic Android interfaces and module exports are assessed separately. This is a target boundary, not a claim that no Android product consumes the feature.",
     "result_commits": [],
     "normalized_ack_blob": "2eba40b1c696cd2690bc0ded06038a19ad1614b6",
-    "common_ancestor_blob": "245a6a829ce998f58da0cab2a7862ab13fcd1afe"
+    "common_ancestor_blob": "245a6a829ce998f58da0cab2a7862ab13fcd1afe",
+    "specific_evidence": "Full residual is UFS query attribute identifiers, zoned-write capability and per-UFS-device OEM data. Preserve native LTS UFS protocol and device structure for the unchanged backend; historical binary layout is out of scope. Current-target decision: pinned GrapheneOS device/generic/goldfish/board/fstab/x86 maps userdata to /dev/block/vdc and SD storage to vdf; board/kernel/x86_64.mk loads virtio_blk and virtio_pci for second stage. Omit additional UFS hardware-backend behavior for this SDK storage model, not because a consumer search was empty. SCSI_UFSHCD/PCI/PLATFORM/BSG/CRYPTO remain enabled in build 34, so this is explicitly not an uncompiled-code claim. Port equals pinned LTS at this path (or both absent). All LTS fixes remain; shared SCSI, block, crypto and their vendor hooks require separate decisions. No runtime hardware inventory or UFS support claim is made.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "include/ufs/ufs_quirks.h": {
     "ack_blob": "e9c59ec1ceae275bdefc3d1dc4d7ec69174e346c",
@@ -31130,7 +31203,9 @@
     "rationale": "Keep LTS for the omitted physical-device, firmware, peripheral or platform-hook feature. Some containing files are generic and compiled for the SDK; this does not assert that an entire file is unused. The omitted feature requires the separate physical topology or controller identified by the source review. Generic Android interfaces and module exports are assessed separately. This is a target boundary, not a claim that no Android product consumes the feature.",
     "result_commits": [],
     "normalized_ack_blob": "e9c59ec1ceae275bdefc3d1dc4d7ec69174e346c",
-    "common_ancestor_blob": "83563247c36cb26863a3ad5fb304218f6150fa31"
+    "common_ancestor_blob": "83563247c36cb26863a3ad5fb304218f6150fa31",
+    "specific_evidence": "Full normalized residual removes the physical UFS VCC power-off-delay quirk in favor of new controller-specific timing. Keep the LTS quirk and matching native power sequence; no LTS safety delay is removed. Current-target decision: pinned GrapheneOS device/generic/goldfish/board/fstab/x86 maps userdata to /dev/block/vdc and SD storage to vdf; board/kernel/x86_64.mk loads virtio_blk and virtio_pci for second stage. Omit additional UFS hardware-backend behavior for this SDK storage model, not because a consumer search was empty. SCSI_UFSHCD/PCI/PLATFORM/BSG/CRYPTO remain enabled in build 34, so this is explicitly not an uncompiled-code claim. Port equals pinned LTS at this path (or both absent). All LTS fixes remain; shared SCSI, block, crypto and their vendor hooks require separate decisions. No runtime hardware inventory or UFS support claim is made.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "include/ufs/ufshcd.h": {
     "ack_blob": "ee5c1c607237d5eaf743d4a267a760c1e0efcf97",
@@ -31140,7 +31215,9 @@
     "rationale": "Keep LTS for the omitted physical-device, firmware, peripheral or platform-hook feature. Some containing files are generic and compiled for the SDK; this does not assert that an entire file is unused. The omitted feature requires the separate physical topology or controller identified by the source review. Generic Android interfaces and module exports are assessed separately. This is a target boundary, not a claim that no Android product consumes the feature.",
     "result_commits": [],
     "normalized_ack_blob": "c7c595806dd8cd026ec43bc596b5cf71da499cc5",
-    "common_ancestor_blob": "17fe07dac6a7e377cf178435eeed2af8d8ac4e11"
+    "common_ancestor_blob": "17fe07dac6a7e377cf178435eeed2af8d8ac4e11",
+    "specific_evidence": "Full residual defines UFS HBA runtime data, PHY equalization structures/capabilities and variant operations, UFS-specific vendor state and exported UFS query/runtime-PM helpers. These interfaces require UFS controller state, not arbitrary source-built Android modules. Keep native LTS structures/API together with native controller implementation; no binary KMI preserved. Current-target decision: pinned GrapheneOS device/generic/goldfish/board/fstab/x86 maps userdata to /dev/block/vdc and SD storage to vdf; board/kernel/x86_64.mk loads virtio_blk and virtio_pci for second stage. Omit additional UFS hardware-backend behavior for this SDK storage model, not because a consumer search was empty. SCSI_UFSHCD/PCI/PLATFORM/BSG/CRYPTO remain enabled in build 34, so this is explicitly not an uncompiled-code claim. Port equals pinned LTS at this path (or both absent). All LTS fixes remain; shared SCSI, block, crypto and their vendor hooks require separate decisions. No runtime hardware inventory or UFS support claim is made.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "include/ufs/ufshci.h": {
     "ack_blob": "5259a48f5be32798ec210561b76774d26fc0dc6b",
@@ -31150,7 +31227,9 @@
     "rationale": "Keep LTS for the omitted physical-device, firmware, peripheral or platform-hook feature. Some containing files are generic and compiled for the SDK; this does not assert that an entire file is unused. The omitted feature requires the separate physical topology or controller identified by the source review. Generic Android interfaces and module exports are assessed separately. This is a target boundary, not a claim that no Android product consumes the feature.",
     "result_commits": [],
     "normalized_ack_blob": "5259a48f5be32798ec210561b76774d26fc0dc6b",
-    "common_ancestor_blob": "e64b701321010be384175d6fbe1d8893023536e1"
+    "common_ancestor_blob": "e64b701321010be384175d6fbe1d8893023536e1",
+    "specific_evidence": "Full normalized residual adds UIC_DME_QOS_MASK for a UFS host-controller register. Native LTS register definitions remain. Current-target decision: pinned GrapheneOS device/generic/goldfish/board/fstab/x86 maps userdata to /dev/block/vdc and SD storage to vdf; board/kernel/x86_64.mk loads virtio_blk and virtio_pci for second stage. Omit additional UFS hardware-backend behavior for this SDK storage model, not because a consumer search was empty. SCSI_UFSHCD/PCI/PLATFORM/BSG/CRYPTO remain enabled in build 34, so this is explicitly not an uncompiled-code claim. Port equals pinned LTS at this path (or both absent). All LTS fixes remain; shared SCSI, block, crypto and their vendor hooks require separate decisions. No runtime hardware inventory or UFS support claim is made.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "include/ufs/unipro.h": {
     "ack_blob": "00ac085435c6fa792e97e56c533e461e5c0d535c",
@@ -31160,7 +31239,9 @@
     "rationale": "Keep LTS for the omitted physical-device, firmware, peripheral or platform-hook feature. Some containing files are generic and compiled for the SDK; this does not assert that an entire file is unused. The omitted feature requires the separate physical topology or controller identified by the source review. Generic Android interfaces and module exports are assessed separately. This is a target boundary, not a claim that no Android product consumes the feature.",
     "result_commits": [],
     "normalized_ack_blob": "00ac085435c6fa792e97e56c533e461e5c0d535c",
-    "common_ancestor_blob": "360e1245fb4063b5048e2bca14acd463bcd3c3e9"
+    "common_ancestor_blob": "360e1245fb4063b5048e2bca14acd463bcd3c3e9",
+    "specific_evidence": "Full normalized residual is M-PHY/UniPro attribute identifiers, UFS link training/eye-monitor encodings and HS gear 6. These define the physical UFS link protocol, not a generic Android communications interface. Current-target decision: pinned GrapheneOS device/generic/goldfish/board/fstab/x86 maps userdata to /dev/block/vdc and SD storage to vdf; board/kernel/x86_64.mk loads virtio_blk and virtio_pci for second stage. Omit additional UFS hardware-backend behavior for this SDK storage model, not because a consumer search was empty. SCSI_UFSHCD/PCI/PLATFORM/BSG/CRYPTO remain enabled in build 34, so this is explicitly not an uncompiled-code claim. Port equals pinned LTS at this path (or both absent). All LTS fixes remain; shared SCSI, block, crypto and their vendor hooks require separate decisions. No runtime hardware inventory or UFS support claim is made.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "include/vdso/TEST_MAPPING": {
     "ack_blob": "efff780963d66f4a9b75648f4e8403f257694d73",
@@ -31815,7 +31896,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "3ab1e04a44bac470548ec5f620d71d9fef8092bd",
-    "common_ancestor_blob": "c832946823f48897949a61ffd8f420211e8b430c"
+    "common_ancestor_blob": "c832946823f48897949a61ffd8f420211e8b430c",
+    "specific_evidence": "Full net addition is UID profiling notification before task exit plus trusted Android MM/task/group-exit hooks. The configured uid_sys_stats exit notifier is the positive consumer; pinned Android framework reads its CPU/IO proc data. Native LTS get_pid/put_pid keeps thread_pid alive across proc_flush_pid, native pending-signal teardown avoids double flush, and sched_mm_cid_exit and exit_nsproxy_namespaces remain. Hooks do not bypass native exit cleanup. No runtime task-exit test.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "kernel/fork.c": {
     "ack_blob": "3cbccd9dcb4eeeca1c8e463860f1c9894b0580ad",
@@ -31828,7 +31911,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "c1bf48702beb85cf041f18917b887f44db588e3d",
-    "common_ancestor_blob": "1215d3f52c6d21d7c3d5a10a916c9be4f73c6858"
+    "common_ancestor_blob": "1215d3f52c6d21d7c3d5a10a916c9be4f73c6858",
+    "specific_evidence": "Reviewed complete LTS and normalized-ACK deltas plus dup_task_struct, delayed_free_task and failed-fork teardown. Retain task/MM/files DMA accounting initialization and owned references; partial sharing clears task reporting while existing objects retain cleanup ownership. After successful copy_dmabuf_info, later failures release the task reference, then MM/files teardown drops their separate references; delayed_free_task calls free_task, not __put_task_struct, so no second task-info put. Keep cpufreq time allocation/init/free, actual vendor/OEM runtime data initialization, task/MM hooks and source exports. Proxy scheduling fields/locks/lists are initialized for the retained implementation; its scheduling algorithms are assessed separately. Integrity-hook failure uses bad_fork_core_free, preserving both locks and scheduler cleanup. Preserve native LTS early BPF initialization, CLONE_VM futex-hash sharing including vfork, PF_BLOCK_TS clearing and namespace API. Accounting OOM can fail fork; no runtime fork/race certification.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "kernel/futex.c": {
     "ack_blob": null,
@@ -32212,7 +32297,9 @@
       "3f883645bffc455cb9f72d34cb0cdeaee7f472ae"
     ],
     "normalized_ack_blob": "8376a75b5d88902290cd8ab44721c5dc7486c8ee",
-    "common_ancestor_blob": "2a1beebf1d37a1b1d56495cda90a124316f5d15d"
+    "common_ancestor_blob": "2a1beebf1d37a1b1d56495cda90a124316f5d15d",
+    "specific_evidence": "Read complete added options. MODULE_SCMVERSION exposes actual build provenance, while MODULE_SIG_PROTECT_LIST selects signed-module export protection independently of historical binary KMI. Existing MODULE_SIG/FORCE/hash policies are unchanged; generated SDK config signs SHA-256, leaves FORCE off and protects configured GKI exports. Native signature verifier, module load authority and lockdown checks remain. No historical import whitelist is enforced; this intentional source-compatibility difference is documented in SECURITY.md.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "kernel/module/Makefile": {
     "ack_blob": "50ffcc413b54504db946af4dce3b41dc4aece1a5",
@@ -32237,28 +32324,34 @@
   "kernel/module/internal.h": {
     "ack_blob": "cc16e0cd19fa43d6c8afa912f821b4501ef096d3",
     "lts_blob": "618202578b428563b1e5697fd095255278c87668",
-    "port_blob": "cc16e0cd19fa43d6c8afa912f821b4501ef096d3",
+    "port_blob": "ac91b7a52899d861de57973a7f04116d9701f1d1",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "f08e12b0ed1a675de6f61e0ed8c5989173b517ee",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "cc16e0cd19fa43d6c8afa912f821b4501ef096d3",
-    "common_ancestor_blob": "618202578b428563b1e5697fd095255278c87668"
+    "common_ancestor_blob": "618202578b428563b1e5697fd095255278c87668",
+    "specific_evidence": "Read full export/lookup metadata delta and companion producer/consumer. Unified symbol/CRC/flag tables preserve GPL semantics. f08e12b0ed1a declares the protected-export array with its actual PREL32 s32 type (or pointer entries for the absolute format), matching PROTECT_EXPORT assembly; pointer-width indexing previously skipped 330 of 659 names in the x86 SDK artifact. Native module/load state retained. This is regenerated metadata, not old binary layout preservation.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "kernel/module/main.c": {
     "ack_blob": "5385599b9b89da36d92a529898da159e6eecd53b",
     "lts_blob": "769463d2b254bd688f2d8523604aa790b19825e3",
-    "port_blob": "14ad5585b5acf8cc5f76c572c0ca42bb0acb262c",
+    "port_blob": "75aca6086588d1214370286322db11e5169d84fe",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "f08e12b0ed1a675de6f61e0ed8c5989173b517ee",
       "dc431d0446196b348fb43bbe4b0c091b6eb81d17",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
       "3f883645bffc455cb9f72d34cb0cdeaee7f472ae"
     ],
     "normalized_ack_blob": "5385599b9b89da36d92a529898da159e6eecd53b",
-    "common_ancestor_blob": "3745cd02c84792f24c0f0b9a2a30395eda070fdc"
+    "common_ancestor_blob": "3745cd02c84792f24c0f0b9a2a30395eda070fdc",
+    "specific_evidence": "Read complete LTS-to-port and normalized-ACK-to-port deltas, load order, section helpers and native signature verifier. Retain Android SCM identity, unified symbol/flag lookup, signed export protection and three trusted vendor memory/permission hooks. Keep LTS CAP_SYS_MODULE/modules_disabled, signature/lockdown, module reference, duplicate/GPL export, ELF SHT_STRTAB validation, codetag error propagation/livepatch cleanup and unsigned-module taint checks. Hooks run around native lifecycle and after successful native ROX/ro-after-init protection; a trusted callback can deliberately alter permission policy. f08e12b0ed1a fixes PREL32 table stride, absolute-pointer dereference, and rejects flags sections whose byte count differs from the symbol count before lookup. Build-34 ELF audit verifies 145 flag/CRC tables and demonstrates the old search misses 330/659 protected names; the 4-byte search finds all. This is metadata evidence, not runtime module-loading enforcement. No historical whitelist restrictions or unsigned-taint suppression retained.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "kernel/module/signing.c": {
     "ack_blob": "a2ff4242e623d5d4e87d2f3d139d8620fb937579",
@@ -32472,7 +32565,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "13dd4fdac5d1b2722dd917b4d30a775a4970a1a5",
-    "common_ancestor_blob": "1fcf1adcf4eb033ef0a5e2960c63404700b94519"
+    "common_ancestor_blob": "1fcf1adcf4eb033ef0a5e2960c63404700b94519",
+    "specific_evidence": "Reviewed entire added notifier implementation and exact normalized-ACK match. Keep blocking task-exit and munmap notifier registration/unregistration with enum validation and GPL exports; do_exit invokes the exit chain and configured UID_SYS_STATS registers its process_notifier. Preserve generic munmap source callback compatibility used by mm/mmap integration. Native profiling sampling implementation is unchanged. Callback code is trusted kernel code and can sleep in these existing contexts; no new userspace authority interface here.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "kernel/ptrace.c": {
     "ack_blob": "7ded2029000d6f82f417b229507b97251e973b9e",
@@ -32702,7 +32797,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "ccc2d4cd87bcb4676a37be2afa4eccf8f9f54a51",
-    "common_ancestor_blob": "7097de2c8cda2096772c0515b7dab5eabb18e8d3"
+    "common_ancestor_blob": "7097de2c8cda2096772c0515b7dab5eabb18e8d3",
+    "specific_evidence": "Full net delta retains cpufreq task-time accounting on user/system CPU time, GPL CPU IRQ-time/thread-group-time exports and Android accounting callbacks. Existing native user/system/IRQ/softIRQ calculations and adjustment paths remain. The irq_start hook flag observes entry/exit without changing native accounting. CPU_FREQ_TIMES positive proc consumer and synthetic emulator driver are documented. File matches normalized ACK; runtime scheduler accuracy is not verified.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "kernel/sched/deadline.c": {
     "ack_blob": "c136785e093f8aaa1ea583020dd4e6de23d9326e",

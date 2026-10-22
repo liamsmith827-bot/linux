@@ -859,5 +859,25 @@
     "result_commits": [
       "a83fe26baa415ac546af1b927a90be8e3b7e2691"
     ]
+  },
+  {
+    "commit": "b19c4dfb4ba77ad8b3d1bad36bca7ade56abe6ac",
+    "disposition": "omitted-kmi-only",
+    "rationale": "The complete patch unconditionally keeps struct module.sig_ok solely to preserve binary layout across differing MODULE_SIG configurations, as its local commit message explicitly explains. User excludes historical vendor binary KMI. Restore native LTS conditional layout in b9307c13e253; all code uses were reviewed as guarded. This SDK has MODULE_SIG=y so its signed build retains the field and behavior. Signature verification, lockdown and signed-export protection remain intact.",
+    "result_commits": [
+      "b9307c13e253ae50776dcbd06ae5476832f5d8f3"
+    ],
+    "evidence": [
+      "Local git show b19c4dfb4ba77ad8b3d1bad36bca7ade56abe6ac; include/linux/module.h and all sig_ok uses; evidence/generic-source-review.json; SECURITY.md: Module loader metadata review"
+    ]
+  },
+  {
+    "commit": "fe0fb52b05905cdde4c026f181c16805dfba334d",
+    "disposition": "reconciled-to-lts",
+    "rationale": "The complete ACK patch removes the policy-reactivation QoS update because generic boost synchronization already covers its original hotplug/reboost bug. No Android SDK API or behavior requires this cleanup. 71542ccb67ed restores the pinned LTS update while retaining the native generic boost path, so the effect of LTS 1608f0230510 is preserved. No security check or native fix is weakened; this avoids an unnecessary divergence. Evidence: local fe0fb52b0590/1608f0230510 messages and diffs, full cpufreq.c source review, SECURITY.md. Referenced message URLs were not visited.",
+    "result_commits": [
+      "71542ccb67edd36a7c45c602d75f2b4740cd0ffa"
+    ],
+    "review_status": "reviewed"
   }
 ]

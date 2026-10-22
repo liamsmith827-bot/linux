@@ -155,7 +155,7 @@ for d in explicit:
  r.pop('net_reconciled',None)
 for r in rows:
  if r['disposition']=='omitted-kmi-only' and 'gki/x86_64/symbols/virtual_device' in r['files']:
-  r.update(disposition='adapted-build-metadata',rationale='Historical ABI enforcement is omitted. The x86 virtual-device symbol list is adapted for the unchanged mixed-build staging import check, with 16 native LTS imports added in 4a8a3df378ad. Trimming and strict ABI enforcement are disabled; no historical signature, layout or symbol CRC is promised.',result_commits=result_ids['gki/x86_64/symbols/virtual_device'])
+  r.update(disposition='adapted-build-metadata',rationale='Historical ABI enforcement is omitted. The x86 virtual-device symbol list is adapted for the unchanged mixed-build staging import check, with 16 native LTS imports added in 4a8a3df378ad and the adapted system_heap dma_heap_put dependency added in 0b7e6baa8c22. Trimming and strict ABI enforcement are disabled; no historical signature, layout or symbol CRC is promised.',result_commits=result_ids['gki/x86_64/symbols/virtual_device'])
  r['review_status']='draft-net-reconciliation' if r.get('net_reconciled') else 'reviewed'
 # A separately reviewed net decision is final only while every source witness
 # still matches. Later integration must not silently inherit stale completion.

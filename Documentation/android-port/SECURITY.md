@@ -274,7 +274,9 @@ Kleaf's local build metadata uses `BRANCH=lts-sdk-6.18` and an empty
 x86 virtual-device symbol-list input serves the unchanged mixed-build staging
 check: before the wrapper signs modules, it checks their imports against that
 list and exports from other unsigned staging modules. Sixteen native LTS imports
-are added in 4a8a3df378ad. This is a source dependency check, not a promise of
+are added in 4a8a3df378ad. 0b7e6baa8c22 adds dma_heap_put for the adapted
+system_heap cleanup path after build 37 reported its staging dependency.
+This is a source dependency check, not a promise of
 historical layouts or symbol CRCs. Strict ABI checking and trimming are disabled.
 
 The final header review in evidence/native-api-review.json covers 80 native API
@@ -997,3 +999,186 @@ This preserves LTS's single-unwind guarantee and avoids double cleanup. No
 allocation-failure injection or driver-selection runtime test was performed.
 As in ACK, a Rust initialization failure after C has been unloaded does not
 restore C automatically; that availability limitation is not validated here.
+
+## UFS backend source selection
+
+The 15 core/interface paths reviewed after build 34 remain byte-for-byte at
+pinned LTS, including the absent new `ufs-txeq.c`. The local goldfish x86 fstab
+uses virtio block storage (`vdc` userdata and `vdf` SD storage), and its x86_64
+module rules load `virtio_blk`/PCI for second stage. UFS changes are for a
+separate storage backend requiring an initialized HBA, controller MMIO and UFS
+protocol/PHY state. The omitted additions include PHY equalization/training,
+UFS-specific query/sysfs/diagnostic interfaces, controller/crypto hooks and
+physical power/interrupt/queue behavior. This is a positive target-selection
+decision, not an inference from a missing consumer search.
+
+Generic UFS, PCI/platform UFS, BSG and UFS crypto are still configured in the
+SDK build. Their compiled implementation retains every pinned LTS fix and
+its native power sequencing; no claim is made that these files are uncompiled
+or that all possible emulator hardware configurations have been tested.
+ACK-only UFS controller source APIs are outside this SDK hardware target.
+Shared SCSI/block APIs, encryption, software fallback and generic vendor
+customization are assessed separately; this exclusion does not cover them.
+The equalization file received a hardware-scope review, not an algorithm
+correctness certification. Per-path evidence is in `generic-source-review.json`.
+Only local pinned sources were consulted.
+
+## Module loader metadata review
+
+`b9307c13e253` removes an overlooked layout-only ACK change. ACK
+`b19c4dfb4ba7` unconditionally retained `struct module.sig_ok` specifically to
+load binaries built with another MODULE_SIG setting. Restore the native LTS
+guard; the actual SDK configuration has signing enabled, so its functionality
+is unchanged. All source uses are guarded or use the native helper.
+
+`f08e12b0ed1a` corrects the retained protected-export mechanism. PROTECT_EXPORT
+emits 4-byte relative entries with CONFIG_HAVE_ARCH_PREL32_RELOCATIONS, which
+is enabled for this x86_64 SDK build. ACK's pointer-typed table and pointer-sized
+bsearch stride use 8-byte steps here. Direct inspection of build 34's ELF
+found 659 sorted protected names: that lookup skips 330 names, allowing their
+replacement by unsigned modules before the legitimate exporter is loaded.
+Duplicate-export checks still apply once a symbol is loaded. Declare the table
+with its real entry type and use its element size; fix the corresponding
+absolute-pointer comparator as well. The artifact audit finds every protected
+name with the correct stride and rejects an absent name. No runtime module
+loading test was performed, and protected exports are not a security sandbox
+against arbitrary privileged module code.
+
+The same adaptation requires exactly one flag byte for each exported symbol
+before lookup, instead of checking only for a non-NULL flags section. This
+avoids reading beyond short module metadata and interpreting unrelated bytes
+as license/protection flags. All 145 generated modules already have the correct
+parallel symbol/flag/CRC counts. `check_module_tables.py` and
+`evidence/module-tables-build-34.json` record the artifact checks and old-stride
+negative control. Kernel compilation with these fixes is verified separately.
+
+The reviewed loader keeps native LTS module-loading authority, signature and
+lockdown checks, ELF string-table type checks, codetag failure propagation and
+livepatch cleanup. It also retains native unsigned-module tainting, which ACK
+suppresses under export protection. Android vendor memory/permission callbacks
+remain trusted kernel code; their unregistered path leaves native protection
+unchanged, but a registered callback can deliberately alter permissions. The
+unified export tables retain GPL flags. Historical import whitelist enforcement
+is omitted as documented above. No remote source was used for this review.
+
+## DMA-buf and heap source review
+
+Pinned GrapheneOS `system/memory/libdmabufheap/BufferAllocator.cpp` selects
+`system-uncached` when CPU access is unnecessary and falls back to `system`
+when that optional heap is absent. `system/memory/lmkd/lmkd.cpp` includes
+`dmabuf_pss` in victim sizing and logs DMA-buf RSS; libmeminfo supplies procfs
+accounting tests (examined, not executed). These are positive userspace contracts
+for retaining the Android heap and accounting features. The manifest's
+`common-modules/virtual-device/virtual_device.fragment` sets
+DMABUF_HEAPS_SYSTEM=m and its BUILD.bazel distributes system_heap.ko. The
+common kernel configuration disables that driver because it is built externally.
+
+`5694a9ef32df` adapts the ACK find/put lifetime API: every open heap file holds a
+reference, and publication, failure cleanup, lookup and final removal use the
+same mutex. A separately allocated cdev survives a racing character-device open
+after heap storage is freed. Final removal balances the extra device reference.
+This prevents use of freed heap state after the final registration/lookup
+reference is dropped. Exporters still must keep their operations and module
+text alive while exposed; this API does not make arbitrary exporter unload safe.
+Native LTS ioctl reserve-copy-install ordering remains intact.
+
+`df0acacabb95` fixes the uncached implementation's SWIOTLB scan to examine each
+entry, and treats failure of the initial cache-flush mapping as allocation
+failure. It releases the exported buffer without unmapping a failed mapping.
+DMA setup is checked before publishing the allocator, with release/acquire
+ordering. If the second, optional heap cannot be registered, module init now
+succeeds with the already published cached heap, keeping its callback text
+resident. This is an intentional failure-path adaptation; libdmabufheap supports
+the absent-uncached fallback. On DMA-mask setup failure the uncached registration
+reference is released. A racing open may delay its removal and receive EBUSY,
+but cannot call an uninitialized allocator. No automatic module-unload support
+is added. Native cached allocation, page zeroing and all LTS fixes remain.
+
+`54fdb0c6e4bd` bounds unused per-CPU accounting records after child accounting
+and on preload failure. Preallocation counts every fd/VMA, while duplicates
+share one record; previously the unused excess could remain cached indefinitely.
+`90d9af708fea` returns EINVAL for NULL partial-end access and initializes optional
+get_flags output to zero. The added partial-access APIs remain trusted
+kernel/exporter interfaces; caller range/coherence obligations are unchanged.
+The existing accounting design excludes partial MM/files sharing and kthreads.
+Mmap-accounting allocation failures log while leaving a successful mapping
+intact; fork/exec bookkeeping can fail with ENOMEM. Cross-file lifecycle
+integration and its candidates are reviewed independently.
+
+These decisions preserve the generic CMA source interface without asserting
+that a CMA heap is used at runtime. No runtime allocation, fork/exec, race,
+SWIOTLB/coherence or fault-injection test was performed. All source evidence
+was local. Build 35 verified the preceding module-loader changes and all 145
+signatures. Build 36 failed because typeof propagated the const qualifier from
+the operations table to the allocator local. eecae28e83be uses its explicit
+function-pointer signature, retaining acquire/release ordering. Build 37 is
+the next compilation check: its common kernel completed, but the virtual-device
+staging check required the new dma_heap_put import. 0b7e6baa8c22 declares it in
+the kernel source input list. Build 38 completed the corrected full workflow, generating the kernel image,
+100 common modules and 45 virtual-device modules. All 145 module signatures
+verified against its exact certificate, and the tampered control was rejected.
+The export-table audit found all 659 protected names and matching symbol/flag/CRC
+table lengths in all modules.
+
+## Task lifecycle and Android statistics review
+
+The file-descriptor and fork/exit review follows task, files_struct and MM
+accounting references through publication and cleanup. Fork failure releases the
+task reference explicitly, while MM/files teardown releases those separate
+owners; its delayed free does not invoke __put_task_struct a second time. The
+exec integration retains native LTS CLOEXEC-before-MM-switch ordering. Files and
+VMAs unaccount buffers before releasing their real references. Partial sharing
+clears task-level reporting while retaining object references for cleanup.
+
+Accounting is observational, not a resource limit: fd installation and mmap can
+succeed after bookkeeping allocation fails, and the subsequent unaccount can
+reduce a shared record early. Statistics can therefore undercount under OOM.
+The original no-merge DMA mapping contract remains. Proc and page-size-related
+files have separate unfinished reviews; this does not finalize their candidates.
+Native LTS backing-file LSM state, PID lifetime during proc cleanup, signal queue
+teardown, early BPF initialization and fork integrity failure cleanup remain.
+
+Pinned Android framework KernelCpuUidTimeReader, StoragedUidIoStatsReader and
+KernelCpuThreadReader supply positive consumers for per-UID CPU/IO statistics
+and per-thread time-in-state. CPU_FREQ_TIMES and UID_SYS_STATS are enabled. The
+actual virtual-device fragment builds dummy-cpufreq.ko, whose synthetic frequency
+table is retained; these SDK statistics do not claim real hardware energy
+accuracy. Profile exit notifiers, task-time lifecycle calls and runtime vendor
+hooks support these interfaces. Allocation failure and missing entries during
+deferred UID updates can lose observations; no exact concurrent snapshot or
+namespace attribution guarantee is added.
+
+71542ccb67ed restores LTS's policy-reactivation max_freq_req update. ACK
+fe0fb52b0590 removes it as redundant with newer boost synchronization. Retaining
+the LTS code preserves the original hotplug/reboost fix and avoids a cleanup
+with no required Android behavior. LTS policy cpumask zeroing, early rwsem
+initialization before sysfs exposure and reference-frequency fallback remain.
+
+643c4957dc48 bounds UID range removal by stored entries. The original signed-long
+loop visits every integer in a userspace-provided range, allowing billions of
+lock operations on an empty table and overflow at LONG_MAX. The adaptation
+rejects negative/reversed/out-of-uid_t ranges, visits each of 1024 buckets once,
+removes inclusive matching entries and reschedules between buckets. Valid
+Android range deletion is retained. check_uid_range.py extracts the actual
+function and checks its behavior with host-side hash and lock shims under
+AddressSanitizer and UndefinedBehaviorSanitizer. Boundary UIDs, full/empty
+ranges, colliding entries, malformed bounds and copy failure passed; the result
+is recorded in evidence/uid-range-check.json. This is not a kernel concurrency
+or SELinux test.
+
+The original UID proc modes (0444 read, 0222 write) remain for Android policy
+compatibility. They rely on SELinux for intended isolation: pinned
+system/sepolicy/private/genfs_contexts labels these exact nodes; system_server.te
+permits the removal/state writes, while storaged.te and statsd.te permit their
+statistics reads. No privilege check is claimed solely from these DAC modes,
+and the port does not assert equivalent isolation without that policy. The
+final ACK fsync-tracking revert is retained; its output format columns remain
+but are zero. OEM fields are used by actual statistics callbacks rather than
+historical layout preservation.
+
+c81b372de983 removes two dangling misc Kconfig/Makefile template entries whose
+explicit dependencies require ARM64. Their source directories were already
+omitted from this x86 SDK port. The generic UID-statistics build entry and all
+native LTS misc drivers remain. No remote resource was accessed for these
+reviews. Runtime task, frequency, UID-statistics and emulator behavior have not
+been tested.
