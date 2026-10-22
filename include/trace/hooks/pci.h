@@ -25,9 +25,6 @@ DECLARE_HOOK(android_vh_platform_pci_choose_state,
 		TP_ARGS(dev, state));
 
 struct device_node;
-DECLARE_HOOK(android_vh_pci_pwrctrl_should_skip,
-		TP_PROTO(struct device_node *np, bool *skip),
-		TP_ARGS(np, skip));
 
 #endif /* _TRACE_HOOK_PCI_VH_H */
 /* This part must be outside protection */

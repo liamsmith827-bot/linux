@@ -673,3 +673,25 @@ CRC changes only protects historical vendor binary compatibility, which is
 explicitly excluded. Redundant per-header includes need not be restored because
 the central header now includes the native tracepoint definitions for every
 consumer, including genksyms. Source-built module versions are regenerated.
+
+## Additional SDK platform hook exclusions
+
+Remove declarations and exports whose only ACK call sites are ARM64 fault, IPI
+stop or hibernation CPU-resume code. The port keeps that architecture at native
+LTS and builds x86_64. Likewise, generic sched_clock's hooks and two exports are
+omitted: init/Kconfig defines GENERIC_SCHED_CLOCK as a hidden boolean, no x86
+Kconfig selects it, and kernel/time/Makefile builds this implementation only
+under that option. Native LTS sched_clock.c is restored exactly. These are
+positive architecture/build-selection exclusions, not failed consumer searches.
+
+The SCMI performance-limit hook belongs to ARM_SCMI_CPUFREQ, dependent on
+ARM_SCMI_PROTOCOL or COMPILE_TEST; neither selects that driver in this SDK
+configuration. The PCI power-controller hook operates on DT power-supply
+platform-device creation, not ordinary PCI/virtio discovery on the selected
+ACPI SDK guest. Their absent call-site changes and remaining declarations/exports
+are omitted together. Generic cpufreq and PCI power-state hooks remain.
+
+The xHCI-platform and syscon-regmap hook questions remain separate: both
+implementations are enabled by the supplied x86 configuration. Their absence
+from a found SDK caller is insufficient to finalize an omission, so the
+selection questions remain recorded in unresolved-feature-questions.json.

@@ -15,9 +15,6 @@ DECLARE_HOOK(android_vh_check_hibernation_swap,
 	TP_PROTO(struct file *resume_block_file, bool *hib_swap),
 	TP_ARGS(resume_block_file, hib_swap));
 
-DECLARE_HOOK(android_vh_save_cpu_resume,
-	TP_PROTO(u64 *addr, u64 phys_addr),
-	TP_ARGS(addr, phys_addr));
 
 DECLARE_HOOK(android_vh_save_hib_resume_bdev,
 	TP_PROTO(struct file *hib_resume_bdev_file),
