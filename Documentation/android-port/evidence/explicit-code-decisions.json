@@ -220,8 +220,8 @@
   },
   {
     "commit": "36751eabe7741ecf281776018facc4b0bf74c707",
-    "disposition": "partially-adapted-net-state",
-    "rationale": "The memory-safety effect is already in LTS 81ea8e822185: retrieve bounded device pointers into a fixed local array and evict every device key before freeing it, without a failing allocation during key removal. The port retains native LTS get_devices signatures and F2FS device-count cap. Omit the ACK get_devices_new alias, obsolete callback slot and ANDROID_KABI_USE layout preservation, which exist solely for historical binary ABI.",
+    "disposition": "already-represented-upstream",
+    "rationale": "The memory-safety effect is already in LTS 81ea8e822185: retrieve bounded device pointers into a fixed local array and evict every device key before freeing it, without a failing allocation during key removal. The port retains native LTS get_devices signatures and F2FS device-count cap. Omit the ACK get_devices_new alias, obsolete callback slot and ANDROID_KABI_USE layout preservation, which exist solely for historical binary ABI. Ledger label corrected after rechecking both local patches and current bounded-device callbacks: no additional source adaptation is needed for this candidate; upstream effect commit is recorded separately.",
     "result_commits": [],
     "upstream_effect_commits": [
       "81ea8e8221853950c47dac7164f27c63a96f8f86"
@@ -1131,5 +1131,174 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
       "769c2a3ea3f5512b82f2d7779488431b756b3c59"
     ]
+  },
+  {
+    "commit": "816567b17866ca3f9a11e670bd52c82335cbb448",
+    "disposition": "partially-adapted-net-state",
+    "rationale": "Retain the added lru_disable_count and lru_cache_disable GPL module exports for Android source compatibility. Omit only the drain-skipping optimization: it publishes the disable count after synchronization/draining, permitting concurrent folio/buffer cache insertion during that interval. Restore exact pinned LTS increment-before-RCU/drain implementation in 133e0283da81. Full patch, folio_batch_add_and_move and fs/buffer.c readers reviewed; this preserves the native migration/CMA exclusion contract without removing the API. Source comparison and compilation, no runtime race test; all evidence local.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "133e0283da81e9d703dc0e1e662caa7a4114740d"
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "commit": "86cab408520fe6b709c2471ca5a2aeed0bb3d721",
+    "disposition": "adapted",
+    "rationale": "The full ACK commit only exports memblock_end_of_DRAM. Preserve the module export where ARCH_KEEP_MEMBLOCK keeps both implementation and memblock arrays alive; 6dcd44cc22af applies the same lifetime guard already used for memblock_free. On the actual SDK x86 configuration ARCH_KEEP_MEMBLOCK is disabled and memblock_discard can free dynamically allocated region arrays. MEMORY_HOTPLUG=y keeps __meminit code/static data, so the concrete SDK hazard is the potentially freed backing arrays; on configurations without hotplug the code also has init lifetime. A persistent export does not provide a valid post-discard API. Built-in boot callers remain unchanged. This is a lifetime adaptation, not a lack-of-consumer omission or historical KMI requirement. The unchanged emulator workflow completed in build 58 with both images, 100 common and 45 virtual modules; all signatures and export/CRC tables verified; no module runtime call test; evidence local.",
+    "result_commits": [
+      "6dcd44cc22aff06becb192ef0f7bde7ea7af7ae4"
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "commit": "58ef7fcc48ec0fd3f37d4de4d5d8ef19e3f40858",
+    "disposition": "adapted-net-state",
+    "rationale": "Full LTS and normalized ACK deltas, swapcache/fault/shmem/zswap-writeback and reclaim callers reviewed. Retain Android I/O policy, timing, lock-owner observation, synchronous read replacement and bio-charge hooks. All timing-end callers retain a folio reference through submission; 14b3570de295 initializes independent timing cookies. Default-false read replacement leaves native full-folio bio setup, task reference, completion status and unlock unchanged; a trusted replacing callback must supply the full folio contents or error and perform completion/unlock, with the provided device-relative start-sector adjustment. Keep separate read/write capabilities for source customization; 14b3570de295 makes read dispatch and both cacheless callers test only the read bit. Ordinary swapon still sets both bits, and filesystem I/O keeps precedence. Extracted actual dispatch functions pass 387 flag/callback/early-completion/PSI-cleanup cases with host shims and UBSan, including the old write-only false match. Native write errors redirty/clear reclaim/end writeback and read errors leave folios not uptodate before unlocking. Native zeromap partial-folio failure, zswap failures, and PSI/delay cleanup remain. No actual block I/O, kernel PSI, fault race or callback execution tested. Complete header delta reviewed against page_io, swap_state, vmscan and kernel/power/swap.c. Separate read/write bit definitions retain the combined setter and do not change userspace swap flags; 14b3570de295 uses the read bit consistently in read and cacheless paths. Added reclaim_pages/__reclaim_pages and swap_cache_del_folio declarations match retained generic source APIs and their reviewed list/folio ownership. alloc_swapdev_block declaration matches the existing hibernation implementation/export and its callers; no hibernation platform enablement is added. Native LTS swap types, counts and layouts remain; no historical binary ABI layout retained.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "14b3570de295499622b13a969dd5c7ed54c5dea3"
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "commit": "13c32ca2755206617f8bcbf28fc92cfbe773904d",
+    "disposition": "omitted-current-target",
+    "rationale": "8e8cbee1ce28 omits memsize reporting and report-only counters for the current SDK target. Full ACK/LTS/port deltas, all counter readers and call sites, report registration gate and actual built configuration reviewed. Both procfs/debugfs registration are under CONFIG_DEBUG_FS && CONFIG_ARCH_KEEP_MEMBLOCK; the SDK has DEBUG_FS=y but no ARCH_KEEP_MEMBLOCK. Its only x86 selector is INTEL_TDX_HOST, a different host role not added for this guest. Thus changing memblock_memsize=procfs/debugfs cannot expose the report here. Counter values do not feed allocation, page release or native sysinfo. This is a positive compiled-target boundary, not a failed-consumer-search conclusion. Native LTS memory handling and diagnostics remain. Requested-size versus actual-reservation accounting, report mutation/concurrency and 64-KiB sampling are not certified for future targets; those diagnostics are absent. No architecture is enabled to make the report available. DT discovery/recording and early-param-only accounting are likewise part of this report; no additional boot parameter behavior is required. The feature was provisionally integrated earlier and is removed in the recorded result, rather than claiming it was never present. Local commit-message links were not visited.",
+    "result_commits": [
+      "8e8cbee1ce28e93ceb1198d30c8c89bb341551c1"
+    ],
+    "review_status": "reviewed",
+    "feature_patch_sha256": "0273503e7283b53c5e6d97469ce4d59923a59970d68280c10482df4c8ce3bcad"
+  },
+  {
+    "commit": "13293206f1836414cd965618706c26f60eebf2af",
+    "disposition": "omitted-current-target",
+    "rationale": "8e8cbee1ce28 omits memsize reporting and report-only counters for the current SDK target. Full ACK/LTS/port deltas, all counter readers and call sites, report registration gate and actual built configuration reviewed. Both procfs/debugfs registration are under CONFIG_DEBUG_FS && CONFIG_ARCH_KEEP_MEMBLOCK; the SDK has DEBUG_FS=y but no ARCH_KEEP_MEMBLOCK. Its only x86 selector is INTEL_TDX_HOST, a different host role not added for this guest. Thus changing memblock_memsize=procfs/debugfs cannot expose the report here. Counter values do not feed allocation, page release or native sysinfo. This is a positive compiled-target boundary, not a failed-consumer-search conclusion. Native LTS memory handling and diagnostics remain. Requested-size versus actual-reservation accounting, report mutation/concurrency and 64-KiB sampling are not certified for future targets; those diagnostics are absent. No architecture is enabled to make the report available. DT discovery/recording and early-param-only accounting are likewise part of this report; no additional boot parameter behavior is required. The feature was provisionally integrated earlier and is removed in the recorded result, rather than claiming it was never present. Local commit-message links were not visited.",
+    "result_commits": [
+      "8e8cbee1ce28e93ceb1198d30c8c89bb341551c1"
+    ],
+    "review_status": "reviewed",
+    "feature_patch_sha256": "9ec4b4dcf622259c30b5cbeb2bff36e9f7415761c3d2f9020f7e2af00d863c9d"
+  },
+  {
+    "commit": "958f1ac05875172597bf204dabcdcb559e321b6a",
+    "disposition": "omitted-current-target",
+    "rationale": "8e8cbee1ce28 omits memsize reporting and report-only counters for the current SDK target. Full ACK/LTS/port deltas, all counter readers and call sites, report registration gate and actual built configuration reviewed. Both procfs/debugfs registration are under CONFIG_DEBUG_FS && CONFIG_ARCH_KEEP_MEMBLOCK; the SDK has DEBUG_FS=y but no ARCH_KEEP_MEMBLOCK. Its only x86 selector is INTEL_TDX_HOST, a different host role not added for this guest. Thus changing memblock_memsize=procfs/debugfs cannot expose the report here. Counter values do not feed allocation, page release or native sysinfo. This is a positive compiled-target boundary, not a failed-consumer-search conclusion. Native LTS memory handling and diagnostics remain. Requested-size versus actual-reservation accounting, report mutation/concurrency and 64-KiB sampling are not certified for future targets; those diagnostics are absent. No architecture is enabled to make the report available. DT discovery/recording and early-param-only accounting are likewise part of this report; no additional boot parameter behavior is required. The feature was provisionally integrated earlier and is removed in the recorded result, rather than claiming it was never present. Local commit-message links were not visited.",
+    "result_commits": [
+      "8e8cbee1ce28e93ceb1198d30c8c89bb341551c1"
+    ],
+    "review_status": "reviewed",
+    "feature_patch_sha256": "d276089999794b3ac3d40b7b3fc39f6a56ac71a55a6b6181d174d37ac1eecd8d"
+  },
+  {
+    "commit": "bd7b76d8977f3fde057f54b421e082466448a43c",
+    "disposition": "omitted-current-target",
+    "rationale": "8e8cbee1ce28 omits memsize reporting and report-only counters for the current SDK target. Full ACK/LTS/port deltas, all counter readers and call sites, report registration gate and actual built configuration reviewed. Both procfs/debugfs registration are under CONFIG_DEBUG_FS && CONFIG_ARCH_KEEP_MEMBLOCK; the SDK has DEBUG_FS=y but no ARCH_KEEP_MEMBLOCK. Its only x86 selector is INTEL_TDX_HOST, a different host role not added for this guest. Thus changing memblock_memsize=procfs/debugfs cannot expose the report here. Counter values do not feed allocation, page release or native sysinfo. This is a positive compiled-target boundary, not a failed-consumer-search conclusion. Native LTS memory handling and diagnostics remain. Requested-size versus actual-reservation accounting, report mutation/concurrency and 64-KiB sampling are not certified for future targets; those diagnostics are absent. No architecture is enabled to make the report available. DT discovery/recording and early-param-only accounting are likewise part of this report; no additional boot parameter behavior is required. The feature was provisionally integrated earlier and is removed in the recorded result, rather than claiming it was never present. Local commit-message links were not visited.",
+    "result_commits": [
+      "8e8cbee1ce28e93ceb1198d30c8c89bb341551c1"
+    ],
+    "review_status": "reviewed",
+    "feature_patch_sha256": "d0d9be09bd554139ee3b4e4a3e89b3b0c4dcfcfa6cc5ad4ec1c49072dc103d28"
+  },
+  {
+    "commit": "763161b2438081adfe7d4cb294c18e1f00b1277c",
+    "disposition": "omitted-current-target",
+    "rationale": "8e8cbee1ce28 omits memsize reporting and report-only counters for the current SDK target. Full ACK/LTS/port deltas, all counter readers and call sites, report registration gate and actual built configuration reviewed. Both procfs/debugfs registration are under CONFIG_DEBUG_FS && CONFIG_ARCH_KEEP_MEMBLOCK; the SDK has DEBUG_FS=y but no ARCH_KEEP_MEMBLOCK. Its only x86 selector is INTEL_TDX_HOST, a different host role not added for this guest. Thus changing memblock_memsize=procfs/debugfs cannot expose the report here. Counter values do not feed allocation, page release or native sysinfo. This is a positive compiled-target boundary, not a failed-consumer-search conclusion. Native LTS memory handling and diagnostics remain. Requested-size versus actual-reservation accounting, report mutation/concurrency and 64-KiB sampling are not certified for future targets; those diagnostics are absent. No architecture is enabled to make the report available. DT discovery/recording and early-param-only accounting are likewise part of this report; no additional boot parameter behavior is required. The feature was provisionally integrated earlier and is removed in the recorded result, rather than claiming it was never present. Local commit-message links were not visited.",
+    "result_commits": [
+      "8e8cbee1ce28e93ceb1198d30c8c89bb341551c1"
+    ],
+    "review_status": "reviewed",
+    "feature_patch_sha256": "9dde26f10876f28cfe922fb46a311a6890973815efc8932052b8c63f5b1c4f89"
+  },
+  {
+    "commit": "6e3933b9b3bc02e4f5fc11f6aaf8e840948fd34e",
+    "disposition": "omitted-current-target",
+    "rationale": "8e8cbee1ce28 omits memsize reporting and report-only counters for the current SDK target. Full ACK/LTS/port deltas, all counter readers and call sites, report registration gate and actual built configuration reviewed. Both procfs/debugfs registration are under CONFIG_DEBUG_FS && CONFIG_ARCH_KEEP_MEMBLOCK; the SDK has DEBUG_FS=y but no ARCH_KEEP_MEMBLOCK. Its only x86 selector is INTEL_TDX_HOST, a different host role not added for this guest. Thus changing memblock_memsize=procfs/debugfs cannot expose the report here. Counter values do not feed allocation, page release or native sysinfo. This is a positive compiled-target boundary, not a failed-consumer-search conclusion. Native LTS memory handling and diagnostics remain. Requested-size versus actual-reservation accounting, report mutation/concurrency and 64-KiB sampling are not certified for future targets; those diagnostics are absent. No architecture is enabled to make the report available. DT discovery/recording and early-param-only accounting are likewise part of this report; no additional boot parameter behavior is required. The feature was provisionally integrated earlier and is removed in the recorded result, rather than claiming it was never present. Local commit-message links were not visited.",
+    "result_commits": [
+      "8e8cbee1ce28e93ceb1198d30c8c89bb341551c1"
+    ],
+    "review_status": "reviewed",
+    "feature_patch_sha256": "34ace02e5ed64d21bc59cd1041b15e9a0f5694e5ecbc0c10205341c36a70aba9"
+  },
+  {
+    "commit": "c30447a460c4a93077160fa3030a66d1f6c9527b",
+    "disposition": "omitted-current-target",
+    "rationale": "8e8cbee1ce28 omits memsize reporting and report-only counters for the current SDK target. Full ACK/LTS/port deltas, all counter readers and call sites, report registration gate and actual built configuration reviewed. Both procfs/debugfs registration are under CONFIG_DEBUG_FS && CONFIG_ARCH_KEEP_MEMBLOCK; the SDK has DEBUG_FS=y but no ARCH_KEEP_MEMBLOCK. Its only x86 selector is INTEL_TDX_HOST, a different host role not added for this guest. Thus changing memblock_memsize=procfs/debugfs cannot expose the report here. Counter values do not feed allocation, page release or native sysinfo. This is a positive compiled-target boundary, not a failed-consumer-search conclusion. Native LTS memory handling and diagnostics remain. Requested-size versus actual-reservation accounting, report mutation/concurrency and 64-KiB sampling are not certified for future targets; those diagnostics are absent. No architecture is enabled to make the report available. DT discovery/recording and early-param-only accounting are likewise part of this report; no additional boot parameter behavior is required. The feature was provisionally integrated earlier and is removed in the recorded result, rather than claiming it was never present. Local commit-message links were not visited.",
+    "result_commits": [
+      "8e8cbee1ce28e93ceb1198d30c8c89bb341551c1"
+    ],
+    "review_status": "reviewed",
+    "feature_patch_sha256": "a2aa42f960a84c7b9252dcd8f2aefd76cc51d0a09e10d52a2b591fe70a615d13"
+  },
+  {
+    "commit": "772865c7f47aec01cb92651359ddb1945d9c6eea",
+    "disposition": "omitted-current-target",
+    "rationale": "8e8cbee1ce28 omits memsize reporting and report-only counters for the current SDK target. Full ACK/LTS/port deltas, all counter readers and call sites, report registration gate and actual built configuration reviewed. Both procfs/debugfs registration are under CONFIG_DEBUG_FS && CONFIG_ARCH_KEEP_MEMBLOCK; the SDK has DEBUG_FS=y but no ARCH_KEEP_MEMBLOCK. Its only x86 selector is INTEL_TDX_HOST, a different host role not added for this guest. Thus changing memblock_memsize=procfs/debugfs cannot expose the report here. Counter values do not feed allocation, page release or native sysinfo. This is a positive compiled-target boundary, not a failed-consumer-search conclusion. Native LTS memory handling and diagnostics remain. Requested-size versus actual-reservation accounting, report mutation/concurrency and 64-KiB sampling are not certified for future targets; those diagnostics are absent. No architecture is enabled to make the report available. DT discovery/recording and early-param-only accounting are likewise part of this report; no additional boot parameter behavior is required. The feature was provisionally integrated earlier and is removed in the recorded result, rather than claiming it was never present. Local commit-message links were not visited.",
+    "result_commits": [
+      "8e8cbee1ce28e93ceb1198d30c8c89bb341551c1"
+    ],
+    "review_status": "reviewed",
+    "feature_patch_sha256": "9150d3f9da71b86d181ccb3645c32eb04e49250199ff57088ed28cd10e5a48f6"
+  },
+  {
+    "commit": "f8a7de807bb646e612daabeb2cf6f51607652df9",
+    "disposition": "omitted-current-target",
+    "rationale": "8e8cbee1ce28 omits memsize reporting and report-only counters for the current SDK target. Full ACK/LTS/port deltas, all counter readers and call sites, report registration gate and actual built configuration reviewed. Both procfs/debugfs registration are under CONFIG_DEBUG_FS && CONFIG_ARCH_KEEP_MEMBLOCK; the SDK has DEBUG_FS=y but no ARCH_KEEP_MEMBLOCK. Its only x86 selector is INTEL_TDX_HOST, a different host role not added for this guest. Thus changing memblock_memsize=procfs/debugfs cannot expose the report here. Counter values do not feed allocation, page release or native sysinfo. This is a positive compiled-target boundary, not a failed-consumer-search conclusion. Native LTS memory handling and diagnostics remain. Requested-size versus actual-reservation accounting, report mutation/concurrency and 64-KiB sampling are not certified for future targets; those diagnostics are absent. No architecture is enabled to make the report available. DT discovery/recording and early-param-only accounting are likewise part of this report; no additional boot parameter behavior is required. The feature was provisionally integrated earlier and is removed in the recorded result, rather than claiming it was never present. Local commit-message links were not visited.",
+    "result_commits": [
+      "8e8cbee1ce28e93ceb1198d30c8c89bb341551c1"
+    ],
+    "review_status": "reviewed",
+    "feature_patch_sha256": "3fad90e32a418e0a0c16ffb6b7ffe099701240e268b3a4f6503375d06c3cd178"
+  },
+  {
+    "commit": "ffc7f741488c632042fd417b22168e40d39a1d91",
+    "disposition": "omitted-current-target",
+    "rationale": "8e8cbee1ce28 omits memsize reporting and report-only counters for the current SDK target. Full ACK/LTS/port deltas, all counter readers and call sites, report registration gate and actual built configuration reviewed. Both procfs/debugfs registration are under CONFIG_DEBUG_FS && CONFIG_ARCH_KEEP_MEMBLOCK; the SDK has DEBUG_FS=y but no ARCH_KEEP_MEMBLOCK. Its only x86 selector is INTEL_TDX_HOST, a different host role not added for this guest. Thus changing memblock_memsize=procfs/debugfs cannot expose the report here. Counter values do not feed allocation, page release or native sysinfo. This is a positive compiled-target boundary, not a failed-consumer-search conclusion. Native LTS memory handling and diagnostics remain. Requested-size versus actual-reservation accounting, report mutation/concurrency and 64-KiB sampling are not certified for future targets; those diagnostics are absent. No architecture is enabled to make the report available. DT discovery/recording and early-param-only accounting are likewise part of this report; no additional boot parameter behavior is required. The feature was provisionally integrated earlier and is removed in the recorded result, rather than claiming it was never present. Local commit-message links were not visited.",
+    "result_commits": [
+      "8e8cbee1ce28e93ceb1198d30c8c89bb341551c1"
+    ],
+    "review_status": "reviewed",
+    "feature_patch_sha256": "50bd398ab0467a7183ace2defaa393191497ee3fcba81b2be6bde98e1b382cbc"
+  },
+  {
+    "commit": "072e0f68d1fe520c676146dfe87f9fc483564c7e",
+    "disposition": "omitted-current-target",
+    "rationale": "8e8cbee1ce28 omits memsize reporting and report-only counters for the current SDK target. Full ACK/LTS/port deltas, all counter readers and call sites, report registration gate and actual built configuration reviewed. Both procfs/debugfs registration are under CONFIG_DEBUG_FS && CONFIG_ARCH_KEEP_MEMBLOCK; the SDK has DEBUG_FS=y but no ARCH_KEEP_MEMBLOCK. Its only x86 selector is INTEL_TDX_HOST, a different host role not added for this guest. Thus changing memblock_memsize=procfs/debugfs cannot expose the report here. Counter values do not feed allocation, page release or native sysinfo. This is a positive compiled-target boundary, not a failed-consumer-search conclusion. Native LTS memory handling and diagnostics remain. Requested-size versus actual-reservation accounting, report mutation/concurrency and 64-KiB sampling are not certified for future targets; those diagnostics are absent. No architecture is enabled to make the report available. DT discovery/recording and early-param-only accounting are likewise part of this report; no additional boot parameter behavior is required. The feature was provisionally integrated earlier and is removed in the recorded result, rather than claiming it was never present. Local commit-message links were not visited.",
+    "result_commits": [
+      "8e8cbee1ce28e93ceb1198d30c8c89bb341551c1"
+    ],
+    "review_status": "reviewed",
+    "feature_patch_sha256": "b53b9b5357c09efc893e56247ed41e35c9b6219fa5962f7343ac76377f63b671"
+  },
+  {
+    "commit": "e501b42d39e7c088623b7ab375252b9ce1328eda",
+    "disposition": "omitted-current-target",
+    "rationale": "8e8cbee1ce28 omits memsize reporting and report-only counters for the current SDK target. Full ACK/LTS/port deltas, all counter readers and call sites, report registration gate and actual built configuration reviewed. Both procfs/debugfs registration are under CONFIG_DEBUG_FS && CONFIG_ARCH_KEEP_MEMBLOCK; the SDK has DEBUG_FS=y but no ARCH_KEEP_MEMBLOCK. Its only x86 selector is INTEL_TDX_HOST, a different host role not added for this guest. Thus changing memblock_memsize=procfs/debugfs cannot expose the report here. Counter values do not feed allocation, page release or native sysinfo. This is a positive compiled-target boundary, not a failed-consumer-search conclusion. Native LTS memory handling and diagnostics remain. Requested-size versus actual-reservation accounting, report mutation/concurrency and 64-KiB sampling are not certified for future targets; those diagnostics are absent. No architecture is enabled to make the report available. DT discovery/recording and early-param-only accounting are likewise part of this report; no additional boot parameter behavior is required. The feature was provisionally integrated earlier and is removed in the recorded result, rather than claiming it was never present. Local commit-message links were not visited.",
+    "result_commits": [
+      "8e8cbee1ce28e93ceb1198d30c8c89bb341551c1"
+    ],
+    "review_status": "reviewed",
+    "feature_patch_sha256": "71167eded827dc7b7fd2a7eef8aef876cf72dd2b63be49e88f5c715cec050f5f"
+  },
+  {
+    "commit": "5c237e268f0efca9cd0a4ced100954717d85803a",
+    "disposition": "omitted-current-target",
+    "rationale": "8e8cbee1ce28 omits memsize reporting and report-only counters for the current SDK target. Full ACK/LTS/port deltas, all counter readers and call sites, report registration gate and actual built configuration reviewed. Both procfs/debugfs registration are under CONFIG_DEBUG_FS && CONFIG_ARCH_KEEP_MEMBLOCK; the SDK has DEBUG_FS=y but no ARCH_KEEP_MEMBLOCK. Its only x86 selector is INTEL_TDX_HOST, a different host role not added for this guest. Thus changing memblock_memsize=procfs/debugfs cannot expose the report here. Counter values do not feed allocation, page release or native sysinfo. This is a positive compiled-target boundary, not a failed-consumer-search conclusion. Native LTS memory handling and diagnostics remain. Requested-size versus actual-reservation accounting, report mutation/concurrency and 64-KiB sampling are not certified for future targets; those diagnostics are absent. No architecture is enabled to make the report available. DT discovery/recording and early-param-only accounting are likewise part of this report; no additional boot parameter behavior is required. The feature was provisionally integrated earlier and is removed in the recorded result, rather than claiming it was never present. Local commit-message links were not visited.",
+    "result_commits": [
+      "8e8cbee1ce28e93ceb1198d30c8c89bb341551c1"
+    ],
+    "review_status": "reviewed",
+    "feature_patch_sha256": "056966bc49c97b38c52f335e406c9c7b6dba03a17ffcb2234bbc05ecf13a8bad"
+  },
+  {
+    "commit": "809eb65377cb9606271670e1a5ccb0c52a8c5130",
+    "disposition": "omitted-current-target",
+    "rationale": "8e8cbee1ce28 omits memsize reporting and report-only counters for the current SDK target. Full ACK/LTS/port deltas, all counter readers and call sites, report registration gate and actual built configuration reviewed. Both procfs/debugfs registration are under CONFIG_DEBUG_FS && CONFIG_ARCH_KEEP_MEMBLOCK; the SDK has DEBUG_FS=y but no ARCH_KEEP_MEMBLOCK. Its only x86 selector is INTEL_TDX_HOST, a different host role not added for this guest. Thus changing memblock_memsize=procfs/debugfs cannot expose the report here. Counter values do not feed allocation, page release or native sysinfo. This is a positive compiled-target boundary, not a failed-consumer-search conclusion. Native LTS memory handling and diagnostics remain. Requested-size versus actual-reservation accounting, report mutation/concurrency and 64-KiB sampling are not certified for future targets; those diagnostics are absent. No architecture is enabled to make the report available. DT discovery/recording and early-param-only accounting are likewise part of this report; no additional boot parameter behavior is required. The feature was provisionally integrated earlier and is removed in the recorded result, rather than claiming it was never present. Local commit-message links were not visited.",
+    "result_commits": [
+      "8e8cbee1ce28e93ceb1198d30c8c89bb341551c1"
+    ],
+    "review_status": "reviewed",
+    "feature_patch_sha256": "4785adb9691412dd9fd569fac2674268a98837edb6c0be8c698218b82e1b2e38"
   }
 ]

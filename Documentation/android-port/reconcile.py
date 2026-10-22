@@ -12,6 +12,7 @@ def nonblank_blob(oid):
   blob_cache[oid]=b'\n'.join(line.rstrip() for line in content.splitlines() if line.strip())
  return blob_cache[oid]
 def omitted(p):
+ if p in ('mm/mm_init.c','include/linux/memblock.h'):return 'sdk-memsize-report'
  if p.startswith('drivers/android/debug_kinfo'):return 'physical-device'
  if p=='kernel/irq/irqdomain.c':return 'lts-native-source-api'
  if p in ('drivers/pci/pci-acpi.c','drivers/pci/probe.c','drivers/thunderbolt/tb.c'):return 'physical-device'
@@ -125,7 +126,7 @@ for r in rows:
   omitted=any(k not in equivalent|{'ported-net-source'} for k in groups)
   if active: disposition='partially-adapted-net-state' if omitted else 'adapted-net-state'
   elif set(groups)<=equivalent:disposition='superseded-no-residual-code'
-  elif set(groups)<=equivalent|{'physical-device','other-architecture','protected-virtualization','build-test-metadata','historical-kmi'}:disposition='omitted-current-target'
+  elif set(groups)<=equivalent|{'physical-device','other-architecture','protected-virtualization','build-test-metadata','historical-kmi','sdk-memsize-report'}:disposition='omitted-current-target'
   else:disposition='reconciled-to-lts'
   if len(r['parents'])>1:disposition='merge-resolution-'+disposition
   r['disposition']=disposition;r['net_reconciled']=True

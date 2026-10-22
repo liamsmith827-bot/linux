@@ -1781,3 +1781,258 @@ Build 56 completed at 769c2a3ea3f5 with both kernel images, 100 common and
 certificate, the altered-payload control was rejected, and 659 protected exports
 plus module flag/CRC tables matched. Compilation and artifacts were checked;
 no runtime memory-pressure or migration test was performed.
+
+38e13dcb4814 fixes restricted-CMA PCP integration. The original fallback overwrote
+the caller's list pointer after an empty CMA lookup; ordinary pages could then
+refill the CMA list while existing movable cache entries were ignored. Preserve
+the original pointer. Give CMA a separate high-order list instead of sharing the
+movable list, preserving the stated __GFP_CMA restriction at all PCP orders. Also
+use the ordinary fallback-type bound in init_pageblock_migratetype so disabling
+mobility grouping cannot relabel a CMA block as unmovable. Native allocation,
+watermark, isolation and free validation remain. This changes internal layout,
+which rebuilt modules consume; preserving historical KMI is out of scope.
+The extracted selection/setup checks cover CMA/THP enabled and disabled and all
+supported PCP high orders, reproducing all three old-source defects. No actual
+CMA reservation or buddy-allocator concurrency was exercised.
+
+72565355d3de resets vendor decisions per zone, folio, memcg and allocator retry,
+initializes reclaim progress, and uses a page returned by the retry callback
+instead of discarding it. MGLRU vendor reclaim now shares the native zero-progress
+stop. This avoids stale skips and repeated no-progress work; trusted callbacks
+still own their chosen policy and supplied pages' allocation/zeroing contracts.
+The extracted MGLRU control checks pass 429 scan/protection/rotation/progress
+cases and reproduce the earlier zero-progress repetition. Simple per-iteration
+initializations were checked by source review and compilation, not a running
+memory-pressure test. Build 57 checks both source commits with the original
+emulator workflow.
+
+The retained MGLRU behavior has concrete Android relevance. Local lmkd/reaper.cpp
+calls process_mrelease; mmgrab/mmdrop protects the walker mm_struct without adding
+an mm_users reference that delays reaping. The mm-list lock protects acquisition,
+mmap read locking protects page-table/VMA walking, and exit_mmap takes its write
+lock before destroying the tree. Offlined memcg pacing/rotation matches Android's
+per-process cgroups (libprocessgroup/processgroup.cpp), retaining minimum/low
+protection and a bounded residual scan. Native LTS large-folio reference checks,
+dirty/writeback reclaim handling and tasks-RCU progress remain. Executable-file
+and MADV_WILLNEED promotion preserve ACK's memory policy; their effect on actual
+latency or killing was not measured. Root shrinkers run before memcg-specific
+ones; shrink_slab's native root/non-root routing and reference rules remain.
+
+Reclaim hooks are trusted kernel extension points. In particular, keep_reclaimed_folio
+runs after reference freezing and must restore the supplied reference count when
+it keeps the folio; asynchronous writeback/list bypass callbacks must take over
+the skipped list/reference work. MADV_PAGEOUT private callbacks must consume or
+move remaining list entries and maintain their begin/end lifetime. These are
+explicit source contracts, not permissions granted to userspace. Zeroing and
+free-validation bypass hooks likewise require replacement implementation of the
+skipped obligations; the default paths keep native LTS checks. No claim is made
+that arbitrary vendor callback code is safe. All evidence was local; commit-message
+lkml/lore links were read as text and were not visited.
+
+Build 57 completed at 72565355d3de with both kernel images, 100 common and
+45 virtual-device modules. All 145 signatures verified, the altered-payload
+control was rejected, and 659 protected exports plus module flag/CRC tables
+matched. No kernel runtime test was performed.
+
+133e0283da81 splits ACK 816567b17866: keep the lru_disable_count and
+lru_cache_disable module exports, but restore the exact native LTS function.
+The ACK optimization publishes the disable count after synchronization/draining,
+leaving a window for concurrent LRU or buffer cache insertion while draining.
+The native implementation publishes it first and waits out preexisting readers
+before draining. Preserving its synchronization effect is more important than
+this internal optimization; the Android source API remains available. Evidence:
+full local ACK patch, lru_cache_disabled readers in folio_batch_add_and_move and
+fs/buffer.c, and native function comparison. Source review and compilation are
+the checks for this native restoration, not a runtime concurrency test.
+
+6dcd44cc22af guards the memblock_end_of_DRAM export with ARCH_KEEP_MEMBLOCK,
+matching the existing memblock_free export guard. The actual SDK disables ARCH_KEEP_MEMBLOCK, so memblock_discard can free
+dynamically allocated region arrays that the function dereferences. MEMORY_HOTPLUG=y
+keeps its __meminit code/static data; the concrete SDK hazard is therefore freed
+backing arrays, not necessarily freed code. Without hotplug, code also has init
+lifetime. This corrects the broader wording in the commit message. The built-in early
+boot function remains available; a persistent module API is exposed only when
+its storage actually persists. Optional memsize reporting and its counter
+accuracy remain under separate review and are not certified by this export fix.
+Build 58 checks the LRU and export changes. No remote source was accessed.
+
+Build 58 completed at 6dcd44cc22af with both kernel images, 100 common and
+45 virtual-device modules. All 145 signatures verified with the build certificate,
+the altered-payload control was rejected, and 659 protected exports plus all
+module flag/CRC tables matched. These are compilation/artifact checks.
+
+## Swap I/O source policy and read capability
+
+14b3570de295 adapts ACK 58ef7fcc48ec to use its separate read capability in
+swap_read_folio, do_swap_page and shmem_swapin_folio. The combined setter is
+unchanged, so ordinary swapon still enables both capabilities. A write-only flag
+previously selected synchronous reads and cacheless allocation unintentionally;
+its absence now selects the normal swapcache/async path. Filesystem swap retains
+precedence. Native folio ownership, memcg charging, exclusivity checks and error
+completion remain. Independent timing hooks now receive initialized cookies.
+
+The synchronous read replacement hook is a trusted kernel source contract:
+callbacks must provide a complete folio or report an error and perform the
+completion/unlock obligations they replace. Native callbacks leave the full-size
+bio, task reference and completion processing intact. Timing end observers have
+a caller-owned folio reference, including zswap writeback and read readahead.
+No SDK callback implementation is assumed; generic vendor interfaces are retained.
+
+check_swap_io.py executes the actual dispatch functions with host I/O and tracing
+shims under UBSan. All 387 combinations passed, including read-only/write-only
+flags, filesystem precedence, independently registered timing callbacks, early
+zeromap/zswap success/failure and pressure-accounting cleanup. The old write-only
+false match is reproduced as a control. Real bios, PSI, completion races and
+Android runtime were not tested. The two cacheless callers are also checked for
+the same read capability. All evidence is local.
+
+## UFFDIO_MOVE and reverse-mapping locks
+
+ACK 05fd7cf26c48 and 8f8f7e4d811c are retained as a coordinated change. GrapheneOS
+ART runtime/gc/collector/mark_compact.cc positively uses UFFDIO_MOVE for compacting
+GC and probes its availability. Anonymous reverse-map walkers now lock the folio,
+so moving an exclusive folio between different anon_vma roots can serialize on
+that folio instead of the source anon_vma write lock. Reclaim/page-idle/DAMON
+trylock failures retain best-effort behavior; memory-failure process collection
+locks the folio. Existing migration, split, unmap and mkclean walkers already
+hold it. RCU, anon_vma references and tree read locks still protect object lifetime.
+
+56b1b2fc24a3 completes the huge-PMD move portion of this contract. Source comparison
+confirms it matches the normalized ACK function with the two native LTS migration
+changes retained: the updated predicate and waiting on the real source PMD rather
+than a stack copy. PTE/PMD revalidation, exclusivity, DMA-pin checks and rollback,
+notifier/TLB handling and protection reconstruction remain. The PTE move path also
+keeps the LTS stale-EAGAIN reset. This removes a lock only with the corresponding
+walker locking in place; importing the lock removal alone would be unsafe.
+
+The huge-page review retains native LTS zero-folio publication/reclamation
+synchronization, deferred-split queue/refcount fixes, dirty PMD propagation,
+mapping unlock before dropping the inode pin, hwpoison flag ordering and memcg
+charging. Generic split policy hooks are kept with their native locking/context
+contracts. A bypass callback must perform the omitted split correctly or return
+an error; it does not excuse invalid refcounts, XArray state or list ownership.
+
+Evidence is full local source/patch and caller review plus function comparisons
+in evidence/uffd-rmap-source-check.json. No concurrent UFFD/reclaim, memory-failure
+injection, Android GC runtime or performance measurement was executed. Links in
+local commit messages were not visited.
+
+## Memsize current-target selection
+
+8e8cbee1ce28 removes the optional ACK memsize report and its accounting calls.
+Both report interfaces, including procfs, are compiled inside DEBUG_FS &&
+ARCH_KEEP_MEMBLOCK. The existing SDK configuration enables DEBUG_FS but does not
+retain memblock. The only x86 selector for ARCH_KEEP_MEMBLOCK is INTEL_TDX_HOST,
+a separate host role outside this ordinary guest target. Neither memsize boot
+parameter value can expose a report in the requested build. Full counter-reader
+review shows these values feed only the report, not allocation, actual page
+release or native memory statistics. This evidence, rather than absence of a
+userspace search hit, supports the current-target omission.
+
+The report's counters used requested ranges rather than actual reserved/removed
+bytes; concurrent reporting mutated shared region records, and late-free detection
+assumed 64-KiB sampling. Those concerns are not certified as safe for a future
+target. The report is absent here, including its DT discovery, early bookkeeping
+and nonfunctional report parameter. No platform is added to enable it.
+
+Native LTS memblock implementation is restored except for the two existing
+ARCH_KEEP_MEMBLOCK-guarded generic exports. mm_init.c and memblock.h are exactly
+native LTS, preserving hotplug allocation failure/counter fixes and device memmap
+initialization. free_reserved_area and dma_contiguous_reserve_area also regain
+their native bodies. The independently retained CMA/GCMA bridge/export remains.
+No upstream fix, allocator boundary or permissions check is weakened. Compilation
+is the verification for removing the now-unreferenced reporting code; no boot or
+report runtime test was performed. All evidence was local.
+
+Build 59 completed at 56b1b2fc24a3 with both kernel images, 100 common and
+45 virtual-device modules. All 145 signatures verified, the altered-payload
+control failed verification, and all module flag/CRC tables plus 659 protected
+exports matched. This validates compilation/artifacts for swap and UFFD source
+changes; later memsize removal is checked separately in build 60.
+
+## Process-memory denial, OOM and allocation diagnostics
+
+907c42c0138b fixes an mm_users reference leak when ACK's process_vm access hook
+rejects a request. Native mm_access authorization still runs first; hook denial
+now drops its acquired mm before the task and temporary page array. This prevents
+repeated denied operations from pinning a target address space. The actual core
+function passes 38 host-shim tests for allocation/permission/hook failures and
+partial copies; the old implementation reproduces the leak as a control. Real
+ptrace/LSM access, page pinning and kernel races were not executed.
+
+The OOM review retains generic victim/reaper policy hooks with native task/mm
+lifetimes, eligibility and default behavior. Local lmkd sends SIGKILL and invokes
+process_mrelease. Signal-hook opt-in reaping still requires successful native
+permission checking/delivery and a task that will release its mm. NMI dump helpers
+use task trylocks and skip memcg traversal; the actual SDK has NUMA disabled. This
+is best-effort diagnostic source support, not proof of NMI safety on every config.
+
+SLUB/vmalloc/page-owner/percpu diagnostics and source APIs are retained without
+adding a hardware dump platform or historical binary layout. Iterating slab slots
+is not a complete snapshot of live objects, and callbacks run under list locks
+with IRQs disabled. Page extension users must retain their RCU lifetime; owner
+metadata is racy diagnostic data. Replacement allocator/free callbacks must meet
+the native size/alignment, initialized or frozen-reference, accounting and TLB
+contracts they take over. Defaults preserve native checks and cleanup.
+
+Native LTS NO_OBJ_EXT recursion handling, krealloc zeroing, hardened-usercopy
+cache merging, CPU-hotplug/sheaf and sysfs/debugfs lifetime fixes are retained.
+Vmalloc huge-page replacement retains LTS exclusion against ptdump. Zsmalloc keeps
+the native handle-inclusive size-class fix plus ACK's reverse-order lock release;
+nonmovable metadata excludes __GFP_CMA. No actual allocator-pressure race was run.
+
+A concrete formatting limit was found in local libmeminfo/sysmeminfo.cpp:
+ReadSlabInfo expects version 2.1 and exactly 16 row cells. Default slabinfo output
+is preserved; vendor callbacks that append columns would break that reader and
+are not claimed compatible. Vmalloc start/end observations are also not a paired
+resource-lifetime API: end reports successful allocations only. All source and
+consumer evidence in this review was local.
+
+Build 60 completed at 8e8cbee1ce28 using the unchanged emulator workflow.
+Both kernel images, 100 common and 45 virtual-device modules were generated.
+All 145 signatures verified against the build certificate; the tampered-payload
+control was rejected. All module flag/CRC tables and 659 protected exports
+matched. This checks the report omission; subsequent process_vm cleanup is
+being compiled separately in build 61.
+
+Build 61 completed at 7a6afb06646e with both kernel images, 100 common and
+45 virtual-device modules. All signatures verified and the tampered control was
+rejected; all flag/CRC tables and 659 protected exports matched. This verifies
+compilation/artifacts for process_vm cleanup and include cleanup, not runtime.
+
+## Memory hook argument transport
+
+3acc3712548b corrects two retained ACK memory hook interfaces.
+
+The MGLRU abort hook introduced by ACK 3ebe18284e11 declared reclaimed progress
+before the target but reversed them in TP_ARGS. The current native trace wrapper
+forwards arguments twice before static dispatch, so one directly called callback
+happens to see correct values. Multiple callbacks use an iterator with another
+forwarding step and see reversed values; non-static dispatch has the same issue.
+The corrected TP_ARGS makes policy inputs independent of callback count. This
+avoids decisions based on a mistaken reclaim target/progress without changing
+native reclaim behavior when no callback is registered. The separately retained
+extended hook and LTS reclaim fixes remain unchanged.
+
+ACK 108327bad812's contiguous-allocation failure hook narrows the end PFN to an
+unsigned int while both native endpoints are unsigned long. The corrected
+prototype preserves the full range on x86_64. Ordinary small SDK guests do not
+reach that truncation boundary, but this is the contract of the retained generic
+source API. A callback must rebuild with the corrected parameter type; historical
+module binaries are explicitly out of scope. This diagnostic hook cannot bypass
+the native isolation failure or turn it into successful allocation.
+
+check_hook_arguments.py scans all 765 declarations for argument order, accepting
+only the three documented block hooks' ignored-to-NULL adapters. It also compiles
+the actual native tracepoint wrapper/iterator macros with host dispatch shims:
+36 cases cover disabled/offline paths, one/two callbacks and 32/64-bit PFN ranges.
+The corrected headers pass; old-header controls reproduce both defects. This is
+argument transport validation, not live registration, RCU or static-call patching.
+No claim is made that argument-name matching validates every hook's semantic
+contract. All evidence was from local source; commit-message links were not opened.
+
+Build 62 completed at 3acc3712548b, manifest cb65420, with both kernel images,
+100 common and 45 virtual-device modules. All 145 signatures verified; the
+modified-payload control was rejected. All flag/CRC tables and 659 protected
+exports matched. This checks the memory-hook signature changes through the
+existing emulator build; no kernel callback or emulator was run.

@@ -89,5 +89,13 @@
       "dd1b8c5c86bb"
     ],
     "evidence": "Full local __dma_buf_account_task, preload, unaccount, fd_install, do_dup2, dma_buf_mmap/internal, __split_vma and copy_vma were examined. Preload may fail before finding an already existing record. fd_install/mmap/split/copy deliberately log and continue without a count; later close/unmap decrements any existing record, so failure can undercount other still-live references. These counters are statistics, separate from the native file/buffer lifetime references, but local lmkd uses them in victim sizing. Need decide whether to retain/document ACK best-effort OOM accounting or adapt failure tracking without changing successful mmap/fd-install contracts. No actual allocation fault, mmap or LMK test has run. Prior path review explicitly described nonfatal errors but did not establish balanced counts after such a failure. No source change for this question yet; no remote access."
+  },
+  {
+    "topic": "Memblock memsize optional reporting and accounting",
+    "status": "resolved current-target omission; report accuracy on other targets not verified",
+    "evidence": "8e8cbee1ce28 omits memsize reporting and report-only counters for the current SDK target. Full ACK/LTS/port deltas, all counter readers and call sites, report registration gate and actual built configuration reviewed. Both procfs/debugfs registration are under CONFIG_DEBUG_FS && CONFIG_ARCH_KEEP_MEMBLOCK; the SDK has DEBUG_FS=y but no ARCH_KEEP_MEMBLOCK. Its only x86 selector is INTEL_TDX_HOST, a different host role not added for this guest. Thus changing memblock_memsize=procfs/debugfs cannot expose the report here. Counter values do not feed allocation, page release or native sysinfo. This is a positive compiled-target boundary, not a failed-consumer-search conclusion. Native LTS memory handling and diagnostics remain. Requested-size versus actual-reservation accounting, report mutation/concurrency and 64-KiB sampling are not certified for future targets; those diagnostics are absent. No architecture is enabled to make the report available.",
+    "result_commits": [
+      "8e8cbee1ce28e93ceb1198d30c8c89bb341551c1"
+    ]
   }
 ]
