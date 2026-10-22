@@ -805,8 +805,11 @@ and PrimeCell ARM-AMBA GPIO selector. Their native LTS definitions remain in the
 tree. Generic DT pinctrl, regmap and GPIO APIs remain configured for vendor source
 customization; this is not a blanket removal of DT support or all optional drivers.
 The change removes platform-specific configuration glue without replacing LTS
-implementations or weakening a stable security fix. Build 30 will validate the
-resulting configuration and module set; it has not yet run at this checkpoint.
+implementations or weakening a stable security fix. Build 30 completed the unchanged workflow with 100 common and 45 virtual-device
+modules. Its generated configuration omits QCOM_SMEM_STATE while retaining
+PINCTRL_SINGLE, the shared regmap APIs and GKI_HACKS_TO_FIX. Every module signature
+was verified against the exact kernel certificate, with a rejected tampered-payload
+control. This validates compilation and artifacts, not runtime device behavior.
 
 A structural comparison of BUILD.bazel against pinned ACK finds 119 retained
 top-level statements: 117 are AST-identical, and two are adapted. The SDK kernel
@@ -832,6 +835,39 @@ The actual constants and DDK header archive used by that workflow are retained.
 
 See evidence/sdk-build-rule-structure.json for exact retained/omitted statements
 and evidence/sdk-build-rule-adaptations.patch for the two normalized changes.
-Successful builds through attempt 29 verify this build-rule selection; subsequent
+Successful builds through attempt 30 verify this build-rule selection; subsequent
 configuration changes require their own recorded build. URLs present in copied
 source comments were not accessed as remote resources.
+
+## Historical GKI configuration selections
+
+404 configuration-only candidates were reviewed against final ACK rather than
+replaying obsolete intermediate settings. Every changed x86 setting was parsed:
+571 distinct keys are involved, of which 443 remain explicitly set by final ACK.
+All 443 match both the port defconfig and build 30's generated configuration.
+The other 128 keys are no longer explicit in final ACK; their absence does not
+imply that their feature is disabled, since defaults or selections can enable it.
+The report records their actual build values as well. ARM64 configuration changes
+remain excluded by the x86 target. This closes the configuration changes only;
+the corresponding implementation candidates still require their own decisions.
+
+The native LTS KUNIT_DEBUGFS default preserves ACK's enabled debugfs test-results
+interface despite removing its redundant explicit line. KUNIT=m and
+KUNIT_DEBUGFS=y are verified in the build output, without executing the tests.
+Three Samsung UART configuration changes are excluded because the native Kconfig
+requires physical Samsung/Exynos/Apple/Artpec platform support or COMPILE_TEST,
+all absent from this SDK configuration. Native serial drivers are unchanged.
+Other defconfig differences, including protected virtualization, are not finalized
+by this configuration comparison.
+
+Android's BPF configuration has security implications: the retained setting
+`# CONFIG_BPF_UNPRIV_DEFAULT_OFF is not set` permits the kernel's unprivileged BPF
+interface by default. This exposes more verifier/JIT functionality than disabling
+it. The local pinned GrapheneOS Connectivity module's
+`bpf/loader/NetBpfLoad.cpp`, lines 1735–1743, explicitly sets
+`/proc/sys/kernel/unprivileged_bpf_disabled` to zero and treats failure on kernels
+at least 5.13 as fatal; the subsequent setup requires the BPF JIT and enables
+privileged JIT symbol export. Retain this demonstrated Android runtime contract
+and the native LTS BPF fixes. Android's additional access policy has not been
+runtime-tested here, so this review does not claim that every process can or
+cannot exercise those interfaces. No remote source was used for this review.

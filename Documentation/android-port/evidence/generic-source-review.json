@@ -4536,5 +4536,93 @@
     "normalized_delta_sha256": "0d5be14dc03bba4ec3e99dc8502f8d4086c4a47c043ab850a4cbca903e9fffd6",
     "ack_blob": "4233b7ea8200079b240c566c43e99d17e9616fd5",
     "lts_blob": null
+  },
+  "BUILD.bazel": {
+    "review_head": "c28e05cecf172a43e41a10d622b6b0f6e8c5ea2f",
+    "status": "reviewed-source-selection",
+    "rationale": "Retain SDK x86 kernel, source/header, module packaging and its selftest-distribution dependency closure. Structural comparison against ACK records 117 AST-identical statements and two adaptations out of 119 retained. The kernel rule removes old KMI/ABI enforcement/strict trimming and ARM64 AutoFDO data, adds SHA-256 signing fragment, and keeps protected-module names plus source-built DDK/module outputs. Timer-test input drops helpers.h absent from native LTS; tests compile in unchanged workflow. Omitted statements are other architectures/boards/Microdroid/crashdump, ABI checks, optional allmodconfig/analysis/DDK test rules and convenience aliases/install wrappers outside this closure. See sdk-build-rule-structure.json and SECURITY.md. Builds through 29 validate exact retained rule behavior for SDK artifacts, not other target labels or runtime tests.",
+    "normalized_delta_sha256": "f655ce7d5a769a2c00de8b7aa3f09e76200ec1d115c420c2c2a5a99d65bc5895",
+    "ack_blob": "3c8178ebce1f27f2c417e4aeaa00fc7001a96be6",
+    "lts_blob": null
+  },
+  "bazel/abi.bzl": {
+    "review_head": "c28e05cecf172a43e41a10d622b6b0f6e8c5ea2f",
+    "status": "reviewed-source-selection",
+    "rationale": "Retain exact ACK generic ABI-directory packaging helper used by cc_binary_with_abi for x86/x86_64 kernel selftests distributed by SDK workflow. Here ABI means userspace architecture, not vendor-module historical KMI. Rule creates native cc_binary and android_filegroup/pkg_files for requested target architectures; existing build verifies the selected outputs. ARM entries are generic helper metadata and no ARM kernel implementation is added.",
+    "normalized_delta_sha256": "42ce4af701bb47a225ba55dcaebc721c26abe91c6c71662a5ce72501e66c0290",
+    "ack_blob": "1d6f7709fb4c7c3a5a51af529d68a0cc85e11ec5",
+    "lts_blob": null
+  },
+  "bazel/modules.bzl": {
+    "review_head": "c28e05cecf172a43e41a10d622b6b0f6e8c5ea2f",
+    "status": "reviewed-source-selection",
+    "rationale": "Retain exact ACK public re-exports of get_gki_modules_list, get_kunit_modules_list and get_kunit_modules_superset. Existing external virtual-device mixed build consumes source module lists; this is module build infrastructure independent of historical binary ABI.",
+    "normalized_delta_sha256": "c3d5258b73d71d8d17e32dd73ae2bd720b16f1510ffd65c2a9f4e0c820d1245a",
+    "ack_blob": "a957027148890c9f5b76a139416dd9dee26ce54e",
+    "lts_blob": null
+  },
+  "bazel/modules_private.bzl": {
+    "review_head": "c28e05cecf172a43e41a10d622b6b0f6e8c5ea2f",
+    "status": "reviewed-source-selection",
+    "rationale": "Retain exact ACK list/selection/map_each implementation, including distinct common/x86_64 module selection and KUnit dependencies. The x86 workflow produces its expected 100 common modules. Protected list excludes zram/zsmalloc as ACK; protected-export handling is retained separately without strict historical import trimming. ARM-only module names occur in an architecture branch not selected by SDK and do not import their implementations. Module signatures and package lists are verified by recorded builds; no claim of runtime loading.",
+    "normalized_delta_sha256": "41403a425aeaa8063b4f0587b5a91da0f96dca3c95beb3ac51b26b05c234e3a3",
+    "ack_blob": "a461f00ae32df9d232e9075cab4be46d180a9a55",
+    "lts_blob": null
+  },
+  "modules.bzl": {
+    "review_head": "c28e05cecf172a43e41a10d622b6b0f6e8c5ea2f",
+    "status": "reviewed-source-selection",
+    "rationale": "Retain exact ACK deprecated public forwarding functions and warnings so existing manifests/external modules can use the old module-list load path without build instruction changes. Forwarding preserves arguments/results to bazel/modules.bzl; not historical vendor binary KMI.",
+    "normalized_delta_sha256": "86323a3a5553d6ae5bb24ef4a1a9531c6be1a95d0e1dfbb0f64859a82e978f59",
+    "ack_blob": "27f0ee295bcd44ad49c630dd992818d342ed99b0",
+    "lts_blob": null
+  },
+  "bazel/constants.scl": {
+    "review_head": "c28e05cecf172a43e41a10d622b6b0f6e8c5ea2f",
+    "status": "reviewed-source-selection",
+    "rationale": "Keep exact ACK Clang r584948c, Rust 1.91.1.p3 and NDK triples matching pinned manifest toolchains. Adapt BRANCH to lts-sdk-6.18 and KMI_GENERATION to empty so release naming does not advertise Android historical KMI compatibility. Source module version checking remains enabled with new layouts/CRCs. Verified by SDK build outputs and local version adaptation.",
+    "normalized_delta_sha256": "a21f326982a6906521aeef10dd987508cda093b9f0cc3edca7998716a45ace55",
+    "ack_blob": "43f76625eb9c8a9306458188a62c18a5de72aea3",
+    "lts_blob": null
+  },
+  "build.config.common": {
+    "review_head": "c28e05cecf172a43e41a10d622b6b0f6e8c5ea2f",
+    "status": "reviewed-source-selection",
+    "rationale": "Final ACK file only prints a deprecation/migration error and exits 1. The unchanged emulator workflow uses Bazel, not this removed legacy build.config entry. Keep native LTS absence; bazel/constants.scl remains available to actual SDK rules. This omits a deprecated failure stub, not required kernel compilation flags.",
+    "normalized_delta_sha256": "6139b9df5c2a42158020a27ab38f3364537afc1d68cd1ec13c5b661cdee8b790",
+    "ack_blob": "b81c14ed543ad3ad1dee173900dff4aaefcafe64",
+    "lts_blob": null
+  },
+  "build.config.constants": {
+    "review_head": "c28e05cecf172a43e41a10d622b6b0f6e8c5ea2f",
+    "status": "reviewed-source-selection",
+    "rationale": "Final ACK path is only a symlink to bazel/constants.scl for legacy build.config clients. The retained SDK Bazel rules use the actual constants path and compile successfully without this alias. Keep LTS absence for an unused legacy build interface; pinned toolchain constants themselves remain.",
+    "normalized_delta_sha256": "0f17e4735478e09b5d4e3d2224429d99373d5570a373c6d2344a35b46d60935a",
+    "ack_blob": "cc08ddcb5cbb543fc508dca51d14ad00d2b665b8",
+    "lts_blob": null
+  },
+  "bazel/test/BUILD.bazel": {
+    "review_head": "c28e05cecf172a43e41a10d622b6b0f6e8c5ea2f",
+    "status": "reviewed-source-selection",
+    "rationale": "Only defines optional ddk_headers_build_test/test_suite outside the SDK build dependency closure. Omit test-only invocation while retaining the actual x86 DDK header archive and source-module infrastructure, verified by kernel/virtual-device compilation. No kernel runtime code is removed.",
+    "normalized_delta_sha256": "9829d8acec7f838d7002e801d4f136c6bc15ff670bd557521818abf47d4b87ec",
+    "ack_blob": "cde7be93aa46055e6f1eeab9b88fd02bba645348",
+    "lts_blob": null
+  },
+  "bazel/test/kleaf_test.bzl": {
+    "review_head": "c28e05cecf172a43e41a10d622b6b0f6e8c5ea2f",
+    "status": "reviewed-source-selection",
+    "rationale": "Optional DDK test transitions allow_ddk_unsafe_headers and wraps //common:all_headers for build_test. It is outside the required emulator workflow; the actual all_headers_x86_64 archive remains. Omission affects only this additional validation target, not Android runtime or module source interfaces.",
+    "normalized_delta_sha256": "6e6cd6696b7a865f3c2c44174ba8ca9c96595813b7c6eb904e7e206612ddaf6e",
+    "ack_blob": "73c42dadf12be8a6753f90b40c7ac93ff3f3391d",
+    "lts_blob": null
+  },
+  "init/Kconfig.gki": {
+    "review_head": "c28e05cecf172a43e41a10d622b6b0f6e8c5ea2f",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed entire hidden-selection file. Keep generic hidden core dependencies for source-built external modules (DRM/media/audio/regmap/IRQ/network/MM/USB/GPIO etc.), including optional generic APIs where precise runtime use is unresolved. User prioritizes Android configuration and vendor source customization. Remove Qualcomm physical shared-memory/ARCH_QCOM group, ARM64 MediaTek timer group, ARM64 DRM bridge selection and ARM-AMBA PrimeCell GPIO selection in c28e05cecf17; these explicitly support physical SoC/other-architecture implementations outside SDK. Keep native LTS definitions and generic DT pinctrl support. Dynamic task storage config remains for source vendor data, with its implementation separately reviewed; not old ABI layout preservation. See SECURITY.md; config change needs attempt 30 verification.",
+    "normalized_delta_sha256": "67c0ddfcd7f32ab4253cd4518a7a14d31e822f01e43e974b5f4c74419d1ef9c2",
+    "ack_blob": "722d6a24fb8bb56c0625890feaf5e309d5ef4c8f",
+    "lts_blob": null
   }
 }

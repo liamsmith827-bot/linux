@@ -191,6 +191,27 @@ if text_completed_path.exists():
   r['final_text_review']={'source_head':report['source_head'],'patch_sha256':decision['patch_sha256'],'method':report['method']}
   ev='evidence/final-text-presence-decisions.json: '+r['commit']
   if ev not in r['evidence']:r['evidence'].append(ev)
+# Configuration-only reviews cover the changed settings, not unrelated kernel
+# implementations or other settings in the same defconfig. Whole-file witnesses
+# invalidate the review conservatively if either selected configuration changes.
+config_completed_path=D/'evidence/final-config-decisions.json'
+if config_completed_path.exists():
+ report=json.loads(config_completed_path.read_text())
+ completed={x['commit']:x for x in report['decisions']}
+ for r in rows:
+  r.pop('final_config_review',None)
+  decision=completed.get(r['commit'])
+  if not decision or not r.get('net_reconciled'):continue
+  if set(decision['path_witnesses'])!=set(r['files']):continue
+  if not all(all(out[p].get(k)==v for k,v in witness.items())
+             for p,witness in decision['path_witnesses'].items()):continue
+  r.update(disposition=decision['disposition'],review_status='reviewed',
+           rationale=decision['rationale'],result_commits=decision['result_commits'])
+  r['final_config_review']={'source_head':report['source_head'],
+                           'keys':decision['keys'],
+                           'patch_sha256':decision['patch_sha256']}
+  ev='evidence/final-config-decisions.json: '+r['commit']
+  if ev not in r['evidence']:r['evidence'].append(ev)
 assert len(rows)==11731
 assert all(r['disposition']!='pending' and r['rationale'] for r in rows)
 (D/'candidates.jsonl').write_text(''.join(json.dumps(r)+'\n' for r in rows));render(rows)

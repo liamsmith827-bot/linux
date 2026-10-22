@@ -72,6 +72,17 @@ does not change source or ledger decisions. A successful check establishes that
 all post-change hunks can be found; it is not a semantic or runtime proof. A
 failed check is inconclusive because later edits may change the context.
 
+`evidence/final-config-decisions.json` reviews configuration-only patches by
+parsing every changed setting and comparing it with the final ACK and port
+defconfigs. It records the original patch digest, each affected setting and the
+generated build-30 value. A null value means that final ACK no longer explicitly
+sets that key; it does not mean the resulting feature is disabled. Explicit
+final ACK settings in this subset also match the generated configuration. These
+decisions do not finalize feature implementations in other commits. Exact file
+blob witnesses invalidate them if either configuration file changes. ARM64-only
+settings remain outside the x86 target. Separately reviewed native-default and
+physical-UART exceptions are in explicit-code-decisions.json.
+
 `reconcile.py` refreshes the per-path blob evidence and draft net classifications
 against the current committed source. `policy_text.py` contains the reviewed
 source-selection rationale used by that report. `decide.py` applies explicit
