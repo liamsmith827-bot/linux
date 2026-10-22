@@ -17,7 +17,8 @@
  */
 static inline bool fuse_is_io_cache_wait(struct fuse_inode *fi)
 {
-	return READ_ONCE(fi->iocachectr) < 0 && !fuse_inode_backing(fi);
+	/* Passthrough has its own counter; negative counts are active DIO. */
+	return READ_ONCE(fi->iocachectr) < 0;
 }
 
 /*
@@ -47,19 +48,7 @@ int fuse_file_cached_io_open(struct inode *inode, struct fuse_file *ff)
 		spin_lock(&fi->lock);
 	}
 
-	/*
-	 * Check if inode entered passthrough io mode while waiting for parallel
-	 * dio write completion.
-	 */
-	/* Android's use case requires opening files in both passthrough and non
-	 * passthrough modes */
-#if 0
-	if (fuse_inode_backing(fi)) {
-		clear_bit(FUSE_I_CACHE_IO_MODE, &fi->state);
-		spin_unlock(&fi->lock);
-		return -ETXTBSY;
-	}
-#endif
+	/* Android permits cached and passthrough opens of the same inode. */
 
 	WARN_ON(ff->iomode == IOM_UNCACHED);
 	WARN_ON(ff->iomode == IOM_PASSTHROUGH);
@@ -139,18 +128,13 @@ static int fuse_file_uncached_io_open(struct inode *inode,
 
 void fuse_inode_uncached_io_end(struct fuse_inode *fi)
 {
-	struct fuse_backing *oldfb = NULL;
-
 	spin_lock(&fi->lock);
 	WARN_ON(fi->iocachectr >= 0);
 	fi->iocachectr++;
-	if (!fi->iocachectr) {
+	if (!fi->iocachectr)
 		wake_up(&fi->direct_io_waitq);
-		oldfb = fuse_inode_backing_set(fi, NULL);
-	}
+	/* Only the last passthrough open releases the inode's backing file. */
 	spin_unlock(&fi->lock);
-	if (oldfb)
-		fuse_backing_put(oldfb);
 }
 
 /* Drop uncached_io reference from passthrough open */

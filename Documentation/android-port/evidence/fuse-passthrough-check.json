@@ -1,0 +1,64 @@
+{
+  "checks": [
+    {
+      "name": "io_modes",
+      "cases": 250,
+      "assertions": 17100,
+      "failures": 0,
+      "expected_failure": false,
+      "source": "fs/fuse/iomode.c",
+      "functions": [
+        "fuse_is_io_cache_wait",
+        "fuse_file_cached_io_open",
+        "fuse_file_cached_io_release",
+        "fuse_inode_uncached_io_start",
+        "fuse_file_uncached_io_open",
+        "fuse_inode_uncached_io_end",
+        "fuse_inode_passthrough_io_end",
+        "fuse_file_passthrough_io_release"
+      ],
+      "extracted_sha256": "f7b5c7fb071591faed6a07d5fafe157de2368580edc622f9974caa3606a8437f",
+      "negative_controls_rejected": [
+        "ignore_dio_with_backing",
+        "drop_backing_at_dio_end"
+      ]
+    },
+    {
+      "name": "registration",
+      "cases": 576,
+      "assertions": 2358,
+      "failures": 0,
+      "expected_failure": false,
+      "source": "fs/fuse/backing.c",
+      "functions": [
+        "fuse_backing_free",
+        "fuse_backing_put",
+        "fuse_backing_open",
+        "fuse_backing_close"
+      ],
+      "extracted_sha256": "f645eeb0adb033aed00d648e7abde6b09f22cae97da7464355b0a3bff7191bd8",
+      "negative_controls_rejected": [
+        "accept_unnegotiated",
+        "accept_missing_creds"
+      ]
+    },
+    {
+      "name": "read_errors",
+      "cases": 32,
+      "assertions": 163,
+      "failures": 0,
+      "expected_failure": false,
+      "source": "fs/fuse/passthrough.c",
+      "functions": [
+        "fuse_passthrough_read_iter",
+        "fuse_passthrough_splice_read"
+      ],
+      "extracted_sha256": "34eef223ce2ef7ae5e410425d4ac3e325f76d2aff4f2f3f423e5ffd3c53d7591",
+      "negative_controls_rejected": [
+        "ignore_writeback_error"
+      ]
+    }
+  ],
+  "scope": "Exercise extracted FUSE mode ownership, registration and read-error paths.\n\nHost shims model references and ordered callbacks; no live FUSE, LSM or race test.\n",
+  "compiler": "host cc with undefined-behavior sanitizer"
+}

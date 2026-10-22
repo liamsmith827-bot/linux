@@ -3078,3 +3078,45 @@ These are source-level conclusions supported by the earlier targeted checks and
 successful emulator build 81. No filesystem was mounted and no real encrypted
 I/O, scheduler, teardown race or cache performance was tested. All evidence in
 this review is local; no additional remote resource was accessed.
+
+## FUSE mixed passthrough ownership and access
+
+Local MediaProvider `jni/FuseDaemon.cpp` negotiates upstream passthrough together
+with writeback cache, chooses passthrough per open according to redaction and
+completed transformations, and checks the Android `fuse_passthrough` feature
+attribute. `external/libfuse/lib/fuse_lowlevel.c` registers backing files only
+for negotiated passthrough and sets FUSE_INIT_EXT/max_stack_depth. The local
+mediaprovider_app policy permits FUSE descriptor operations without granting it
+CAP_SYS_ADMIN; app_neverallows excludes other untrusted apps. These are concrete
+compatibility reasons for the Android mixed-open behavior and narrower daemon
+privilege, not a claim that SELinux makes arbitrary FUSE operations safe.
+
+Dropping CAP_SYS_ADMIN allows a process holding the daemon connection to retain
+backing files without that global capability. Connection access, possession of
+the lower descriptor, regular-file checks, stack-depth bounds and backing-open
+LSM checks remain relevant security controls. The adaptation restores the native
+negotiation gate while retaining the Android capability relaxation. It also
+handles prepare_creds allocation failure before publishing a backing object;
+the file/object are released instead of retaining a NULL credential.
+
+The ACK split between cached/DIO counts and passthrough-open counts left two
+old shared-counter assumptions in place. Completing an ordinary parallel direct
+write could release the inode's backing reference despite active passthrough
+opens, and a cached open could skip waiting for direct writes merely because a
+backing pointer existed. The adaptation waits whenever the DIO count is negative
+and gives backing-reference release exclusively to the last passthrough open.
+Conflicting backing objects remain rejected. Cache writeback errors now stop
+passthrough reads/splices rather than being ignored before lower-file reads.
+
+The extracted checks cover 250 mode sequences, 576 registration/error cases and
+32 read/writeback outcomes (19,621 assertions). Five regression controls detect
+premature backing release, skipped DIO waiting, absent negotiation, missing
+credential handling and swallowed writeback errors. Kernel locks, allocation,
+references and lower I/O are modeled; real concurrent I/O and Android media
+redaction are untested. Mixed writable mappings and invalidation of busy/dirty
+cache pages remain broader ACK coherency limitations, not established correct
+behavior. The original ACK change explicitly acknowledged the mixed shared-mmap
+limitation, and local MediaProvider disables splice-write negotiation after
+observing redaction/cache issues. This port retains the required mixed-open
+interface with the stated limits; it does not claim that these focused fixes
+solve all mixed-cache coherence. No remote resource was accessed for this review.

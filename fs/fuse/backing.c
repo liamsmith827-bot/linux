@@ -88,14 +88,10 @@ int fuse_backing_open(struct fuse_conn *fc, struct fuse_backing_map *map)
 
 	pr_debug("%s: fd=%d flags=0x%x\n", __func__, map->fd, map->flags);
 
-	/* TODO: relax CAP_SYS_ADMIN once backing files are visible to lsof */
-	/* Android already restricts access here, and we don't want to grant extra
-	 * Permissions to the daemon */
-#if 0
+	/* Android restricts daemon access without granting CAP_SYS_ADMIN. */
 	res = -EPERM;
-	if (!fc->passthrough || !capable(CAP_SYS_ADMIN))
+	if (!fc->passthrough)
 		goto out;
-#endif
 
 	res = -EINVAL;
 	if (map->flags || map->padding)
@@ -123,6 +119,11 @@ int fuse_backing_open(struct fuse_conn *fc, struct fuse_backing_map *map)
 
 	fb->file = file;
 	fb->cred = prepare_creds();
+	if (!fb->cred) {
+		kfree(fb);
+		fb = NULL;
+		goto out_fput;
+	}
 	refcount_set(&fb->count, 1);
 
 	res = fuse_backing_id_alloc(fc, fb);
@@ -148,14 +149,10 @@ int fuse_backing_close(struct fuse_conn *fc, int backing_id)
 
 	pr_debug("%s: backing_id=%d\n", __func__, backing_id);
 
-	/* TODO: relax CAP_SYS_ADMIN once backing files are visible to lsof */
-	/* Android already restricts access here, and we don't want to grant extra
-	 * Permissions to the daemon */
-#if 0
+	/* Registration is available only after passthrough negotiation. */
 	err = -EPERM;
-	if (!fc->passthrough || !capable(CAP_SYS_ADMIN))
+	if (!fc->passthrough)
 		goto out;
-#endif
 
 	err = -EINVAL;
 	if (backing_id <= 0)

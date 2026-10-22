@@ -61,7 +61,9 @@ ssize_t fuse_passthrough_read_iter(struct kiocb *iocb, struct iov_iter *iter)
 		return 0;
 
 	/* Flush any dirtied cache pages from fuse cache */
-	write_inode_now(file_inode(file), 1);
+	ret = write_inode_now(file_inode(file), 1);
+	if (ret)
+		return ret;
 	ret = backing_file_read_iter(backing_file, iter, iocb, iocb->ki_flags,
 				     &ctx);
 
@@ -113,7 +115,9 @@ ssize_t fuse_passthrough_splice_read(struct file *in, loff_t *ppos,
 		 backing_file, *ppos, len, flags);
 
 	/* Flush any dirtied cache pages from fuse cache */
-	write_inode_now(file_inode(in), 1);
+	ret = write_inode_now(file_inode(in), 1);
+	if (ret)
+		return ret;
 
 	init_sync_kiocb(&iocb, in);
 	iocb.ki_pos = *ppos;
