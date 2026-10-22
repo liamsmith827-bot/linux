@@ -1418,5 +1418,217 @@
     "disposition": "already-represented-upstream",
     "rationale": "Full one-line patch rechecked after node.c gained lock instrumentation. Native LTS f2fs_get_node_info already returns -EFSCORRUPTED immediately after ERROR_INCONSISTENT_NAT, preventing caching/success for a corrupt entry; that exact check/error/return remains. Eleven-file caller normalization confirms node.c underlying code is unchanged. File identity ceased after tracing, but this security effect remains represented; no ACK application is required.",
     "result_commits": []
+  },
+  {
+    "commit": "2f9b3d761013f380a3372288e58a32ce6a4aee0b",
+    "disposition": "adapted",
+    "rationale": "Adapt immutable, non-compressed regular-file large-folio reads, quota exclusion, slab state, GC order-0 fallback and write-open restriction onto native LTS. Native setattr restrictions and node-footer validation remain. Use native fsverity_verify_blocks with the actual hole subpage offset, retaining native fscrypt/verity APIs. Aggregate failures from all bios and hold a submission reference until mapping/verification ends; ACK last-bio status can otherwise hide an earlier I/O/decryption/verity error. Capture actual folio index and size before dropping its reference, avoiding an undersized invalidation range when the requested index is inside a larger folio. Clearing immutable does not clear the mapping capability; writes remain unsupported until inode eviction, as ACK documents. F2FS and IOSTAT are enabled by the SDK configuration. The supplied SDK data fstab uses ext4; actual use of this optional generic filesystem feature is unconfirmed, so preserve the ACK source/configuration contract conservatively rather than infer omission from missing consumers. No future platform is enabled. Implementation and validation details are in SECURITY.md and evidence/f2fs-largefolio-check.json; no mounted-filesystem or runtime verification.",
+    "result_commits": [
+      "ce7f50c5967d3417371d2585486e177dce384b94"
+    ]
+  },
+  {
+    "commit": "fd573b4216c9cd182701fd8f0eb3f7dd3e1b3186",
+    "disposition": "adapted",
+    "rationale": "Retain f2fs_read_folio and nrpages trace fields for the selected read path. Emit before dropping submission ownership, while the folio is still locked; do not dereference a completed folio for tracing. F2FS and IOSTAT are enabled by the SDK configuration. The supplied SDK data fstab uses ext4; actual use of this optional generic filesystem feature is unconfirmed, so preserve the ACK source/configuration contract conservatively rather than infer omission from missing consumers. No future platform is enabled. Implementation and validation details are in SECURITY.md and evidence/f2fs-largefolio-check.json; no mounted-filesystem or runtime verification.",
+    "result_commits": [
+      "ce7f50c5967d3417371d2585486e177dce384b94"
+    ]
+  },
+  {
+    "commit": "5c99e318febf1ccc77b4f785a8e55e8fd6f0a47c",
+    "disposition": "adapted",
+    "rationale": "Allocate zeroed large-folio private state and initialize its spinlock. Reset pending count and accumulated error for each locked read attempt; stale slab or retry state must not keep pages locked or report success. F2FS and IOSTAT are enabled by the SDK configuration. The supplied SDK data fstab uses ext4; actual use of this optional generic filesystem feature is unconfirmed, so preserve the ACK source/configuration contract conservatively rather than infer omission from missing consumers. No future platform is enabled. Implementation and validation details are in SECURITY.md and evidence/f2fs-largefolio-check.json; no mounted-filesystem or runtime verification.",
+    "result_commits": [
+      "ce7f50c5967d3417371d2585486e177dce384b94"
+    ]
+  },
+  {
+    "commit": "2e6663fee7978c24f9a40bcc6b5ca45941ef8ebe",
+    "disposition": "adapted",
+    "rationale": "Account each mapped subpage before submitting an earlier bio. Also retain a submission reference across hole mapping/verification, so early bio completions cannot unlock a folio while the reader is still modifying it. Deterministic immediate-completion schedules are covered by the extracted reader test. F2FS and IOSTAT are enabled by the SDK configuration. The supplied SDK data fstab uses ext4; actual use of this optional generic filesystem feature is unconfirmed, so preserve the ACK source/configuration contract conservatively rather than infer omission from missing consumers. No future platform is enabled. Implementation and validation details are in SECURITY.md and evidence/f2fs-largefolio-check.json; no mounted-filesystem or runtime verification.",
+    "result_commits": [
+      "ce7f50c5967d3417371d2585486e177dce384b94"
+    ]
+  },
+  {
+    "commit": "0eecf1bc9b7c142569aa9d53e49a4d29b3719f2c",
+    "disposition": "adapted",
+    "rationale": "Decrease max_nr_pages for every processed base page, bounding subsequent mapping and bio-allocation requests to the remaining read window. Retain native block validation. F2FS and IOSTAT are enabled by the SDK configuration. The supplied SDK data fstab uses ext4; actual use of this optional generic filesystem feature is unconfirmed, so preserve the ACK source/configuration contract conservatively rather than infer omission from missing consumers. No future platform is enabled. Implementation and validation details are in SECURITY.md and evidence/f2fs-largefolio-check.json; no mounted-filesystem or runtime verification.",
+    "result_commits": [
+      "ce7f50c5967d3417371d2585486e177dce384b94"
+    ]
+  },
+  {
+    "commit": "2819f5141ec2fb01dbf97ec178bd27d88a0eef65",
+    "disposition": "adapted",
+    "rationale": "Retain per-folio bio membership for order-0 folios inside large-folio-capable mappings. Large folios use a submission reference, which completes even an all-hole folio with no bio; no waiting reader is stranded. F2FS and IOSTAT are enabled by the SDK configuration. The supplied SDK data fstab uses ext4; actual use of this optional generic filesystem feature is unconfirmed, so preserve the ACK source/configuration contract conservatively rather than infer omission from missing consumers. No future platform is enabled. Implementation and validation details are in SECURITY.md and evidence/f2fs-largefolio-check.json; no mounted-filesystem or runtime verification.",
+    "result_commits": [
+      "ce7f50c5967d3417371d2585486e177dce384b94"
+    ]
+  },
+  {
+    "commit": "ba52a9aaf5619cdccba37da98a72e1084933536e",
+    "disposition": "adapted",
+    "rationale": "Advance index and offset in the loop increment, including zero-filled holes. Verify each hole at its own byte offset through the native LTS verity API, preventing verification of offset zero for every subpage. F2FS and IOSTAT are enabled by the SDK configuration. The supplied SDK data fstab uses ext4; actual use of this optional generic filesystem feature is unconfirmed, so preserve the ACK source/configuration contract conservatively rather than infer omission from missing consumers. No future platform is enabled. Implementation and validation details are in SECURITY.md and evidence/f2fs-largefolio-check.json; no mounted-filesystem or runtime verification.",
+    "result_commits": [
+      "ce7f50c5967d3417371d2585486e177dce384b94"
+    ]
+  },
+  {
+    "commit": "4ab5495d8b819bea78ebeff773c03ad77a83fecf",
+    "disposition": "adapted",
+    "rationale": "Retain m_next_pgofs hole hints in both single-page and large-folio readers, initialized per read call. Preserve native single-page EOF clamp and zeroing before the cached-hole shortcut. Mapping errors and physical-block validity checks still abort reads; this reduces redundant mapping work without weakening validation. F2FS and IOSTAT are enabled by the SDK configuration. The supplied SDK data fstab uses ext4; actual use of this optional generic filesystem feature is unconfirmed, so preserve the ACK source/configuration contract conservatively rather than infer omission from missing consumers. No future platform is enabled. Implementation and validation details are in SECURITY.md and evidence/f2fs-largefolio-check.json; no mounted-filesystem or runtime verification.",
+    "result_commits": [
+      "ce7f50c5967d3417371d2585486e177dce384b94"
+    ]
+  },
+  {
+    "commit": "341a0a78610e4c5156686e48715024d8042ba39a",
+    "disposition": "adapted",
+    "rationale": "Use folio_end_read for no-bio order-0 reads and the final large-folio completion. The large-folio helper combines mapping/verification and all bio failures before selecting uptodate, rather than merely replacing mark/unlock calls. F2FS and IOSTAT are enabled by the SDK configuration. The supplied SDK data fstab uses ext4; actual use of this optional generic filesystem feature is unconfirmed, so preserve the ACK source/configuration contract conservatively rather than infer omission from missing consumers. No future platform is enabled. Implementation and validation details are in SECURITY.md and evidence/f2fs-largefolio-check.json; no mounted-filesystem or runtime verification.",
+    "result_commits": [
+      "ce7f50c5967d3417371d2585486e177dce384b94"
+    ]
+  },
+  {
+    "commit": "bbc0736de8331de02e0602a0ff2cbfbcec143eb6",
+    "disposition": "adapted",
+    "rationale": "Preserve the single error-exit bio submission. Replace ACK submit-then-relock/clear with a sticky failure recorded before dropping submission ownership, avoiding both duplicate submission and transient publication of a successful folio after a mapping error. F2FS and IOSTAT are enabled by the SDK configuration. The supplied SDK data fstab uses ext4; actual use of this optional generic filesystem feature is unconfirmed, so preserve the ACK source/configuration contract conservatively rather than infer omission from missing consumers. No future platform is enabled. Implementation and validation details are in SECURITY.md and evidence/f2fs-largefolio-check.json; no mounted-filesystem or runtime verification.",
+    "result_commits": [
+      "ce7f50c5967d3417371d2585486e177dce384b94"
+    ]
+  },
+  {
+    "commit": "c99a81e0e5704891e34b5f23243939b013367bcb",
+    "disposition": "adapted",
+    "rationale": "Unlock a directly supplied folio when immutable/compression eligibility fails. Complete no-bio reads and route mapping errors through the common submission path, including accumulated bios from earlier readahead folios. F2FS and IOSTAT are enabled by the SDK configuration. The supplied SDK data fstab uses ext4; actual use of this optional generic filesystem feature is unconfirmed, so preserve the ACK source/configuration contract conservatively rather than infer omission from missing consumers. No future platform is enabled. Implementation and validation details are in SECURITY.md and evidence/f2fs-largefolio-check.json; no mounted-filesystem or runtime verification.",
+    "result_commits": [
+      "ce7f50c5967d3417371d2585486e177dce384b94"
+    ]
+  },
+  {
+    "commit": "4885ba5ce4c1b959a1a00e8ecd435b2d4cd1eba4",
+    "disposition": "adapted",
+    "rationale": "Reject mmap write faults on mappings with large-folio capability, including after clearing immutable, while retaining native immutable rejection. This prevents unsupported large-folio writes and dirty-page state; write-open and native setattr guards provide the other restrictions. F2FS and IOSTAT are enabled by the SDK configuration. The supplied SDK data fstab uses ext4; actual use of this optional generic filesystem feature is unconfirmed, so preserve the ACK source/configuration contract conservatively rather than infer omission from missing consumers. No future platform is enabled. Implementation and validation details are in SECURITY.md and evidence/f2fs-largefolio-check.json; no mounted-filesystem or runtime verification.",
+    "result_commits": [
+      "ce7f50c5967d3417371d2585486e177dce384b94"
+    ]
+  },
+  {
+    "commit": "e6050a6cb4ed8e9d80125e0d96dd5c5f3c95ae9b",
+    "disposition": "adapted",
+    "rationale": "Retain order-indexed read-folio statistics, reset/delta handling, trace fields and CONFIG_F2FS_IOSTAT stubs. Increment under the existing iostat lock and clamp the order index; the optional statistics do not control allocation or authorize access. F2FS and IOSTAT are enabled by the SDK configuration. The supplied SDK data fstab uses ext4; actual use of this optional generic filesystem feature is unconfirmed, so preserve the ACK source/configuration contract conservatively rather than infer omission from missing consumers. No future platform is enabled. Implementation and validation details are in SECURITY.md and evidence/f2fs-largefolio-check.json; no mounted-filesystem or runtime verification.",
+    "result_commits": [
+      "ce7f50c5967d3417371d2585486e177dce384b94"
+    ]
+  },
+  {
+    "commit": "8e46340d6f0f18bf0a4def2af6da7485a99fc17d",
+    "disposition": "adapted",
+    "rationale": "Retain the final ACK 16-bucket trace schema and compile-time coverage assertion with the selected telemetry. The SDK 4-KiB configuration does not suffer the original top-order truncation; retaining its current ACK diagnostic format is the reason here, not enabling 16/64-KiB kernel platforms. Correct the comment to name f2fs_init_iostat where the assertion actually lives. Unused buckets are zeroed. F2FS and IOSTAT are enabled by the SDK configuration. The supplied SDK data fstab uses ext4; actual use of this optional generic filesystem feature is unconfirmed, so preserve the ACK source/configuration contract conservatively rather than infer omission from missing consumers. No future platform is enabled. Implementation and validation details are in SECURITY.md and evidence/f2fs-largefolio-check.json; no mounted-filesystem or runtime verification.",
+    "result_commits": [
+      "ce7f50c5967d3417371d2585486e177dce384b94"
+    ]
+  },
+  {
+    "commit": "95575ea99ac73e2d70ad21144c2f8201ad32e137",
+    "disposition": "adapted",
+    "rationale": "On a later readahead folio failing before bio insertion, complete that folio and flush the earlier accumulated bio before returning; stop consuming readahead. Replace unlock/relock error clearing with the submission reference and sticky failures. Tests cover failures before insertion with order-0 and large folios, in immediate, forward and reverse completion orders. F2FS and IOSTAT are enabled by the SDK configuration. The supplied SDK data fstab uses ext4; actual use of this optional generic filesystem feature is unconfirmed, so preserve the ACK source/configuration contract conservatively rather than infer omission from missing consumers. No future platform is enabled. Implementation and validation details are in SECURITY.md and evidence/f2fs-largefolio-check.json; no mounted-filesystem or runtime verification.",
+    "result_commits": [
+      "ce7f50c5967d3417371d2585486e177dce384b94"
+    ]
+  },
+  {
+    "commit": "15b2b6aabc5c3f15c178f7b2938a769c72236fe8",
+    "disposition": "adapted",
+    "rationale": "Reset folio_in_bio for every new folio; a prior folio with mapped data cannot prevent a later all-hole or failing order-0 folio from completing. Mixed readahead cases exercise this regression. F2FS and IOSTAT are enabled by the SDK configuration. The supplied SDK data fstab uses ext4; actual use of this optional generic filesystem feature is unconfirmed, so preserve the ACK source/configuration contract conservatively rather than infer omission from missing consumers. No future platform is enabled. Implementation and validation details are in SECURITY.md and evidence/f2fs-largefolio-check.json; no mounted-filesystem or runtime verification.",
+    "result_commits": [
+      "ce7f50c5967d3417371d2585486e177dce384b94"
+    ]
+  },
+  {
+    "commit": "5acc164ef3e9858f0ed6fdc8dc85acbcd786021d",
+    "disposition": "adapted",
+    "rationale": "Capture folio_nr_pages while the folio remains locked and referenced, before f2fs_folio_put. Also use the actual folio->index captured there, instead of mapping_align_index at min order zero, to invalidate the whole original folio even for an interior requested page. This avoids a use-after-put and undersized invalidation range; native GC then retries its order-0 path. F2FS and IOSTAT are enabled by the SDK configuration. The supplied SDK data fstab uses ext4; actual use of this optional generic filesystem feature is unconfirmed, so preserve the ACK source/configuration contract conservatively rather than infer omission from missing consumers. No future platform is enabled. Implementation and validation details are in SECURITY.md and evidence/f2fs-largefolio-check.json; no mounted-filesystem or runtime verification.",
+    "result_commits": [
+      "ce7f50c5967d3417371d2585486e177dce384b94"
+    ]
+  },
+  {
+    "commit": "cd3f7824593c132d86d61b7f13d409739fcba1f0",
+    "disposition": "reverted",
+    "rationale": "Review of the original inode-number/user.fadvise registration and ACK revert 209b9b90af3b shows that the final ACK removes the registration enum, xattr get/set, inode eviction/drop behavior and alternate eligibility helper. Pinned ACK and port contain none of LARGE_FOLIO_INO, F2FS_XATTR_FADV_LARGEFOLIO or f2fs_xattr_fadvise_get/set. Keep final immutable-only selection in ce7f50c5967d; do not revive a withdrawn user interface or its unchecked xattr value access. The full inverse patch IDs differ due to intervening code/context; this disposition relies on examined semantic removal and final-tree symbol absence, not an assertion of exact inverse identity. Local commit-message remote URLs were not accessed.",
+    "result_commits": [
+      "ce7f50c5967d3417371d2585486e177dce384b94"
+    ]
+  },
+  {
+    "commit": "209b9b90af3b7cc904cad9e363ecb1761d7410c2",
+    "disposition": "reverted",
+    "rationale": "Review of the original inode-number/user.fadvise registration and ACK revert 209b9b90af3b shows that the final ACK removes the registration enum, xattr get/set, inode eviction/drop behavior and alternate eligibility helper. Pinned ACK and port contain none of LARGE_FOLIO_INO, F2FS_XATTR_FADV_LARGEFOLIO or f2fs_xattr_fadvise_get/set. Keep final immutable-only selection in ce7f50c5967d; do not revive a withdrawn user interface or its unchecked xattr value access. The full inverse patch IDs differ due to intervening code/context; this disposition relies on examined semantic removal and final-tree symbol absence, not an assertion of exact inverse identity. Local commit-message remote URLs were not accessed.",
+    "result_commits": [
+      "ce7f50c5967d3417371d2585486e177dce384b94"
+    ]
+  },
+  {
+    "commit": "183b4a0e36e4a8c32cfc3cda9dfab43594f47447",
+    "disposition": "omitted-current-target",
+    "rationale": "Three filemap lookups gain only the f2fs_filemap_get_folio fault-injection wrapper. In current f2fs.h that wrapper returns the same __filemap_get_folio call with unchanged arguments whenever time_to_inject is false. Retain native LTS lookup calls and newer allocation flags; no SDK error behavior changes. Full local patch, f2fs.h time_to_inject false stub/wrapper, guarded sysfs registration, super.c injection section and actual SDK config were examined. CONFIG_F2FS_FAULT_INJECTION is not set. This is a compiled-target boundary, not a failure to locate a consumer; native LTS debug support remains available in source but additional debug configuration behavior is not certified. No kernel source modification or resulting implementation commit is needed. See SECURITY.md: F2FS fault injection target boundary.",
+    "result_commits": []
+  },
+  {
+    "commit": "a0e5aed071eb2253d2c2481a4c736d9114d22e69",
+    "disposition": "omitted-current-target",
+    "rationale": "Rename FAULT_TIMEOUT to FAULT_ATOMIC_TIMEOUT only within injection enum/name/documentation and the guarded atomic-write delay. Its injection flag is compiled inactive for the SDK; no ordinary atomic-write code or numeric userspace fault bit changes are required. Full local patch, f2fs.h time_to_inject false stub/wrapper, guarded sysfs registration, super.c injection section and actual SDK config were examined. CONFIG_F2FS_FAULT_INJECTION is not set. This is a compiled-target boundary, not a failure to locate a consumer; native LTS debug support remains available in source but additional debug configuration behavior is not certified. No kernel source modification or resulting implementation commit is needed. See SECURITY.md: F2FS fault injection target boundary.",
+    "result_commits": []
+  },
+  {
+    "commit": "1fc618bbeebf461e3aa420e3ac5726c20e068e26",
+    "disposition": "omitted-current-target",
+    "rationale": "Adds a simulated lock delay behind time_to_inject plus an injection bit/name and documentation. With fault injection disabled the delay cannot run. The separate selected lock tracing and priority implementation remains; no normal lock timing behavior is omitted by excluding this artificial delay. Full local patch, f2fs.h time_to_inject false stub/wrapper, guarded sysfs registration, super.c injection section and actual SDK config were examined. CONFIG_F2FS_FAULT_INJECTION is not set. This is a compiled-target boundary, not a failure to locate a consumer; native LTS debug support remains available in source but additional debug configuration behavior is not certified. No kernel source modification or resulting implementation commit is needed. See SECURITY.md: F2FS fault injection target boundary.",
+    "result_commits": []
+  },
+  {
+    "commit": "2d456dfaef438e21849a998f69b4e906db0231e2",
+    "disposition": "omitted-current-target",
+    "rationale": "The new timeout attribute, storage, parsing and simulator are CONFIG_F2FS_FAULT_INJECTION gated. The generalized killable sleep helper has only the atomic-injection and lock-injection callers, both disabled. Do not add a sysfs operation whose only purpose is deliberate delay injection to this SDK target; retain native scheduling helpers for ordinary callers. Full local patch, f2fs.h time_to_inject false stub/wrapper, guarded sysfs registration, super.c injection section and actual SDK config were examined. CONFIG_F2FS_FAULT_INJECTION is not set. This is a compiled-target boundary, not a failure to locate a consumer; native LTS debug support remains available in source but additional debug configuration behavior is not certified. No kernel source modification or resulting implementation commit is needed. See SECURITY.md: F2FS fault injection target boundary.",
+    "result_commits": []
+  },
+  {
+    "commit": "5b30a9e4c43328bfc3a7dcd5dfb78053ff5ff7ec",
+    "disposition": "omitted-current-target",
+    "rationale": "Corrects __struct_ptr for the newly introduced fault-timeout sysfs attribute. Both the attribute and its branch are excluded by CONFIG_F2FS_FAULT_INJECTION; the port omits the parent feature and does not expose the incorrect pointer path. Full local patch, f2fs.h time_to_inject false stub/wrapper, guarded sysfs registration, super.c injection section and actual SDK config were examined. CONFIG_F2FS_FAULT_INJECTION is not set. This is a compiled-target boundary, not a failure to locate a consumer; native LTS debug support remains available in source but additional debug configuration behavior is not certified. No kernel source modification or resulting implementation commit is needed. See SECURITY.md: F2FS fault injection target boundary.",
+    "result_commits": []
+  },
+  {
+    "commit": "87f3f8010795de5d681b3932607fa25eb6956a33",
+    "disposition": "omitted-current-target",
+    "rationale": "The new skip-write failure is conditional on time_to_inject during checkpoint enabling. The SDK compiles time_to_inject to false, so no ordinary write behavior is provided by the addition. Omit the injection enum/name/docs and branch; checkpoint retry/error handling is independently reviewed. Full local patch, f2fs.h time_to_inject false stub/wrapper, guarded sysfs registration, super.c injection section and actual SDK config were examined. CONFIG_F2FS_FAULT_INJECTION is not set. This is a compiled-target boundary, not a failure to locate a consumer; native LTS debug support remains available in source but additional debug configuration behavior is not certified. No kernel source modification or resulting implementation commit is needed. See SECURITY.md: F2FS fault injection target boundary.",
+    "result_commits": []
+  },
+  {
+    "commit": "3c58c4720ac338e6b3a86560bded7885457f5e38",
+    "disposition": "omitted-current-target",
+    "rationale": "Replaces explicit TASK_UNINTERRUPTIBLE plus io_schedule_timeout with the equivalent __f2fs_schedule_timeout helper inside the killable injection delay. Its only native caller is guarded by time_to_inject(sbi, FAULT_TIMEOUT); no ordinary congestion sleep caller is changed. Full local patch, f2fs.h time_to_inject false stub/wrapper, guarded sysfs registration, super.c injection section and actual SDK config were examined. CONFIG_F2FS_FAULT_INJECTION is not set. This is a compiled-target boundary, not a failure to locate a consumer; native LTS debug support remains available in source but additional debug configuration behavior is not certified. No kernel source modification or resulting implementation commit is needed. See SECURITY.md: F2FS fault injection target boundary.",
+    "result_commits": []
+  },
+  {
+    "commit": "35bde31bb83f0e0ed55bb9099ef9c9214b7ed8f5",
+    "disposition": "omitted-current-target",
+    "rationale": "Changes only the killable fault-injection delay accounting from accumulated intervals to a jiffies deadline. The only native caller is disabled with fault injection; retain the native helper without introducing this inactive debug-only timing rewrite. This does not decide the separately reviewed normal congestion timeout. Full local patch, f2fs.h time_to_inject false stub/wrapper, guarded sysfs registration, super.c injection section and actual SDK config were examined. CONFIG_F2FS_FAULT_INJECTION is not set. This is a compiled-target boundary, not a failure to locate a consumer; native LTS debug support remains available in source but additional debug configuration behavior is not certified. No kernel source modification or resulting implementation commit is needed. See SECURITY.md: F2FS fault injection target boundary.",
+    "result_commits": []
+  },
+  {
+    "commit": "a66e0ba8f7aee26aa33d71f8cf8c65ed56238f36",
+    "disposition": "reconciled-to-lts",
+    "rationale": "The local native block/blk-lib.c __blkdev_issue_discard unconditionally returns zero. Keep its return-value assignment and existing error branch in native F2FS; ignoring that return value is a cleanup with identical successful-path behavior. The only nonzero err here comes from configured-off fault injection. No Android interface or normal discard behavior requires the cleanup. Full local patches and both native functions were examined. See SECURITY.md: F2FS fault injection target boundary; no remote access.",
+    "result_commits": []
+  },
+  {
+    "commit": "eaf2b0906975408de38fab63aaa52e8dddcb84ff",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Removes FAULT_DISCARD simulation and its now-dead error handling after a66e0ba8f7ae. The SDK disables fault injection, and native __blkdev_issue_discard returns zero. Keeping the native loop/return checks therefore has the same ordinary discard result and preserves native source structure. No runtime failure handling is weakened, and documentation continues to describe the retained native debug source. Full local patches and both native functions were examined. See SECURITY.md: F2FS fault injection target boundary; no remote access.",
+    "result_commits": []
   }
 ]

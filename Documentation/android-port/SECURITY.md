@@ -2192,3 +2192,78 @@ four i_size_read event changes. Runtime scheduling and filesystem behavior remai
 unverified. Stable overlap review separately confirms cb06a07d835b NAT ordering,
 b2cf17d39dd2 GC lock coverage and aefcec3bebde checkpoint-thread null/lifetime
 checks retain their LTS effects under the wrappers.
+
+## F2FS immutable large-folio reads (ce7f50c5967d)
+
+The SDK configuration includes F2FS and its IOSTAT interface. The supplied data
+fstab uses ext4; actual use of the optional F2FS large-folio path has not been
+established. Retain this generic ACK feature conservatively for Android source,
+configuration and runtime compatibility, without enabling another platform.
+Eligibility remains immutable, non-compressed regular files excluding quota
+inodes. Write opens and mmap write faults are rejected for a large-folio-capable
+mapping, and native LTS setattr-size rejection remains. Clearing immutable does
+not clear that capability; write access requires inode eviction as documented
+by ACK. The withdrawn inode-number/user.fadvise registration is not restored.
+
+The original ACK completion decrements pending subpages and uses the status of
+the last completing bio for the entire folio. A prior I/O, decryption or verity
+failure can therefore be lost if the final bio succeeds. The port accumulates
+failure under the folio-state lock. A submission reference holds the folio locked
+until all mapping and hole verification have finished; mapping failures are
+recorded before this reference is dropped. This also avoids publishing a valid
+folio and then relocking/clearing it on the old error path. A pending bio is
+submitted exactly once, including when a later readahead folio fails before
+insertion. Folio membership is reset on every iteration, and all-hole folios
+complete. These changes are security relevant because invalid or unverified data
+must never be marked uptodate merely because another portion read successfully.
+
+Native LTS fscrypt and fsverity APIs remain. Both bio consumers iterate folio
+length/offset; holes call native fsverity_verify_blocks with their actual offset.
+Native node-footer validation remains before completion. Large-file eligibility
+excludes compression, and only compressed callers enable STEP_DECOMPRESS; the
+new private-state pointer is not passed to the compressed-page magic checker.
+GC's existing order-0 data path invalidates large folios and retries. Both size
+and actual starting index are captured while locked and referenced, before the
+put; using mapping_align_index with minimum order zero could start inside the
+folio. Native single-page EOF checks precede the new consecutive-hole hint.
+
+The selected trace/iostat interface uses the final ACK 16-bucket format, with
+zeroed unused buckets and a compile-time capacity check. The SDK's 4-KiB kernel
+does not exhibit the original ARM larger-base-page truncation; preserving the
+current diagnostic format justifies selection here, not future-platform support.
+No historical struct layout or binary KMI is retained.
+
+`check_f2fs_largefolio.py` extracts the actual reader and completion functions.
+9,406 deterministic host cases and 161,821 assertions pass with undefined-behavior
+sanitization: mixed data/holes, invalid blocks, mapping/hole-verification errors,
+I/O failure positions, immediate/forward/reverse completion, bio-capacity retry,
+state reuse, mixed order-0 readahead, prior-bio flushing, and unsupported input.
+A separate partial-error control passes with the port and fails with pinned ACK's
+actual completion function. A stub also checks native node-footer error delivery.
+These shims do not run kernel locking, real concurrency, storage, encryption or
+verity algorithms. Compilation is recorded separately; no mounted filesystem or
+runtime compatibility is claimed. Local host C headers under `/usr/include`,
+including errno definitions, are used only for the host harness. All inspected
+sources were local; commit-message URLs were not accessed.
+
+## F2FS fault injection target boundary
+
+The built SDK config has `CONFIG_F2FS_FAULT_INJECTION` unset. Native f2fs.h
+therefore makes `time_to_inject` return false; fault state and sysfs registration
+are conditional on that configuration. The new atomic-delay rename, lock-delay
+simulator/sysfs control and pointer fix, skip-write trigger, and filemap lookup
+wrapper additions cannot affect this build. Their individual final dispositions
+record the complete patches and affected gates. Native fault-injection source is
+left in place; this is not a claim that no debug consumer exists.
+
+The helper-only killable timeout refactor/deadline change has only a native
+atomic-injection caller, also compiled inactive. The ordinary congestion-timeout
+change is separate and remains under review. Likewise, f2fs_fault_report emits
+real error diagnostics independent of fault injection and is not covered by this
+omission. Classification follows code reachability, not the word “fault”.
+
+Native `block/blk-lib.c::__blkdev_issue_discard` unconditionally returns zero.
+Retaining native F2FS return-value/error checks instead of ACK's cleanup and
+FAULT_DISCARD deletion has the same ordinary discard outcome in the SDK. No
+actual block error is suppressed by this decision; completion errors remain
+handled by native bio completion. All evidence is local.

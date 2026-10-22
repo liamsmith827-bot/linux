@@ -1,14 +1,30 @@
 [
   {
     "topic": "F2FS large-folio read support",
-    "status": "unresolved necessity; candidate decisions remain provisional",
+    "status": "resolved conservative source selection; runtime use unconfirmed",
     "candidates": [
-      "5acc164ef3e9858f0ed6fdc8dc85acbcd786021d",
+      "2f9b3d761013f380a3372288e58a32ce6a4aee0b",
+      "fd573b4216c9cd182701fd8f0eb3f7dd3e1b3186",
+      "5c99e318febf1ccc77b4f785a8e55e8fd6f0a47c",
+      "2e6663fee7978c24f9a40bcc6b5ca45941ef8ebe",
+      "0eecf1bc9b7c142569aa9d53e49a4d29b3719f2c",
+      "2819f5141ec2fb01dbf97ec178bd27d88a0eef65",
+      "ba52a9aaf5619cdccba37da98a72e1084933536e",
+      "4ab5495d8b819bea78ebeff773c03ad77a83fecf",
+      "341a0a78610e4c5156686e48715024d8042ba39a",
+      "bbc0736de8331de02e0602a0ff2cbfbcec143eb6",
+      "c99a81e0e5704891e34b5f23243939b013367bcb",
+      "4885ba5ce4c1b959a1a00e8ecd435b2d4cd1eba4",
+      "e6050a6cb4ed8e9d80125e0d96dd5c5f3c95ae9b",
+      "8e46340d6f0f18bf0a4def2af6da7485a99fc17d",
       "95575ea99ac73e2d70ad21144c2f8201ad32e137",
       "15b2b6aabc5c3f15c178f7b2938a769c72236fe8",
-      "8e46340d6f0f18bf0a4def2af6da7485a99fc17d"
+      "5acc164ef3e9858f0ed6fdc8dc85acbcd786021d"
     ],
-    "evidence": "SDK common config enables F2FS and IOSTAT; goldfish x86 fstab uses ext4. LTS lacks ACK f2fs_read_data_large_folio and read_folio_count telemetry, so these fixes target code not currently ported. A missing SDK caller is not proof the optional generic feature can be omitted. Review the full feature series and Android configuration/consumer contracts before finalizing. Lock tracing has been separately resolved by 0e583bb7ddb4 using a positive vold consumer; this does not resolve large-folio selection."
+    "evidence": "Configured F2FS/IOSTAT generic feature retained conservatively, with immutable/non-compressed/quota eligibility and write restrictions. Preserve native LTS fsverity/fscrypt and node-footer checks. Adaptation retains failures across all bios and holds submission ownership until mapping/hole verification completes; actual ACK completion control reproduces lost error. Extracted reader tests pass 9406 cases, including readahead error flushing, holes, retry and completion order. No actual mounted F2FS, block I/O, crypto operation or concurrency test. The SDK data fstab remains ext4, so runtime necessity is not claimed as established. All evidence is local.",
+    "result_commits": [
+      "ce7f50c5967d3417371d2585486e177dce384b94"
+    ]
   },
   {
     "topic": "F2FS dynamic device-alias reserve/release",
