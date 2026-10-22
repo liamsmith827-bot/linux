@@ -3425,3 +3425,33 @@ to a different block-layer ordering optimization and is absent from the native
 LTS interface. Retain native queue/zone serialization instead. These narrow
 target decisions do not finalize the separate multi-file block-crypto candidates.
 Only local checkouts were used.
+
+## Android test-selection archive
+
+The x86_64 common_kernel target includes test_mappings_zip in extra_dist. Its
+pkg_files rule packages the kernel tree's TEST_MAPPING files as inert JSON
+metadata. Restore 30 missing generic/x86 mapping files so that source changes in
+those paths remain associated with Android's existing test groups and filters.
+This adds no kernel driver, runtime permission or historical vendor-binary KMI.
+The supplied KernelAbilistTest.java inspects Android CPU ABI properties and
+returns immediately on non-Arm; its descriptor is not a kernel KMI layout check.
+
+The complete before/after JSON of all 34 pending metadata-only commits was
+parsed, rejecting duplicate object keys, and the per-path test/import/option
+changes recorded. Retain the final ACK group and filter evolution rather than
+replaying obsolete selections: it includes the Telecom class-name correction,
+the later removal of broad Libcore selection in 8896bb41cd5a, and scheduler/power
+presubmit reductions. Exclude only the desktop-postsubmit IGT group introduced
+by 6442b9cc8f99; it specifically selects the separate desktop display validation
+suite and is not part of this SDK build target. Other groups in that DRM mapping
+remain. All 52 examined final mapping files match ACK semantically except this
+documented group omission.
+
+These files describe tests; they neither execute the tests nor establish that
+every referenced Android package/filter is available or suitable on this SDK.
+For example, ACK's fs mapping imports system/core/fs_mgr while the supplied
+GrapheneOS checkout locates fs_mgr under system/fs/fs_mgr. Preserve the existing
+metadata here rather than claim that the Android test harness was validated.
+Only the archive generation and kernel/module workflow are in the requested
+verification scope. No Android OS build, CTS/VTS run or external resource access
+was performed for this review.
