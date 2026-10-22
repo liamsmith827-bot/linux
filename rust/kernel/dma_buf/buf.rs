@@ -101,6 +101,7 @@ impl DmaBuf {
         Ok(DmaBufAttachment {
             ptr: NonNull::new(ptr).ok_or(EINVAL)?,
             dmabuf: ARef::from(self),
+            _dev: ARef::from(dev),
         })
     }
 
@@ -170,10 +171,13 @@ impl DmaBuf {
 ///
 /// # Invariants
 ///
-/// Owns a valid dma-buf attachment associated with the inner dma-buf.
+/// Owns a valid dma-buf attachment and keeps both its dma-buf and device alive
+/// until after detaching. Keeping the device alive does not keep its driver bound.
 pub struct DmaBufAttachment {
     ptr: NonNull<bindings::dma_buf_attachment>,
     dmabuf: ARef<DmaBuf>,
+    // The C attachment stores a borrowed device pointer, without taking a reference.
+    _dev: ARef<Device>,
 }
 
 // SAFETY: `DmaBufAttachment` is safe to send to other threads.
