@@ -24,7 +24,11 @@ pub trait AnonInodeFileInterface: Sized {
     type Ptr: ForeignOwnable + Send + Sync;
 
     /// Called when the device is released.
-    fn release(device: Self::Ptr, _file: &File) {
+    ///
+    /// The file's last reference has already been dropped. Do not expose a
+    /// `File` reference here: it would allow safe code to acquire a reference
+    /// to a file whose destruction is already in progress.
+    fn release(device: Self::Ptr) {
         drop(device);
     }
 
@@ -180,10 +184,9 @@ impl<T: AnonInodeFileInterface> AnonInodeFileVTable<T> {
         // data and is called only once, so we can safely reclaim ownership.
         let ptr = unsafe { <T::Ptr as ForeignOwnable>::from_foreign(private) };
 
-        // SAFETY:
-        // * The file is valid for the duration of this call.
-        // * There is no active fdget_pos region on the file on this thread.
-        T::release(ptr, unsafe { File::from_raw_file(file) });
+        // The file storage remains valid for this callback, but its refcount
+        // is no longer positive, so File::from_raw_file must not be called.
+        T::release(ptr);
 
         0
     }
