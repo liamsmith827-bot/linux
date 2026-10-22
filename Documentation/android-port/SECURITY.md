@@ -2456,3 +2456,34 @@ ledger entries. Their safe ordering is retained with the port's trace wrappers.
 Native per-superblock lockdep-key lifetime is likewise preserved. No new remote
 sources were accessed, and compilation artifacts remain the only platform-level
 verification.
+
+## F2FS direct-I/O statistics and checkpoint diagnostics
+
+Retain ACK's direct-I/O latency accounting for the configured F2FS_IOSTAT path.
+The completion wrapper saves iomap's private pointer before releasing the
+statistics context and restores it before native iomap completion, for reads
+and writes. The existing statistics helper otherwise restores the superblock
+pointer on writes, which is not an iomap context. The typed post_read_ctx member
+transports this opaque pointer without dereferencing it. Native iomap sets both
+bi_private and its completion before either filesystem submit callback, including
+zero-tail bios. Native encryption, error status, write hints and completion
+reference handling remain. The new wrapper is installed only when statistics
+are enabled at submission; disabling them in flight cannot skip context release.
+The existing trusted vendor hook can suppress latency accounting but cannot skip
+the wrapper's cleanup. This does not grant userspace a new access capability.
+
+The extracted-function host check covers 64 cases with 912 assertions: reads,
+synchronous/asynchronous writes, success/error status, hook suppression and all
+enable-at-submission/completion combinations. Controls removing iomap pointer
+restoration or allocating when disabled fail. It uses shims for the mempool,
+latency update and native completion; no actual I/O, allocation pressure or
+concurrency is tested. The SDK filesystem remains ext4; optional F2FS runtime
+use is unconfirmed and these generic interfaces are retained conservatively.
+
+Checkpoint timing separates merged I/O, NAT and SIT phases; debugfs reports each
+current segment's block offset while retaining the earlier atomic defrag counter.
+NAT flushing prefetches pages that cannot fit in the journal, under the native
+nat_tree_lock. The existing flush function still decides placement, validates
+metadata and handles errors; prefetch does not replace those checks. No block
+layout, permissions or durability ordering changes are introduced. All evidence
+is local, and build verification is recorded separately by source commit.
