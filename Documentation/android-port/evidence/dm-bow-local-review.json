@@ -1,0 +1,101 @@
+{
+  "source_head": "698b14841c5eabad75ac7d6cea667b928e2a2b90",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "port_blob": "7be13bd381fa9e949d35d9379224d2cc3c1a8f78",
+  "ack_blob": "8a7f71bf71a019f73b135a4b1a005137776cdbc1",
+  "lts_path_absent": true,
+  "records": [
+    {
+      "commit": "d00a21b8ebfb1ec52513496063eb1a3e8a84c6e9",
+      "patch_sha256": "be919f11999d2dc24b5df7c9d0fb8b3fa6b9a326a6fa1b5cf750731d8c7f95de",
+      "assessment": "Retain sector alignment masking and correctly cast 64-bit sector diagnostics. These are shared dm-bow paths used on x86_64 too, not an additional 32-bit platform. Current alignment is derived from the selected power-of-two block size."
+    },
+    {
+      "commit": "feff0b2236497c0651baa7f59ea50c2377fff053",
+      "patch_sha256": "e7e6a1140855100519f7416294e074749004abfc0f9fcdd37ce3276e2f29ee5b",
+      "assessment": "Retain subtraction from trims_total when allocating a backup range. Local vold Checkpoint.cpp reads bow/free and uses it to decide when to commit or abort a checkpoint; overstating remaining backup capacity can prevent that low-space response. The subtraction precedes removing/retyping the trimmed range."
+    },
+    {
+      "commit": "ca986e448cf2f92f1bb672fe9bc0b651fa6b76c5",
+      "patch_sha256": "11a1c23a6b979e28d120550421503bec94aff983c9d150874582a0c039c958d5",
+      "assessment": "Retain 4096-byte discard granularity for fragmented ranges, now in target io_hints instead of mutating the shared underlying queue from the constructor. This supports collecting free checkpoint space without changing another consumer of the backing device."
+    },
+    {
+      "commit": "7df64f62169ca56286ba49bca3116e9786fd1616",
+      "patch_sha256": "ea915fa5416112fa02bc4911a168bf7e9d63f13a4acceb1a4eaf48b5a63204a5",
+      "assessment": "Retain block_size option, power-of-two 512..4096 validation, target version 1.2.0 and queue hints. Local fs_mgr explicitly requests 4096 for metadata-encrypted checkpoints because dm-bow relocates sector zero beneath dm-default-key and must preserve crypto data-unit alignment. Correct the constructor cleanup/error paths rather than copying the original OOM false-success behavior."
+    },
+    {
+      "commit": "228804d48ce2923c47ae3f6bdd18dc8d0f20ddbe",
+      "patch_sha256": "463a9919995e19d100fac2f62dd75a442323dafe16d31273574f4113c645d105",
+      "assessment": "Retain unsigned-int max when setting logical_block_size; the native queue-limit member is not narrowed to the historical unsigned-short range. This preserves correct queue limits with the existing Android block-size option."
+    },
+    {
+      "commit": "2eeb8df83da02b93e2ced41fbfef0d8c8a447659",
+      "patch_sha256": "60c41dc25cc7729442a64dc0040b1961c3c89923e2da38d7df81b6ef2a22490a",
+      "assessment": "Retain draining the workqueue and destroying bufio before releasing ranges. Also retain the later b210 ordering which removes/waits for sysfs before destroying those helpers. Initialize locks before any constructor error can call this destructor and release the underlying device reference after helper teardown."
+    },
+    {
+      "commit": "9aba03058c4991e3187d149d8370d58f54a92345",
+      "patch_sha256": "4efac4d5a9ff5e399f0fc837dd5561840cebb7f1e87b91e593975d8fbda492f6",
+      "assessment": "Retain assigning sector0 and then using set_type to make the allocated trimmed block SECTOR0_CURRENT. Direct assignment before copying bypassed trim-list/byte accounting and allowed reuse of the live sector. Keep the source fix; the broader checkpoint durability questions are tracked separately and not claimed resolved."
+    },
+    {
+      "commit": "363f844cc2dc04f3581bd839537a574ca2484420",
+      "patch_sha256": "d8544cc32bdc172ea3de05bfae207b191a223d6e196774a8f84b8d028ade70aa",
+      "assessment": "Retain explicit empty IMA status alongside INFO, with maxlen guard. This initializes the response instead of allowing the added target to leave caller output unspecified; it does not invent a dm-bow IMA measurement format."
+    },
+    {
+      "commit": "7a96549fc9ff33f14b4ed1b4c5f49a0fb51ce9c9",
+      "patch_sha256": "282923e95dc5e5e6ae06f7f86e9629c774e43e25328460b3918ecb1673a90f2c",
+      "assessment": "Retain all four API updates after restoring dm-bow: attribute groups, removal of obsolete num_write_same_bios, current dm_bufio_client_create flags argument, and bdev_nr_sectors for ioctl size matching. These fit the supplied LTS interfaces without changing their implementations."
+    },
+    {
+      "commit": "d242fc9bf14a655afe36d65223e9e0d44d8ce636",
+      "patch_sha256": "ac3905236983ce1a691af7debe8844e4255ed40bb231c9467538b0f915425d7e",
+      "assessment": "Retain sysfs creation in target resume after the mapped disk is registered rather than in constructor. Keep the state_initialized guard, and retain later destructor completion waiting. The Android bow/state and bow/free consumers remain available; failed sysfs setup is recorded in ti->error as in ACK, with no runtime-success claim."
+    },
+    {
+      "commit": "8912d1ff15454fb3ba1bb1178b6e789853df8454",
+      "patch_sha256": "8abc4471f6c870b54ad6adc1c4f67443c5ac4804bb58cac57905d381150f1ea7",
+      "assessment": "Retain bypass of range/split processing for zero-size bios, allowing normal flush requests to reach the backing device. The extracted map matrix covers zero sizes in all three states and both backing-discard capability modes. It does not establish ordering of asynchronously submitted data writes against state changes."
+    },
+    {
+      "commit": "ba03ab7f9a5dceec607ab6b288eef355c9f88133",
+      "patch_sha256": "700d12ea2f7128faab7dd210a3d576e18043446a607cba4a5c876adca1747ec0",
+      "assessment": "Retain the control-flow cleanup replacing empty else statements with comments. All three fall-through remap behaviors remain. This has no independent permission or data-format effect, and avoids retaining obsolete syntax in the selected runtime path."
+    },
+    {
+      "commit": "7a4f5e7cb1043bf4ba49674ffd7263a564fec844",
+      "patch_sha256": "b8b4f5a77271ba1212913a872c5dd2b4f5e3baa0d13612c46e601d85713e7090",
+      "assessment": "Keep destructor range locking and extend status locking to cover the initial trimmed-list walk and first-range checks as well as the main tree loop. Route every locked error exit through unlock. The original hunk protected only the later tree loop, leaving initial dereferences exposed to concurrent splitting/freeing. Preserve the first-range coalescing NULL guard added during this review."
+    },
+    {
+      "commit": "85abd0be638249bc791343b22eabba4ead05ca74",
+      "patch_sha256": "c5ea7f6e06d312ae6b992c96090ee7d04263dba5b93b97577e5c8101f06e1155",
+      "assessment": "Retain static scope on the private range helpers, resume/map helper, ioctl and module init/exit functions. They are used through the target registration callbacks and are not public module APIs. This matches native warning expectations without introducing binary-layout compatibility constraints."
+    },
+    {
+      "commit": "99559d93a01761e503ae157991797c1ab3b5168f",
+      "patch_sha256": "ebcb12a67c07719e9564c875aff9e17bfa7f1241fdbef3d1b5504e03033ee15e",
+      "assessment": "Retain successful no-op completion of CHECKPOINT discards and extend it ahead of sector-zero routing. The original ordering let a discard starting at zero reach handle_sector0 and potentially discard relocated live data. The extracted map matrix and regression control check both zero/nonzero starting sectors, empty requests and the other target states."
+    },
+    {
+      "commit": "b21016d0d44fde7669051c038987090487e81cf9",
+      "patch_sha256": "73bdcb6072e6cc27ae5284fa103d49af22167d6f71ba072f39866b4661cdfedc",
+      "assessment": "Retain kobject_put and completion wait before workqueue/bufio destruction, so active sysfs state/free callbacks cannot use freed helpers. Extend correct lifetime handling to partial construction and the device reference. Extracted constructor/teardown fault cases verify release ordering and no remaining modeled allocations/device references."
+    }
+  ],
+  "checks": [
+    "dm-bow-check.json"
+  ],
+  "local_consumers": [
+    "../grapheneos-17/system/fs/fs_mgr/fs_mgr.cpp",
+    "../grapheneos-17/system/fs/fs_mgr/libdm/dm_target.cpp",
+    "../grapheneos-17/system/vold/Checkpoint.cpp",
+    "../grapheneos-17/device/generic/goldfish/board/fstab/x86",
+    "../kernel_manifest-6.18/common_dist/kernel_x86_64_dot_config"
+  ],
+  "limits": "No live device-mapper setup, block I/O or crash-recovery test. a95d721f13a4 and original target integration remain provisional while checkpoint I/O completion, cache and error propagation are reviewed."
+}
