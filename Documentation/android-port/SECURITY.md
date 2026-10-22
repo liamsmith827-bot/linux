@@ -3430,7 +3430,7 @@ Only local checkouts were used.
 
 The x86_64 common_kernel target includes test_mappings_zip in extra_dist. Its
 pkg_files rule packages the kernel tree's TEST_MAPPING files as inert JSON
-metadata. Restore 30 missing generic/x86 mapping files so that source changes in
+metadata. Restore 29 missing generic/x86 mapping files so that source changes in
 those paths remain associated with Android's existing test groups and filters.
 This adds no kernel driver, runtime permission or historical vendor-binary KMI.
 The supplied KernelAbilistTest.java inspects Android CPU ABI properties and
@@ -3443,9 +3443,9 @@ replaying obsolete selections: it includes the Telecom class-name correction,
 the later removal of broad Libcore selection in 8896bb41cd5a, and scheduler/power
 presubmit reductions. Exclude only the desktop-postsubmit IGT group introduced
 by 6442b9cc8f99; it specifically selects the separate desktop display validation
-suite and is not part of this SDK build target. Other groups in that DRM mapping
-remain. All 52 examined final mapping files match ACK semantically except this
-documented group omission.
+suite and is not part of this SDK build target. Final ACK's DRM mapping contains
+only that group, so the file is omitted entirely. The other 51 examined final
+mapping files match ACK semantically.
 
 These files describe tests; they neither execute the tests nor establish that
 every referenced Android package/filter is available or suitable on this SDK.
