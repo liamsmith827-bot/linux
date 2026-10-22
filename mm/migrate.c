@@ -1981,6 +1981,7 @@ static int migrate_pages_batch(struct list_head *from,
 			case 0:
 				list_move_tail(&folio->lru, &unmap_folios);
 				list_add_tail(&dst->lru, &dst_folios);
+				nr_left = 0;
 				trace_android_vh_migrate_pages_batch_break(folio, from,
 						reason, &migrate_break, &nr_left);
 				if (migrate_break) {

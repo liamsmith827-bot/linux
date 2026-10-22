@@ -2580,7 +2580,7 @@ compact_zone(struct compact_control *cc, struct capture_control *capc)
 	bool update_cached;
 	unsigned int nr_succeeded = 0, nr_migratepages;
 	int order;
-	long vendor_ret;
+	long vendor_ret = 0;
 
 	/*
 	 * These counters track activities during zone compaction.  Initialize
@@ -2589,6 +2589,7 @@ compact_zone(struct compact_control *cc, struct capture_control *capc)
 	cc->total_migrate_scanned = 0;
 	cc->total_free_scanned = 0;
 	cc->nr_migratepages = 0;
+	cc->nr_migrate_file_pages = 0;
 	cc->nr_freepages = 0;
 	for (order = 0; order < NR_PAGE_ORDERS; order++)
 		INIT_LIST_HEAD(&cc->freepages[order]);
@@ -3270,7 +3271,6 @@ static int kcompactd(void *p)
 	pg_data_t *pgdat = (pg_data_t *)p;
 	long default_timeout = msecs_to_jiffies(HPAGE_FRAG_CHECK_INTERVAL_MSEC);
 	long timeout = default_timeout;
-	bool bypass = false;
 
 	current->flags |= PF_KCOMPACTD;
 	set_freezable();
@@ -3291,6 +3291,7 @@ static int kcompactd(void *p)
 		if (wait_event_freezable_timeout(pgdat->kcompactd_wait,
 			kcompactd_work_requested(pgdat), timeout) &&
 			!pgdat->proactive_compact_trigger) {
+			bool bypass = false;
 
 			trace_android_vh_async_psi_bypass(&bypass);
 			if (!bypass)
