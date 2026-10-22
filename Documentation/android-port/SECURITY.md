@@ -691,7 +691,25 @@ platform-device creation, not ordinary PCI/virtio discovery on the selected
 ACPI SDK guest. Their absent call-site changes and remaining declarations/exports
 are omitted together. Generic cpufreq and PCI power-state hooks remain.
 
-The xHCI-platform and syscon-regmap hook questions remain separate: both
-implementations are enabled by the supplied x86 configuration. Their absence
-from a found SDK caller is insufficient to finalize an omission, so the
-selection questions remain recorded in unresolved-feature-questions.json.
+The xHCI-platform and syscon-regmap hooks are conservatively retained: both
+implementations are enabled by the supplied x86 configuration, and xHCI-platform
+also has native ACPI matching. Their exact use by the SDK remains unresolved,
+recorded in unresolved-feature-questions.json. A missing located consumer does
+not establish that these configured, generic vendor interfaces can be removed.
+The syscon hook originated for UNISOC register access; this port adds no UNISOC
+controller implementation or platform enablement.
+
+The xHCI runtime callbacks may deliberately bypass native suspend/resume when
+a trusted module sets bypass. That is an explicit customization of the native
+LTS power-management path and can affect availability or device state if the
+callback is wrong. With no callback, the existing LTS paths and quirk-error
+handling remain. System suspend, sideband handling and LTS controller fixes
+are not replaced. Historical KABI declaration hiding is omitted.
+
+The syscon hook runs after successful regmap/optional clock/reset setup under
+syscon_list_lock. It receives the native config and regmap, retaining LTS
+resource-size checks and error unwinding. ACK frees config.name before invoking
+this callback; the port instead gives the allocated name automatic cleanup at
+function exit, so it is valid during the callback on success and freed on every
+error exit. Callbacks must not retain the stack config/name after return or
+recursively take the syscon mutex. Runtime hook execution is not verified.

@@ -20,6 +20,7 @@
 #include <linux/reset.h>
 #include <linux/mfd/syscon.h>
 #include <linux/slab.h>
+#include <trace/hooks/regmap.h>
 
 static DEFINE_MUTEX(syscon_list_lock);
 static LIST_HEAD(syscon_list);
@@ -45,6 +46,7 @@ static struct syscon *of_syscon_register(struct device_node *np, bool check_res)
 	u32 reg_io_width;
 	int ret;
 	struct regmap_config syscon_config = syscon_regmap_config;
+	char *name __free(kfree) = NULL;
 	struct resource res;
 	struct reset_control *reset;
 	resource_size_t res_size;
@@ -103,11 +105,12 @@ static struct syscon *of_syscon_register(struct device_node *np, bool check_res)
 		goto err_regmap;
 	}
 
-	syscon_config.name = kasprintf(GFP_KERNEL, "%pOFn@%pa", np, &res.start);
-	if (!syscon_config.name) {
+	name = kasprintf(GFP_KERNEL, "%pOFn@%pa", np, &res.start);
+	if (!name) {
 		ret = -ENOMEM;
 		goto err_regmap;
 	}
+	syscon_config.name = name;
 	syscon_config.reg_stride = reg_io_width;
 	syscon_config.val_bits = reg_io_width * 8;
 	syscon_config.max_register = res_size - reg_io_width;
@@ -115,7 +118,6 @@ static struct syscon *of_syscon_register(struct device_node *np, bool check_res)
 		syscon_config.max_register_is_0 = true;
 
 	regmap = regmap_init_mmio(NULL, base, &syscon_config);
-	kfree(syscon_config.name);
 	if (IS_ERR(regmap)) {
 		pr_err("regmap init failed\n");
 		ret = PTR_ERR(regmap);
@@ -146,6 +148,7 @@ static struct syscon *of_syscon_register(struct device_node *np, bool check_res)
 			goto err_reset;
 	}
 
+	trace_android_vh_regmap_update(&syscon_config, regmap);
 	syscon->regmap = regmap;
 	syscon->np = np;
 
