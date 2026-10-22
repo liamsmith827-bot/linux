@@ -1300,5 +1300,123 @@
     ],
     "review_status": "reviewed",
     "feature_patch_sha256": "4785adb9691412dd9fd569fac2674268a98837edb6c0be8c698218b82e1b2e38"
+  },
+  {
+    "commit": "4b21cd3091d0a199ebd05da70b99523c5b09cdeb",
+    "disposition": "adapted",
+    "rationale": "Adapt the rwsem timing context and event definitions. Initialize io_sleep_time to zero when current has no delay state, avoiding uninitialized diagnostic values independently of SDK stack initialization. Sampling is approximate, not a scheduler accounting guarantee. Retain source compatibility for configured F2FS; local vold IdleMaint.cpp SetMaxLockElapsedTime and VoldNativeService.cpp positively expose the timing control. SDK data fstab is ext4, so actual F2FS runtime use remains unverified; optional generic controls are conservatively retained, without enabling another platform. Native LTS locking, error paths and validation remain. See SECURITY.md and evidence/f2fs-lock-trace-check.json; only compilation/host shims are verified.",
+    "result_commits": [
+      "0e583bb7ddb4d8f97e19d1581673758f1d3cbffd"
+    ]
+  },
+  {
+    "commit": "2404af36db552c3dfa3e04b011ae6dea25f24d39",
+    "disposition": "adapted",
+    "rationale": "Add the max_lock_elapsed_time sysfs threshold used by local vold. Keep LTS size-aware sysfs attribute access, so the u64 field is read/written at its actual width. The threshold only controls trace emission. Retain source compatibility for configured F2FS; local vold IdleMaint.cpp SetMaxLockElapsedTime and VoldNativeService.cpp positively expose the timing control. SDK data fstab is ext4, so actual F2FS runtime use remains unverified; optional generic controls are conservatively retained, without enabling another platform. Native LTS locking, error paths and validation remain. See SECURITY.md and evidence/f2fs-lock-trace-check.json; only compilation/host shims are verified.",
+    "result_commits": [
+      "0e583bb7ddb4d8f97e19d1581673758f1d3cbffd"
+    ]
+  },
+  {
+    "commit": "d3e175efec478bcd418a531e97514b8b2cd541ea",
+    "disposition": "adapted",
+    "rationale": "Adapt cp_rwsem operation wrappers and carry the same stack context through normal/error releases, including failed-inode cleanup. Preserve native loff_t destination sizes, EOF validation, inline list initialization, and absence of the reverted cp_enable_rwsem. Eleven whole caller files equal the pre-change source after removing instrumentation. Retain source compatibility for configured F2FS; local vold IdleMaint.cpp SetMaxLockElapsedTime and VoldNativeService.cpp positively expose the timing control. SDK data fstab is ext4, so actual F2FS runtime use remains unverified; optional generic controls are conservatively retained, without enabling another platform. Native LTS locking, error paths and validation remain. See SECURITY.md and evidence/f2fs-lock-trace-check.json; only compilation/host shims are verified.",
+    "result_commits": [
+      "0e583bb7ddb4d8f97e19d1581673758f1d3cbffd"
+    ]
+  },
+  {
+    "commit": "e3340256246aa73370b31698c5c1a3c209440e43",
+    "disposition": "adapted",
+    "rationale": "Adapt node_change timing calls, sharing one lock context with the alternative cp_rwsem path. Preserve native block mapping, allocation and release ordering; no reverted cp_enable_rwsem is reintroduced. Retain source compatibility for configured F2FS; local vold IdleMaint.cpp SetMaxLockElapsedTime and VoldNativeService.cpp positively expose the timing control. SDK data fstab is ext4, so actual F2FS runtime use remains unverified; optional generic controls are conservatively retained, without enabling another platform. Native LTS locking, error paths and validation remain. See SECURITY.md and evidence/f2fs-lock-trace-check.json; only compilation/host shims are verified.",
+    "result_commits": [
+      "0e583bb7ddb4d8f97e19d1581673758f1d3cbffd"
+    ]
+  },
+  {
+    "commit": "a99f3e5a0d779bb95b60480bfe000d55b4e5e92f",
+    "disposition": "adapted",
+    "rationale": "Adapt node_write timing for compressed/quota/node writes. Maintain conditional locking and same matching context on cleanup. Preserve native per-superblock cp_global_sem lockdep keys in the initialization conflict. Retain source compatibility for configured F2FS; local vold IdleMaint.cpp SetMaxLockElapsedTime and VoldNativeService.cpp positively expose the timing control. SDK data fstab is ext4, so actual F2FS runtime use remains unverified; optional generic controls are conservatively retained, without enabling another platform. Native LTS locking, error paths and validation remain. See SECURITY.md and evidence/f2fs-lock-trace-check.json; only compilation/host shims are verified.",
+    "result_commits": [
+      "0e583bb7ddb4d8f97e19d1581673758f1d3cbffd"
+    ]
+  },
+  {
+    "commit": "c04087d8c4ceb6f077c5c79c1903ac8c7d83fea4",
+    "disposition": "adapted",
+    "rationale": "Adapt GC lock contexts through gc_control for every f2fs_gc caller and for independent GC-lock users. Preserve newer LTS f2fs_gc_range per-section optional locking, its six-argument API, and pinning sync/retry behavior; place timing inside that existing lock scope rather than restore the old outer lock. This avoids reversing newer deadlock/ordering fixes. Retain source compatibility for configured F2FS; local vold IdleMaint.cpp SetMaxLockElapsedTime and VoldNativeService.cpp positively expose the timing control. SDK data fstab is ext4, so actual F2FS runtime use remains unverified; optional generic controls are conservatively retained, without enabling another platform. Native LTS locking, error paths and validation remain. See SECURITY.md and evidence/f2fs-lock-trace-check.json; only compilation/host shims are verified.",
+    "result_commits": [
+      "0e583bb7ddb4d8f97e19d1581673758f1d3cbffd"
+    ]
+  },
+  {
+    "commit": "3463db095008e866be128990711c1263aed9e04c",
+    "disposition": "adapted",
+    "rationale": "Adapt cp_global_sem timing with separate contexts for nested GC/checkpoint locks. Preserve per-superblock lockdep registration and current recovery-list initialization. CP_RESIZE keeps its existing caller-owned lock and never consumes an uninitialized local context. Retain source compatibility for configured F2FS; local vold IdleMaint.cpp SetMaxLockElapsedTime and VoldNativeService.cpp positively expose the timing control. SDK data fstab is ext4, so actual F2FS runtime use remains unverified; optional generic controls are conservatively retained, without enabling another platform. Native LTS locking, error paths and validation remain. See SECURITY.md and evidence/f2fs-lock-trace-check.json; only compilation/host shims are verified.",
+    "result_commits": [
+      "0e583bb7ddb4d8f97e19d1581673758f1d3cbffd"
+    ]
+  },
+  {
+    "commit": "4f5a5370b4972cc1d0aa2e9bd5c3893f86af94cc",
+    "disposition": "adapted",
+    "rationale": "Adapt io_rwsem read/write timing around the existing bio batching/submission critical regions. Native merged-bio lifetime, flush conditions and zone handling remain; context and init-name normalization yields identical data.c code. Retain source compatibility for configured F2FS; local vold IdleMaint.cpp SetMaxLockElapsedTime and VoldNativeService.cpp positively expose the timing control. SDK data fstab is ext4, so actual F2FS runtime use remains unverified; optional generic controls are conservatively retained, without enabling another platform. Native LTS locking, error paths and validation remain. See SECURITY.md and evidence/f2fs-lock-trace-check.json; only compilation/host shims are verified.",
+    "result_commits": [
+      "0e583bb7ddb4d8f97e19d1581673758f1d3cbffd"
+    ]
+  },
+  {
+    "commit": "ce52c10b05a57c1e8f9b7cad8d0ec972a08475e6",
+    "disposition": "adapted",
+    "rationale": "Retain optional lock-priority control, disabled by default, with bounded nice-priority sysfs values and exact per-lock mask. Failed trylocks restore a temporary boost; readers alone may boost for cp_rwsem/node_change/node_write. RT and already-higher-priority tasks are unchanged. Restoration is best effort when another actor changes nice; the equality check is not an atomic scheduler transaction. Root-owned sysfs policy controls temporary priority changes, so no new unprivileged control path is claimed. Retain source compatibility for configured F2FS; local vold IdleMaint.cpp SetMaxLockElapsedTime and VoldNativeService.cpp positively expose the timing control. SDK data fstab is ext4, so actual F2FS runtime use remains unverified; optional generic controls are conservatively retained, without enabling another platform. Native LTS locking, error paths and validation remain. See SECURITY.md and evidence/f2fs-lock-trace-check.json; only compilation/host shims are verified.",
+    "result_commits": [
+      "0e583bb7ddb4d8f97e19d1581673758f1d3cbffd"
+    ]
+  },
+  {
+    "commit": "6852ad3a0ca38832f16ddb138f042db8ba3e3f06",
+    "disposition": "adapted",
+    "rationale": "Retain matching priority uplift/restore tracepoints for the selected optional policy. Events report the trusted kernel task context and do not add a userspace write operation or alter lock acquisition. Retain source compatibility for configured F2FS; local vold IdleMaint.cpp SetMaxLockElapsedTime and VoldNativeService.cpp positively expose the timing control. SDK data fstab is ext4, so actual F2FS runtime use remains unverified; optional generic controls are conservatively retained, without enabling another platform. Native LTS locking, error paths and validation remain. See SECURITY.md and evidence/f2fs-lock-trace-check.json; only compilation/host shims are verified.",
+    "result_commits": [
+      "0e583bb7ddb4d8f97e19d1581673758f1d3cbffd"
+    ]
+  },
+  {
+    "commit": "93f313fca66b90d941436fc21778f98d043d7cbd",
+    "disposition": "adapted",
+    "rationale": "Retain critical_task_priority sysfs control and startup policy. Adapt GC task access to native LTS embedded gc_thread storage. Keep CAP_SYS_NICE plus sysfs access and bounds 100..139; apply the later s_umount lifetime fix. Correct documentation to actual default priority 120/nice 0, not the original erroneous 100. Retain source compatibility for configured F2FS; local vold IdleMaint.cpp SetMaxLockElapsedTime and VoldNativeService.cpp positively expose the timing control. SDK data fstab is ext4, so actual F2FS runtime use remains unverified; optional generic controls are conservatively retained, without enabling another platform. Native LTS locking, error paths and validation remain. See SECURITY.md and evidence/f2fs-lock-trace-check.json; only compilation/host shims are verified.",
+    "result_commits": [
+      "0e583bb7ddb4d8f97e19d1581673758f1d3cbffd"
+    ]
+  },
+  {
+    "commit": "587650a540e17eeb63da4564494e5ebf9dc91d75",
+    "disposition": "adapted",
+    "rationale": "Include critical_task_priority in native s_umount try-read exclusion, alongside existing thread-control attributes. Concurrent remount/teardown cannot destroy the checkpoint/GC task while this sysfs store changes its priority; EAGAIN behavior is retained. Retain source compatibility for configured F2FS; local vold IdleMaint.cpp SetMaxLockElapsedTime and VoldNativeService.cpp positively expose the timing control. SDK data fstab is ext4, so actual F2FS runtime use remains unverified; optional generic controls are conservatively retained, without enabling another platform. Native LTS locking, error paths and validation remain. See SECURITY.md and evidence/f2fs-lock-trace-check.json; only compilation/host shims are verified.",
+    "result_commits": [
+      "0e583bb7ddb4d8f97e19d1581673758f1d3cbffd"
+    ]
+  },
+  {
+    "commit": "a27f036e45615fa7921a1687abf3dbabbaac3a4b",
+    "disposition": "adapted",
+    "rationale": "Adapt NAT-tree lock contexts and mask/event names, preserving newer LTS node_write ordering with a distinct nested context. All native NAT-cache lookup/allocation/free, retry and cleanup code remains after wrapper normalization. Retain source compatibility for configured F2FS; local vold IdleMaint.cpp SetMaxLockElapsedTime and VoldNativeService.cpp positively expose the timing control. SDK data fstab is ext4, so actual F2FS runtime use remains unverified; optional generic controls are conservatively retained, without enabling another platform. Native LTS locking, error paths and validation remain. See SECURITY.md and evidence/f2fs-lock-trace-check.json; only compilation/host shims are verified.",
+    "result_commits": [
+      "0e583bb7ddb4d8f97e19d1581673758f1d3cbffd"
+    ]
+  },
+  {
+    "commit": "705b9a3653c458bc46240ead5a9c61c44f06d831",
+    "disposition": "applied",
+    "rationale": "Full patch and all four trace assignments rechecked: pinned LTS still reads inode i_size directly, so the earlier broad tracing disposition did not establish upstream representation. Apply i_size_read consistently, preserving every other LTS field and event. It prevents torn reads on 32-bit kernel architectures; the current 64-bit SDK has no added locking or ABI change. Conservative native accessor use also matches ACK source expectations. This corrects the earlier review rather than using that review as evidence. The current 64-bit native i_size_read also uses smp_load_acquire paired with i_size_write; this preserves that native accessor synchronization for the configured target, not only a future 32-bit architecture.",
+    "result_commits": [
+      "d20875dda4d419f1f12c008a2a03f954b7e8a420"
+    ]
+  },
+  {
+    "commit": "2e0ca5a5793262c83c21342f867448a5bacf9c25",
+    "disposition": "already-represented-upstream",
+    "rationale": "Full one-line patch rechecked after node.c gained lock instrumentation. Native LTS f2fs_get_node_info already returns -EFSCORRUPTED immediately after ERROR_INCONSISTENT_NAT, preventing caching/success for a corrupt entry; that exact check/error/return remains. Eleven-file caller normalization confirms node.c underlying code is unchanged. File identity ceased after tracing, but this security effect remains represented; no ACK application is required.",
+    "result_commits": []
   }
 ]

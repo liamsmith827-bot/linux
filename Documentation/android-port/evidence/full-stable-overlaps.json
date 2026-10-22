@@ -1,9 +1,31 @@
 {
   "base": "7d0a66e4bb9081d75c82ec4957c50034cb0ea449",
   "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
-  "port": "35b41a30b529ba2196e1ed575a8e0e8d2c4675d1",
-  "commits_examined": 1677,
+  "port": "d20875dda4d419f1f12c008a2a03f954b7e8a420",
+  "commits_examined": 1706,
   "overlaps": [
+    {
+      "commit": "cb06a07d835ba1ea250785a796243bb483e65816",
+      "subject": "f2fs: fix data loss caused by incorrect use of nat_entry flag",
+      "lts_added_line_absent": [
+        {
+          "path": "fs/f2fs/node.c",
+          "port_path": "fs/f2fs/node.c",
+          "hunk": "@@ -430,0 +431 @@ bool f2fs_need_inode_block_update(struct f2fs_sb_info *sbi, nid_t ino)",
+          "line": "f2fs_down_read(&sbi->node_write);"
+        },
+        {
+          "path": "fs/f2fs/node.c",
+          "port_path": "fs/f2fs/node.c",
+          "hunk": "@@ -437,0 +439 @@ bool f2fs_need_inode_block_update(struct f2fs_sb_info *sbi, nid_t ino)",
+          "line": "f2fs_up_read(&sbi->node_write);"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "f2fs_need_inode_block_update retains node_write outside nat_tree_lock, with distinct lc/nlc contexts. The trace wrappers call the same native down_read/up_read; normalization of all node.c caller code equals the pre-adaptation baseline. The flag-ordering/data-loss fix is preserved.",
+      "assessment_source_head": "d20875dda4d419f1f12c008a2a03f954b7e8a420"
+    },
     {
       "commit": "71cbad138969edecef01b28dff87d91b56db538d",
       "subject": "rust_binder: reschedule node refcount update on thread exit",
@@ -25,6 +47,28 @@
       "status": "reviewed-source-adaptation",
       "assessment": "The refcount-update requeue on thread exit is retained in both Node and NodeWrapper cancellation. The adapted push_work API additionally receives &self.owner / &node.owner so polling notification is correct; destruction remains outside the process lock.",
       "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "b2cf17d39dd2cc226033fbb669977b6951a6fc11",
+      "subject": "f2fs: fix to shrink gc_lock coverage in f2fs_gc_range()",
+      "lts_added_line_absent": [
+        {
+          "path": "fs/f2fs/gc.c",
+          "port_path": "fs/f2fs/gc.c",
+          "hunk": "@@ -2137,0 +2138,4 @@ int f2fs_gc_range(struct f2fs_sb_info *sbi,",
+          "line": "f2fs_down_write(&sbi->gc_lock);"
+        },
+        {
+          "path": "fs/f2fs/gc.c",
+          "port_path": "fs/f2fs/gc.c",
+          "hunk": "@@ -2159 +2167,8 @@ int f2fs_gc_range(struct f2fs_sb_info *sbi,",
+          "line": "f2fs_up_write(&sbi->gc_lock);"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "f2fs_gc_range retains optional per-section lock acquisition/release and every native goto-next/error/return path, six-argument interface and caller lock choices. Only trace wrappers/context are added; full gc.c and segment.c normalization checks preserve the original code. No old outer-lock coverage is reintroduced.",
+      "assessment_source_head": "d20875dda4d419f1f12c008a2a03f954b7e8a420"
     },
     {
       "commit": "03525b632908b049f4d04cc8a71cdff2329589cf",
@@ -417,6 +461,22 @@
       "status": "reviewed-source-adaptation",
       "assessment": "Split args.h remains; in_args/out_args expand from LTS 4/2 to Android 5/3 for FUSE-BPF instead of restoring the old unsplit header.",
       "assessment_source_head": "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    },
+    {
+      "commit": "aefcec3bebdeed2bff444378122300763325ba23",
+      "subject": "f2fs: avoid NULL checkpoint thread access in sysfs",
+      "lts_added_line_absent": [
+        {
+          "path": "fs/f2fs/sysfs.c",
+          "port_path": "fs/f2fs/sysfs.c",
+          "hunk": "@@ -964,0 +965 @@ static ssize_t f2fs_sbi_store(struct f2fs_attr *a,",
+          "line": "bool thread_entry = !strcmp(a->attr.name, \"ckpt_thread_ioprio\");"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "The existing ckpt_thread_ioprio pointer-null check and s_umount try-read exclusion remain. thread_entry now additionally includes critical_task_priority, extending the same lifetime protection rather than removing the original member. Both priority stores check the actual checkpoint-task pointer.",
+      "assessment_source_head": "d20875dda4d419f1f12c008a2a03f954b7e8a420"
     },
     {
       "commit": "12be1d75e9b29b387088aa729f8b79563ada400d",

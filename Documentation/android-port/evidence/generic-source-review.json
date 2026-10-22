@@ -184,12 +184,13 @@
     "lts_blob": "2f7c367d68ce432bc657d6e698701870638ae188"
   },
   "include/trace/events/f2fs.h": {
-    "review_head": "f6cca810530c3d648a668fead20190087b97b48e",
-    "status": "reviewed-source-selection",
-    "rationale": "Keep tracepoint definitions matching the selected LTS filesystem implementations. ACK event changes accompany the separately omitted F2FS/verity/netfs implementation series; importing their signatures alone would mismatch call sites. Ordinary Android tracing/vendor hooks are retained separately.",
+    "review_head": "d20875dda4d419f1f12c008a2a03f954b7e8a420",
+    "status": "reviewed-scoped-feature-selection",
+    "rationale": "Scoped review of lock timing/priority events added by 0e583bb7ddb4 and four i_size_read assignments applied by d20875dda4d4. Event names/fields match the selected source call sites. Earlier broad LTS-tracing reasoning did not establish representation of the i_size accessor patch; that candidate is now explicitly applied. Large-folio/verity and other event selection remains tied to its pending implementation review, not finalized by this note.",
     "normalized_delta_sha256": "d686440ba8ed2f704d37752ee2b30856f8a77e8303330959b65a8027ef00ca40",
     "ack_blob": "9bfeccbdf26145fde0947d1a922971e03749145c",
-    "lts_blob": "abf5bc7dad9a0b5e33b8d772950fac6ae7fd0bad"
+    "lts_blob": "abf5bc7dad9a0b5e33b8d772950fac6ae7fd0bad",
+    "port_blob": "f2e9efbcd1b85c45e1a91d124c0989d3cd924b93"
   },
   "include/trace/events/fsverity.h": {
     "review_head": "f6cca810530c3d648a668fead20190087b97b48e",
@@ -1216,22 +1217,22 @@
     "port_blob": "2b9e8055bbb53888bb95fa108d2ee3c05e9ddc67"
   },
   "fs/f2fs/data.c": {
-    "review_head": "db5a87077cbc126671c21e87fe8d7e24bfad267a",
-    "status": "reviewed-source-selection",
-    "rationale": "1e4401eda113 completes the read side of the configured F2FS cleancache interface. The adaptation retains LTS block-address validation before cache lookup, fs-verity verification on cache hits and native return/unlock behavior. Exact optional SDK F2FS use is unresolved; original x86 GKI config enables F2FS and CLEANCACHE, so preserve their generic integration conservatively.",
+    "review_head": "d20875dda4d419f1f12c008a2a03f954b7e8a420",
+    "status": "reviewed-scoped-feature-selection",
+    "rationale": "1e4401eda113 completes the read side of the configured F2FS cleancache interface. The adaptation retains LTS block-address validation before cache lookup, fs-verity verification on cache hits and native return/unlock behavior. Exact optional SDK F2FS use is unresolved; original x86 GKI config enables F2FS and CLEANCACHE, so preserve their generic integration conservatively. 0e583bb7ddb4 adds lock instrumentation only; the whole caller file matches the previous source after normalizing contexts/wrappers. This note covers cleancache and locking instrumentation, not final selection of every large-folio/verity series.",
     "normalized_delta_sha256": "f05014c45c746df7fc40833d328edd1167eaf3b101e27d2dd237a0f32402e969",
     "ack_blob": "c83ce99ee66ba64418fb25bfe948b8c23640b400",
     "lts_blob": "3455565b82451abf17adf8aff042e92b84db1098",
-    "port_blob": "0ff76fd42422b9130dd1a97525b06ae685444c5f"
+    "port_blob": "0c0dce9bfb6f68c38535034e3b7e865f1ec71626"
   },
   "fs/f2fs/super.c": {
-    "review_head": "db5a87077cbc126671c21e87fe8d7e24bfad267a",
-    "status": "reviewed-source-selection",
-    "rationale": "1e4401eda113 initializes the configured F2FS cleancache pool. The adjacent ACK f2fs_restore_device_alias call is deliberately not imported: that separate alias-storage mode is outside the ext4 SDK storage target. LTS mounting and cleanup remain.",
+    "review_head": "d20875dda4d419f1f12c008a2a03f954b7e8a420",
+    "status": "reviewed-scoped-feature-selection",
+    "rationale": "Scoped review: retain cleancache pool initialization, mount cleanup and native LTS locking/lockdep. 0e583bb7ddb4 initializes selected lock tracing/priority state while preserving LTS mount behavior. Correction: native LTS already supports static device aliases; the omitted f2fs_restore_device_alias belongs to later dynamic reserve/release, whose necessity remains under review. SDK ext4 fstab alone is not proof of its dispensability. This is not a completed whole-file feature-selection review.",
     "normalized_delta_sha256": "1229ef2e11202ddaaa08ebc8ac07ffeafce3b4870ee50b8fd92ed82338cfd760",
     "ack_blob": "ac11a7fe86f4aae5ad2a483a7cd9a453c49c2cd5",
     "lts_blob": "74b12c1ef82110287a335c25f97f0e6db05a0c5c",
-    "port_blob": "14303ea902cc855a1ca9abaa1706a3fa6490a409"
+    "port_blob": "7b47f60b380f8fb7cd2fbf524e7ec29ae75ba751"
   },
   "block/blk-merge.c": {
     "review_head": "db5a87077cbc126671c21e87fe8d7e24bfad267a",

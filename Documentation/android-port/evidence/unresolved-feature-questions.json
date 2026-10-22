@@ -1,23 +1,22 @@
 [
   {
-    "topic": "F2FS large-folio read support and lock tracing",
+    "topic": "F2FS large-folio read support",
     "status": "unresolved necessity; candidate decisions remain provisional",
     "candidates": [
       "5acc164ef3e9858f0ed6fdc8dc85acbcd786021d",
       "95575ea99ac73e2d70ad21144c2f8201ad32e137",
       "15b2b6aabc5c3f15c178f7b2938a769c72236fe8",
-      "8e46340d6f0f18bf0a4def2af6da7485a99fc17d",
-      "a27f036e45615fa7921a1687abf3dbabbaac3a4b"
+      "8e46340d6f0f18bf0a4def2af6da7485a99fc17d"
     ],
-    "evidence": "SDK common config enables F2FS and IOSTAT; goldfish x86 fstab uses ext4. LTS lacks ACK f2fs_read_data_large_folio and read_folio_count telemetry, so these fixes target code not currently ported. A missing SDK caller is not proof the optional generic feature can be omitted. Review the full feature series and Android configuration/consumer contracts before finalizing."
+    "evidence": "SDK common config enables F2FS and IOSTAT; goldfish x86 fstab uses ext4. LTS lacks ACK f2fs_read_data_large_folio and read_folio_count telemetry, so these fixes target code not currently ported. A missing SDK caller is not proof the optional generic feature can be omitted. Review the full feature series and Android configuration/consumer contracts before finalizing. Lock tracing has been separately resolved by 0e583bb7ddb4 using a positive vold consumer; this does not resolve large-folio selection."
   },
   {
-    "topic": "F2FS device-alias mode",
+    "topic": "F2FS dynamic device-alias reserve/release",
     "status": "unresolved necessity; candidate decisions remain provisional",
     "candidates": [
       "0b3c285a9221498d782bf3cdbf8b989d5c8b1f1a"
     ],
-    "evidence": "ACK namei.c error-unwind fix concerns IS_DEVICE_ALIASING paths absent from native LTS. The current source keeps the native LTS filesystem and SDK ext4/virtio storage path, but absence of the alias feature is a pending feature-selection decision; do not use its absence to claim this fix unnecessary without completing that review."
+    "evidence": "Correction to earlier note: native LTS has IS_DEVICE_ALIASING and static device-alias support; it is the dynamic reserve/release/status ioctls and associated restrictions/restoration that ACK adds. 8b4be13c97ad and 0b3c285a9221 patches were examined; local vold supports formatting static aliases, but that alone does not decide the dynamic extension. SDK ext4 fstab is not sufficient evidence to omit generic functionality. Full dynamic feature and native LTS interaction review remains pending."
   },
   {
     "topic": "Page-pinner higher-order iteration",
@@ -97,5 +96,28 @@
     "result_commits": [
       "8e8cbee1ce28e93ceb1198d30c8c89bb341551c1"
     ]
+  },
+  {
+    "topic": "F2FS lock tracing and priority policy",
+    "status": "resolved source selection; optional runtime use unconfirmed and conservatively retained",
+    "candidates": [
+      "4b21cd3091d0a199ebd05da70b99523c5b09cdeb",
+      "2404af36db552c3dfa3e04b011ae6dea25f24d39",
+      "d3e175efec478bcd418a531e97514b8b2cd541ea",
+      "e3340256246aa73370b31698c5c1a3c209440e43",
+      "a99f3e5a0d779bb95b60480bfe000d55b4e5e92f",
+      "c04087d8c4ceb6f077c5c79c1903ac8c7d83fea4",
+      "3463db095008e866be128990711c1263aed9e04c",
+      "4f5a5370b4972cc1d0aa2e9bd5c3893f86af94cc",
+      "ce52c10b05a57c1e8f9b7cad8d0ec972a08475e6",
+      "6852ad3a0ca38832f16ddb138f042db8ba3e3f06",
+      "93f313fca66b90d941436fc21778f98d043d7cbd",
+      "587650a540e17eeb63da4564494e5ebf9dc91d75",
+      "a27f036e45615fa7921a1687abf3dbabbaac3a4b"
+    ],
+    "result_commits": [
+      "0e583bb7ddb4d8f97e19d1581673758f1d3cbffd"
+    ],
+    "evidence": "Local vold has SetMaxLockElapsedTime and its binder service entry. Selected F2FS config is enabled although the supplied SDK data fstab uses ext4. Preserve generic timing and optional bounded priority interfaces with s_umount task-lifetime exclusion, initialized absent delay accounting, and native LTS data/lock/error behavior. 78 extracted-function host checks passed; ACK missing-delay initialization control rejected. Eleven complete caller files match baseline after documented instrumentation-only normalization. No mounted F2FS, real scheduler/tracepoint, or Android service was executed. Timeout fault injection is disabled by the actual SDK config and has not been imported as part of this feature."
   }
 ]

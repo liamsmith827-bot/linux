@@ -2105,3 +2105,90 @@ Build 63 completed at 8e348642e1f0, manifest f7b136a, with both kernel images,
 modified-payload control was rejected. All module flag/CRC tables and 659 protected
 exports matched. This validates compilation and packaging of the zram lifetime
 fixes; it does not execute swap I/O or the later compat ioctl dispatch addition.
+
+## F2FS lock timing and priority interfaces
+
+0e583bb7ddb4 adapts the ACK lock-timing/priority series onto native LTS F2FS.
+Local GrapheneOS system/vold/IdleMaint.cpp implements SetMaxLockElapsedTime,
+and VoldNativeService.cpp exposes it through the existing service. That is a
+positive consumer for max_lock_elapsed_time. F2FS is configured in the SDK,
+although its supplied data fstab uses ext4. Optional F2FS runtime use remains
+unverified; retain the generic Android interfaces conservatively. This decision
+does not establish the necessity of large-folio or dynamic device-alias changes.
+
+The timing wrappers retain the native rwsem operations and use a per-acquisition
+stack context. Separate contexts cover nested NAT/node-write and GC/checkpoint
+locks. Failed trylocks undo a temporary priority boost, and all successful/error
+releases use the context associated with their acquisition. The checkpoint's
+special raw writer path remains unchanged. The vendor down-read hook remains
+inside the native read-lock wrapper; a trusted callback that requests bypass
+must still implement the required lock semantics.
+
+Temporary priority adjustment defaults to disabled. Its sysfs mask identifies
+which locks permit boosting; cp_rwsem, node_change and node_write boost readers
+only. Already-higher-priority and RT tasks retain their policy. Nice restoration
+is best effort: an observed intervening change suppresses restoration, but the
+check and setter are not an atomic scheduler transaction. Root-owned writable
+sysfs controls remain the authority for this optional policy. The separate
+critical_task_priority control retains CAP_SYS_NICE, priority bounds 100..139,
+and the later s_umount try-read exclusion against remount/thread teardown.
+The GC task reference follows LTS's embedded gc_thread structure. Documentation
+now states the implemented default of 120/nice 0 rather than ACK's incorrect 100.
+
+Conflicts were resolved by preserving the LTS implementation and adding timing:
+
+- Keep loff_t destination size/end variables, EOF validation and error exits.
+- Keep the reverted cp_enable_rwsem absent. Do not restore its old lock ordering.
+- Keep per-superblock cp_global_sem lockdep keys and their registration/cleanup.
+- Keep f2fs_gc_range's optional per-section lock, six-argument API, pinning sync
+  and retry behavior. Instrument inside that scope, rather than restoring the
+  older outer GC lock and reversing later deadlock/ordering fixes.
+- Keep native recovery-list initialization, node_write/NAT lock order and
+  size-aware sysfs field access. No historical structure layout is preserved.
+
+Initialize a missing delay-accounting sample explicitly to zero. The original
+ACK helper leaves it uninitialized when current->delays is NULL. SDK automatic
+stack initialization mitigates automatic objects, but explicit initialization
+also covers reused/poisoned context storage. Timing remains diagnostic sampling,
+not exact scheduler accounting under dynamic accounting changes. Fault-timeout
+injection is disabled by the actual SDK config and is not imported with this
+series; its independent candidate review remains separate.
+
+check_f2fs_lock_trace.py passes 78 extracted-function checks: absent delay state,
+all seven lock names, read/write policy, failed/successful trylocks, RT/higher
+priority bypass, nesting and observed external nice changes. A poisoned-state
+control using ACK's original helper fails. Eleven complete caller files equal
+the baseline after removing only context declarations/arguments, normalizing
+wrapper/init names, and removing the separately reviewed GC-thread nice setter.
+This comparison preserves the actual underlying control flow and data handling;
+it does not prove live lock balance or scheduler behavior. No F2FS filesystem,
+real tracing callback, Android service or runtime fault injection was executed.
+
+Rechecking 705b9a3653c4 found that the earlier broad tracing disposition did not
+establish its code effect: LTS still used direct i_size reads in four events.
+d20875dda4d4 applies the actual i_size_read patch. Besides the original 32-bit
+tearing rationale, the current native 64-bit helper uses smp_load_acquire paired
+with i_size_write, so use the native accessor consistently. No event layout or
+userspace authority changes. This corrects the earlier review explicitly.
+
+The device-alias question has also been corrected: LTS already supports static
+aliases. The unresolved ACK extension is dynamic reserve/release/status and its
+mount/rename cleanup, not the existence of static alias support. Local vold's
+formatting support does not by itself resolve that dynamic feature's necessity.
+
+Build 64 completed at 35b41a30b529, manifest 55efe90, with both kernel images,
+100 common modules and 45 virtual-device modules. All 145 signatures and module
+flag/CRC tables verified; 659 protected exports matched and the altered-payload
+control was rejected. This includes zram compat dispatch; subsequent F2FS source
+changes require their own build evidence. Existing nonfatal toybox diff and GKI
+version-format warnings remain; their linked URLs were not opened. All sources
+consulted for this review were local checkouts and local host build tools.
+
+Build 65 completed at 0e583bb7ddb4, manifest 74a43a0, with both kernel images,
+100 common and 45 virtual-device modules. All signatures and module flag/CRC
+tables verified; the altered payload was rejected and 659 protected exports
+matched. This verifies the adapted F2FS lock interfaces, before the later
+four i_size_read event changes. Runtime scheduling and filesystem behavior remain
+unverified. Stable overlap review separately confirms cb06a07d835b NAT ordering,
+b2cf17d39dd2 GC lock coverage and aefcec3bebde checkpoint-thread null/lifetime
+checks retain their LTS effects under the wrappers.
