@@ -17,6 +17,7 @@
 #include <linux/swap.h>
 #include <linux/prefetch.h>
 #include <linux/uio.h>
+#include <linux/cleancache.h>
 #include <linux/sched/signal.h>
 #include <linux/fiemap.h>
 #include <linux/iomap.h>
@@ -2211,6 +2212,17 @@ got_it:
 		if (!f2fs_is_valid_blkaddr(F2FS_I_SB(inode), block_nr,
 						DATA_GENERIC_ENHANCE_READ)) {
 			ret = -EFSCORRUPTED;
+			goto out;
+		}
+		if (!folio_test_uptodate(folio) && !folio_test_swapcache(folio) &&
+		    !cleancache_get_page(&folio->page)) {
+			if (f2fs_need_verity(inode, index) &&
+			    !fsverity_verify_folio(folio)) {
+				ret = -EIO;
+				goto out;
+			}
+			folio_mark_uptodate(folio);
+			folio_unlock(folio);
 			goto out;
 		}
 	} else {
