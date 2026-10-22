@@ -2539,5 +2539,87 @@
     "disposition": "reverted-no-residual-code",
     "rationale": "Preserve this removal of obsolete android_fs data tracepoints/helpers and every ext4/F2FS/mpage call site. Native LTS needs no removal patch because those interfaces are absent already; current port also has no residual symbols/headers. Every deletion examined, including F2FS DIO calls moved into file.c and the earlier quota guard. This avoids reviving incompatible completion code and alias-allocation reclaim exposure. GrapheneOS Perfetto still recognizes legacy event schemas (external/perfetto/src/traced/probes/ftrace/event_info.cc); this is not evidence that such events must be restored to a kernel whose final ACK removed them. Local atrace disk category selects optional native ext4/F2FS events, and those remain; current native F2FS file-based data events also remain, without claiming identical timing/ABI to the removed events. No additional remote source used; no runtime trace validation.",
     "result_commits": []
+  },
+  {
+    "commit": "36f66dd065e557b80b77c3a2b1d78742196cfbca",
+    "disposition": "adapted",
+    "rationale": "Transfer the common-reader error fix into both selected native ext4/F2FS Merkle readers: only -ENOENT can trigger speculative readahead; other lookup errors return unchanged. Drop existing stale references before demand reading and propagate demand-read failure. Keep native offsets and the invalidate lock from 05ae9392c7c8. Avoid extra I/O on allocation/error paths without weakening hash verification. Extracted tests pass 160 cases/1520 assertions with retry-on-error and leaked-reference controls rejected. Full original patch and current callers reviewed; see evidence/fsverity-native-review.json. No runtime verification or additional remote resource used.",
+    "result_commits": [
+      "8e1d83f93ebd4b17cf29d09ebf1d6af0be16cd67"
+    ]
+  },
+  {
+    "commit": "cc924eb3fcd6cf663f992dfb96670cc9da393305",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "The exported standalone signature helper was explicitly removed by 7f2bfb86500c after its incfs caller was removed. Both complete patches and current signature/header/incfs sources examined: final ACK and port lack __fsverity_verify_signature and preserve native verification instead. Do not restore the removed wrapper or its permissive disabled-signature stub. Native signature validation retains the empty-keyring parser-avoidance check and LSM integrity notification (SDK built-in signatures disabled). Incfs still implements its separately retained digest/metadata API; absence of a caller alone is not the rationale. Full original patch and current callers reviewed; see evidence/fsverity-native-review.json. No runtime verification or additional remote resource used.",
+    "result_commits": []
+  },
+  {
+    "commit": "c6dfd9165315c7798249bd7b54a2dac1ccf8b9b7",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native LTS contains e77000ccc531 initialization handling: SLAB_PANIC info cache, workqueue/keyring panic on failure, void initialization helpers and no unused exit paths. The full affected fs/verity files and private header are identical to pinned LTS. Later native register_sysctl_init supersedes the manual sysctl registration/panic handling. Keep native boot-failure behavior and all signature checks; do not reintroduce ACK standalone signature wrapper context. Full original patch and current callers reviewed; see evidence/fsverity-native-review.json. No runtime verification or additional remote resource used.",
+    "result_commits": []
+  },
+  {
+    "commit": "3742c49ce772331138c9c046380145db3de19766",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native LTS contains 456ae5fe9b44: sysctl setup resides in init.c and runs independently of built-in signature support; only require_signatures table entry is conditional. Later register_sysctl_init and sized const table supersede the old header/sentinel. All affected files equal LTS. The SDK disables built-in signatures but retains the common fsverity sysctl directory setup. Native access mode/bounds on require_signatures remain. Full original patch and current callers reviewed; see evidence/fsverity-native-review.json. No runtime verification or additional remote resource used.",
+    "result_commits": []
+  },
+  {
+    "commit": "57a0db274b7b2fc02f10c42c365ec47b6c1141cd",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep native per-filesystem fsverity_cleanup_inode ownership rather than moving it into generic clear_inode. Reviewed ext4_clear_inode, F2FS post-eviction including async split, and both btrfs eviction exits: each still cleans its info exactly at the native lifecycle point. Native cleanup frees and clears the inode-owned pointer; generic clear_inode has no duplicate call. This is an internal ownership refactor, not a new Android userspace or hook operation. SDK ext4/F2FS retain verification and cleanup; btrfs is disabled. No need to change generic VFS lifetime or adopt a hash-table representation for this refactor. Full original patch and current callers reviewed; see evidence/fsverity-native-review.json. No runtime verification or additional remote resource used.",
+    "result_commits": []
+  },
+  {
+    "commit": "af007e9cc7107d42dab14b568ae3d62683f1643d",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep native inode-based write_merkle_tree_block API. Every changed filesystem callback immediately converts the proposed file argument back to the same inode; native build_merkle_tree already obtains that inode from its live filp. Ext4/F2FS metadata offsets, pagecache writes and errors are therefore retained with no new target behavior required. Btrfs callback is native and disabled in SDK. The motivating new iomap/XFS implementation is outside this target; this does not omit hash writes or verification. Vendor hooks are unaffected; this is an internal filesystem operation signature, not historical binary KMI. Full original patch and current callers reviewed; see evidence/fsverity-native-review.json. No runtime verification or additional remote resource used.",
+    "result_commits": []
+  },
+  {
+    "commit": "66abca47bee6e529654246698e6b9ada826d6d86",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep two native filesystem Merkle-page readers instead of moving their identical cache/read sequence into a common helper. Each retains its own metadata offset and native __filemap_get_folio behavior; SDK F2FS fault injection is disabled. Port the substantive later error-path fix 36f66dd separately in 8e1d83f93ebd and preserve shared invalidate locking. No hash operation, userspace API or vendor hook is removed by retaining the local implementation. A common helper needed by a future XFS implementation is not necessary for the configured ext4/F2FS target. Full original patch and current callers reviewed; see evidence/fsverity-native-review.json. No runtime verification or additional remote resource used.",
+    "result_commits": [
+      "8e1d83f93ebd4b17cf29d09ebf1d6af0be16cd67"
+    ]
+  },
+  {
+    "commit": "2c6703e3c484f4ab23be8e78310011dbae16e460",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Retain native const inode in fsverity_info and explicit non-const inode argument to verification. Native callers already provide the live inode; removing const and reducing an argument only prepares the later cached-info refactor. The same block hashing, signature checks and read operations remain. All three touched core files equal pinned LTS at this review. Full original patch and affected current implementations examined. See evidence/fsverity-representation-review.json. No additional remote resources; no runtime/concurrency verification.",
+    "result_commits": []
+  },
+  {
+    "commit": "6131e03b52b70b7dee681e7992f2c3c482ba928a",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Retain native inode/folio/bio-based verification helpers with internal info lookup. Complete cross-filesystem patch reviewed: the change moves lookup into buffer, btrfs, ext4 and F2FS callers without adding verification. Native direct inode pointer lookup avoids the proposed hash-table cost; native callers still verify buffer offsets, full folios, bios, decompressed pages and holes. Keep the explicit F2FS large-folio subrange adaptation already reviewed. No userspace or vendor hook interface depends on relocating this lookup; btrfs disabled in SDK. Native publication acquire and inode-owned lifetime remain. Full original patch and affected current implementations examined. See evidence/fsverity-representation-review.json. No additional remote resources; no runtime/concurrency verification.",
+    "result_commits": []
+  },
+  {
+    "commit": "f706f34d4749e4fa65cbc9b922fbdafc54f77965",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep native per-filesystem inode-owned verity pointers with release/acquire publication and cleanup, rather than global rhashtable lookup. All affected pointer fields, zero initialization, inode_info_offs and cleanup calls are present in the port. Native fsverity_active tests initialized info (not merely S_VERITY), including enable/open races. The change trades per-inode storage for global lookup/allocation and earlier publication; it does not add an Android userspace operation, verification algorithm or vendor hook. Retaining the LTS representation preserves its existing verification/enable failure semantics and avoids a new global lifetime dependency. This is representation minimization, not historical binary-KMI retention; eight bytes of native pointer storage per enabled-filesystem inode remain. Full original patch and affected current implementations examined. See evidence/fsverity-representation-review.json. No additional remote resources; no runtime/concurrency verification.",
+    "result_commits": []
+  },
+  {
+    "commit": "f358830908a522b978b74cebe7aa99f3cdd71b07",
+    "disposition": "reconciled-to-lts",
+    "rationale": "The verification-context inode remains used by native fsverity_verify_pending_blocks when calling verify_data_block. Its removal is cleanup only after the omitted argument-reduction refactor. Preserve the actual live native field, initialization and use; dropping it alone would break verification, not improve security. Full original patch and affected current implementations examined. See evidence/fsverity-representation-review.json. No additional remote resources; no runtime/concurrency verification.",
+    "result_commits": []
+  },
+  {
+    "commit": "3ebda2caa466bf17f05600cb96e3376c6fe7bcd1",
+    "disposition": "reconciled-to-lts",
+    "rationale": "The native fsverity_verify_page helper still has configured F2FS compression verification consumers in compress.c and data.c. Their page-sized compressed mappings remain excluded from large folios; other noncompressed bios/holes use the separately adapted native length/offset helpers. Keep this wrapper and its native core delegation rather than removing a still-used API based on the later ACK consumer conversion. No data verification is omitted. Full original patch and affected current implementations examined. See evidence/fsverity-representation-review.json. No additional remote resources; no runtime/concurrency verification.",
+    "result_commits": []
+  },
+  {
+    "commit": "efe665b77332621017fded6de1496bfff20ae5c6",
+    "disposition": "reconciled-to-lts",
+    "rationale": "This fixes a cross-inode hash-chain UAF introduced by f706f34d4749. That hash table is not selected: native fsverity_get_info directly loads the inode-owned pointer, fsverity_free_info removes no shared chain, and other inodes cannot traverse this object during lookup. Full fix and predecessor examined. Retain native inode-lifetime cleanup; applying an RCU union/callback without the hash table is not required to preserve this fix effect. This is a concrete missing-precondition analysis, not a claim that all possible verity lifetime races are ruled out. Full original patch and affected current implementations examined. See evidence/fsverity-representation-review.json. No additional remote resources; no runtime/concurrency verification.",
+    "result_commits": []
   }
 ]
