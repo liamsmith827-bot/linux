@@ -3669,3 +3669,32 @@ Review found that atomic.c and its generator disagreed about the helper macro
 fallback. `f4693bcebd83` corrects the generator; executing it reproduces the
 checked-in body and its SHA-1 exactly. Atomic operations are unchanged. The
 ashmem Offset alias cleanup also preserves the earlier legacy ioctl payload fix.
+
+## Rust WrapFD lifetime and IRQ helpers
+
+Three candidates are reviewed in `evidence/rust-wrapfd-dependency-review.json`.
+The new anonymous-inode wrapper called `File::from_raw_file` from final release,
+after native `__fput` had consumed the last reference. The native Rust contract
+requires a positive reference count: exposing a regular File there permits safe
+code to attempt reference acquisition during destruction. `f744d35f5a43` removes
+the File argument from this new callback, retaining owned-private-data cleanup.
+The selected WrapFD implementation uses the default cleanup. Custom source
+implementations of this newly introduced callback must adopt the safer signature;
+this deliberate API deviation prevents the lifetime violation. Native LTS
+anonymous-inode allocation, LSM initialization, module pinning and failure cleanup
+remain unchanged. Other inherited Rust file interfaces are not certified by this
+scoped review.
+
+The extracted creation/release harness passes 16 cases and 213 assertions,
+including ownership return on failure and successful retry. The actual ACK
+implementation produces 16 invalid File references in the same host model.
+These are FFI/refcount shims, not native LSM, file-syscall or race tests.
+
+WrapFD uses the retained IRQ lock around completion results. The closure guard
+cannot escape; three compiler rejection probes and an owned-return success probe
+check that property with the actual extracted method and simplified lock types.
+Native irqsave/irqrestore supplies interrupt semantics; no IRQ execution is
+claimed. Error values still return through the unlock path. The selected kernel
+has no panic unwinding or PREEMPT_RT behavior verified here. Mask-only page helpers
+retain native base-page units for DMA and direct-I/O buffer geometry. The complete
+WrapFD driver, including caller arithmetic, remains a separate audit item.

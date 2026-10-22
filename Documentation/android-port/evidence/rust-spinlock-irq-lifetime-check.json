@@ -1,0 +1,23 @@
+{
+  "source_sha256": "ee3c419da447ee22b784f945895ce6c62683b5e83968322714098df5f6fe0ca1",
+  "extracted_lock_irq_sha256": "a31b23b49f2db4b075f81f59a752aad469e3d449a60ccc925c1a5256eef3aceb",
+  "results": {
+    "return_value": {
+      "returncode": 0,
+      "diagnostic": ""
+    },
+    "escape_guard": {
+      "returncode": 1,
+      "diagnostic": "error: lifetime may not live long enough\n  --> /tmp/sdk-spinlock-escape_guard.rs:25:120\n   |\n25 | ...:new(1)};let out=lock.lock_irq(|guard| guard);println!(\"{}\",*out);}\n   |                                    ------ ^^^^^ returning this value requires that `'1` must outlive `'2`\n   |                                    |    |\n   |                                    |    return type of closure is SpinLockIrqGuard<'2, i32>\n   |                                    has type `SpinLockIrqGuard<'1, i32>`\n\nerror: aborting due to 1 previous error"
+    },
+    "escape_reference": {
+      "returncode": 1,
+      "diagnostic": "error: lifetime may not live long enough\n  --> /tmp/sdk-spinlock-escape_reference.rs:25:120\n   |\n25 | ...new(1)};let out=lock.lock_irq(|guard| &*guard);println!(\"{}\",out);}\n   |                                   ------ ^^^^^^^ returning this value requires that `'1` must outlive `'2`\n   |                                   |    |\n   |                                   |    return type of closure is &'2 i32\n   |                                   has type `SpinLockIrqGuard<'1, i32>`\n   |\nhelp: dereference the return value\n   |\n25 | fn main(){let lock=SpinLockIrq{state:Opaque(UnsafeCell::new(0)),data:UnsafeCell::new(1)};let out=lock.lock_irq(|guard| *&*guard);println!(\"{}\",out);}\n   |                                                                                                                        +\n\nerror[E0515]: cannot return value referencing function parameter `guard`\n  --> /tmp/sdk-spinlock-escape_reference.rs:25:120\n   |\n25 | ...};let out=lock.lock_irq(|guard| &*guard);println!(\"{}\",out);}\n   |                                    ^^-----\n   |                                    | |\n   |                                    | `guard` is borrowed here\n   |                                    returns a value referencing data owned by the current function\n\nerror: aborting due to 2 previous errors\n\nFor more information about this error, try `rustc --explain E0515`."
+    },
+    "store_guard": {
+      "returncode": 1,
+      "diagnostic": "error[E0521]: borrowed data escapes outside of closure\n  --> /tmp/sdk-spinlock-store_guard.rs:25:129\n   |\n25 | ...eCell::new(1)};let mut out=None;lock.lock_irq(|guard|{out=Some(guard);});println!(\"{}\",*out.unwrap());}\n   |                       -------                     -----  ^^^^^^^^^^^^^^^ `guard` escapes the closure body here\n   |                       |                           |\n   |                       |                           `guard` is a reference that is only valid in the closure body\n   |                       `out` declared here, outside of the closure body\n\nerror: aborting due to 1 previous error\n\nFor more information about this error, try `rustc --explain E0521`."
+    }
+  },
+  "scope": "Actual lock_irq method extracted unchanged; simplified lock/guard types and no-op native-lock shims. Compiler permits an owned return value and rejects returning/storing a guard or reference outside the callback. No test of native IRQ masking, spinlocks, preemption or concurrent callbacks."
+}
