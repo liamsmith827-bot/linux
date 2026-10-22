@@ -3446,7 +3446,8 @@ static struct file *do_sync_mmap_readahead(struct vm_fault *vmf)
 	trace_android_vh_page_cache_read(file->f_inode, ra->start, ra->size);
 	trace_android_vh_page_cache_readahead_start(file, vmf->pgoff,
 			ra->size, true);
-	trace_android_vh_customize_ractl(&ractl, ra, vmf->vma, false);
+	/* The VMA may have been freed after dropping the fault lock. */
+	trace_android_vh_customize_ractl(&ractl, ra, fpin ? NULL : vmf->vma, false);
 	page_cache_ra_order(&ractl, ra);
 	trace_android_vh_page_cache_readahead_end(file, vmf->pgoff);
 	return fpin;
@@ -4016,8 +4017,15 @@ vm_fault_t filemap_map_pages(struct vm_fault *vmf,
 					xas.xa_index - folio->index, addr,
 					nr_pages, &rss, &mmap_miss, file_end);
 
-		folio_unlock(folio);
-		trace_android_vh_filemap_folio_mapped(folio);
+		if (trace_android_vh_filemap_folio_mapped_enabled()) {
+			/* Mapping consumed our reference; pin across the unlocked hook. */
+			folio_get(folio);
+			folio_unlock(folio);
+			trace_android_vh_filemap_folio_mapped(folio);
+			folio_put(folio);
+		} else {
+			folio_unlock(folio);
+		}
 	} while ((folio = next_uptodate_folio(&xas, mapping, end_pgoff)) != NULL);
 	add_mm_counter(vma->vm_mm, folio_type, rss);
 	pte_unmap_unlock(vmf->pte, vmf->ptl);
@@ -4392,6 +4400,7 @@ ssize_t generic_perform_write(struct kiocb *iocb, struct iov_iter *i)
 	trace_android_vh_adjust_iocb_flags(file, pos, iov_iter_count(i), &iocb->ki_flags);
 	do {
 		struct folio *folio;
+		pgoff_t index;
 		size_t offset;		/* Offset into folio */
 		size_t bytes;		/* Bytes to write to folio */
 		size_t copied;		/* Bytes copied from user */
@@ -4429,6 +4438,7 @@ retry:
 		copied = copy_folio_from_iter_atomic(folio, offset, bytes, i);
 		flush_dcache_folio(folio);
 
+		index = folio->index;
 		status = a_ops->write_end(iocb, mapping, pos, bytes, copied,
 						folio, fsdata);
 		if (unlikely(status != copied)) {
@@ -4436,7 +4446,7 @@ retry:
 			if (unlikely(status < 0))
 				break;
 		}
-		trace_android_vh_io_statistics(mapping, folio->index, 1, false, false);
+		trace_android_vh_io_statistics(mapping, index, 1, false, false);
 		cond_resched();
 
 		if (unlikely(status == 0)) {
