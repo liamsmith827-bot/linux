@@ -252,18 +252,31 @@ static long do_mincore(unsigned long addr, unsigned long pages, unsigned char *v
 	return (end - addr) >> PAGE_SHIFT;
 }
 
-static inline void __collapse_mincore_result(unsigned char *src_vec,
-					     unsigned char *res_vec,
-					     unsigned long pages,
-					     unsigned long nr_subpages)
+struct mincore_result {
+	unsigned int nr_subpages;
+	unsigned int accumulated;
+	unsigned char value;
+};
+
+static unsigned long collapse_mincore_result(unsigned char *src_vec,
+		unsigned char *res_vec, unsigned long pages,
+		struct mincore_result *result)
 {
-	unsigned long i;
+	unsigned long i, out = 0;
 
-	if (nr_subpages == 1)
-		return;
+	if (result->nr_subpages == 1)
+		return pages;
 
-	for (i = 0; i < pages; i++)
-		res_vec[i / nr_subpages] |= src_vec[i];
+	/* A native VMA boundary can split one emulated page across walks. */
+	for (i = 0; i < pages; i++) {
+		result->value |= src_vec[i];
+		if (++result->accumulated == result->nr_subpages) {
+			res_vec[out++] = result->value;
+			result->accumulated = 0;
+			result->value = 0;
+		}
+	}
+	return out;
 }
 
 /*
@@ -298,6 +311,7 @@ SYSCALL_DEFINE3(mincore, unsigned long, start, size_t, len,
 	unsigned char *tmp;
 	unsigned char *res;
 	unsigned long nr_subpages = __PAGE_SIZE / PAGE_SIZE;
+	struct mincore_result result = { .nr_subpages = nr_subpages };
 
 	start = untagged_addr(start);
 
@@ -310,18 +324,20 @@ SYSCALL_DEFINE3(mincore, unsigned long, start, size_t, len,
 		return -ENOMEM;
 
 	/* This also avoids any overflows on PAGE_ALIGN */
-	pages = len >> PAGE_SHIFT;
-	pages += (offset_in_page(len)) != 0;
+	pages = len >> __PAGE_SHIFT;
+	pages += (__offset_in_page(len)) != 0;
 
-	if (!access_ok(vec, pages / nr_subpages))
+	if (!access_ok(vec, pages))
 		return -EFAULT;
+	/* Walk every native subpage of each requested userspace page. */
+	pages *= nr_subpages;
 
 	tmp = (void *) __get_free_page(GFP_USER);
 	if (!tmp)
 		return -EAGAIN;
 
 	if (unlikely(nr_subpages > 1)) {
-		res = (void *) __get_free_page(GFP_USER|__GFP_ZERO);
+		res = (void *) __get_free_page(GFP_USER);
 		if (!res) {
 			free_page((unsigned long) tmp);
 			return -EAGAIN;
@@ -331,6 +347,8 @@ SYSCALL_DEFINE3(mincore, unsigned long, start, size_t, len,
 
 	retval = 0;
 	while (pages) {
+		unsigned long entries;
+
 		/*
 		 * Do at most PAGE_SIZE entries per iteration, due to
 		 * the temporary buffer size.
@@ -342,22 +360,15 @@ SYSCALL_DEFINE3(mincore, unsigned long, start, size_t, len,
 		if (retval <= 0)
 			break;
 
-		__collapse_mincore_result(tmp, res, retval, nr_subpages);
+		entries = collapse_mincore_result(tmp, res, retval, &result);
 
-		if (copy_to_user(vec, res, retval / nr_subpages)) {
+		if (copy_to_user(vec, res, entries)) {
 			retval = -EFAULT;
 			break;
 		}
 
-		/*
-		 * If emulating the page size, clear the old results, to avoid
-		 * corrupting the next __collapse_mincore_result()
-		 */
-		if (nr_subpages > 1)
-			memset(res, 0, retval / nr_subpages);
-
 		pages -= retval;
-		vec += retval / nr_subpages;
+		vec += entries;
 		start += retval << PAGE_SHIFT;
 		retval = 0;
 	}
