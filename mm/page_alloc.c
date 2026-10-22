@@ -3782,10 +3782,11 @@ static bool unreserve_highatomic_pageblock(const struct alloc_context *ac,
 	struct page *page;
 	int order;
 	int ret;
-	bool skip_unreserve_highatomic = false;
 
 	for_each_zone_zonelist_nodemask(zone, z, zonelist, ac->highest_zoneidx,
 								ac->nodemask) {
+		bool skip_unreserve_highatomic = false;
+
 		/*
 		 * Preserve at least one pageblock unless memory pressure
 		 * is really high.
@@ -4794,7 +4795,7 @@ __perform_reclaim(gfp_t gfp_mask, unsigned int order,
 					const struct alloc_context *ac)
 {
 	unsigned int noreclaim_flag;
-	unsigned long progress;
+	unsigned long progress = 0;
 	bool skip = false;
 
 	cond_resched();
@@ -5325,8 +5326,11 @@ retry:
 	if (page)
 		goto got_pg;
 
+	should_alloc_retry = false;
 	trace_android_vh_should_alloc_pages_retry(gfp_mask, order, &alloc_flags,
 		ac->migratetype, ac->preferred_zoneref->zone, &page, &should_alloc_retry);
+	if (page)
+		goto got_pg;
 	if (should_alloc_retry)
 		goto retry;
 

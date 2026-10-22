@@ -2248,8 +2248,6 @@ static void shrink_active_list(unsigned long nr_to_scan,
 	unsigned nr_rotated = 0;
 	bool file = is_file_lru(lru);
 	struct pglist_data *pgdat = lruvec_pgdat(lruvec);
-	int should_protect = 0;
-	bool bypass = false;
 
 	lru_add_drain();
 
@@ -2268,6 +2266,8 @@ static void shrink_active_list(unsigned long nr_to_scan,
 
 	while (!list_empty(&l_hold)) {
 		struct folio *folio;
+		int should_protect = 0;
+		bool bypass = false;
 
 		cond_resched();
 		folio = lru_to_folio(&l_hold);
@@ -5061,7 +5061,7 @@ static bool try_to_shrink_lruvec(struct lruvec *lruvec, struct scan_control *sc)
 	int swappiness = get_swappiness(lruvec, sc);
 
 	while (true) {
-		int delta;
+		int delta = 0;
 		bool bypass = false;
 
 		nr_to_scan = get_nr_to_scan(lruvec, sc, swappiness);
@@ -5074,9 +5074,9 @@ static bool try_to_shrink_lruvec(struct lruvec *lruvec, struct scan_control *sc)
 			goto check_abort;
 
 		delta = evict_folios(nr_to_scan, lruvec, sc, swappiness);
+check_abort:
 		if (!delta)
 			break;
-check_abort:
 		scanned += delta;
 		if (scanned >= nr_to_scan)
 			break;
@@ -5149,7 +5149,6 @@ static void shrink_many(struct pglist_data *pgdat, struct scan_control *sc)
 	struct lru_gen_folio *lrugen;
 	struct mem_cgroup *memcg;
 	struct hlist_nulls_node *pos;
-	bool bypass = false;
 
 	gen = get_memcg_gen(READ_ONCE(pgdat->memcg_lru.seq));
 	bin = first_bin = get_random_u32_below(MEMCG_NR_BINS);
@@ -5160,6 +5159,8 @@ restart:
 	rcu_read_lock();
 
 	hlist_nulls_for_each_entry_rcu(lrugen, pos, &pgdat->memcg_lru.fifo[gen][bin], list) {
+		bool bypass = false;
+
 		if (op) {
 			lru_gen_rotate_memcg(lruvec, op);
 			op = 0;
