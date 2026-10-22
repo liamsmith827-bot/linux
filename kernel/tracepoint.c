@@ -800,7 +800,7 @@ static int rvh_func_add(struct tracepoint *tp, struct tracepoint_func *func)
 		/* '+ 1' for the last NULL element */
 		tp->funcs = rvh_zalloc_funcs(ANDROID_RVH_NR_PROBES_MAX + 1);
 		if (!tp->funcs)
-			return ENOMEM;
+			return -ENOMEM;
 	}
 
 	for (i = 0; i < ANDROID_RVH_NR_PROBES_MAX; i++) {
@@ -827,8 +827,11 @@ static int android_rvh_add_func(struct tracepoint *tp, struct tracepoint_func *f
 	}
 
 	ret = rvh_func_add(tp, func);
-	if (ret)
+	if (ret) {
+		if (tp->ext && tp->ext->unregfunc && !static_key_enabled(&tp->key))
+			tp->ext->unregfunc();
 		return ret;
+	}
 	tracepoint_update_call(tp, tp->funcs);
 	static_branch_enable(&tp->key);
 
@@ -840,6 +843,10 @@ int android_rvh_probe_register(struct tracepoint *tp, void *probe, void *data)
 	struct tracepoint_func tp_func;
 	int ret;
 
+	if (WARN_ON(!probe))
+		return -EINVAL;
+
+	mutex_lock(&tracepoints_mutex);
 	/*
 	 * Once the static key has been flipped, the array may be read
 	 * concurrently. Although __traceiter_*()  always checks .func first,
@@ -849,13 +856,15 @@ int android_rvh_probe_register(struct tracepoint *tp, void *probe, void *data)
 	 * corner case which is unlikely to be needed by anybody in practice,
 	 * so let's just forbid it and keep the fast path clean.
 	 */
-	if (WARN_ON(static_key_enabled(&tp->key) && data))
-		return -EINVAL;
+	if (WARN_ON(static_key_enabled(&tp->key) && data)) {
+		ret = -EINVAL;
+		goto out_unlock;
+	}
 
-	mutex_lock(&tracepoints_mutex);
 	tp_func.func = probe;
 	tp_func.data = data;
 	ret = android_rvh_add_func(tp, &tp_func);
+out_unlock:
 	mutex_unlock(&tracepoints_mutex);
 
 	return ret;

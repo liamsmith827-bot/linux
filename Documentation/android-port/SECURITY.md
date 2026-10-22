@@ -652,3 +652,24 @@ invalid record decoding, out-of-bounds access during resize and division by
 zero in this optional debug interface. This is a source-level finding, not an
 exploit demonstration or a runtime-tested claim. Native LTS page-extension
 lifetime and allocation/free logic are retained.
+
+## Restricted vendor-hook registration
+
+The hook core retains ACK's two-callback restricted hooks, static calls and
+ordinary tracepoint hooks for source-built vendor customization. Restricted
+hooks cannot be unregistered; callbacks must remain resident and are trusted
+kernel code. The port retains native LTS ordinary tracepoint implementation.
+For restricted hooks, the non-NULL second-callback data prohibition is now
+checked under the registration mutex, closing a concurrent-registration window
+that could accept a callback while discarding its data. Allocation failures
+return `-ENOMEM`, NULL probes are rejected, and first-registration failure
+unwinds the optional registration callback following the native LTS pattern.
+These fixes address error reporting, callback state and failure cleanup without
+changing permitted two-probe registration or adding a userspace interface.
+Runtime concurrency/fault injection has not been performed.
+
+The `__GENKSYMS__` include-hiding from ACK 317f0cc6bf52 is removed: suppressing
+CRC changes only protects historical vendor binary compatibility, which is
+explicitly excluded. Redundant per-header includes need not be restored because
+the central header now includes the native tracepoint definitions for every
+consumer, including genksyms. Source-built module versions are regenerated.
