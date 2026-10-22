@@ -1,0 +1,16 @@
+{
+  "source_commit": "05ae9392c7c8cc0c314662828698a04db2f2ca8d",
+  "negative_control_commit": "69eb820a7f4c5ff40bfccf2bd9fe7409d4353430",
+  "excerpts_sha256": "4d67038ee79d81f6284098d7f244183379f12d72616969832933ebfe015453b7",
+  "compiler_flags": [
+    "-std=gnu11",
+    "-Wall",
+    "-Wextra",
+    "-Wno-sign-compare",
+    "-fsanitize=address,undefined",
+    "-fno-omit-frame-pointer"
+  ],
+  "result": "Readahead lifetime and filesystem lock checks passed; three old missing-lock controls reproduced",
+  "negative_control_asan_heap_use_after_free": true,
+  "scope": "Exercise extracted readahead and filesystem callers with host lifetime/lock shims.\n\nSimulates reclaim during read_pages, failed reference acquisition, callback\nenablement and allocation failures. Exercises complete ext4/F2FS Merkle-tree\nreaders and F2FS redirty_blocks, asserting the unbounded-read lock contract.\nOld-source controls reproduce an ASan use-after-free and three missing locks.\nThis does not execute kernel locking, actual filesystems, I/O or an emulator."
+}

@@ -933,5 +933,43 @@
     "result_commits": [
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ]
+  },
+  {
+    "commit": "4840288585a981ed8a4ecf74ab3b52df96ab860e",
+    "disposition": "adapted",
+    "rationale": "Retain the complete x86 16 KiB vDSO data/clock layout for the positively configured SDK page_shift=14 ABI, including d12faee06a93 native-layout guard. Cross-file review found the real-clock lookup inside time namespaces still advanced PAGE_SIZE while the kernel fault mapping used VDSO_TIMENS_PAGE_OFFSET. 745944398038 derives that pointer from the layout, preserving native clock arithmetic and permissions; host extracted fault/lookup tests reproduce the previous SIGBUS padding and validate both layouts. Current SDK TIME_NS remains disabled; this minimal shared-layout correction keeps the imported code coherent for source/config customization without enabling a future platform. See generic-source-review.json, vdso-spacing-check.json and SECURITY.md. Local commit messages/diffs only; referenced kernelci URLs were not visited.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "7459443980382ed42877bf4402bf44a93894ea84"
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "commit": "4808e3cd8037fe4ad5e9a8e76e98b0efe093671a",
+    "disposition": "adapted",
+    "rationale": "The complete ACK patch moves invalidate_lock into callers. Retain its readahead contract and regular-call lock pair, and adapt its generic fsverity-reader hunk to the retained native ext4/F2FS readers in 05ae9392c7c8, including the F2FS compression redirty hunk. All actual callers were searched; metadata ioctl and compression call chains do not supply that lock. This preserves native LTS invalidation exclusion without importing unrelated generic-reader refactoring. Host extracted-function tests reproduce three old unlocked calls and confirm lock/error cleanup; no kernel race test is claimed. See SECURITY.md and evidence/readahead-integration-check.json. Local commit-message URLs were not visited.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "05ae9392c7c8cc0c314662828698a04db2f2ca8d"
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "commit": "e82cb2953b8c1ed5e9d283c4c2e2634f68b6869b",
+    "disposition": "adapted",
+    "rationale": "Full patch reviewed: retain declaration/export and all four readahead allocation hooks for vendor module source customization. Each supplies a newly allocated caller-owned folio before page-cache insertion; normal failure cleanup remains. Callbacks must preserve ownership and use their own references for retention. No LTS check is removed and historical binary KMI is excluded. Evidence: local complete patch, mm/readahead.c allocation paths, include/trace/hooks/mm.h and drivers/android/vendor_hooks.c; SECURITY.md. Other readahead policy commits have independent dispositions.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "review_status": "reviewed"
+  },
+  {
+    "commit": "0025f977996faab984d62f50562e226b939bd965",
+    "disposition": "adapted",
+    "rationale": "Full one-file patch retained in the integrated source: forced readahead acquires a filemap reference before setting the MGLRU OEM bit, ignores failed lookups and drops successful references. This prevents modifying a folio reclaimed/reused after a raw XArray lookup. It preserves rather than weakens the ACK safety fix; native LTS has no equivalent OEM operation. Evidence: local full patch and do_page_cache_ra; SECURITY.md. The parent MGLRU retention policy is reviewed separately.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "review_status": "reviewed"
   }
 ]

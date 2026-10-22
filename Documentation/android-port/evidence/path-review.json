@@ -6105,7 +6105,9 @@
       "8242b417aec08d75d53b6e0350ad01d38988c7f1"
     ],
     "normalized_ack_blob": "bc05bacb32d88f016a23b4f1e9485b6c87d0428c",
-    "common_ancestor_blob": "78ed1c1f28b92b97973f57d3f65b9c4d4694f462"
+    "common_ancestor_blob": "78ed1c1f28b92b97973f57d3f65b9c4d4694f462",
+    "specific_evidence": "Full delta rounds generated raw vDSO image size and backing-array alignment to 16384. This host generator cannot use a boot-time page-size variable; its constant matches __MAX_PAGE_SIZE. Both 32-bit compat and 64-bit images retain native ELF validation and copying with the larger initialized array. Actual SDK config has IA32_EMULATION=y. The change supports a single compiled image across page modes; no added platform or runtime test.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/entry/vdso/vma.c": {
     "ack_blob": "afe105b2f907b1cb8f422c207b5f5294a1256b6c",
@@ -6127,7 +6129,9 @@
       "8242b417aec08d75d53b6e0350ad01d38988c7f1"
     ],
     "normalized_ack_blob": "7c7792d0e2bf40a09475c48e7df4fd12ed3dbfe6",
-    "common_ancestor_blob": "6e6c0a7408371aa83903831f7363d754442f9d36"
+    "common_ancestor_blob": "6e6c0a7408371aa83903831f7363d754442f9d36",
+    "specific_evidence": "Full delta includes the page-size header and expands the synthetic gate VMA end to the 16 KiB maximum so its reported span fits emulated-page granularity. This also makes the synthetic VMA larger in native 4 KiB mode; actual page tables, address-to-vsyscall-number validation, SIGSEGV paths and in_gate_area_no_mm retain native 4 KiB behavior. Actual SDK config selects XONLY, which installs no readable PTE for this pseudo mapping. No additional backing page is exposed and no runtime vsyscall test is claimed.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/events/core.c": {
     "ack_blob": "c5ca237aea3804ea753ee3e5f1ecc55c1cb63a66",
@@ -6285,7 +6289,9 @@
       "8242b417aec08d75d53b6e0350ad01d38988c7f1"
     ],
     "normalized_ack_blob": "231a8d4284ddcc6ad11e8866ed73c50112523ea9",
-    "common_ancestor_blob": "6c8fdc96be7e8bd33919d9b56ae8a8a68f4b0c3f"
+    "common_ancestor_blob": "6c8fdc96be7e8bd33919d9b56ae8a8a68f4b0c3f",
+    "specific_evidence": "Only net delta defines ELF_EXEC_PAGESIZE as reported __PAGE_SIZE plus its include. This feeds the ELF loader and AT_PAGESZ ABI required by the local Goldfish 16 KiB command line. Retain native architecture compatibility, register layouts and personality checks. No historical KMI field preservation. fs/binfmt_elf.c dynamic min_coredump initialization was separately reviewed.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/include/asm/fpu/xstate.h": {
     "ack_blob": "a52250c9da2fc8801ec59a8bc8961cbc67e705cd",
@@ -6695,7 +6701,9 @@
       "8242b417aec08d75d53b6e0350ad01d38988c7f1"
     ],
     "normalized_ack_blob": "6d86a11e93ea4d076fab39720489bd3e8d845c62",
-    "common_ancestor_blob": "4aa311a923f233902f14d3847137e05fc0fc57a6"
+    "common_ancestor_blob": "4aa311a923f233902f14d3847137e05fc0fc57a6",
+    "specific_evidence": "Full delta scales reserved vDSO and virtual-clock areas and Hyper-V page offset by the native-pages-per-16-KiB ratio. Cross-checked linker symbols against vma.c fault/install offsets and include/vdso/datapage.h. Internal physical page units stay PAGE_SIZE; exported areas have reported-page-compatible boundaries. Native vvar fault checks and mapping permissions remain. This is compile-time common-image spacing, so native 4 KiB mode also reserves the larger range. No runtime virtual clock certification.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/include/asm/vmx.h": {
     "ack_blob": "c1d0669fa1532a29b53e98969ef1786ac53db07f",
@@ -6911,7 +6919,9 @@
       "8242b417aec08d75d53b6e0350ad01d38988c7f1"
     ],
     "normalized_ack_blob": "4111d520edcf963d155b9509d6e0a3af6e7f0ffa",
-    "common_ancestor_blob": "4c718f8adc592d5f9db023ecc3f4307cdb726dfe"
+    "common_ancestor_blob": "4c718f8adc592d5f9db023ecc3f4307cdb726dfe",
+    "specific_evidence": "Only net delta changes stack subpage randomization from 8192 bytes to twice the reported page size, plus the header. Native ADDR_NO_RANDOMIZE/randomize_va_space gates and final 16-byte alignment remain. Both 4 KiB and 16 KiB modes retain two reported pages of low stack displacement; setup_arg_pages performs separately reviewed page alignment. Other native x86 process and idle behavior remains LTS.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kernel/setup.c": {
     "ack_blob": "6df6769b1ca58d3b1e9e6516368c3177c4410108",
@@ -7965,7 +7975,9 @@
       "8242b417aec08d75d53b6e0350ad01d38988c7f1"
     ],
     "normalized_ack_blob": "d9654c25573c363e746b4381c8f71174416011ab",
-    "common_ancestor_blob": "82f3a987f7cf3df72e81911a710ae568b9ebb040"
+    "common_ancestor_blob": "82f3a987f7cf3df72e81911a710ae568b9ebb040",
+    "specific_evidence": "Full net delta is helper inclusion and arch_rnd using reported-page shift. Preserve native PF_RANDOMIZE behavior, legacy/top-down choice, mmap minimum gap and task-size clamps. Existing emulated mmap_rnd_bits adjustment preserves byte span with two fewer bits at 16 KiB, documented as a security tradeoff. 2b8ae3b1fce2 separately aligns randomize_stack_top within native stack_maxrandom_size span, preserving the guard-gap reservation relationship; native 4 KiB behavior stays exact.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/mm/pat/set_memory.c": {
     "ack_blob": "9cfa81eb8beeebab7fb3b647f5f9c674829024d9",
@@ -21475,7 +21487,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "cda081e9d95b471b8b1386916cb5d995ebf2a6d2",
-    "common_ancestor_blob": "4298e7e08d5d78ea327c10e9e962780b3d976e1a"
+    "common_ancestor_blob": "4298e7e08d5d78ea327c10e9e962780b3d976e1a",
+    "specific_evidence": "Reviewed complete LTS/normalized-ACK deltas and dma_buf_begin_new_exec plus prior reviewed fd/fork/exit ownership. Retain reported-page stack alignment, task-name/binfmt success/failure hooks and GPL task-name source export. Transfer DMA-buf accounting after unshare_files; old_files is used only as an identity comparison, never dereferenced after unsharing. New task/files accounting owns independent references; acquire the new MM reference only after successful exec_mmap, while the old MM retains its existing teardown reference. Allocation failure is after the point of no return and follows native fatal-exec cleanup. Positive lmkd/libmeminfo DMA accounting consumers are documented in the prior DMA review. Keep LTS CLOEXEC closure before exec_update_lock/FUSE wait, POSIX timer cleanup immediately after de_thread, futex_exec_done after MM replacement and unsigned argument-copy-loop fix. Hooks are trusted module customization points and do not replace native credential/LSM installation. No runtime exec-race certification.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "fs/exfat/file.c": {
     "ack_blob": "536c8078f0c192688eed5f5ee86dd1bc738be84f",
@@ -21720,10 +21734,12 @@
   "fs/ext4/verity.c": {
     "ack_blob": "d6876a1090dcd01f0f08b1b16e752dfdfc4c73aa",
     "lts_blob": "b0acb0c50313794979dab3701b1b90c7590cd5b7",
-    "port_blob": "b0acb0c50313794979dab3701b1b90c7590cd5b7",
-    "policy": "lts-filesystem-storage",
-    "rationale": "Keep LTS filesystem/storage algorithms and fixes. Current goldfish fstab uses conventional virtio block and ext4; Android metadata encryption, FUSE-BPF, IncFS, namespaces and hooks are handled separately. Omit the new zoned/bulk-I/O, F2FS aliasing and fs-verity implementation series. Optional F2FS aliasing needs must be revisited before enabling that storage mode; no absence-of-consumer proof is claimed.",
-    "result_commits": [],
+    "port_blob": "f63365d32a499458ec92f03c1817131661cbe943",
+    "policy": "ported-net-source",
+    "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
+    "result_commits": [
+      "05ae9392c7c8cc0c314662828698a04db2f2ca8d"
+    ],
     "normalized_ack_blob": "d6876a1090dcd01f0f08b1b16e752dfdfc4c73aa",
     "common_ancestor_blob": "b0acb0c50313794979dab3701b1b90c7590cd5b7"
   },
@@ -21875,10 +21891,11 @@
   "fs/f2fs/file.c": {
     "ack_blob": "d1dd7b5cb00dec5d6ab0155380879a12a02ca799",
     "lts_blob": "791f1cf198c16a78f8cd2857841b648042c56ced",
-    "port_blob": "6b42e730e1035ed38e2e44b58145dcbf815a2c94",
+    "port_blob": "c93ca7b38a0074662d04c1a68188666dc859f0d8",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "05ae9392c7c8cc0c314662828698a04db2f2ca8d",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "d1dd7b5cb00dec5d6ab0155380879a12a02ca799",
@@ -22064,10 +22081,12 @@
   "fs/f2fs/verity.c": {
     "ack_blob": "92ebcc19cab09926db7bd53b6458e5c919b76bc7",
     "lts_blob": "f0ab9a3c7a82b368a13b6a6961a2d803e52c4b0a",
-    "port_blob": "f0ab9a3c7a82b368a13b6a6961a2d803e52c4b0a",
-    "policy": "lts-filesystem-storage",
-    "rationale": "Keep LTS filesystem/storage algorithms and fixes. Current goldfish fstab uses conventional virtio block and ext4; Android metadata encryption, FUSE-BPF, IncFS, namespaces and hooks are handled separately. Omit the new zoned/bulk-I/O, F2FS aliasing and fs-verity implementation series. Optional F2FS aliasing needs must be revisited before enabling that storage mode; no absence-of-consumer proof is claimed.",
-    "result_commits": [],
+    "port_blob": "f90a71d1c64744d99458ce34ba8647ecc8bdc780",
+    "policy": "ported-net-source",
+    "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
+    "result_commits": [
+      "05ae9392c7c8cc0c314662828698a04db2f2ca8d"
+    ],
     "normalized_ack_blob": "92ebcc19cab09926db7bd53b6458e5c919b76bc7",
     "common_ancestor_blob": "f0ab9a3c7a82b368a13b6a6961a2d803e52c4b0a"
   },
@@ -23632,7 +23651,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "35b533cf6b84e25488ca41c933ce500f6c4782a1",
-    "common_ancestor_blob": "038d4b57127fefe31997a49d8df5d0aa3a405f82"
+    "common_ancestor_blob": "038d4b57127fefe31997a49d8df5d0aa3a405f82",
+    "specific_evidence": "Complete LTS delta only includes page-size definitions and reports /proc/PID/stat RSS in emulated-page counts, matching the reported page-size ABI enabled by Goldfish page_shift=14. Rounding loses less than one reported-page fraction, as inherent in the integer page-count ABI. Keep native exec_update_lock around task stat, ptrace-sensitive field filtering and scoped stats seqlock; no access check is relaxed. This is ABI consistency, not proof that all consumers handle non-4-KiB units correctly: local Toybox ps.c has both a fixed <<2 RSS conversion and a sysconf(_SC_PAGESIZE) path, and ProcessCpuTracker does not establish an RSS consumer. No runtime proc concurrency or userspace utility correctness test.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "fs/proc/base.c": {
     "ack_blob": "b81d122db30078101dd088550de0a2fc282455b1",
@@ -23721,7 +23742,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "d15d4ad6f57237c1b14bd05bb5c7c703a7ee65d5",
-    "common_ancestor_blob": "fc64f23e05e589f667b8f8e2b840b3795c0b5ddd"
+    "common_ancestor_blob": "fc64f23e05e589f667b8f8e2b840b3795c0b5ddd",
+    "specific_evidence": "Full LTS delta retains PG_error reporting needed by configured incfs source SetPageError paths and suppresses PFN-indexed proc APIs only when page-size emulation is active. Positive local libmeminfo/pageacct.cpp explicitly detects x86 non-4-KiB pages, skips opening these files and returns zero flags/one mapcount rather than consuming an invented PFN. ACK 6acc26714c0e documents physically noncontiguous native subpages, so a synthetic single PFN cannot preserve this ABI; retain that explicit SDK limitation, not an absence-of-consumer rationale. Native 4 KiB proc APIs and permissions stay; retain LTS exact FOLIO_MAPPING_FLAGS KSM classification fix. Other applications needing exact PFNs in emulated mode remain unsupported by this representation; no runtime test.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "fs/proc/root.c": {
     "ack_blob": "1e24e085c7d5a191148064fa68301d9acd0fc43e",
@@ -31282,7 +31305,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "4595e8f879f22364c31a40fe8e8528b5e0123ab9",
-    "common_ancestor_blob": "23c39b96190fdfc2f31bf76a8614d69a3a98017c"
+    "common_ancestor_blob": "23c39b96190fdfc2f31bf76a8614d69a3a98017c",
+    "specific_evidence": "Reviewed full data-layout delta with x86 vma installation, lib/vdso/datastore.c fault insertion and linker symbols. x86 time/namespace/RNG/architecture areas are spaced at the 16 KiB maximum and expressed in native-page offsets; other architectures remain native. This permits the same compiled vDSO image in 4/8/16 KiB userspace modes. 745944398038 adapts the namespace reader in lib/vdso/gettimeofday.c to the declared offset rather than a hard-coded one native page; host extracted fault/lookup checks prove layout agreement and reproduce the old SIGBUS path. Current SDK TIME_NS is disabled, but the minimal shared-layout correction preserves native code under source/config customization; it enables no new platform or feature. Native PFN/readonly/sealed-system-map enforcement stays in datastore.c. No actual vDSO/time namespace execution test.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "init/Kconfig": {
     "ack_blob": "92021a195d4748dc832b6e30156bb421134683da",
@@ -34303,10 +34328,11 @@
   "mm/filemap.c": {
     "ack_blob": "2258b4dcd86a6cc4a28b18f9688e5bf94ffe45a8",
     "lts_blob": "1a035881060906d46ff279e8c55944d97742aa64",
-    "port_blob": "b0b3802e4f6d7d0afc83dece71a40c97e2c5f608",
+    "port_blob": "720e9f456fef8f5cd64da6310317990c303e4dd9",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "8d75f9fa7f08e9c64741d10288ffeb914a2009b6",
       "7f9fdddd5bf89fe656e25c3e4069c2df2091706d",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
@@ -34414,14 +34440,17 @@
   "mm/madvise.c": {
     "ack_blob": "3f2ec7a54344c45a3dad9ae85303e45b0edbca8e",
     "lts_blob": "b8c25fea4fab9b2ba246ecd1163d367a6dc7b085",
-    "port_blob": "1cb9d1c4d1390550098092b4582c156b4cb702ee",
+    "port_blob": "a5a17107bbbf854709ba0f5f25b74968c43bf953",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "b39eeed468efb77aaa5154d7aea538f428c3d8c0",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "3f2ec7a54344c45a3dad9ae85303e45b0edbca8e",
-    "common_ancestor_blob": "fb1c86e630b6634fe124403eaada50bca64a0f8b"
+    "common_ancestor_blob": "fb1c86e630b6634fe124403eaada50bca64a0f8b",
+    "specific_evidence": "Reviewed complete LTS and normalized-ACK deltas and changed call-site/locking/cleanup flows. Retain reported-page alignment, Android linker padding hints, anon_vma_name source export, swapin/pageout/reclaim and syscall customization hooks. b39eeed468ef releases the acquired madvise lock on callback bypass, releases the caller-owned VMA-name reference on both paths and initializes callback result slots. A callback retaining a name must take its own reference. Focused extracted-code host ASan/UBSan checks reproduce both former leaks and cover normal/bypass/error cleanup; they do not execute kernel locks or modules. Keep native LTS sticky guard flags and anonymous-only anon_vma_prepare, pointer-based vma_modify_flags, khugepaged registration and file_owner_or_capable/file_permission pageout side-channel checks. Ordinary process_madvise retains flags/iovec/pidfd/ptrace/CAP_SYS_NICE validation. The retained restricted raw syscall hook precedes those checks and may replace the operation: trusted kernel callbacks must implement appropriate access/argument validation, not assume it already happened. Reclaim begin/end retain balanced private-context handoff even on walk error, and native TLB completion runs before return-error policy. Hooks change trusted module policy, not userspace authority by default; no consumer absence is used as an omission reason.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/memblock.c": {
     "ack_blob": "3b9958e12e250307c2e7512d047e52cfed61dcef",
@@ -34573,14 +34602,17 @@
   "mm/mincore.c": {
     "ack_blob": "5110d7da036d6c587505b3c54499420a2915cc53",
     "lts_blob": "2cf2667bca7e53e71d5e8ffda3e04c4277311ce4",
-    "port_blob": "629ebb103a57ab835516190fa62e22a36bd13d66",
+    "port_blob": "b0aae1db33a95673eef1045a68c2413aabd6c1e8",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "5bc7751ba8de0b0edfa6b34bd5d8efd067e02a7d",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "5110d7da036d6c587505b3c54499420a2915cc53",
-    "common_ancestor_blob": "8ec4719370e1b90b3134e973afbc86dfcc97e8cd"
+    "common_ancestor_blob": "8ec4719370e1b90b3134e973afbc86dfcc97e8cd",
+    "specific_evidence": "Reviewed complete LTS/normalized-ACK deltas and syscall/do_mincore flow. Preserve emulated residency aggregation for the positive SDK page_shift=14 ABI. 5bc7751ba8de rounds requested length/result-vector count to userspace pages and carries OR state across native VMA/chunk boundaries. The old implementation could omit all bytes for short requests or one-native-page VMA chunks. Each successful result now covers every native subpage of the reported page. Native file_owner_or_capable/file_permission masking and page-walk locking remain; protected file mappings still produce conservative resident bits, preserving the LTS side-channel restriction. LTS non_swap_entry ordering before the disabled-SWAP warning also remains. Extracted syscall/aggregation host ASan/UBSan checks cover 240 length/split cases plus failures and old controls; they simulate walks/permissions and do not certify kernel concurrency.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/mlock.c": {
     "ack_blob": "a21547600b04b6069e710df97a42fa1f078738a5",
@@ -34592,7 +34624,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "a21547600b04b6069e710df97a42fa1f078738a5",
-    "common_ancestor_blob": "f59c6d8d376ff1464a8e2566cc3980e173062b64"
+    "common_ancestor_blob": "f59c6d8d376ff1464a8e2566cc3980e173062b64",
+    "specific_evidence": "Full LTS delta is page-size header integration and emulated alignment for mlock/munlock entry ranges. Preserve RLIMIT_MEMLOCK and locked_vm accounting in actual native page units, CAP_IPC_LOCK checks, writer locking, zero/wrapped-range validation and native population/error behavior. Caller ranges are aligned before the stronger internal assertions. Keep newer LTS zone_stat_mod_folio accounting and vma_modify_flags pointer update so merged sticky guard flags are retained. Bionic/Android receive the configured emulated page-size ABI; this does not enlarge locking authority or import historical KMI layouts. Native 4 KiB behavior is unchanged; no runtime locking test.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/mm_init.c": {
     "ack_blob": "6bee8539dd65a3e914868469dbeda2b0fd9f30ca",
@@ -34668,7 +34702,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "c9564c13d335b260553fb6c46aab32524bf67531",
-    "common_ancestor_blob": "988c366137d506ba24a716943175917447ff9ce8"
+    "common_ancestor_blob": "988c366137d506ba24a716943175917447ff9ce8",
+    "specific_evidence": "Full LTS delta changes only include dependencies, start-alignment validation and length rounding to the emulated page size. Preserve native pkey validation, VM_MAY access limits, map_deny_write_exec, architecture checks, security_file_mprotect, vm_ops callbacks and TLB/lock sequencing. Keep LTS vma_modify_flags pointer API so updated sticky flags survive merging. Padding handling stays in separately reviewed common VMA helpers. Positive page_shift=14 requires the corresponding syscall page granularity; native mode is unchanged. Diagnostic rate limiting is in c476769367dd. No runtime protection test claimed.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/mremap.c": {
     "ack_blob": "b36052804be76c69116dfc9c82834d36b61a02aa",
@@ -34680,7 +34716,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "b36052804be76c69116dfc9c82834d36b61a02aa",
-    "common_ancestor_blob": "419a0ea0a8708adc41c0f8e81e8d078194b088e7"
+    "common_ancestor_blob": "419a0ea0a8708adc41c0f8e81e8d078194b088e7",
+    "specific_evidence": "Full LTS delta is page-size helper inclusion and reported-page alignment/rounding for old/new addresses and lengths. Reviewed check_mremap_params and mapping constraints: flag validity, TASK_SIZE bounds, MAYMOVE requirement, DONTUNMAP equal-length rule, nonoverlap and map-count headroom remain native. Native move accounting and LTS DONTUNMAP unfaulted-anonymous vm_pgoff reset and locked_vm accounting order remain. Internal offsets/accounting use actual base pages. This preserves the SDK page_shift=14 ABI without importing historical KMI or reverting the later LTS corrections. No runtime remapping test.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/mseal.c": {
     "ack_blob": "35dba65cdab07a63d5e945b8add6aa7f8cdd17c5",
@@ -34692,7 +34730,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "35dba65cdab07a63d5e945b8add6aa7f8cdd17c5",
-    "common_ancestor_blob": "c561f0ea93e848db17667abdd96187a18a0b74fe"
+    "common_ancestor_blob": "c561f0ea93e848db17667abdd96187a18a0b74fe",
+    "specific_evidence": "Complete LTS delta only applies reported-page start alignment and range rounding. Retain flags/overflow/empty-range validation, mmap writer locking, no-unmapped-gap precheck and irreversible VM_SEALED behavior. Keep LTS pointer-based vma_modify_flags and sticky flag preservation. Positive page_shift=14 requires corresponding ABI granularity. No GrapheneOS hardening series or runtime sealing test added.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/msync.c": {
     "ack_blob": "599046fbec51d3e32a2f7204a4d46d35fa8a016d",
@@ -34704,7 +34744,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "599046fbec51d3e32a2f7204a4d46d35fa8a016d",
-    "common_ancestor_blob": "ac4c9bfea2e7faff18c3cf3bd8b74766cdbee166"
+    "common_ancestor_blob": "ac4c9bfea2e7faff18c3cf3bd8b74766cdbee166",
+    "specific_evidence": "Reviewed complete file and LTS/normalized-ACK deltas. Retain emulated start validation and range rounding only. Native flag validation, locked-VMA MS_INVALIDATE rejection, unmapped-range reporting, shared-file requirement, file references while dropping mmap_lock and fsync error propagation remain. Native vm_pgoff still converts to byte offsets using PAGE_SHIFT because internal offsets stay in native units. This preserves the emulated userspace page-size ABI without changing LTS writeback authority or dirty tracking. No runtime I/O test.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/nommu.c": {
     "ack_blob": "c3a23b082adb94e2fcb91bbd3c604ac09291c849",
@@ -34776,7 +34818,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "9675b617d70aa5f741c354377178519e84c25e60",
-    "common_ancestor_blob": "a82b340dc20447e760889b588cf71288525a7275"
+    "common_ancestor_blob": "a82b340dc20447e760889b588cf71288525a7275",
+    "specific_evidence": "Reviewed full file/net deltas. Keep ACK 05fd7cf26c48 always-trylock before rmap_walk to support its UFFDIO_MOVE fine-grained folio-lock contract; failures remain best effort and never block on the lock. Native mapped/LRU/refcount checks, PFN bounds, mmu_notifier clearing and permissions remain. Suppress idle-PFN bitmap only in emulated page-size mode, matching libmeminfo/pageacct.cpp explicit non-4-KiB detection and IsPageIdle fallback. Its MarkPageIdle/GetPageIdle helpers require initialized actual PFN mode; no synthetic-PFN design is added. Native 4 KiB mode retains bitmap. The full multi-file UFFD series is separately reviewed; no kernel locking or bitmap runtime test.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/page_io.c": {
     "ack_blob": "4e8f1ad010349fc0473185f51b74d7983fc3dc42",
@@ -34914,10 +34958,11 @@
   "mm/readahead.c": {
     "ack_blob": "b3ed60aa35c1a04122ab564f1f390ba1a1b33bcb",
     "lts_blob": "3a4b5d58eeb6fe266fbfc4dd1c6033e016915ead",
-    "port_blob": "b3ed60aa35c1a04122ab564f1f390ba1a1b33bcb",
+    "port_blob": "a4b25afe13b3e886db5cad539c81916095ce3869",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "05ae9392c7c8cc0c314662828698a04db2f2ca8d",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "b3ed60aa35c1a04122ab564f1f390ba1a1b33bcb",
@@ -34938,10 +34983,11 @@
   "mm/shmem.c": {
     "ack_blob": "c83f7f79f64cc7dd4ab7dcfa9ae245ce1d01a3e6",
     "lts_blob": "0100110f77b8e1b58169494dfe3e1522b7a4bcf2",
-    "port_blob": "cafaacb511204fe4ff5a320625dcced510efc375",
+    "port_blob": "d8f6feca8aff91216286e1f7046b26112bc0025e",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "69eb820a7f4c5ff40bfccf2bd9fe7409d4353430",
       "7f9fdddd5bf89fe656e25c3e4069c2df2091706d",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
@@ -35085,14 +35131,17 @@
   "mm/util.c": {
     "ack_blob": "cc42a0fbb65692d59830ac10299f90f1add2a777",
     "lts_blob": "31a59c038ba0ad6739e10aa1cacd23ab5e9bc7ad",
-    "port_blob": "0c31f4a678a6fb0b066934609b3ce5c25347da83",
+    "port_blob": "79f775eeafc3025e89e25c0542f03375b2976760",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "2b8ae3b1fce29678401b28c91e8eefec6dfe4530",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "cc42a0fbb65692d59830ac10299f90f1add2a777",
-    "common_ancestor_blob": "8989d57675286199e30ddb693df37c598021c626"
+    "common_ancestor_blob": "8989d57675286199e30ddb693df37c598021c626",
+    "specific_evidence": "Reviewed full LTS and normalized-ACK deltas and randomization/mmap paths. Retain reported-page randomize_page alignment, final mmap observation hook (scalar result, after native LSM/fsnotify/locking/unmap/population flow) and get_cmdline source export. 2b8ae3b1fce2 aligns random stack offsets within the native byte span so x86 stack_maxrandom_size reservation remains sufficient; 16 KiB placement has two fewer bits, explicitly documented in SECURITY.md. Remove obsolete __GENSYMS__ guard, not any actual source API. Keep LTS snapshot_page third-page copy bound nr_pages > 2. Host checks exhaust 12,589,056 x86 mask inputs; no runtime random-number/ASLR test. All current x86 randomize_page callers use ranges larger than page alignment; no generic range-underflow fix is asserted.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/vma.c": {
     "ack_blob": "0167b28771e1e10885ed1a382061ff3a96ee2f4b",
@@ -35109,14 +35158,17 @@
   "mm/vma_exec.c": {
     "ack_blob": "3f8b6ed20e1314234868c804fbbd016c9adf6aa6",
     "lts_blob": "922ee51747a6831192d61cb21f51c700f6b24c58",
-    "port_blob": "3f8b6ed20e1314234868c804fbbd016c9adf6aa6",
+    "port_blob": "6a2a1bcb266585b540be9ae693462fe28463ff6c",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "2b8ae3b1fce29678401b28c91e8eefec6dfe4530",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "3f8b6ed20e1314234868c804fbbd016c9adf6aa6",
-    "common_ancestor_blob": "922ee51747a6831192d61cb21f51c700f6b24c58"
+    "common_ancestor_blob": "922ee51747a6831192d61cb21f51c700f6b24c58",
+    "specific_evidence": "Full delta is an initial stack VMA sized to the reported page size and 2b8ae3b1fce2 accounting correction. Keep native KSM setup, mmap writer locking, anonymous VMA flags and failure unwinding; account vma_pages(vma), not one, in native stack_vm/total_vm units. Host extracted-function ASan/UBSan covers 4/8/16 KiB setup and each allocation/lock/KSM/insertion failure, with an old-source undercount control. No real exec test.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/vma_readahead_boundary.c": {
     "ack_blob": "df44abea83473379051732885204f9aff5023ac4",
@@ -35165,7 +35217,9 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "5f05614df5635ab4d2fbbf9d4a84ccf522180122",
-    "common_ancestor_blob": "98855f31294dd22bfc80ac96b394fa2e9b7790bd"
+    "common_ancestor_blob": "98855f31294dd22bfc80ac96b394fa2e9b7790bd",
+    "specific_evidence": "Full net delta adds a pagetypeinfo output hook and scales zoneinfo watermarks/reserves/capacity/pageset counts to reported-page units. Pinned lmkd.cpp meminfo_parse_line divides kB by page_k and calc_zone_watermarks sums protection/high/low/min; these must use matching reported units. Preserve native per-node/zone event counters and /proc/vmstat in actual page/event units: lmkd refault ratios compare counters from that same source. This intentionally retains ACK mixed diagnostic units, not a claim that every zoneinfo field was converted. Local lmkd parses nr_free_pages/nr_free_cma and node active/inactive fields but does not use those zoneinfo copies in watermark policy. Other generic diagnostic interpretation is not certified. Kernel internal accounting and native locks unchanged; no runtime pressure/LMK test.",
+    "review_record": "evidence/generic-source-review.json"
   },
   "mm/workingset.c": {
     "ack_blob": "df7ea800575e67ad6c2dfc8ac1abf56c1d5cba46",

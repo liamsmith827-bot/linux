@@ -1357,3 +1357,167 @@ mapping offsets. Other BPF/perf integration files remain separate reviews.
 Build 43 completed at c0cbe76ff03a with 145 verified signatures and matching
 protected-export/module-flag tables. It includes atomic padding and swap format
 translation. Build 44 checks the later rotation-accounting and rate-limit edits.
+
+
+5bc7751ba8de fixes emulated mincore results for short lengths and native VMA
+boundaries. Round the query to reported userspace pages and carry residency OR
+state across native walks; emit exactly one byte per reported page. ACK divided
+native counts at each boundary and could return success without writing the
+required result byte. Native LTS owner/write-permission masking of file residency
+and the non-swap-entry ordering remain unchanged. Host extracted-code checks
+cover 240 range/chunk/VMA-split cases, holes, invalid buffers, allocation and copy
+failures under ASan/UBSan, with old-source negative controls. Page walking and
+permissions are simulated, so no runtime or side-channel test is claimed.
+
+The complete mlock, mprotect and msync net deltas are limited to emulated page
+alignment and associated headers. Keep native mlock accounting in real 4 KiB
+units, capability/resource limits, mprotect LSM/VM_MAY/pkey/deny-write-exec checks,
+and msync file-reference/writeback/error ordering. Newer LTS mlock zone accounting
+and the pointer-based VMA flag update are retained. No downstream GrapheneOS
+hardening is added by these reviews.
+
+
+b39eeed468ef balances vendor madvise bypass cleanup: release the acquired
+madvise lock and always drop the caller-owned VMA-name reference. Initialize
+raw callback result slots. Callbacks retaining the name must acquire their own
+reference. The host ASan/UBSan test reproduces the old lock/reference leaks and
+checks ordinary, bypass, failure and callback-retained-reference paths; kernel
+locks and real callbacks are not executed. The restricted process_madvise hook
+still precedes native flags, iovec, ptrace and CAP_SYS_NICE checks for source
+compatibility. A trusted callback replacing the operation must perform appropriate
+validation itself. The normal path keeps these checks, native file-pageout
+side-channel masking, sticky guard flags and TLB/lock cleanup.
+
+The mremap review retains native DONTUNMAP anonymous-offset and lock-accounting
+fixes. Proc stat retains exec_update_lock and ptrace filtering while reporting RSS
+in the page units expected by Android. Exec retains native CLOEXEC/FUSE ordering,
+post-de_thread POSIX timer cleanup and futex teardown, with reference-counted
+DMA-buf accounting installed for the new task/files/MM. No runtime task or VMA
+race test is claimed. All evidence for these reviews came from local checkouts.
+
+Build 44 completed at c476769367dd: kernel images and 100 common plus 45 virtual
+device modules generated. All 145 signatures verified, the altered-payload control
+was rejected, and protected export/module flag/CRC tables matched. Build 45 checks
+the subsequent mincore and madvise corrections at b39eeed468ef.
+
+
+2b8ae3b1fce2 corrects initial stack accounting in emulated-page mode: the
+16 KiB VMA now contributes four native pages to stack_vm/total_vm, instead of
+one. Native accounting and limits use actual 4 KiB pages. Its stack-randomization
+adaptation preserves the native byte span used by x86 stack_maxrandom_size and
+mmap gap sizing, then aligns offsets to the emulated page size. ACK had multiplied
+the offset span by four without enlarging that reserved randomization gap. The
+local ACK e01cd7fd276e intent is alignment, which this retains. At 16 KiB the
+native span has two fewer possible placement bits; this is the explicit alignment
+tradeoff, not unchanged entropy. Native 4 KiB results remain exact. The focused
+host test checks setup failure cleanup/accounting and 12,589,056 x86 mask inputs,
+including old-source controls for both mismatches; no kernel exec or ASLR runtime
+test is claimed. The obsolete __GENSYMS__ include guard is removed, with no
+historical symbol CRC preservation contract.
+
+Build 45 completed at b39eeed468ef with mincore and madvise cleanup corrections.
+Both kernel images, all 100 common modules and all 45 virtual-device modules were
+generated. All signatures and module/protected-export tables passed the same
+checks, including rejection of the altered-payload signature control.
+
+
+745944398038 derives the real-clock pointer used in vDSO time namespaces from
+VDSO_TIMENS_PAGE_OFFSET. ACK 4840288585a9 spaces x86 data areas 16 KiB apart,
+while the old reader still added 4 KiB and reached SIGBUS padding. The host check
+extracts both lookup and kernel vvar fault code and verifies their agreement,
+native spacing, insertion failure and the old-source control. TIME_NS remains
+disabled in the actual SDK config; the correction keeps the imported shared
+layout consistent for configuration customization and enables no extra platform.
+Native clock calculations, readonly PFN mappings and sealed system mappings stay.
+This does not claim a running namespace/vDSO test.
+
+The PFN API necessity question has stronger local evidence: libmeminfo/pageacct.cpp
+explicitly detects x86 page-size emulation and bypasses kpageflags/kpagecount/idle
+file access. It returns flags zero, mapcount one and no idle pages. Retain ACK
+6acc26714c0e API suppression only in emulated mode, since multiple noncontiguous
+native PFNs cannot be truthfully represented as one emulated-page PFN. Exact
+sharing/PFN-based working-set diagnostics are therefore limited in that mode;
+this is a documented representation limit with a matching Android fallback, not
+an inference from a missing consumer. Native 4 KiB APIs remain. The actual build
+has PROC_PAGE_MONITOR and INCFS enabled and IDLE_PAGE_TRACKING disabled. PG_error
+is functional for incfs SetPageError, not a historical-KMI reservation; retain its
+proc reporting and native LTS KSM mapping-bit classification. The multi-file
+UFFDIO_MOVE locking series remains a separate review.
+
+Zoneinfo watermarks and reserve values use reported-page units, matching local
+lmkd meminfo conversion and calc_zone_watermarks. Per-node/event counters remain
+native as in ACK; lmkd computes refault ratios using counters from the same source.
+This mixed diagnostic format is recorded explicitly and is not a claim that all
+VM statistics are converted. No userspace pressure test or OS build was run.
+All these reviews used local checkouts; URLs printed in local commit messages
+were not accessed remotely.
+
+
+8d75f9fa7f08 corrects filemap callback lifetime hazards found in the full net-delta
+review. Capture the page-cache index before write_end can release its folio;
+retain an extra folio reference across the unlocked mapped-folio callback when
+that tracepoint is enabled; and pass NULL VMA to readahead customization when
+maybe_unlock_mmap_for_io released the fault lock. That hook already receives NULL
+from native read-ahead call sites in mm/readahead.c. A callback must tolerate it
+and cannot rely on a valid VMA after lock release. Other fault callbacks receiving
+vmf after a dropped fault lock likewise cannot dereference its VMA then. Native
+I/O/locking order remains and the mapped-folio callback still runs after unlock.
+The host ASan/UBSan check executes the full extracted generic write function and
+both hook blocks; simulated teardown reproduces heap-use-after-free in all three
+old-source controls. These demonstrate source lifetime errors under modeled
+teardown, not an executed kernel race or exploit.
+
+69eb820a7f4c adapts reclaim_shmem_address_space to native filemap_get_folios
+batches. folio_isolate_lru explicitly requires an elevated caller-owned reference;
+the raw XArray/RCU walk did not take one. Drop lookup references before reclaim
+consumes isolation references, reclaim each batch and reschedule, and saturate
+the exported int count at INT_MAX. This avoids an unbounded isolated list and
+preserves reference ownership with large folios and concurrent cache changes.
+The host check covers 114 count/hole/value/off-LRU cases plus invalid mappings,
+return saturation and an old missing-reference control. Actual XArray concurrency,
+swap and MM reclamation were not run. These paths remain within the unfinished
+filemap/shmem feature review, so this correction alone does not finalize every
+commit touching those files. All evidence was local.
+
+
+Build 46 completed at 745944398038 including stack and vDSO corrections. Both
+images, 100 common modules and 45 virtual-device modules were generated; all 145
+signatures verified and the tampered-payload control was rejected. Protected
+exports and flag/CRC tables matched. Build 47 checks the subsequent filemap/shmem
+lifetime changes at 69eb820a7f4c. The unchanged emulator build script remains the
+only workflow run; no OS build, prebuilt import, emulator boot or flashing.
+
+
+05ae9392c7c8 completes the caller-held invalidate_lock contract introduced by
+ACK 4808e3cd8037. Its generic fsverity reader is not present in the selected LTS
+filesystem implementation, so adapt the same shared-lock bracketing to both
+ext4 and F2FS Merkle-tree readers, and retain the F2FS redirty_blocks hunk.
+The metadata ioctl and compression caller chains do not already hold that lock.
+This restores LTS exclusion of concurrent mapping invalidation; native verity
+hash verification, error handling and filesystem algorithms remain intact.
+
+The same adaptation pins existing-folio arguments for the OEM readahead callback
+with filemap_get_folio before read_pages can yield to reclaim. A raw XArray
+existence lookup gives no lifetime guarantee. If the referenced lookup fails,
+skip that notification; callbacks for successfully allocated folios remain.
+Callback modules must take their own reference if retaining an argument, obey
+the caller's lock/NOFS context, and not consume its reference. The change adds
+no lookup reference when the callback is disabled. Duplicate hook includes are
+removed. The focused host test extracts complete readahead and filesystem
+functions; ASan reproduces the old use-after-free with simulated cache teardown,
+and lock shims detect all three old unlocked call sites. These are source-level
+regression checks, not actual filesystem races or kernel lockdep execution.
+
+The complete e82cb2953b8c hook patch is retained: all four allocation call sites
+pass a caller-owned folio before page-cache insertion, with declaration and
+export. It remains a trusted module interface; no vendor binary ABI is promised.
+The complete 0025f977996f correction remains in forced readahead, pinning each
+folio before changing its MGLRU OEM bit and dropping the reference afterwards.
+The larger MGLRU policy series remains a separate review. All evidence was read
+locally; links embedded in ACK commit messages were not contacted.
+
+Build 47 completed at 69eb820a7f4c, generating both images and 100 common plus
+45 virtual-device modules. All 145 signatures verified; the altered payload
+was rejected. Protected exports and module flag/CRC tables matched. Build 48
+checks 05ae9392c7c8 after the completed local common fast-forward and manifest
+pin update. No dependency changes were needed for these corrections.

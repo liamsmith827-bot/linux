@@ -1,0 +1,29 @@
+{
+  "source_commit": "8d75f9fa7f08e9c64741d10288ffeb914a2009b6",
+  "negative_control_commit": "7459443980382ed42877bf4402bf44a93894ea84",
+  "excerpts_sha256": "e9ba4c347233b232e2572ae72a3c7be38dacc23208479e9d7554043446be37ee",
+  "compiler_flags": [
+    "-std=gnu11",
+    "-Wall",
+    "-Wextra",
+    "-Wno-sign-compare",
+    "-fsanitize=address,undefined",
+    "-fno-omit-frame-pointer"
+  ],
+  "result": "Filemap hook lifetime checks passed with simulated teardown",
+  "negative_controls": [
+    {
+      "mode": "old-write",
+      "asan_heap_use_after_free": true
+    },
+    {
+      "mode": "old-vma",
+      "asan_heap_use_after_free": true
+    },
+    {
+      "mode": "old-folio",
+      "asan_heap_use_after_free": true
+    }
+  ],
+  "scope": "Exercise extracted filemap hook paths with host teardown and callback shims.\n\nCovers full generic_perform_write plus mmap-readahead and mapped-folio hook\nblocks. Simulated write_end, fault-lock release and folio unlock free objects;\nold-source controls must report ASan heap-use-after-free. No kernel race, actual\nfilesystem I/O, registered module or emulator is executed."
+}

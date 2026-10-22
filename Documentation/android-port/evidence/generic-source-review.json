@@ -5570,5 +5570,181 @@
     "port_blob": "37b2501828a1ee3f1712a2a22b73461c0ccb8e38",
     "lts_to_port_sha256": "da8d1db9ad743dc5094769cbddf1a58375bf6c7e20834041f7629436aa4d9277",
     "normalized_ack_to_port_sha256": "fc695cc4c19356ab8c4ebbb1f1d655280f4c5bd5ef5e576c730a1b10137e764a"
+  },
+  "mm/mincore.c": {
+    "review_head": "5bc7751ba8de0b0edfa6b34bd5d8efd067e02a7d",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed complete LTS/normalized-ACK deltas and syscall/do_mincore flow. Preserve emulated residency aggregation for the positive SDK page_shift=14 ABI. 5bc7751ba8de rounds requested length/result-vector count to userspace pages and carries OR state across native VMA/chunk boundaries. The old implementation could omit all bytes for short requests or one-native-page VMA chunks. Each successful result now covers every native subpage of the reported page. Native file_owner_or_capable/file_permission masking and page-walk locking remain; protected file mappings still produce conservative resident bits, preserving the LTS side-channel restriction. LTS non_swap_entry ordering before the disabled-SWAP warning also remains. Extracted syscall/aggregation host ASan/UBSan checks cover 240 length/split cases plus failures and old controls; they simulate walks/permissions and do not certify kernel concurrency.",
+    "port_blob": "b0aae1db33a95673eef1045a68c2413aabd6c1e8",
+    "lts_to_port_sha256": "776c96bb44cdb6abe60f3cdb1d819a456f8c39742cba02e9e9149190af6f5715",
+    "normalized_ack_to_port_sha256": "8f74935f7580bedb484930bf54ca2bdb8309f6244689ba220432ad343252fd3f"
+  },
+  "mm/mlock.c": {
+    "review_head": "5bc7751ba8de0b0edfa6b34bd5d8efd067e02a7d",
+    "status": "reviewed-source-selection",
+    "rationale": "Full LTS delta is page-size header integration and emulated alignment for mlock/munlock entry ranges. Preserve RLIMIT_MEMLOCK and locked_vm accounting in actual native page units, CAP_IPC_LOCK checks, writer locking, zero/wrapped-range validation and native population/error behavior. Caller ranges are aligned before the stronger internal assertions. Keep newer LTS zone_stat_mod_folio accounting and vma_modify_flags pointer update so merged sticky guard flags are retained. Bionic/Android receive the configured emulated page-size ABI; this does not enlarge locking authority or import historical KMI layouts. Native 4 KiB behavior is unchanged; no runtime locking test.",
+    "port_blob": "8eab12c97894e7e0f9de19dd4d8670dff5626add",
+    "lts_to_port_sha256": "3955768aabb5c40cfcf7c91f5a6e145719981cc60d3e4aa4829f21e9eb889d91",
+    "normalized_ack_to_port_sha256": "318ed3d6760fffbac96fdd05e474c1fe33a41ab05d49a06febcc8de2ff7f5bf7"
+  },
+  "mm/mprotect.c": {
+    "review_head": "5bc7751ba8de0b0edfa6b34bd5d8efd067e02a7d",
+    "status": "reviewed-source-selection",
+    "rationale": "Full LTS delta changes only include dependencies, start-alignment validation and length rounding to the emulated page size. Preserve native pkey validation, VM_MAY access limits, map_deny_write_exec, architecture checks, security_file_mprotect, vm_ops callbacks and TLB/lock sequencing. Keep LTS vma_modify_flags pointer API so updated sticky flags survive merging. Padding handling stays in separately reviewed common VMA helpers. Positive page_shift=14 requires the corresponding syscall page granularity; native mode is unchanged. Diagnostic rate limiting is in c476769367dd. No runtime protection test claimed.",
+    "port_blob": "dd3b54be7fb28952d0526328b2f702f65d30e0c4",
+    "lts_to_port_sha256": "f8b454473a7fb9ed4864671944d5096416120138ab2be0a1e7f6c13f4583f432",
+    "normalized_ack_to_port_sha256": "eb1b09351d2b15acda2dbf4a15a7e01563838cfc5f9cf877f6054e9b412f3be7"
+  },
+  "mm/msync.c": {
+    "review_head": "5bc7751ba8de0b0edfa6b34bd5d8efd067e02a7d",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed complete file and LTS/normalized-ACK deltas. Retain emulated start validation and range rounding only. Native flag validation, locked-VMA MS_INVALIDATE rejection, unmapped-range reporting, shared-file requirement, file references while dropping mmap_lock and fsync error propagation remain. Native vm_pgoff still converts to byte offsets using PAGE_SHIFT because internal offsets stay in native units. This preserves the emulated userspace page-size ABI without changing LTS writeback authority or dirty tracking. No runtime I/O test.",
+    "port_blob": "599046fbec51d3e32a2f7204a4d46d35fa8a016d",
+    "lts_to_port_sha256": "95621c7cc4cc10e87e0250032e4d3c66a00fa654e82db76fcf217ba8d8bc10b5",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "mm/madvise.c": {
+    "review_head": "b39eeed468efb77aaa5154d7aea538f428c3d8c0",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed complete LTS and normalized-ACK deltas and changed call-site/locking/cleanup flows. Retain reported-page alignment, Android linker padding hints, anon_vma_name source export, swapin/pageout/reclaim and syscall customization hooks. b39eeed468ef releases the acquired madvise lock on callback bypass, releases the caller-owned VMA-name reference on both paths and initializes callback result slots. A callback retaining a name must take its own reference. Focused extracted-code host ASan/UBSan checks reproduce both former leaks and cover normal/bypass/error cleanup; they do not execute kernel locks or modules. Keep native LTS sticky guard flags and anonymous-only anon_vma_prepare, pointer-based vma_modify_flags, khugepaged registration and file_owner_or_capable/file_permission pageout side-channel checks. Ordinary process_madvise retains flags/iovec/pidfd/ptrace/CAP_SYS_NICE validation. The retained restricted raw syscall hook precedes those checks and may replace the operation: trusted kernel callbacks must implement appropriate access/argument validation, not assume it already happened. Reclaim begin/end retain balanced private-context handoff even on walk error, and native TLB completion runs before return-error policy. Hooks change trusted module policy, not userspace authority by default; no consumer absence is used as an omission reason.",
+    "port_blob": "a5a17107bbbf854709ba0f5f25b74968c43bf953",
+    "lts_to_port_sha256": "a4f71b55db1c582251290ed2ce5b7edcfcaf5d53f0ffe75e23c2af20f803b3af",
+    "normalized_ack_to_port_sha256": "c66c7ad62d56828600411e3de955903bf94a8ca18d1df5b64650b092446a4c8f"
+  },
+  "mm/mremap.c": {
+    "review_head": "b39eeed468efb77aaa5154d7aea538f428c3d8c0",
+    "status": "reviewed-source-selection",
+    "rationale": "Full LTS delta is page-size helper inclusion and reported-page alignment/rounding for old/new addresses and lengths. Reviewed check_mremap_params and mapping constraints: flag validity, TASK_SIZE bounds, MAYMOVE requirement, DONTUNMAP equal-length rule, nonoverlap and map-count headroom remain native. Native move accounting and LTS DONTUNMAP unfaulted-anonymous vm_pgoff reset and locked_vm accounting order remain. Internal offsets/accounting use actual base pages. This preserves the SDK page_shift=14 ABI without importing historical KMI or reverting the later LTS corrections. No runtime remapping test.",
+    "port_blob": "c35ba07a9685f731f5e4d6ac895b38fb6880096b",
+    "lts_to_port_sha256": "f0923d543b140a6c6bb46a2eaebc752e1b91526ba66e3f6ee2fe8f40371b4785",
+    "normalized_ack_to_port_sha256": "7b1a2c496f00457692c4933f58338efd04aa229781c870feccce17dc2339f648"
+  },
+  "fs/proc/array.c": {
+    "review_head": "b39eeed468efb77aaa5154d7aea538f428c3d8c0",
+    "status": "reviewed-source-selection",
+    "rationale": "Complete LTS delta only includes page-size definitions and reports /proc/PID/stat RSS in emulated-page counts, matching the reported page-size ABI enabled by Goldfish page_shift=14. Rounding loses less than one reported-page fraction, as inherent in the integer page-count ABI. Keep native exec_update_lock around task stat, ptrace-sensitive field filtering and scoped stats seqlock; no access check is relaxed. This is ABI consistency, not proof that all consumers handle non-4-KiB units correctly: local Toybox ps.c has both a fixed <<2 RSS conversion and a sysconf(_SC_PAGESIZE) path, and ProcessCpuTracker does not establish an RSS consumer. No runtime proc concurrency or userspace utility correctness test.",
+    "port_blob": "c6a5568eb1f2e9dbac5648475de75d01585cab4a",
+    "lts_to_port_sha256": "85d1e2f19fdf72951b0564b19f1d75ef9d4e5102dfd06dddae373642a6f2e0c2",
+    "normalized_ack_to_port_sha256": "c1a1c3888a8087175f6a5cf7cc1d74cd1580297bddbaef79bbabc9eefc218e5b"
+  },
+  "fs/exec.c": {
+    "review_head": "b39eeed468efb77aaa5154d7aea538f428c3d8c0",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed complete LTS/normalized-ACK deltas and dma_buf_begin_new_exec plus prior reviewed fd/fork/exit ownership. Retain reported-page stack alignment, task-name/binfmt success/failure hooks and GPL task-name source export. Transfer DMA-buf accounting after unshare_files; old_files is used only as an identity comparison, never dereferenced after unsharing. New task/files accounting owns independent references; acquire the new MM reference only after successful exec_mmap, while the old MM retains its existing teardown reference. Allocation failure is after the point of no return and follows native fatal-exec cleanup. Positive lmkd/libmeminfo DMA accounting consumers are documented in the prior DMA review. Keep LTS CLOEXEC closure before exec_update_lock/FUSE wait, POSIX timer cleanup immediately after de_thread, futex_exec_done after MM replacement and unsigned argument-copy-loop fix. Hooks are trusted module customization points and do not replace native credential/LSM installation. No runtime exec-race certification.",
+    "port_blob": "54ad162303a9fbb0941bf2d15bf2e0982fd368f1",
+    "lts_to_port_sha256": "86a0899b032ad8bf4b6a2589b8b83c6469397963b89f8ff24147c8440055efd9",
+    "normalized_ack_to_port_sha256": "f54a6a600931ba738afe6a338c14d7038e513a2f17cb3fc284e03cfef406f242"
+  },
+  "mm/vma_exec.c": {
+    "review_head": "7459443980382ed42877bf4402bf44a93894ea84",
+    "status": "reviewed-source-selection",
+    "rationale": "Full delta is an initial stack VMA sized to the reported page size and 2b8ae3b1fce2 accounting correction. Keep native KSM setup, mmap writer locking, anonymous VMA flags and failure unwinding; account vma_pages(vma), not one, in native stack_vm/total_vm units. Host extracted-function ASan/UBSan covers 4/8/16 KiB setup and each allocation/lock/KSM/insertion failure, with an old-source undercount control. No real exec test.",
+    "port_blob": "6a2a1bcb266585b540be9ae693462fe28463ff6c",
+    "lts_to_port_sha256": "218e882803461515cc594b085a6c13248a210b29d16cad3c5ccb37cd277b512a",
+    "normalized_ack_to_port_sha256": "4755951be52e67e9ed89863b10f7bd1f055c5360dcecabe7558a8fe5d580a4cf"
+  },
+  "mm/mseal.c": {
+    "review_head": "7459443980382ed42877bf4402bf44a93894ea84",
+    "status": "reviewed-source-selection",
+    "rationale": "Complete LTS delta only applies reported-page start alignment and range rounding. Retain flags/overflow/empty-range validation, mmap writer locking, no-unmapped-gap precheck and irreversible VM_SEALED behavior. Keep LTS pointer-based vma_modify_flags and sticky flag preservation. Positive page_shift=14 requires corresponding ABI granularity. No GrapheneOS hardening series or runtime sealing test added.",
+    "port_blob": "1cac2f2a6419f223cda8c66bc496c1a9d715ea33",
+    "lts_to_port_sha256": "f3666ba1bec96c25a3ced795b974fd476ebf22ce81eaa33ab918fe3e0fd5adb6",
+    "normalized_ack_to_port_sha256": "5f15b1377018e72cfc74267d9f58833e15f8a2fc7fd35d9ad0300efa6d748d92"
+  },
+  "mm/util.c": {
+    "review_head": "7459443980382ed42877bf4402bf44a93894ea84",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed full LTS and normalized-ACK deltas and randomization/mmap paths. Retain reported-page randomize_page alignment, final mmap observation hook (scalar result, after native LSM/fsnotify/locking/unmap/population flow) and get_cmdline source export. 2b8ae3b1fce2 aligns random stack offsets within the native byte span so x86 stack_maxrandom_size reservation remains sufficient; 16 KiB placement has two fewer bits, explicitly documented in SECURITY.md. Remove obsolete __GENSYMS__ guard, not any actual source API. Keep LTS snapshot_page third-page copy bound nr_pages > 2. Host checks exhaust 12,589,056 x86 mask inputs; no runtime random-number/ASLR test. All current x86 randomize_page callers use ranges larger than page alignment; no generic range-underflow fix is asserted.",
+    "port_blob": "79f775eeafc3025e89e25c0542f03375b2976760",
+    "lts_to_port_sha256": "93cc9e54f93d33ed40863152873d61c4fb0c58882528c189680807a2263556cc",
+    "normalized_ack_to_port_sha256": "8247bcbc368b864a2f44f06c6b40be92e69fd09087f3c8ef656f5e9d1fcc9adf"
+  },
+  "arch/x86/mm/mmap.c": {
+    "review_head": "7459443980382ed42877bf4402bf44a93894ea84",
+    "status": "reviewed-source-selection",
+    "rationale": "Full net delta is helper inclusion and arch_rnd using reported-page shift. Preserve native PF_RANDOMIZE behavior, legacy/top-down choice, mmap minimum gap and task-size clamps. Existing emulated mmap_rnd_bits adjustment preserves byte span with two fewer bits at 16 KiB, documented as a security tradeoff. 2b8ae3b1fce2 separately aligns randomize_stack_top within native stack_maxrandom_size span, preserving the guard-gap reservation relationship; native 4 KiB behavior stays exact.",
+    "port_blob": "d9654c25573c363e746b4381c8f71174416011ab",
+    "lts_to_port_sha256": "3eb30d25e000df9e9ab52401f04d0b44772fe785fbfd36994e3187989457922e",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "arch/x86/kernel/process.c": {
+    "review_head": "7459443980382ed42877bf4402bf44a93894ea84",
+    "status": "reviewed-source-selection",
+    "rationale": "Only net delta changes stack subpage randomization from 8192 bytes to twice the reported page size, plus the header. Native ADDR_NO_RANDOMIZE/randomize_va_space gates and final 16-byte alignment remain. Both 4 KiB and 16 KiB modes retain two reported pages of low stack displacement; setup_arg_pages performs separately reviewed page alignment. Other native x86 process and idle behavior remains LTS.",
+    "port_blob": "4111d520edcf963d155b9509d6e0a3af6e7f0ffa",
+    "lts_to_port_sha256": "c42cb8c00aaf83e57840a206729668c4f7f94d70dc413859c58f13fa30237cc0",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "arch/x86/include/asm/elf.h": {
+    "review_head": "7459443980382ed42877bf4402bf44a93894ea84",
+    "status": "reviewed-source-selection",
+    "rationale": "Only net delta defines ELF_EXEC_PAGESIZE as reported __PAGE_SIZE plus its include. This feeds the ELF loader and AT_PAGESZ ABI required by the local Goldfish 16 KiB command line. Retain native architecture compatibility, register layouts and personality checks. No historical KMI field preservation. fs/binfmt_elf.c dynamic min_coredump initialization was separately reviewed.",
+    "port_blob": "231a8d4284ddcc6ad11e8866ed73c50112523ea9",
+    "lts_to_port_sha256": "0f2a08bceb5d27f4a8140a0a679e7f87e3320efb26090d101a205db49bf77446",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "arch/x86/entry/vsyscall/vsyscall_64.c": {
+    "review_head": "7459443980382ed42877bf4402bf44a93894ea84",
+    "status": "reviewed-source-selection",
+    "rationale": "Full delta includes the page-size header and expands the synthetic gate VMA end to the 16 KiB maximum so its reported span fits emulated-page granularity. This also makes the synthetic VMA larger in native 4 KiB mode; actual page tables, address-to-vsyscall-number validation, SIGSEGV paths and in_gate_area_no_mm retain native 4 KiB behavior. Actual SDK config selects XONLY, which installs no readable PTE for this pseudo mapping. No additional backing page is exposed and no runtime vsyscall test is claimed.",
+    "port_blob": "7c7792d0e2bf40a09475c48e7df4fd12ed3dbfe6",
+    "lts_to_port_sha256": "7cf182ac5c3b7173face3f456a9b7ee51a24881149ded5d7d766f6099dbde169",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "include/vdso/datapage.h": {
+    "review_head": "7459443980382ed42877bf4402bf44a93894ea84",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed full data-layout delta with x86 vma installation, lib/vdso/datastore.c fault insertion and linker symbols. x86 time/namespace/RNG/architecture areas are spaced at the 16 KiB maximum and expressed in native-page offsets; other architectures remain native. This permits the same compiled vDSO image in 4/8/16 KiB userspace modes. 745944398038 adapts the namespace reader in lib/vdso/gettimeofday.c to the declared offset rather than a hard-coded one native page; host extracted fault/lookup checks prove layout agreement and reproduce the old SIGBUS path. Current SDK TIME_NS is disabled, but the minimal shared-layout correction preserves native code under source/config customization; it enables no new platform or feature. Native PFN/readonly/sealed-system-map enforcement stays in datastore.c. No actual vDSO/time namespace execution test.",
+    "port_blob": "4595e8f879f22364c31a40fe8e8528b5e0123ab9",
+    "lts_to_port_sha256": "a5b4c0fb85b12070769efe2741a0dae01e58d70c79a1c90f609b792301438c4d",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "arch/x86/include/asm/vdso/vsyscall.h": {
+    "review_head": "7459443980382ed42877bf4402bf44a93894ea84",
+    "status": "reviewed-source-selection",
+    "rationale": "Full delta scales reserved vDSO and virtual-clock areas and Hyper-V page offset by the native-pages-per-16-KiB ratio. Cross-checked linker symbols against vma.c fault/install offsets and include/vdso/datapage.h. Internal physical page units stay PAGE_SIZE; exported areas have reported-page-compatible boundaries. Native vvar fault checks and mapping permissions remain. This is compile-time common-image spacing, so native 4 KiB mode also reserves the larger range. No runtime virtual clock certification.",
+    "port_blob": "6d86a11e93ea4d076fab39720489bd3e8d845c62",
+    "lts_to_port_sha256": "e6db77e8318c773b171f239d1a605a8a401bf350fd4393ee7ac32fe16527fb4f",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "arch/x86/entry/vdso/vdso2c.h": {
+    "review_head": "7459443980382ed42877bf4402bf44a93894ea84",
+    "status": "reviewed-source-selection",
+    "rationale": "Full delta rounds generated raw vDSO image size and backing-array alignment to 16384. This host generator cannot use a boot-time page-size variable; its constant matches __MAX_PAGE_SIZE. Both 32-bit compat and 64-bit images retain native ELF validation and copying with the larger initialized array. Actual SDK config has IA32_EMULATION=y. The change supports a single compiled image across page modes; no added platform or runtime test.",
+    "port_blob": "bc05bacb32d88f016a23b4f1e9485b6c87d0428c",
+    "lts_to_port_sha256": "f6014ee70bb418fbbce4a3312111c13352afaaf5d683ff8c6f939479550423d8",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "lib/vdso/gettimeofday.c": {
+    "review_head": "7459443980382ed42877bf4402bf44a93894ea84",
+    "status": "reviewed-source-selection",
+    "rationale": "745944398038 changes only the time-namespace real-data pointer increment to VDSO_TIMENS_PAGE_OFFSET * PAGE_SIZE. It equals native PAGE_SIZE on ordinary layouts and the actual kernel vvar insertion offset on x86 max-page spacing. Host checks run extracted lookup and fault code for native and x86 layouts with time-namespace enabled/disabled and insertion failure; old offset reaches SIGBUS padding on x86. Current SDK configuration keeps TIME_NS disabled. Clock arithmetic, sequence checks and syscall fallback remain native LTS.",
+    "port_blob": "7d5182fc8cbf0c84a782091a8945fca034569aaa",
+    "lts_to_port_sha256": "e2923c929bdfc86b11f52590368ede434ec5a0eb3f91161e6ac10aa19f1f792b",
+    "normalized_ack_to_port_sha256": "e2923c929bdfc86b11f52590368ede434ec5a0eb3f91161e6ac10aa19f1f792b"
+  },
+  "fs/proc/page.c": {
+    "review_head": "7459443980382ed42877bf4402bf44a93894ea84",
+    "status": "reviewed-source-selection",
+    "rationale": "Full LTS delta retains PG_error reporting needed by configured incfs source SetPageError paths and suppresses PFN-indexed proc APIs only when page-size emulation is active. Positive local libmeminfo/pageacct.cpp explicitly detects x86 non-4-KiB pages, skips opening these files and returns zero flags/one mapcount rather than consuming an invented PFN. ACK 6acc26714c0e documents physically noncontiguous native subpages, so a synthetic single PFN cannot preserve this ABI; retain that explicit SDK limitation, not an absence-of-consumer rationale. Native 4 KiB proc APIs and permissions stay; retain LTS exact FOLIO_MAPPING_FLAGS KSM classification fix. Other applications needing exact PFNs in emulated mode remain unsupported by this representation; no runtime test.",
+    "port_blob": "8c5f1596056a905357e56db24e2210c003152391",
+    "lts_to_port_sha256": "d91678c56d70380893776ce5db7aaaed1d2a2134de565fd4c947ee2de51fdf8d",
+    "normalized_ack_to_port_sha256": "cb995cc9d398162417055a68ea474f3fe0f2d116eed736e4daee8e8cd576284e"
+  },
+  "mm/page_idle.c": {
+    "review_head": "7459443980382ed42877bf4402bf44a93894ea84",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed full file/net deltas. Keep ACK 05fd7cf26c48 always-trylock before rmap_walk to support its UFFDIO_MOVE fine-grained folio-lock contract; failures remain best effort and never block on the lock. Native mapped/LRU/refcount checks, PFN bounds, mmu_notifier clearing and permissions remain. Suppress idle-PFN bitmap only in emulated page-size mode, matching libmeminfo/pageacct.cpp explicit non-4-KiB detection and IsPageIdle fallback. Its MarkPageIdle/GetPageIdle helpers require initialized actual PFN mode; no synthetic-PFN design is added. Native 4 KiB mode retains bitmap. The full multi-file UFFD series is separately reviewed; no kernel locking or bitmap runtime test.",
+    "port_blob": "9675b617d70aa5f741c354377178519e84c25e60",
+    "lts_to_port_sha256": "290e9d7524470c548ac8a7829a61d4de29f2f61b3026d5a7f728fa5c944803bc",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "mm/vmstat.c": {
+    "review_head": "7459443980382ed42877bf4402bf44a93894ea84",
+    "status": "reviewed-source-selection",
+    "rationale": "Full net delta adds a pagetypeinfo output hook and scales zoneinfo watermarks/reserves/capacity/pageset counts to reported-page units. Pinned lmkd.cpp meminfo_parse_line divides kB by page_k and calc_zone_watermarks sums protection/high/low/min; these must use matching reported units. Preserve native per-node/zone event counters and /proc/vmstat in actual page/event units: lmkd refault ratios compare counters from that same source. This intentionally retains ACK mixed diagnostic units, not a claim that every zoneinfo field was converted. Local lmkd parses nr_free_pages/nr_free_cma and node active/inactive fields but does not use those zoneinfo copies in watermark policy. Other generic diagnostic interpretation is not certified. Kernel internal accounting and native locks unchanged; no runtime pressure/LMK test.",
+    "port_blob": "5f05614df5635ab4d2fbbf9d4a84ccf522180122",
+    "lts_to_port_sha256": "8d9953d15db67e6a214376ff2ca6f55712591d4895b538d9a907eddc1cf79d8e",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   }
 }
