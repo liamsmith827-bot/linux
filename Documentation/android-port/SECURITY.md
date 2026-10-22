@@ -2686,3 +2686,14 @@ errors, duplicate orphan reservation and missing-entry false success all fail.
 The shims do not execute actual encryption, quota, I/O, GC or crash recovery.
 All source evidence is local, including fs/crypto/hooks.c, fs/inode.c and the
 GrapheneOS consumer; no additional remote source was accessed.
+
+The full LTS 95d5975c9d1c (symlink writeback errors) patch was also examined.
+Its error return and DIRSYNC-on-success condition are preserved. Its attempt to
+unlink after a flush error is deliberately replaced by ACK's creation-versus-
+persistence boundary: that inode is already published, so error rollback must
+not leave a hashed dentry pointing at an unlinked inode. The consequence is that
+a failed persistence operation may leave a visible, potentially non-durable or
+broken symlink; callers still receive the error. This is an explicit failure-
+semantics tradeoff, not an assertion that durability improved. Native encryption,
+block initialization and read error handling are unchanged; no new access right
+is granted. The earlier payload-failure path instead unlinks before publication.
