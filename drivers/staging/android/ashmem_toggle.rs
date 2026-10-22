@@ -53,6 +53,11 @@ impl<T: AshmemToggle> MiscDevice for AshmemToggleMisc<T> {
         iov.simple_read_from_buffer(kiocb.ki_pos_mut(), data)
     }
     fn write_iter(_kiocb: Kiocb<'_, Self::Ptr>, iov: &mut IovIterSource<'_>) -> Result<usize> {
+        // Android's /dev/ashmem* rules also match these global controls.
+        if !crate::has_cap_sys_admin() {
+            return Err(EPERM);
+        }
+
         let mut data = [0; 16];
         let len = iov.copy_from_iter(&mut data[..15]);
         data[len] = 0;
