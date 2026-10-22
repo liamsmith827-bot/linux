@@ -1478,7 +1478,7 @@ static int cmp_export(const void *sym, const void *export)
 #ifdef CONFIG_HAVE_ARCH_PREL32_RELOCATIONS
 	return strcmp((const char *)sym, (const char *)offset_to_ptr(export));
 #else
-	return strcmp((const char *)sym, (const char *)export);
+	return strcmp(sym, *(const char * const *)export);
 #endif
 }
 
@@ -1486,7 +1486,7 @@ static bool is_protected_export(const struct kernel_symbol *sym)
 {
 	return bsearch(kernel_symbol_name(sym), __start___kexporttab,
 		       __stop___kexporttab - __start___kexporttab,
-		       sizeof(const char *), cmp_export) != NULL;
+		       sizeof(__start___kexporttab[0]), cmp_export) != NULL;
 }
 #endif
 
@@ -2861,10 +2861,14 @@ out_err:
 	return ret;
 }
 
-static int check_export_symbol_sections(struct module *mod)
+static int check_export_symbol_sections(struct module *mod,
+				       const struct load_info *info)
 {
-	if (mod->num_syms && !mod->flagstab) {
-		pr_err("%s: no flags for exported symbols\n", mod->name);
+	unsigned int flags = find_sec(info, "__kflagstab");
+
+	if ((mod->num_syms && !mod->flagstab) ||
+	    info->sechdrs[flags].sh_size != mod->num_syms) {
+		pr_err("%s: invalid flags table for exported symbols\n", mod->name);
 		return -ENOEXEC;
 	}
 #ifdef CONFIG_MODVERSIONS
@@ -3483,7 +3487,7 @@ static int load_module(struct load_info *info, const char __user *uargs,
 	if (err)
 		goto free_unload;
 
-	err = check_export_symbol_sections(mod);
+	err = check_export_symbol_sections(mod, info);
 	if (err)
 		goto free_unload;
 

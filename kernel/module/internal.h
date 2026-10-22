@@ -56,8 +56,13 @@ extern const struct kernel_symbol __stop___ksymtab[];
 extern const u32 __start___kcrctab[];
 extern const u8 __start___kflagstab[];
 #ifdef CONFIG_MODULE_SIG_PROTECT
-extern const char *__start___kexporttab[];
-extern const char *__stop___kexporttab[];
+#ifdef CONFIG_HAVE_ARCH_PREL32_RELOCATIONS
+extern const s32 __start___kexporttab[];
+extern const s32 __stop___kexporttab[];
+#else
+extern const char * const __start___kexporttab[];
+extern const char * const __stop___kexporttab[];
+#endif
 #endif
 
 #define KMOD_PATH_LEN 256
