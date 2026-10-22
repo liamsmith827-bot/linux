@@ -14,6 +14,8 @@
  * of the licence, or (at your option) any later version.
  */
 #define _GNU_SOURCE
+/* This tool uses the detached, no-attributes CMS subset BoringSSL supports. */
+#define BORINGSSL_NO_NO_CMS
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
