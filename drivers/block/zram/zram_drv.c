@@ -34,6 +34,7 @@
 #include <linux/cpuhotplug.h>
 #include <linux/part_stat.h>
 #include <linux/kernel_read_file.h>
+#include <linux/completion.h>
 
 #include "zram_drv.h"
 #include "zram_ioctl.h"
@@ -501,7 +502,7 @@ struct zram_wb_req {
 
 struct zram_prefetch_ctl {
 	atomic_t num_inflight;
-	wait_queue_head_t done_wait;
+	struct completion *done;
 };
 
 struct zram_rb_req {
@@ -1175,15 +1176,16 @@ static int zram_populate_table(struct zram *zram, struct page *page, u32 index)
 	return 0;
 }
 
-static inline void zram_prefetch_dec_and_wake(struct zram_prefetch_ctl *pf_ctl)
+static inline void zram_prefetch_put(struct zram_prefetch_ctl *pf_ctl)
 {
 	if (atomic_dec_and_test(&pf_ctl->num_inflight))
-		wake_up(&pf_ctl->done_wait);
+		complete(pf_ctl->done);
 }
 
 static void zram_deferred_prefetch(struct work_struct *w)
 {
 	struct zram_rb_req *req = container_of(w, struct zram_rb_req, work);
+	struct zram_prefetch_ctl *pf_ctl = req->pf_ctl;
 	struct page *page = bio_first_page_all(req->bio);
 	struct zram *zram = req->zram;
 	u32 index = req->index;
@@ -1192,20 +1194,21 @@ static void zram_deferred_prefetch(struct work_struct *w)
 
 	__free_page(page);
 	bio_put(req->bio);
-	zram_prefetch_dec_and_wake(req->pf_ctl);
 	kfree(req);
+	zram_prefetch_put(pf_ctl);
 }
 
 static void zram_prefetch_read_endio(struct bio *bio)
 {
 	struct zram_rb_req *req = bio->bi_private;
+	struct zram_prefetch_ctl *pf_ctl = req->pf_ctl;
 	struct page *page = bio_first_page_all(bio);
 
 	if (bio->bi_status) {
-		zram_prefetch_dec_and_wake(req->pf_ctl);
 		__free_page(page);
 		bio_put(bio);
 		kfree(req);
+		zram_prefetch_put(pf_ctl);
 		return;
 	}
 
@@ -1255,6 +1258,7 @@ static int zram_prefetch_from_bdev(struct zram *zram, struct page *page,
 
 int zram_prefetch_slots(struct zram *zram, struct zram_pp_ctl *ctl)
 {
+	DECLARE_COMPLETION_ONSTACK(done);
 	struct zram_pp_slot *pps;
 	struct zram_prefetch_ctl pf_ctl;
 	int ret = 0;
@@ -1262,8 +1266,9 @@ int zram_prefetch_slots(struct zram *zram, struct zram_pp_ctl *ctl)
 	unsigned long blk_idx;
 	struct page *page = NULL;
 
-	atomic_set(&pf_ctl.num_inflight, 0);
-	init_waitqueue_head(&pf_ctl.done_wait);
+	/* Keep a submission reference so completion cannot fire between reads. */
+	atomic_set(&pf_ctl.num_inflight, 1);
+	pf_ctl.done = &done;
 
 	while ((pps = select_pp_slot(ctl))) {
 		index = pps->index;
@@ -1304,7 +1309,9 @@ unlock_next:
 	if (page)
 		__free_page(page);
 
-	wait_event(pf_ctl.done_wait, atomic_read(&pf_ctl.num_inflight) == 0);
+	zram_prefetch_put(&pf_ctl);
+	/* The completion lock also joins the last notifier's stack access. */
+	wait_for_completion(&done);
 	return ret;
 }
 
@@ -1758,7 +1765,7 @@ static void zram_async_read_endio(struct bio *bio)
 	queue_work(system_highpri_wq, &req->work);
 }
 
-static void read_from_bdev_async(struct zram *zram, struct page *page,
+static int read_from_bdev_async(struct zram *zram, struct page *page,
 				 u32 index, unsigned long blk_idx,
 				 struct bio *parent)
 {
@@ -1767,12 +1774,12 @@ static void read_from_bdev_async(struct zram *zram, struct page *page,
 
 	req = kmalloc(sizeof(*req), GFP_NOIO);
 	if (!req)
-		return;
+		return -ENOMEM;
 
 	bio = bio_alloc(zram->bdev, 1, parent->bi_opf, GFP_NOIO);
 	if (!bio) {
 		kfree(req);
-		return;
+		return -ENOMEM;
 	}
 
 	req->zram = zram;
@@ -1788,6 +1795,7 @@ static void read_from_bdev_async(struct zram *zram, struct page *page,
 	__bio_add_page(bio, page, PAGE_SIZE, 0);
 	bio_inc_remaining(parent);
 	submit_bio(bio);
+	return 0;
 }
 
 static void zram_sync_read(struct work_struct *w)
@@ -1836,8 +1844,7 @@ static int read_from_bdev(struct zram *zram, struct page *page, u32 index,
 			return -EIO;
 		return read_from_bdev_sync(zram, page, index, blk_idx);
 	}
-	read_from_bdev_async(zram, page, index, blk_idx, parent);
-	return 0;
+	return read_from_bdev_async(zram, page, index, blk_idx, parent);
 }
 #else
 static inline void reset_bdev(struct zram *zram) {};
@@ -1888,7 +1895,6 @@ static ssize_t read_block_state(struct file *file, char __user *buf,
 
 	for (index = *ppos; index < nr_pages; index++) {
 		int copied;
-		struct timespec64 ts;
 
 		slot_lock(zram, index);
 		if (!slot_allocated(zram, index))
@@ -2311,6 +2317,9 @@ static bool zram_meta_alloc(struct zram *zram, u64 disksize)
 static void slot_free(struct zram *zram, u32 index)
 {
 	unsigned long handle;
+
+	/* An overwrite or discard invalidates the cached backing copy too. */
+	zram_prefetch_cache_drop(zram, index);
 
 #ifdef CONFIG_ZRAM_TRACK_ENTRY_ACTIME
 	zram->table[index].attr.ac_time = 0;
@@ -3156,7 +3165,6 @@ static void zram_slot_free_notify(struct block_device *bdev,
 	}
 
 	slot_free(zram, index);
-	zram_prefetch_cache_drop(zram, index);
 	slot_unlock(zram, index);
 }
 

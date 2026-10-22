@@ -240,6 +240,9 @@ static int zram_ioctl_process_writeback(struct zram *zram,
 	struct zram_wb_ctl *wb_ctl = NULL;
 	int ret;
 
+	prwb->next_addr = 0;
+	prwb->written_bytes = 0;
+
 	/* Require CAP_SYS_NICE for influencing process performance. */
 	if (!capable(CAP_SYS_NICE))
 		return -EPERM;
