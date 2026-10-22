@@ -3683,5 +3683,255 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
       "25f97fccb3ca42cf9d9104b233ada2a944c7483d"
     ]
+  },
+  {
+    "commit": "0aad32680ae633f315a3e407ac2b1a6bdc821d66",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native verity_handle_data_hash_mismatch returns EIO when the original bio has I/O failure after recheck/FEC fail, before calling verity_handle_err. This retains the distinction between lower I/O errors and verified corruption; native configured restart/panic-on-I/O policy remains in verity_finish_io. No ACK reapplication is needed. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "f04c05a5f5a025eec0b7e2c6a22904443f089186",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "rationale": "The complete remerge diff has one conflict, changing only continuation indentation of cur_block in the verity_handle_err call. Neither parent adds unique behavior at this resolution. The surrounding ACK I/O-error guard is already present in native verity_handle_data_hash_mismatch. Preserve that function and native error policy. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "7b4e57fa421b7c5ee7ecf94cb31d515398bc0906",
+    "disposition": "reconciled-to-lts",
+    "rationale": "This removes one informational log of the selected shash driver. Keep native LTS logging and provider setup: no target option, format, access rule or error-handling change is required. This deliberately retains one additional diagnostic message; it is not claimed to be byte-identical ACK logging. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "a3f37cc3173dfa3c478ee1e61283826a3261f131",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep native crypto_shash hashing, salted-state setup, per-bio context allocation and DM_VERITY Kconfig stanza as a complete set. ACK adds a direct SHA-256 library fast path and context union to prepare interleaving; it does not change the digest algorithm or salt placement (v0 trailing, v1 leading). Native code accepts the same AVB table algorithms and verifies the same digest. SDK already enables the architecture SHA-256 library, but that does not prove equivalent speed. Omit this internal optimization; actual throughput is unmeasured. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "f59d2f592e0d84f5db690ba9c56099fbe9fc8f6e",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep native single-data-block real_digest/want_digest context and matching helper parameters. ACK adds separate temporary storage and explicit wanted-digest arguments to support simultaneous pending blocks; the interleaving caller is not selected. Native verity_hash_for_block writes its caller-supplied digest, FEC erasure lookup uses a local wanted digest, recursive FEC is disabled, and successful output is rehashed before copying. This is a coherent implementation selection, not an isolated removal of hash validation. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "a68523d1c87a0db27d43b43b003e0b0f3e73e93b",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep native sequential block hashing and per-block verification/cleanup. ACK batches up to two data blocks with sha256_finup_2x, introduces pending maps/digests and error unmapping; its local message documents throughput gains on some arm64/x86_64 CPUs, not a new table or verification contract. Omit the optimization as a complete set with its digest/provider prerequisites. The SDK may have lower cold-read throughput; no equal-performance claim or runtime benchmark is made. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "e9edc57adcb1219b33c489b3edd0b7b2a2d9415b",
+    "disposition": "adapted",
+    "rationale": "Retain the corrected-block count in STATUSTYPE_INFO, its atomic storage and verity.rst status documentation. Count only after successful FEC output hash validation/copy, incorporating 140f47bc1113 instead of the original per-buffer increment. Storage is kzalloc-initialized; failed/recursive correction never increments. fs_mgr checks the leading C/V character, so the additional field preserves that consumer. A dedicated SDK count consumer was not established; preserve this configured verified-storage status ABI conservatively. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": [
+      "db5a87077cbc126671c21e87fe8d7e24bfad267a"
+    ]
+  },
+  {
+    "commit": "6d727d780839ace85cca357894af2d2ffdc241f0",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Retain native extra_pool with zero reserve and GFP_NOWAIT allocations, paired native frees and destructor cleanup. Replacing this wrapper with kmem_cache_alloc/free removes internal overhead without creating a new feature or allocation guarantee. Required buffer/RS/output pools still supply the native low-memory progress mechanism. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "236527c6fe7a4c56500ca917e7bf0214e60cfb93",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep native FEC state in DM per-bio padding with matching initialization, cleanup and recursion guard. ACK lazily allocates it from a new fio_pool to reduce allocation/zeroing overhead on ordinary reads. This is a real memory/performance difference, but neither layout is an external source/binary interface or changes the FEC format. Preserve the native complete lifecycle; no historical KMI constraint is involved and no equal memory-cost claim is made. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "694cb99bef0841c669aea79999afa838061a7873",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep the native fixed pointer array sized by PAGE_SHIFT and its matching allocation/free loops. The SDK kernel has 4K pages, and native verity rejects data blocks larger than PAGE_SIZE; smaller supported blocks can waste slots but do not exceed the array. ACK sizes the array by data block size to reduce waste, especially on 16K kernels. Do not introduce a flexible array without the separately omitted fio_pool lifecycle; no supported table size is removed. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "06fe1f0378c4d593355d5a4e25dab95f177cda03",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep native conditional FEC cleanup for !in_bh. FEC/error paths return EAGAIN before sleeping work in BH, so successful BH verification has allocated no FEC buffers. ACK removes the condition after its lazy pointer-based cleanup becomes cheap. That prerequisite is omitted; native worker fallback sets in_bh=false and still frees all FEC state. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "7a7e601e3b098dde1e55687d01d7bc609a343d45",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep the native CONFIG_DM_VERITY_FEC guard around data correction. SDK enables it, so correction is called; without FEC the native stub returns EOPNOTSUPP, making the removed guard only a source simplification. No verification result or configured interface differs. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "c9a7f7c117e4d126ddbc77d7e3d1fbd7f0c011de",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep the native out-of-line verity_fec_is_enabled and matching declaration/stub. Both implementations test v->fec && v->fec->dev; moving the same predicate into the header is an internal call optimization, not a missing enabled-FEC condition. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "3f7d7e483a6766e0f6879a87add1684280408f16",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep the native separate bh_work and work fields with their matching container_of/queue sites. ACK reuses one work_struct to shrink per-bio storage, relying on never being queued on both workqueues simultaneously. Native still transitions BH EAGAIN/ENOMEM to the normal worker and preserves LTS workqueue fixes. No historical layout compatibility is required; retaining the native lifecycle minimizes unnecessary scheduling changes. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "ec0cb0d37b8b5693102be6a3172171d2c1ccf4bc",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep bio_advance_iter: it handles the same block-size advance as the single-vector fast helper and also supports crossing vectors. Native alignment and bv_len checks prohibit verity blocks spanning pages. The ACK helper substitution removes general-loop overhead but does not enable another supported I/O layout. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "2f7a2eecb786c9900dce75558c0efbd1e4e10c80",
+    "disposition": "reconciled-to-lts",
+    "rationale": "The complete patch changes only comments from tasklet/workqueue wording to softirq/kworker. Native system_bh_wq and normal fallback implementation already implements the described contexts; retaining LTS comments does not change execution or sleeping rules. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "140f47bc111327f54567426828a17292e78d0c00",
+    "disposition": "adapted",
+    "rationale": "db5a87077cbc already moves the statistic to verity_fec_decode after fec_decode_rsb successfully rehashes and copies one complete block. Failed attempts and multiple buffer batches cannot each increase the block counter. Keep this fix with the status extension, without importing the unrelated FEC allocation rewrite. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": [
+      "db5a87077cbc126671c21e87fe8d7e24bfad267a"
+    ]
+  },
+  {
+    "commit": "c59ecc1ab645dcc71f1f0a76dadec6c36e4141d8",
+    "disposition": "already-represented-upstream",
+    "rationale": "The array reduction is represented by LTS a556189c0675 and naming commit 3f31bde63f9a, then strengthened by 5488d3a69d20: use MAX_ROOTS entries and strict *neras < roots at both append sites. Do not restore ACK MAX_ROOTS+1 or <= roots, which can pass too many erasures into the Reed-Solomon decoder and overflow its polynomial scratch array. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "17dfbd255d439d2d5a413141321eedc7c03a411b",
+    "disposition": "already-represented-upstream",
+    "rationale": "LTS d47281b9a447 retains the bounded parity_pos/to_copy reader, including split parity on the first codeword and buffer release before reading the next block. Current fec_decode_bufs is byte-identical to LTS. Preserve this low-memory/non-default-root buffer-overread fix; no ACK cherry-pick is needed. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "c64041d9986a20dcc8e206f29eb0a3d0f6baceba",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep the native internal hash_blocks field with its existing end-position meaning, assignments, prefetch bounds and constructor/FEC checks. ACK renames it to hash_end and moves its declaration to clarify that meaning. All uses are changed consistently in ACK, but no arithmetic or externally visible field changes; retaining native names preserves the same bounds. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "e6c17ef1b3d402b20c470b327c33b069d38c913a",
+    "disposition": "already-represented-upstream",
+    "rationale": "LTS 3f31bde63f9a supplies MIN_ROOTS=2/MAX_ROOTS=24, parity array bounds and parser limits. The later LTS 5488d3a69d20 uses MAX_ROOTS (not MAX_ROOTS+1) erasures with strict append bounds. Keep that newer security correction; the naming/limit conversion is otherwise represented. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "ab48d481c3e2133b33d8fbcdf1cff94c11821a3b",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Retain native RSM/rsn terminology and all matching calls, cache sizes and division checks. ACK renames them RS_N/rs_k to standard Reed-Solomon notation while preserving 255-symbol codewords and k=255-roots. Native root bounds and the newer erasure limit remain; this rename adds no format compatibility. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "320eec62e98aea086596d2a554665ae76e36a9da",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Retain native RS-block helper/macro names with matching callers. ACK changes them to RS-message/codeword terminology and simplifies a temporary pointer; loops, byte addresses and decoder parameters are unchanged. No codeword format or bounds fix is omitted by this naming choice. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "cfb1f4067bba16d332cc7230c0218f68bb60d9e4",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Retain native io_size and equivalent 1<<data_dev_block_bits expressions. Native constructor checks matching data/hash block sizes and initializes io_size before use. ACK consolidates those expressions under block_size and updates comments; required device/size validation remains unchanged in the port. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "085f7a276217f562862e7572102df5258279722d",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Retain rounds and its native ceil(blocks/rsn) computation plus nonzero/device-size checks. ACK renames this internal count to region_blocks without changing geometry. Retaining the name does not omit the separately preserved too-small FEC device fix. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "88107ba370732bafd06b5bc21a398b6cbc7857f5",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Native rsb is offset - floor(offset/divisor)*divisor for nonzero divisor rounds<<block_bits. ACK replaces the identical remainder calculation with div64_u64_rem. Keep native checked geometry; there is no new format or failure policy in this arithmetic simplification. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "1e325ddcf77e9775768bd87d1a4a4134626e9d19",
+    "disposition": "reconciled-to-lts",
+    "rationale": "For native n=rsb*rsn+i and 0<=i<rsn, fec_interleave returns rsb+i*(rounds<<block_bits), the direct formula used by ACK. Keep the native helper and matching byte-offset representation; ACK removes a redundant quotient/remainder operation, not a required block selection. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "8c957a01fe7ff95cc2e83d4b8f4df0af19fdc8cc",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Native fec_buffer_rs_index(n,j)+block_offset equals the ACK incrementing src_pos over the same nested loops. Both stop at data block size and release the buffer. Keep the original index helper and caller consistently; no new deinterleaving capability is omitted. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "d586d9fbae03f0ebefbf997803924f32cfc9528d",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep native block_offset/pos names. ACK renames output cursor to out_pos and folds its increment into the assignment while retaining the same block-size stop and per-batch advance. This is internal naming/control-expression cleanup with no format or security-policy difference. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "0f513ac193f0888bd3de06c50b7cdebbfa143a8a",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep native fec_decode_rsb and caller-computed offset/rsb. ACK moves their calculation into renamed fec_decode and documents the existing post-correction hash requirement. Current native code performs that hash comparison before returning success; the security requirement does not depend on the refactor. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "e3b8cd88656062f0739574937f9b7ba0315741ad",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep native target_index discovery while visiting the rsn interleaved blocks. With the constructor-validated geometry, division target_block/rounds selects the same region; native target_index remains -1 if no match and the caller returns error before indexing the output message. ACK computes the region directly and warns on out-of-range; retaining native checked lookup does not introduce an unchecked negative index. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "f27848bdfa9a167e4799bc0c4b539dcfd2d8e9de",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep native byte-offset rsb through read/decode rather than ACK block-index representation. rsb is a block-aligned remainder; shifting it to a block index gives the same region sequence and parity byte position. Apply neither half of the representation conversion alone. Native low-memory split-parity and erasure bounds remain intact. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "e6156b1c061f07139dac502782c23afa11328300",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep native fec_decode_bufs returning a nonnegative corrected-symbol count or negative error. Its only native caller tests r<0; no caller needs success==0. ACK normalizes success to zero and keeps a separate diagnostic count as cleanup, without changing acceptance. Corrected-block status is independently updated only after full revalidation. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "c5d652e3581d5443aff2609518540e5f6d278225",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep native FEC diagnostic identifiers and signatures. ACK passes target_block deeper solely to improve log labels from region-relative index to the actual target; it changes no reads, correction bytes or validation. This deliberately forgoes the more precise log label, without disabling error logging or the retained status count. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "2d18ce7e38162cf713a3ad5dcc23feba79979ab9",
+    "disposition": "reconciled-to-lts",
+    "rationale": "The patch changes comments for the ACK region-index implementation. Keep comments with the selected native helper representation. Its roots+1 erasure description must not be imported as a behavioral requirement: newer native 5488d3a69d20 deliberately caps at roots to prevent decoder overflow. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "e6d89c03cfee6fe8ed0d9384111268e7638f8478",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep native warning only when corrected>0, plus errors for failed correction. ACK adds a diagnostic warning when FEC corrected zero symbols; its purpose is exposing unexpected invocations/performance overhead. Acceptance still requires rehashing, and corrected-block status still counts successful complete recovery. No integrity check is lost, but this additional diagnostic is deliberately omitted. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "6115619831507784439fbbe03b9b1f7ae7ce0172",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "Final ACK explicitly removes this vbmeta-invalidating driver in d9d3fe628e9e. The original and pre-removal driver blobs match exactly; final ACK, LTS and port contain neither source, build/config entry nor restart-hook declaration/call. Do not revive kernel writes to vbmeta on integrity failure: current native restart/panic policy and userspace AVB table construction remain. This conclusion is based on actual removal, not absence of a searched consumer. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "d9d3fe628e9e0f1880e65d8c2097fad244bcbec4",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "Retain the removal of the original AVB error handler: source, Kconfig, Makefile link rule and error-handler call/declaration are absent in final ACK and the port. The local revert message states modern-device problems, but no reliance on that assertion is needed to prove final ACK no longer requires this behavior. Ordinary verified boot and corruption policy are retained. Evidence: evidence/dm-verity-local-review.json; SECURITY.md: dm-verity final source selection. All evidence is local.",
+    "result_commits": []
+  },
+  {
+    "commit": "337e846605519afcf39b1dafc85175e73d90c360",
+    "disposition": "omitted-current-target",
+    "rationale": "Keep native DM_VERITY_FEC selection of REED_SOLOMON/DEC8. The full ACK change only permits the decoder to become a module when dm-verity is modular. The existing SDK config has DM_VERITY=y, DM_VERITY_FEC=y and REED_SOLOMON=y, so moving selection to the tristate parent would produce the same built-in decoder. Existing modular dm-verity remains buildable with a built-in decoder; this additional module packaging choice is not required for the current workflow. No historical KMI is preserved. Evidence: evidence/dm-bufio-config-review.json. Only local sources were examined.",
+    "result_commits": []
+  },
+  {
+    "commit": "6b9e2a3b768e181b1dafc124989dd25d36b26862",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep native cache_put and cache_put_and_wake as separate helpers. The full ACK patch inlines the only call, retaining the same cache read lock, checked atomic hold-count decrement, unlock and waiter wake condition. Current dm-bufio.c equals pinned LTS exactly. This is internal function consolidation with no new API or synchronization guarantee. Evidence: evidence/dm-bufio-config-review.json. Only local sources were examined.",
+    "result_commits": []
+  },
+  {
+    "commit": "4a0357feb72ac3fd258ffa2a2bc015dea21963ef",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Keep the complete native dm-bufio cache implementation. The full ACK patch caches buffer_tree pointers to avoid repeated deterministic cache_index computations across get/put/mark/insert/remove, allocation retry, prefetch, dirty write and forget paths. It changes helper signatures and all callers together but not tree selection or lock type. Native code uses the same hashed tree for each lock/search/unlock, preserving ownership and later LTS fixes. Omission forgoes an internal speed/code-size optimization; actual SDK performance is unmeasured. Evidence: evidence/dm-bufio-config-review.json. Only local sources were examined.",
+    "result_commits": []
   }
 ]

@@ -1,0 +1,29 @@
+{
+  "source_head": "7cb6e77706f4e5ae5a88fd313ad870c22deebf63",
+  "records": [
+    {
+      "commit": "337e846605519afcf39b1dafc85175e73d90c360",
+      "disposition": "omitted-current-target",
+      "rationale": "Keep native DM_VERITY_FEC selection of REED_SOLOMON/DEC8. The full ACK change only permits the decoder to become a module when dm-verity is modular. The existing SDK config has DM_VERITY=y, DM_VERITY_FEC=y and REED_SOLOMON=y, so moving selection to the tristate parent would produce the same built-in decoder. Existing modular dm-verity remains buildable with a built-in decoder; this additional module packaging choice is not required for the current workflow. No historical KMI is preserved. Evidence: evidence/dm-bufio-config-review.json. Only local sources were examined.",
+      "result_commits": [],
+      "patch_sha256": "fcfd85f504c14a024f179ad2369cc3dbedb21696b6be06e42a112d4bdca5a77a"
+    },
+    {
+      "commit": "6b9e2a3b768e181b1dafc124989dd25d36b26862",
+      "disposition": "reconciled-to-lts",
+      "rationale": "Keep native cache_put and cache_put_and_wake as separate helpers. The full ACK patch inlines the only call, retaining the same cache read lock, checked atomic hold-count decrement, unlock and waiter wake condition. Current dm-bufio.c equals pinned LTS exactly. This is internal function consolidation with no new API or synchronization guarantee. Evidence: evidence/dm-bufio-config-review.json. Only local sources were examined.",
+      "result_commits": [],
+      "patch_sha256": "3d1d43810b0da7a23611c114a23dd83a707a881c3421cce36cf3c4e3e739a717"
+    },
+    {
+      "commit": "4a0357feb72ac3fd258ffa2a2bc015dea21963ef",
+      "disposition": "reconciled-to-lts",
+      "rationale": "Keep the complete native dm-bufio cache implementation. The full ACK patch caches buffer_tree pointers to avoid repeated deterministic cache_index computations across get/put/mark/insert/remove, allocation retry, prefetch, dirty write and forget paths. It changes helper signatures and all callers together but not tree selection or lock type. Native code uses the same hashed tree for each lock/search/unlock, preserving ownership and later LTS fixes. Omission forgoes an internal speed/code-size optimization; actual SDK performance is unmeasured. Evidence: evidence/dm-bufio-config-review.json. Only local sources were examined.",
+      "result_commits": [],
+      "patch_sha256": "a38611360b6ffbc7be210660c670e64d261c90735cd4e6a3abf3e3f8eea939cd"
+    }
+  ],
+  "bufio_identical_to_lts_blob": "59e5d8aa42b717692808f7475d0a92d826b02cb7",
+  "config": "kernel_manifest-6.18/common_dist/kernel_x86_64_dot_config (build 86)",
+  "scope": "Complete three patches; no source changes or runtime tests."
+}

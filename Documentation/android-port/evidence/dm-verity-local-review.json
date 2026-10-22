@@ -1,0 +1,466 @@
+{
+  "source_head": "7cb6e77706f4e5ae5a88fd313ad870c22deebf63",
+  "scope": "38 complete candidate patches including one complete nonempty remerge; code and local commit messages examined, not a subject-only classification. No remote resources accessed; URLs embedded in comments/messages were not opened.",
+  "records": [
+    {
+      "commit": "0aad32680ae633f315a3e407ac2b1a6bdc821d66",
+      "disposition": "already-represented-upstream",
+      "assessment": "Native verity_handle_data_hash_mismatch returns EIO when the original bio has I/O failure after recheck/FEC fail, before calling verity_handle_err. This retains the distinction between lower I/O errors and verified corruption; native configured restart/panic-on-I/O policy remains in verity_finish_io. No ACK reapplication is needed.",
+      "files": [
+        "drivers/md/dm-verity-target.c"
+      ],
+      "patch_sha256": "21d800a1fd8b4f1ceec6746a39fea404299b8af86e14b09d5dffcc5008946dff",
+      "result_commits": []
+    },
+    {
+      "commit": "f04c05a5f5a025eec0b7e2c6a22904443f089186",
+      "disposition": "merge-resolution-reconciled-to-lts",
+      "assessment": "The complete remerge diff has one conflict, changing only continuation indentation of cur_block in the verity_handle_err call. Neither parent adds unique behavior at this resolution. The surrounding ACK I/O-error guard is already present in native verity_handle_data_hash_mismatch. Preserve that function and native error policy.",
+      "files": [
+        "drivers/md/dm-verity-target.c"
+      ],
+      "patch_sha256": "4df1379c6a6d42b8c4e133a5a2321dda3b2cc3039d259ed34d8b4341c07fcadc",
+      "result_commits": []
+    },
+    {
+      "commit": "7b4e57fa421b7c5ee7ecf94cb31d515398bc0906",
+      "disposition": "reconciled-to-lts",
+      "assessment": "This removes one informational log of the selected shash driver. Keep native LTS logging and provider setup: no target option, format, access rule or error-handling change is required. This deliberately retains one additional diagnostic message; it is not claimed to be byte-identical ACK logging.",
+      "files": [
+        "drivers/md/dm-verity-target.c"
+      ],
+      "patch_sha256": "1519d9183311389a315c02b6987542cf810c41601df112840b7611cba1b1e719",
+      "result_commits": []
+    },
+    {
+      "commit": "a3f37cc3173dfa3c478ee1e61283826a3261f131",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Keep native crypto_shash hashing, salted-state setup, per-bio context allocation and DM_VERITY Kconfig stanza as a complete set. ACK adds a direct SHA-256 library fast path and context union to prepare interleaving; it does not change the digest algorithm or salt placement (v0 trailing, v1 leading). Native code accepts the same AVB table algorithms and verifies the same digest. SDK already enables the architecture SHA-256 library, but that does not prove equivalent speed. Omit this internal optimization; actual throughput is unmeasured.",
+      "files": [
+        "drivers/md/Kconfig",
+        "drivers/md/dm-verity-target.c",
+        "drivers/md/dm-verity.h"
+      ],
+      "patch_sha256": "808cd4fe7fc638d78fcb5b8bf2215c1f8f099595b1962e15639af9cc6e3fb27d",
+      "result_commits": []
+    },
+    {
+      "commit": "f59d2f592e0d84f5db690ba9c56099fbe9fc8f6e",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Keep native single-data-block real_digest/want_digest context and matching helper parameters. ACK adds separate temporary storage and explicit wanted-digest arguments to support simultaneous pending blocks; the interleaving caller is not selected. Native verity_hash_for_block writes its caller-supplied digest, FEC erasure lookup uses a local wanted digest, recursive FEC is disabled, and successful output is rehashed before copying. This is a coherent implementation selection, not an isolated removal of hash validation.",
+      "files": [
+        "drivers/md/dm-verity-fec.c",
+        "drivers/md/dm-verity-fec.h",
+        "drivers/md/dm-verity-target.c",
+        "drivers/md/dm-verity.h"
+      ],
+      "patch_sha256": "0a557ccfeb41150ac1763d09271614b35c2298ade3c22798fe78fb49252648e2",
+      "result_commits": []
+    },
+    {
+      "commit": "a68523d1c87a0db27d43b43b003e0b0f3e73e93b",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Keep native sequential block hashing and per-block verification/cleanup. ACK batches up to two data blocks with sha256_finup_2x, introduces pending maps/digests and error unmapping; its local message documents throughput gains on some arm64/x86_64 CPUs, not a new table or verification contract. Omit the optimization as a complete set with its digest/provider prerequisites. The SDK may have lower cold-read throughput; no equal-performance claim or runtime benchmark is made.",
+      "files": [
+        "drivers/md/dm-verity-target.c",
+        "drivers/md/dm-verity.h"
+      ],
+      "patch_sha256": "a5b708591426c5b7fa47cc16a8e19bca1fabb1804e57eeb4ade8aecea6ff589b",
+      "result_commits": []
+    },
+    {
+      "commit": "e9edc57adcb1219b33c489b3edd0b7b2a2d9415b",
+      "disposition": "adapted",
+      "assessment": "Retain the corrected-block count in STATUSTYPE_INFO, its atomic storage and verity.rst status documentation. Count only after successful FEC output hash validation/copy, incorporating 140f47bc1113 instead of the original per-buffer increment. Storage is kzalloc-initialized; failed/recursive correction never increments. fs_mgr checks the leading C/V character, so the additional field preserves that consumer. A dedicated SDK count consumer was not established; preserve this configured verified-storage status ABI conservatively.",
+      "files": [
+        "Documentation/admin-guide/device-mapper/verity.rst",
+        "drivers/md/dm-verity-fec.c",
+        "drivers/md/dm-verity-fec.h",
+        "drivers/md/dm-verity-target.c"
+      ],
+      "patch_sha256": "f334298adf073046c79540c51b4909f6e57e8858d8a17835408f5a3016c7c6dd",
+      "result_commits": [
+        "db5a87077cbc126671c21e87fe8d7e24bfad267a"
+      ]
+    },
+    {
+      "commit": "6d727d780839ace85cca357894af2d2ffdc241f0",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Retain native extra_pool with zero reserve and GFP_NOWAIT allocations, paired native frees and destructor cleanup. Replacing this wrapper with kmem_cache_alloc/free removes internal overhead without creating a new feature or allocation guarantee. Required buffer/RS/output pools still supply the native low-memory progress mechanism.",
+      "files": [
+        "drivers/md/dm-verity-fec.c",
+        "drivers/md/dm-verity-fec.h"
+      ],
+      "patch_sha256": "82170efdaac6f724cac91af07df847f9e9c7dfe04aacd9392c5d53aa01ea6d46",
+      "result_commits": []
+    },
+    {
+      "commit": "236527c6fe7a4c56500ca917e7bf0214e60cfb93",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Keep native FEC state in DM per-bio padding with matching initialization, cleanup and recursion guard. ACK lazily allocates it from a new fio_pool to reduce allocation/zeroing overhead on ordinary reads. This is a real memory/performance difference, but neither layout is an external source/binary interface or changes the FEC format. Preserve the native complete lifecycle; no historical KMI constraint is involved and no equal memory-cost claim is made.",
+      "files": [
+        "drivers/md/dm-verity-fec.c",
+        "drivers/md/dm-verity-fec.h",
+        "drivers/md/dm-verity.h"
+      ],
+      "patch_sha256": "8f786da1cb4eb1e2b49964ab4f1d36fbe96d6f1421abe503416fc82e8c4cc9e1",
+      "result_commits": []
+    },
+    {
+      "commit": "694cb99bef0841c669aea79999afa838061a7873",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Keep the native fixed pointer array sized by PAGE_SHIFT and its matching allocation/free loops. The SDK kernel has 4K pages, and native verity rejects data blocks larger than PAGE_SIZE; smaller supported blocks can waste slots but do not exceed the array. ACK sizes the array by data block size to reduce waste, especially on 16K kernels. Do not introduce a flexible array without the separately omitted fio_pool lifecycle; no supported table size is removed.",
+      "files": [
+        "drivers/md/dm-verity-fec.c",
+        "drivers/md/dm-verity-fec.h"
+      ],
+      "patch_sha256": "efc2ab867c0edd357522ca6c0aa0edea97e81b588ce99b0ffc747ae601c05d4a",
+      "result_commits": []
+    },
+    {
+      "commit": "06fe1f0378c4d593355d5a4e25dab95f177cda03",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Keep native conditional FEC cleanup for !in_bh. FEC/error paths return EAGAIN before sleeping work in BH, so successful BH verification has allocated no FEC buffers. ACK removes the condition after its lazy pointer-based cleanup becomes cheap. That prerequisite is omitted; native worker fallback sets in_bh=false and still frees all FEC state.",
+      "files": [
+        "drivers/md/dm-verity-target.c"
+      ],
+      "patch_sha256": "42af33905db6c89aa3b02e684da2d78a24d79a7bcb2439fbd801a6689a4ebb8e",
+      "result_commits": []
+    },
+    {
+      "commit": "7a7e601e3b098dde1e55687d01d7bc609a343d45",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Keep the native CONFIG_DM_VERITY_FEC guard around data correction. SDK enables it, so correction is called; without FEC the native stub returns EOPNOTSUPP, making the removed guard only a source simplification. No verification result or configured interface differs.",
+      "files": [
+        "drivers/md/dm-verity-target.c"
+      ],
+      "patch_sha256": "9c6503c1425124cba84b549f9a2a9cd1e2efa95a001a562d360efa185ab2a846",
+      "result_commits": []
+    },
+    {
+      "commit": "c9a7f7c117e4d126ddbc77d7e3d1fbd7f0c011de",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Keep the native out-of-line verity_fec_is_enabled and matching declaration/stub. Both implementations test v->fec && v->fec->dev; moving the same predicate into the header is an internal call optimization, not a missing enabled-FEC condition.",
+      "files": [
+        "drivers/md/dm-verity-fec.c",
+        "drivers/md/dm-verity-fec.h"
+      ],
+      "patch_sha256": "e1a8ac4d67351ac9eb52fefcd8705320a8f4980b1a72c21076198664bb279c4d",
+      "result_commits": []
+    },
+    {
+      "commit": "3f7d7e483a6766e0f6879a87add1684280408f16",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Keep the native separate bh_work and work fields with their matching container_of/queue sites. ACK reuses one work_struct to shrink per-bio storage, relying on never being queued on both workqueues simultaneously. Native still transitions BH EAGAIN/ENOMEM to the normal worker and preserves LTS workqueue fixes. No historical layout compatibility is required; retaining the native lifecycle minimizes unnecessary scheduling changes.",
+      "files": [
+        "drivers/md/dm-verity-target.c",
+        "drivers/md/dm-verity.h"
+      ],
+      "patch_sha256": "980f9047d75788fbfc05abf1ed2a8d063ab04a494a2c9fcbf087da5c6fabb509",
+      "result_commits": []
+    },
+    {
+      "commit": "ec0cb0d37b8b5693102be6a3172171d2c1ccf4bc",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Keep bio_advance_iter: it handles the same block-size advance as the single-vector fast helper and also supports crossing vectors. Native alignment and bv_len checks prohibit verity blocks spanning pages. The ACK helper substitution removes general-loop overhead but does not enable another supported I/O layout.",
+      "files": [
+        "drivers/md/dm-verity-target.c"
+      ],
+      "patch_sha256": "7abff1e1bde74212925d5ec16e051ac3c205dce00e97c8bc1ec808927be22c69",
+      "result_commits": []
+    },
+    {
+      "commit": "2f7a2eecb786c9900dce75558c0efbd1e4e10c80",
+      "disposition": "reconciled-to-lts",
+      "assessment": "The complete patch changes only comments from tasklet/workqueue wording to softirq/kworker. Native system_bh_wq and normal fallback implementation already implements the described contexts; retaining LTS comments does not change execution or sleeping rules.",
+      "files": [
+        "drivers/md/dm-verity-target.c"
+      ],
+      "patch_sha256": "b7ce4cd2f19b37138ab50b9d87db5e1ee3e53ea4a3a6425884e5e62ae8a52c1e",
+      "result_commits": []
+    },
+    {
+      "commit": "140f47bc111327f54567426828a17292e78d0c00",
+      "disposition": "adapted",
+      "assessment": "db5a87077cbc already moves the statistic to verity_fec_decode after fec_decode_rsb successfully rehashes and copies one complete block. Failed attempts and multiple buffer batches cannot each increase the block counter. Keep this fix with the status extension, without importing the unrelated FEC allocation rewrite.",
+      "files": [
+        "drivers/md/dm-verity-fec.c"
+      ],
+      "patch_sha256": "b43aac73283ee5f21b83477ec0029c98a8b496e256d47a124c2c9ff4ac226b19",
+      "result_commits": [
+        "db5a87077cbc126671c21e87fe8d7e24bfad267a"
+      ]
+    },
+    {
+      "commit": "c59ecc1ab645dcc71f1f0a76dadec6c36e4141d8",
+      "disposition": "already-represented-upstream",
+      "assessment": "The array reduction is represented by LTS a556189c0675 and naming commit 3f31bde63f9a, then strengthened by 5488d3a69d20: use MAX_ROOTS entries and strict *neras < roots at both append sites. Do not restore ACK MAX_ROOTS+1 or <= roots, which can pass too many erasures into the Reed-Solomon decoder and overflow its polynomial scratch array.",
+      "files": [
+        "drivers/md/dm-verity-fec.h"
+      ],
+      "patch_sha256": "074004b76538d170a8ee373bd095e98e0275d651f3f99fbe4d13a90532a97517",
+      "result_commits": []
+    },
+    {
+      "commit": "17dfbd255d439d2d5a413141321eedc7c03a411b",
+      "disposition": "already-represented-upstream",
+      "assessment": "LTS d47281b9a447 retains the bounded parity_pos/to_copy reader, including split parity on the first codeword and buffer release before reading the next block. Current fec_decode_bufs is byte-identical to LTS. Preserve this low-memory/non-default-root buffer-overread fix; no ACK cherry-pick is needed.",
+      "files": [
+        "drivers/md/dm-verity-fec.c"
+      ],
+      "patch_sha256": "3b2f832dae1ad1a9265cfd81585179faf29a96abc44c94a1dc4dbf1fce876a58",
+      "result_commits": []
+    },
+    {
+      "commit": "c64041d9986a20dcc8e206f29eb0a3d0f6baceba",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Keep the native internal hash_blocks field with its existing end-position meaning, assignments, prefetch bounds and constructor/FEC checks. ACK renames it to hash_end and moves its declaration to clarify that meaning. All uses are changed consistently in ACK, but no arithmetic or externally visible field changes; retaining native names preserves the same bounds.",
+      "files": [
+        "drivers/md/dm-verity-fec.c",
+        "drivers/md/dm-verity-target.c",
+        "drivers/md/dm-verity.h"
+      ],
+      "patch_sha256": "cbbdda70a746a0e58867479ce4c9b1e7ea6c806c52be9f0b34d99253950759f6",
+      "result_commits": []
+    },
+    {
+      "commit": "e6c17ef1b3d402b20c470b327c33b069d38c913a",
+      "disposition": "already-represented-upstream",
+      "assessment": "LTS 3f31bde63f9a supplies MIN_ROOTS=2/MAX_ROOTS=24, parity array bounds and parser limits. The later LTS 5488d3a69d20 uses MAX_ROOTS (not MAX_ROOTS+1) erasures with strict append bounds. Keep that newer security correction; the naming/limit conversion is otherwise represented.",
+      "files": [
+        "drivers/md/dm-verity-fec.c",
+        "drivers/md/dm-verity-fec.h"
+      ],
+      "patch_sha256": "877810b6e675b5715c7d155b3a3c7c6e0cd7de7a31206e4b093dfbc713976c3b",
+      "result_commits": []
+    },
+    {
+      "commit": "ab48d481c3e2133b33d8fbcdf1cff94c11821a3b",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Retain native RSM/rsn terminology and all matching calls, cache sizes and division checks. ACK renames them RS_N/rs_k to standard Reed-Solomon notation while preserving 255-symbol codewords and k=255-roots. Native root bounds and the newer erasure limit remain; this rename adds no format compatibility.",
+      "files": [
+        "drivers/md/dm-verity-fec.c",
+        "drivers/md/dm-verity-fec.h"
+      ],
+      "patch_sha256": "543f739c73e05921f9fd3c1ea5841431d2222491da0a860d5fc21bc32ce3b8cd",
+      "result_commits": []
+    },
+    {
+      "commit": "320eec62e98aea086596d2a554665ae76e36a9da",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Retain native RS-block helper/macro names with matching callers. ACK changes them to RS-message/codeword terminology and simplifies a temporary pointer; loops, byte addresses and decoder parameters are unchanged. No codeword format or bounds fix is omitted by this naming choice.",
+      "files": [
+        "drivers/md/dm-verity-fec.c",
+        "drivers/md/dm-verity-fec.h"
+      ],
+      "patch_sha256": "df16897792094bd98b4a4b86089c44aca9afbfcd31b35ddf35b638ef005ed609",
+      "result_commits": []
+    },
+    {
+      "commit": "cfb1f4067bba16d332cc7230c0218f68bb60d9e4",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Retain native io_size and equivalent 1<<data_dev_block_bits expressions. Native constructor checks matching data/hash block sizes and initializes io_size before use. ACK consolidates those expressions under block_size and updates comments; required device/size validation remains unchanged in the port.",
+      "files": [
+        "drivers/md/dm-verity-fec.c",
+        "drivers/md/dm-verity-fec.h"
+      ],
+      "patch_sha256": "4e0bb9d51eba02ad3f8c62b6e92b9af22f592e7b4f4a6b685cbefd2898bbff5a",
+      "result_commits": []
+    },
+    {
+      "commit": "085f7a276217f562862e7572102df5258279722d",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Retain rounds and its native ceil(blocks/rsn) computation plus nonzero/device-size checks. ACK renames this internal count to region_blocks without changing geometry. Retaining the name does not omit the separately preserved too-small FEC device fix.",
+      "files": [
+        "drivers/md/dm-verity-fec.c",
+        "drivers/md/dm-verity-fec.h"
+      ],
+      "patch_sha256": "13ec414925d41b7213df7080ed5a7ff75bb7f884ba36877f2aebc8a0357819d0",
+      "result_commits": []
+    },
+    {
+      "commit": "88107ba370732bafd06b5bc21a398b6cbc7857f5",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Native rsb is offset - floor(offset/divisor)*divisor for nonzero divisor rounds<<block_bits. ACK replaces the identical remainder calculation with div64_u64_rem. Keep native checked geometry; there is no new format or failure policy in this arithmetic simplification.",
+      "files": [
+        "drivers/md/dm-verity-fec.c"
+      ],
+      "patch_sha256": "86464ff03deba26860d5a56582cb48623c3a4c9bdfcaaf66bd79ad59c919233c",
+      "result_commits": []
+    },
+    {
+      "commit": "1e325ddcf77e9775768bd87d1a4a4134626e9d19",
+      "disposition": "reconciled-to-lts",
+      "assessment": "For native n=rsb*rsn+i and 0<=i<rsn, fec_interleave returns rsb+i*(rounds<<block_bits), the direct formula used by ACK. Keep the native helper and matching byte-offset representation; ACK removes a redundant quotient/remainder operation, not a required block selection.",
+      "files": [
+        "drivers/md/dm-verity-fec.c"
+      ],
+      "patch_sha256": "36c67817f445e96b409cbf14d2da9337e3e3c53f59ba910431907bf77cd3c0a3",
+      "result_commits": []
+    },
+    {
+      "commit": "8c957a01fe7ff95cc2e83d4b8f4df0af19fdc8cc",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Native fec_buffer_rs_index(n,j)+block_offset equals the ACK incrementing src_pos over the same nested loops. Both stop at data block size and release the buffer. Keep the original index helper and caller consistently; no new deinterleaving capability is omitted.",
+      "files": [
+        "drivers/md/dm-verity-fec.c"
+      ],
+      "patch_sha256": "0d632fe0142b82ea9bfc3668ab040d2dae791dfd8541fed0dc41c43a44d17d3e",
+      "result_commits": []
+    },
+    {
+      "commit": "d586d9fbae03f0ebefbf997803924f32cfc9528d",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Keep native block_offset/pos names. ACK renames output cursor to out_pos and folds its increment into the assignment while retaining the same block-size stop and per-batch advance. This is internal naming/control-expression cleanup with no format or security-policy difference.",
+      "files": [
+        "drivers/md/dm-verity-fec.c"
+      ],
+      "patch_sha256": "ccca24f50d2de4b393bf213fb2a35af9228a45c863096a421299d904c81b910f",
+      "result_commits": []
+    },
+    {
+      "commit": "0f513ac193f0888bd3de06c50b7cdebbfa143a8a",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Keep native fec_decode_rsb and caller-computed offset/rsb. ACK moves their calculation into renamed fec_decode and documents the existing post-correction hash requirement. Current native code performs that hash comparison before returning success; the security requirement does not depend on the refactor.",
+      "files": [
+        "drivers/md/dm-verity-fec.c"
+      ],
+      "patch_sha256": "25443f5269470faf756f718521ccbab6a03995743e63516c6dd4eba0b7f7fb5e",
+      "result_commits": []
+    },
+    {
+      "commit": "e3b8cd88656062f0739574937f9b7ba0315741ad",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Keep native target_index discovery while visiting the rsn interleaved blocks. With the constructor-validated geometry, division target_block/rounds selects the same region; native target_index remains -1 if no match and the caller returns error before indexing the output message. ACK computes the region directly and warns on out-of-range; retaining native checked lookup does not introduce an unchecked negative index.",
+      "files": [
+        "drivers/md/dm-verity-fec.c"
+      ],
+      "patch_sha256": "1dd2df98603a9895f76de6823842c10fe5eda3d56d376d596bb84bcab896f8a7",
+      "result_commits": []
+    },
+    {
+      "commit": "f27848bdfa9a167e4799bc0c4b539dcfd2d8e9de",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Keep native byte-offset rsb through read/decode rather than ACK block-index representation. rsb is a block-aligned remainder; shifting it to a block index gives the same region sequence and parity byte position. Apply neither half of the representation conversion alone. Native low-memory split-parity and erasure bounds remain intact.",
+      "files": [
+        "drivers/md/dm-verity-fec.c"
+      ],
+      "patch_sha256": "b4f64b438e0b75f1b0a0193259441eb0cb8f837c1a906d3fbaf492c771cff28e",
+      "result_commits": []
+    },
+    {
+      "commit": "e6156b1c061f07139dac502782c23afa11328300",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Keep native fec_decode_bufs returning a nonnegative corrected-symbol count or negative error. Its only native caller tests r<0; no caller needs success==0. ACK normalizes success to zero and keeps a separate diagnostic count as cleanup, without changing acceptance. Corrected-block status is independently updated only after full revalidation.",
+      "files": [
+        "drivers/md/dm-verity-fec.c"
+      ],
+      "patch_sha256": "b7b6fba98eb8a4976d931276d6d6e42913666879058f8d6e89b15679f6b79f44",
+      "result_commits": []
+    },
+    {
+      "commit": "c5d652e3581d5443aff2609518540e5f6d278225",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Keep native FEC diagnostic identifiers and signatures. ACK passes target_block deeper solely to improve log labels from region-relative index to the actual target; it changes no reads, correction bytes or validation. This deliberately forgoes the more precise log label, without disabling error logging or the retained status count.",
+      "files": [
+        "drivers/md/dm-verity-fec.c"
+      ],
+      "patch_sha256": "290812633010383cd476e4a142e9e11d2a8b6f1ffc27fcc1c596603bd551b031",
+      "result_commits": []
+    },
+    {
+      "commit": "2d18ce7e38162cf713a3ad5dcc23feba79979ab9",
+      "disposition": "reconciled-to-lts",
+      "assessment": "The patch changes comments for the ACK region-index implementation. Keep comments with the selected native helper representation. Its roots+1 erasure description must not be imported as a behavioral requirement: newer native 5488d3a69d20 deliberately caps at roots to prevent decoder overflow.",
+      "files": [
+        "drivers/md/dm-verity-fec.c"
+      ],
+      "patch_sha256": "c9791f1416429cabb1ab50eb1caddd8ab61586f6737effa15c7d3af7791ceb21",
+      "result_commits": []
+    },
+    {
+      "commit": "e6d89c03cfee6fe8ed0d9384111268e7638f8478",
+      "disposition": "reconciled-to-lts",
+      "assessment": "Keep native warning only when corrected>0, plus errors for failed correction. ACK adds a diagnostic warning when FEC corrected zero symbols; its purpose is exposing unexpected invocations/performance overhead. Acceptance still requires rehashing, and corrected-block status still counts successful complete recovery. No integrity check is lost, but this additional diagnostic is deliberately omitted.",
+      "files": [
+        "drivers/md/dm-verity-fec.c"
+      ],
+      "patch_sha256": "0a7d32ca7257d57ee24227598a91e3e3517c2e19866634ecab33e00d6fb50369",
+      "result_commits": []
+    },
+    {
+      "commit": "6115619831507784439fbbe03b9b1f7ae7ce0172",
+      "disposition": "reverted-no-residual-code",
+      "assessment": "Final ACK explicitly removes this vbmeta-invalidating driver in d9d3fe628e9e. The original and pre-removal driver blobs match exactly; final ACK, LTS and port contain neither source, build/config entry nor restart-hook declaration/call. Do not revive kernel writes to vbmeta on integrity failure: current native restart/panic policy and userspace AVB table construction remain. This conclusion is based on actual removal, not absence of a searched consumer.",
+      "files": [
+        "drivers/md/Kconfig",
+        "drivers/md/Makefile",
+        "drivers/md/dm-verity-avb.c",
+        "drivers/md/dm-verity-target.c",
+        "drivers/md/dm-verity.h"
+      ],
+      "patch_sha256": "98d5441c1054f4467d5d3957d7d5f5cedecbbecf00799d4e5f619304e30037d8",
+      "result_commits": []
+    },
+    {
+      "commit": "d9d3fe628e9e0f1880e65d8c2097fad244bcbec4",
+      "disposition": "reverted-no-residual-code",
+      "assessment": "Retain the removal of the original AVB error handler: source, Kconfig, Makefile link rule and error-handler call/declaration are absent in final ACK and the port. The local revert message states modern-device problems, but no reliance on that assertion is needed to prove final ACK no longer requires this behavior. Ordinary verified boot and corruption policy are retained.",
+      "files": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig",
+        "drivers/md/Kconfig",
+        "drivers/md/Makefile",
+        "drivers/md/dm-verity-avb.c",
+        "drivers/md/dm-verity-target.c",
+        "drivers/md/dm-verity.h"
+      ],
+      "patch_sha256": "9d7efa899fafe49b42e928d6754a1ca7567ace57e4898cd83e86269176c33885",
+      "result_commits": []
+    }
+  ],
+  "native_file_witnesses": [
+    {
+      "path": "drivers/md/dm-verity-fec.c",
+      "port_blob": "23ab4600c346830cd29614f91f3f6ff532c13540",
+      "lts_blob": "d1e4fbc5a21d9b4bfd326fa7b85cbafb07b22ac4",
+      "ack_blob": "c3caf33ae69496ce8c125bfd43cd6e13680ebd58",
+      "sole_addition_to_lts": "\tatomic64_inc(&v->fec->corrected);\n",
+      "identical_after_removing_recorded_addition": true
+    },
+    {
+      "path": "drivers/md/dm-verity-fec.h",
+      "port_blob": "74f6d1d8f32771f69caf048133f98d3a7580823d",
+      "lts_blob": "8552b5d3c915274074d2710de38017b1268c0d77",
+      "ack_blob": "50b5e187d5cc1b0091f018e0749e96b540b9e1e9",
+      "sole_addition_to_lts": "\tatomic64_t corrected; /* successfully corrected blocks */\n",
+      "identical_after_removing_recorded_addition": true
+    },
+    {
+      "path": "drivers/md/dm-verity-target.c",
+      "port_blob": "b8838ee8d949cd8e9f5dc6f0cc644593c1e2b1df",
+      "lts_blob": "2c754144e929a4f0aaa154d71b4d57ee1cd04e65",
+      "ack_blob": "b860c5bdbccca712071d875ff0ddbbeeeae49172",
+      "sole_addition_to_lts": "\t\tif (verity_fec_is_enabled(v))\n\t\t\tDMEMIT(\" %lld\", atomic64_read(&v->fec->corrected));\n\t\telse\n\t\t\tDMEMIT(\" -\");\n",
+      "identical_after_removing_recorded_addition": true
+    },
+    {
+      "path": "drivers/md/dm-verity.h",
+      "port_blob": "2ed44b60042bc21850cd55a14cf8c09c0f0a3bb6",
+      "lts_blob": "2ed44b60042bc21850cd55a14cf8c09c0f0a3bb6",
+      "ack_blob": "2922263501f68d6ef02f509ccd4a0bcf4e13663e",
+      "sole_addition_to_lts": "",
+      "identical_after_removing_recorded_addition": true
+    }
+  ],
+  "dm_verity_kconfig_identical_to_lts": true,
+  "status_documentation_section_matches_final_ack": true,
+  "status_documentation_section_sha256": "1ce20ebe66fe355fb354254eb508785b15406ff40721dc0c84dc8a87d00f7ce6",
+  "avb_removed_source_blob": "a9f102aa379e9d5eb9dacf6484cacc78028a832f",
+  "local_consumers": [
+    "grapheneos-17/device/generic/goldfish/board/fstab/x86: system avb=vbmeta",
+    "grapheneos-17/system/fs/fs_mgr/libfs_avb/avb_util.cpp: ConstructVerityTable, UseFec and try_verify_in_tasklet",
+    "grapheneos-17/system/fs/fs_mgr/fs_mgr.cpp: fs_mgr_is_verity_enabled reads the leading C/V character"
+  ],
+  "uncertainty": "No direct corrected-count consumer established; retained conservatively. Actual SDK throughput, memory pressure, integrity recovery and boot/runtime behavior are not tested. Native internal allocation/hashing may have different performance from ACK."
+}

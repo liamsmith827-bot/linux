@@ -421,6 +421,45 @@ verified-storage target, so compatibility is retained conservatively.
 
 ## Additional filesystem fixes found during final review
 
+### dm-verity final source selection
+
+`evidence/dm-verity-local-review.json` gives individual decisions for 38 complete
+patches, including the indentation-only resolution in merge f04c05a5f5a0.
+Whole-file comparisons show that the four dm-verity implementation files equal
+pinned LTS after removing exactly the three recorded corrected-count additions.
+The DM_VERITY configuration stanza is native; the status documentation section
+matches final ACK. This is not a claim that the entire documentation file equals
+ACK: its later FEC explanatory rewrite is separate.
+
+Keep native crypto_shash, sequential digest verification, per-bio FEC storage and
+BH/normal-work lifetimes together. Omitted ACK optimizations reduce hashing,
+allocation and zeroing costs but introduce no new verified-storage table format.
+The supplied goldfish system fstab requests AVB; local ConstructVerityTable
+selects the existing hash, FEC and optional BH-verification interfaces. All remain
+available. Native allocation may consume more memory and SHA-256 reads may be
+slower than ACK's interleaved implementation. Neither throughput equivalence nor
+runtime compatibility has been verified. Omitting these transformations relies
+on their examined code semantics, not failure to locate a consumer.
+
+The corrected-block statistic remains conservative source compatibility. It is
+zero-initialized with its target, incremented atomically only after corrected
+output passes hash validation, and read through the existing status interface.
+It counts successful recovery operations rather than unique disk block numbers.
+The fs_mgr status reader accepts the initial C/V character; a dedicated SDK
+consumer of the added count has not been established. The original per-buffer
+increment would overcount under low-memory batching and is not restored.
+
+Retain LTS's strict erasure limit from 5488d3a69d20, including both append guards
+and the MAX_ROOTS-sized array. ACK's historical MAX_ROOTS+1 representation and
+roots+1 comments must not weaken that fix: excess erasures can overflow the
+Reed-Solomon decoder's scratch array. Native split-parity bounds, recursion
+prevention, device-size checks, atomic corruption count and workqueue fixes stay
+intact. The historical vbmeta-invalidating driver is explicitly removed by final
+ACK; its source and every integration point remain absent, with native corruption
+restart/panic handling retained. No kernel runtime or corruption-injection test
+was executed. All resources for this review were local; embedded URLs were not
+accessed.
+
 `22157454367a` applies ACK `86daefb58da53955d746f5d0b1e9c89f2f64e6ff`.
 The LTS ext4 rmdir path still held its journal transaction across dentry
 invalidation. Child-dentry eviction can wait for that transaction while rmdir
