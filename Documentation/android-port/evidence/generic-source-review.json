@@ -5514,5 +5514,61 @@
     "port_blob": "09c70d950b7072ea42b65a8094ebe5249241dcbd",
     "lts_to_port_sha256": "f622ed73c19518969b2cef1359d6e460ecfb234e64a241ad8db9da633ae59f0e",
     "normalized_ack_to_port_sha256": "2b2d50489bc73e89065939206ae6c0a60582a981e53b76ea5fa5c158ccecf5aa"
+  },
+  "mm/pgsize_migration.c": {
+    "review_head": "aa723abf2d0547fdddee6cc7e806da55cbd19d7b",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed the entire added file and full normalized-ACK residual. Retain default-enabled 4 KiB/64-bit ELF padding and root-writable sysfs switch, positively consumed by pinned bionic linker_phdr.cpp MADV_DONTNEED padding hints. Hints require a private file-backed .so, ELF magic, bounded trailing range and linker context. Final ACK 099fe093d60d uses try/read VMA lookup rather than acquiring mmap_lock beneath a VMA read lock; rejection only omits a hint. The path check is a reporting heuristic, not authentication. aa723abf2d05 atomically replaces padding bits and validates field/VMA bounds, preventing count combination and loss of native VM_MAYBE_GUARD. Splits reconstruct original bounds from both halves and redistribute suffix padding; merging padded VMAs is rejected. Synthetic display copies remove file/protection/padding bits and cannot recurse. Native LTS has no corresponding subsystem. Retain ACK wholly-padded-VMA and split-calculation fixes. Extracted-code ASan/UBSan checks cover forced interleavings and 14962 splits. Other callers/proc locking remain separate reviews; no kernel concurrency or runtime verification claimed. See SECURITY.md and evidence/padding-flags-check.json.",
+    "port_blob": "bc451dc914d4f6ffacab93b08675acfc98a446e5",
+    "lts_to_port_sha256": "b435eb56caf3c9e479ca2b18079c0a352c07eff493e410c4009926bb4d9f89bb",
+    "normalized_ack_to_port_sha256": "1e16a89f9ee5413826c9103bd930c04b1d633ff14babb1a6e64a452c55c26a12"
+  },
+  "include/linux/pgsize_migration.h": {
+    "review_head": "c476769367dd9ec44abeb0483606f530d43b18dc",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed the full new header. Retain padding interfaces, disabled-mode stubs for non-4KiB/non-64-bit kernels and bounded SELFMAG kernel_read checking for ELF hints. Native LTS has no corresponding interface. The implementation and pinned Bionic linker padding consumer justify retention. No historical KMI layout or override of LTS permission checks. c476769367dd adds native printk rate limiting for invalid padding-hint diagnostics reachable from unprivileged madvise; checks and return behavior are unchanged.",
+    "port_blob": "6c314bd2a3b4c8b4ba9dcff1c021375356a2ba4f",
+    "lts_to_port_sha256": "59c78e44fa76eeb2692265f4a78b6242496f9d32ac6c207cf96a2052a9692622",
+    "normalized_ack_to_port_sha256": "ade5d33234a00d6199032567986265a2d6573a34c1e8cc4521d5e7e90a820d2a"
+  },
+  "include/linux/pgsize_migration_inline.h": {
+    "review_head": "aa723abf2d0547fdddee6cc7e806da55cbd19d7b",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed the full new header and native vm_flags consumers. Four functional high bits encode at most 15 base pages (60 KiB) of ELF padding; bit 63 remains native mseal. Native VM_MAYBE_GUARD bit 11 is preserved by aa723abf2d05 atomic updates. vma_pad_fixup_flags preserves current padding when caller flags carry it; VMA writers retain native serialization. VMA_PAD_START uses the bounded implementation accessor. This is Bionic alignment metadata, not historical ABI padding. The 64 KiB ELF segment alignment bound is separate from the maximum emulated kernel page size of 16 KiB.",
+    "port_blob": "40c1bdb5f5045796096206c0284666fa2ce2534e",
+    "lts_to_port_sha256": "9c7bdf8c295696d0717199174826f5b634ac77d7671714501d49aaf4c4c036ff",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "mm/page_size_compat.c": {
+    "review_head": "c476769367dd9ec44abeb0483606f530d43b18dc",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed the entire added implementation and normalized-ACK residual. Retain positive Goldfish page_shift=14 support. dbae496171a5 validates a temporary before publishing the boot parameter and caps it at the actual x86 vDSO maximum of 16 KiB. Keep read-only-after-init shift and GPL source exports. ASLR random-page bit counts decrease by the page-shift difference while x86 arch_rnd shifts by the emulated size: the byte span is preserved, with two fewer placement bits in 16 KiB mode; this explicit security tradeoff is documented in SECURITY.md. Native 4 KiB behavior remains. BPF ring-file classification checks the real bpf_map_fops and ring map type, matching local libbpf ringbuf.c getpagesize-based offsets. Perf mlock allowance retains 512 KiB plus one emulated metadata page. c0cbe76ff03a moves swap translation into the native swapfile validation/ownership path using a private copy; no stale cache-rewriting helper remains. Extracted parser and swap checks cover adaptations; other mapping/BPF/perf consumers are separately reviewed. No whole-feature runtime claim.",
+    "port_blob": "d76fb34b589da94923e833cccef387d756e57fce",
+    "lts_to_port_sha256": "628ddd9c61f991a9b80e318aaa3acc93578efaca09a624e23b8e528000cf047b",
+    "normalized_ack_to_port_sha256": "083452c615dcac30725b1bc5327575dabc8a6e0e860cc5704cd6c40b63ec004a"
+  },
+  "include/linux/page_size_compat.h": {
+    "review_head": "c476769367dd9ec44abeb0483606f530d43b18dc",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed the full final helper header. Retain emulated alignment/logging, extra-alignment space, BPF ring offset scaling and cachestat count conversion. Native mode leaves alignment/counts unchanged. Ring offsets divide only for recognized ring-map files with aligned positive offsets; matching libbpf maps at getpagesize(). d65b1b963b41 eliminates the pread-specific pagemap declaration; c0cbe76ff03a removes the cache-rewriting swap helper declaration. c476769367dd uses native rate-limited printk for diagnostics reachable by unprivileged invalid requests. Maximum supported emulation is now accurately documented as 16 KiB. These are functional source interfaces, not historical KMI shims; full consumer integrations remain separate reviews.",
+    "port_blob": "090a2f369dff8c84f3cf353ff0151f3d10afb85d",
+    "lts_to_port_sha256": "dfc2d519c95d1aa20fe574d12b76ac00e6358422adc3956e1fd323094db234f5",
+    "normalized_ack_to_port_sha256": "d7dda5f84c4e3ee8fe565f27923eeb46a69cf2d8d00ffb6c254b2c8354436205"
+  },
+  "include/linux/page_size_compat_defs.h": {
+    "review_head": "c476769367dd9ec44abeb0483606f530d43b18dc",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed the entire definitions header and x86 vDSO layout consumers. Retain __MAX_PAGE_SHIFT=14 and assembly-safe size/mask constants, runtime __page_shift restricted to CONFIG_X86_64, static-key disabled native defaults, alignment helpers and rounded page-count conversion. The header split supplies assembly/minimal-dependency consumers; retaining it is not a historical ABI-layout requirement despite the original comment mentioning KABI. Pinned Goldfish explicitly enables page_shift=14. No ARM or future-platform emulation is added.",
+    "port_blob": "3ba4eeadfc816f7069069e668a9b91c994894800",
+    "lts_to_port_sha256": "3ef3422ca5c5ff803a5be61e3fba152645a6ec3a136651b9e2592afa6365f625",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "mm/swapfile.c": {
+    "review_head": "c476769367dd9ec44abeb0483606f530d43b18dc",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed full LTS and normalized-ACK deltas plus allocation, device reference, free, activation and teardown paths. Retain generic swap source exports and Android policy/observation callbacks for vendor customization; no-hook behavior remains native. Callbacks run under existing local/spin locks where applicable, must not sleep, and are trusted code; entry/flag mutations must honor allocator accounting contracts. Exact optional SDK callback use is unresolved and conservatively retained. c0cbe76ff03a translates Android Toybox/mmd/fs_mgr emulated swap formats without cached-header mutation, preserving native validation and capacity bounds, and reserves the entire header in map and clusters. d7f2fd2bd53e stores activation classification in SWP_SOLIDSTATE so a changed/unregistered hibernation callback cannot unbalance nr_rotate_swap on swapoff; both callback sites remain. Native LTS atomic_long counter mask, reclaim cond_resched, rate-limited corrupt-entry diagnostics, encrypted-file rejection, percpu-reference shutdown and error unwinds remain. Host extracted-code checks cover header/map/cluster paths and hook classification; no real swap, extent, concurrency or runtime tests. Dual-signature ambiguity and the unchanged native bad-table bound are documented in SECURITY.md.",
+    "port_blob": "37b2501828a1ee3f1712a2a22b73461c0ccb8e38",
+    "lts_to_port_sha256": "da8d1db9ad743dc5094769cbddf1a58375bf6c7e20834041f7629436aa4d9277",
+    "normalized_ack_to_port_sha256": "fc695cc4c19356ab8c4ebbb1f1d655280f4c5bd5ef5e576c730a1b10137e764a"
   }
 }

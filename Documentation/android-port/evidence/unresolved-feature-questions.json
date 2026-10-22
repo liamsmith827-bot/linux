@@ -39,5 +39,29 @@
     "topic": "TTM allocation vendor hooks",
     "status": "runtime necessity unresolved; final conservative retention decision",
     "evidence": "Build 30 has DRM_TTM=y through GKI_HIDDEN_DRM_CONFIGS, which supplies hidden dependencies for source-built vendor modules. Its allocation-policy callbacks are generic, not a particular GPU platform. Restore ACK 44f80f29d2a0 hooks on LTS allocation code, preserving defaults and clamping max_page_order to the native pool-array bound. No GPU driver or runtime validation is added. Earlier blanket physical-platform hook pruning was too broad."
+  },
+  {
+    "topic": "Shared file tail behavior with emulated 16 KiB pages",
+    "status": "unresolved compatibility; shared-tail extension blocked by native MM invariants; candidate remains provisional",
+    "candidates": [
+      "b3c77090341c2832f1d703b6592011886cdb7e9c"
+    ],
+    "evidence": "Pinned Goldfish x86_64_16k_cmdline.txt positively enables page_shift=14. ACK b3c77090341c extends file/shmem EOF to an emulated-page boundary and permits shared file VMAs in do_anonymous_page. Source review of do_anonymous_page, do_wp_page, wp_pfn_shared, wp_page_reuse and vm_normal_page shows the read-zero-page/shared-write route can make the global zero page writable; shared page_mkwrite and anonymous reverse mapping also need a coherent design. Restore the LTS VM_SHARED guard in c75a4c447656 while preserving private file-tail emulation and native 4 KiB behavior. This is a documented security-driven compatibility limit, not an absence-of-consumer finding. Determine whether to implement shared cache-backed tail pages or otherwise preserve Android shared mapping expectations safely; full runtime validation is out of current scope.",
+    "result_commits": [
+      "7f9fdddd5bf89fe656e25c3e4069c2df2091706d",
+      "c75a4c4476567c8284454fe8d1eb861de7cafdde"
+    ]
+  },
+  {
+    "topic": "Pagemap aggregate metadata under page-size emulation",
+    "status": "unresolved compatibility; candidate remains provisional",
+    "candidates": [
+      "1b1a4ce9cfb18211367a9fc5e5434274df023e89",
+      "58e399dbc4c103529fbbe7b939b79dd06c34b374"
+    ],
+    "evidence": "Goldfish page_shift=14 and libmeminfo PageMap/ReadVmaStats are positive consumers. d65b1b963b41 fixes offset/count/error handling while retaining ACK aggregate masks. Noncontiguous native PFNs and swap offsets cannot be represented by a single emulated-page identity. libmeminfo optional ReadVmaStats uses PFNs and swap offsets; zeroing them is an ACK limitation, not proof of no need. ACK also omits UFFD-WP and guard bits from aggregate entries. The port fs/userfaultfd.c equals native LTS and does not itself disable those features for emulation. Review representation/consumer compatibility before finalizing these candidates. Native 4 KiB pagemap behavior remains. Local commit-message URL r.android.com/3424862 was not accessed.",
+    "result_commits": [
+      "d65b1b963b41a4833eab058c8f825742ba3b1614"
+    ]
   }
 ]

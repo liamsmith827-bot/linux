@@ -1182,3 +1182,178 @@ omitted from this x86 SDK port. The generic UID-statistics build entry and all
 native LTS misc drivers remain. No remote resource was accessed for these
 reviews. Runtime task, frequency, UID-statistics and emulator behavior have not
 been tested.
+
+## Page-size emulation review in progress
+
+Pinned Goldfish board/kernel/x86_64_16k_cmdline.txt explicitly supplies
+page_shift=14. Bionic linker_phdr.cpp uses MADV_DONTNEED to identify ELF padding
+and caps representable padding at the kernel's 64 KiB ELF segment alignment.
+These are positive SDK consumers for page emulation and migration behavior.
+The complete shared MM/proc review remains unfinished; the following corrections
+are recorded without treating their entire files or all candidates as final.
+
+7f9fdddd5bf8 uses one inode-size snapshot for each pair of real/emulated EOF
+checks. With two independent reads, concurrent truncation could select the
+anonymous-tail fallback even when emulation was disabled. At 4 KiB, both limits
+now derive from the same size, so that fallback is unreachable. The locked
+filemap path also drops the folio reference before returning its tail result;
+ACK omitted that put. NEED_ANONPAGE moves from 0x080000, inside the native
+hardware-poison hstate-index mask, to the unused 0x008000 bit. This is an internal
+source-built flag, not a userspace ABI or a preserved vendor-binary encoding.
+
+c75a4c447656 restores native LTS do_anonymous_page rejection of VM_SHARED.
+ACK had relaxed that guard to permit shared file tail emulation. Source tracing
+shows a read fault can install the global zero page into such a VMA; its later
+write fault enters do_wp_page's shared branch, where vm_normal_page returns
+NULL for the zero page, wp_pfn_shared has no pfn_mkwrite callback for ordinary
+file mappings, and wp_page_reuse makes the existing PTE writable. That violates
+the global zero-page invariant. Anonymous tail folios also do not meet shared
+file page_mkwrite/reverse-mapping expectations. This conclusion is source
+analysis; no exploitation or runtime mapping test was performed.
+
+The restoration is a deliberate partial adaptation: private mapping tail
+emulation remains, but shared mappings beyond real EOF's final 4 KiB page
+return SIGBUS even inside an emulated 16 KiB page. This preserves LTS protection
+at the cost of ACK's shared-tail extension. It is not a claim that no Android
+consumer needs that extension. A compatible shared-tail design remains an
+unresolved compatibility question, recorded in the in-progress review evidence.
+
+dbae496171a5 parses page_shift into a temporary, validates it and only then
+publishes it. A rejected duplicate parameter can no longer replace a previously
+valid enabled shift with a negative/out-of-range value. The maximum is the
+actual __MAX_PAGE_SHIFT=14 used by the fixed x86 vDSO data/clock layout and
+vdso2c's 16 KiB image alignment. Reject previously advertised 32/64 KiB emulation
+rather than extending the SDK layout to unsupported modes. The pinned SDK
+page_shift=14 and the existing 8 KiB mode remain accepted; no kernel or vDSO
+runtime behavior is certified by this parser check.
+
+check_page_emulation.py executes extracted current and pre-correction parser,
+EOF-check, folio-cleanup and shared-guard code with host-side shims under ASan
+and UBSan. It reproduces the old negative controls and verifies corrected
+boundaries/state/cleanup; it also checks the actual fault-flag constants against
+the native hstate mask. These checks are not a whole-MM concurrency test. All
+source evidence is local; no additional remote resource was accessed.
+
+20063c97d296 makes map_files lookup, revalidation and readlink recognize the
+same padded data boundary emitted by readdir. It also accepts the native full
+VMA range, retains every existing ptrace/mm_access/capability check, and skips
+zero-length entries for wholly padded VMAs. The helper rejects mismatched starts,
+intermediate ends and empty ranges. The extracted-helper host checks reproduce
+the prior exact-range mismatch and verify both supported aliases; procfs runtime
+and permission enforcement have not been tested. This fixes an internally
+inconsistent interface rather than inferring absence of a userspace consumer.
+
+Build 40 completed at 20063c97d296 with 145 verified signatures, including
+the shared-VMA guard restoration and proc range fix. The protected-export
+table check again matched 659 names and all 145 module flag/CRC tables.
+No emulator has been booted. Later source edits require their own build.
+
+
+d65b1b963b41 adapts ACK 1b1a4ce9cfb1 and 58e399dbc4c1 pagemap emulation.
+The ACK seek wrapper returned the requested offset on mem_lseek errors, and
+multiplied signed offsets without checking overflow. Scaling the whole read
+count also allowed the native int copied counter to exceed its MAX_RW_COUNT
+bound in emulated modes. Keep offsets/counts in userspace bytes and convert
+only entry indices and bounded page-walk chunks in pagemap_read. This restores
+native mem_lseek and removes the pread64-specific hook from fs/read_write.c.
+The same file-operation convention now applies to other VFS read paths. Emit
+a complete final entry when task_size ends partway through an emulated page,
+rather than copying a fraction of its eight bytes. Native ptrace/open and
+CAP_SYS_ADMIN PFN masking, page-table locking and newer LTS pagemap fixes remain.
+
+GrapheneOS system/memory/libmeminfo/procmeminfo.cpp:365-390 and 466-575 positively
+consume pagemap using pread64 offsets derived from getpagesize(). The ACK
+aggregate policy is preserved: any constituent can set present/file/soft-dirty/
+exclusive, while PFNs and swap identity are zero because constituents need not
+be contiguous. This cannot supply libmeminfo's optional PFN-based accounting
+or swap-offset information in emulated mode. UFFD-WP and guard-region metadata
+are also absent from that ACK aggregate mask; broader compatibility of those
+flags is unresolved, not inferred unnecessary from the SDK consumer search.
+The ordinary 4 KiB mode retains native entries. check_pagemap_emulation.py runs
+extracted reader/seek code for 4/8/16 KiB modes with simulated walks, allocation,
+capability and copy operations, including error cleanup and old-code controls.
+These host ASan/UBSan checks do not verify real procfs permissions or MM races.
+
+aa723abf2d05 replaces the two unprotected padding-flag operations with an
+atomic compare-exchange update and validates the count against the field width
+and stable VMA bounds. Concurrent MADV_DONTNEED hints hold only a read lock;
+the old clear/set sequence can combine counts (one and two become three).
+Native LTS also permits VM_MAYBE_GUARD to be set atomically under a read lock,
+so an ordinary whole-flags write can lose that update. The new operation
+preserves native flags and retries on contention without acquiring mmap_lock
+under the per-VMA lock. Split callers retain their existing lock/ownership
+rules. vma_pad_pages still rejects invalid bounds; this is not a claim that
+the old count race alone allowed arbitrary out-of-range page-table access.
+check_padding_flags.py reproduces the old interleaving, forces a guarded
+compare-exchange retry, and checks 14,962 split cases in both split directions.
+It does not execute kernel concurrency or certify the whole padding feature.
+
+Build 41 completed at d65b1b963b41, including the pagemap offset adaptation,
+with 100 common and 45 virtual-device modules. All 145 signatures verified and
+the tampered-payload control failed as expected. Protected exports/module
+flag-CRC checks passed. Build 42 is checking the later atomic padding update.
+
+
+c0cbe76ff03a adapts ACK 6312e8d3e0d swap-header handling. Local Android Toybox
+mkswap.c obtains sysconf(_SC_PAGE_SIZE), writes last_page in those units and
+places the signature at that page's end. Both fs_mgr.cpp and mmd/src/zram/setup.rs
+invoke /system/bin/mkswap. At page_shift=14, ACK's signature-only move therefore
+makes capacity one quarter of the formatted area. It also clears the signature
+before a possibly failing header read and leaves its original page allocatable.
+
+The adaptation validates emulated-format magic using a private header copy,
+scales last_page and bad-page ranges into native page units, and reserves all
+header pages in both swap-map and cluster metadata. Keep native LTS version,
+endianness, file-size, bad-page-count, regular-file bad-block rejection and
+CAP_SYS_ADMIN/LSM/inode checks. The native unsigned-int swap capacity limit is
+retained after scaling. The existing bad-page table bound remains the native
+first-header-page bound; support for larger tables is not added. A native 4 KiB
+signature takes precedence if both signatures exist. Such a stale dual-signature
+file is ambiguous; this does not certify arbitrary reformatting without clearing
+old signatures. Android's freshly configured zram is the positive current use.
+Neither cached signature is moved or cleared by the new emulation helper.
+
+check_swap_emulation.py executes extracted helper, header validator, swap-map
+and cluster-reservation code under host ASan/UBSan with simulated I/O/allocation.
+It covers 4/8/16 KiB formats, both endiannesses, capacity limits, malformed and
+out-of-range fields, bad-page expansion, header reservation, native-format
+preference, error cleanup and old-source controls for quarter capacity and erased
+magic. These are not real swap-I/O, filesystem-extent or runtime tests. No swap
+was enabled, no OS was built, and no remote resource was used for this review.
+
+Attempt 42 exited successfully, but it was started before the local common
+fast-forward command was observed to finish. Its source-ordering assurance is
+insufficient, so it is not added as a verified artifact run. Attempt 43 starts
+only after the local fast-forward to c0cbe76ff03a completed and includes the
+atomic padding and swap adaptations. This was a local sequencing issue, not a
+new remote access.
+
+
+d7f2fd2bd53e balances nr_rotate_swap using the SWP_SOLIDSTATE classification
+recorded at activation. ACK queried the hibernation callback again at swapoff;
+a changed result or unloaded callback could miss the decrement (or decrement
+without a matching increment). Both callback sites remain, but accounting uses
+the stored classification. The non-solid-state path explicitly clears that flag.
+The host swap check covers all device/rotational/hook-result/initial-flag
+combinations and reproduces the old missed decrement. Generic swap callbacks
+are trusted kernel-module policy code and must obey the existing non-sleeping
+locks and entry/accounting contracts; no runtime hook consumer is asserted.
+
+c476769367dd rate-limits page-compat and padding diagnostics reachable from
+unprivileged invalid mmap/mprotect/madvise requests. Native printk rate limiting
+bounds log work while preserving alignment validation, error returns and hints.
+
+Retaining ACK page-size emulation carries an explicit ASLR tradeoff: at
+page_shift=14, its random-page-bit settings are reduced by two while x86
+arch_rnd shifts by 14. The randomization byte span is preserved but has two fewer
+possible placement bits than 4 KiB mode. The pinned SDK's page_shift=14 requires
+16 KiB-aligned mappings; native 4 KiB mode is unchanged. This is not a claim of
+unchanged ASLR entropy. Perf's default free mlock allowance also grows from
+512+4 KiB to 512+16 KiB to accommodate one reported metadata page; native
+capability/resource checks remain. The matching BPF ring-buffer offset helper
+has a positive local libbpf/src/ringbuf.c consumer using getpagesize() for producer
+mapping offsets. Other BPF/perf integration files remain separate reviews.
+
+Build 43 completed at c0cbe76ff03a with 145 verified signatures and matching
+protected-export/module-flag tables. It includes atomic padding and swap format
+translation. Build 44 checks the later rotation-accounting and rate-limit edits.
