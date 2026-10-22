@@ -75,7 +75,7 @@ static bool needs_swiotlb_bounce(struct device *dev, struct sg_table *table)
 	for_each_sgtable_dma_sg(table, sg, i) {
 		// SG_DMA_SWIOTLB is set only for dma-iommu, not for dma-direct
 		if (domain && IS_ENABLED(CONFIG_NEED_SG_DMA_FLAGS)) {
-			if (sg_dma_is_swiotlb(table->sgl))
+			if (sg_dma_is_swiotlb(sg))
 				return true;
 		} else {
 			phys_addr_t paddr = domain ?
@@ -460,7 +460,12 @@ static struct dma_buf *system_heap_do_allocate(struct dma_heap *heap,
 	 * unmap it now so we don't get corruption later on.
 	 */
 	if (buffer->uncached) {
-		dma_map_sgtable(dma_heap_get_dev(heap), table, DMA_BIDIRECTIONAL, 0);
+		ret = dma_map_sgtable(dma_heap_get_dev(heap), table,
+				      DMA_BIDIRECTIONAL, 0);
+		if (ret) {
+			dma_buf_put(dmabuf);
+			return ERR_PTR(ret);
+		}
 		dma_unmap_sgtable(dma_heap_get_dev(heap), table, DMA_BIDIRECTIONAL, 0);
 	}
 
@@ -520,6 +525,7 @@ static int __init system_heap_create(void)
 	struct dma_heap_export_info exp_info;
 	struct dma_heap *sys_uncached_heap;
 	struct dma_heap *sys_heap;
+	int ret;
 
 	exp_info.name = "system";
 	exp_info.ops = &system_heap_ops;
@@ -534,12 +540,23 @@ static int __init system_heap_create(void)
 	exp_info.priv = NULL;
 
 	sys_uncached_heap = dma_heap_add(&exp_info);
-	if (IS_ERR(sys_uncached_heap))
-		return PTR_ERR(sys_uncached_heap);
+	if (IS_ERR(sys_uncached_heap)) {
+		pr_warn("system-uncached heap unavailable: %ld\n",
+			PTR_ERR(sys_uncached_heap));
+		/* The published system heap still needs this module's callbacks. */
+		return 0;
+	}
 
-	dma_coerce_mask_and_coherent(dma_heap_get_dev(sys_uncached_heap), DMA_BIT_MASK(64));
-	mb(); /* make sure we only set allocate after dma_mask is set */
-	system_uncached_heap_ops.allocate = system_uncached_heap_allocate;
+	ret = dma_coerce_mask_and_coherent(dma_heap_get_dev(sys_uncached_heap),
+					 DMA_BIT_MASK(64));
+	if (ret) {
+		pr_warn("system-uncached heap DMA setup failed: %d\n", ret);
+		dma_heap_put(sys_uncached_heap);
+		return 0;
+	}
+	/* Pair with the acquire in dma_heap_buffer_alloc(). */
+	smp_store_release(&system_uncached_heap_ops.allocate,
+			  system_uncached_heap_allocate);
 
 	return 0;
 }
