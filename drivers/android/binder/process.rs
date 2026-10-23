@@ -1217,11 +1217,14 @@ impl Process {
 
         {
             let mut inner = self.inner.lock();
-            // cursor_lower_bound retrieves the "key" passed or the next existing larger key
-            if let Some(cursor) = inner.nodes.cursor_lower_bound(&(ptr + 1)) {
-                let (_, node) = cursor.current();
-                let node = node.clone();
-                node.populate_debug_info(&mut out, &inner);
+            // There is no node after the largest possible userspace pointer.
+            // cursor_lower_bound retrieves the key passed or the next larger key.
+            if let Some(next_ptr) = ptr.checked_add(1) {
+                if let Some(cursor) = inner.nodes.cursor_lower_bound(&next_ptr) {
+                    let (_, node) = cursor.current();
+                    let node = node.clone();
+                    node.populate_debug_info(&mut out, &inner);
+                }
             }
         }
 
