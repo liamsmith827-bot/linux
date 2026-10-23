@@ -4213,8 +4213,11 @@ void move_queued_task_locked(struct rq *src_rq, struct rq *dst_rq, struct task_s
 		if (!task_queued_on_rq(src_rq, task) || task_current_donor(src_rq, task))
 			break;
 
-		if (task_is_blocked(task))
-			owner = task_blocked_on_owner(task);
+		/* Remote unlock may change blocked_on without taking either rq lock. */
+		scoped_guard (raw_spinlock, &task->blocked_lock) {
+			if (task_is_blocked(task))
+				owner = task_blocked_on_owner(task);
+		}
 
 		__move_queued_task_locked(src_rq, dst_rq, task);
 		if (task == owner)
