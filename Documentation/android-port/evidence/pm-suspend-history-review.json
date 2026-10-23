@@ -1,0 +1,262 @@
+{
+  "source_head": "1cea64c5f402352151c75e6cab68b648fb758b21",
+  "records": [
+    {
+      "commit": "9e0566255e18a0a25b9681fef96e6c4a6308f441",
+      "disposition": "already-represented-upstream",
+      "rationale": "All three error-path list_splice_init operations remain in whole functions identical to LTS. Resetting the source list heads avoids leaving stale links after splicing; do not restore the older list_splice calls. Original upstream 079e8889ad136930617278fbce44b42ef10af9e1 is an ancestor of the pinned LTS; no extra ACK patch required.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pm-suspend-history-review.json",
+        "evidence/wakeup-history-review.json",
+        "SECURITY.md: PM suspend history and merge resolutions"
+      ],
+      "patch_sha256": "a5bce10c230f0ab2650902df45f5f4179ed92e4437bb04bfab8e328a9427a223"
+    },
+    {
+      "commit": "13ee07921b13a275e25af0ce24bb97c8e0784497",
+      "disposition": "already-represented-upstream",
+      "rationale": "The complete native device_resume function clears is_suspended before the direct-complete early exit. Preserve cleanup for direct-complete devices; Android watchdog changes do not alter the set/clear call sites. Original upstream d46c4c839c20a599a0eb8d73708ce401f9c7d06d is an ancestor of the pinned LTS; no extra ACK patch required.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pm-suspend-history-review.json",
+        "evidence/wakeup-history-review.json",
+        "SECURITY.md: PM suspend history and merge resolutions"
+      ],
+      "patch_sha256": "6e704cd32f19fc920931cb5423576a186f8ad4080aebefd42e8615b0fb013b7d"
+    },
+    {
+      "commit": "6e0a01be88bbbe036aed007f0edc04ec868eef4f",
+      "disposition": "already-represented-upstream",
+      "rationale": "The complete native dpm_async_resume_children function holds dpm_list_mtx while scheduling children, preserving synchronization with initial resume list walks and dpm_clear_async_state. Original upstream 8887abccf8aa16795f23ef3a3b25650cb8aa804c is an ancestor of the pinned LTS; no extra ACK patch required.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pm-suspend-history-review.json",
+        "evidence/wakeup-history-review.json",
+        "SECURITY.md: PM suspend history and merge resolutions"
+      ],
+      "patch_sha256": "ff644374061292ff173c6cbcb5d411f5e934aaf869d2ee3bc3d3b1858b8f8e9d"
+    },
+    {
+      "commit": "6d2f1e93a39555d671e8fd454bf518709b08fcba",
+      "disposition": "already-represented-upstream",
+      "rationale": "The complete native dpm_async_suspend_complete_all function holds async_wip_mtx and completes only devices with no work in progress. All three error-path callers remain identical to LTS, waking unscheduled dependency waiters without prematurely completing active callbacks. Preserve the deadlock fix. Original upstream ebd6884167eac94bae9f92793fcd84069d9e4415 is an ancestor of the pinned LTS; no extra ACK patch required.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pm-suspend-history-review.json",
+        "evidence/wakeup-history-review.json",
+        "SECURITY.md: PM suspend history and merge resolutions"
+      ],
+      "patch_sha256": "0b52dd6d7b7f76983266716822bf52a29dab6cddca9be35db4bbfae68947c04f"
+    },
+    {
+      "commit": "352686974fae111d30f3c666677caf665d6bc807",
+      "disposition": "partially-adapted-net-state",
+      "rationale": "Both paths reviewed. Keep dpm_prepare failed-device recording on the native reference/unlock flow. The original top-level last_failed_dev report was subsequently replaced by b19f0cc3fe48 with generic early-wakeup/failure reporting and precise callback-local diagnostics; preserve the final ACK behavior, not the superseded ring-buffer lookup. Wakeup sysfs has a positive pinned SystemSuspend reader documented in wakeup-history-review.json.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-suspend-history-review.json",
+        "evidence/wakeup-history-review.json",
+        "SECURITY.md: PM suspend history and merge resolutions"
+      ],
+      "patch_sha256": "e7194987560a9a07f345ca1ea8960a2022c45a1bcb6b29bf87d2556f8aa9dc34"
+    },
+    {
+      "commit": "3f6711f547cfd7ec934cb62824e428204789f5df",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain all three callback-local device/phase/error formats for Android abort reporting. Native callback/control flow, WRITE_ONCE(async_error), failed-device accounting and pm_dev_err remain. Removing only the observation calls gives exact LTS functions. No callback pointer is formatted into the Android report; access remains under the existing reporting/sysfs permissions.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-suspend-history-review.json",
+        "evidence/wakeup-history-review.json",
+        "SECURITY.md: PM suspend history and merge resolutions"
+      ],
+      "patch_sha256": "f4e1365a0c148df1aa89b1a2d92e78378158c503b734e274690850096081abfb"
+    },
+    {
+      "commit": "170fc3254c0e30240369d3bb6c88ffe6d1bf86d5",
+      "disposition": "merge-resolution-adapted-net-state",
+      "rationale": "All unique remerge changes in dpm_prepare reviewed. Retain native dev_info and Android abort/failed-device reporting together. Current complete function is LTS after removing only those reports and separately reviewed probe hooks; do not transplant obsolete prepare control flow.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-suspend-history-review.json",
+        "evidence/wakeup-history-review.json",
+        "SECURITY.md: PM suspend history and merge resolutions"
+      ],
+      "patch_sha256": "0c5e1193b3df283594c88a6bf3e719fa6ccd29f9395c8b60d57b1f6b6d3b1779"
+    },
+    {
+      "commit": "3ba5988e21b730e1fd08e1ea23ed2715877bca00",
+      "disposition": "merge-resolution-adapted-net-state",
+      "rationale": "The unique resolution keeps abort reporting and failed-device recording while dropping branch-local put_device/break to use native common unlock/reference cleanup. Current dpm_prepare is exact LTS after the documented observations are removed, preserving the updated device lifetime flow.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-suspend-history-review.json",
+        "evidence/wakeup-history-review.json",
+        "SECURITY.md: PM suspend history and merge resolutions"
+      ],
+      "patch_sha256": "937b0ad4526fb9e005f5b994b98dd0a15510c134de90850531107838d6c26a2b"
+    },
+    {
+      "commit": "02eca6c60ee4e23d32aac9bd8169aa881ba3b110",
+      "disposition": "merge-resolution-adapted-net-state",
+      "rationale": "Both unique paths reviewed. Keep native two-slot wake IRQ tracking under wakeup_irq_lock, with Android IRQ capture; do not restore the old unsynchronized single variable. Later c87a4e876a92 defers diagnostic printing and the port additionally owns stored full IRQ names in 55607d0a35a3. Keep clear_wakeup_reasons in the native s2idle loop; the obsolete pm_wakeup_clear(false) is absent. The remainder of the complete s2idle_loop is identical to LTS. See wakeup-history-review.json for the full current capture/print/lifetime analysis.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "55607d0a35a331dbafb89df3505b5c2649f2bf7d"
+      ],
+      "evidence": [
+        "evidence/pm-suspend-history-review.json",
+        "evidence/wakeup-history-review.json",
+        "SECURITY.md: PM suspend history and merge resolutions"
+      ],
+      "patch_sha256": "0f42561cad56f841f841a0cf8320dd1995efecef2771ae249afad70fe18ee08b"
+    },
+    {
+      "commit": "5cf7312fcb3c1c91088ce8cdcbc9c1354287619d",
+      "disposition": "merge-resolution-adapted-net-state",
+      "rationale": "Both unique error-block resolutions retain native WRITE_ONCE(async_error,error) together with Android phase/error reports, dpm_save_failed_dev and pm_dev_err. The entire noirq and late suspend functions match LTS after removing the two-line reporting calls, so native async synchronization and cleanup are preserved.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-suspend-history-review.json",
+        "evidence/wakeup-history-review.json",
+        "SECURITY.md: PM suspend history and merge resolutions"
+      ],
+      "patch_sha256": "1a6bda2b291abd2a836698967fb48504aa15bdb5f7c44e297fa8cef81d46a3df"
+    },
+    {
+      "commit": "f48aa34a88e61cd913b394f884eff64588ff64dd",
+      "disposition": "merge-resolution-partially-adapted-net-state",
+      "rationale": "All four unique paths reviewed. PM noirq/late errors keep Android reports plus native failed-device/error accounting; suspend_prepare keeps the abort report and native dpm_save_failed_step, omitting the superseded manual failed_freeze increment and preserving native filesystems_thaw. DM_USER Kconfig remains with native dm-vdo inclusion (current dm-user implementation was separately reviewed). Keep current native MAINTAINERS rather than resurrect historical IncFS and obsolete INA owner entries; this metadata does not gate IncFS code, configuration or module source behavior. The only current MAINTAINERS delta is the separately reviewed fsverity trace header entry.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-suspend-history-review.json",
+        "evidence/wakeup-history-review.json",
+        "SECURITY.md: PM suspend history and merge resolutions"
+      ],
+      "patch_sha256": "b60f5821fab77bad880e9fe9aa8bec69a7b1bbdc829484cfaec3a2f8ecec6f7b"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "drivers/base/power/main.c",
+      "function": "dpm_noirq_suspend_devices",
+      "whole_function_identical_to_lts": true,
+      "sha256": "cb80165e8e2ff51f164392ba54916d8a041a245046c487ca1fbfea8591d4562b"
+    },
+    {
+      "path": "drivers/base/power/main.c",
+      "function": "dpm_suspend_late",
+      "whole_function_identical_to_lts": true,
+      "sha256": "663568d7d7d290d04462fa34bcd1b93ff015dc92215d643863b6ef9769348aa7"
+    },
+    {
+      "path": "drivers/base/power/main.c",
+      "function": "dpm_suspend",
+      "whole_function_identical_to_lts": true,
+      "sha256": "a33000f43867ee9fd7b8fd386c97fd8e4732404727d329c39ce6c84664ab0fca"
+    },
+    {
+      "path": "drivers/base/power/main.c",
+      "function": "device_resume",
+      "whole_function_identical_to_lts": true,
+      "sha256": "1453e2b75f768d47dc642b0a38b9904f2271d8ae25a3e6cc17760d098d4f676e"
+    },
+    {
+      "path": "drivers/base/power/main.c",
+      "function": "dpm_async_resume_children",
+      "whole_function_identical_to_lts": true,
+      "sha256": "2afa10a413f67463cb7720f45c6b2a35fd711dd6328914254edab6a9a4be80c0"
+    },
+    {
+      "path": "drivers/base/power/main.c",
+      "function": "dpm_async_resume_subordinate",
+      "whole_function_identical_to_lts": true,
+      "sha256": "d933a41ba15fd785dfae71c6d671b59262332fa75aa6830a1974bd6b7df10ebd"
+    },
+    {
+      "path": "drivers/base/power/main.c",
+      "function": "dpm_async_suspend_complete_all",
+      "whole_function_identical_to_lts": true,
+      "sha256": "7a0eb1d44eb0fecd4001b0280cd9c356ba3745cb04cadfc56e43eadfa924b93a"
+    },
+    {
+      "path": "drivers/base/power/main.c",
+      "function": "dpm_prepare",
+      "whole_function_identical_to_lts_after_removing": [
+        "Android abort reporting",
+        "probe observation hooks",
+        "save failed device name"
+      ],
+      "sha256": "47e905900ad3a3949c4a0b07bc6cdcc3e6f5b6ae357dc03b1f8d473664ad91a0"
+    },
+    {
+      "path": "drivers/base/power/main.c",
+      "function": "device_suspend_noirq",
+      "whole_function_identical_to_lts_after_removing": [
+        "Android abort reporting"
+      ],
+      "sha256": "7d48b7587f9f004dc82183615e01c4995c509ea0d682787c8c0235e6fdbe221b"
+    },
+    {
+      "path": "drivers/base/power/main.c",
+      "function": "device_suspend_late",
+      "whole_function_identical_to_lts_after_removing": [
+        "Android abort reporting"
+      ],
+      "sha256": "927a1d1650cb872019b91250b31671fcdeec9066a850889ed8dd2da1f61cb05f"
+    },
+    {
+      "path": "drivers/base/power/main.c",
+      "function": "device_suspend",
+      "whole_function_identical_to_lts_after_removing": [
+        "Android abort reporting"
+      ],
+      "sha256": "0012040eb64a3a154507b472a25aceae4bede3ec76623e5b236c110d75b4cb93"
+    },
+    {
+      "path": "kernel/power/suspend.c",
+      "function": "s2idle_loop",
+      "identical_to_lts_except": "\t\tclear_wakeup_reasons();\n\n",
+      "sha256": "a995fc0ae94b13b980f3b98330fff90a0eeec1e03ca6c9a8ba4d368583d0a5bd"
+    },
+    {
+      "path": "kernel/power/suspend.c",
+      "function": "suspend_prepare",
+      "identical_to_lts_except": "\tlog_suspend_abort_reason(\"One or more tasks refusing to freeze\");\n",
+      "sha256": "e567041f74d5a72ef9531dd3f3b53b82b4aa8fa1e0674340bd904b6c9fbaeefe"
+    },
+    {
+      "path": "drivers/md/Kconfig",
+      "scope": "DM_USER block retained exactly and native dm-vdo Kconfig still sourced",
+      "sha256": "b0dbe5df6628a71ace60656ab24c329f14af9744775b546c46de6d013581a112"
+    },
+    {
+      "path": "MAINTAINERS",
+      "scope": "whole file native except separately reviewed fsverity trace header entry; no historical IncFS owner block",
+      "sha256": "1d135c5ed4007864aa839f34928817a5417aa27607aa4c8036868429057811d2"
+    }
+  ],
+  "upstream_ancestors": [
+    "079e8889ad136930617278fbce44b42ef10af9e1",
+    "d46c4c839c20a599a0eb8d73708ce401f9c7d06d",
+    "8887abccf8aa16795f23ef3a3b25650cb8aa804c",
+    "ebd6884167eac94bae9f92793fcd84069d9e4415"
+  ],
+  "security": "Native suspend dependency synchronization, list-head initialization, work completion, direct-complete state cleanup, callback error ordering and reference/unlock flows remain. Android additions in these reviewed functions report failures without changing native callback decisions. Merge history does not justify importing obsolete single-slot IRQ tracking, duplicate freeze accounting, or old device cleanup. Previously finalized upstream rows are re-evidenced with complete function equality after an unrelated watchdog change invalidated file-wide witnesses.",
+  "validation": "Build 112 at 1cea64c5f402 passed the existing emulator workflow, producing both kernel images, 100 common and 45 virtual-device modules. All 145 signatures and module flag/CRC tables verified. Structural checks compare complete functions as specified; no suspend execution or emulator boot.",
+  "remote_sources_used": [],
+  "local_resources": "Pinned ACK and LTS history; already-recorded wakeup review and its pinned local SystemSuspend consumer. URLs in commit messages were not opened."
+}

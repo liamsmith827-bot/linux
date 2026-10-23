@@ -5012,3 +5012,50 @@ freezer diagnostics are preserved in the reviewed merge. Obsolete Clang,
 Cuttlefish, extra_free_kbytes and old tracing code is not revived. Separate DPM
 watchdog parameter lifecycle and BPF reporting changes remain for their own
 reviews. All sources used here were local; no embedded URL was accessed.
+
+# DPM watchdog parameter lifetime
+
+`evidence/dpm-watchdog-review.json` records four patches for generic watchdog
+backtraces, sysctl timeouts, the pm parameter prefix and default enablement.
+The SDK compiles the watchdog with 25-second fatal and 10-second warning
+timeouts, but CONFIG_DPM_WATCHDOG_ENABLED is unset. Preserve these current
+Android controls and configuration; no definite SDK knob-setting consumer was
+established, so that uncertainty remains explicit. Disabling the watchdog means
+a hung callback may lack this panic/diagnostic recovery mechanism.
+
+`1cea64c5f402` corrects two unsafe effects of mutable global controls. Save the
+enable decision in the stack instance before returning from setup. Cleanup then
+uses that decision, avoiding both an uninitialized timer operation after enabling
+and a surviving stack-referencing timer after disabling. Sample the timeout
+values when arming, cap warning to the sampled fatal timeout and use those
+instance values in the handler. Later updates cannot change an armed timer's
+remaining-time subtraction/deadline. Independent global sysctl reads/writers are
+not made transactional; normalization guarantees a bounded effective pair.
+The documented runtime change takes effect for subsequent device callbacks.
+Native synchronous timer deletion/destruction, warning/panic sequencing and
+device callback control flow remain. Privileged control modes and existing
+sysctl validation stay intact; no historical structure layout is preserved.
+
+The extracted lifecycle/deadline check passes 7,500 cases; the original ACK
+control produces 16,575 failing assertions. It exercises actual functions using
+host timer, panic and parameter observers. It does not run kernel timers, PM
+callbacks, parallel sysctl writes or an emulator. All source evidence is local.
+
+# PM suspend history and merge resolutions
+
+`evidence/pm-suspend-history-review.json` records eleven individual dispositions,
+including five nonempty merge resolutions. Four upstream fixes are present in
+the pinned LTS: initialize source lists after splicing, clear direct-complete
+suspend state, serialize child resume scheduling, and release unscheduled
+dependency waiters after suspend errors. Complete relevant functions match LTS.
+The callback/prepare functions also match LTS after removing only the identified
+Android observation hooks and failure reporting. Preserve native WRITE_ONCE,
+device references, unlock paths, asynchronous completion and error accounting.
+
+Keep the Android failure reports consumed through the previously documented
+SystemSuspend interface. Do not revive superseded single-slot IRQ tracking,
+duplicate freeze counters or old branch-local reference cleanup. The mixed
+four-path merge keeps DM_USER configuration alongside native dm-vdo inclusion;
+historical ownership entries do not control runtime or module compatibility.
+Build 112 and the module/signature checks pass. This is compilation and source
+review evidence, not suspend execution or emulator runtime verification.

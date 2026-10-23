@@ -1,0 +1,123 @@
+{
+  "source_head": "1cea64c5f402352151c75e6cab68b648fb758b21",
+  "records": [
+    {
+      "commit": "8f49e1ed451e89bc5de8095c880643f5009cf772",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain the optional all-CPU backtrace module parameter for the configured generic DPM watchdog. The full single-file patch adds only the parameter/include and fatal-time diagnostic call. Default false remains, current read uses READ_ONCE, and native fatal panic/stack capture remains. This is a source/runtime diagnostic control, not historical KMI. No SDK script setting it was established; retain conservatively with the current configured interface.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "1cea64c5f402352151c75e6cab68b648fb758b21"
+      ],
+      "evidence": [
+        "evidence/dpm-watchdog-review.json",
+        "evidence/dpm-watchdog-state-check.json",
+        "SECURITY.md: DPM watchdog parameter lifetime"
+      ],
+      "patch_sha256": "7a84c1571647ae97b3af407d8c2dceec3d8ee1bcaa398447c4f854996bacad02"
+    },
+    {
+      "commit": "ca8f3e8eda58e0b9278a448e2db755c025295608",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain both privileged timeout sysctls with the original validation and compile-time upper bound. Adapt consumption in 1cea64c5f402: each armed watchdog samples timeout and warning with READ_ONCE and caps warning to its sampled timeout. Its handler uses those stable values, preventing later updates from extending the deadline or making unsigned remaining-time subtraction underflow. Concurrent writers/global pairs are not made atomic; the effective per-watchdog pair is normalized and immutable after publication. Native two-stage warning/panic and synchronous timer cleanup remain.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "1cea64c5f402352151c75e6cab68b648fb758b21"
+      ],
+      "evidence": [
+        "evidence/dpm-watchdog-review.json",
+        "evidence/dpm-watchdog-state-check.json",
+        "SECURITY.md: DPM watchdog parameter lifetime"
+      ],
+      "patch_sha256": "a1b6a8aea0a929f84263c45a4d2a8671affaba25bccc4e05cb54346078cc5906"
+    },
+    {
+      "commit": "45cbf0a8c13852c20781e9b028f04efffdf62d3e",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain the complete MODULE_PARAM_PREFIX rename to pm. This establishes the current pm.dpm_watchdog_enabled and backtrace parameter names for Android boot/runtime source compatibility; do not preserve the old generated file-based prefix as a binary interface. No new writable mode or privilege is added by this two-directive change.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/dpm-watchdog-review.json",
+        "evidence/dpm-watchdog-state-check.json",
+        "SECURITY.md: DPM watchdog parameter lifetime"
+      ],
+      "patch_sha256": "77f6a82a0157f96b9294ec0de1ff7d43a6788428811d6b2d83690736ea985706"
+    },
+    {
+      "commit": "75b728aaef8a7105fd28f7585c64314c8a4bc8a6",
+      "disposition": "adapted-net-state",
+      "rationale": "All three paths reviewed: retain DPM_WATCHDOG_ENABLED Kconfig, boot/runtime enable parameter, and matching kernel-parameter documentation. Current SDK builds DPM watchdog but disables it by default; preserve that Android configuration. Correct the original independent set/clear checks by storing enabled in each stack instance before any early return, so false-to-true cannot destroy an uninitialized timer and true-to-false cannot leave a timer pointing to returned stack storage. Runtime changes affect subsequent instances; documentation records this deliberate safe lifecycle behavior. Existing native timer_delete_sync/destroy and callback ordering remain; no running PM/timer verification.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "1cea64c5f402352151c75e6cab68b648fb758b21"
+      ],
+      "evidence": [
+        "evidence/dpm-watchdog-review.json",
+        "evidence/dpm-watchdog-state-check.json",
+        "SECURITY.md: DPM watchdog parameter lifetime"
+      ],
+      "patch_sha256": "541125c70e600e51ef6bff9707f8f1a4d2a30d403c5a0db5dd8ea3e1ba04c44d"
+    }
+  ],
+  "witnesses": [
+    {
+      "function": "proc_dodpm_watchdog_timeout_secs",
+      "identical_to_ack": true,
+      "sha256": "9aac5e0bb264f011e1a9f3f98176e158055a1026b481202cf83db4c21b6ee521"
+    },
+    {
+      "function": "dpm_watchdog_sysctl_init",
+      "identical_to_ack": true,
+      "sha256": "147aed571644966f51e5519e94d41bb5199f06285fc0ab1813bc40ea605213f9"
+    },
+    {
+      "scope": "complete two-entry sysctl table",
+      "identical_to_ack": true,
+      "sha256": "e668cd3ff3e5c96ea2677f1431c420392cd9b946d158f06ccaa6f20a54b2aab9"
+    },
+    {
+      "function": "dpm_watchdog_handler",
+      "sha256": "596c6c961b252eab9b97744d24d07abf38c3b37e8739fd3df55a108708b15859",
+      "implementation_commit": "1cea64c5f402352151c75e6cab68b648fb758b21"
+    },
+    {
+      "function": "dpm_watchdog_set",
+      "sha256": "fd1e8c542ae1e383ad6eb3600e2f572f1cbb513a2584e51936c20e890c9d6351",
+      "implementation_commit": "1cea64c5f402352151c75e6cab68b648fb758b21"
+    },
+    {
+      "function": "dpm_watchdog_clear",
+      "sha256": "8ea43dca5a41867b969b9c70f56776b86f83eb9ad16a37ae1fc6bc8e2766bfcc",
+      "implementation_commit": "1cea64c5f402352151c75e6cab68b648fb758b21"
+    },
+    {
+      "function": "device_suspend",
+      "scope": "native set/clear call counts and order; earlier exits bypass both at Complete",
+      "sha256": "0012040eb64a3a154507b472a25aceae4bede3ec76623e5b236c110d75b4cb93"
+    },
+    {
+      "function": "device_resume",
+      "scope": "native set/clear call counts and order; earlier exits bypass both at Complete",
+      "sha256": "1453e2b75f768d47dc642b0a38b9904f2271d8ae25a3e6cc17760d098d4f676e"
+    },
+    {
+      "path": "kernel/power/Kconfig",
+      "scope": "complete DPM_WATCHDOG_ENABLED block",
+      "identical_to_ack": true,
+      "sha256": "14b12a5768f77eaa46fbee71141e4ed0d31c2b3ba7157273e20245bfa74d6e2b"
+    }
+  ],
+  "sdk_config": [
+    "CONFIG_DPM_WATCHDOG=y",
+    "# CONFIG_DPM_WATCHDOG_ENABLED is not set",
+    "CONFIG_DPM_WATCHDOG_TIMEOUT=25",
+    "CONFIG_DPM_WATCHDOG_WARNING_TIMEOUT=10"
+  ],
+  "security": "The original writable enable flag is sampled twice independently around a stack-owned timer. A change between set and clear can either skip timer cleanup or touch an uninitialized timer. Keep a per-instance enabled decision and native synchronous delete/destroy. Stable per-instance timeout values also prevent live changes from invalidating the two-stage deadline; warning is capped to timeout because independent global reads may observe different updates. Existing sysctl permission 0644, positive lower bounds and CONFIG_DPM_WATCHDOG_TIMEOUT upper bound stay. Default disabling is an Android availability/diagnostic policy: a hung device callback may lack this panic/capture mechanism until enabled. This does not remove native suspend authorization or an LTS memory-safety fix. Retain native driver/task lifetime through the set/clear interval. No actual kernel timer, panic or sysctl race test.",
+  "uncertainty": "No SDK consumer of the writable watchdog knobs was established in scoped system/frameworks/goldfish searches. Retain the configured generic Android runtime/module control conservatively. Global sysctl writer operations are not serialized with each other: the normalized per-instance pair makes consumption bounded, not globally transactional. Runtime changes deliberately affect subsequent watchdog instances; no immediate cancellation of an armed watchdog is promised.",
+  "local_resources": "Pinned ACK, LTS and already-pinned local mainline 9e947d96915af63e28896caae85a81b74855621b history. No remote URLs accessed.",
+  "validation": "Host extraction check of actual private struct/set/handler/clear: 7500 cases pass; original ACK control has 16575 observed lifecycle/deadline failures. Test uses host timer/panic/READ_ONCE observers and does not execute kernel timers or concurrent sysctl writes. Build 112 at 1cea64c5f402 passed the existing workflow; both images, 100 common and 45 virtual modules recorded, all signatures and module flag/CRC tables verified.",
+  "remote_sources_used": []
+}

@@ -378,12 +378,14 @@
   },
   {
     "topic": "DPM watchdog dynamic parameter lifecycle",
-    "status": "unresolved review question; implementation candidates remain provisional",
+    "status": "resolved by per-instance lifetime/deadline adaptation; runtime use unverified",
     "candidates": [
       "75b728aaef8a7105fd28f7585c64314c8a4bc8a6",
       "ca8f3e8eda58e0b9278a448e2db755c025295608"
     ],
-    "evidence": "While reading device-suspend report contexts, observed dpm_watchdog_set and dpm_watchdog_clear independently read writable dpm_watchdog_enabled, and handler/set read writable timeout pairs. Need examine whether changing parameters during an armed callback can skip cleanup, clear an uninitialized timer, or produce inconsistent timeouts. No final conclusion or runtime result; see drivers/base/power/main.c at d5a30aac4af10245fbcc2389f4f7c06de532532b",
-    "result_commits": []
+    "evidence": "The original writable enable flag is sampled twice independently around a stack-owned timer. A change between set and clear can either skip timer cleanup or touch an uninitialized timer. Keep a per-instance enabled decision and native synchronous delete/destroy. Stable per-instance timeout values also prevent live changes from invalidating the two-stage deadline; warning is capped to timeout because independent global reads may observe different updates. Existing sysctl permission 0644, positive lower bounds and CONFIG_DPM_WATCHDOG_TIMEOUT upper bound stay. Default disabling is an Android availability/diagnostic policy: a hung device callback may lack this panic/capture mechanism until enabled. This does not remove native suspend authorization or an LTS memory-safety fix. Retain native driver/task lifetime through the set/clear interval. No actual kernel timer, panic or sysctl race test. No SDK consumer of the writable watchdog knobs was established in scoped system/frameworks/goldfish searches. Retain the configured generic Android runtime/module control conservatively. Global sysctl writer operations are not serialized with each other: the normalized per-instance pair makes consumption bounded, not globally transactional. Runtime changes deliberately affect subsequent watchdog instances; no immediate cancellation of an armed watchdog is promised.",
+    "result_commits": [
+      "1cea64c5f402352151c75e6cab68b648fb758b21"
+    ]
   }
 ]
