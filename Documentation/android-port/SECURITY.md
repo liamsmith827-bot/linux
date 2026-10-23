@@ -5616,3 +5616,34 @@ not retain them or destroy/reenter their list. The event hook precedes cmpxchg
 and does not certify a new wakeup; the group hook runs on each update pass. Exact
 SDK hook consumers remain unconfirmed, so generic source compatibility is kept.
 All examined resources are supplied local sources; no new remote access occurred.
+
+# PELT configuration and source customization
+
+`evidence/pelt-customization-review.json` resolves six candidates. Keep the 0644
+multiplier sysctl, default 1 with allowed values 1/2/4, and its vendor veto hook.
+Preserve ordinary task-time accounting and native IRQ/steal subtraction. Scale
+PELT deltas and idle synchronization through the additional live clock field;
+omit both historical ABI layout/CRC artifacts. Native idle synchronization stays
+in set_next_task_idle after previous-class accounting (79a074be9b57).
+
+Each runqueue samples the shift independently; accumulated clocks are not
+rescaled. Native migration idle-lag extrapolation still uses unscaled scheduler
+clock time, and hardware-pressure averaging retains its native clock. Do not
+interpret the advertised half-life shorthand as a measured uniform wall-time
+decay rate across all signals, migration or changing settings. No runtime
+convergence, frequency, power, fairness or latency result is claimed.
+
+Retain initialized replacement hooks for PELT clocks/averages, the forced-average
+refresh hook, fair load notifications and task-aware RT utilization notifications.
+Recorded native-body comparisons show default code remains intact. Replacements
+must maintain accounting and caller locking contracts; borrowed pointers are
+not references. The multiplier hook runs under its handler mutex before value
+validation, so it can see subsequently rejected input. Rejection restores the
+sysctl variable and does not publish a shift; it cannot undo callback side effects
+or the underlying proc handler's file-position changes. Recursive writes deadlock.
+
+Exact SDK multiplier writers and callbacks are unconfirmed after scoped local
+searches; this does not establish absence of need. Preserve the generic Android
+configuration and vendor source interfaces conservatively. Trusted callbacks and
+nondefault timing can materially alter scheduler decisions; no arbitrary-callback
+safety or arbitrary-clock-jump bound is established. No remote resources were used.

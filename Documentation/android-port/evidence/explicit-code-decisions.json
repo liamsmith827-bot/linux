@@ -13320,5 +13320,77 @@
       "evidence/psi-compatibility-review.json",
       "SECURITY.md: PSI userspace compatibility and permission tradeoff"
     ]
+  },
+  {
+    "commit": "bc7dd5c786f5fd860ba3d15f5a59c1a73693c96b",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All four source-path patches read; both ABI stg deltas parsed as rq layout/type/CRC metadata and omitted. Keep live clock_task_mult state and 0644 sched_pelt_multiplier sysctl, default 1, accepting only 1/2/4 and publishing shifts 0/1/2. Task runtime accounting remains unscaled; PELT uses scaled deltas/idle synchronization. Preserve native IRQ/steal subtraction and 79a074be9b57 idle synchronization ordering. No exact SDK setting writer found in scoped local sources; keep generic Android configuration compatibility conservatively. Dynamic rate changes are sampled per runqueue update, not synchronized across CPUs; do not claim uniform wall-time decay for every signal/path.",
+    "evidence": [
+      "evidence/pelt-customization-review.json",
+      "SECURITY.md: PELT configuration and source customization"
+    ]
+  },
+  {
+    "commit": "598e1ecfa6dda025b70fc3c4426f4f8fdee6d5e3",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All three paths read. Retain ordinary GPL multiplier notification/veto hook under the sysctl handler mutex. Old/current values are passed by value and ret starts at successful proc_dointvec result 0. Nonzero veto restores sysctl value without publishing a new shift. Hook runs before the 1/2/4 validity switch, so callback can see rejected values and must not assume success or recursively write this sysctl. Rollback does not undo callback side effects or proc handler file-position changes. Exact SDK registration unconfirmed; retain source API.",
+    "evidence": [
+      "evidence/pelt-customization-review.json",
+      "SECURITY.md: PELT configuration and source customization"
+    ]
+  },
+  {
+    "commit": "ce44999e401c9e28658b186e6225b72f61dc5e71",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All three paths read. Retain initialized-zero force_update hook after positive 1024ns time progress and no-load running/runnable normalization. Native accumulate_sum still runs; hook only supplies return when no PELT period boundary was crossed, requesting caller average refresh. It does not bypass negative-time or zero-delta early exits. Without a callback whole update routine is native apart from public visibility/export. Trusted callbacks may increase update frequency; no measured scheduling benefit.",
+    "evidence": [
+      "evidence/pelt-customization-review.json",
+      "SECURITY.md: PELT configuration and source customization"
+    ]
+  },
+  {
+    "commit": "6ede7d7021778c4717b15fee42366d672f9527d6",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All four paths read. Keep five restricted replacement hooks, declarations and GPL exports. Four average routines initialize ret=-1 and run complete native code unless callback changes it; clock routine initializes ret=0 and skips native PELT clock update only on nonzero override. Replacements must maintain clocks, average fields and return semantics under caller locking; unsafe callbacks can break scheduling. Current native h_nr_runnable and all other later body changes remain. Exact SDK callback consumers unconfirmed; vendor source customization is explicitly in scope.",
+    "evidence": [
+      "evidence/pelt-customization-review.json",
+      "SECURITY.md: PELT configuration and source customization"
+    ]
+  },
+  {
+    "commit": "c5e9038c7ed2aeab207d3182ed987031fb1042fd",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All three paths and five sites read. Keep restricted attach/detach/update/remove/blocked-load notifications with matching GPL exports. Each containing fair.c function is native LTS plus exactly its hook (allowing blank-line placement). Removal notification runs after sync but before removed.lock; callback must honor actual caller context, not assume that lock is held. No default accounting changes, and hooks do not acquire ownership of borrowed rq/cfs/se pointers. Exact SDK consumers unconfirmed; retain generic source interface.",
+    "evidence": [
+      "evidence/pelt-customization-review.json",
+      "SECURITY.md: PELT configuration and source customization"
+    ]
+  },
+  {
+    "commit": "3a3a073cf98e5a391d3affffe4874d373773abd8",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All three paths read. Keep restricted task-aware RT-util notification at first set-next (running=0), put-prev and tick (running=1), with declaration/export. Set-next hook runs even when native aggregate update is skipped because previous donor was RT; first=false returns before the hook. Observes the scheduling task passed by class callers, not necessarily execution current under proxying. Pointers are borrowed in scheduler context; no per-task PELT tracker is introduced by the core hook itself. Broader RT/proxy changes require their separate decisions.",
+    "evidence": [
+      "evidence/pelt-customization-review.json",
+      "SECURITY.md: PELT configuration and source customization"
+    ]
   }
 ]
