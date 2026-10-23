@@ -12755,10 +12755,15 @@ static inline int find_new_ilb(void)
 	int new_ilb = nr_cpu_ids;
 
 	trace_android_rvh_find_new_ilb(nohz.idle_cpus_mask, &new_ilb);
-	if (new_ilb != nr_cpu_ids)
-		return new_ilb;
 
 	hk_mask = housekeeping_cpumask(HK_TYPE_KERNEL_NOISE);
+	if (new_ilb < 0)
+		return -1;
+	/* Vendor selection must satisfy the native idle-balancer constraints. */
+	if (new_ilb < nr_cpu_ids && new_ilb != smp_processor_id() &&
+	    cpumask_test_cpu(new_ilb, nohz.idle_cpus_mask) &&
+	    cpumask_test_cpu(new_ilb, hk_mask) && idle_cpu(new_ilb))
+		return new_ilb;
 
 	for_each_cpu_and(ilb_cpu, nohz.idle_cpus_mask, hk_mask) {
 

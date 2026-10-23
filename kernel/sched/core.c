@@ -3772,7 +3772,7 @@ int select_fallback_rq(int cpu, struct task_struct *p)
 	int dest_cpu = -1;
 
 	trace_android_rvh_select_fallback_rq(cpu, p, &dest_cpu);
-	if (dest_cpu >= 0)
+	if ((unsigned int)dest_cpu < nr_cpu_ids && is_cpu_allowed(p, dest_cpu))
 		return dest_cpu;
 
 	/*
@@ -3865,7 +3865,7 @@ int select_task_rq(struct task_struct *p, int cpu, int *wake_flags)
 	 * [ this allows ->select_task() to simply return task_cpu(p) and
 	 *   not worry about this generic constraint ]
 	 */
-	if (unlikely(!is_cpu_allowed(p, cpu)))
+	if (unlikely((unsigned int)cpu >= nr_cpu_ids || !is_cpu_allowed(p, cpu)))
 		cpu = select_fallback_rq(task_cpu(p), p);
 
 	return cpu;
