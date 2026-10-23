@@ -881,10 +881,11 @@ static int __init task_struct_vendor_size_setup(char *str)
 
 	size = memparse(str, &str);
 
-	if (size < 0 || size > CONFIG_GKI_TASK_STRUCT_VENDOR_SIZE_MAX)
+	if (size > CONFIG_GKI_TASK_STRUCT_VENDOR_SIZE_MAX)
 		return -EINVAL;
 
-	arch_task_struct_size = sizeof(struct task_struct) + size;
+	/* Architecture setup still owns arch_task_struct_size at this point. */
+	android_task_vendor_size = size;
 
 	return 0;
 }

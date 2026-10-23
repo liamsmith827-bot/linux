@@ -7,6 +7,7 @@
  * functionality:
  */
 
+#include <linux/math.h>
 #include <linux/rcupdate.h>
 #include <linux/refcount.h>
 #include <linux/sched.h>
@@ -58,7 +59,10 @@ extern spinlock_t mmlist_lock;
 extern union thread_union init_thread_union;
 extern struct task_struct init_task;
 #ifdef CONFIG_GKI_DYNAMIC_TASK_STRUCT_SIZE
-extern u64 vendor_data_pad[CONFIG_GKI_TASK_STRUCT_VENDOR_SIZE_MAX / sizeof(u64)];
+extern u64 vendor_data_pad[DIV_ROUND_UP(CONFIG_GKI_TASK_STRUCT_VENDOR_SIZE_MAX,
+				     sizeof(u64))];
+extern unsigned int android_task_vendor_size;
+extern unsigned int android_task_vendor_offset;
 #endif
 
 extern int lockdep_tasklist_lock_is_held(void);
@@ -234,14 +238,15 @@ static inline void *android_task_vendor_data(struct task_struct *p)
 	if (p == &init_task)
 		return &vendor_data_pad[0];
 
-	return p + 1;
+	/* Architecture state, such as x86 FPU state, may follow task_struct. */
+	return (void *)p + android_task_vendor_offset;
 }
 
 static inline void android_init_dynamic_vendor_data(struct task_struct *p)
 {
-	if (arch_task_struct_size > sizeof(struct task_struct))
+	if (android_task_vendor_size)
 		memset((void *)android_task_vendor_data(p), 0x0,
-		       arch_task_struct_size - sizeof(struct task_struct));
+		       android_task_vendor_size);
 }
 #else /* !CONFIG_GKI_DYNAMIC_TASK_STRUCT_SIZE */
 static inline void android_init_dynamic_vendor_data(struct task_struct *p) {}

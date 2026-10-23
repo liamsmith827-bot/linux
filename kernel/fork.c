@@ -803,6 +803,33 @@ static void __init set_max_threads(unsigned int max_threads_suggested)
 int arch_task_struct_size __read_mostly;
 #endif
 
+#ifdef CONFIG_GKI_DYNAMIC_TASK_STRUCT_SIZE
+unsigned int android_task_vendor_size __ro_after_init;
+EXPORT_SYMBOL_GPL(android_task_vendor_size);
+unsigned int android_task_vendor_offset __ro_after_init;
+EXPORT_SYMBOL_GPL(android_task_vendor_offset);
+
+static void __init android_task_vendor_data_setup(void)
+{
+	size_t offset = ALIGN((size_t)arch_task_struct_size, sizeof(u64));
+
+	android_task_vendor_offset = arch_task_struct_size;
+	if (!android_task_vendor_size)
+		return;
+
+	if (offset > INT_MAX || android_task_vendor_size > INT_MAX - offset) {
+		pr_warn("Ignoring Android task vendor size: allocation size overflow\n");
+		android_task_vendor_size = 0;
+		return;
+	}
+
+	android_task_vendor_offset = offset;
+	arch_task_struct_size = offset + android_task_vendor_size;
+}
+#else
+static inline void android_task_vendor_data_setup(void) {}
+#endif
+
 static void __init task_struct_whitelist(unsigned long *offset, unsigned long *size)
 {
 	/* Fetch thread_struct whitelist for the architecture. */
@@ -829,6 +856,8 @@ void __init fork_init(void)
 
 	/* create a slab on which task_structs can be allocated */
 	task_struct_whitelist(&useroffset, &usersize);
+	/* Append vendor storage after native state and outside its usercopy area. */
+	android_task_vendor_data_setup();
 	task_struct_cachep = kmem_cache_create_usercopy("task_struct",
 			arch_task_struct_size, align,
 			SLAB_PANIC|SLAB_ACCOUNT,
