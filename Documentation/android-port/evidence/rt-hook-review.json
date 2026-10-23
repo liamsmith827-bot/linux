@@ -1,0 +1,88 @@
+{
+  "source_head": "b1cd2b2b27929af030c47d1803ffc903742fbfac",
+  "records": [
+    {
+      "commit": "bf3d991a7daad265d3c57f95b1f3d8749636bc74",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three paths read. Keep ordinary throttle diagnostic hook, current GPL export in kernel/sched/vendor_hooks.c and declaration; generated disabled-hook handling supersedes old manual stubs. The site follows native rt_throttled=1, passes only values and cannot veto through its arguments. Whole routine is native plus notification. CONFIG_RT_GROUP_SCHED=n in the SDK configuration means this site is not compiled or exercised; retain generic Android configuration/source hook compatibility without enabling RT groups or adding hardware support. Exact SDK callback unconfirmed; no performance or data-access claim.",
+      "evidence": [
+        "evidence/rt-hook-review.json",
+        "SECURITY.md: RT balancing and diagnostic hooks"
+      ],
+      "patch_sha256": "e1d668c9571b4a68f67e4dd4b2ad216e66f83e5d7c96c5a9317e365c1d7d36f9"
+    },
+    {
+      "commit": "ebce8ec6bd55eb0df223cdacc77c3aa71bcf9149",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Both paths read. Keep hook after mask allocation/pinned-affinity checks and cpupri search, with output CPU initialized -1 and ret supplied. Later 8f5c988d396a adds execution context, preserving current signature. ret=0 does not guarantee a freshly valid candidate mask; callbacks must honor status. Nonnegative override is trusted, not checked for membership/active status. This preserves source customization with native default selection and the separately adapted active filter.",
+      "evidence": [
+        "evidence/rt-hook-review.json",
+        "SECURITY.md: RT balancing and diagnostic hooks"
+      ],
+      "patch_sha256": "868e037b0d97374e9585a0b75925fdae74924415e61f1386c02efaf63eaa86dd"
+    },
+    {
+      "commit": "1085eff98a250217c9c475ba8b08bf2e1f59794c",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All four paths read. Keep initialized-zero RT-balance replacement hook and GPL pushable-picker export/prototype, relocated current registry. Hook is called after rq_unpin_lock, which does not unlock the rq; a callback that drops it must restore it. Nonzero done suppresses native pull and assumes callback supplied required policy. Whole balance_rt is native LTS plus the hook; retain fef4b8f17e1c fresh donor and no reuse after lock drops. Exported picker uses reviewed chain-aware predicate and native migration-disabled exclusions. Exact SDK callback unconfirmed; generic source API retained.",
+      "evidence": [
+        "evidence/rt-hook-review.json",
+        "SECURITY.md: RT balancing and diagnostic hooks"
+      ],
+      "patch_sha256": "6d0a4becc6982d909a97aab9e98d2f80e3dbaf58cae9354d85d4392a49676f8a"
+    },
+    {
+      "commit": "1347ec535a19feeac64db01def8d9b428f2d08fd",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three paths read. Retain restricted RT push-IPI candidate hook, declaration and GPL export. Whole rto_next_cpu is LTS plus callback; native 52aeb1e07ec2 skips current CPU after callback, and acquire/iteration bookkeeping remains. Caller holds rd->rto_lock and may be hardirq; callback must preserve legal CPU/end-of-iteration values and progress. Historical CPU Pause motivation is not the current generic interface scope; removed common pause code remains omitted. Actual SDK registration unconfirmed, not proof of no vendor need.",
+      "evidence": [
+        "evidence/rt-hook-review.json",
+        "SECURITY.md: RT balancing and diagnostic hooks"
+      ],
+      "patch_sha256": "f8e1e657e1bb239cb7584a7a5795c7f5735d3941a01c398479d11b9b5f72a7bc"
+    }
+  ],
+  "path": "kernel/sched/rt.c",
+  "witnesses": [
+    {
+      "function": "sched_rt_runtime_exceeded",
+      "sha256": "ee55099f346079662ad3e7c455845ac654b3ab1dcbd22aa64abaac5c1f62e4c4",
+      "relationship": "whole LTS function plus value-only notification; RT_GROUP_SCHED=n excludes site in SDK build"
+    },
+    {
+      "function": "balance_rt",
+      "sha256": "be726c8795ceb6e095cecc014b6e4d0f26413f361508e3b49c21483416ceb87d",
+      "relationship": "whole LTS function plus initialized replacement hook"
+    },
+    {
+      "function": "rto_next_cpu",
+      "sha256": "7cb1aaf0717215e0bdb5def7a4467416dfc0b315511a9491ffee5b3409c54c7c",
+      "relationship": "whole LTS function plus candidate hook; native current-CPU exclusion follows hook"
+    },
+    {
+      "function": "find_lowest_rq",
+      "sha256": "64ad75f3a87b82ed68f3519063ebd4d734fa5164f54a18fb31429f47695343ff",
+      "relationship": "whole final ACK function; full changes and chain/active-mask dependencies separately reviewed"
+    },
+    {
+      "function": "pick_highest_pushable_task",
+      "sha256": "307afcd1770d6f4a6bacc0ef6705e65b2acdb764ec124d168e87eb8c0327f8f0",
+      "relationship": "whole final ACK function; full changes and chain/active-mask dependencies separately reviewed"
+    }
+  ],
+  "security": "Default native RT throttling/balancing/IPI behavior preserved after removing precisely reviewed hook additions. Active callbacks are trusted kernel code; invalid CPU overrides, unbalanced locks, blocking or missed balancing can cause hangs, starvation or corruption. Throttle notification site is compiled out for current SDK RT_GROUP_SCHED=n, while declarations/export preserve generic Android source compatibility. No exact module registration was established and absence is not omission proof.",
+  "validation": "Full patch reads, whole-function delta comparisons, declaration/export checks and actual SDK configuration inspection. No new source change or runtime test for this batch.",
+  "remote_sources_used": []
+}

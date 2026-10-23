@@ -5647,3 +5647,197 @@ searches; this does not establish absence of need. Preserve the generic Android
 configuration and vendor source interfaces conservatively. Trusted callbacks and
 nondefault timing can materially alter scheduler decisions; no arbitrary-callback
 safety or arbitrary-clock-jump bound is established. No remote resources were used.
+
+# RT and deadline chain balancing
+
+`evidence/rt-dl-chain-review.json` resolves twelve candidates, including the
+unique d202b97297c3 merge hunk. Retain execution-context versus scheduling-context
+selection, chain-aware push/pull and revalidation, and live DL current-entity
+tracking. They support enabled Android proxy execution, not historical binary
+layout. Keep native current/migrate-disabled exclusions, CPU-priority and deadline
+heap maintenance, and DL parameter inheritance with ENQUEUE_REPLENISH on deboost.
+Native enqueue/accounting bodies remain apart from documented aliases and the
+current-entity guard preventing nested pushable-tree insertion.
+
+Two safety adaptations are recorded. In 3409f4102490, extend the native
+fc09027786c9 active-CPU filter to RT searches with no local execution task. ACK's
+NULL-context branch bypassed it, admitting inactive CPU candidates. The extracted
+four-CPU test covers 32,768 static combinations; all pass, whereas the prior
+implementation fails 2,800. This preserves the hotplug livelock fix's filtering
+intent; it does not freeze CPU state after the check or constrain arbitrary
+trusted vendor overrides.
+
+In faad9f616aa9, take task blocked_lock while sampling a migration-chain owner.
+Remote mutex and rwsem wakeups publish PROXY_WAKING under that lock without either
+rq lock. Both rq locks remain held; release blocked_lock before dequeue/enqueue
+callbacks. The 160-case extracted helper model passes; a forced source-level
+interleaving exposes invalid primitive accesses in 24 prior cases and unprotected
+owner reads in another 24. This is not a reproduced kernel crash or machine-code
+race. It checks the local synchronization contract, not global chain correctness.
+
+Traversal accepts only tasks queued on the locked source rq. Preemption-disabled
+rq-lock regions protect task allocation through native RCU release, but remote
+owners may change state and cause traversal to stop. Missing/self owner is a
+transitional result, not proof of an unblocked endpoint. No global chain recovery,
+cycle termination, fairness or latency bound is claimed. Ordinary chain migration
+updates wake_cpu through set_task_cpu; unlike proxy_migrate_task it does not save
+the earlier preference. Subsequent wake/return selection must still enforce CPU
+affinity. No boot, scheduler stress or hotplug execution was performed.
+
+Retain the two-context find_lowest_rq hook; callbacks must handle NULL exec_ctx,
+borrowed task pointers and valid CPU selection. Exact SDK registrations are
+unconfirmed, which is not evidence of no need. Native filtering and accounting
+remain the default, with trusted hooks able to deliberately change policy. All
+sources used for this review were local; embedded commit links were not fetched.
+
+# Synchronous wakeup flag separation
+
+`evidence/sync-wakeup-review.json` resolves six candidates. Retain Android's
+SMP RT sync hint policy and its vendor veto, with ordinary WF_SYNC propagation.
+C Binder and epoll provide positive compiled sync-wakeup paths; a particular SDK
+RT workload or energy/latency benefit is not established. The policy checks the
+execution current's RT policy, wakee priority, RT task count and same-CPU affinity;
+it can bypass the usual capacity/softirq search. This is deliberate Android
+runtime compatibility, not a real-time performance guarantee.
+
+ACK reused 0x80 for ENQUEUE_WAKEUP_SYNC even though LTS uses that bit for
+ENQUEUE_INITIAL. In b1cd2b2b2792 the sync flag moves to 0x1000, a free bit across
+current enqueue/dequeue flags. Native ENQUEUE_INITIAL stays 0x80. Ordinary
+synchronous fair wakeups therefore no longer receive initial-task half-slice
+placement, and new RT enqueues are no longer mistaken for synchronous wakes.
+Symbolic vendor source interfaces remain; historical binary flag values do not.
+The extracted native placement routine passes 32 modeled cases; old definitions
+fail 16 flag/placement cases, including two incorrect deadlines. This checks local
+flag semantics, not runtime fairness or contention.
+
+Keep the separate WF_ANDROID_VENDOR wake-domain flag and existing socket/wake
+hooks. Allowing it in a WARN mask changes diagnostics, not permissions. The early
+wake-flags hook runs with preemption disabled before pi_lock and may alter flags;
+trusted callbacks must preserve internal wake semantics and atomic constraints.
+The honor hook defaults true and can veto but does not bypass remaining predicates.
+Exact SDK registrations remain unconfirmed; no-consumer searches were not used
+as omission proof. All evidence for this review is local; no remote was accessed.
+
+# RT balancing and diagnostic hooks
+
+`evidence/rt-hook-review.json` resolves four candidates. Retain RT balance
+replacement, push-IPI CPU selection, revised lowest-rq placement and throttle
+diagnostics as generic Android vendor source interfaces. Whole-function delta
+checks preserve native default behavior and current LTS fixes. The throttle site
+is compiled out because SDK RT_GROUP_SCHED=n; keeping its declaration/export does
+not establish an active SDK callback or justify enabling RT groups.
+
+RT balance unpinning is not unlocking. Callbacks must restore any dropped rq lock
+and honor the replacement contract. Lowest-rq status zero may leave no fresh mask;
+overrides are trusted and must select a valid CPU. Push-IPI callbacks run under
+rto_lock, possibly from hardirq; the native current-CPU skip still follows the
+callback, but this does not validate arbitrary values or guarantee callback
+progress. Bad trusted callbacks can cause missed balancing, corruption or hangs.
+No hardware-specific support or removed common CPU Pause machinery was added.
+Exact SDK registrations are unconfirmed; absence is not treated as omission proof.
+No remote resources or new runtime tests were used for this batch.
+
+# Scheduler hook lifetime and instantiation
+
+`evidence/scheduler-hook-plumbing-review.json` resolves nine candidates. Preserve
+the current scheduler trace registry and per-source macro cleanup needed when
+build_policy.c includes multiple policy sources. The registry instantiates live
+vendor APIs even though its original motivation mentioned ABI metadata. The report
+accounts for all 44 moved exports: 39 same-name, two renamed, three explicitly
+removed later. Preserve current cgroup declarations and omit the explicitly
+reverted can_attach/update_cpus_allowed overrides.
+
+Keep server start/skip customization and diagnostic hooks. Default start follows
+the native empty-to-nonempty transition; trusted callbacks may suppress or force
+service, affecting starvation protection. In dcef94ed034d initialize the skip
+veto for each server. The previous function-wide variable leaked a veto through
+goto again into later servers. All 216 extracted-loop cases pass; the old code
+fails 20. The model uses three candidates to exercise repeated decisions, while
+the configured rq has fair and ext servers. No concurrency or latency result is
+claimed. RETRY_TASK still returns before any hook or server assignment; diagnostic
+pointers remain borrowed in scheduler context.
+
+The current fair preemption hook has initialized preempt/ignore controls and
+retains the full native function when inactive. Preempt takes precedence if both
+are set; active trusted callbacks can override native policy. Removed early hooks
+are not recreated. Exact SDK registrations remain unconfirmed and are not used
+as omission proof. All newly consulted resources were local.
+
+# Scheduler deferral hooks and unimplemented bounds
+
+`evidence/scheduler-deferral-hooks-review.json` resolves three candidates. Retain
+ordinary GPL-exported Android deferral/lifecycle hooks with initialized false or
+zero defaults. Native reschedule functions compare exactly after removing those
+hook additions. No extra hardware support or vendor binary compatibility is added.
+
+The names and commit descriptions overstate what the core implements. The hook
+inside __resched_curr can suppress immediate requests, including idle wakeups;
+it does not simply request lazy preemption. The hook in resched_curr_lazy also
+suppresses the request. The schedule-entry hook has no CFS-only, preempt-only,
+timer or deferral-count guard. It runs for voluntary blocking too, before rq lock
+and IRQ disable. A trusted callback must implement eligibility, bounds and correct
+blocking semantics. The supplied patch itself does not implement bounded deferral.
+Wrong callbacks can cause starvation, busy loops or hangs. Native behavior remains
+when callbacks leave the initialized outputs unchanged.
+
+Scoped GrapheneOS and manifest-module searches did not establish the actual hint
+transport, callback implementation or SDK policy. Those questions remain explicit;
+absence is not omission proof. Retention preserves requested generic Android vendor
+source customization, not a claim that the described framework policy exists or
+has been verified. No remote source or runtime preemption test was used.
+
+# Priority hooks and nice-value bounds
+
+`evidence/priority-hooks-review.json` resolves nine priority, fork, yield and
+uclamp candidates against their complete patches and current implementations.
+The hooks are retained as generic Android vendor source interfaces, including
+current scheduler-owned declarations/exports and syscall file organization.
+Native permission/ownership/LSM checks remain, including separately reviewed
+ACK 2b5819446e0b CAP_SYS_NICE clamp restriction. Positive GrapheneOS
+callers exercise the scheduler/nice surface; exact SDK vendor callbacks remain
+unconfirmed and are not presumed absent.
+
+`8771c5fb4ae8` preserves the native nice range after the locked callback. ACK checked
+the request before this mutable callback, allowing a bad replacement to reach
+static_prio and the 40-entry scheduler weight tables. Revalidate -20 through 19
+before any priority write. Valid customization and false veto are preserved, and
+the native scoped rq guard releases on rejection. The old unlocked allowed flag
+which bypassed range rejection is superseded, not restored. The extracted host
+check covers 16,200 cases with zero current failures; its pre-fix control has
+1,440 mismatches including 480 invalid modeled weight indices. It does not execute
+kernel scheduling or establish an exploitable userspace path.
+
+Priority/class/task-pointer callbacks still require trusted, nonblocking code
+which preserves PI, queue/class and lifetime invariants. They can deliberately
+customize values after userspace permission checks; those checks are not repeated
+on arbitrary callback mutations. Keeping this vendor facility is a compatibility
+choice, not a claim that unknown callbacks are safe. Native deadline PI setup is
+retained before the setscheduler notification, and native sched_change guards,
+cpuset serialization, deadline admission and uclamp validation remain. Uclamp
+notifications report explicit updates, not every default/reset path; yield does
+not promise that a different task will execute. No remote sources were accessed.
+
+# Schedutil hook history and policy obligations
+
+`evidence/sugov-hooks-review.json` resolves ten additions, removals and
+reintroductions. Keep the current map-util and rq-aware I/O-wait interfaces,
+including complete declarations/exports. The old worker sched_attr and update-veto
+hooks were explicitly removed and remain absent in final ACK; native worker policy
+and update logic are retained. The entire current cpufreq_schedutil.c matches LTS
+after removing only the map-util addition and its include.
+
+With callbacks absent, native frequency mapping, caching, policy-limit barriers
+and driver resolution remain. The map-util callback can replace the raw frequency
+and mutate need_freq_update/policy. A trusted callback that clears a mandatory
+limit-change update can allow the raw-cache fast path to return the previous
+frequency without re-resolution. Retaining that explicit Android policy contract
+is a vendor source-compatibility choice; callbacks must preserve frequency and
+thermal limits, valid integer ranges and update obligations. Native limits are
+not claimed to constrain arbitrary callback behavior. The I/O-wait callback may
+force or suppress boost, with p->in_iowait as its initial value, but does not alter
+I/O accounting. All scheduler-context callbacks must obey locking/lifetime rules.
+
+The generated SDK configuration selects schedutil. Exact SDK callback consumers
+and their policies remain unconfirmed; the scoped negative searches are not
+omission proof. No physical CPU power savings, runtime correctness or thermal
+behavior is verified by this source review. No remote resources were accessed.

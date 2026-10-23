@@ -1,0 +1,194 @@
+{
+  "source_head": "8771c5fb4ae85a547ef9ccb03a1f5210c7de997c",
+  "records": [
+    {
+      "commit": "f39f3ac200dbb48deddc521a2c5014c5f263fe41",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "8771c5fb4ae85a547ef9ccb03a1f5210c7de997c"
+      ],
+      "rationale": "All three paths read. Retain all five priority/fork interface families at their current sites, including migrated syscalls.c and scheduler-owned GPL registry. Prepare-fork follows copying normal_prio; finish-fork follows class selection and runnable-average init. Native reset-on-fork and deadline rejection remain. rtmutex preparation precedes rq acquisition and effective priority calculation. Nice evolved through 4e77/039b/29ab; do not restore historical prototypes or unchecked bypass. setscheduler notification now follows native DL PI setup inside sched_change. Generic Android source customization, with actual SDK hook registration unresolved.",
+      "evidence": [
+        "evidence/priority-hooks-review.json",
+        "evidence/nice-hook-bounds-check.json",
+        "SECURITY.md: Priority hooks and nice-value bounds"
+      ],
+      "patch_sha256": "3c07bc3bf595d665ebde6c96181176c74f2215bfa720af0dc0cf35d3ba37a7c9"
+    },
+    {
+      "commit": "4e77c99cd7bf3a038b0143e962985d0ba508ae2a",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "Both paths read. Historical unlocked nice hook with allowed=false could override both unchanged-value and invalid-range rejection. The 039b locked-veto design and 29ab unlocked observation/customization replace this contract. Final unlocked hook has no allowed argument and is followed by native bounds check; locked hook defaults allowed=true and is revalidated in 8771c5fb4ae8. Do not resurrect invalid-range bypass or a historical source/binary signature.",
+      "evidence": [
+        "evidence/priority-hooks-review.json",
+        "evidence/nice-hook-bounds-check.json",
+        "SECURITY.md: Priority hooks and nice-value bounds"
+      ],
+      "patch_sha256": "c652ef30e8ce6a264d4cd95e4444e4edd55caee84ba3d0d2119c99cf2a62588a"
+    },
+    {
+      "commit": "039b2e0a925dc3c977729c175f6cd0e52b28aa12",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "8771c5fb4ae85a547ef9ccb03a1f5210c7de997c"
+      ],
+      "rationale": "All three paths read. Keep rq-locked nice customization and default-true veto, plus later reintroduced unlocked hook. Native CLASS(task_rq_lock) releases the lock on early veto. Adapt with 8771c5fb4ae8: re-check MIN_NICE/MAX_NICE after the locked callback, before any static_prio write or scheduler weight access. Without this, a faulty callback can bypass native bounds and index outside 40-entry weight tables; RT/DL static priority is also protected. Valid changes and allowed=false behavior remain; no sensible valid-nice policy depends on out-of-range results.",
+      "evidence": [
+        "evidence/priority-hooks-review.json",
+        "evidence/nice-hook-bounds-check.json",
+        "SECURITY.md: Priority hooks and nice-value bounds"
+      ],
+      "patch_sha256": "15001275338cebf76747d9b2477386910fca137ea4cedbf9cda4fbefe8bd9d80"
+    },
+    {
+      "commit": "29ab5891f82b33123e5f97438bfc30b4acf52ecc",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three paths read. Retain two-argument unlocked hook before unchanged/range rejection so it observes even equal requests and may replace the requested value. It does not restore the obsolete allowed argument. Native range check follows it, then rq-locked hook and new range revalidation. Scoped GrapheneOS code positively uses nice/scheduler syscalls, while exact vendor callback is unresolved. Callback must handle this unlocked task context and maintain its own policy consistency.",
+      "evidence": [
+        "evidence/priority-hooks-review.json",
+        "evidence/nice-hook-bounds-check.json",
+        "SECURITY.md: Priority hooks and nice-value bounds"
+      ],
+      "patch_sha256": "2915ac13991213e26ec4e68fe1451d582b3078931947f0edb01053b07a1f9339"
+    },
+    {
+      "commit": "bcc907fa42af8ac4c57def8fa0b99205ca16b541",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three paths read. Keep restricted GPL priority-change notification after class/prio assignment in rt_mutex_setprio and before check_class_changing, inside native sched_change. Native effective-priority, idle, deadline PI and enqueue/dequeue protocol remain; local comparison equals LTS after removing explicitly listed hooks. Callback receives mutable task and can break class/priority or PI invariants if faulty. No claim that cited Pixel latency measurements apply to SDK; generic source compatibility is the retention reason.",
+      "evidence": [
+        "evidence/priority-hooks-review.json",
+        "evidence/nice-hook-bounds-check.json",
+        "SECURITY.md: Priority hooks and nice-value bounds"
+      ],
+      "patch_sha256": "fdda1eb96a6e9e6288554fd2dd46b7d89e94c57aeef99d953933753ada818a75"
+    },
+    {
+      "commit": "d5ac0297416c24d7fbb36a06c4d40724352ef720",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three paths read. Preserve ordinary GPL uclamp notifications at final syscalls.c sites, restored by d4acab after upstream file split. Emit only after explicit min/max value assignment, not for -1 reset/default paths. Entire __setscheduler_uclamp is native plus these two value notifications; native user validation and clamp accounting remain. Task pointer is borrowed under rq serialization; callback must not block or mutate clamp state inconsistently.",
+      "evidence": [
+        "evidence/priority-hooks-review.json",
+        "evidence/nice-hook-bounds-check.json",
+        "SECURITY.md: Priority hooks and nice-value bounds"
+      ],
+      "patch_sha256": "d9a5164888f0e6baed183b73662b6c73ee575b8dd62207e86e25d4c9a3d0b5dd"
+    },
+    {
+      "commit": "c0704a1fc89df688230aafdd30fa294495286228",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three paths read. Retain restricted do_sched_yield callback after native donor-class yield and before rq unlock/preemption-enable/schedule. Default has no replacement output and does not itself guarantee another task will run. Current separate before-yield override and optional class method guard are independently retained; this callback is neither a new userspace privilege nor a fairness guarantee. Source declaration/export and restored syscalls.c site agree.",
+      "evidence": [
+        "evidence/priority-hooks-review.json",
+        "evidence/nice-hook-bounds-check.json",
+        "SECURITY.md: Priority hooks and nice-value bounds"
+      ],
+      "patch_sha256": "84e85b141a91c31683c550540a2e5dc093824b4f4eda7f982f7fe952d7ac003b"
+    },
+    {
+      "commit": "d4acab4311c34643c7da69f8899b46599b67a98e",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Entire single-file patch read. Preserve restored yield and uclamp call sites after native core/syscalls split. Current trace include is preceded by TRACE_INCLUDE_PATH undef from separately audited plumbing. Restore notifications without undoing native donor scheduling, scoped sched_change guards, uclamp validation, or current syscall file organization.",
+      "evidence": [
+        "evidence/priority-hooks-review.json",
+        "evidence/nice-hook-bounds-check.json",
+        "SECURITY.md: Priority hooks and nice-value bounds"
+      ],
+      "patch_sha256": "095bd7cd771a4dbc010818ac673dec0de5717999311bc3759e12ed86864a5fc6"
+    },
+    {
+      "commit": "dff64b64355734b61e55d60b5717274b39c0e040",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Entire single-file patch read. Preserve restored setscheduler notification in syscalls.c, adapted after __setscheduler_dl_pi inside native sched_change. Native capability/ownership/LSM, policy, deadline bandwidth, cpuset serialization and clamp checks still precede the callback. It runs only when KEEP_PARAMS is absent. The DL-PI-before-hook ordering was also examined in merge d202b97297c3; no historical pre-LTS scheduler implementation is restored.",
+      "evidence": [
+        "evidence/priority-hooks-review.json",
+        "evidence/nice-hook-bounds-check.json",
+        "SECURITY.md: Priority hooks and nice-value bounds"
+      ],
+      "patch_sha256": "c089fbc4ccc6df55b635d78b657298466edd6dc85e5119b6859d534cf158e3ce"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "set_user_nice",
+      "sha256": "6d115f9fad9480e037d7918ead783f2f7e1a51445e1b89145dfd859b2266c308",
+      "relationship": "whole LTS function plus unlocked/locked callbacks, initialized veto and post-callback range check"
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "__setscheduler_uclamp",
+      "sha256": "b36af7099f3d56556b47f5683f55ba36a7cf10c57c99e149e7d921327027719e",
+      "relationship": "whole LTS function plus two post-assignment value notifications"
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "__sched_setscheduler",
+      "sha256": "cdeaf462edc32658e63785dd4e82ce0e287e811c3156faa8765a92f9f4958fdc",
+      "relationship": "whole native function after removing the enumerated one-line priority/SCX hook calls; SCX hooks have separate candidate review"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "rt_mutex_setprio",
+      "sha256": "52b1c538d14da9fbc734fd016d5ae5088ae9df8d87d645b0267c5efa6ecab6ec",
+      "relationship": "whole native function after removing the enumerated one-line priority/SCX hook calls; SCX hooks have separate candidate review"
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "user_check_sched_setscheduler",
+      "sha256": "ff0d895699a193f9726150fb8319e852d8b9b1c21dd54ad322bd93b1dbafd90a",
+      "relationship": "whole native user permission function plus previously audited ACK 2b5819446e0b CAP_SYS_NICE clamp restriction"
+    },
+    {
+      "path": "kernel/sys.c",
+      "function": "set_one_prio",
+      "sha256": "193d1428e414469f42bafb72c2758d656500c692187158b8c62b736dcec20d55",
+      "relationship": "whole native nice permission/ownership/LSM check function"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "sched_fork",
+      "sha256": "2b94042682bf6e7c3763195f2b5df459359d8b6ca4071a59773a90affa845fb7",
+      "relationship": "full current function read; other callback/class differences explicitly outside this nine-candidate batch"
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "do_sched_yield",
+      "sha256": "833ec2cfd3889f5e578015839e995a79d1f747782c7b48f12424a5b2ccc8385c",
+      "relationship": "full current function read; other callback/class differences explicitly outside this nine-candidate batch"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "set_load_weight",
+      "sha256": "99d5303440093dac15b26ded6bfe96b6a319f95bc597e8018658dc94d6abf4f5",
+      "relationship": "full current function read; other callback/class differences explicitly outside this nine-candidate batch"
+    }
+  ],
+  "consumer_evidence": [
+    "Pinned GrapheneOS system/core/libprocessgroup/task_profiles.cpp SetSchedulerPolicyAction::ExecuteForTask calls sched_setscheduler and setpriority; frameworks/base/core/jni/android_util_Process.cpp invokes scheduler and nice APIs. This establishes the runtime surface, not registration of vendor callbacks.",
+    "Scoped searches in manifest common-modules and GrapheneOS system/core/frameworks/native found no named priority hook callback. Exact SDK policy/consumer remains unresolved; retention is conservative Android vendor source compatibility."
+  ],
+  "security": "Callbacks are trusted kernel extensions and may customize priority after original syscall permission checks. No unprivileged registration API is introduced and native caller checks are retained, including the separately reviewed additional ACK CAP_SYS_NICE clamp restriction; this does not constrain arbitrary callback task mutations. Invalid locked nice outputs now stop before static_prio/weight access. Other mutable task hooks must keep scheduler class/priority, PI, lifetime and locking invariants; no runtime vendor policy is verified.",
+  "validation": "16,200 extracted nice-function host cases: zero failures/invalid indices/current lock leaks; previous code 1,440 semantic failures including 480 invalid modeled weight indices. Guarded rq and scheduling helpers are modeled; no concurrent scheduler test or exploit claim. Next emulator build will validate source 8771c5fb4ae8.",
+  "remote_sources_used": []
+}

@@ -1,0 +1,163 @@
+{
+  "source_head": "b1cd2b2b27929af030c47d1803ffc903742fbfac",
+  "records": [
+    {
+      "commit": "3a9495889492ae5132ea995723bf5ed6b045d8fa",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "All three paths read with explicit a8d9faf6f6d1 revert and 0a7537e20fc2 reapplication. Original sync wake policy is represented by the later implementation; do not replay its obsolete 0x80 enqueue flag, now colliding with native ENQUEUE_INITIAL. Final behavior and safety adaptation are assigned to the reapplication.",
+      "evidence": [
+        "evidence/sync-wakeup-review.json",
+        "evidence/sync-enqueue-flag-check.json",
+        "SECURITY.md: Synchronous wakeup flag separation"
+      ],
+      "patch_sha256": "a0f294943eccb1e3bad3cd5695496a8cfa04dbeacba4f82789f90399a2126b6a"
+    },
+    {
+      "commit": "a8d9faf6f6d1168ea754173dde90922b8774bf1f",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "All three removal paths read. This was a temporary rebase revert explicitly restored by 0a7537e20fc2. Retain final Android RT sync behavior with distinct enqueue bit; neither the temporary deletion nor its old placement is needed as an additional source transformation.",
+      "evidence": [
+        "evidence/sync-wakeup-review.json",
+        "evidence/sync-enqueue-flag-check.json",
+        "SECURITY.md: Synchronous wakeup flag separation"
+      ],
+      "patch_sha256": "680dde17edf91b27bc3d7dfd3898465406909f3538e60165048a3a264fa825c6"
+    },
+    {
+      "commit": "0a7537e20fc27eb8bcfe89229832b8183585fdfa",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "b1cd2b2b27929af030c47d1803ffc903742fbfac"
+      ],
+      "rationale": "All three paths read. Retain WF_SYNC propagation into enqueue flags, SMP RT-waker/priority/count predicate, same-CPU affinity-checked selection and suppression of push-list insertion for an honored sync wake. Positive compiled paths include C Binder and epoll sync wake calls; exact SDK RT traffic and measured benefit are unverified. Assign ENQUEUE_WAKEUP_SYNC=0x1000 in b1cd2b2b2792 rather than ACK 0x80, which aliases native ENQUEUE_INITIAL. This preserves native fair initial-only half-slice placement and prevents initial RT enqueue from masquerading as sync. No historical binary flag compatibility required.",
+      "evidence": [
+        "evidence/sync-wakeup-review.json",
+        "evidence/sync-enqueue-flag-check.json",
+        "SECURITY.md: Synchronous wakeup flag separation"
+      ],
+      "patch_sha256": "dae8ae6ac610cac8313628f6fdb31e7b76ab2cda3382846823fa16708c1e2c5a"
+    },
+    {
+      "commit": "1c65ab695e14c98b52300c01f6c97d8a955a049c",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three paths read. Retain initialized-true restricted honor hook, declaration and GPL export. A false value vetoes the optimization; true still requires sync, actual execution current RT policy, priority ordering and <=2 RT tasks. Thus it cannot force honoring a hint through the boolean alone when those predicates fail. Called in selection and enqueue with their respective contexts; exact SDK registration unconfirmed, preserve vendor source control.",
+      "evidence": [
+        "evidence/sync-wakeup-review.json",
+        "evidence/sync-enqueue-flag-check.json",
+        "SECURITY.md: Synchronous wakeup flag separation"
+      ],
+      "patch_sha256": "b611fe5600f213af3e7bfb68c05fc2344206b93c7b67d10a23ba09b4ee1e43dc"
+    },
+    {
+      "commit": "2d7833d168dd1c7bca8c7caa9e2a7d227b54ea6e",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three paths read. Keep wake-flag customization immediately after WF_TTWU is set, under preemption disable but before current-task special case and pi_lock acquisition. Parameter state is passed by value; flags are mutable. Trusted callback may add sync/custom hints, but must preserve required internal flag semantics and must not assume task/rq locks or sleep. No userspace callback registration path is added; exact SDK consumer unconfirmed.",
+      "evidence": [
+        "evidence/sync-wakeup-review.json",
+        "evidence/sync-enqueue-flag-check.json",
+        "SECURITY.md: Synchronous wakeup flag separation"
+      ],
+      "patch_sha256": "e986327b14466c88fb4c20fdd8eb5a73ebc54ece60296ccdcb34ed764c877ac3"
+    },
+    {
+      "commit": "3395cf170da074b9444c07db34249d6bf3303f59",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Both paths read. Keep WF_ANDROID_VENDOR=0x1000 as a distinct WAKE flag and permit it in default_wake_function warning mask, alongside native WF_SYNC/WF_CURRENT_CPU. This warning is diagnostic, not authorization or enforcement. Final set_wake_flags/socket hooks were separately traced in wake-queue-history-review.json; no native algorithm interprets the vendor bit itself. WAKE and ENQUEUE domains are distinct despite the new enqueue bit using the same number. No historical raw-bit binary compatibility is preserved.",
+      "evidence": [
+        "evidence/sync-wakeup-review.json",
+        "evidence/sync-enqueue-flag-check.json",
+        "SECURITY.md: Synchronous wakeup flag separation"
+      ],
+      "patch_sha256": "c01f0616746c329eb90594ae464f813514ba31adb5ac21d01f3eecba397caf37"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/sched/rt.c",
+      "function": "should_honor_rt_sync",
+      "sha256": "44da421c0bc7d4178cd4525c3bccbde22501eb2377a3ac99d6b9df007c2ce38a",
+      "relationship": "whole function equals ACK; numeric flag adaptation in sched.h"
+    },
+    {
+      "path": "kernel/sched/rt.c",
+      "function": "select_task_rq_rt",
+      "sha256": "05f35b0f29e7471577256b9277fc7a6b3c3773c186236bc0ee621c1c5acfb28c",
+      "relationship": "whole function equals ACK; numeric flag adaptation in sched.h"
+    },
+    {
+      "path": "kernel/sched/rt.c",
+      "function": "enqueue_task_rt",
+      "sha256": "1fa2be8cee131cdaf6ac59b383f832fe5fa130b05479e1dac176499a8129c9c4",
+      "relationship": "whole function equals ACK; numeric flag adaptation in sched.h"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "ttwu_do_activate",
+      "sha256": "e5cd6dd35cbebabec0563a55bde57d44d868abca28f9686de8eb8c511bf70715",
+      "relationship": "whole function equals ACK; numeric flag adaptation in sched.h"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "default_wake_function",
+      "sha256": "45b1cf30f244063d5ad7cc3141741ce3fc7a12006ac722f1c27414f30e791eea",
+      "relationship": "whole function equals ACK; numeric flag adaptation in sched.h"
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "place_entity",
+      "sha256": "e12794208ee28235ea7d94ba64056cd7d4fe55097724dbd746df0489d248c62b",
+      "relationship": "whole LTS placement routine plus existing observation hook; correct native initial bit retained"
+    }
+  ],
+  "enqueue_dequeue_flags": {
+    "DEQUEUE_SLEEP": 1,
+    "DEQUEUE_SAVE": 2,
+    "DEQUEUE_MOVE": 4,
+    "DEQUEUE_NOCLOCK": 8,
+    "DEQUEUE_SPECIAL": 16,
+    "DEQUEUE_MIGRATING": 256,
+    "DEQUEUE_DELAYED": 512,
+    "DEQUEUE_THROTTLE": 2048,
+    "ENQUEUE_WAKEUP": 1,
+    "ENQUEUE_RESTORE": 2,
+    "ENQUEUE_MOVE": 4,
+    "ENQUEUE_NOCLOCK": 8,
+    "ENQUEUE_HEAD": 16,
+    "ENQUEUE_REPLENISH": 32,
+    "ENQUEUE_MIGRATED": 64,
+    "ENQUEUE_INITIAL": 128,
+    "ENQUEUE_MIGRATING": 256,
+    "ENQUEUE_DELAYED": 512,
+    "ENQUEUE_RQ_SELECTED": 1024,
+    "ENQUEUE_WAKEUP_SYNC": 4096
+  },
+  "security": "Preserve Android synchronous RT placement policy with explicit source hook veto. Its fast path intentionally bypasses normal RT capacity/softirq target search once current-CPU affinity and honor conditions hold; it is a scheduling policy difference with possible latency/power effects, not a verified improvement or hard-real-time guarantee. No scheduler-policy authorization check changes. Correct the flag collision so ordinary synchronous fair wakeups do not acquire native initial-task treatment and new RT tasks are not implicitly sync.",
+  "evidence": "Current configured C Binder sync wake calls in drivers/android/binder.c and epoll propagation in fs/eventpoll.c are positive mechanism consumers, not proof of a particular SDK RT workload. Scoped searches in GrapheneOS system/core, frameworks/native and manifest common-modules found no named rt_sync/ENQUEUE_WAKEUP_SYNC/WF_ANDROID_VENDOR/try_to_wake_up_begin/should_honor_rt_sync consumer. These are internal names; their absence is not evidence of no Android benefit or need. Retain policy and vendor hooks conservatively.",
+  "limits": "Sync is a hint, not a promise that the waker blocks immediately. should_honor_rt_sync tests actual rq->curr RT policy, not donor policy under proxying. No claim that every remote queued wake preserves all flags; current queue behavior is left unchanged and has its separate audit. Vendor wake hook runs before pi_lock, may alter internal flags, and must honor atomic context. No boot, timing, energy, latency or global scheduling correctness measurement.",
+  "validation": "32 actual place_entity host cases pass with distinct flag; old definitions fail 16 flag/placement cases, including two deadline mismatches. Model fixes nice=0, disables lag compensation and exercises feature/custom-slice/relative-deadline combinations. Source build 128 pending.",
+  "local_paths": {
+    "drivers/android/binder.c": "f6518a3ff4790396f0a745ea84d597242ad0c657ba59d3565ad3e8ee2011b733",
+    "fs/eventpoll.c": "bd61c7ab5de517eec80fa68a4ed36ea4102495fdba0e0c4e22765d3b953c718c",
+    "kernel/sched/wait.c": "22ca36e5c03533488f3e68b1d4bd335b744da180031b8c06aaa0fb2ed194e48c",
+    "include/trace/hooks/sched.h": "2631da4b2dee06c3179d1581bb6240201374847b01f481f0fc339c4e53767cfd",
+    "kernel/sched/vendor_hooks.c": "7fd33fd57110fcce88fadf10af031b1c16b3dd050769d76cfcc0a6f716d1a7fd"
+  },
+  "remote_sources_used": [],
+  "subsequent_build_verification": {
+    "run": "sdk-build-attempt-129",
+    "source_head": "dcef94ed034d124ddb857f63f3e6544f0c0970ce",
+    "result": "Complete common and virtual-device build, signing and artifact generation passed. All 145 signatures verified; tampered control rejected; 145 module CRC/flag tables and 659 protected exports checked. See build-results.json and module-tables-build-129.json. No boot or runtime validation."
+  }
+}

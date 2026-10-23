@@ -10752,14 +10752,16 @@
   {
     "commit": "42d241724467d9d4614097757e0ca02de521f945",
     "disposition": "adapted-net-state",
-    "rationale": "All five paths reviewed. Retain typed blocked_on {lock,type}, helper updates and fork NULL initialization, plus owner/wait-lock dispatch in the selected proxy scheduler. Later BO_T_RWSEM extends the same dispatch; BO_T_NONE and PROXY_WAKING have no owner. find_proxy_task snapshots the pair under blocked_lock, locks the primitive wait_lock then rechecks under blocked_lock. This supports Android rwsem proxy execution, not a frozen layout. The abstraction does not independently prove lifetime of an arbitrary previously recorded task link.",
+    "rationale": "All five paths reviewed. Retain typed blocked_on {lock,type}, helper updates and fork NULL initialization, plus owner/wait-lock dispatch in the selected proxy scheduler. Later BO_T_RWSEM extends the same dispatch; BO_T_NONE and PROXY_WAKING have no owner. find_proxy_task snapshots the pair under blocked_lock, locks the primitive wait_lock then rechecks under blocked_lock. This supports Android rwsem proxy execution, not a frozen layout. The abstraction does not independently prove lifetime of an arbitrary previously recorded task link. Follow-up chain-migration review adds blocked_lock around owner sampling in faad9f616aa9, since remote unlock publishes PROXY_WAKING without the rq locks; release before migration callbacks.",
     "result_commits": [
-      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "faad9f616aa9f339512f7123914957a052992a7c"
     ],
     "evidence": [
       "evidence/proxy-locking-state-review.json",
       "evidence/proxy-lock-state-check.json",
-      "SECURITY.md: Proxy lock state and donor lifetime"
+      "SECURITY.md: Proxy lock state and donor lifetime",
+      "evidence/rt-dl-chain-review.json"
     ]
   },
   {
@@ -13391,6 +13393,681 @@
     "evidence": [
       "evidence/pelt-customization-review.json",
       "SECURITY.md: PELT configuration and source customization"
+    ]
+  },
+  {
+    "commit": "c621dead3a640a6055afcb80a78a16be3eff3b8b",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "3409f41024900cdfa3107737b015ea59801cd711"
+    ],
+    "rationale": "All six paths read. Keep donor priority/deadline/capacity distinct from execution-task affinity in RT/DL searches. Ordinary wake selection passes the same task twice; proxy selection passes donor and owner. RT supports a NULL execution task for a chain leaving this rq; DL callers reject NULL. Restore native fc09027786c9 active-CPU filtering for BOTH RT mask-producing branches in 3409f4102490. ACK bypassed it for NULL execution context. Preserve whole native CPU-priority update/barrier and deadline heap maintenance functions. Source-level vendor API changes are allowed; no old binary signature compatibility.",
+    "evidence": [
+      "evidence/rt-dl-chain-review.json",
+      "evidence/cpupri-active-check.json",
+      "evidence/proxy-move-owner-check.json",
+      "SECURITY.md: RT and deadline chain balancing"
+    ]
+  },
+  {
+    "commit": "57d50e9d7fc2f224ab09145b7ba2aae530ec798e",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All four paths read. Retain rq-locked execution-chain lookup and queued/rq/queued double-read with barriers. Each owner lookup holds blocked_lock and now uses final typed mutex/rwsem dispatch. Returns NULL for an owner off rq or the selected donor; missing/self owner returns the last task, which may still carry blocked state, not necessarily an unblocked executable task. Nonproxy helper returns p. DL users include later NULL fixes f69f23fd1d9f and b3f7a4b32906; RT lookup deliberately permits NULL. Keep this necessary support for enabled Android proxy balancing; no proof of arbitrary lock-graph termination.",
+    "evidence": [
+      "evidence/rt-dl-chain-review.json",
+      "evidence/cpupri-active-check.json",
+      "evidence/proxy-move-owner-check.json",
+      "SECURITY.md: RT and deadline chain balancing"
+    ]
+  },
+  {
+    "commit": "d8ed16933c9b4a7ce89be7c914e91fc2db06d835",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All three paths read. Retain extracted RT/DL revalidation helpers required by the later chain-aware implementations. Nonproxy RT rejects changed class/rq/affinity/on_cpu/migration-disable/queued state and re-picks the push head. Nonproxy DL keeps the native throttled/offline checks plus head re-pick for nonthrottled tasks. Proxy wrappers re-check chain pushability after dropping rq locks. Factoring does not discard native validation; no claim that static comparison validates all concurrent migration interleavings.",
+    "evidence": [
+      "evidence/rt-dl-chain-review.json",
+      "evidence/cpupri-active-check.json",
+      "evidence/proxy-move-owner-check.json",
+      "SECURITY.md: RT and deadline chain balancing"
+    ]
+  },
+  {
+    "commit": "f77e294987675cc8ef143bb52667ff0025416d73",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "3409f41024900cdfa3107737b015ea59801cd711",
+      "faad9f616aa9f339512f7123914957a052992a7c"
+    ],
+    "rationale": "All four paths read. Retain chain-level RT/DL balancing, ternary pushability, list scanning and post-unlock retry/abort distinction for enabled Android proxy execution. Preserve LTS 755476d7ba92 by excluding migrate-disabled root and execution tasks, including the nonproxy helper. Keep LTS 6a1a15d86ba6 current-task exclusion and corrected DL iterator. Adapt owner sampling in move_queued_task_locked to hold each task blocked_lock: remote mutex/rwsem unlock writers do not take either rq lock. Release it before migration callbacks; both rq locks remain. Native active-mask safety is extended to NULL-context RT search. Owner chains crossing rq boundaries stop at the boundary and may subsequently migrate back through proxy selection; no bound on repeated recovery or starvation is claimed.",
+    "evidence": [
+      "evidence/rt-dl-chain-review.json",
+      "evidence/cpupri-active-check.json",
+      "evidence/proxy-move-owner-check.json",
+      "SECURITY.md: RT and deadline chain balancing"
+    ]
+  },
+  {
+    "commit": "32768749ab1726effbac253772e179b0d00275e9",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Entire deadline.c patch read. Keep local dl_se/dl_rq aliases used by the subsequent current-entity protection. Enqueue and put-prev otherwise normalize exactly to LTS plus that protection. Aliases do not remove current native boost/deboost handling, replenishment flags, scheduler statistics or migration accounting.",
+    "evidence": [
+      "evidence/rt-dl-chain-review.json",
+      "evidence/cpupri-active-check.json",
+      "evidence/proxy-move-owner-check.json",
+      "SECURITY.md: RT and deadline chain balancing"
+    ]
+  },
+  {
+    "commit": "64035f9bde7f9d853426133ee824ed6fa092f344",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Both paths read. Keep live dl_rq->curr state, set before the first=false early return and cleared only after update_curr_dl and load accounting. enqueue_task_dl skips adding this entity to the pushable tree during nested dequeue/enqueue from put-prev. This prevents double insertion of the selected donor while rq->curr runs another task. It is active scheduling state, not a historical ABI reservation. Native per-entity accounting and tree machinery retained; runtime duplicate-enqueue stress not executed.",
+    "evidence": [
+      "evidence/rt-dl-chain-review.json",
+      "evidence/cpupri-active-check.json",
+      "evidence/proxy-move-owner-check.json",
+      "SECURITY.md: RT and deadline chain balancing"
+    ]
+  },
+  {
+    "commit": "425a7a9092197f68deb63839268a0a0cb142a6b0",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Both complete patch paths read and compared with native LTS 6a1a15d86ba6. Preserve removal of proxy_tag_curr and all calls; preserve class selection excluding execution current. ACK DL iterator fix assigns result only after a pushable candidate is found, returning NULL when all fail. Final chain-aware predicate additionally preserves native 755476d7ba92 migrate-disabled exclusion rather than replaying old weaker pickers. Do not reintroduce the historical dequeue/enqueue tagging workaround.",
+    "evidence": [
+      "evidence/rt-dl-chain-review.json",
+      "evidence/cpupri-active-check.json",
+      "evidence/proxy-move-owner-check.json",
+      "SECURITY.md: RT and deadline chain balancing"
+    ]
+  },
+  {
+    "commit": "f69f23fd1d9faae2acb5cac96d096d3dc7dcb9a5",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Full one-line fix retained: find_later_rq rejects NULL execution context before affinity and task_rq/cpudl access. Call sites inspected: normal select passes p/p, locked balancing checks find_exec_ctx before calling. Keep defensive check even with checked current callers; no need to reproduce the intermediate NULL-dereference implementation.",
+    "evidence": [
+      "evidence/rt-dl-chain-review.json",
+      "evidence/cpupri-active-check.json",
+      "evidence/proxy-move-owner-check.json",
+      "SECURITY.md: RT and deadline chain balancing"
+    ]
+  },
+  {
+    "commit": "b3f7a4b32906759d37e166af3e6abae3ffe3ab4e",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Full fix retained in check_preempt_equal_dl: return on missing execution context before passing it to cpudl_find. cpudl_find requires a real execution-task affinity mask. RT cpupri has a distinct intentional NULL-context path, so do not copy its permissiveness into DL.",
+    "evidence": [
+      "evidence/rt-dl-chain-review.json",
+      "evidence/cpupri-active-check.json",
+      "evidence/proxy-move-owner-check.json",
+      "SECURITY.md: RT and deadline chain balancing"
+    ]
+  },
+  {
+    "commit": "a1c52c8593af327ca9be8158adc83d047aab9e77",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Full one-line alias cleanup retained with 32768749ab17 and 64035f9bde7f. The throttle test still reads exactly p->dl.dl_throttled via dl_se; no altered admission, replenishment or authorization behavior.",
+    "evidence": [
+      "evidence/rt-dl-chain-review.json",
+      "evidence/cpupri-active-check.json",
+      "evidence/proxy-move-owner-check.json",
+      "SECURITY.md: RT and deadline chain balancing"
+    ]
+  },
+  {
+    "commit": "8f5c988d396a23232b5f976b7821f59ffd6464e5",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Both paths read. Keep the current two-context restricted find_lowest_rq hook signature and matching call/export. Callback must tolerate NULL exec_ctx and distinguish donor priority from owner affinity. lowest_cpu starts -1; nonnegative override is trusted and may bypass native filtering, so this is not validation of arbitrary callback output. Exact SDK callback registration unconfirmed; retain generic vendor source customization, not historical module binaries.",
+    "evidence": [
+      "evidence/rt-dl-chain-review.json",
+      "evidence/cpupri-active-check.json",
+      "evidence/proxy-move-owner-check.json",
+      "SECURITY.md: RT and deadline chain balancing"
+    ]
+  },
+  {
+    "commit": "d202b97297c3520cf82bfadcd9141b5360ab69cd",
+    "disposition": "merge-resolution-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Complete remerge patch has one syscalls.c hunk. Preserve native __setscheduler_dl_pi before the Android setscheduler hook, after policy/class/priority update within sched_change. Whole native helper equals LTS 0638bf16b7a7, inheriting donor DL parameters and ENQUEUE_REPLENISH on deboost to prevent bandwidth corruption. Merge resolution retains both functions in the correct order; hook still requires trusted callbacks not to undo native state.",
+    "evidence": [
+      "evidence/rt-dl-chain-review.json",
+      "evidence/cpupri-active-check.json",
+      "evidence/proxy-move-owner-check.json",
+      "SECURITY.md: RT and deadline chain balancing"
+    ]
+  },
+  {
+    "commit": "3a9495889492ae5132ea995723bf5ed6b045d8fa",
+    "disposition": "superseded",
+    "result_commits": [],
+    "rationale": "All three paths read with explicit a8d9faf6f6d1 revert and 0a7537e20fc2 reapplication. Original sync wake policy is represented by the later implementation; do not replay its obsolete 0x80 enqueue flag, now colliding with native ENQUEUE_INITIAL. Final behavior and safety adaptation are assigned to the reapplication.",
+    "evidence": [
+      "evidence/sync-wakeup-review.json",
+      "evidence/sync-enqueue-flag-check.json",
+      "SECURITY.md: Synchronous wakeup flag separation"
+    ]
+  },
+  {
+    "commit": "a8d9faf6f6d1168ea754173dde90922b8774bf1f",
+    "disposition": "superseded",
+    "result_commits": [],
+    "rationale": "All three removal paths read. This was a temporary rebase revert explicitly restored by 0a7537e20fc2. Retain final Android RT sync behavior with distinct enqueue bit; neither the temporary deletion nor its old placement is needed as an additional source transformation.",
+    "evidence": [
+      "evidence/sync-wakeup-review.json",
+      "evidence/sync-enqueue-flag-check.json",
+      "SECURITY.md: Synchronous wakeup flag separation"
+    ]
+  },
+  {
+    "commit": "0a7537e20fc27eb8bcfe89229832b8183585fdfa",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "b1cd2b2b27929af030c47d1803ffc903742fbfac"
+    ],
+    "rationale": "All three paths read. Retain WF_SYNC propagation into enqueue flags, SMP RT-waker/priority/count predicate, same-CPU affinity-checked selection and suppression of push-list insertion for an honored sync wake. Positive compiled paths include C Binder and epoll sync wake calls; exact SDK RT traffic and measured benefit are unverified. Assign ENQUEUE_WAKEUP_SYNC=0x1000 in b1cd2b2b2792 rather than ACK 0x80, which aliases native ENQUEUE_INITIAL. This preserves native fair initial-only half-slice placement and prevents initial RT enqueue from masquerading as sync. No historical binary flag compatibility required.",
+    "evidence": [
+      "evidence/sync-wakeup-review.json",
+      "evidence/sync-enqueue-flag-check.json",
+      "SECURITY.md: Synchronous wakeup flag separation"
+    ]
+  },
+  {
+    "commit": "1c65ab695e14c98b52300c01f6c97d8a955a049c",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All three paths read. Retain initialized-true restricted honor hook, declaration and GPL export. A false value vetoes the optimization; true still requires sync, actual execution current RT policy, priority ordering and <=2 RT tasks. Thus it cannot force honoring a hint through the boolean alone when those predicates fail. Called in selection and enqueue with their respective contexts; exact SDK registration unconfirmed, preserve vendor source control.",
+    "evidence": [
+      "evidence/sync-wakeup-review.json",
+      "evidence/sync-enqueue-flag-check.json",
+      "SECURITY.md: Synchronous wakeup flag separation"
+    ]
+  },
+  {
+    "commit": "2d7833d168dd1c7bca8c7caa9e2a7d227b54ea6e",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All three paths read. Keep wake-flag customization immediately after WF_TTWU is set, under preemption disable but before current-task special case and pi_lock acquisition. Parameter state is passed by value; flags are mutable. Trusted callback may add sync/custom hints, but must preserve required internal flag semantics and must not assume task/rq locks or sleep. No userspace callback registration path is added; exact SDK consumer unconfirmed.",
+    "evidence": [
+      "evidence/sync-wakeup-review.json",
+      "evidence/sync-enqueue-flag-check.json",
+      "SECURITY.md: Synchronous wakeup flag separation"
+    ]
+  },
+  {
+    "commit": "3395cf170da074b9444c07db34249d6bf3303f59",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Both paths read. Keep WF_ANDROID_VENDOR=0x1000 as a distinct WAKE flag and permit it in default_wake_function warning mask, alongside native WF_SYNC/WF_CURRENT_CPU. This warning is diagnostic, not authorization or enforcement. Final set_wake_flags/socket hooks were separately traced in wake-queue-history-review.json; no native algorithm interprets the vendor bit itself. WAKE and ENQUEUE domains are distinct despite the new enqueue bit using the same number. No historical raw-bit binary compatibility is preserved.",
+    "evidence": [
+      "evidence/sync-wakeup-review.json",
+      "evidence/sync-enqueue-flag-check.json",
+      "SECURITY.md: Synchronous wakeup flag separation"
+    ]
+  },
+  {
+    "commit": "bf3d991a7daad265d3c57f95b1f3d8749636bc74",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All three paths read. Keep ordinary throttle diagnostic hook, current GPL export in kernel/sched/vendor_hooks.c and declaration; generated disabled-hook handling supersedes old manual stubs. The site follows native rt_throttled=1, passes only values and cannot veto through its arguments. Whole routine is native plus notification. CONFIG_RT_GROUP_SCHED=n in the SDK configuration means this site is not compiled or exercised; retain generic Android configuration/source hook compatibility without enabling RT groups or adding hardware support. Exact SDK callback unconfirmed; no performance or data-access claim.",
+    "evidence": [
+      "evidence/rt-hook-review.json",
+      "SECURITY.md: RT balancing and diagnostic hooks"
+    ]
+  },
+  {
+    "commit": "ebce8ec6bd55eb0df223cdacc77c3aa71bcf9149",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Both paths read. Keep hook after mask allocation/pinned-affinity checks and cpupri search, with output CPU initialized -1 and ret supplied. Later 8f5c988d396a adds execution context, preserving current signature. ret=0 does not guarantee a freshly valid candidate mask; callbacks must honor status. Nonnegative override is trusted, not checked for membership/active status. This preserves source customization with native default selection and the separately adapted active filter.",
+    "evidence": [
+      "evidence/rt-hook-review.json",
+      "SECURITY.md: RT balancing and diagnostic hooks"
+    ]
+  },
+  {
+    "commit": "1085eff98a250217c9c475ba8b08bf2e1f59794c",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All four paths read. Keep initialized-zero RT-balance replacement hook and GPL pushable-picker export/prototype, relocated current registry. Hook is called after rq_unpin_lock, which does not unlock the rq; a callback that drops it must restore it. Nonzero done suppresses native pull and assumes callback supplied required policy. Whole balance_rt is native LTS plus the hook; retain fef4b8f17e1c fresh donor and no reuse after lock drops. Exported picker uses reviewed chain-aware predicate and native migration-disabled exclusions. Exact SDK callback unconfirmed; generic source API retained.",
+    "evidence": [
+      "evidence/rt-hook-review.json",
+      "SECURITY.md: RT balancing and diagnostic hooks"
+    ]
+  },
+  {
+    "commit": "1347ec535a19feeac64db01def8d9b428f2d08fd",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All three paths read. Retain restricted RT push-IPI candidate hook, declaration and GPL export. Whole rto_next_cpu is LTS plus callback; native 52aeb1e07ec2 skips current CPU after callback, and acquire/iteration bookkeeping remains. Caller holds rd->rto_lock and may be hardirq; callback must preserve legal CPU/end-of-iteration values and progress. Historical CPU Pause motivation is not the current generic interface scope; removed common pause code remains omitted. Actual SDK registration unconfirmed, not proof of no vendor need.",
+    "evidence": [
+      "evidence/rt-hook-review.json",
+      "SECURITY.md: RT balancing and diagnostic hooks"
+    ]
+  },
+  {
+    "commit": "fa3848486d034d40020cf217c44038f4d8cda7f0",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6ca282d8ee2cfa209f8fea97e0402419bdffcf56"
+    ],
+    "rationale": "All three paths read. Keep ordinary DL-server diagnostic hook and GPL export after successful server pick and rq->dl_server assignment. It is not restricted to activation and may run on repeated selections. Preserve RETRY_TASK early return before hooks/assignment, introduced in 6ca282d8ee2c; NULL/skipped picks stop/retry without dump. Task/server pointers are borrowed under scheduler context, not ownership transfers. Exact SDK observer unconfirmed; retain generic diagnostics.",
+    "evidence": [
+      "evidence/scheduler-hook-plumbing-review.json",
+      "evidence/dl-server-skip-check.json",
+      "SECURITY.md: Scheduler hook lifetime and instantiation"
+    ]
+  },
+  {
+    "commit": "c8ad4b45772b913cdd0b0993bad22720b74cdbab",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6ca282d8ee2cfa209f8fea97e0402419bdffcf56",
+      "dcef94ed034d124ddb857f63f3e6544f0c0970ce"
+    ],
+    "rationale": "All four paths read. Keep initialized fair-server start policy and DL-server skip hook. Default start follows native empty-to-nonempty transition; callback may force/suppress the service, deliberately affecting starvation protection. Reset skip per server candidate in dcef94ed034d: the ACK function-wide variable retained a prior veto across goto again, unintentionally suppressing later fair/ext servers. Preserve RETRY_TASK before hooks/assignment and NULL result handling. Hooks remain trusted policy; no default server/bandwidth code is removed.",
+    "evidence": [
+      "evidence/scheduler-hook-plumbing-review.json",
+      "evidence/dl-server-skip-check.json",
+      "SECURITY.md: Scheduler hook lifetime and instantiation"
+    ]
+  },
+  {
+    "commit": "24d20c9118a44adf58602d60854afb37795a4657",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All four paths read. Retain TRACE_INCLUDE_PATH undef after hook includes in cputime/rt/syscalls and CREATE_TRACE_POINTS undef after sched_ext event definition. Current build_policy.c compiles these sources together and SCHED_CLASS_EXT=y; macro leakage otherwise selects wrong headers or duplicate definitions. This is functional build integration, not historical KMI maintenance. Existing successful builds compile this arrangement.",
+    "evidence": [
+      "evidence/scheduler-hook-plumbing-review.json",
+      "evidence/dl-server-skip-check.json",
+      "SECURITY.md: Scheduler hook lifetime and instantiation"
+    ]
+  },
+  {
+    "commit": "5f657b04f4f26ef44e4470ac9be42bff0f06a525",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All six paths read. Keep separate scheduler vendor_hooks.o and its internal includes, create-tracepoint declaration and current GPL registry; core includes cgroup hook declarations. These instantiate live source APIs, despite the historical ABI-metadata motivation. Of 44 relocated exports, 39 remain under the same names, two are renamed and three explicitly removed later; exact mapping recorded. Cgroup hooks remain in cgroup.h/global registry with later can_attach removal. Do not restore obsolete declarations/duplicate registry entries or freeze CRC/layout artifacts.",
+    "evidence": [
+      "evidence/scheduler-hook-plumbing-review.json",
+      "evidence/dl-server-skip-check.json",
+      "SECURITY.md: Scheduler hook lifetime and instantiation"
+    ]
+  },
+  {
+    "commit": "8312ce4c615fc07f6b205c1cb140eeef1bb9b34b",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All three paths read. Keep find_busiest_group hook rename to sched_balance_find_src_group with matching call and GPL export. Current hook still defaults out_balance=1 and influences the EAS/non-overutilized balancing shortcut. This is source-name alignment; old binary event-name alias is not retained. Native current grouping and later safeguards remain; exact SDK callback unconfirmed.",
+    "evidence": [
+      "evidence/scheduler-hook-plumbing-review.json",
+      "evidence/dl-server-skip-check.json",
+      "SECURITY.md: Scheduler hook lifetime and instantiation"
+    ]
+  },
+  {
+    "commit": "77759c22e5fe49782675d49a3a79659fe60602e4",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All three paths read. Keep current check_preempt_wakeup_fair hook signature without obsolete next-buddy/granularity arguments, initialized preempt=false/ignore=false, and call after update_curr. Whole current function is LTS plus these controls. Preempt takes precedence over ignore when both set, deliberately bypassing native later policy for trusted customization. Without callback native LTS logic, including current slice protection and next-buddy fixes, remains exact.",
+    "evidence": [
+      "evidence/scheduler-hook-plumbing-review.json",
+      "evidence/dl-server-skip-check.json",
+      "SECURITY.md: Scheduler hook lifetime and instantiation"
+    ]
+  },
+  {
+    "commit": "5d1a9a9aa581facb9002b45862ae44c5f962f351",
+    "disposition": "superseded",
+    "result_commits": [],
+    "rationale": "All three removal paths read. The old early check_preempt_wakeup_ignore hook is explicitly deleted and absent from final ACK/LTS/port; its remaining ignore policy is supplied by the later combined fair wakeup hook. Preserve that current interface and native early exits instead of recreating the historical early override.",
+    "evidence": [
+      "evidence/scheduler-hook-plumbing-review.json",
+      "evidence/dl-server-skip-check.json",
+      "SECURITY.md: Scheduler hook lifetime and instantiation"
+    ]
+  },
+  {
+    "commit": "1fcd7476b52f2ee7bb7b9cd45ff6a829237b3dda",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "All three revert paths read. Removed cpu_cgroup_can_attach callback/declaration/export remain absent in final ACK/LTS/port. Whole current cpu_cgroup_can_attach equals LTS, retaining RT admission and SCX attach validation. Other cgroup attach/online notifications remain separate source APIs; do not reintroduce this explicitly reverted return-code override.",
+    "evidence": [
+      "evidence/scheduler-hook-plumbing-review.json",
+      "evidence/dl-server-skip-check.json",
+      "SECURITY.md: Scheduler hook lifetime and instantiation"
+    ]
+  },
+  {
+    "commit": "034ddf86f70f5acc3c8191246a8724b7c418693f",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "All three revert paths read. Historical update_cpus_allowed hook, wrapper and export are explicitly removed in ACK and absent in native LTS/current. Current cpuset code retains native affinity setters with its separately reviewed generic hooks; do not recreate this old cpus_requested override. Removal is established by the explicit revert and final trees, not by failure to find a consumer.",
+    "evidence": [
+      "evidence/scheduler-hook-plumbing-review.json",
+      "evidence/dl-server-skip-check.json",
+      "SECURITY.md: Scheduler hook lifetime and instantiation"
+    ]
+  },
+  {
+    "commit": "db4307c8667c5df5ab809c4082d84bfb2f2c921a",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All three paths read. Retain initialized-zero ordinary hook in __resched_curr and matching GPL export. Without callback the entire function is native. Despite lazy naming it can suppress ANY new reschedule request, including immediate requests and idle-task wakeups after lazy-to-immediate conversion; it does not set a lazy flag instead. Existing pending requests are checked before the hook. Trusted callback must preserve mandatory preemption/IPI behavior. Exact SDK registration unconfirmed; retain generic Android source policy interface, not a claim of bounded deferral.",
+    "evidence": [
+      "evidence/scheduler-deferral-hooks-review.json",
+      "SECURITY.md: Scheduler deferral hooks and unimplemented bounds"
+    ]
+  },
+  {
+    "commit": "db8b198e6542009dd13e909ccca05eaaf60acced",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All three paths read. Retain initialized-false ordinary hook before native __resched_curr in resched_curr_lazy. True suppresses the request rather than changing its TIF bit. With no callback native get_lazy_tif_bit and local/remote rescheduling remain. Although commit motivation names arm64 overhead, this is architecture-independent source customization on the configured scheduler, not a new arm64 platform dependency. Exact SDK callback unconfirmed; no measured latency or throughput benefit.",
+    "evidence": [
+      "evidence/scheduler-deferral-hooks-review.json",
+      "SECURITY.md: Scheduler deferral hooks and unimplemented bounds"
+    ]
+  },
+  {
+    "commit": "6716c91bc4a9ee8f791bf3f4978005562183a0aa",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All five paths read. Retain schedule-entry skip hook and fork/exit notifications as generic Android vendor source interfaces. Title/message claim bounded CFS hint deferral, but actual core adds only callbacks: no timer, cap, task-class check or SM_PREEMPT-only gate. __schedule invokes it for voluntary blocking too, after schedule_debug and before hrtick clear/IRQ disable/rq lock. A callback must implement all eligibility/bounds and must not bypass required blocking. Fork notification is at successful copy_process tail; exit follows seccomp release before accounting. No framework hint implementation was established in scoped SDK sources. Default false preserves all subsequent native scheduling; do not advertise an implemented bounded policy.",
+    "evidence": [
+      "evidence/scheduler-deferral-hooks-review.json",
+      "SECURITY.md: Scheduler deferral hooks and unimplemented bounds"
+    ]
+  },
+  {
+    "commit": "f39f3ac200dbb48deddc521a2c5014c5f263fe41",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "8771c5fb4ae85a547ef9ccb03a1f5210c7de997c"
+    ],
+    "rationale": "All three paths read. Retain all five priority/fork interface families at their current sites, including migrated syscalls.c and scheduler-owned GPL registry. Prepare-fork follows copying normal_prio; finish-fork follows class selection and runnable-average init. Native reset-on-fork and deadline rejection remain. rtmutex preparation precedes rq acquisition and effective priority calculation. Nice evolved through 4e77/039b/29ab; do not restore historical prototypes or unchecked bypass. setscheduler notification now follows native DL PI setup inside sched_change. Generic Android source customization, with actual SDK hook registration unresolved.",
+    "evidence": [
+      "evidence/priority-hooks-review.json",
+      "evidence/nice-hook-bounds-check.json",
+      "SECURITY.md: Priority hooks and nice-value bounds"
+    ]
+  },
+  {
+    "commit": "4e77c99cd7bf3a038b0143e962985d0ba508ae2a",
+    "disposition": "superseded",
+    "result_commits": [],
+    "rationale": "Both paths read. Historical unlocked nice hook with allowed=false could override both unchanged-value and invalid-range rejection. The 039b locked-veto design and 29ab unlocked observation/customization replace this contract. Final unlocked hook has no allowed argument and is followed by native bounds check; locked hook defaults allowed=true and is revalidated in 8771c5fb4ae8. Do not resurrect invalid-range bypass or a historical source/binary signature.",
+    "evidence": [
+      "evidence/priority-hooks-review.json",
+      "evidence/nice-hook-bounds-check.json",
+      "SECURITY.md: Priority hooks and nice-value bounds"
+    ]
+  },
+  {
+    "commit": "039b2e0a925dc3c977729c175f6cd0e52b28aa12",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "8771c5fb4ae85a547ef9ccb03a1f5210c7de997c"
+    ],
+    "rationale": "All three paths read. Keep rq-locked nice customization and default-true veto, plus later reintroduced unlocked hook. Native CLASS(task_rq_lock) releases the lock on early veto. Adapt with 8771c5fb4ae8: re-check MIN_NICE/MAX_NICE after the locked callback, before any static_prio write or scheduler weight access. Without this, a faulty callback can bypass native bounds and index outside 40-entry weight tables; RT/DL static priority is also protected. Valid changes and allowed=false behavior remain; no sensible valid-nice policy depends on out-of-range results.",
+    "evidence": [
+      "evidence/priority-hooks-review.json",
+      "evidence/nice-hook-bounds-check.json",
+      "SECURITY.md: Priority hooks and nice-value bounds"
+    ]
+  },
+  {
+    "commit": "29ab5891f82b33123e5f97438bfc30b4acf52ecc",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All three paths read. Retain two-argument unlocked hook before unchanged/range rejection so it observes even equal requests and may replace the requested value. It does not restore the obsolete allowed argument. Native range check follows it, then rq-locked hook and new range revalidation. Scoped GrapheneOS code positively uses nice/scheduler syscalls, while exact vendor callback is unresolved. Callback must handle this unlocked task context and maintain its own policy consistency.",
+    "evidence": [
+      "evidence/priority-hooks-review.json",
+      "evidence/nice-hook-bounds-check.json",
+      "SECURITY.md: Priority hooks and nice-value bounds"
+    ]
+  },
+  {
+    "commit": "bcc907fa42af8ac4c57def8fa0b99205ca16b541",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All three paths read. Keep restricted GPL priority-change notification after class/prio assignment in rt_mutex_setprio and before check_class_changing, inside native sched_change. Native effective-priority, idle, deadline PI and enqueue/dequeue protocol remain; local comparison equals LTS after removing explicitly listed hooks. Callback receives mutable task and can break class/priority or PI invariants if faulty. No claim that cited Pixel latency measurements apply to SDK; generic source compatibility is the retention reason.",
+    "evidence": [
+      "evidence/priority-hooks-review.json",
+      "evidence/nice-hook-bounds-check.json",
+      "SECURITY.md: Priority hooks and nice-value bounds"
+    ]
+  },
+  {
+    "commit": "d5ac0297416c24d7fbb36a06c4d40724352ef720",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All three paths read. Preserve ordinary GPL uclamp notifications at final syscalls.c sites, restored by d4acab after upstream file split. Emit only after explicit min/max value assignment, not for -1 reset/default paths. Entire __setscheduler_uclamp is native plus these two value notifications; native user validation and clamp accounting remain. Task pointer is borrowed under rq serialization; callback must not block or mutate clamp state inconsistently.",
+    "evidence": [
+      "evidence/priority-hooks-review.json",
+      "evidence/nice-hook-bounds-check.json",
+      "SECURITY.md: Priority hooks and nice-value bounds"
+    ]
+  },
+  {
+    "commit": "c0704a1fc89df688230aafdd30fa294495286228",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All three paths read. Retain restricted do_sched_yield callback after native donor-class yield and before rq unlock/preemption-enable/schedule. Default has no replacement output and does not itself guarantee another task will run. Current separate before-yield override and optional class method guard are independently retained; this callback is neither a new userspace privilege nor a fairness guarantee. Source declaration/export and restored syscalls.c site agree.",
+    "evidence": [
+      "evidence/priority-hooks-review.json",
+      "evidence/nice-hook-bounds-check.json",
+      "SECURITY.md: Priority hooks and nice-value bounds"
+    ]
+  },
+  {
+    "commit": "d4acab4311c34643c7da69f8899b46599b67a98e",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Entire single-file patch read. Preserve restored yield and uclamp call sites after native core/syscalls split. Current trace include is preceded by TRACE_INCLUDE_PATH undef from separately audited plumbing. Restore notifications without undoing native donor scheduling, scoped sched_change guards, uclamp validation, or current syscall file organization.",
+    "evidence": [
+      "evidence/priority-hooks-review.json",
+      "evidence/nice-hook-bounds-check.json",
+      "SECURITY.md: Priority hooks and nice-value bounds"
+    ]
+  },
+  {
+    "commit": "dff64b64355734b61e55d60b5717274b39c0e040",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Entire single-file patch read. Preserve restored setscheduler notification in syscalls.c, adapted after __setscheduler_dl_pi inside native sched_change. Native capability/ownership/LSM, policy, deadline bandwidth, cpuset serialization and clamp checks still precede the callback. It runs only when KEEP_PARAMS is absent. The DL-PI-before-hook ordering was also examined in merge d202b97297c3; no historical pre-LTS scheduler implementation is restored.",
+    "evidence": [
+      "evidence/priority-hooks-review.json",
+      "evidence/nice-hook-bounds-check.json",
+      "SECURITY.md: Priority hooks and nice-value bounds"
+    ]
+  },
+  {
+    "commit": "06881e01b564a89c001add7a865b212355837a2a",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All four paths read. Historical sugov-thread sched_attr callback was explicitly removed by f4b102e1e488 and remains absent in final ACK/port; retain native deadline worker policy and error/lifetime handling. Its I/O-wait customization is represented by the final rq-aware reintroduction b396daac7e51, not the original two-argument hook. Preserve configured Android vendor source interface without resurrecting a removed worker-policy override.",
+    "evidence": [
+      "evidence/sugov-hooks-review.json",
+      "SECURITY.md: Schedutil hook history and policy obligations"
+    ]
+  },
+  {
+    "commit": "846bf8e8cb39243bd02545ebc3a13a692f31a3c1",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "All three paths read with complete inverse 592bea2ef052. Final ACK/port have no android_rvh_set_sugov_update declaration, export or call; current entire sugov_update_next_freq equals pinned LTS, including need_freq_update reset and CPUFREQ_NEED_UPDATE_LIMITS behavior. Original vendor skip hook is not revived; later map-util callback is a distinct retained interface.",
+    "evidence": [
+      "evidence/sugov-hooks-review.json",
+      "SECURITY.md: Schedutil hook history and policy obligations"
+    ]
+  },
+  {
+    "commit": "a2d89d4f3a370e6f743c77ae41ecd167b21c46cf",
+    "disposition": "superseded",
+    "result_commits": [],
+    "rationale": "All three paths read with inverse 69209b7f82af and reintroduction dcf51616546f/extension 2ee0efa54cf5. Preserve the final map-util hook contract and current LTS get_capacity_ref_freq, not historical frequency-reference/margin calculations or four-argument signature.",
+    "evidence": [
+      "evidence/sugov-hooks-review.json",
+      "SECURITY.md: Schedutil hook history and policy obligations"
+    ]
+  },
+  {
+    "commit": "69209b7f82af93951996a6605d28d39d80c04d44",
+    "disposition": "superseded",
+    "result_commits": [],
+    "rationale": "All three removal paths read. This merge-preparation revert was superseded by explicit later reintroduction dcf51616546f. Do not interpret the temporary deletion as current ACK policy or remove the final six-argument source interface.",
+    "evidence": [
+      "evidence/sugov-hooks-review.json",
+      "SECURITY.md: Schedutil hook history and policy obligations"
+    ]
+  },
+  {
+    "commit": "592bea2ef052c02acb45cf3fb230291621a2fd80",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All three paths read. Retain explicit removal of set_sugov_update, with native whole update function and no residual registry/declaration. This patch also removed the I/O-wait export; that part is superseded by b396daac7e51 which restores complete rq-aware I/O-wait declaration/site/export. Final effective code, not raw inverse application, controls the decision.",
+    "evidence": [
+      "evidence/sugov-hooks-review.json",
+      "SECURITY.md: Schedutil hook history and policy obligations"
+    ]
+  },
+  {
+    "commit": "f4b102e1e4886ccc2107330db0de523561fcec39",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All four removal paths read. Keep removal of sugov worker-attribute callback; whole current sugov_kthread_create is native. I/O-wait removal is superseded by b396daac7e51 and generic trace include is again needed for map-util. Do not roll back current hooks merely to reproduce this temporary merge-preparation patch.",
+    "evidence": [
+      "evidence/sugov-hooks-review.json",
+      "SECURITY.md: Schedutil hook history and policy obligations"
+    ]
+  },
+  {
+    "commit": "dcf51616546f2c129edbef71ce338cf25ea7cdd0",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All three paths read. Keep map-util frequency callback and GPL export with initialized-zero replacement: zero falls through to native mapping. Current whole cpufreq_schedutil.c equals LTS after removing include/local variable/callback selection additions. Native reference-frequency, raw cache, resolve_freq, worker and limits/barrier logic remain. SDK config selects schedutil with generic/dummy cpufreq; actual callback registration and physical power savings are unverified.",
+    "evidence": [
+      "evidence/sugov-hooks-review.json",
+      "SECURITY.md: Schedutil hook history and policy obligations"
+    ]
+  },
+  {
+    "commit": "2ee0efa54cf5e3cfbec88b9596b2761c218b9d52",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Both paths read. Keep final policy pointer and need_freq_update pointer so Android source callbacks can customize frequency-policy updates. This deliberately permits trusted callback changes to forced-update state: clearing a native limits-change request combined with equal cached raw frequency can return previous next_freq without re-resolution. Retention prioritizes the requested vendor policy interface; callback must preserve frequency/thermal limits and update obligations. No unconditional claim of native limit enforcement under arbitrary callbacks. Native body and memory barriers are otherwise retained.",
+    "evidence": [
+      "evidence/sugov-hooks-review.json",
+      "SECURITY.md: Schedutil hook history and policy obligations"
+    ]
+  },
+  {
+    "commit": "33c994022015a4a02a15ab6d68523d2617bcf7b7",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Both paths read. Current reintroduced I/O-wait hook has the added rq argument at declaration, call and GPL export. It receives the enqueue destination rq under scheduler serialization; no historical two-argument binary/source signature is preserved. Later temporary deletion and explicit reintroduction were examined.",
+    "evidence": [
+      "evidence/sugov-hooks-review.json",
+      "SECURITY.md: Schedutil hook history and policy obligations"
+    ]
+  },
+  {
+    "commit": "b396daac7e51949892ec9e89d25502a70194e388",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All three paths read. Keep reintroduced restricted rq-aware I/O-wait callback, initialized from p->in_iowait, before cpufreq_update_util with SCHED_CPUFREQ_IOWAIT. Native throttled/delayed enqueue early exits still precede this site. Callback can force/suppress boost without changing p->in_iowait or I/O accounting. Exact SDK policy unknown; no claim of measured big-core savings in this virtual CPU target. Retain generic configured Android runtime customization, without adding physical platform support.",
+    "evidence": [
+      "evidence/sugov-hooks-review.json",
+      "SECURITY.md: Schedutil hook history and policy obligations"
     ]
   }
 ]

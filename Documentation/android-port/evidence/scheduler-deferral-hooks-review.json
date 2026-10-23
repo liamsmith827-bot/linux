@@ -1,0 +1,80 @@
+{
+  "source_head": "dcef94ed034d124ddb857f63f3e6544f0c0970ce",
+  "records": [
+    {
+      "commit": "db4307c8667c5df5ab809c4082d84bfb2f2c921a",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three paths read. Retain initialized-zero ordinary hook in __resched_curr and matching GPL export. Without callback the entire function is native. Despite lazy naming it can suppress ANY new reschedule request, including immediate requests and idle-task wakeups after lazy-to-immediate conversion; it does not set a lazy flag instead. Existing pending requests are checked before the hook. Trusted callback must preserve mandatory preemption/IPI behavior. Exact SDK registration unconfirmed; retain generic Android source policy interface, not a claim of bounded deferral.",
+      "evidence": [
+        "evidence/scheduler-deferral-hooks-review.json",
+        "SECURITY.md: Scheduler deferral hooks and unimplemented bounds"
+      ],
+      "patch_sha256": "58f1938f5d1d0f1f4c5d59b6fe84b811dcbb4a502a8567c618e50f12851f60b0"
+    },
+    {
+      "commit": "db8b198e6542009dd13e909ccca05eaaf60acced",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three paths read. Retain initialized-false ordinary hook before native __resched_curr in resched_curr_lazy. True suppresses the request rather than changing its TIF bit. With no callback native get_lazy_tif_bit and local/remote rescheduling remain. Although commit motivation names arm64 overhead, this is architecture-independent source customization on the configured scheduler, not a new arm64 platform dependency. Exact SDK callback unconfirmed; no measured latency or throughput benefit.",
+      "evidence": [
+        "evidence/scheduler-deferral-hooks-review.json",
+        "SECURITY.md: Scheduler deferral hooks and unimplemented bounds"
+      ],
+      "patch_sha256": "c2b760e2889f214b2d1296c762950691113d39bc75b8d458da5e070bc5a61c17"
+    },
+    {
+      "commit": "6716c91bc4a9ee8f791bf3f4978005562183a0aa",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All five paths read. Retain schedule-entry skip hook and fork/exit notifications as generic Android vendor source interfaces. Title/message claim bounded CFS hint deferral, but actual core adds only callbacks: no timer, cap, task-class check or SM_PREEMPT-only gate. __schedule invokes it for voluntary blocking too, after schedule_debug and before hrtick clear/IRQ disable/rq lock. A callback must implement all eligibility/bounds and must not bypass required blocking. Fork notification is at successful copy_process tail; exit follows seccomp release before accounting. No framework hint implementation was established in scoped SDK sources. Default false preserves all subsequent native scheduling; do not advertise an implemented bounded policy.",
+      "evidence": [
+        "evidence/scheduler-deferral-hooks-review.json",
+        "SECURITY.md: Scheduler deferral hooks and unimplemented bounds"
+      ],
+      "patch_sha256": "71b9847983a0ae7ac0f4748143b1c3a2b7b3685be2d3b85115c9a55ada37d2b2"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/sched/core.c",
+      "function": "__resched_curr",
+      "sha256": "39a9f500526ce5876b4f1b33e54728247f9b014c5429e20c41d1070c71c82807",
+      "relationship": "whole native function plus initialized suppression hook; not restricted to lazy requests"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "resched_curr_lazy",
+      "sha256": "1a2b30fa4986f961f1bda263162689c48a2cc1fd6e34b872954be8be2123ff24",
+      "relationship": "whole native function plus initialized suppression hook"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "get_lazy_tif_bit",
+      "sha256": "fcb918a3836a8af49215c8057f99293a6ef9131083cdbeb2f897ce161e932cfb",
+      "relationship": "whole native LTS function; compile-time alternatives unchanged"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "dynamic_preempt_lazy",
+      "sha256": "0d254f298c7d7b906d97e14fca3ef421c0baf76ef5f18b49021caec1686717be",
+      "relationship": "whole native LTS function; compile-time alternatives unchanged"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "__schedule",
+      "sha256": "7b715791877117159fb737691ac6c1874b4e47a6a88c242e59dbfb5b588ff998",
+      "relationship": "reviewed initialized hook before rq/IRQ critical section; broad function changes have separate decisions"
+    }
+  ],
+  "security": "These hooks are powerful trusted-kernel policy overrides. Suppression can defeat immediate rescheduling, idle wakeup or required blocking, and can cause starvation, spinning or hangs if callbacks are wrong. No scheduler-enforced timeout or deferral cap is implemented here. Without callbacks all suppression outputs are false/zero and native bodies continue. Retention serves requested Android vendor source compatibility; it is not endorsement of an unverified vendor policy or permission for unprivileged code to register callbacks.",
+  "uncertainty": "Scoped local searches in GrapheneOS system/core, frameworks/base and manifest common-modules found no named hook consumer. The actual framework hint transport, callback bounds and SDK use are unresolved; no-consumer search is not omission proof. Generic interfaces retained conservatively; no future hardware support is added.",
+  "validation": "Full patches, current sites, native-body comparisons and declaration/export checks. No new kernel source changes and no runtime/preemption/latency tests for this batch.",
+  "remote_sources_used": []
+}

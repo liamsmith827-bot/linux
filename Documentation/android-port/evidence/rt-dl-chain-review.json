@@ -1,0 +1,419 @@
+{
+  "source_head": "faad9f616aa9f339512f7123914957a052992a7c",
+  "records": [
+    {
+      "commit": "c621dead3a640a6055afcb80a78a16be3eff3b8b",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "3409f41024900cdfa3107737b015ea59801cd711"
+      ],
+      "rationale": "All six paths read. Keep donor priority/deadline/capacity distinct from execution-task affinity in RT/DL searches. Ordinary wake selection passes the same task twice; proxy selection passes donor and owner. RT supports a NULL execution task for a chain leaving this rq; DL callers reject NULL. Restore native fc09027786c9 active-CPU filtering for BOTH RT mask-producing branches in 3409f4102490. ACK bypassed it for NULL execution context. Preserve whole native CPU-priority update/barrier and deadline heap maintenance functions. Source-level vendor API changes are allowed; no old binary signature compatibility.",
+      "evidence": [
+        "evidence/rt-dl-chain-review.json",
+        "evidence/cpupri-active-check.json",
+        "evidence/proxy-move-owner-check.json",
+        "SECURITY.md: RT and deadline chain balancing"
+      ],
+      "patch_sha256": "87bef1956b4a1ecb3e2b2fd2b035ad8462b44e7b56232c8d8c08c88b7edf19df"
+    },
+    {
+      "commit": "57d50e9d7fc2f224ab09145b7ba2aae530ec798e",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All four paths read. Retain rq-locked execution-chain lookup and queued/rq/queued double-read with barriers. Each owner lookup holds blocked_lock and now uses final typed mutex/rwsem dispatch. Returns NULL for an owner off rq or the selected donor; missing/self owner returns the last task, which may still carry blocked state, not necessarily an unblocked executable task. Nonproxy helper returns p. DL users include later NULL fixes f69f23fd1d9f and b3f7a4b32906; RT lookup deliberately permits NULL. Keep this necessary support for enabled Android proxy balancing; no proof of arbitrary lock-graph termination.",
+      "evidence": [
+        "evidence/rt-dl-chain-review.json",
+        "evidence/cpupri-active-check.json",
+        "evidence/proxy-move-owner-check.json",
+        "SECURITY.md: RT and deadline chain balancing"
+      ],
+      "patch_sha256": "b48e5868196d51b75687ceac19131ec35b2ad9ec93332d25b7e49598b5a821d3"
+    },
+    {
+      "commit": "d8ed16933c9b4a7ce89be7c914e91fc2db06d835",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three paths read. Retain extracted RT/DL revalidation helpers required by the later chain-aware implementations. Nonproxy RT rejects changed class/rq/affinity/on_cpu/migration-disable/queued state and re-picks the push head. Nonproxy DL keeps the native throttled/offline checks plus head re-pick for nonthrottled tasks. Proxy wrappers re-check chain pushability after dropping rq locks. Factoring does not discard native validation; no claim that static comparison validates all concurrent migration interleavings.",
+      "evidence": [
+        "evidence/rt-dl-chain-review.json",
+        "evidence/cpupri-active-check.json",
+        "evidence/proxy-move-owner-check.json",
+        "SECURITY.md: RT and deadline chain balancing"
+      ],
+      "patch_sha256": "c8b050705e537972b7cfcd434eb0aaab185f18890e7eb215d57f6db764298c5e"
+    },
+    {
+      "commit": "f77e294987675cc8ef143bb52667ff0025416d73",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "3409f41024900cdfa3107737b015ea59801cd711",
+        "faad9f616aa9f339512f7123914957a052992a7c"
+      ],
+      "rationale": "All four paths read. Retain chain-level RT/DL balancing, ternary pushability, list scanning and post-unlock retry/abort distinction for enabled Android proxy execution. Preserve LTS 755476d7ba92 by excluding migrate-disabled root and execution tasks, including the nonproxy helper. Keep LTS 6a1a15d86ba6 current-task exclusion and corrected DL iterator. Adapt owner sampling in move_queued_task_locked to hold each task blocked_lock: remote mutex/rwsem unlock writers do not take either rq lock. Release it before migration callbacks; both rq locks remain. Native active-mask safety is extended to NULL-context RT search. Owner chains crossing rq boundaries stop at the boundary and may subsequently migrate back through proxy selection; no bound on repeated recovery or starvation is claimed.",
+      "evidence": [
+        "evidence/rt-dl-chain-review.json",
+        "evidence/cpupri-active-check.json",
+        "evidence/proxy-move-owner-check.json",
+        "SECURITY.md: RT and deadline chain balancing"
+      ],
+      "patch_sha256": "2b0b674428956b9e5901b30b2a2c4d76a300b139351e7a0c31e3b0daf7becdf1"
+    },
+    {
+      "commit": "32768749ab1726effbac253772e179b0d00275e9",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Entire deadline.c patch read. Keep local dl_se/dl_rq aliases used by the subsequent current-entity protection. Enqueue and put-prev otherwise normalize exactly to LTS plus that protection. Aliases do not remove current native boost/deboost handling, replenishment flags, scheduler statistics or migration accounting.",
+      "evidence": [
+        "evidence/rt-dl-chain-review.json",
+        "evidence/cpupri-active-check.json",
+        "evidence/proxy-move-owner-check.json",
+        "SECURITY.md: RT and deadline chain balancing"
+      ],
+      "patch_sha256": "e6f865c82f1fbae3624197e5781e565445a46ae2727b44e9db573c92a9f5186f"
+    },
+    {
+      "commit": "64035f9bde7f9d853426133ee824ed6fa092f344",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Both paths read. Keep live dl_rq->curr state, set before the first=false early return and cleared only after update_curr_dl and load accounting. enqueue_task_dl skips adding this entity to the pushable tree during nested dequeue/enqueue from put-prev. This prevents double insertion of the selected donor while rq->curr runs another task. It is active scheduling state, not a historical ABI reservation. Native per-entity accounting and tree machinery retained; runtime duplicate-enqueue stress not executed.",
+      "evidence": [
+        "evidence/rt-dl-chain-review.json",
+        "evidence/cpupri-active-check.json",
+        "evidence/proxy-move-owner-check.json",
+        "SECURITY.md: RT and deadline chain balancing"
+      ],
+      "patch_sha256": "65d762d13d9d26d5917b7d412efdcaa3b92ec310524c82e1f58eb45924c9414d"
+    },
+    {
+      "commit": "425a7a9092197f68deb63839268a0a0cb142a6b0",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Both complete patch paths read and compared with native LTS 6a1a15d86ba6. Preserve removal of proxy_tag_curr and all calls; preserve class selection excluding execution current. ACK DL iterator fix assigns result only after a pushable candidate is found, returning NULL when all fail. Final chain-aware predicate additionally preserves native 755476d7ba92 migrate-disabled exclusion rather than replaying old weaker pickers. Do not reintroduce the historical dequeue/enqueue tagging workaround.",
+      "evidence": [
+        "evidence/rt-dl-chain-review.json",
+        "evidence/cpupri-active-check.json",
+        "evidence/proxy-move-owner-check.json",
+        "SECURITY.md: RT and deadline chain balancing"
+      ],
+      "patch_sha256": "df757d0896bd0e3eba02f82374720c7305bbc0ec2e236421b0650c31bbb01c7b"
+    },
+    {
+      "commit": "f69f23fd1d9faae2acb5cac96d096d3dc7dcb9a5",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full one-line fix retained: find_later_rq rejects NULL execution context before affinity and task_rq/cpudl access. Call sites inspected: normal select passes p/p, locked balancing checks find_exec_ctx before calling. Keep defensive check even with checked current callers; no need to reproduce the intermediate NULL-dereference implementation.",
+      "evidence": [
+        "evidence/rt-dl-chain-review.json",
+        "evidence/cpupri-active-check.json",
+        "evidence/proxy-move-owner-check.json",
+        "SECURITY.md: RT and deadline chain balancing"
+      ],
+      "patch_sha256": "80ff780104ffe6a8a892b090229c591ad406c265fc1142af46b88712ebc30643"
+    },
+    {
+      "commit": "b3f7a4b32906759d37e166af3e6abae3ffe3ab4e",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full fix retained in check_preempt_equal_dl: return on missing execution context before passing it to cpudl_find. cpudl_find requires a real execution-task affinity mask. RT cpupri has a distinct intentional NULL-context path, so do not copy its permissiveness into DL.",
+      "evidence": [
+        "evidence/rt-dl-chain-review.json",
+        "evidence/cpupri-active-check.json",
+        "evidence/proxy-move-owner-check.json",
+        "SECURITY.md: RT and deadline chain balancing"
+      ],
+      "patch_sha256": "e16541b691a25ca283ed2be51e5e64486a08423517fcae31dc87a9d5828cf198"
+    },
+    {
+      "commit": "a1c52c8593af327ca9be8158adc83d047aab9e77",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full one-line alias cleanup retained with 32768749ab17 and 64035f9bde7f. The throttle test still reads exactly p->dl.dl_throttled via dl_se; no altered admission, replenishment or authorization behavior.",
+      "evidence": [
+        "evidence/rt-dl-chain-review.json",
+        "evidence/cpupri-active-check.json",
+        "evidence/proxy-move-owner-check.json",
+        "SECURITY.md: RT and deadline chain balancing"
+      ],
+      "patch_sha256": "a2aa1c911b108c1f094d57ccf83878f1ae20e7d2b0d86c240a1fda6d28c04acf"
+    },
+    {
+      "commit": "8f5c988d396a23232b5f976b7821f59ffd6464e5",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Both paths read. Keep the current two-context restricted find_lowest_rq hook signature and matching call/export. Callback must tolerate NULL exec_ctx and distinguish donor priority from owner affinity. lowest_cpu starts -1; nonnegative override is trusted and may bypass native filtering, so this is not validation of arbitrary callback output. Exact SDK callback registration unconfirmed; retain generic vendor source customization, not historical module binaries.",
+      "evidence": [
+        "evidence/rt-dl-chain-review.json",
+        "evidence/cpupri-active-check.json",
+        "evidence/proxy-move-owner-check.json",
+        "SECURITY.md: RT and deadline chain balancing"
+      ],
+      "patch_sha256": "230bd286306aa372b82f93decab65c39da7c400c45195077c9ac1b7f44c7fc6a"
+    },
+    {
+      "commit": "d202b97297c3520cf82bfadcd9141b5360ab69cd",
+      "disposition": "merge-resolution-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Complete remerge patch has one syscalls.c hunk. Preserve native __setscheduler_dl_pi before the Android setscheduler hook, after policy/class/priority update within sched_change. Whole native helper equals LTS 0638bf16b7a7, inheriting donor DL parameters and ENQUEUE_REPLENISH on deboost to prevent bandwidth corruption. Merge resolution retains both functions in the correct order; hook still requires trusted callbacks not to undo native state.",
+      "evidence": [
+        "evidence/rt-dl-chain-review.json",
+        "evidence/cpupri-active-check.json",
+        "evidence/proxy-move-owner-check.json",
+        "SECURITY.md: RT and deadline chain balancing"
+      ],
+      "patch_sha256": "b5238c42cb8784e7b127a4db672b3cfeb5b7fe5921f09cff425bb782495f0022"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/sched/core.c",
+      "function": "task_queued_on_rq",
+      "sha256": "5769ed02f00f3fab8d5ce3783834c00e866a3dc407e38725fa5dae631f7bf9aa",
+      "relationship": "whole function equals final ACK after full patch and LTS-delta review"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "find_exec_ctx",
+      "sha256": "bea9574b0cdc5a520db35cf7cbb3c5efd6711c1285258c59c46d8ff13be80bf2",
+      "relationship": "whole function equals final ACK after full patch and LTS-delta review"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "check_preempt_equal_dl",
+      "sha256": "713b66ddaaf46c03fea942c09c0af86bf42919e66ad2280e83eca69aba9ff4e5",
+      "relationship": "whole function equals final ACK after full patch and LTS-delta review"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "find_later_rq",
+      "sha256": "7c238d1e13fa9034aea879db88192c979817169bded6ed18617eb8b6bff19b91",
+      "relationship": "whole function equals final ACK after full patch and LTS-delta review"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "pick_next_pushable_dl_task",
+      "sha256": "5d9d99170282f62890045d2e967a1a1540b9e0468d26a9375f1a5b2984e0d5ec",
+      "relationship": "whole function equals final ACK after full patch and LTS-delta review"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "__dl_revalidate_rq_state",
+      "sha256": "7ad7dd96917e3675552b2bf04968b1cb71f415c59af0a68bb4be31b311efcd85",
+      "relationship": "whole function equals final ACK after full patch and LTS-delta review"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "dl_revalidate_rq_state",
+      "sha256": "d1953f20c45f5879a0d320aac05fba422825bdf9e15186cea17c1869de826eb8",
+      "relationship": "whole function equals final ACK after full patch and LTS-delta review"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "find_lock_later_rq",
+      "sha256": "7b7f365ae13398310bf7425e31edb887a3571d87d9bef3a8859eeca7878eaf12",
+      "relationship": "whole function equals final ACK after full patch and LTS-delta review"
+    },
+    {
+      "path": "kernel/sched/rt.c",
+      "function": "check_preempt_equal_prio",
+      "sha256": "4a798565bf685e585758c70377b649418fd41976041a223dc4fdb8ef7a59b6bb",
+      "relationship": "whole function equals final ACK after full patch and LTS-delta review"
+    },
+    {
+      "path": "kernel/sched/rt.c",
+      "function": "find_lowest_rq",
+      "sha256": "64ad75f3a87b82ed68f3519063ebd4d734fa5164f54a18fb31429f47695343ff",
+      "relationship": "whole function equals final ACK after full patch and LTS-delta review"
+    },
+    {
+      "path": "kernel/sched/rt.c",
+      "function": "pick_next_pushable_task",
+      "sha256": "57151e7680f6e66774a7c35fc8daf41b299a383f12394948e66d9ba855be6230",
+      "relationship": "whole function equals final ACK after full patch and LTS-delta review"
+    },
+    {
+      "path": "kernel/sched/rt.c",
+      "function": "__rt_revalidate_rq_state",
+      "sha256": "a77212302815c676c1c3215fc2ce8f07ff513f29a55bed80aad6aa0af82d3b07",
+      "relationship": "whole function equals final ACK after full patch and LTS-delta review"
+    },
+    {
+      "path": "kernel/sched/rt.c",
+      "function": "rt_revalidate_rq_state",
+      "sha256": "4b4cfd21b8394c351e784efcbade26d4f7076a9d86abb7174706777d848b666b",
+      "relationship": "whole function equals final ACK after full patch and LTS-delta review"
+    },
+    {
+      "path": "kernel/sched/rt.c",
+      "function": "find_lock_lowest_rq",
+      "sha256": "1b8168947dbbf8b4d569ccaa22ff7b758b5e9a6b770793b8d0c0395d90b0eff3",
+      "relationship": "whole function equals final ACK after full patch and LTS-delta review"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "task_is_pushable",
+      "sha256": "6b92bed2428579a02e145dfb9a50cddbf09729fa4a543326d3de6700806b5ec2",
+      "relationship": "ACK plus root and execution-context migration-disabled exclusions preserving LTS 755476d7ba92"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "move_queued_task_locked",
+      "sha256": "c29734d61fd8ca3c6f7460cce418417f6f05fe6f4d1c786c91877c0f9048e367",
+      "relationship": "ACK plus blocked_lock around owner sampling, released before dequeue/enqueue"
+    },
+    {
+      "path": "kernel/sched/cpupri.c",
+      "function": "__cpupri_find",
+      "sha256": "c92da173097300d65b0e47c4376327f0b7b3f1a7a94dc11db2512709a5dd82d1",
+      "relationship": "ACK plus native active CPU filter extended to NULL execution context"
+    },
+    {
+      "path": "kernel/sched/cpupri.c",
+      "function": "cpupri_set",
+      "sha256": "9290b9a0faf254cbd65e333776b4a9514cdd2ae8e7cacf47083c92cda6fa7d17",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/cpupri.c",
+      "function": "cpupri_init",
+      "sha256": "b155eaef2594a84410c6e2721dcfecdb7b244a693643b80d8465adc1dfe2fecc",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/cpupri.c",
+      "function": "cpupri_cleanup",
+      "sha256": "cb6df66d5dbad9f914a30af4cb4fccf91cab69f1a2a70aae501b421d6e311c8f",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/cpudeadline.c",
+      "function": "cpudl_set",
+      "sha256": "4f4cb00d96e3e7512bfa28cf1d1b91e15619f4dd97fb5d17f3bbe14d1bb493b8",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/cpudeadline.c",
+      "function": "cpudl_clear",
+      "sha256": "699036e4d5b94134463d8e9e230b8d568d786f3c4aa136ec29f4282bfad5629a",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/cpudeadline.c",
+      "function": "cpudl_init",
+      "sha256": "2d76be98cb72cf269c9e028ae03e221cfa7c627ec48f2c7253250701b8f4201e",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/cpudeadline.c",
+      "function": "cpudl_cleanup",
+      "sha256": "d970298212b938350483010baa88eeaae869cc5795d37c2261bf42f82739ae70",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "__setscheduler_dl_pi",
+      "sha256": "b5da43c964e4b6799fef57c97b99659164670efac1dc48f35de168d80ad66472",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/rt.c",
+      "function": "rq_online_rt",
+      "sha256": "07f56db30378f69a9ef2144659088478d6974d5a5215b116ce2d4eaa8d49acaa",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/rt.c",
+      "function": "rq_offline_rt",
+      "sha256": "9798ff5bd0466878bd38f4cf717f7a2d0cb34bb4ccf6e6e52d02a34880f273ae",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "enqueue_pushable_dl_task",
+      "sha256": "fe9e18d8812d0c9530a1c6aa0c2dd5da4d5f7d542d4f1c5159489e488fb22893",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "dequeue_pushable_dl_task",
+      "sha256": "8e259a746ac99443d42f14e6dd5bae647f0a654e72365605397bcb7c90930ab5",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/cpudeadline.c",
+      "sha256": "a3d6827dd1d2078352a3541042fb73d96f631a93403ed1d7a8eeb49407d9975f",
+      "relationship": "whole file equals final ACK; complete context split reviewed"
+    },
+    {
+      "path": "kernel/sched/cpudeadline.h",
+      "sha256": "5c10e546647efc6bb35444d363e1f145848b4074d329bd1796a4735f478a2efb",
+      "relationship": "whole file equals final ACK; complete context split reviewed"
+    },
+    {
+      "path": "kernel/sched/cpupri.h",
+      "sha256": "55373b3b3167359e93f895d9d256700b581159d27e4f5d8d24653d334ef2be2d",
+      "relationship": "whole file equals final ACK; complete context split reviewed"
+    },
+    {
+      "path": "kernel/sched/rt.c",
+      "function": "rto_next_cpu",
+      "sha256": "7cb1aaf0717215e0bdb5def7a4467416dfc0b315511a9491ffee5b3409c54c7c",
+      "relationship": "LTS function plus existing vendor hook; native current-CPU skip retained, trusted callback may alter candidate"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "enqueue_task_dl",
+      "sha256": "db0ba07cbbd3d07b3622cc25a2195c99cdb0bef8ad5f7cf54a894966ec287166",
+      "relationship": "LTS body plus reviewed dl_se/dl_rq aliases and current-entity protection"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "put_prev_task_dl",
+      "sha256": "b46965a9c4c7e6d108f9ef691d317d94c35ccebc10bfc145b62bd53c23d8a37f",
+      "relationship": "LTS body plus reviewed dl_se/dl_rq aliases and current-entity protection"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "set_next_task_dl",
+      "sha256": "4a04dc4f24487e643c7b451f7784a259f419bbf1275103ad3b82110bac9d6a32",
+      "relationship": "LTS body plus reviewed dl_se/dl_rq aliases and current-entity protection"
+    }
+  ],
+  "security": "Keep configured Android chain balancing and source hooks. Native priority/capacity policy uses donor while affinity uses execution task. Native current/migrate-disabled exclusions and DL deboost replenishment remain. Restore active-mask restriction on NULL-context RT candidates; protect blocked owner sampling against remote PROXY_WAKING updates. No LTS safety behavior is intentionally weakened by these two adaptations.",
+  "lifetime": "find_exec_ctx holds source rq lock and per-task blocked_lock while sampling typed owner. Both rq locks remain held through chain migration; owner sampling now also holds blocked_lock, released before callbacks. Tasks accepted for continued traversal are queued on the locked source rq; a pointer to a remote owner is checked and traversal stops. Preemption-disabled rq-lock regions protect task allocations under native RCU task release, but this does not freeze remote owner state. Queue/rq/queue barriers and subsequent locked checks remain. Original kernel primitive lifetimes must still obey their waiters; this is not protection against arbitrary invalid lock pointers.",
+  "semantics_limits": "NULL execution context is intentional for RT chains leaving rq; DL find/preempt callers reject it. Missing or self owner returns the last task, not a guaranteed runnable endpoint. Ternary pushability 1 permits chosen CPU, -1 allows a different CPU, 0 rejects migration. Retry paths may move a prefix then recover through proxy selection; no global progress, deadlocked-graph cycle detection, real-time latency, affinity race or starvation proof. The generic move helper uses set_task_cpu, including its wake_cpu update; do not confuse it with proxy_migrate_task, which explicitly preserves a wake preference. Normal return/wakeup CPU selection still applies affinity validation.",
+  "hooks": "find_lowest_rq has initialized -1 output but trusts nonnegative vendor override; callback must handle NULL exec_ctx and valid active/allowed CPU selection. Native filtering is not enforced against arbitrary trusted callback policy. No exact SDK callback registration was established; generic vendor source compatibility retained conservatively.",
+  "validation": "32768 static four-CPU helper cases: port passes, prior implementation fails 2800. 160 chain-owner host cases: port passes, prior implementation has 24 invalid-primitive and 24 unprotected-read cases under the forced interleaving/protocol check. These are extracted-function models, not kernel concurrency or boot verification. Emulator build 127 covers active-mask correction; subsequent build is required for owner-lock correction.",
+  "remote_sources_used": [],
+  "refreshed_text_witness": {
+    "commit": "a2beed739cdb14c6009f0fefa43581c7e80b4c15",
+    "source_head": "b1cd2b2b27929af030c47d1803ffc903742fbfac",
+    "method": "Full patch reverse-apply against temporary LTS/current indexes; only stale core.c blob witness updated after unrelated owner-lock changes."
+  },
+  "subsequent_build_verification": {
+    "run": "sdk-build-attempt-129",
+    "source_head": "dcef94ed034d124ddb857f63f3e6544f0c0970ce",
+    "result": "Complete common and virtual-device build, signing and artifact generation passed. All 145 signatures verified; tampered control rejected; 145 module CRC/flag tables and 659 protected exports checked. See build-results.json and module-tables-build-129.json. No boot or runtime validation."
+  }
+}
