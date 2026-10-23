@@ -1,0 +1,179 @@
+{
+  "source_head": "277f9e226c2176d4d1f7581400f26af58c6190ba",
+  "records": [
+    {
+      "commit": "c329759c645d8778653599d12d0b36c92fd6b301",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three paths read. Retain low-level __set_task_cpu callback only when CPU changes, BEFORE set_task_rq, native write barrier, cpu publication and wake_cpu update. This reaches proxy migration and first-task placement that deliberately bypass high-level set_task_cpu. High-level migrations can emit both distinct events; callbacks must avoid double-counting. Current old task CPU/group context and caller-specific locking differ; do not assume always runnable/new-task initialization complete. Whole native function remains after event removal, preserving publication ordering. Generic source hook is useful for configured proxy execution; exact SDK module is unconfirmed.",
+      "evidence": [
+        "evidence/scheduler-lifecycle-followups-review.json",
+        "SECURITY.md: Scheduler lifecycle followups and merge ordering"
+      ],
+      "patch_sha256": "a34edf1f8ae1b5ba9c22fc46aeb799c74553a07fd5215f57cf53439a498e60a3",
+      "unique_hunks": null
+    },
+    {
+      "commit": "6f157b8016afcd72586923d46533145f64129f06",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three patch paths and current time-file include read. Retain ordinary entry notification in tick_nohz_idle_stop_tick with NULL payload, before native eligibility/expiration checks. Emission does NOT guarantee tick was stopped: native can return early or retain tick. Callback stopping private timers must handle that distinction and idle context (IRQs disabled in relevant idle callers), cannot sleep or infer universal energy savings. Whole native function remains after callback removal; generic idle-loop use applies to SDK. No OPPO timer implementation or commit-message 7% power claim is adopted.",
+      "evidence": [
+        "evidence/scheduler-lifecycle-followups-review.json",
+        "SECURITY.md: Scheduler lifecycle followups and merge ordering"
+      ],
+      "patch_sha256": "e52d5ea2e0d4d0629216a7b7bc1cd62a97802a3be3da510b865e6b91e1a83bc7",
+      "unique_hunks": null
+    },
+    {
+      "commit": "592dff8cc31e5aad5a87a2744373f8d68a8ade24",
+      "disposition": "merge-resolution-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "f6617750f7d36b82b8d4217625e9b6413ece2715"
+      ],
+      "rationale": "Complete unique remerge hunk read. Preserve upstream WRITE_ONCE wake_q.next publication and its pairing comment; retain Android wake_q_count hint with explicit WRITE_ONCE and clear after wake_up_process from f6617750f7d3. Native dequeue/node/refcount/wakeup ordering unchanged. Hint is not queue ownership or synchronization proof and concurrent requeue is possible after next is cleared; see existing wake-hint review.",
+      "evidence": [
+        "evidence/scheduler-lifecycle-followups-review.json",
+        "SECURITY.md: Scheduler lifecycle followups and merge ordering"
+      ],
+      "patch_sha256": "27fa0de04bfb7e355eca74761c108abead30ee1378fbbb4e58468a6e097d0eb2",
+      "unique_hunks": 1
+    },
+    {
+      "commit": "28174b15b2df1f47c005ec71ee5427e4ac8f46f0",
+      "disposition": "merge-resolution-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Both unique enqueue conflict-resolution hunks read. Keep class enqueue exactly once, with Android before/after events around it AFTER native uclamp increment and BEFORE native PSI enqueue. Do not retain the competing pre-uclamp duplicate class call. Current full native body preserved after event and independently retained queue-mask tracking removal.",
+      "evidence": [
+        "evidence/scheduler-lifecycle-followups-review.json",
+        "SECURITY.md: Scheduler lifecycle followups and merge ordering"
+      ],
+      "patch_sha256": "a45a44c02cbcb202a67a817b7858f5a3dc9f8192be87ae5328e4db3613fa6b4d",
+      "unique_hunks": 2
+    },
+    {
+      "commit": "57bae874eb314eee2a9d9d64dbc660ce1c4fe78f",
+      "disposition": "merge-resolution-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Complete unique CPU-cgroup attach hunk read. Keep current Android notification after moving each task, omit removed scx_cgroup_finish_attach rather than resurrecting obsolete SCX transaction finishing. Whole current native cpu_cgroup_attach remains after event removal; current can/cancel attach and SCX flow were separately reviewed in cgroup-hooks-review.",
+      "evidence": [
+        "evidence/scheduler-lifecycle-followups-review.json",
+        "SECURITY.md: Scheduler lifecycle followups and merge ordering"
+      ],
+      "patch_sha256": "77b4969d68c10974fdb909b4a98d08b3db4ff382d2e5dcb953a547823728e818",
+      "unique_hunks": 1
+    },
+    {
+      "commit": "9e5123845271915f484a7da13bcbaa734b3de3cf",
+      "disposition": "merge-resolution-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three unique remerge hunks read. Preserve one runtime/period declaration with old_runtime tracking in common Fair/Ext server writer, current generic selected-server application/start, post-lock transition notice and early error return before file position advance. Restore native offline-CPU EBUSY guard in existing integration. Keep period/min/max/runtime validation and native dl_server_apply_params bandwidth accounting. This is common dispatch-server adaptation, not blind selection of ACK or import of commit-title media driver changes; see dispatch-server-review for effects/limitations of Ext server policy.",
+      "evidence": [
+        "evidence/scheduler-lifecycle-followups-review.json",
+        "SECURITY.md: Scheduler lifecycle followups and merge ordering"
+      ],
+      "patch_sha256": "cf2723abd166d961ec9d518e82111f850e0a9b65a1d47a9768962bae2cd147f0",
+      "unique_hunks": 3
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/sched/sched.h",
+      "function": "__set_task_cpu",
+      "sha256": "d1f7e5dac712529b24d145b32494be67cd6654726ef7b3e7df1cc6c168fdb3c4",
+      "relationship": "Full LTS function with recorded isolated differences",
+      "removed_or_replaced": [
+        [
+          "\tif (task_cpu(p) != cpu)\n\t\ttrace_android_rvh___set_task_cpu(p, cpu);\n\n",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/time/tick-sched.c",
+      "function": "tick_nohz_idle_stop_tick",
+      "sha256": "31fdb015688c94bd52bd7abcedca00662b52529bdac03f424458d70dbe550d55",
+      "relationship": "Full LTS function with recorded isolated differences",
+      "removed_or_replaced": [
+        [
+          "\n\ttrace_android_vh_tick_nohz_idle_stop_tick(NULL);\n",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "wake_up_q",
+      "sha256": "aaba12b6a69fcde3e0adda899755a480b2c083e6fc182fd3a9d4a6484872682e",
+      "relationship": "Full LTS function with recorded isolated differences",
+      "removed_or_replaced": [
+        [
+          "\t\tWRITE_ONCE(task->wake_q_count, head->count);\n",
+          ""
+        ],
+        [
+          "\t\tWRITE_ONCE(task->wake_q_count, 0);\n",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "enqueue_task",
+      "sha256": "83731f43e73c99310745a066725320f1aaaac0913fd5c8e24460197e2c202b40",
+      "relationship": "Full LTS function with recorded isolated differences",
+      "removed_or_replaced": [
+        [
+          "\ttrace_android_rvh_enqueue_task(rq, p, flags);\n",
+          ""
+        ],
+        [
+          "\ttrace_android_rvh_after_enqueue_task(rq, p, flags);\n",
+          ""
+        ],
+        [
+          "\trq->queue_mask |= p->sched_class->queue_mask;\n",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "cpu_cgroup_attach",
+      "sha256": "ebcebd8477dc4dcf87b0bd5803f41c463e5661babeb20fff7881d42092648816",
+      "relationship": "Full LTS function with recorded isolated differences",
+      "removed_or_replaced": [
+        [
+          "\n\ttrace_android_rvh_cpu_cgroup_attach(tset);\n",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/debug.c",
+      "function": "sched_server_write_common",
+      "sha256": "098996ae6ff951ba192a0a856e6fbfbcdd311aa68eb3b6a1e68cb5502add6f2f",
+      "relationship": "Exact final ACK common Fair/Ext writer plus native offline-CPU guard; period/bandwidth/error ordering checked, see dispatch-server-review"
+    }
+  ],
+  "security": "Callbacks retain native CPU publication/tick checks and have no direct output override. Modules must respect old-CPU/pre-publication state, duplicate high/low migration events, and tick-stop event emitted before actual eligibility. Merge resolutions preserve native publication and accounting ordering while retaining generic interfaces. No arbitrary callback safety, runtime scheduling, energy saving or hotplug stress result is claimed.",
+  "uncertainty": "Exact SDK callbacks for low-level migration and timer cancellation remain unidentified, not inferred absent. Current configured SMP/proxy/tickless idle paths and generic Android module API warrant retention.",
+  "validation": "Full patches/remerge diffs, whole native-body comparisons and prior dispatch-server analysis. No source change from these six decisions; build 137 running for prior utilization adaptations.",
+  "remote_sources_used": [],
+  "subsequent_build_verification": {
+    "run": "sdk-build-attempt-137",
+    "source_head": "277f9e226c2176d4d1f7581400f26af58c6190ba",
+    "result": "Complete emulator workflow passed; 100 common and 45 virtual modules, all signatures and CRC/flag tables verified. No boot or runtime verification."
+  }
+}

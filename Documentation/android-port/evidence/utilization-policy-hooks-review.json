@@ -1,0 +1,211 @@
+{
+  "source_head": "277f9e226c2176d4d1f7581400f26af58c6190ba",
+  "records": [
+    {
+      "commit": "3ac58871f8088eaca7127a4a044f6b050bc8edbc",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three paths read. Retain before_do_sched_yield skip output at function entry before rq locking, statistics, class yield, after-yield notification and schedule. Any nonzero long skips the entire yield; syscall still returns success. This changes fairness/latency for Android ART callers (native Thread.yield0, monitor contention and other runtime paths), not just games despite the motivation. Default zero keeps native behavior. Retain generic vendor source policy without Xiaomi hardware code; trusted policy must avoid starving threads or busy-looping yield users. No per-process restriction or latency benefit is claimed.",
+      "evidence": [
+        "evidence/utilization-policy-hooks-review.json",
+        "evidence/utilization-hooks-check.json",
+        "SECURITY.md: Utilization callback policy and activation"
+      ],
+      "patch_sha256": "cd1a2eb4a83436f4de865200689982f65beaff1d940f9a0c807579f18163a205"
+    },
+    {
+      "commit": "a6fab19adfcedbe207470332468c4fd4aba14efa",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "277f9e226c2176d4d1f7581400f26af58c6190ba"
+      ],
+      "rationale": "All three paths read. Retain ordinary uclamp validation override with ret/done to allow vendor special values as final ACK specifies. Native user permission and LSM checks occur earlier; independent Android CAP_SYS_NICE clamp requirement remains. Override can bypass numeric bounds and min<=max ordering, so cooperating policy must handle extended values and 11-bit native storage/truncation; native bucket indexing still saturates and this is not proof arbitrary accepted values are safe. Adapt successful done/ret=0 path to call native sched_uclamp_enable before returning, preserving activation outside rq locks. Rejections do not enable; no callback/default path retains complete LTS validation.",
+      "evidence": [
+        "evidence/utilization-policy-hooks-review.json",
+        "evidence/utilization-hooks-check.json",
+        "SECURITY.md: Utilization callback policy and activation"
+      ],
+      "patch_sha256": "4dd8da5751196d77b35f402ab51713b7e1d42a12ab4c79f436ea5fe6ede11077"
+    },
+    {
+      "commit": "8cac6b59b6543407cc3324a53c6590115692e51c",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three paths read. Keep post_init_entity_util_avg event after native fair-task util/runnable initialization and before activation; non-fair early return does not emit it. Callback may change sched_entity averages before attach, and is distinct from later new_task_stats. Native initialization and cap calculation remain exactly LTS. Module must keep averages/sums internally consistent; arbitrary values can distort DVFS/balancing. Generic vendor policy is retained; exact SDK callback is unconfirmed.",
+      "evidence": [
+        "evidence/utilization-policy-hooks-review.json",
+        "evidence/utilization-hooks-check.json",
+        "SECURITY.md: Utilization callback policy and activation"
+      ],
+      "patch_sha256": "d4e9cd6db4f78ff440753b44254df6e488b67d11d8f43454e5a93e699e5f1160"
+    },
+    {
+      "commit": "0b6505991b74448ca833c59f60b66f0c382083fb",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three paths read. Retain INT_MAX sentinel output for cpu_util_cfs_boost. Unchanged sentinel uses complete native cpu_util(cpu,NULL,-1,1); any other unsigned long returns directly, without applying the native cpu_util capacity cap to the replacement. This is broader than the message choice of boosted versus unboosted utilization. Trusted policy can affect DVFS/thermal/availability and must supply sensible bounded estimates; no SDK energy benefit or actual callback is established.",
+      "evidence": [
+        "evidence/utilization-policy-hooks-review.json",
+        "evidence/utilization-hooks-check.json",
+        "SECURITY.md: Utilization callback policy and activation"
+      ],
+      "patch_sha256": "c896f3edd6b3bdc6095326e45cc2e1e59709cddef37087e2e5835ae80ae42026"
+    },
+    {
+      "commit": "ba2904a72ba725192101e7bf2107a048d25805ed",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "277f9e226c2176d4d1f7581400f26af58c6190ba"
+      ],
+      "rationale": "All three paths read. Keep restricted util_fits_cpu bool override/default native algorithm, including native tri-state -1 for unmet minimum capacity only on the non-overridden path. Callback done returns bool 0/1 and cannot express -1. Explicitly initialize fits=false so done-without-output is deterministic without relying on SDK automatic stack zeroing. A callback can bypass native margin/uclamp/pressure fitness policy, not the separate affinity authorization; callers still own candidate CPU validity. Tests compare no-override whole function against pinned LTS and preserve supplied callback outputs.",
+      "evidence": [
+        "evidence/utilization-policy-hooks-review.json",
+        "evidence/utilization-hooks-check.json",
+        "SECURITY.md: Utilization callback policy and activation"
+      ],
+      "patch_sha256": "d33f990d03d31c6b2afdab0628ea5d30d441f024398b1c7d17967836ac3bc1e8"
+    },
+    {
+      "commit": "c76af23385f69ac2362aaab3ee7a26b0ce6c7523",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three paths read. Retain task-specific fitness override with task/util/clamp inputs and initialized fits=true/done=false. Done returns bool directly; default runs native util_fits_cpu>0 (and its separately retained generic override). This permits task-aware policy before native fit decision without changing the default native uclamp/pressure checks. Callback-only-done explicitly accepts as final ACK initializes true, unlike generic hook default false. CPU/task inputs remain borrowed under callers locking, no new affinity bypass or claim of arbitrary callback safety.",
+      "evidence": [
+        "evidence/utilization-policy-hooks-review.json",
+        "evidence/utilization-hooks-check.json",
+        "SECURITY.md: Utilization callback policy and activation"
+      ],
+      "patch_sha256": "6aaedab816a6dceff30586b7119d3d22cffd5b2932a4e615ac3199b9f6c8d75d"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "post_init_entity_util_avg",
+      "sha256": "99b4df331be8fe11052d6d96d4e6d6b12e83fc5e0b87f59333f11e8235635418",
+      "relationship": "Whole function equals LTS after isolated recorded callback changes",
+      "removed_or_replaced": [
+        [
+          "\n\t/* Hook before this se's util is attached to cfs_rq's util */\n\ttrace_android_rvh_post_init_entity_util_avg(se);\n",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "cpu_util_cfs_boost",
+      "sha256": "a96ef24e0856875f56a38d8f276007b01c8e8c6ef2d7af098e9a77924e2760b8",
+      "relationship": "Whole function equals LTS after isolated recorded callback changes",
+      "removed_or_replaced": [
+        [
+          "\tunsigned long util = INT_MAX;\n\n\ttrace_android_rvh_cpu_util_cfs_boost(cpu, &util);\n\tif (util != INT_MAX)\n\t\treturn util;\n\n",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "task_fits_cpu",
+      "sha256": "8980589d182b0f599379d3ffaeae625a0cbf9120205505c4724ae88100acc82c",
+      "relationship": "Whole function equals LTS after isolated recorded callback changes",
+      "removed_or_replaced": [
+        [
+          "\tbool fits = true, done = false;\n\n\ttrace_android_rvh_task_fits_cpu(p, util, uclamp_min, uclamp_max, cpu, &fits, &done);\n\n\tif (done)\n\t\treturn fits;\n\n",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "util_fits_cpu",
+      "sha256": "5ff832f6e4a670ee468b456760d911ab823567bb1b895be9bd1783d21ab981de",
+      "relationship": "Whole function equals LTS after isolated recorded callback changes",
+      "removed_or_replaced": [
+        [
+          "\tbool fits = false, uclamp_max_fits, done = false;\n\n\ttrace_android_rvh_util_fits_cpu(util, uclamp_min, uclamp_max, cpu, &fits, &done);\n\n\tif (done)\n\t\treturn fits;",
+          "\tbool fits, uclamp_max_fits;"
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "uclamp_validate",
+      "sha256": "3e10497e13c41a5b0e6b2847c2d2064bb164d03e535008dd03124090aa7ad1a9",
+      "relationship": "Whole function equals LTS after isolated recorded callback changes",
+      "removed_or_replaced": [
+        [
+          "\tbool done = false;\n\tint ret = 0;\n\n\ttrace_android_vh_uclamp_validate(p, attr, &ret, &done);\n\tif (done) {\n\t\tif (!ret)\n\t\t\tsched_uclamp_enable();\n\t\treturn ret;\n\t}\n",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "do_sched_yield",
+      "sha256": "833ec2cfd3889f5e578015839e995a79d1f747782c7b48f12424a5b2ccc8385c",
+      "relationship": "Whole function equals LTS after isolated recorded callback changes",
+      "removed_or_replaced": [
+        [
+          "\tlong skip = 0;\n\n\ttrace_android_rvh_before_do_sched_yield(&skip);\n\tif (skip)\n\t\treturn;\n",
+          ""
+        ],
+        [
+          "\tif (rq->donor->sched_class->yield_task)\n\t\trq->donor->sched_class->yield_task(rq);",
+          "\trq->donor->sched_class->yield_task(rq);"
+        ],
+        [
+          "\n\ttrace_android_rvh_do_sched_yield(rq);\n",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/sched.h",
+      "function": "uclamp_bucket_id",
+      "sha256": "0314763e34555254037e142fbd86ded7203ea9a593c3660bf60ac0e1d4b6c828",
+      "relationship": "Exact LTS whole function"
+    },
+    {
+      "path": "kernel/sched/sched.h",
+      "function": "uclamp_se_set",
+      "sha256": "06a2c236998d050d5d352a0de31696b667e8963b74b0f82315411c34aa92e864",
+      "relationship": "Exact LTS whole function"
+    },
+    {
+      "path": "kernel/sched/sched.h",
+      "function": "sched_uclamp_enable",
+      "sha256": "bda07b22a2126d31ccb8a028a8b50d58ac1bf754a68d7574995747fbf6ac7634",
+      "relationship": "Exact LTS whole function"
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "__sched_setscheduler",
+      "sha256": "cdeaf462edc32658e63785dd4e82ce0e287e811c3156faa8765a92f9f4958fdc",
+      "relationship": "Authorization/LSM before validation, validation before rq lock; other hooks independently reviewed"
+    }
+  ],
+  "local_consumers": [
+    "GrapheneOS frameworks/native/services/surfaceflinger/SurfaceFlinger.cpp setSchedAttr: configured nonzero ro.surface_flinger.uclamp.min issues sched_setattr util clamp, max=1024; default zero disables call. This proves optional Android API use, not SDK nonzero configuration or hook registration.",
+    "GrapheneOS hardware/interfaces/audio/effect/all-versions/default/Effect.cpp set util minimum with sched_setattr; this is Android interface source evidence, not SDK audio HAL deployment proof.",
+    "GrapheneOS art/runtime/native/java_lang_Thread.cc Thread_yield0 directly calls sched_yield; runtime monitor.cc contention also calls it."
+  ],
+  "uncertainty": "No exact callback implementing these vendor policies is identified in supplied target evidence. Keep final generic Android source contracts rather than infer absence. Vendor extended uclamp values need coordinated downstream handling and are not verified at runtime.",
+  "security": "Successful clamp override now enables native uclamp static branch outside rq lock. Numeric/order override remains an intentional trusted vendor contract behind existing user authorization and LSM; values wider than native bitfield may truncate. Generic fitness output is explicitly initialized, matching SDK zero-init behavior; no SDK uninitialized-read exploit claim. Yield suppression and arbitrary utilization/fit replacements can affect availability and thermal policy.",
+  "validation": "2592 validation and 3456 fitness host cases pass. Old control misses native enabling in 432 accepted cases, emits maybe-uninitialized compiler diagnostic but is compiled with SDK-equivalent zero init for comparison; fitness outputs then match. This is not real kernel static-key switching, scheduling, hardware thermal or boot verification. Build 137 pending.",
+  "remote_sources_used": [],
+  "subsequent_build_verification": {
+    "run": "sdk-build-attempt-137",
+    "source_head": "277f9e226c2176d4d1f7581400f26af58c6190ba",
+    "result": "Complete emulator workflow passed; 100 common and 45 virtual modules, all signatures and CRC/flag tables verified. No boot or runtime verification."
+  }
+}

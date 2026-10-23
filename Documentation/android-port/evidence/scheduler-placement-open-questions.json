@@ -1,0 +1,20 @@
+{
+  "source_head": "277f9e226c21",
+  "candidates": [
+    "7f51114c2879",
+    "a1fc1fba460b"
+  ],
+  "status": "pending implementation and verification, not final dispositions",
+  "findings": [
+    "find_new_ilb accepts every callback output other than nr_cpu_ids; kick_ilb rejects only negative values before per-CPU state access. Positive out-of-range values require guarding; preserve native idle-mask/housekeeping selection conditions when adapting.",
+    "select_task_rq_fair accepts nonnegative callback CPU. Common select_task_rq invokes is_cpu_allowed, whose task_allowed_on_cpu uses cpumask_test_cpu before any explicit range guard. A CPU range guard is needed before native mask access; existing affinity fallback must remain."
+  ],
+  "evidence_examined": [
+    "Full 7f51114c2879 and a1fc1fba460b patches",
+    "kernel/sched/fair.c find_new_ilb, kick_ilb, select_task_rq_fair",
+    "kernel/sched/core.c select_task_rq and is_cpu_allowed",
+    "kernel/sched/sched.h task_allowed_on_cpu"
+  ],
+  "uncertainty": "Exact SDK vendor callbacks remain unconfirmed. Retain source interfaces and adapt input validation; no omission based on missing consumer. No actual runtime fault reproduced.",
+  "remote_sources_used": []
+}

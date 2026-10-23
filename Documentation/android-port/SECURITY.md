@@ -6153,3 +6153,111 @@ the compatibility priority, without claiming that arbitrary overrides preserve
 native invariants. Exact SDK consumers are unconfirmed; no hardware-specific
 WALT implementation is introduced by these generic events. No runtime scheduler
 accounting or boot verification is claimed. No remote source was accessed.
+
+# Scheduler callback history and capacity floor
+
+`evidence/scheduler-hook-cycles-review.json` resolves eleven candidates across
+scheduler callback additions, four temporary removals, and dummy-stub removal.
+Full original/final patches and every intermediate added/deleted code difference
+were examined, including evolving IRQ/placement signatures, topology event and
+export relocation. Generic Android module source callbacks remain; no Qualcomm
+hardware-specific WALT implementation is added. Exact SDK callbacks are
+unconfirmed after scoped searches; absence is not used to justify omission.
+The always-false android.h stubs remain absent as explicitly removed in final ACK.
+
+Preserve native task/stack teardown and wake acquire ordering, fork resets,
+hotplug diagnostics, IRQ accounting and clock updates. The report records each
+callback context, including unlocked success/flush notifications, pre-init fork,
+possibly NULL misfit task, and execution-task versus donor distinction. The IRQ
+start bool reports whether native hardirq/non-ksoftirqd softirq delta branches
+ran; it is not universally an irq_enter/exit indicator. Misfit suppression can
+leave stale load and remains a trusted vendor policy responsibility.
+
+ACK's capacity callback runs after the native minimum-one check and can undo it.
+The value then populates rq and group capacities used as load-balancing divisors.
+Commit b46e8cbd73681d714f56fd53634102c19f2c1a6f restores the minimum after callback execution while
+preserving the original callback input and every positive adjustment. This
+restricts only zero output, which cannot satisfy the native arithmetic contract.
+It does not bound arbitrary positive policy values or make malicious callbacks
+safe. The extracted whole-function check passes 162 cases; the previous control
+produces nine zero-divisor states. This is a host model, not a kernel crash or
+runtime scheduler test. Build 136 passed with all 145 module signatures and
+version/flag tables verified. No remote source was accessed;
+embedded links in historical commit messages were not opened.
+
+# Utilization callback policy and activation
+
+`evidence/utilization-policy-hooks-review.json` resolves six source interfaces.
+Keep yield suppression, pre-attach new-task utilization adjustment, boosted-util
+replacement and generic/task-aware fitness overrides. Their outputs can change
+fairness, CPU selection and DVFS; they are trusted vendor policies, not passive
+notifications. INT_MAX alone means use native boosted utilization; other outputs
+return directly without native capacity capping. The fitness override is boolean
+and cannot return the native unmet-minimum -1 state. Explicit false initialization
+for the generic result removes dependence on SDK automatic stack zeroing; the
+task-specific hook deliberately keeps ACK's true default.
+
+The uclamp validation callback can accept vendor special numeric values and skip
+native bounds/order checks. Earlier user authorization, independent Android
+CAP_SYS_NICE clamp restriction and LSM checks remain. Native bucket selection
+saturates, but the 11-bit value field can truncate extended values; cooperating
+vendor code must handle that representation. We do not claim arbitrary accepted
+values preserve scheduler semantics. Successful callback acceptance now invokes
+native sched_uclamp_enable before return, outside rq locks, so it cannot silently
+leave the native accounting static key disabled. Failure still returns directly.
+The default path remains complete native validation.
+
+Local GrapheneOS SurfaceFlinger and audio-interface source demonstrate clamp API
+use, conditionally enabled; ART Thread.yield and monitor contention use sched_yield.
+They do not establish an installed SDK vendor callback or active nonzero property.
+No Xiaomi/Samsung/MediaTek hardware implementation is introduced by these hooks.
+The host checks pass 2592 validation and 3456 fitness cases; the previous control
+misses enable on 432 accepted cases. GCC diagnoses its uninitialized generic
+result even with zero-init enabled; only that control's diagnostic is downgraded
+for comparison. No SDK exploit or runtime scheduling result is claimed.
+Source change: 277f9e226c2176d4d1f7581400f26af58c6190ba. Build 137 passed, including all 145 module signatures and
+version/flag tables. No remote source was accessed.
+
+# Scheduler lifecycle followups and merge ordering
+
+`evidence/scheduler-lifecycle-followups-review.json` resolves two hook candidates
+and four merges (all unique remerge hunks examined). The low-level CPU-change
+event executes before native rq assignment/write barrier/CPU publication. It
+covers proxy and initial placement, and may accompany the high-level event;
+modules must not double-count or assume uniformly runnable/fully initialized
+tasks. The tick-stop entry event precedes eligibility checks, including paths
+that retain the tick. It is a chance to manage vendor timers, not a guarantee
+that the hardware tick stopped or evidence of the message's power-saving claim.
+
+Preserve wake-queue WRITE_ONCE ordering and separately reviewed count-hint clear,
+uclamp-before-enqueue with exactly one class call, current cgroup/SCX lifecycle,
+and native offline-CPU and parameter checks in the common Fair/Ext server writer.
+No obsolete SCX finishing call or duplicated enqueue is restored. Exact vendor
+callbacks remain unconfirmed; generic interfaces are retained under the source
+compatibility priority. No source changes or new runtime claims result from this
+batch. No remote source was accessed.
+
+# Load-balancing callback contracts
+
+`evidence/load-balance-hook-history-review.json` resolves eight candidates.
+The explicitly removed EAS-picker/energy-model override callbacks stay absent;
+current find_energy_efficient_cpu and compute_energy are wholly native LTS.
+Keep final renamed group-balance override and current generic newidle, nohz,
+busiest-queue and migration callbacks, with the updated env CPU-mask argument.
+The env-mask patch's title names the wrong event; decisions follow its code.
+
+These are trusted policy interfaces. A detached migration callback must perform
+required dequeue/CPU/accounting work and return holding the original rq lock.
+The detach path can bypass native hot-task accounting, which its implementation
+must maintain. Newidle replacement precedes native active-CPU/misfit checks and
+must preserve those obligations and caller locking/result meanings. NoHz done
+continues through the common tail, which may still issue a next-update kick.
+Replacement busiest rq must satisfy group/affinity/pinning/current env masks;
+the callback receives a mutable mask, not just a read-only hint. Native defaults
+and separately hardened donor retry handling remain. EAS group out_balance=0
+only bypasses the energy gate, with remaining native balancing still in control.
+
+Exact SDK callback consumers remain unconfirmed, not inferred absent. No hardware
+vendor scheduler implementation or energy gain is claimed. Pending CPU-output
+range checks are recorded separately and are not finalized by this review.
+No remote source was accessed.
