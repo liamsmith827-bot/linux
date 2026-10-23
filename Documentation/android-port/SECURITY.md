@@ -4858,3 +4858,74 @@ remain. Upstream f5d0e5e9d72d removed SELinux lockdown due to incorrect calling
 credential assumptions, so old class-order merges do not justify restoring
 that implementation. No LTS control is reversed. Build 107 covers compilation,
 not policy compilation or live authorization. No remote resource was used.
+
+# SELinux policy history and memfd class
+
+`evidence/selinux-policy-history-review.json` resolves ten historical patches.
+Temporary lockdown, firmware-loading and io_uring policy workarounds are
+superseded. Current native kernel-file and io_uring authorization stays intact;
+pinned policy supplies the new permission definitions and selected allow rules.
+The removed SELinux lockdown class/hook is not restored, as upstream found its
+current-credential assumption invalid. Generic LSM lockdown hooks, shared reason
+strings and audit handling remain native. The SDK build disables the separate
+SECURITY_LOCKDOWN_LSM; this review does not claim active lockdown enforcement.
+
+Retain the final capability-gated memfd security initialization and memfd_file
+class. With the capability enabled, creation receives a task-derived transition
+label and CREATE check before publication; errors release the file. Execution
+uses the corresponding class permissions and preserves native NNP/nosuid,
+process transition/share/ptrace and secureexec behavior. Class permissions are
+policy-dependent; this is not a blanket prohibition on executable memfd files.
+The capability-disabled SELinux path leaves legacy labeling. Native dispatcher
+calls to other LSMs, flag validation and sealing remain.
+
+Pinned policy includes memfd_file rules and pinned libsepol recognizes
+memfd_class, but its activation was not established in the SDK assembled policy:
+the examined capability file contains no such directive. This is recorded as an
+unresolved runtime-activation question with a conservative final retention
+choice for the current generic Android interface. No platform or policy changes
+are added, and no OS build or runtime authorization test was performed. All
+sources were local; embedded commit-message links were not accessed.
+
+# Mixed SELinux merge resolutions
+
+`evidence/selinux-mixed-merge-review.json` records every unique path/hunk of five
+cross-subsystem merges, including edits outside conflict markers. Current native
+BPF dispatch/CFI, FUSE release lifetime handling, Binder initialization and
+SELinux capability interfaces are preserved. Android cpufreq/statistics, network
+hooks and IPv6 route-table selection remain. Obsolete helper declarations and
+private netlink bits are superseded by final ACK/native APIs. ARM64 MPAM/SCS/PAC,
+SM8550 audio routing and Samsung serial configuration do not add SDK requirements;
+native sources and platform dependencies remain. The util_est callback still
+allows trusted vendor code to skip estimator updates; its default remainder is
+byte-identical to LTS. IDLETIMER corrections are documented separately. All
+comparisons are local and scoped to the recorded merge changes.
+
+# Android idle timer integration
+
+`evidence/idletimer-history-review.json` records eighteen historical changes and
+unique merge resolutions. Pinned netd creates/removes IPv4/IPv6 IDLETIMER rules
+with --send_nl_msg and consumes INTERFACE, STATE, TIME_NS and UID activity events.
+Retain this Android functionality with current v0/v1 UAPI layouts, native
+family-specific registrations, input bounds and timer/work/sysfs lifetime rules.
+The temporary global-family rollback is superseded; retain native IPv6 MARK/NFLOG
+and TRACE-owner fixes and NFT_COMPAT_ARP support.
+
+`f3f057ef8e9a` fixes an ACK null dereference: list deletion precedes sysfs removal,
+so a sysfs read can find no timer. Copy notification mode only after successful
+lookup under list_mutex and use the snapshot after unlock. Kernfs lifetime
+protection does not guarantee that a timer remains in this list. This is not a
+claim of a demonstrated use-after-free or an unprivileged exploit.
+
+`f9788ed2879e` initializes the timer and work before publishing the PM callback.
+Native blocking-notifier registration permits calls as soon as its lock is
+released. The callback also skips jiffies adjustment for native ALARM_BOOTTIME,
+which already includes suspend time and has no initialized regular timer.
+Native shutdown, callback unregistration and work draining remain before free.
+
+The extracted show check passes 644 cases and the original ACK control faults.
+The constructor/resume check passes 91 cases; original ACK has 21 violations.
+These are host shims, not live sysfs, suspend, notifications or concurrency.
+Build108 verifies the first fix; build109 verifies both corrections and all
+145 signed common/virtual-device modules. No remote
+resources were accessed, including links embedded in historical commit messages.

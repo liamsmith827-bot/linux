@@ -1,0 +1,457 @@
+{
+  "source_head": "f9788ed2879e42426529eced8d0ed4bd245985c2",
+  "records": [
+    {
+      "commit": "f0c2df2b1228a4407c72e92e07d9f3fe695fa558",
+      "disposition": "adapted-net-state",
+      "rationale": "Complete original two-file patch reviewed. Preserve Android activity/idle uevents, timestamp/UID reporting, suspend accounting and expired-time output through the final v1 reimplementation, not the obsolete revision-0 layout, public constants or timespec APIs. Pinned netd adds/removes --send_nl_msg rules and consumes all four event fields. Correct absent timer sysfs lookup and notifier initialization in the two recorded adaptations; preserve current native safety checks.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "f3f057ef8e9a43dbdbe2bb7b09d4e88c756e9969",
+        "f9788ed2879e42426529eced8d0ed4bd245985c2"
+      ],
+      "evidence": [
+        "evidence/idletimer-history-review.json",
+        "SECURITY.md: Android idle timer integration"
+      ],
+      "patch_sha256": "fccaa94a2dec5b649763058e6fab018128484c136af306d87e356aff9e76ef34",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "7ded4359680d3fb593cbc5c90d84bb5e5083eda9",
+      "disposition": "adapted-net-state",
+      "rationale": "Keep zero-initialized allocations and suspend_time_valid guard so POST_SUSPEND without PREPARE does not consume uninitialized timestamp state. Both constructors use kzalloc; current callback preserves the validity guard and is additionally restricted to regular timers because native boottime alarms need no jiffies adjustment.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "f9788ed2879e42426529eced8d0ed4bd245985c2"
+      ],
+      "evidence": [
+        "evidence/idletimer-history-review.json",
+        "SECURITY.md: Android idle timer integration"
+      ],
+      "patch_sha256": "862500d412fb02a8f47c5891d8114b057b1e3d382d6fef2ecac41d62eda9d6f9",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "b22d6257b549d48a254b43c7430d16e85b4eaec6",
+      "disposition": "partially-adapted-net-state",
+      "rationale": "All two-file rollback hunks reviewed. Preserve its correction of duplicate revision-1 registration and revision-0 UAPI pollution via native v0/v1 layouts and registration arrays. Its wholesale notification/suspend removal is superseded by cf468a86d072/382e68666b7f and current netd consumers. Do not restore intermediate kmalloc, missing notifications, obsolete BUG_ON or old teardown ordering.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/idletimer-history-review.json",
+        "SECURITY.md: Android idle timer integration"
+      ],
+      "patch_sha256": "421b5908c66d58f57a3ff2346c922fbd5f41d8de7d79968302ae7c72c968044e",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "cf468a86d0725616ec8178d7f6684a7daed1cd88",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain active v1 send_nl_msg UAPI and acceptance of values 0/1; values above 1 fail EINVAL. Native rejects nonzero mode as unsupported, which is incompatible with the positive pinned netd --send_nl_msg caller. Keep native timer-type, timeout/label and same-label timer-type checks; this is userspace protocol compatibility, not historical vendor binary KMI.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/idletimer-history-review.json",
+        "SECURITY.md: Android idle timer integration"
+      ],
+      "patch_sha256": "a0482dcd403f3c3b420a9c6371fc231605f3bb541c2637c5f4a6ed21aaefe2f4",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "382e68666b7f90c1d62b445f41973285410ccad5",
+      "disposition": "adapted",
+      "rationale": "Complete core reimplementation retained with native current timer/sysfs/socket APIs and explicit fixes f3f057ef8e9a/f9788ed2879e. Preserve native teardown outside list_mutex, timer shutdown before work/sysfs release, timeout bounds and family-specific registration; keep Android notifier unregister before free. Snapshot sysfs mode only after successful locked lookup; initialize work/timer before PM publication; do not operate on unused regular timer for ALARM_BOOTTIME. Netd provides positive producer/consumer evidence. No live event/suspend test is claimed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "f3f057ef8e9a43dbdbe2bb7b09d4e88c756e9969",
+        "f9788ed2879e42426529eced8d0ed4bd245985c2"
+      ],
+      "evidence": [
+        "evidence/idletimer-history-review.json",
+        "SECURITY.md: Android idle timer integration"
+      ],
+      "patch_sha256": "091260d6b6ab5ba91a9bcb196126ec858f32af06d6195f7b3a3e225f37e5d9c8",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "80af3825b7d4e4873d3642c84d2c856059ab6526",
+      "disposition": "adapted-net-state",
+      "rationale": "Complete diagnostic-only newline fixes remain in current notification and constructor paths. No permission, buffer limit or timer behavior is changed by this historical patch.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/idletimer-history-review.json",
+        "SECURITY.md: Android idle timer integration"
+      ],
+      "patch_sha256": "f018ddeec00662904b4b583267cd68e0f510586e55f023bd373db5c340183c34",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "2a9b1b2a983a4f093b54c055a25731d2a87448f9",
+      "disposition": "merge-resolution-adapted-net-state",
+      "rationale": "All unique sysfs formatting hunks examined. Retain native sysfs_emit and Android expired-time second field with one jiffies snapshot. Later f3f057ef8e9a copies send_nl_msg under successful lookup/list_mutex to avoid the historical null dereference between list deletion and sysfs removal; all formatting cases are checked separately.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "f3f057ef8e9a43dbdbe2bb7b09d4e88c756e9969",
+        "f9788ed2879e42426529eced8d0ed4bd245985c2"
+      ],
+      "evidence": [
+        "evidence/idletimer-history-review.json",
+        "SECURITY.md: Android idle timer integration"
+      ],
+      "patch_sha256": "aa1a731f519f1d7bb663ff90a3a0149d09c62f3b553ad8d4d7cc0d607fb9f51c",
+      "unique_remerge_review": true
+    },
+    {
+      "commit": "92cf99250dd3d508726d5c3ad850857e7766c594",
+      "disposition": "merge-resolution-partially-adapted-net-state",
+      "rationale": "Unique destroy resolution adopts native timer_shutdown_sync, retained. Its sysfs-before-work order is superseded by final 41005643bc9b. Current destroy keeps shutdown then work cancellation then sysfs removal outside list_mutex and unregisters the Android PM notifier first; do not replay the historical order.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/idletimer-history-review.json",
+        "SECURITY.md: Android idle timer integration"
+      ],
+      "patch_sha256": "3cd999e96f7f3ef58f48277a0779965a333a9b1a36425ffd4cf41ff166c4b349",
+      "unique_remerge_review": true
+    },
+    {
+      "commit": "01222b46195ef5d356dccec2131443f724a7e551",
+      "disposition": "merge-resolution-partially-adapted-net-state",
+      "rationale": "Both unique destructor resolutions examined. Preserve native early return for shared references and unlock after final list removal, avoiding waiting for callbacks under list_mutex. The accidentally lost unregister_pm_notifier calls are restored by c6ee14d14edc and reordered by 41005643bc9b. No dangling registered callback is retained.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/idletimer-history-review.json",
+        "SECURITY.md: Android idle timer integration"
+      ],
+      "patch_sha256": "c258b2992250253b0a72d04592ba9eebc54c867ca62fa528836e3269d6e5ec24",
+      "unique_remerge_review": true
+    },
+    {
+      "commit": "4c4f255cafac0fe523db66a74b610269b570cdd7",
+      "disposition": "adapted-net-state",
+      "rationale": "Complete one-line API rename retained: Android suspend adjustment uses native timer_delete. Destruction separately uses timer_shutdown_sync. Do not restore the removed del_timer spelling or confuse callback-time deletion with final lifetime shutdown.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/idletimer-history-review.json",
+        "SECURITY.md: Android idle timer integration"
+      ],
+      "patch_sha256": "83db4b4d94a76300e9397eb01ea5928c704fb1837e7ca275e3a312ce061113f3",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "c6ee14d14edca4dba56eec1288d558f075590415",
+      "disposition": "adapted-net-state",
+      "rationale": "Both missing notifier unregisters are retained, with final 41005643bc9b ordering before timer shutdown/work cancellation/sysfs removal/free. Native blocking-notifier unregister synchronizes callback lifetime. The earlier intermediate placement after sysfs is superseded.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/idletimer-history-review.json",
+        "SECURITY.md: Android idle timer integration"
+      ],
+      "patch_sha256": "bd5cb3182ae197603449e054e6cbd0aa8681d7822fbec08cdfce98341ac26189",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "da0d6fef4be114bfe8c8ffe7299762721d961077",
+      "disposition": "merge-resolution-adapted-net-state",
+      "rationale": "All six unique timeout/target/checkentry hunks examined. Retain native secs_to_jiffies constructor conversion and Android reset_timer calls needed for activity/UID notifications. 9464026f6aec supplies the same safe conversion inside reset_timer; do not replace Android state transitions with bare mod_timer calls.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/idletimer-history-review.json",
+        "SECURITY.md: Android idle timer integration"
+      ],
+      "patch_sha256": "5c42342c16d721c19305084c6977b894de3dec978851cfe2b37858c57e4c6dc5",
+      "unique_remerge_review": true
+    },
+    {
+      "commit": "9464026f6aec2de1c2abb78cd551c9d8eb446b1c",
+      "disposition": "adapted-net-state",
+      "rationale": "Keep secs_to_jiffies in reset_timer so native conversion applies without intermediate info_timeout*1000 multiplication. Existing timeout validation and native timer APIs remain; no restored overflow-prone arithmetic.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/idletimer-history-review.json",
+        "SECURITY.md: Android idle timer integration"
+      ],
+      "patch_sha256": "983aa19fe6d2eb442a97ceb557a0cfae9d255dab6a25b4009feb43b325fa8228",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "770ffb0a835c7a10e36595d03c2735887ca21d31",
+      "disposition": "adapted-net-state",
+      "rationale": "Keep native sk_uid for full sockets and current user-namespace conversion, with subsequent cafbae1761e5 null check. Cached sk_uid retains the last socket owner after orphaning as documented locally by the removal of sock_i_uid; do not restore obsolete API behavior or dereference a missing full socket.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/idletimer-history-review.json",
+        "SECURITY.md: Android idle timer integration"
+      ],
+      "patch_sha256": "a32742b38dd38a382338364c8c3cf960f90b00eb641ccea0212ac125045ba1a0",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "cafbae1761e5ba165d5d7e5774516f9b51eabb87",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain full_sk null check before sk_uid, covering native skb_to_full_sk returning NULL for TIME_WAIT or missing full sockets. If no full socket exists the existing cached timer UID remains; this is notification metadata, not an authorization decision.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/idletimer-history-review.json",
+        "SECURITY.md: Android idle timer integration"
+      ],
+      "patch_sha256": "72ac726f3b233d3f9d09421a3a6cbcc1df8d3dc0fc37dad5f58105091fc19b47",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "41005643bc9b3937f9dc8e8372c5d15af8e61bb2",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain final destructor ordering: remove list under mutex, unlock, unregister PM callback, shutdown/cancel timer, cancel work, remove sysfs file, then free. Both complete current destructors equal native LTS after removing only Android notifier unregister. This retains native deadlock/lifetime fixes; f3f057ef8e9a separately fixes lookup during the list/sysfs removal interval.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "f3f057ef8e9a43dbdbe2bb7b09d4e88c756e9969",
+        "f9788ed2879e42426529eced8d0ed4bd245985c2"
+      ],
+      "evidence": [
+        "evidence/idletimer-history-review.json",
+        "SECURITY.md: Android idle timer integration"
+      ],
+      "patch_sha256": "c80de8caa2436e09c2b0b878b92c8c2d04e650971582518304dc5458fd3975a2",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "d82db31ed25704be812bace4bf657c6bd0ea263d",
+      "disposition": "superseded",
+      "rationale": "All 16-path changed payloads exactly invert reapplication 06dd5347bd54, whose full patch was reviewed. Temporary NFPROTO_UNSPEC rollback is superseded by native family-specific tables and later 306ed1728e84 IPv6 MARK/NFLOG and TRACE-owner fixes. Preserve native connbytes error return and current registration/unregistration; do not restore the temporary broad-family behavior.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/idletimer-history-review.json",
+        "SECURITY.md: Android idle timer integration"
+      ],
+      "patch_sha256": "810e933c096051b672810f16d6862722b7cc8c8b83099c17c0492709231ea5b9",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "06dd5347bd5403b0eeff6fab70533b060403e623",
+      "disposition": "already-represented-upstream",
+      "rationale": "Complete 16-file reapplication reviewed. Native LTS represents family-specific registration/cleanup, CT/NOTRACK table consolidation and connbytes error propagation. Fifteen full files equal LTS; IDLETIMER registration array also equals LTS alongside separately retained Android runtime extension. Keep later 306ed1728e84 correcting IPv6 MARK/NFLOG and TRACE module owner, and c38eb2973c18 NFT_COMPAT_ARP condition; historical reapplication alone had the old wrong-family entries.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/idletimer-history-review.json",
+        "SECURITY.md: Android idle timer integration"
+      ],
+      "patch_sha256": "5a8210d07e23636d5b60a3b97ff0a1215e9b3f7376b4fda46a79d83ea1f1efe0",
+      "unique_remerge_review": false
+    }
+  ],
+  "scoped_witnesses": [
+    {
+      "path": "net/netfilter/xt_CHECKSUM.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "sha256": "ba5079e5e28e7f75dbf07253f53b168d94c777763aab64bc3d7f4054c9501075"
+    },
+    {
+      "path": "net/netfilter/xt_CLASSIFY.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "sha256": "5ebb798e2e8385470f501d78ab7772439f276a088b8d8b49d6ee3fc59ed0a6f9"
+    },
+    {
+      "path": "net/netfilter/xt_CONNSECMARK.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "sha256": "1e1e2e6bd0bda23445ab513c328f88b4acebe2128d65bed7ad77d2bb8fed9382"
+    },
+    {
+      "path": "net/netfilter/xt_CT.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "sha256": "688d7186f2b45373100ada132d10dc93521421206e123183972b889f6f7fadaf"
+    },
+    {
+      "path": "net/netfilter/xt_LED.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "sha256": "862ebec8a116ced05b6a07a2790c79a979f58320fd61d8aec87922f4eff6d572"
+    },
+    {
+      "path": "net/netfilter/xt_NFLOG.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "sha256": "20306dd74ad09265e6e68a2f90bec366eef3bbf51b1f5dbf4316fb769493082d"
+    },
+    {
+      "path": "net/netfilter/xt_RATEEST.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "sha256": "faa3a6a09cc9379fe758978fa6e6b7e7cc8857d8820f1cd39f694c8d5fa0f6b6"
+    },
+    {
+      "path": "net/netfilter/xt_SECMARK.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "sha256": "ce56885d3781ddea4d66da283047687001888d063ee581218129c9751ddcd4e9"
+    },
+    {
+      "path": "net/netfilter/xt_TRACE.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "sha256": "05c403b15131a72171d28fd61502e3ccbef69c5159038bbd1598ace4f49c509c"
+    },
+    {
+      "path": "net/netfilter/xt_addrtype.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "sha256": "4cdc0a33f448d4a67e349302ad7245ff1a73f2a0fce298295b6217c2d0ec5c11"
+    },
+    {
+      "path": "net/netfilter/xt_cluster.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "sha256": "3f2a2511cb390842f43a8062d2538abaf7525c0491f8ce6cf9bcf4d6d1dfeaed"
+    },
+    {
+      "path": "net/netfilter/xt_connbytes.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "sha256": "7b22bf1be9e9e3685b089750942d2180d915a5918367ca52ffde7885fd2a8be9"
+    },
+    {
+      "path": "net/netfilter/xt_connlimit.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "sha256": "c37f39f62f5703572fdf43eefb354c81a0dd854d061fe7b587ea345a3a0a3689"
+    },
+    {
+      "path": "net/netfilter/xt_connmark.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "sha256": "20663e5effdac95ff1de638506ab480e2b28e283d8da5bc400952904e1d990bb"
+    },
+    {
+      "path": "net/netfilter/xt_mark.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "sha256": "6f17c463f36bc716892671f1143e1a689d24f6086118cac6add4f7a898b53f07"
+    },
+    {
+      "path": "net/netfilter/xt_IDLETIMER.c",
+      "function": "idletimer_tg_destroy",
+      "scope": "Complete function equals LTS after removing only Android PM unregister call",
+      "sha256": "45af65439f23388dc73680c29150212ab3b41a793450f9ccc378bbdde775a0ef"
+    },
+    {
+      "path": "net/netfilter/xt_IDLETIMER.c",
+      "function": "idletimer_tg_destroy_v1",
+      "scope": "Complete function equals LTS after removing only Android PM unregister call",
+      "sha256": "00aca0fd2b8929f35e28dfd897c9118410912246415e25ef53aee3866d7c1eff"
+    },
+    {
+      "path": "net/netfilter/xt_IDLETIMER.c",
+      "function": "idletimer_tg_helper",
+      "identical_to_lts": true,
+      "sha256": "680919923675d59c4e7f9f95e753e762a279777c9d6ec99c2562dbde70ed3cb8"
+    },
+    {
+      "path": "net/netfilter/xt_IDLETIMER.c",
+      "function": "idletimer_check_sysfs_name",
+      "identical_to_lts": true,
+      "sha256": "625eff36b4fe408276a6f8fe980a4a223695d9bd1e080af67578fe519fe0393f"
+    },
+    {
+      "path": "net/netfilter/xt_IDLETIMER.c",
+      "scope": "whole registration array",
+      "identical_to_lts": true,
+      "sha256": "8c813f0229ef8e35e4d5cedf1bd55b46e287a8742a3f79d5a5cb55fe010bb9ba"
+    },
+    {
+      "path": "net/netfilter/xt_IDLETIMER.c",
+      "function": "check_for_delayed_trigger",
+      "identical_to_ack": true,
+      "sha256": "6848a9d1d8463c3812361603584240d506c4d12545c33023e4a87dbe225567fe"
+    },
+    {
+      "path": "net/netfilter/xt_IDLETIMER.c",
+      "function": "notify_netlink_uevent",
+      "identical_to_ack": true,
+      "sha256": "1a2aa2b4cc722867200a86f5aace6889609127dfa1303003c525be2f582e283d"
+    },
+    {
+      "path": "net/netfilter/xt_IDLETIMER.c",
+      "function": "reset_timer",
+      "identical_to_ack": true,
+      "sha256": "ed5fbce6c7fb8f6e2e597ce603f2a0b6c6249d75b8a57124cfd787e8f6d25dcc"
+    },
+    {
+      "path": "net/netfilter/xt_IDLETIMER.c",
+      "function": "idletimer_tg_checkentry",
+      "identical_to_ack": true,
+      "sha256": "fb09debf15a10e6a720eb239f70a26efc9262221f1376fe38c911e8046d4b01f"
+    },
+    {
+      "path": "net/netfilter/xt_IDLETIMER.c",
+      "function": "idletimer_tg_checkentry_v1",
+      "identical_to_ack": true,
+      "sha256": "777893c7270052bde99e4e4e2ffa14e4a5f1b2bbc1715952953c78bc5903eba4"
+    },
+    {
+      "path": "net/netfilter/xt_IDLETIMER.c",
+      "function": "idletimer_tg_work",
+      "identical_to_ack": true,
+      "sha256": "9ce012978f119d1d53b60c077c783df386a15b82fa4ad3ead578c2d17fbf1c2a"
+    },
+    {
+      "path": "net/netfilter/xt_IDLETIMER.c",
+      "function": "idletimer_tg_target",
+      "identical_to_ack": true,
+      "sha256": "ddfbd60ea096f3918767889c86b953083ac59fdd9a4b4d84792a23d8681a0ef0"
+    },
+    {
+      "path": "net/netfilter/xt_IDLETIMER.c",
+      "function": "idletimer_tg_target_v1",
+      "identical_to_ack": true,
+      "sha256": "2f35c4c17de3354fa2d33639e6cf80c08c9ea9556b9f4c6748e47601e66c5435"
+    }
+  ],
+  "netfilter_inverse_payload_proof": "d82db31ed257 and 06dd5347bd54 exactly invert all added/deleted lines across all 16 paths; no claim that historical reapplication contains later native IPv6 fixes.",
+  "local_sources": [
+    {
+      "repository": "grapheneos-17/system/netd",
+      "commit": "d57ea8dce505948725389d34806af1b5e9998749",
+      "files": {
+        "server/IdletimerController.cpp": "355122096ab48802eea408685b71e4a76d97ce733934d9060c86d1d881bc9056",
+        "server/NetlinkHandler.cpp": "6560cb5eca1731548fab2a37aa404a2de92134e270f25a0d20d828cc09baf060"
+      },
+      "scope": "modifyInterfaceIdletimer adds/removes V4V6 --send_nl_msg rules; NetlinkHandler parses xt_idletimer INTERFACE/STATE/TIME_NS/UID activity events."
+    }
+  ],
+  "adaptations": [
+    {
+      "commit": "f3f057ef8e9a43dbdbe2bb7b09d4e88c756e9969",
+      "analysis": "List removal precedes sysfs removal, so sysfs show can find no timer. ACK dereferences timer->send_nl_msg after the failed lookup. Copy only when found under list_mutex; do not dereference after unlock. Existing kernfs lifetime draining does not prevent a NULL lookup. This analysis claims a null dereference, not a demonstrated freed-object exploit."
+    },
+    {
+      "commit": "f9788ed2879e42426529eced8d0ed4bd245985c2",
+      "analysis": "Blocking-notifier registration releases its write semaphore before returning, so callbacks can start immediately. Initialize/arm timer and work first; register afterward. Skip regular-timer adjustment for ALARM_BOOTTIME because it uses ktime_get_boottime and the regular timer is not initialized in that branch. Keep valid-PREPARE guard and native clock/teardown primitives."
+    }
+  ],
+  "security": "Retained notification extension widens native interface functionality because current Android netd requests it. Native name/timeout bounds, timer-type checks, family restrictions, timer shutdown and work/sysfs teardown remain. UID is activity metadata and not used here for authorization. Historical old layouts, obsolete APIs and incorrect IPv6 entries are not restored. Generic PM/kernel notifier/alarmtimer implementations are unmodified.",
+  "validation": "644 extracted sysfs cases pass; original ACK faults on missing-timer control. 91 extracted publication/resume cases pass; original ACK has 21 violations. Build108 passed at f3f057ef8e9a with all 145 signatures/export tables verified. Build109 passed at f9788ed2879e: both images, 100 common and 45 virtual-device modules, all 145 signatures verified with tampered-payload rejection, and all 145 module export/CRC tables verified. No live sysfs, packet, notification, suspend or concurrency test.",
+  "remote_sources_used": []
+}

@@ -8565,5 +8565,397 @@
       "evidence/selinux-netlink-history-review.json",
       "SECURITY.md: Native SELinux netlink permissions"
     ]
+  },
+  {
+    "commit": "d9cb255af3a03d7b9cdb5ddbab10d9f5c68f97f2",
+    "disposition": "superseded",
+    "rationale": "The complete seven-file temporary SELinux lockdown revert is superseded by later reapplication and native f5d0e5e9d72d removal of the SELinux hook/class. Keep the current generic LSM lockdown hook, shared reason table and generic audit representation; do not replay historical relocation/removal of those general interfaces. SDK config disables SECURITY_LOCKDOWN_LSM; no claim of active lockdown enforcement.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-policy-history-review.json",
+      "SECURITY.md: SELinux policy history and memfd class"
+    ]
+  },
+  {
+    "commit": "f1ee68a8f6bdddcc93b9a582bf49c3113ff4f180",
+    "disposition": "superseded",
+    "rationale": "Seven-file restore, including shared reasons and changed quoted audit formatting, was examined. General lockdown/audit interfaces are native; SELinux-specific current-credential checks were removed upstream by f5d0e5e9d72d. Retain native state rather than resurrect the invalid SELinux subject/object assumption.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-policy-history-review.json",
+      "SECURITY.md: SELinux policy history and memfd class"
+    ]
+  },
+  {
+    "commit": "4162f006bd11db3af3a16c1048e204d0e55e593a",
+    "disposition": "superseded",
+    "rationale": "Complete six-file second workaround removes SELinux lockdown/audit declarations and makes the reasons local, but is later reversed by 6b42512ec72a. Native SELinux hook/class removal already avoids its historical policy problem while retaining the generic LSM hook/reasons/audit. This does not justify deleting current LTS general security interfaces.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-policy-history-review.json",
+      "SECURITY.md: SELinux policy history and memfd class"
+    ]
+  },
+  {
+    "commit": "6b42512ec72a42775df45ea6c4206ac7505518b3",
+    "disposition": "superseded",
+    "rationale": "Complete six-file reapplication restores then-supported SELinux lockdown, but native f5d0e5e9d72d subsequently removes that SELinux implementation because current credentials are incorrect in some call contexts. Retain native generic LSM support and audit representation, not the obsolete class/hook.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-policy-history-review.json",
+      "SECURITY.md: SELinux policy history and memfd class"
+    ]
+  },
+  {
+    "commit": "7a34c69799b8eaa936f4a354c6b223aac5e57199",
+    "disposition": "superseded",
+    "rationale": "Complete firmware/kernel-file permission revert is superseded by ACK 4e36c091c947 reapplication and current native selinux_kernel_load_from_file/read_file/load_data. Pinned policy defines new system permissions, grants kernel self firmware_load for fallback and forbids kexec/X509 loading. Preserve all native file/data class checks and FD__USE validation; do not restore the temporary permission bypass.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-policy-history-review.json",
+      "SECURITY.md: SELinux policy history and memfd class"
+    ]
+  },
+  {
+    "commit": "cceec644fd0f8004044ff1e506cda1ffa8e6c51c",
+    "disposition": "superseded",
+    "rationale": "Complete six-path io_uring_setup permission revert is superseded by ACK 5d6d2afba9d8 and native LTS enforcement. Current io_uring_allowed reaches security_uring_allowed after native sysctl/group checks, then SELinux IO_URING__ALLOWED. Pinned io_uring_use macro grants allowed and has fastbootd/snapuserd/statsd/logd call sites; retain the check.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-policy-history-review.json",
+      "SECURITY.md: SELinux policy history and memfd class"
+    ]
+  },
+  {
+    "commit": "5d6d2afba9d8c21478f70e7df934e8f9908380d5",
+    "disposition": "already-represented-upstream",
+    "rationale": "All six paths of the reapplication examined. LTS already has the io_uring setup security hook, SELinux permission and class vector, and these current function bodies match LTS. Keep native header stubs and native io_uring implementation rather than importing old declaration formatting. Positive pinned policy macro/call-site evidence supports compatibility; no actual syscall/policy-load test.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-policy-history-review.json",
+      "SECURITY.md: SELinux policy history and memfd class"
+    ]
+  },
+  {
+    "commit": "d84a3e705026d79242ce3b92257ed61dc97a1912",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain memfd anonymous-inode labeling, CREATE checking, memfd_file class and execute_no_trans/entrypoint checks through the final reapplication in integration 2fbc2da4ade3. The later crsec rename is preserved. Scope includes all seven paths. Pinned policy has memfd_file rules and libsepol recognizes memfd_class; enablement was not found in the examined capability file, so activation remains unconfirmed and support is retained conservatively for Android runtime/policy compatibility.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/selinux-policy-history-review.json",
+      "SECURITY.md: SELinux policy history and memfd class"
+    ]
+  },
+  {
+    "commit": "245f32e04a7a89843cb41dd5c9414a9a5235168e",
+    "disposition": "superseded",
+    "rationale": "Complete seven-file temporary memfd revert only unblocks an upstream credential-variable rename, as confirmed by the exact inverse payload of d84a3e705026 and the subsequent reapplication. Do not remove the final capability-gated memfd implementation; preserve native credential naming and later execution controls.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-policy-history-review.json",
+      "SECURITY.md: SELinux policy history and memfd class"
+    ]
+  },
+  {
+    "commit": "1e3041af01622a8956e6130548f6dfb66e10871c",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain all seven-path memfd reapplication semantics on LTS with native crsec variables. Anonymous security initialization happens before publishing the memfd and failure fputs the file; with memfd_class enabled, SELinux labels/checks CREATE and selects MEMFD_FILE execution permissions. Capability-disabled SELinux leaves legacy labeling. Native NNP/nosuid, process transition/share/ptrace and secureexec checks remain exact after removing this scoped extension. Native sealing/flag handling remains; separate SHMEM_FL_MEMFD tracking is not attributed to this patch. SDK policy activation remains unconfirmed; generic current Android class support is retained conservatively.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/selinux-policy-history-review.json",
+      "SECURITY.md: SELinux policy history and memfd class"
+    ]
+  },
+  {
+    "commit": "28b159de8ede6590346cfd3f708eaddca95aa3d1",
+    "disposition": "merge-resolution-adapted-net-state",
+    "rationale": "Five complete unique resolution paths reviewed. Keep native ARM64 SYM_FUNC_END, PROC_CPU_RESCTRL and time_namespace/resctrl includes, with current cpufreq_times include. Historical PROC_UID and uclamp_boosted/uclamp_util_with helpers are absent in final ACK and current native interfaces; no residual obsolete helper is restored. Keep native SID-table hash-stats interface; legacy netlink initializer is superseded by native xperms.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/selinux-mixed-merge-review.json",
+      "evidence/selinux-netlink-history-review.json",
+      "SECURITY.md: Mixed SELinux merge resolutions"
+    ]
+  },
+  {
+    "commit": "6aea7b712969d8bb24c9707216ec957fe7e26e01",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "rationale": "Eight complete unique resolution paths reviewed. ARM64 SCS/PAC assembly/flags are outside x86_64 SDK; preserve native architecture sources. Current topology API supersedes max_freq_scale/arch_freq_counters_available. Native BPF __bpfcall dispatcher preserves current CFI handling without old renamed wrappers; native linker cleanup replaces obsolete .tmp_lto.lds cleanup. Retain IDLETIMER alarm/v1 plus Android notifications and expired-time output, current reset_timer API and native sysfs_emit; fix absent timer lookup in f3f057ef8e9a and notifier publication in f9788ed2879e. Old public NL_EVENT constants are superseded by current header/private emission implementation. Current SELinux status/policy capabilities remain native; private Android netlink fields are removed by the already reviewed xperm replacement.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "f3f057ef8e9a43dbdbe2bb7b09d4e88c756e9969",
+      "f9788ed2879e42426529eced8d0ed4bd245985c2"
+    ],
+    "evidence": [
+      "evidence/selinux-mixed-merge-review.json",
+      "evidence/selinux-netlink-history-review.json",
+      "SECURITY.md: Mixed SELinux merge resolutions"
+    ]
+  },
+  {
+    "commit": "756151494432e57155135c9af08956a93d43a68e",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "rationale": "All eleven unique paths reviewed. ARM64 MPAM context hook is not added for the x86 SDK; native ptrauth remains. Binder retains Android sched_policy/normal_prio initialization with SCHED_NORMAL fallback alongside the native freeze waitqueue; native credential ownership remains. Keep current arch_freq_scale/frequency-source APIs, UID_SYS_STATS (old UID_SYS_STATS_DEBUG absent final ACK), native relocated pvpanic Kconfig, native platform dependencies for Samsung UART, and native TCPM auto-discharge/slow-charger state (old debouncing absent final ACK). Current FUSE ioctl build/declarations and native passthrough release/open_flags handling supersede the old Android passthrough structs; preserve native release locking/lifetimes. Native PR_PAC/PR_SET_VMA definitions and perf_event class terminator remain. Obsolete SELinux lockdown class remains absent as in LTS.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/selinux-mixed-merge-review.json",
+      "evidence/selinux-netlink-history-review.json",
+      "SECURITY.md: Mixed SELinux merge resolutions"
+    ]
+  },
+  {
+    "commit": "6e0df9b365b71675e4e9027ea8505655fdd916ea",
+    "disposition": "merge-resolution-adapted-net-state",
+    "rationale": "All four unique paths reviewed. Retain cpufreq_times with native uapi/lsm include; retain util_est_update restricted hook and unsigned EWMA/dequeued variables. The rest of that complete estimator function equals LTS. Trusted callback can skip the estimator update; no callback leaves native behavior. Current native userspace_initial_context capability remains; old GETLINK/GETNEIGH vectors/helpers are superseded by the reviewed native xperm interface.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/selinux-mixed-merge-review.json",
+      "evidence/selinux-netlink-history-review.json",
+      "SECURITY.md: Mixed SELinux merge resolutions"
+    ]
+  },
+  {
+    "commit": "a83342f9773e53af9bd3f849a80261c13b222087",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "rationale": "All four unique paths reviewed, including IPv6 whitespace outside conflict markers. SM8550 board audio port routing/comments remain native and are not an SDK platform addition. Retain Android accept_ra_rt_table alongside native proxy_ndp placement in its cacheline group; preserve native page_pool/rps includes plus vendor net hook include. Keep native policydb header formatting/bounds and removal of obsolete private netlink bits. No native IPv6 field is discarded.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/selinux-mixed-merge-review.json",
+      "evidence/selinux-netlink-history-review.json",
+      "SECURITY.md: Mixed SELinux merge resolutions"
+    ]
+  },
+  {
+    "commit": "f0c2df2b1228a4407c72e92e07d9f3fe695fa558",
+    "disposition": "adapted-net-state",
+    "rationale": "Complete original two-file patch reviewed. Preserve Android activity/idle uevents, timestamp/UID reporting, suspend accounting and expired-time output through the final v1 reimplementation, not the obsolete revision-0 layout, public constants or timespec APIs. Pinned netd adds/removes --send_nl_msg rules and consumes all four event fields. Correct absent timer sysfs lookup and notifier initialization in the two recorded adaptations; preserve current native safety checks.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "f3f057ef8e9a43dbdbe2bb7b09d4e88c756e9969",
+      "f9788ed2879e42426529eced8d0ed4bd245985c2"
+    ],
+    "evidence": [
+      "evidence/idletimer-history-review.json",
+      "SECURITY.md: Android idle timer integration"
+    ]
+  },
+  {
+    "commit": "7ded4359680d3fb593cbc5c90d84bb5e5083eda9",
+    "disposition": "adapted-net-state",
+    "rationale": "Keep zero-initialized allocations and suspend_time_valid guard so POST_SUSPEND without PREPARE does not consume uninitialized timestamp state. Both constructors use kzalloc; current callback preserves the validity guard and is additionally restricted to regular timers because native boottime alarms need no jiffies adjustment.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "f9788ed2879e42426529eced8d0ed4bd245985c2"
+    ],
+    "evidence": [
+      "evidence/idletimer-history-review.json",
+      "SECURITY.md: Android idle timer integration"
+    ]
+  },
+  {
+    "commit": "b22d6257b549d48a254b43c7430d16e85b4eaec6",
+    "disposition": "partially-adapted-net-state",
+    "rationale": "All two-file rollback hunks reviewed. Preserve its correction of duplicate revision-1 registration and revision-0 UAPI pollution via native v0/v1 layouts and registration arrays. Its wholesale notification/suspend removal is superseded by cf468a86d072/382e68666b7f and current netd consumers. Do not restore intermediate kmalloc, missing notifications, obsolete BUG_ON or old teardown ordering.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/idletimer-history-review.json",
+      "SECURITY.md: Android idle timer integration"
+    ]
+  },
+  {
+    "commit": "cf468a86d0725616ec8178d7f6684a7daed1cd88",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain active v1 send_nl_msg UAPI and acceptance of values 0/1; values above 1 fail EINVAL. Native rejects nonzero mode as unsupported, which is incompatible with the positive pinned netd --send_nl_msg caller. Keep native timer-type, timeout/label and same-label timer-type checks; this is userspace protocol compatibility, not historical vendor binary KMI.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/idletimer-history-review.json",
+      "SECURITY.md: Android idle timer integration"
+    ]
+  },
+  {
+    "commit": "382e68666b7f90c1d62b445f41973285410ccad5",
+    "disposition": "adapted",
+    "rationale": "Complete core reimplementation retained with native current timer/sysfs/socket APIs and explicit fixes f3f057ef8e9a/f9788ed2879e. Preserve native teardown outside list_mutex, timer shutdown before work/sysfs release, timeout bounds and family-specific registration; keep Android notifier unregister before free. Snapshot sysfs mode only after successful locked lookup; initialize work/timer before PM publication; do not operate on unused regular timer for ALARM_BOOTTIME. Netd provides positive producer/consumer evidence. No live event/suspend test is claimed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "f3f057ef8e9a43dbdbe2bb7b09d4e88c756e9969",
+      "f9788ed2879e42426529eced8d0ed4bd245985c2"
+    ],
+    "evidence": [
+      "evidence/idletimer-history-review.json",
+      "SECURITY.md: Android idle timer integration"
+    ]
+  },
+  {
+    "commit": "80af3825b7d4e4873d3642c84d2c856059ab6526",
+    "disposition": "adapted-net-state",
+    "rationale": "Complete diagnostic-only newline fixes remain in current notification and constructor paths. No permission, buffer limit or timer behavior is changed by this historical patch.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/idletimer-history-review.json",
+      "SECURITY.md: Android idle timer integration"
+    ]
+  },
+  {
+    "commit": "2a9b1b2a983a4f093b54c055a25731d2a87448f9",
+    "disposition": "merge-resolution-adapted-net-state",
+    "rationale": "All unique sysfs formatting hunks examined. Retain native sysfs_emit and Android expired-time second field with one jiffies snapshot. Later f3f057ef8e9a copies send_nl_msg under successful lookup/list_mutex to avoid the historical null dereference between list deletion and sysfs removal; all formatting cases are checked separately.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "f3f057ef8e9a43dbdbe2bb7b09d4e88c756e9969",
+      "f9788ed2879e42426529eced8d0ed4bd245985c2"
+    ],
+    "evidence": [
+      "evidence/idletimer-history-review.json",
+      "SECURITY.md: Android idle timer integration"
+    ]
+  },
+  {
+    "commit": "92cf99250dd3d508726d5c3ad850857e7766c594",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "rationale": "Unique destroy resolution adopts native timer_shutdown_sync, retained. Its sysfs-before-work order is superseded by final 41005643bc9b. Current destroy keeps shutdown then work cancellation then sysfs removal outside list_mutex and unregisters the Android PM notifier first; do not replay the historical order.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/idletimer-history-review.json",
+      "SECURITY.md: Android idle timer integration"
+    ]
+  },
+  {
+    "commit": "01222b46195ef5d356dccec2131443f724a7e551",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "rationale": "Both unique destructor resolutions examined. Preserve native early return for shared references and unlock after final list removal, avoiding waiting for callbacks under list_mutex. The accidentally lost unregister_pm_notifier calls are restored by c6ee14d14edc and reordered by 41005643bc9b. No dangling registered callback is retained.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/idletimer-history-review.json",
+      "SECURITY.md: Android idle timer integration"
+    ]
+  },
+  {
+    "commit": "4c4f255cafac0fe523db66a74b610269b570cdd7",
+    "disposition": "adapted-net-state",
+    "rationale": "Complete one-line API rename retained: Android suspend adjustment uses native timer_delete. Destruction separately uses timer_shutdown_sync. Do not restore the removed del_timer spelling or confuse callback-time deletion with final lifetime shutdown.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/idletimer-history-review.json",
+      "SECURITY.md: Android idle timer integration"
+    ]
+  },
+  {
+    "commit": "c6ee14d14edca4dba56eec1288d558f075590415",
+    "disposition": "adapted-net-state",
+    "rationale": "Both missing notifier unregisters are retained, with final 41005643bc9b ordering before timer shutdown/work cancellation/sysfs removal/free. Native blocking-notifier unregister synchronizes callback lifetime. The earlier intermediate placement after sysfs is superseded.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/idletimer-history-review.json",
+      "SECURITY.md: Android idle timer integration"
+    ]
+  },
+  {
+    "commit": "da0d6fef4be114bfe8c8ffe7299762721d961077",
+    "disposition": "merge-resolution-adapted-net-state",
+    "rationale": "All six unique timeout/target/checkentry hunks examined. Retain native secs_to_jiffies constructor conversion and Android reset_timer calls needed for activity/UID notifications. 9464026f6aec supplies the same safe conversion inside reset_timer; do not replace Android state transitions with bare mod_timer calls.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/idletimer-history-review.json",
+      "SECURITY.md: Android idle timer integration"
+    ]
+  },
+  {
+    "commit": "9464026f6aec2de1c2abb78cd551c9d8eb446b1c",
+    "disposition": "adapted-net-state",
+    "rationale": "Keep secs_to_jiffies in reset_timer so native conversion applies without intermediate info_timeout*1000 multiplication. Existing timeout validation and native timer APIs remain; no restored overflow-prone arithmetic.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/idletimer-history-review.json",
+      "SECURITY.md: Android idle timer integration"
+    ]
+  },
+  {
+    "commit": "770ffb0a835c7a10e36595d03c2735887ca21d31",
+    "disposition": "adapted-net-state",
+    "rationale": "Keep native sk_uid for full sockets and current user-namespace conversion, with subsequent cafbae1761e5 null check. Cached sk_uid retains the last socket owner after orphaning as documented locally by the removal of sock_i_uid; do not restore obsolete API behavior or dereference a missing full socket.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/idletimer-history-review.json",
+      "SECURITY.md: Android idle timer integration"
+    ]
+  },
+  {
+    "commit": "cafbae1761e5ba165d5d7e5774516f9b51eabb87",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain full_sk null check before sk_uid, covering native skb_to_full_sk returning NULL for TIME_WAIT or missing full sockets. If no full socket exists the existing cached timer UID remains; this is notification metadata, not an authorization decision.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/idletimer-history-review.json",
+      "SECURITY.md: Android idle timer integration"
+    ]
+  },
+  {
+    "commit": "41005643bc9b3937f9dc8e8372c5d15af8e61bb2",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain final destructor ordering: remove list under mutex, unlock, unregister PM callback, shutdown/cancel timer, cancel work, remove sysfs file, then free. Both complete current destructors equal native LTS after removing only Android notifier unregister. This retains native deadlock/lifetime fixes; f3f057ef8e9a separately fixes lookup during the list/sysfs removal interval.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "f3f057ef8e9a43dbdbe2bb7b09d4e88c756e9969",
+      "f9788ed2879e42426529eced8d0ed4bd245985c2"
+    ],
+    "evidence": [
+      "evidence/idletimer-history-review.json",
+      "SECURITY.md: Android idle timer integration"
+    ]
+  },
+  {
+    "commit": "d82db31ed25704be812bace4bf657c6bd0ea263d",
+    "disposition": "superseded",
+    "rationale": "All 16-path changed payloads exactly invert reapplication 06dd5347bd54, whose full patch was reviewed. Temporary NFPROTO_UNSPEC rollback is superseded by native family-specific tables and later 306ed1728e84 IPv6 MARK/NFLOG and TRACE-owner fixes. Preserve native connbytes error return and current registration/unregistration; do not restore the temporary broad-family behavior.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/idletimer-history-review.json",
+      "SECURITY.md: Android idle timer integration"
+    ]
+  },
+  {
+    "commit": "06dd5347bd5403b0eeff6fab70533b060403e623",
+    "disposition": "already-represented-upstream",
+    "rationale": "Complete 16-file reapplication reviewed. Native LTS represents family-specific registration/cleanup, CT/NOTRACK table consolidation and connbytes error propagation. Fifteen full files equal LTS; IDLETIMER registration array also equals LTS alongside separately retained Android runtime extension. Keep later 306ed1728e84 correcting IPv6 MARK/NFLOG and TRACE module owner, and c38eb2973c18 NFT_COMPAT_ARP condition; historical reapplication alone had the old wrong-family entries.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/idletimer-history-review.json",
+      "SECURITY.md: Android idle timer integration"
+    ]
   }
 ]
