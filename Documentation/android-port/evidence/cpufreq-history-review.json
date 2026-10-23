@@ -1,0 +1,238 @@
+{
+  "source_head": "f6617750f7d36b82b8d4217625e9b6413ece2715",
+  "records": [
+    {
+      "commit": "8bea10e03303b38a298b86c9bd8199098abd26ae",
+      "disposition": "adapted-net-state",
+      "rationale": "All nine original paths and final time-accounting implementation reviewed. Keep per-task frequency-time arrays, proc process/thread 0444 entries, initialization after task duplication, allocation before first wake, final-task free, policy creation/transition integration and user/system accounting. Final code uses valid entries, flexible array/struct_size, current policy transition API and fast-switch recording. Positive pinned Framework KernelCpuThreadReader and ProcTimeInStateReader consumers parse CPU headers and 10ms units. CPU_FREQ_TIMES=y. Task array reads/update/free serialize on task_time_in_state_lock; failed atomic allocation loses statistics rather than failing fork. Persistent policy tables retain stable offsets, not hardware energy accuracy; concurrent hotplug/driver replacement and resource use remain runtime-unverified.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/cpufreq-history-review.json",
+        "SECURITY.md: CPU frequency accounting and source interfaces"
+      ],
+      "patch_sha256": "92d9b67575fb1d4222ea59e4409f1a6ecbbb6860a01b4bcdb7b76a84e0ad0f6b"
+    },
+    {
+      "commit": "1bf760e97d559c9c83511165c73c4e10181436b9",
+      "disposition": "reverted-no-residual-code",
+      "rationale": "All four capping-addition paths reviewed with explicit inverse 625ebc8a7125, later reapplication 0cfe39fe403e and final revert c65b55018570. Both tips lack old max_cpu_freq/max_freq_scale storage and arch_set_max_freq_scale API. Do not reintroduce obsolete scaling or its cpumask_first > nr_cpu_ids boundary check. Native current hardware-pressure implementation remains, with separately retained Android callbacks.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/cpufreq-history-review.json",
+        "SECURITY.md: CPU frequency accounting and source interfaces"
+      ],
+      "patch_sha256": "858a7bd307232445c7218dd69294628a40275cb445c2f761302f1f694b5cf9d2"
+    },
+    {
+      "commit": "625ebc8a71257d19a503838c48a6e17e64f715a2",
+      "disposition": "superseded",
+      "rationale": "All four inverse paths reviewed. Temporary revert is superseded by reapplication 0cfe39fe403e and final removal c65b55018570. Final code agrees with removal of this historical API; retain native current capacity/pressure logic rather than replay temporary history.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/cpufreq-history-review.json",
+        "SECURITY.md: CPU frequency accounting and source interfaces"
+      ],
+      "patch_sha256": "f075265ca63c66e0a812e8fa6f8a30d1e57a3edf627f44e610294021e756e1f5"
+    },
+    {
+      "commit": "0cfe39fe403ea6dbe2fdfb38edd36022b35d4d66",
+      "disposition": "reverted-no-residual-code",
+      "rationale": "Complete four-path reapplication reviewed with explicit inverse c65b55018570. Old max-frequency scale machinery is absent in ACK and port; current LTS capacity reference and boost-aware hardware-pressure calculation are preserved. No compatibility requirement justifies restoring an interface ACK itself removed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/cpufreq-history-review.json",
+        "SECURITY.md: CPU frequency accounting and source interfaces"
+      ],
+      "patch_sha256": "15e2335854d0391c8b517b5b019580fb854e4762554aede6a9f273a76bdbb666"
+    },
+    {
+      "commit": "c65b550185706ddcc7d1dfaa25d389196032ef51",
+      "disposition": "already-represented-upstream",
+      "rationale": "All four removal paths reviewed. Current LTS and port omit the old fields/functions/declarations and cpufreq_set_policy is byte-identical to LTS. Native topology_update_hw_pressure calculation including boost handling and WRITE_ONCE updates is retained except an Android observer after each update. This establishes removal representation, not identity of the historical upstream implementation cited by the commit message.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/cpufreq-history-review.json",
+        "SECURITY.md: CPU frequency accounting and source interfaces"
+      ],
+      "patch_sha256": "8f3ceb87cf98f4a6c8bcc69cca9a7fa05b99db8772668c7a11d041039c7a3972"
+    },
+    {
+      "commit": "18b7a1479ed8c9ac9ecc40171a445c371a2eca79",
+      "disposition": "partially-adapted-net-state",
+      "rationale": "All five paths reviewed. Retain dummy driver, Kconfig and Makefile; final driver has current cpufreq_policy_data verification signature and get callback returning synthetic frequency 1, table 1/2 and no-op target. Original GKI defconfig selections are superseded by existing virtual-device fragment CPUFREQ_DUMMY=m and BUILD.bazel dummy-cpufreq.ko distribution; no arm64 configuration is added for x86 target. Generated dummy module is positive build evidence. This provides emulator frequency/statistics interfaces, not real frequency or energy measurements.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/cpufreq-history-review.json",
+        "SECURITY.md: CPU frequency accounting and source interfaces"
+      ],
+      "patch_sha256": "82c98f76d1f5a986f5195e08692fa1fdf5caf906ef665d2ad1beaa821b46f5fa"
+    },
+    {
+      "commit": "bdfa61448f3184fb8a48f25da621532fcbef3d3a",
+      "disposition": "superseded",
+      "rationale": "All five historical paths reviewed. Final ACK and LTS cpufreq_ready_for_eas/cpufreq_policy_is_good_for_eas enforce schedutil again; port preserves those functions. Historical governor-change helper no longer exists in either tree. Retain LTS documentation stating actual native restriction rather than historical ACK recommendation wording. Current default-false Android build_perf_domains override remains separately retained; this row does not remove generic customization. SDK ENERGY_MODEL is unset and default governor is schedutil; no runtime EAS claim.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/cpufreq-history-review.json",
+        "SECURITY.md: CPU frequency accounting and source interfaces"
+      ],
+      "patch_sha256": "a2e4569f80676dfd18af0babe9c3cccd93afdd1f48279e118c2b473b76aa475f"
+    },
+    {
+      "commit": "efab334061ff7ed8f9dd5e28f2c7bdb09e2a77ec",
+      "disposition": "partially-adapted-net-state",
+      "rationale": "All four paths reviewed. Retain max-frequency reporting customization using final restricted android_rvh_show_max_freq signature/export. Default scalar is policy cpuinfo.max_freq; callback changes reported value without directly changing policy. Omit historical freq_table_limits observer explicitly removed by 519b8651aaf6. Current frequency-table helper is exactly native except trace include. Incorrect trusted max-frequency overrides may mislead userspace frequency/power policy; fixed unsigned formatting cannot overflow a sysfs page. Exact SDK callback registration unconfirmed; preserve source interface conservatively.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/cpufreq-history-review.json",
+        "SECURITY.md: CPU frequency accounting and source interfaces"
+      ],
+      "patch_sha256": "2c4ba56c8b04a846415e55e40dfe658d46c3b6612a8fae6582e93c810bb5f84c"
+    },
+    {
+      "commit": "519b8651aaf6784a00935519bb68c3fae6e8f8e4",
+      "disposition": "already-represented-upstream",
+      "rationale": "All five removal paths reviewed, including both GIC affinity initialization loops. Removed hook names have no call, declaration or registry export in delivered code; freq-table helper and GIC init behavior follow LTS. This uses the explicit ACK removal and final code, not an inference from failing to find consumers. Current replacement restricted max-frequency reporting hook remains.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/cpufreq-history-review.json",
+        "SECURITY.md: CPU frequency accounting and source interfaces"
+      ],
+      "patch_sha256": "88c4e82100e02f3a83a22fa63e4cdbb40e96b88b6bf65faa35c8a16215340d27"
+    },
+    {
+      "commit": "eb5e5c1f626e74ce56890b491edb90a1d11a7ea7",
+      "disposition": "omitted-current-target",
+      "rationale": "All three paths reviewed: arm64 Tegra config enabling plus Tegra AHB/default CPUfreq Kconfig constraints. These select Tegra SoC/IP support, not Android generic source interfaces. Current target is x86 SDK with no Tegra/SCMI configuration and no arm64 GKI defconfig; both Kconfig implementation files remain exactly LTS. Do not add physical Tegra support or suppress native defaults solely for another target.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/cpufreq-history-review.json",
+        "SECURITY.md: CPU frequency accounting and source interfaces"
+      ],
+      "patch_sha256": "70422b90461bd893a6ad2a7391a3f039322f679d83c227b6758df773fa30942e"
+    },
+    {
+      "commit": "f6e93ef001e4d3be4b9ea11eb28b708acc91ce7a",
+      "disposition": "omitted-current-target",
+      "rationale": "Complete one-hunk initialization fix reviewed with introducing 85e3a67903c7. Port keeps entire scmi-cpufreq.c identical to LTS, without the omitted SCMI-only vendor hook or done branch, and removes its declaration/export. Native callback unconditionally updates freq QoS and initializes ret from that call. Thus the uninitialized branch cannot be present; this is not leaving a known bug in a retained hook. ARM SCMI platform driver is outside configured x86 SDK target.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/cpufreq-history-review.json",
+        "SECURITY.md: CPU frequency accounting and source interfaces"
+      ],
+      "patch_sha256": "a26020273d93045bde8e78086e9034d1c10afa84d1f2e8d65d2a24a90552c956"
+    },
+    {
+      "commit": "56cbb143f88eb52418714b2023991e15ec81afd4",
+      "disposition": "adapted-net-state",
+      "rationale": "Full per-CPU GPL export addition reviewed. Keep cpufreq_update_util_data source export for Android governor/vendor customization. Entire scheduler cpufreq.c matches LTS except this export and separately retained cpufreq_this_cpu_can_update export. Native RCU publication/removal and caller synchronization remain; export does not grant pointer lifetime or permit bypassing required rq/RCU context. Exact SDK vendor consumer remains unconfirmed; retain generic source interface conservatively.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/cpufreq-history-review.json",
+        "SECURITY.md: CPU frequency accounting and source interfaces"
+      ],
+      "patch_sha256": "18ef66759cd442c0789a67e2a722571ed2846c135cf1a96203ccc4d4b2dcb113"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "drivers/cpufreq/cpufreq_times.c",
+      "port_blob": "aeb7b7b0bbdad7a88415fdf6e94e34fbcb429a4f",
+      "relationship": "whole file equals pinned ACK; source reviewed"
+    },
+    {
+      "path": "drivers/cpufreq/dummy-cpufreq.c",
+      "port_blob": "173b84157524d5c486dce83c152a30b8b335a7c2",
+      "relationship": "whole file equals pinned ACK; source reviewed"
+    },
+    {
+      "path": "include/linux/cpufreq_times.h",
+      "port_blob": "38272a5f3163fc9427fef476487cdae3894cb6bd",
+      "relationship": "whole file equals pinned ACK; source reviewed"
+    },
+    {
+      "path": "drivers/cpufreq/scmi-cpufreq.c",
+      "port_blob": "c450cf9c881d497fa03dc99c32e1258135d89aa5",
+      "relationship": "whole file equals pinned LTS"
+    },
+    {
+      "path": "drivers/cpufreq/Kconfig.arm",
+      "port_blob": "9be0503df55a0d4baf86d8d42a6ca97a115f4cf5",
+      "relationship": "whole file equals pinned LTS"
+    },
+    {
+      "path": "drivers/amba/Kconfig",
+      "port_blob": "fb6c7e0b4cce286f806c4b43871ac10817375d28",
+      "relationship": "whole file equals pinned LTS"
+    },
+    {
+      "path": "include/linux/cpufreq.h",
+      "port_blob": "fd26b3a4aa286e02bbc55b765b87c6c2f2c463e8",
+      "relationship": "whole file equals pinned LTS"
+    },
+    {
+      "path": "Documentation/scheduler/sched-energy.rst",
+      "port_blob": "70e2921ef725dc89919df78d269aa246cd18f114",
+      "relationship": "whole file equals pinned LTS"
+    },
+    {
+      "path": "drivers/cpufreq/freq_table.c",
+      "relationship": "native except trace include",
+      "sha256": "572d18f7e60ac81840fd751c3a81a6317d23b2ca435117b69df7182d4f293dd5"
+    },
+    {
+      "path": "kernel/sched/cpufreq.c",
+      "relationship": "native except two GPL exports",
+      "sha256": "a499ffa5dd64488eefdfab8dd14e201cb1233a74a2a1d36af36ca9cd14d66e05"
+    },
+    {
+      "path": "drivers/cpufreq/cpufreq.c",
+      "function": "cpufreq_set_policy",
+      "sha256": "88f09db18c687e287620cae989d24b3d163181ba7faaf625b1ce3e6cc3819257",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "drivers/cpufreq/cpufreq.c",
+      "function": "cpufreq_ready_for_eas",
+      "sha256": "1821578447a38b09abf9091d1db68db0a3d5a95dff58abba09fc7121cb92e1e4",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "drivers/cpufreq/cpufreq.c",
+      "function": "cpufreq_policy_is_good_for_eas",
+      "sha256": "d8cc4c1fd101e351caad269cfc43942bcea67bef6bb57ae69adb4ea1f21b21fa",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "drivers/irqchip/irq-gic-v3.c",
+      "function": "gic_dist_init",
+      "sha256": "8d3788036e3b659aca4fd4393aba57684a28d7bda4bb302b445e46a63fec6957",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "drivers/base/arch_topology.c",
+      "function": "topology_update_hw_pressure",
+      "sha256": "f4f354b7121eb86c531ea49edf87baf2e04468b5d46354279762ada8cf74952e",
+      "relationship": "native except observer after WRITE_ONCE"
+    }
+  ],
+  "local_resources": {
+    "frameworks/base/core/java/com/android/internal/os/KernelCpuThreadReader.java": "2848a76baedbc32e93dd698b16616b6ecd83e25b0ba49d5f178b3f09338b04d1",
+    "frameworks/base/core/java/com/android/internal/os/ProcTimeInStateReader.java": "b0387a6b7e5aad511736fb50576a07151f4480ff7985099d25c0eda36bb958d5",
+    "common-modules/virtual-device/virtual_device.fragment": "e63c143d165c2c4df5223e4df8d174e9d43fd0d5fd02b05769cb2b3b2f4d5503",
+    "common-modules/virtual-device/BUILD.bazel": "0b847df7553808750766684ebf743fa306bb6a6f1f25b7b35d9f9149abf4e4fb"
+  },
+  "frameworks_base_pin": "8304f868f2114c6a35c76e21691f3f54c3ee1c4f",
+  "security": "Retained per-task proc stats add kernel memory use and an IRQ-disabled spinlock to CPU accounting/readout; no measured contention bound. Synthetic 1/2 values are interface data, not actual frequency/energy. Policy tables persist/reuse CPU offsets; concurrent registration/hotplug, module replacement and proc/task exit races were source-reviewed but not runtime-tested. No userspace write interface or KMI padding added. Exported callbacks retain native caller lifetime/RCU obligations.",
+  "uncertainty": "Framework proc consumer and emulator module are positive evidence. Exact max-frequency callback and per-CPU export consumers are unconfirmed, so generic customization is retained conservatively. CONFIG_ENERGY_MODEL is unset in distributed base configuration. The distributed dot_config reflects base kernel; actual virtual module config is selected by virtual_device.fragment, not inferred from base CPUFREQ_DUMMY=n.",
+  "validation": "Source identities and scoped native function comparisons asserted. Existing emulator build 121 validates unchanged f6617750f7d3 implementation; no new source changes or runtime tests in this review.",
+  "remote_sources_used": []
+}

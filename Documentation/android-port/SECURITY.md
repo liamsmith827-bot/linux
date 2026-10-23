@@ -5330,3 +5330,46 @@ user_dumpable and restore the native bitfield placement. Its exit-time saved
 value and native ptrace credential/capability checks are retained. Existing vendor
 module binaries are intentionally not preserved; source modules rebuild against
 this layout. No remote resources or runtime tests were added.
+
+# Wake queues and notification hooks
+
+`evidence/wake-queue-history-review.json` covers eleven candidates including all
+eight unique paths of merge c05e84a239bf. Wake-queue add/wake operations retain
+native duplicate suppression, barriers and task-reference ownership. Keep integer
+wake-batch metadata rather than the historical pointer to a transient queue head.
+Commit f6617750f7d3 resets the copied scalar during fork and uses WRITE_ONCE for
+publication/clear. Concurrent wakers can overwrite it; it is an advisory hint,
+not a lifetime reference or exact serialized count. No queue pointer escapes.
+
+Retain generic flags/mode and socket wake-replacement hooks. Defaults preserve
+native wakeups. A callback setting done must supply the replaced notification;
+incorrect state masks or suppression can starve waiters. Socket async notification
+still runs, and callbacks must obey the call-site atomic/RCU restrictions. Native
+pollfree logic is GPL-exported for the actual Rust PollCondVar destructors, which
+retain synchronous/deferred RCU lifetime handling. Exact SDK vendor hook consumers
+remain unconfirmed; no absence argument justifies removing these interfaces.
+No runtime socket, poll, lock-contention or scheduling test was executed.
+
+# CPU frequency accounting and source interfaces
+
+`evidence/cpufreq-history-review.json` reviews twelve historical candidates.
+Keep per-task time-in-state accounting: pinned Framework readers consume the
+process/thread proc files and parse CPU headers and 10ms time units. Keep the
+synthetic dummy driver explicitly selected and distributed by the existing
+virtual-device build. Its frequencies 1/2 do not measure real hardware power.
+Array access/free uses the IRQ-saving task statistics lock; allocation failure
+can lose accounting samples. Added memory use, lock contention, concurrent
+hotplug/driver replacement and task/proc runtime races have not been measured or
+executed. Persistent policy tables preserve offsets; this is not a proof of
+arbitrary dynamic-driver compatibility.
+
+Keep generic max-frequency reporting customization and GPL per-CPU governor
+source export, with native RCU/lifetime obligations. Incorrect callbacks can
+mislead frequency policy or violate synchronization. Exact SDK registrations
+remain unconfirmed; retain these interfaces conservatively. Do not revive the
+explicitly reverted max-frequency capping engine or removed frequency-table/GIC
+hooks. Current EAS readiness still checks schedutil in both ACK and LTS, while
+separate Android override hooks remain. Preserve native current pressure logic.
+Tegra/SCMI-specific additions are outside this x86 target; the native SCMI driver
+has no vendor done branch and therefore no instance of the fixed uninitialized
+variable. No physical driver fix is weakened by omitting that absent branch.

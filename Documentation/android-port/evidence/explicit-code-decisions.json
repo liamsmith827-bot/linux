@@ -11005,5 +11005,255 @@
       "evidence/proxy-donor-chain-review.json",
       "SECURITY.md: Proxy donor chain and task layout"
     ]
+  },
+  {
+    "commit": "1a29b384b03de6799ffcda6ef6b2dd4bb0c1e567",
+    "disposition": "partially-adapted-net-state",
+    "rationale": "All three paths reviewed. Keep context-local queue count and expose the copied integer during wake_up_q for vendor source customization. Do not preserve the original pointer to a potentially stack-allocated queue head; abe2e577c368 replaces it. Native cmpxchg duplicate suppression, wakeup ordering and task references remain. Static aggregate initialization zeroes count and wake_q_init resets it. f6617750f7d3 clears inherited task metadata at fork; the scalar is advisory, not an exact concurrent queue length.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "f6617750f7d36b82b8d4217625e9b6413ece2715"
+    ],
+    "evidence": [
+      "evidence/wake-queue-history-review.json",
+      "SECURITY.md: Wake queues and notification hooks"
+    ]
+  },
+  {
+    "commit": "abe2e577c3685f2965656e7e7a26da0782f54004",
+    "disposition": "adapted-net-state",
+    "rationale": "Both paths reviewed. Retain integer wake_q_count instead of exposing queue-head lifetime. Publish/clear via WRITE_ONCE and initialize copied tasks to zero in f6617750f7d3. Once native wake_q.next is cleared, overlapping wakers may overwrite/clear this field, so it is only a hint and consumers must use appropriate reads rather than rely on a unique active batch. No new serialization or unprivileged writable interface is added.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "f6617750f7d36b82b8d4217625e9b6413ece2715"
+    ],
+    "evidence": [
+      "evidence/wake-queue-history-review.json",
+      "SECURITY.md: Wake queues and notification hooks"
+    ]
+  },
+  {
+    "commit": "dec0fd4a0385ddd89b983aa75e68b8015d610229",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "Complete three-path addition of __sched annotations and sched/debug include reviewed with explicit inverse 8c3fc59e08b9. Keep native current page/folio wait declarations and bodies; the historical annotation policy has no residual effect. Current wait.c autoremove/wait_woken/woken helpers are byte-identical to LTS, and folio/page wait declarations retain native attributes. Do not revive removed pre-folio functions or alter wchan text sections.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/wake-queue-history-review.json",
+      "SECURITY.md: Wake queues and notification hooks"
+    ]
+  },
+  {
+    "commit": "8c3fc59e08b952533be16932c02e4897fd7e2a35",
+    "disposition": "already-represented-upstream",
+    "rationale": "All three revert paths reviewed. The final removal of those Android __sched attributes agrees with the current native wait helpers and page/folio declarations. Historical page implementations have since been replaced upstream; this is source-state representation rather than commit-ID equivalence. Separate filemap changes are not certified by this annotation review.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/wake-queue-history-review.json",
+      "SECURITY.md: Wake queues and notification hooks"
+    ]
+  },
+  {
+    "commit": "0d0f0c5020bc425c9a51c8d17b16ca831c2598fb",
+    "disposition": "superseded",
+    "rationale": "All four paths reviewed. Original socket wake-replacement hook lacks the later sock argument and exports live in the old registry. Explicit revert and reapplications replace it; retain the final typed source interface and native socket wake logic underneath, not the old signature or duplicate events.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/wake-queue-history-review.json",
+      "SECURITY.md: Wake queues and notification hooks"
+    ]
+  },
+  {
+    "commit": "7c4dc7a76e51b872c923b42f2b2437e515f83043",
+    "disposition": "superseded",
+    "rationale": "All four removal paths reviewed. Later 19919fb4e58c adds the socket pointer and restores both generic wake hooks. Do not replay the temporary revert against current Android vendor interfaces.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/wake-queue-history-review.json",
+      "SECURITY.md: Wake queues and notification hooks"
+    ]
+  },
+  {
+    "commit": "19919fb4e58ce5c7484c1d70c523ac82891078e6",
+    "disposition": "superseded",
+    "rationale": "Complete four-path typed reintroduction reviewed. Later e4bd52296926 removal and ec0684d2500c reapplication establish final code; registry placement is current kernel/sched/vendor_hooks.c. Preserve the final reapplication instead of historical source positions.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/wake-queue-history-review.json",
+      "SECURITY.md: Wake queues and notification hooks"
+    ]
+  },
+  {
+    "commit": "e4bd522969262b7139f77bb27cd8b0094ddcaab9",
+    "disposition": "superseded",
+    "rationale": "All four hook/registry/wait/socket removal paths reviewed. ec0684d2500c explicitly restores the functionality; omit this temporary revert as a source transformation. No absence-of-consumer conclusion is inferred.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/wake-queue-history-review.json",
+      "SECURITY.md: Wake queues and notification hooks"
+    ]
+  },
+  {
+    "commit": "ec0684d2500c578edc79e58b26fba49b691f9a0c",
+    "disposition": "adapted-net-state",
+    "rationale": "All four paths reviewed. Retain default WF_SYNC/unchanged mode and default done=0, current sock argument and GPL tracepoint exports. The flags hook may change waking state masks or placement hints; done=1 replaces the normal socket poll wake and must actually perform the required notification. Native sk_wake_async_rcu still runs and RCU protects socket wait pointers. Trusted callbacks must honor atomic/RCU context and wait conditions; incorrect overrides can lose wakeups or starve tasks. Exact SDK callbacks unconfirmed, interfaces retained conservatively.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/wake-queue-history-review.json",
+      "SECURITY.md: Wake queues and notification hooks"
+    ]
+  },
+  {
+    "commit": "c0b25fe22b561a71d86116c63cfe8449b1665295",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain GPL export of native __wake_up_pollfree. Positive in-tree consumers are Rust PollCondVar and PollCondVarBox destruction, which call it before synchronize_rcu or deferred kvfree_call_rcu; configured Rust Binder modules require the source interface. Full exported function is LTS unchanged, including EPOLLHUP|POLLFREE and remaining-queue warning. Export does not substitute for caller lifetime/RCU obligations.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/wake-queue-history-review.json",
+      "SECURITY.md: Wake queues and notification hooks"
+    ]
+  },
+  {
+    "commit": "c05e84a239bffd0a739f4237a6b6c13c3735252d",
+    "disposition": "merge-resolution-adapted-net-state",
+    "rationale": "All eight unique remerge paths reviewed. Keep native scheduler split includes/guards plus Android trace/cpufreq/vendor includes, GPL double_rq_lock/set_task_cpu, blocked-reason/tick observations, latency_sensitive cgroup entry and exported declarations. Preserve RT task_is_blocked early return together with Android sync-aware push suppression. Fair preemption is current LTS plus default-false preempt/ignore hook; historical do_preempt_short declaration is superseded by native later logic. Do not select one merge parent wholesale. Whole scheduling policies remain separately audited; this row addresses the unique resolutions.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/wake-queue-history-review.json",
+      "SECURITY.md: Wake queues and notification hooks"
+    ]
+  },
+  {
+    "commit": "8bea10e03303b38a298b86c9bd8199098abd26ae",
+    "disposition": "adapted-net-state",
+    "rationale": "All nine original paths and final time-accounting implementation reviewed. Keep per-task frequency-time arrays, proc process/thread 0444 entries, initialization after task duplication, allocation before first wake, final-task free, policy creation/transition integration and user/system accounting. Final code uses valid entries, flexible array/struct_size, current policy transition API and fast-switch recording. Positive pinned Framework KernelCpuThreadReader and ProcTimeInStateReader consumers parse CPU headers and 10ms units. CPU_FREQ_TIMES=y. Task array reads/update/free serialize on task_time_in_state_lock; failed atomic allocation loses statistics rather than failing fork. Persistent policy tables retain stable offsets, not hardware energy accuracy; concurrent hotplug/driver replacement and resource use remain runtime-unverified.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/cpufreq-history-review.json",
+      "SECURITY.md: CPU frequency accounting and source interfaces"
+    ]
+  },
+  {
+    "commit": "1bf760e97d559c9c83511165c73c4e10181436b9",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "All four capping-addition paths reviewed with explicit inverse 625ebc8a7125, later reapplication 0cfe39fe403e and final revert c65b55018570. Both tips lack old max_cpu_freq/max_freq_scale storage and arch_set_max_freq_scale API. Do not reintroduce obsolete scaling or its cpumask_first > nr_cpu_ids boundary check. Native current hardware-pressure implementation remains, with separately retained Android callbacks.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/cpufreq-history-review.json",
+      "SECURITY.md: CPU frequency accounting and source interfaces"
+    ]
+  },
+  {
+    "commit": "625ebc8a71257d19a503838c48a6e17e64f715a2",
+    "disposition": "superseded",
+    "rationale": "All four inverse paths reviewed. Temporary revert is superseded by reapplication 0cfe39fe403e and final removal c65b55018570. Final code agrees with removal of this historical API; retain native current capacity/pressure logic rather than replay temporary history.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/cpufreq-history-review.json",
+      "SECURITY.md: CPU frequency accounting and source interfaces"
+    ]
+  },
+  {
+    "commit": "0cfe39fe403ea6dbe2fdfb38edd36022b35d4d66",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "Complete four-path reapplication reviewed with explicit inverse c65b55018570. Old max-frequency scale machinery is absent in ACK and port; current LTS capacity reference and boost-aware hardware-pressure calculation are preserved. No compatibility requirement justifies restoring an interface ACK itself removed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/cpufreq-history-review.json",
+      "SECURITY.md: CPU frequency accounting and source interfaces"
+    ]
+  },
+  {
+    "commit": "c65b550185706ddcc7d1dfaa25d389196032ef51",
+    "disposition": "already-represented-upstream",
+    "rationale": "All four removal paths reviewed. Current LTS and port omit the old fields/functions/declarations and cpufreq_set_policy is byte-identical to LTS. Native topology_update_hw_pressure calculation including boost handling and WRITE_ONCE updates is retained except an Android observer after each update. This establishes removal representation, not identity of the historical upstream implementation cited by the commit message.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/cpufreq-history-review.json",
+      "SECURITY.md: CPU frequency accounting and source interfaces"
+    ]
+  },
+  {
+    "commit": "18b7a1479ed8c9ac9ecc40171a445c371a2eca79",
+    "disposition": "partially-adapted-net-state",
+    "rationale": "All five paths reviewed. Retain dummy driver, Kconfig and Makefile; final driver has current cpufreq_policy_data verification signature and get callback returning synthetic frequency 1, table 1/2 and no-op target. Original GKI defconfig selections are superseded by existing virtual-device fragment CPUFREQ_DUMMY=m and BUILD.bazel dummy-cpufreq.ko distribution; no arm64 configuration is added for x86 target. Generated dummy module is positive build evidence. This provides emulator frequency/statistics interfaces, not real frequency or energy measurements.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/cpufreq-history-review.json",
+      "SECURITY.md: CPU frequency accounting and source interfaces"
+    ]
+  },
+  {
+    "commit": "bdfa61448f3184fb8a48f25da621532fcbef3d3a",
+    "disposition": "superseded",
+    "rationale": "All five historical paths reviewed. Final ACK and LTS cpufreq_ready_for_eas/cpufreq_policy_is_good_for_eas enforce schedutil again; port preserves those functions. Historical governor-change helper no longer exists in either tree. Retain LTS documentation stating actual native restriction rather than historical ACK recommendation wording. Current default-false Android build_perf_domains override remains separately retained; this row does not remove generic customization. SDK ENERGY_MODEL is unset and default governor is schedutil; no runtime EAS claim.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/cpufreq-history-review.json",
+      "SECURITY.md: CPU frequency accounting and source interfaces"
+    ]
+  },
+  {
+    "commit": "efab334061ff7ed8f9dd5e28f2c7bdb09e2a77ec",
+    "disposition": "partially-adapted-net-state",
+    "rationale": "All four paths reviewed. Retain max-frequency reporting customization using final restricted android_rvh_show_max_freq signature/export. Default scalar is policy cpuinfo.max_freq; callback changes reported value without directly changing policy. Omit historical freq_table_limits observer explicitly removed by 519b8651aaf6. Current frequency-table helper is exactly native except trace include. Incorrect trusted max-frequency overrides may mislead userspace frequency/power policy; fixed unsigned formatting cannot overflow a sysfs page. Exact SDK callback registration unconfirmed; preserve source interface conservatively.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/cpufreq-history-review.json",
+      "SECURITY.md: CPU frequency accounting and source interfaces"
+    ]
+  },
+  {
+    "commit": "519b8651aaf6784a00935519bb68c3fae6e8f8e4",
+    "disposition": "already-represented-upstream",
+    "rationale": "All five removal paths reviewed, including both GIC affinity initialization loops. Removed hook names have no call, declaration or registry export in delivered code; freq-table helper and GIC init behavior follow LTS. This uses the explicit ACK removal and final code, not an inference from failing to find consumers. Current replacement restricted max-frequency reporting hook remains.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/cpufreq-history-review.json",
+      "SECURITY.md: CPU frequency accounting and source interfaces"
+    ]
+  },
+  {
+    "commit": "eb5e5c1f626e74ce56890b491edb90a1d11a7ea7",
+    "disposition": "omitted-current-target",
+    "rationale": "All three paths reviewed: arm64 Tegra config enabling plus Tegra AHB/default CPUfreq Kconfig constraints. These select Tegra SoC/IP support, not Android generic source interfaces. Current target is x86 SDK with no Tegra/SCMI configuration and no arm64 GKI defconfig; both Kconfig implementation files remain exactly LTS. Do not add physical Tegra support or suppress native defaults solely for another target.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/cpufreq-history-review.json",
+      "SECURITY.md: CPU frequency accounting and source interfaces"
+    ]
+  },
+  {
+    "commit": "f6e93ef001e4d3be4b9ea11eb28b708acc91ce7a",
+    "disposition": "omitted-current-target",
+    "rationale": "Complete one-hunk initialization fix reviewed with introducing 85e3a67903c7. Port keeps entire scmi-cpufreq.c identical to LTS, without the omitted SCMI-only vendor hook or done branch, and removes its declaration/export. Native callback unconditionally updates freq QoS and initializes ret from that call. Thus the uninitialized branch cannot be present; this is not leaving a known bug in a retained hook. ARM SCMI platform driver is outside configured x86 SDK target.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/cpufreq-history-review.json",
+      "SECURITY.md: CPU frequency accounting and source interfaces"
+    ]
+  },
+  {
+    "commit": "56cbb143f88eb52418714b2023991e15ec81afd4",
+    "disposition": "adapted-net-state",
+    "rationale": "Full per-CPU GPL export addition reviewed. Keep cpufreq_update_util_data source export for Android governor/vendor customization. Entire scheduler cpufreq.c matches LTS except this export and separately retained cpufreq_this_cpu_can_update export. Native RCU publication/removal and caller synchronization remain; export does not grant pointer lifetime or permit bypassing required rq/RCU context. Exact SDK vendor consumer remains unconfirmed; retain generic source interface conservatively.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/cpufreq-history-review.json",
+      "SECURITY.md: CPU frequency accounting and source interfaces"
+    ]
   }
 ]
