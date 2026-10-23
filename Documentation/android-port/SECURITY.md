@@ -4351,3 +4351,29 @@ validation, potentially allowing an invalid extended ops interpretation. Current
 modules are rebuilt using the same KCFI toolchain, so historical binary CFI behavior
 is not preserved. Build 103 compiled the actual module set; runtime DMA-buffer
 interoperability and emulator firmware behavior remain unverified.
+
+## Module SCM history and build merge resolutions
+
+Four decisions in `evidence/module-history-merge-review.json` account for the
+original SCMVERSION feature/removal and two merges containing nine unique hunks.
+The temporary removal was superseded by the current implementation. The bounded
+modpost value is optional, emitted only after the Makefile revision filter succeeds.
+Native MODINFO_ATTR duplicates it, exposes a read-only sysfs value only when present,
+and frees it during module teardown. It does not relax signatures or version checks.
+
+All 145 build-103 module .modinfo sections were inspected: none contains scmversion,
+even though MODULE_SCMVERSION=y. Retained Kleaf stamp.bzl emits -maybe-dirty without
+stamping and omits optional external-module localversion under that setting; this
+is consistent with the revision filter producing no SCM value. No stamped build
+or runtime sysfs inspection was performed. The immutable source/dependency pins
+and artifact hashes in this audit remain the actual build-provenance evidence.
+
+The module Kconfig merge retains native menu relocation and current list-based
+Android signed-module export protection. The Kbuild merge retains native shared
+.module-common.o metadata, BTF/link/install paths and builtin range support, with
+current source-module generation and independently reviewed modules.order metadata.
+Native shared metadata supplies retpoline information; the removed per-module
+copy is not reintroduced. Old DT include overrides and historical mixed-prefix
+syntax are not required by the selected SDK build. Native DT rules and external
+module documentation remain. Build 103 verifies the actual common/virtual-device
+workflow, not every historical standalone make or out-of-tree DT build mode.
