@@ -362,8 +362,11 @@ static int uclamp_validate(struct task_struct *p,
 	int ret = 0;
 
 	trace_android_vh_uclamp_validate(p, attr, &ret, &done);
-	if (done)
+	if (done) {
+		if (!ret)
+			sched_uclamp_enable();
 		return ret;
+	}
 
 	if (attr->sched_flags & SCHED_FLAG_UTIL_CLAMP_MIN) {
 		util_min = attr->sched_util_min;
