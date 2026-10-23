@@ -1,0 +1,949 @@
+{
+  "source_head": "81e18ca6effc228983f2650b268776d7d668b3a3",
+  "records": [
+    {
+      "commit": "3fc5e942554eb435a2afd5113778eefd2a97f19b",
+      "disposition": "superseded",
+      "rationale": "The 2020 transaction-init/set/restore hook implementation was removed by aafad03cb0f3, then replaced by 4db07ca827f0 and f272cfae9a9b. Retain the final transaction storage and current hook signatures/placements, not the old restore(t,task) signature or NULL idle-restore use. Current idle restoration uses the separate c4fbf0e936f8 hook. No historical binary hook ABI is promised.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "761834a35e498f2473977946d9ce8e4a928535cc"
+      ],
+      "evidence": [
+        "evidence/c-binder-vendor-review.json",
+        "evidence/binder-vendor-cleanup-check.json",
+        "SECURITY.md: C Binder vendor hook history and destruction"
+      ],
+      "subject": "ANDROID: binder: Add vendor hook to the binder",
+      "patch_sha256": "a16b225876b49b0b6574d221a45d49ebedd126e48e640b4803461d2fbd76e79b",
+      "path_blobs": {
+        "drivers/android/binder.c": {
+          "ack": "00d3d5054639b8f5a2d2bcca9ce605523b86c4b9",
+          "port": "2cbf4cece4454154fc20427ae790b57873b384a0"
+        },
+        "drivers/android/vendor_hooks.c": {
+          "ack": "d5e98cbe95e1cee151f1d0cc769fe1792e774018",
+          "port": "c5c8da29b4f3f9c3083b1d4507ae076689693e24"
+        },
+        "include/trace/hooks/binder.h": {
+          "ack": "7bc00734c5bcd0df717ae68a8a1a5960bf93dff5",
+          "port": "4a25eaf5351b4e47382486a47696d095cb166f8e"
+        }
+      }
+    },
+    {
+      "commit": "37d7ed1b228526cac0b61c7e459129cc96fcac71",
+      "disposition": "reverted-no-residual-code",
+      "rationale": "The original separate poll-thread/thread wakeup hooks were consolidated by de3955742da8 and ultimately removed by a4bfc3f2920b after the consolidation was reverted. All three old wakeup hook names are absent from final ACK and port declarations, exports and callsites. Native wakeups remain. Later wait/receive hooks are distinct reviewed interfaces; no obsolete callback ABI is reconstructed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/c-binder-vendor-review.json",
+        "evidence/binder-vendor-cleanup-check.json",
+        "SECURITY.md: C Binder vendor hook history and destruction"
+      ],
+      "subject": "ANDROID: binder: Add vendor hooks",
+      "patch_sha256": "125257256eea0ab4de0fb4e75be41a0e466247f3233094695f6839092986b172",
+      "path_blobs": {
+        "drivers/android/binder.c": {
+          "ack": "00d3d5054639b8f5a2d2bcca9ce605523b86c4b9",
+          "port": "2cbf4cece4454154fc20427ae790b57873b384a0"
+        },
+        "drivers/android/vendor_hooks.c": {
+          "ack": "d5e98cbe95e1cee151f1d0cc769fe1792e774018",
+          "port": "c5c8da29b4f3f9c3083b1d4507ae076689693e24"
+        },
+        "include/trace/hooks/binder.h": {
+          "ack": "7bc00734c5bcd0df717ae68a8a1a5960bf93dff5",
+          "port": "4a25eaf5351b4e47382486a47696d095cb166f8e"
+        }
+      }
+    },
+    {
+      "commit": "de3955742da82a0cce0919f3114b43d336118ab6",
+      "disposition": "reverted-no-residual-code",
+      "rationale": "cd38e54c84ae reverses the two-to-one wakeup-hook consolidation, followed by a4bfc3f2920b removing the separate hooks. Final ACK and port have none of the three old wakeup names. Retain native wakeup behavior and current wait/receive extensions without adding obsolete source interfaces.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/c-binder-vendor-review.json",
+        "evidence/binder-vendor-cleanup-check.json",
+        "SECURITY.md: C Binder vendor hook history and destruction"
+      ],
+      "subject": "ANDROID: binder: consolidate wakeup vendor hooks into one",
+      "patch_sha256": "9d1dbe2cc8d3fe76f0067e8a6b4fd8c970d8642203e60f0f73f24b505f4eb297",
+      "path_blobs": {
+        "drivers/android/binder.c": {
+          "ack": "00d3d5054639b8f5a2d2bcca9ce605523b86c4b9",
+          "port": "2cbf4cece4454154fc20427ae790b57873b384a0"
+        },
+        "drivers/android/vendor_hooks.c": {
+          "ack": "d5e98cbe95e1cee151f1d0cc769fe1792e774018",
+          "port": "c5c8da29b4f3f9c3083b1d4507ae076689693e24"
+        },
+        "include/trace/hooks/binder.h": {
+          "ack": "7bc00734c5bcd0df717ae68a8a1a5960bf93dff5",
+          "port": "4a25eaf5351b4e47382486a47696d095cb166f8e"
+        }
+      }
+    },
+    {
+      "commit": "5ec033b0cc6f095f5b08655cca2ddd383b1eebf1",
+      "disposition": "superseded",
+      "rationale": "The historical patch enlarged the consolidated wakeup signature and added wait/receive callbacks; 1ffbca5669e5 removed all three changes. Final ACK 0c67e28bfc93 reintroduces only wait_for_work and sync_txn_recvd. Retain that current subset; the wakeup hook has no residual code. Existing native waitqueue/wakeup and task-reference handling are preserved.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/c-binder-vendor-review.json",
+        "evidence/binder-vendor-cleanup-check.json",
+        "SECURITY.md: C Binder vendor hook history and destruction"
+      ],
+      "subject": "ANDROID: vendor_hooks: Add hooks for improving binder trans",
+      "patch_sha256": "6c056a7437a9c4b8ff921aea19fc7c4ce40bbb7c006e14445bacb7ca044982c9",
+      "path_blobs": {
+        "drivers/android/binder.c": {
+          "ack": "00d3d5054639b8f5a2d2bcca9ce605523b86c4b9",
+          "port": "2cbf4cece4454154fc20427ae790b57873b384a0"
+        },
+        "drivers/android/vendor_hooks.c": {
+          "ack": "d5e98cbe95e1cee151f1d0cc769fe1792e774018",
+          "port": "c5c8da29b4f3f9c3083b1d4507ae076689693e24"
+        },
+        "include/trace/hooks/binder.h": {
+          "ack": "7bc00734c5bcd0df717ae68a8a1a5960bf93dff5",
+          "port": "4a25eaf5351b4e47382486a47696d095cb166f8e"
+        }
+      }
+    },
+    {
+      "commit": "1ffbca5669e5aec32d016a9aada6317539c11e0c",
+      "disposition": "superseded",
+      "rationale": "Full revert read against 5ec033b0cc6f. Its restoration of the old one-argument wakeup hook was subsequently removed; wait/receive callback removal was superseded by 0c67e28bfc93. Final code uses the current ACK wait/receive callbacks and native wakeups. The historical commit message preference for no vendor hooks does not override the requested vendor source compatibility.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/c-binder-vendor-review.json",
+        "evidence/binder-vendor-cleanup-check.json",
+        "SECURITY.md: C Binder vendor hook history and destruction"
+      ],
+      "subject": "Revert \"ANDROID: vendor_hooks: Add hooks for improving binder trans\"",
+      "patch_sha256": "37494a1c9b0180bb3029a3e420895fcf2d1e616625e6752737d6af319bd70738",
+      "path_blobs": {
+        "drivers/android/binder.c": {
+          "ack": "00d3d5054639b8f5a2d2bcca9ce605523b86c4b9",
+          "port": "2cbf4cece4454154fc20427ae790b57873b384a0"
+        },
+        "drivers/android/vendor_hooks.c": {
+          "ack": "d5e98cbe95e1cee151f1d0cc769fe1792e774018",
+          "port": "c5c8da29b4f3f9c3083b1d4507ae076689693e24"
+        },
+        "include/trace/hooks/binder.h": {
+          "ack": "7bc00734c5bcd0df717ae68a8a1a5960bf93dff5",
+          "port": "4a25eaf5351b4e47382486a47696d095cb166f8e"
+        }
+      }
+    },
+    {
+      "commit": "cd38e54c84ae7ed56af1af6eb2f23df2df70108c",
+      "disposition": "superseded-no-residual-code",
+      "rationale": "Full inverse consolidation patch read. Reintroduced two old wakeup hooks were then removed by a4bfc3f2920b; neither old interface nor the consolidated interface exists at either final tip. No code from this intermediate restoration is needed in the final source API.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/c-binder-vendor-review.json",
+        "evidence/binder-vendor-cleanup-check.json",
+        "SECURITY.md: C Binder vendor hook history and destruction"
+      ],
+      "subject": "Revert \"ANDROID: binder: consolidate wakeup vendor hooks into one\"",
+      "patch_sha256": "971f937bb004971d5f9ae82ef550e16d856a2bf85ba14805fecbec40620a4834",
+      "path_blobs": {
+        "drivers/android/binder.c": {
+          "ack": "00d3d5054639b8f5a2d2bcca9ce605523b86c4b9",
+          "port": "2cbf4cece4454154fc20427ae790b57873b384a0"
+        },
+        "drivers/android/vendor_hooks.c": {
+          "ack": "d5e98cbe95e1cee151f1d0cc769fe1792e774018",
+          "port": "c5c8da29b4f3f9c3083b1d4507ae076689693e24"
+        },
+        "include/trace/hooks/binder.h": {
+          "ack": "7bc00734c5bcd0df717ae68a8a1a5960bf93dff5",
+          "port": "4a25eaf5351b4e47382486a47696d095cb166f8e"
+        }
+      }
+    },
+    {
+      "commit": "a4bfc3f2920be55f161ca8dd533481b157cbbee6",
+      "disposition": "reverted",
+      "rationale": "This removes the original two wakeup hooks; verify both declarations/exports/calls remain absent in final ACK and port. Their removal is represented by native LTS wakeups without replaying an intermediate add/remove pair. This does not remove the separate later wait/receive hooks.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/c-binder-vendor-review.json",
+        "evidence/binder-vendor-cleanup-check.json",
+        "SECURITY.md: C Binder vendor hook history and destruction"
+      ],
+      "subject": "Revert \"ANDROID: binder: Add vendor hooks\"",
+      "patch_sha256": "29d6232bfc257a0ee7694ebddcca70146ee01a9f2a20b59d585a39d4ddbe6e00",
+      "path_blobs": {
+        "drivers/android/binder.c": {
+          "ack": "00d3d5054639b8f5a2d2bcca9ce605523b86c4b9",
+          "port": "2cbf4cece4454154fc20427ae790b57873b384a0"
+        },
+        "drivers/android/vendor_hooks.c": {
+          "ack": "d5e98cbe95e1cee151f1d0cc769fe1792e774018",
+          "port": "c5c8da29b4f3f9c3083b1d4507ae076689693e24"
+        },
+        "include/trace/hooks/binder.h": {
+          "ack": "7bc00734c5bcd0df717ae68a8a1a5960bf93dff5",
+          "port": "4a25eaf5351b4e47382486a47696d095cb166f8e"
+        }
+      }
+    },
+    {
+      "commit": "aafad03cb0f3b67803393cdb0203388c7bfb1563",
+      "disposition": "superseded",
+      "rationale": "This removed original transaction hooks and vendor storage, but final ACK restored the storage and revised set/restore hooks in 4db07ca827f0 and init hook in f272cfae9a9b. Retain those current generic vendor interfaces. The old two-argument restore hook and removed idle call are not recreated; final idle customization is separately named.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "761834a35e498f2473977946d9ce8e4a928535cc"
+      ],
+      "evidence": [
+        "evidence/c-binder-vendor-review.json",
+        "evidence/binder-vendor-cleanup-check.json",
+        "SECURITY.md: C Binder vendor hook history and destruction"
+      ],
+      "subject": "Revert \"ANDROID: binder: Add vendor hook to the binder\"",
+      "patch_sha256": "9998bfa5a255c38ae9ca88f762053b6a92233323a93ced9b2c5450f35a0b4edd",
+      "path_blobs": {
+        "drivers/android/binder.c": {
+          "ack": "00d3d5054639b8f5a2d2bcca9ce605523b86c4b9",
+          "port": "2cbf4cece4454154fc20427ae790b57873b384a0"
+        },
+        "drivers/android/binder_internal.h": {
+          "ack": "3dfeff2667f309abc61c1fdda33849eb6a15d29b",
+          "port": "3dfeff2667f309abc61c1fdda33849eb6a15d29b"
+        },
+        "drivers/android/vendor_hooks.c": {
+          "ack": "d5e98cbe95e1cee151f1d0cc769fe1792e774018",
+          "port": "c5c8da29b4f3f9c3083b1d4507ae076689693e24"
+        },
+        "include/trace/hooks/binder.h": {
+          "ack": "7bc00734c5bcd0df717ae68a8a1a5960bf93dff5",
+          "port": "4a25eaf5351b4e47382486a47696d095cb166f8e"
+        }
+      }
+    },
+    {
+      "commit": "4db07ca827f07852a161271df35c5169f2d7ec6b",
+      "disposition": "adapted",
+      "rationale": "Retain runtime transaction vendor data and set-priority/restore-priority callbacks. Storage is actual zero-initialized transaction extension state, not historical KMI padding. Set runs after native Android priority handling; reply/error restore callbacks run with the transaction live before restoration/free. Final restore takes only the transaction and the current task is implicit. Trusted callbacks can alter policy; capability/rlimit/RESET_ON_FORK checks in the normal priority path remain. SDK module use is unconfirmed, so generic source compatibility is retained rather than inferring dispensability.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/c-binder-vendor-review.json",
+        "evidence/binder-vendor-cleanup-check.json",
+        "SECURITY.md: C Binder vendor hook history and destruction"
+      ],
+      "subject": "ANDROID: binder: set and restore vendor priority data",
+      "patch_sha256": "d6c6a2179578a5f36df9ea617ce4d51e1c5c529f072ca846766ddb62fcbe406c",
+      "path_blobs": {
+        "drivers/android/binder.c": {
+          "ack": "00d3d5054639b8f5a2d2bcca9ce605523b86c4b9",
+          "port": "2cbf4cece4454154fc20427ae790b57873b384a0"
+        },
+        "drivers/android/binder_internal.h": {
+          "ack": "3dfeff2667f309abc61c1fdda33849eb6a15d29b",
+          "port": "3dfeff2667f309abc61c1fdda33849eb6a15d29b"
+        },
+        "drivers/android/vendor_hooks.c": {
+          "ack": "d5e98cbe95e1cee151f1d0cc769fe1792e774018",
+          "port": "c5c8da29b4f3f9c3083b1d4507ae076689693e24"
+        },
+        "include/trace/hooks/binder.h": {
+          "ack": "7bc00734c5bcd0df717ae68a8a1a5960bf93dff5",
+          "port": "4a25eaf5351b4e47382486a47696d095cb166f8e"
+        }
+      }
+    },
+    {
+      "commit": "0c67e28bfc93b61f84d8ed2bf4d9cc5f13131739",
+      "disposition": "adapted",
+      "rationale": "Retain wait_for_work under proc inner lock immediately before unlock/schedule, and synchronous receive with t_from held by native temporary reference. Current receiver task and sender task references remain live. Callbacks in locked context must not sleep or retain unreferenced pointers. Full patch reintroduces no wakeup hook; native wait/wakeup semantics are unchanged when callbacks are absent.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/c-binder-vendor-review.json",
+        "evidence/binder-vendor-cleanup-check.json",
+        "SECURITY.md: C Binder vendor hook history and destruction"
+      ],
+      "subject": "ANDROID: vendor_hooks: Add hooks for improving binder trans",
+      "patch_sha256": "b311d4e8ce5eca7e6b5ddeed416c864d90a13799e7be584bba9d0e7af47c057b",
+      "path_blobs": {
+        "drivers/android/binder.c": {
+          "ack": "00d3d5054639b8f5a2d2bcca9ce605523b86c4b9",
+          "port": "2cbf4cece4454154fc20427ae790b57873b384a0"
+        },
+        "drivers/android/vendor_hooks.c": {
+          "ack": "d5e98cbe95e1cee151f1d0cc769fe1792e774018",
+          "port": "c5c8da29b4f3f9c3083b1d4507ae076689693e24"
+        },
+        "include/trace/hooks/binder.h": {
+          "ack": "7bc00734c5bcd0df717ae68a8a1a5960bf93dff5",
+          "port": "4a25eaf5351b4e47382486a47696d095cb166f8e"
+        }
+      }
+    },
+    {
+      "commit": "7fdc7571051ff6bd153f970f9a102bde149ea842",
+      "disposition": "adapted",
+      "rationale": "Retain transaction allocation/receive/free, proc-finish, special queue insertion and buffer-release hooks as generic scheduling/source extension points. enqueue_task defaults true; callback opting out must enqueue exactly once under the existing proc/node locking. Native dead/frozen checks, outstanding accounting, outdated-buffer failure release and fd-fixup cleanup remain. 761834a35e49 adds missing vendor destruction notifications for outdated async replacement and every error path, before buffer destruction and without duplicate fallthrough notification. Otherwise callback-allocated state could leak on attacker-triggered failure or replacement. Forty extracted cleanup cases pass; previous port fails 80 assertions. No real vendor callback/concurrency runtime test.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "761834a35e498f2473977946d9ce8e4a928535cc"
+      ],
+      "evidence": [
+        "evidence/c-binder-vendor-review.json",
+        "evidence/binder-vendor-cleanup-check.json",
+        "SECURITY.md: C Binder vendor hook history and destruction"
+      ],
+      "subject": "ANDROID: vendor_hooks: Add hooks to implement the feature of improving the scheduling priority of binder_sched->task",
+      "patch_sha256": "64dcfc23202bcc3a5743c8ba5b52d919249b15fa030b49d0a9ca58df98ad7ec9",
+      "path_blobs": {
+        "drivers/android/binder.c": {
+          "ack": "00d3d5054639b8f5a2d2bcca9ce605523b86c4b9",
+          "port": "2cbf4cece4454154fc20427ae790b57873b384a0"
+        },
+        "drivers/android/vendor_hooks.c": {
+          "ack": "d5e98cbe95e1cee151f1d0cc769fe1792e774018",
+          "port": "c5c8da29b4f3f9c3083b1d4507ae076689693e24"
+        },
+        "include/trace/hooks/binder.h": {
+          "ack": "7bc00734c5bcd0df717ae68a8a1a5960bf93dff5",
+          "port": "4a25eaf5351b4e47382486a47696d095cb166f8e"
+        }
+      }
+    },
+    {
+      "commit": "80a7e6537be6c161060ecd85a095fc1d5e1a6df7",
+      "disposition": "adapted",
+      "rationale": "Retain reply/trans instrumentation and proc preset, with later 71a1a2c8fe8c moving preset before list publication and adding proc argument. Target proc/thread native temporary references cover reply/trans callbacks. trans runs before security_binder_transaction, so it does not imply authorization and callbacks must not treat it as an authorized delivery; native LSM rejection still follows. Preset receives a mutex to acquire when accessing the global proc list and is called without it held.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/c-binder-vendor-review.json",
+        "evidence/binder-vendor-cleanup-check.json",
+        "SECURITY.md: C Binder vendor hook history and destruction"
+      ],
+      "subject": "ANDROID: Add vendor hooks for binder perf tuning",
+      "patch_sha256": "17d4528b3c7c20e30701834805809389b4dd9aa251c017d71e3ed29633a546d4",
+      "path_blobs": {
+        "drivers/android/binder.c": {
+          "ack": "00d3d5054639b8f5a2d2bcca9ce605523b86c4b9",
+          "port": "2cbf4cece4454154fc20427ae790b57873b384a0"
+        },
+        "drivers/android/vendor_hooks.c": {
+          "ack": "d5e98cbe95e1cee151f1d0cc769fe1792e774018",
+          "port": "c5c8da29b4f3f9c3083b1d4507ae076689693e24"
+        },
+        "include/trace/hooks/binder.h": {
+          "ack": "7bc00734c5bcd0df717ae68a8a1a5960bf93dff5",
+          "port": "4a25eaf5351b4e47382486a47696d095cb166f8e"
+        }
+      }
+    },
+    {
+      "commit": "23c3e27095752c88833feba8274e628cbb46661d",
+      "disposition": "adapted",
+      "rationale": "Retain allocator-budget/refusal hook under allocator locking. should_fail starts false; callback refusal returns EPERM before native allocation, and free_async_space remains subject to native async-space/buffer checks. Pointer permits trusted module budget changes and can weaken accounting if misused, so this is not an untrusted security boundary. Callback must preserve size/accounting invariants and not sleep while the lock is held. No callback yields the native allocation path.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/c-binder-vendor-review.json",
+        "evidence/binder-vendor-cleanup-check.json",
+        "SECURITY.md: C Binder vendor hook history and destruction"
+      ],
+      "subject": "ANDROID: vendor_hooks: Add hook for binder_alloc_new_buf_locked",
+      "patch_sha256": "b94c3716c7d4bda2aea4568817384199e0abb8434336d790e6b19a03fdf4a8c6",
+      "path_blobs": {
+        "drivers/android/binder_alloc.c": {
+          "ack": "70e8a992033df79b3c08e47960f19b71bebccfbb",
+          "port": "70e8a992033df79b3c08e47960f19b71bebccfbb"
+        },
+        "drivers/android/vendor_hooks.c": {
+          "ack": "d5e98cbe95e1cee151f1d0cc769fe1792e774018",
+          "port": "c5c8da29b4f3f9c3083b1d4507ae076689693e24"
+        },
+        "include/trace/hooks/binder.h": {
+          "ack": "7bc00734c5bcd0df717ae68a8a1a5960bf93dff5",
+          "port": "4a25eaf5351b4e47382486a47696d095cb166f8e"
+        }
+      }
+    },
+    {
+      "commit": "17fd54af169e6a13b3d7b071b29f1ec2e1962045",
+      "disposition": "adapted",
+      "rationale": "Retain special-work availability/selection, proc transaction, looper exit, spawn, ioctl-end and read-list hooks. Initial outputs preserve native behavior: list NULL, nothing_to_do/force_spawn false, has_work derived from native queues, ret zero only after successful ioctl dispatch. Native failure gotos bypass ioctl_end. A trusted callback may suppress availability, redirect queues or exceed max_threads via force_spawn; preserve for requested source customization, documenting denial-of-service and memory/lifetime obligations rather than presenting hooks as permission checks. Custom lists must be valid nonempty, protected by proc inner lock and paired with teardown; no actual scheduler policy/SDK vendor consumer established.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/c-binder-vendor-review.json",
+        "evidence/binder-vendor-cleanup-check.json",
+        "SECURITY.md: C Binder vendor hook history and destruction"
+      ],
+      "subject": "ANDROID: vendor_hooks: Add hooks for binder proc transaction",
+      "patch_sha256": "c276837eb7f00b8948bffa94f29cff1614d03118d03fe80b926eaf1a3591a02a",
+      "path_blobs": {
+        "drivers/android/binder.c": {
+          "ack": "00d3d5054639b8f5a2d2bcca9ce605523b86c4b9",
+          "port": "2cbf4cece4454154fc20427ae790b57873b384a0"
+        },
+        "drivers/android/vendor_hooks.c": {
+          "ack": "d5e98cbe95e1cee151f1d0cc769fe1792e774018",
+          "port": "c5c8da29b4f3f9c3083b1d4507ae076689693e24"
+        },
+        "include/trace/hooks/binder.h": {
+          "ack": "7bc00734c5bcd0df717ae68a8a1a5960bf93dff5",
+          "port": "4a25eaf5351b4e47382486a47696d095cb166f8e"
+        }
+      }
+    },
+    {
+      "commit": "7ae9e04b40fbc0b7a7cafa40cf6a6eaca3214086",
+      "disposition": "adapted",
+      "rationale": "Retain reference creation/deletion notifications with translated handle and node debug ID. Creation occurs while outer proc/node locks protect the initialized reference; deletion occurs before reference storage is freed. Callback receives scalar IDs, not ownership; it must maintain lifetime/locking of any retained proc data. No native handle validation, node refcount or deallocation is removed. Generic diagnostics/source API retained despite no confirmed SDK policy consumer.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/c-binder-vendor-review.json",
+        "evidence/binder-vendor-cleanup-check.json",
+        "SECURITY.md: C Binder vendor hook history and destruction"
+      ],
+      "subject": "ANDROID: vendor_hooks: Add hooks for binder reference.",
+      "patch_sha256": "e9428b95b5d1e2464591fd5f0dc09db1c3811ec92428336ec9e2cb7a88861450",
+      "path_blobs": {
+        "drivers/android/binder.c": {
+          "ack": "00d3d5054639b8f5a2d2bcca9ce605523b86c4b9",
+          "port": "2cbf4cece4454154fc20427ae790b57873b384a0"
+        },
+        "drivers/android/vendor_hooks.c": {
+          "ack": "d5e98cbe95e1cee151f1d0cc769fe1792e774018",
+          "port": "c5c8da29b4f3f9c3083b1d4507ae076689693e24"
+        },
+        "include/trace/hooks/binder.h": {
+          "ack": "7bc00734c5bcd0df717ae68a8a1a5960bf93dff5",
+          "port": "4a25eaf5351b4e47382486a47696d095cb166f8e"
+        }
+      }
+    },
+    {
+      "commit": "71a1a2c8fe8cadad26dc2f799eebcf59e8afdce8",
+      "disposition": "adapted",
+      "rationale": "Retain runtime OEM fields and custom-worklist initialization, ordering, availability, reporting and release hooks. Final preset receives the initialized proc before publication; special_list defaults NULL. Deferred release drains the returned list using native binder_release_work, and debug printing applies existing pointer-hashing policy under proc lock. free_proc hook runs before proc memory free but after native task/cred/dbitmap release; callbacks must only access still-live vendor state and cannot assume those released members remain usable. No concrete fg_todo scheduler is added; callback owns list validity, fairness and teardown. Fields are used extension storage, not KMI reserve layout.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/c-binder-vendor-review.json",
+        "evidence/binder-vendor-cleanup-check.json",
+        "SECURITY.md: C Binder vendor hook history and destruction"
+      ],
+      "subject": "ANDROID: binder: Add vendor hooks to implement the feature of binder_proc->fg_todo list",
+      "patch_sha256": "a82840774151840aa6e9cb1a1627ebd6468723653515d61dac337cf9198efb89",
+      "path_blobs": {
+        "drivers/android/binder.c": {
+          "ack": "00d3d5054639b8f5a2d2bcca9ce605523b86c4b9",
+          "port": "2cbf4cece4454154fc20427ae790b57873b384a0"
+        },
+        "drivers/android/binder_internal.h": {
+          "ack": "3dfeff2667f309abc61c1fdda33849eb6a15d29b",
+          "port": "3dfeff2667f309abc61c1fdda33849eb6a15d29b"
+        },
+        "drivers/android/vendor_hooks.c": {
+          "ack": "d5e98cbe95e1cee151f1d0cc769fe1792e774018",
+          "port": "c5c8da29b4f3f9c3083b1d4507ae076689693e24"
+        },
+        "include/trace/hooks/binder.h": {
+          "ack": "7bc00734c5bcd0df717ae68a8a1a5960bf93dff5",
+          "port": "4a25eaf5351b4e47382486a47696d095cb166f8e"
+        }
+      }
+    },
+    {
+      "commit": "f272cfae9a9bc7574aa3ceac1f85554cd1e2580e",
+      "disposition": "adapted",
+      "rationale": "Retain transaction vendor initialization after zero allocation/list/lock initialization, before debug/target/buffer population. Callback cannot assume later fields exist. Paired vendor destruction now reaches early errors as well as normal/outdated destruction through 761834a35e49; callbacks must tolerate absent OEM allocation/buffer. Native kzalloc failure never invokes either hook. This avoids leaks from init-hook state on invalid target/transaction failures; exact callback implementation and runtime behavior remain unverified.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "761834a35e498f2473977946d9ce8e4a928535cc"
+      ],
+      "evidence": [
+        "evidence/c-binder-vendor-review.json",
+        "evidence/binder-vendor-cleanup-check.json",
+        "SECURITY.md: C Binder vendor hook history and destruction"
+      ],
+      "subject": "ANDROID: binder: Add vendor hook to the binder",
+      "patch_sha256": "ee747e0ff64d5198738bf884f96897002fe9daa6ee925cbd075c60c5c476f46f",
+      "path_blobs": {
+        "drivers/android/binder.c": {
+          "ack": "00d3d5054639b8f5a2d2bcca9ce605523b86c4b9",
+          "port": "2cbf4cece4454154fc20427ae790b57873b384a0"
+        },
+        "drivers/android/vendor_hooks.c": {
+          "ack": "d5e98cbe95e1cee151f1d0cc769fe1792e774018",
+          "port": "c5c8da29b4f3f9c3083b1d4507ae076689693e24"
+        },
+        "include/trace/hooks/binder.h": {
+          "ack": "7bc00734c5bcd0df717ae68a8a1a5960bf93dff5",
+          "port": "4a25eaf5351b4e47382486a47696d095cb166f8e"
+        }
+      }
+    },
+    {
+      "commit": "3a02a36bceb90de88ddc744c08d20e62606747b5",
+      "disposition": "adapted",
+      "rationale": "Retain pre-priority callback before set_priority_called test. Callback can mark priority handling complete; normal code snapshots desired/node priorities before the callback and otherwise keeps inherit_rt, recipient capability/rlimit and nested priority restoration semantics. Callback is trusted kernel policy, not a user-controlled bypass. Generic source API retained; no existing vendor binary signature compatibility required.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/c-binder-vendor-review.json",
+        "evidence/binder-vendor-cleanup-check.json",
+        "SECURITY.md: C Binder vendor hook history and destruction"
+      ],
+      "subject": "ANDROID: vendor_hooks: add vendor hooks for binder_transaction_priority",
+      "patch_sha256": "01c557c1b8e7af82d8457793707d74ae32f7373fa2871540655bd4c103cc34ad",
+      "path_blobs": {
+        "drivers/android/binder.c": {
+          "ack": "00d3d5054639b8f5a2d2bcca9ce605523b86c4b9",
+          "port": "2cbf4cece4454154fc20427ae790b57873b384a0"
+        },
+        "drivers/android/vendor_hooks.c": {
+          "ack": "d5e98cbe95e1cee151f1d0cc769fe1792e774018",
+          "port": "c5c8da29b4f3f9c3083b1d4507ae076689693e24"
+        },
+        "include/trace/hooks/binder.h": {
+          "ack": "7bc00734c5bcd0df717ae68a8a1a5960bf93dff5",
+          "port": "4a25eaf5351b4e47382486a47696d095cb166f8e"
+        }
+      }
+    },
+    {
+      "commit": "4143a83b5cca7b3049e150beaf393493f844a623",
+      "disposition": "adapted",
+      "rationale": "Retain thread OEM state and skip=false callback at entry to binder_do_set_priority, covering both set and restore calls. A trusted callback may deliberately skip restoring a boost, including pending state transitions, so fairness/availability and eventual priority cleanup are its responsibility. With no callback all normal capability/rlimit/RESET_ON_FORK and nested-state logic remains. Storage implements runtime customization and is not historical ABI padding.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/c-binder-vendor-review.json",
+        "evidence/binder-vendor-cleanup-check.json",
+        "SECURITY.md: C Binder vendor hook history and destruction"
+      ],
+      "subject": "ANDROID: vendor_hooks: add vendor hook to skip binder priority restore",
+      "patch_sha256": "c744484e7816393728542d2cccb8eaa8c1098135b5bb05286bd6cc26f5a07bfa",
+      "path_blobs": {
+        "drivers/android/binder.c": {
+          "ack": "00d3d5054639b8f5a2d2bcca9ce605523b86c4b9",
+          "port": "2cbf4cece4454154fc20427ae790b57873b384a0"
+        },
+        "drivers/android/binder_internal.h": {
+          "ack": "3dfeff2667f309abc61c1fdda33849eb6a15d29b",
+          "port": "3dfeff2667f309abc61c1fdda33849eb6a15d29b"
+        },
+        "drivers/android/vendor_hooks.c": {
+          "ack": "d5e98cbe95e1cee151f1d0cc769fe1792e774018",
+          "port": "c5c8da29b4f3f9c3083b1d4507ae076689693e24"
+        },
+        "include/trace/hooks/binder.h": {
+          "ack": "7bc00734c5bcd0df717ae68a8a1a5960bf93dff5",
+          "port": "4a25eaf5351b4e47382486a47696d095cb166f8e"
+        }
+      }
+    },
+    {
+      "commit": "c4fbf0e936f81ddd7686b357ac191a5ba4b2972b",
+      "disposition": "adapted",
+      "rationale": "Retain dedicated before_restore_priority(NULL) call when a thread is preparing for process work. NULL is the specified idle-state notification; callback must not dereference it. It precedes normal default-priority restoration and does not replace the transaction-specific restore hook. Preserve current source signatures and native default behavior; actual vendor policy execution is not verified.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/c-binder-vendor-review.json",
+        "evidence/binder-vendor-cleanup-check.json",
+        "SECURITY.md: C Binder vendor hook history and destruction"
+      ],
+      "subject": "ANDROID: vendor_hooks: add hook for restore binder priority.",
+      "patch_sha256": "07cac03da8ffce907570e821919781d97388c207be1779629e716a291c3f9178",
+      "path_blobs": {
+        "drivers/android/binder.c": {
+          "ack": "00d3d5054639b8f5a2d2bcca9ce605523b86c4b9",
+          "port": "2cbf4cece4454154fc20427ae790b57873b384a0"
+        },
+        "drivers/android/vendor_hooks.c": {
+          "ack": "d5e98cbe95e1cee151f1d0cc769fe1792e774018",
+          "port": "c5c8da29b4f3f9c3083b1d4507ae076689693e24"
+        },
+        "include/trace/hooks/binder.h": {
+          "ack": "7bc00734c5bcd0df717ae68a8a1a5960bf93dff5",
+          "port": "4a25eaf5351b4e47382486a47696d095cb166f8e"
+        }
+      }
+    },
+    {
+      "commit": "77d1700f41b6bf03340cd1dbb9fafcbcd9ebe4b4",
+      "disposition": "partially-adapted",
+      "rationale": "Retain WrapFD cc_binary_with_abi target, explicit UAPI/tools/selftest include inputs, static linking and x86_64 package/Tradefed registration for the selected SDK driver. Rule and x86_64 added lines match ACK; no test success is inferred from registration. Omit arm64 package addition with the existing scoped build target and remove its XML registration in 81e18ca6effc because that is solely future-platform test execution. No ARM64 implementation/support is claimed. WrapFD selftest binary/runtime were not invoked; existing emulator build validates build-file integration only.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "81e18ca6effc228983f2650b268776d7d668b3a3"
+      ],
+      "evidence": [
+        "evidence/c-binder-vendor-review.json",
+        "evidence/binder-vendor-cleanup-check.json",
+        "SECURITY.md: C Binder vendor hook history and destruction"
+      ],
+      "subject": "ANDROID: Define bazel target for wrapfd kselftests and run in presubmit",
+      "patch_sha256": "5b93041beb26b7cb2f493e16012aaf762b648c103b5f671e2806b9cec349ed7b",
+      "path_blobs": {
+        "BUILD.bazel": {
+          "ack": "3c8178ebce1f27f2c417e4aeaa00fc7001a96be6",
+          "port": "4e13e657cc4b9d626fbffb6e792d0e6d88001b77"
+        },
+        "tools/testing/selftests/android/config_arm64.xml": {
+          "ack": "906d0face3a990ead1f4b7ead989a3d3daa3c506",
+          "port": "c16a27b640d7a6ff6b50adad87ef3bb320c94e37"
+        },
+        "tools/testing/selftests/android/config_x86_64.xml": {
+          "ack": "b9045a2c230a493d0245e3901499e341816bcae6",
+          "port": "b9045a2c230a493d0245e3901499e341816bcae6"
+        }
+      }
+    }
+  ],
+  "reviewed_hooks": [
+    "android_vh_binder_transaction_init",
+    "android_vh_binder_set_priority",
+    "android_vh_binder_restore_priority",
+    "android_vh_binder_alloc_new_buf_locked",
+    "android_vh_binder_wait_for_work",
+    "android_vh_sync_txn_recvd",
+    "android_vh_binder_proc_transaction_finish",
+    "android_vh_binder_select_special_worklist",
+    "android_vh_alloc_oem_binder_struct",
+    "android_vh_binder_transaction_received",
+    "android_vh_free_oem_binder_struct",
+    "android_vh_binder_special_task",
+    "android_vh_binder_buffer_release",
+    "android_vh_binder_ioctl_end",
+    "android_vh_binder_looper_exited",
+    "android_vh_binder_spawn_new_thread",
+    "android_vh_binder_has_special_work_ilocked",
+    "android_vh_binder_list_add_work",
+    "android_vh_binder_has_proc_work_ilocked",
+    "android_vh_binder_check_special_work",
+    "android_vh_binder_free_proc",
+    "android_vh_binder_preset",
+    "android_vh_binder_reply",
+    "android_vh_binder_trans",
+    "android_vh_binder_proc_transaction",
+    "android_vh_binder_thread_read",
+    "android_vh_binder_new_ref",
+    "android_vh_binder_del_ref",
+    "android_vh_binder_skip_set_priority",
+    "android_vh_binder_transaction_priority",
+    "android_vh_binder_before_restore_priority"
+  ],
+  "removed_wakeup_hooks": [
+    "android_vh_binder_wakeup_poll_threads_ilocked",
+    "android_vh_binder_wakeup_thread_ilocked",
+    "android_vh_binder_wakeup_ilocked"
+  ],
+  "source_checks": "Read all 20 full C Binder historical patches plus the WrapFD metadata patch, complete current C Binder LTS delta, ACK-to-port delta, final hook header, native callback contexts and all three transaction destruction paths. All 31 current hooks have declarations, GPL export macros and C callsites. No existing vendor module binary compatibility is intended.",
+  "cleanup_fix": "761834a35e498f2473977946d9ce8e4a928535cc",
+  "cleanup_evidence": "evidence/binder-vendor-cleanup-check.json",
+  "native_fixes_preserved": [
+    "locked single target_proc/to_thread snapshot and temporary reference in binder_free_transaction",
+    "outdated buffer release as failure and binder_free_txn_fixups before free",
+    "aligned LSM context size retained across security_release_secctx",
+    "normal transaction LSM/FD/buffer checks",
+    "balanced successful-init-only builtin C teardown"
+  ],
+  "limits": [
+    "No actual C Binder ioctl, scheduling, vendor-module load or fault-injection execution.",
+    "SDK vendor callbacks are not established; generic architecture-independent source hooks retained conservatively under requested vendor customization scope.",
+    "Callbacks are trusted kernel code, can suppress work or priority restore, alter budget or force spawn beyond configured maximum. They must honor current lock context, pointer lifetime, queue ownership and callback registration/unregistration lifetime.",
+    "free_proc callback follows release of native task/credential/dbitmap resources and cannot treat them as live references.",
+    "WrapFD kselftest metadata reviewed; binary and runtime not executed."
+  ],
+  "validation": {
+    "build": "sdk-build-attempt-103 passed; both images, 100 common and 45 virtual-device modules. All 31 Binder hook tracepoints and iterators have GPL-only export records.",
+    "host_cleanup": "40 cases pass; previous port 80 failed assertions",
+    "generated_hook_exports": {
+      "run": "sdk-build-attempt-103",
+      "source_head": "81e18ca6effc228983f2650b268776d7d668b3a3",
+      "records": [
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_transaction_init\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x13422092\t__traceiter_android_vh_binder_transaction_init\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_set_priority\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0xf5cfa084\t__traceiter_android_vh_binder_set_priority\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_restore_priority\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x13422092\t__traceiter_android_vh_binder_restore_priority\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_alloc_new_buf_locked\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x14bb2c31\t__traceiter_android_vh_binder_alloc_new_buf_locked\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_wait_for_work\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x8de43242\t__traceiter_android_vh_binder_wait_for_work\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_sync_txn_recvd\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x617471db\t__traceiter_android_vh_sync_txn_recvd\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_proc_transaction_finish\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x823b7b08\t__traceiter_android_vh_binder_proc_transaction_finish\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_select_special_worklist\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x28fad6a3\t__traceiter_android_vh_binder_select_special_worklist\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_alloc_oem_binder_struct\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0xb9dae87a\t__traceiter_android_vh_alloc_oem_binder_struct\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_transaction_received\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x9817ed5c\t__traceiter_android_vh_binder_transaction_received\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_free_oem_binder_struct\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x13422092\t__traceiter_android_vh_free_oem_binder_struct\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_special_task\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x4740ed7d\t__traceiter_android_vh_binder_special_task\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_buffer_release\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x91669995\t__traceiter_android_vh_binder_buffer_release\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_ioctl_end\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x1a49e008\t__traceiter_android_vh_binder_ioctl_end\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_looper_exited\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x6c091a2a\t__traceiter_android_vh_binder_looper_exited\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_spawn_new_thread\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x1bbb57ea\t__traceiter_android_vh_binder_spawn_new_thread\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_has_special_work_ilocked\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x9be71ef0\t__traceiter_android_vh_binder_has_special_work_ilocked\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_list_add_work\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x0f4047e6\t__traceiter_android_vh_binder_list_add_work\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_has_proc_work_ilocked\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x9be71ef0\t__traceiter_android_vh_binder_has_proc_work_ilocked\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_check_special_work\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x2cbb0f8b\t__traceiter_android_vh_binder_check_special_work\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_free_proc\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x7e5a11a4\t__traceiter_android_vh_binder_free_proc\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_preset\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x612387f6\t__traceiter_android_vh_binder_preset\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_reply\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0xc2baba4a\t__traceiter_android_vh_binder_reply\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_trans\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0xc2baba4a\t__traceiter_android_vh_binder_trans\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_proc_transaction\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x5238beee\t__traceiter_android_vh_binder_proc_transaction\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_thread_read\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0xe8d0c5e9\t__traceiter_android_vh_binder_thread_read\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_new_ref\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x9cb379f2\t__traceiter_android_vh_binder_new_ref\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_del_ref\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0xbbc6480f\t__traceiter_android_vh_binder_del_ref\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_skip_set_priority\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x30ac9990\t__traceiter_android_vh_binder_skip_set_priority\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_transaction_priority\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x70be71a4\t__traceiter_android_vh_binder_transaction_priority\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x3fe6da8c\t__tracepoint_android_vh_binder_before_restore_priority\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x13422092\t__traceiter_android_vh_binder_before_restore_priority\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+      ]
+    }
+  },
+  "remote_sources_used": [],
+  "preserved_final_net_reviews": [
+    {
+      "commit": "e00eb41c0c7bea879d93e878748408e73357b384",
+      "subject": "ANDROID: binder: add support for RT prio inheritance.",
+      "old_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+      "new_blob": "2cbf4cece4454154fc20427ae790b57873b384a0",
+      "followup": "761834a35e49 only adds vendor cleanup notifications and an error-fallthrough flag. No existing line, native cleanup, security check, priority logic, refcount, or reviewed merge resolution is removed or altered. Earlier scoped review remains valid with this additive lifetime fix.",
+      "delta_sha256": "d6f86fa9a108715f867a1dd5b40476aba90bf10a85e9567772ca1f54756a62b3"
+    },
+    {
+      "commit": "630839ac24e36e2c604560a66e152e4466415af9",
+      "subject": "Merge 5.4-rc3 into android-mainline",
+      "old_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+      "new_blob": "2cbf4cece4454154fc20427ae790b57873b384a0",
+      "followup": "761834a35e49 only adds vendor cleanup notifications and an error-fallthrough flag. No existing line, native cleanup, security check, priority logic, refcount, or reviewed merge resolution is removed or altered. Earlier scoped review remains valid with this additive lifetime fix.",
+      "delta_sha256": "d6f86fa9a108715f867a1dd5b40476aba90bf10a85e9567772ca1f54756a62b3"
+    },
+    {
+      "commit": "aefd2d632eb0914f22fc6149f52eb0c6c148ce35",
+      "subject": "ANDROID: binder: fix sleeping from invalid function caused by RT inheritance",
+      "old_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+      "new_blob": "2cbf4cece4454154fc20427ae790b57873b384a0",
+      "followup": "761834a35e49 only adds vendor cleanup notifications and an error-fallthrough flag. No existing line, native cleanup, security check, priority logic, refcount, or reviewed merge resolution is removed or altered. Earlier scoped review remains valid with this additive lifetime fix.",
+      "delta_sha256": "d6f86fa9a108715f867a1dd5b40476aba90bf10a85e9567772ca1f54756a62b3"
+    },
+    {
+      "commit": "223480e4215026722afcd5bab61d8374ca08dc3a",
+      "subject": "Revert \"ANDROID: binder: fix sleeping from invalid function caused by RT inheritance\"",
+      "old_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+      "new_blob": "2cbf4cece4454154fc20427ae790b57873b384a0",
+      "followup": "761834a35e49 only adds vendor cleanup notifications and an error-fallthrough flag. No existing line, native cleanup, security check, priority logic, refcount, or reviewed merge resolution is removed or altered. Earlier scoped review remains valid with this additive lifetime fix.",
+      "delta_sha256": "d6f86fa9a108715f867a1dd5b40476aba90bf10a85e9567772ca1f54756a62b3"
+    },
+    {
+      "commit": "f0416df755b7a52adebea9c4714934a8bf084e89",
+      "subject": "Revert \"binder: Prevent context manager from incrementing ref 0\"",
+      "old_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+      "new_blob": "2cbf4cece4454154fc20427ae790b57873b384a0",
+      "followup": "761834a35e49 only adds vendor cleanup notifications and an error-fallthrough flag. No existing line, native cleanup, security check, priority logic, refcount, or reviewed merge resolution is removed or altered. Earlier scoped review remains valid with this additive lifetime fix.",
+      "delta_sha256": "d6f86fa9a108715f867a1dd5b40476aba90bf10a85e9567772ca1f54756a62b3"
+    },
+    {
+      "commit": "b1e6a9854787eb2b70d9d4b8fb1fbe9b9eba5f94",
+      "subject": "Merge 2911ed9f47b4 (\"Merge tag 'char-misc-5.11-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/char-misc\") into android-mailine",
+      "old_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+      "new_blob": "2cbf4cece4454154fc20427ae790b57873b384a0",
+      "followup": "761834a35e49 only adds vendor cleanup notifications and an error-fallthrough flag. No existing line, native cleanup, security check, priority logic, refcount, or reviewed merge resolution is removed or altered. Earlier scoped review remains valid with this additive lifetime fix.",
+      "delta_sha256": "d6f86fa9a108715f867a1dd5b40476aba90bf10a85e9567772ca1f54756a62b3"
+    },
+    {
+      "commit": "547ee338cd3c131265fad49d8c88b4e14547d7af",
+      "subject": "ANDROID: binder: fix up use of MAX_USER_RT_PRIO",
+      "old_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+      "new_blob": "2cbf4cece4454154fc20427ae790b57873b384a0",
+      "followup": "761834a35e49 only adds vendor cleanup notifications and an error-fallthrough flag. No existing line, native cleanup, security check, priority logic, refcount, or reviewed merge resolution is removed or altered. Earlier scoped review remains valid with this additive lifetime fix.",
+      "delta_sha256": "d6f86fa9a108715f867a1dd5b40476aba90bf10a85e9567772ca1f54756a62b3"
+    },
+    {
+      "commit": "d1c6df6dc86a04a3cabc6b5e2fc01198bcf0a29d",
+      "subject": "Revert \"Revert \"binder: Prevent context manager from incrementing ref 0\"\"",
+      "old_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+      "new_blob": "2cbf4cece4454154fc20427ae790b57873b384a0",
+      "followup": "761834a35e49 only adds vendor cleanup notifications and an error-fallthrough flag. No existing line, native cleanup, security check, priority logic, refcount, or reviewed merge resolution is removed or altered. Earlier scoped review remains valid with this additive lifetime fix.",
+      "delta_sha256": "d6f86fa9a108715f867a1dd5b40476aba90bf10a85e9567772ca1f54756a62b3"
+    },
+    {
+      "commit": "c9760ef71368dd278ed1351217148e5b729f0d36",
+      "subject": "ANDROID: binder: Export binder_transaction_received trace point",
+      "old_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+      "new_blob": "2cbf4cece4454154fc20427ae790b57873b384a0",
+      "followup": "761834a35e49 only adds vendor cleanup notifications and an error-fallthrough flag. No existing line, native cleanup, security check, priority logic, refcount, or reviewed merge resolution is removed or altered. Earlier scoped review remains valid with this additive lifetime fix.",
+      "delta_sha256": "d6f86fa9a108715f867a1dd5b40476aba90bf10a85e9567772ca1f54756a62b3"
+    },
+    {
+      "commit": "498bf715b77c68e54d0289fa66e3f112278f87dc",
+      "subject": "ANDROID: binder: fold common setup of node_prio",
+      "old_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+      "new_blob": "2cbf4cece4454154fc20427ae790b57873b384a0",
+      "followup": "761834a35e49 only adds vendor cleanup notifications and an error-fallthrough flag. No existing line, native cleanup, security check, priority logic, refcount, or reviewed merge resolution is removed or altered. Earlier scoped review remains valid with this additive lifetime fix.",
+      "delta_sha256": "d6f86fa9a108715f867a1dd5b40476aba90bf10a85e9567772ca1f54756a62b3"
+    },
+    {
+      "commit": "52d85f8a16467ce0bca374f885de24918f017371",
+      "subject": "ANDROID: binder: pass desired priority by reference",
+      "old_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+      "new_blob": "2cbf4cece4454154fc20427ae790b57873b384a0",
+      "followup": "761834a35e49 only adds vendor cleanup notifications and an error-fallthrough flag. No existing line, native cleanup, security check, priority logic, refcount, or reviewed merge resolution is removed or altered. Earlier scoped review remains valid with this additive lifetime fix.",
+      "delta_sha256": "d6f86fa9a108715f867a1dd5b40476aba90bf10a85e9567772ca1f54756a62b3"
+    },
+    {
+      "commit": "759d98484b5b51932d3d11651fa83c6bb268ce03",
+      "subject": "ANDROID: binder: switch task argument for binder_thread",
+      "old_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+      "new_blob": "2cbf4cece4454154fc20427ae790b57873b384a0",
+      "followup": "761834a35e49 only adds vendor cleanup notifications and an error-fallthrough flag. No existing line, native cleanup, security check, priority logic, refcount, or reviewed merge resolution is removed or altered. Earlier scoped review remains valid with this additive lifetime fix.",
+      "delta_sha256": "d6f86fa9a108715f867a1dd5b40476aba90bf10a85e9567772ca1f54756a62b3"
+    },
+    {
+      "commit": "cac827f2619b280d418e546a09f25da600dafe5a",
+      "subject": "ANDROID: binder: fix race in priority restore",
+      "old_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+      "new_blob": "2cbf4cece4454154fc20427ae790b57873b384a0",
+      "followup": "761834a35e49 only adds vendor cleanup notifications and an error-fallthrough flag. No existing line, native cleanup, security check, priority logic, refcount, or reviewed merge resolution is removed or altered. Earlier scoped review remains valid with this additive lifetime fix.",
+      "delta_sha256": "d6f86fa9a108715f867a1dd5b40476aba90bf10a85e9567772ca1f54756a62b3"
+    },
+    {
+      "commit": "3b6d09b4a7e3477355b83e456e1e656046f95d1d",
+      "subject": "Merge 6f9b5ed8cadd (\"Merge tag 'char-misc-5.19-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/char-misc\") into android-mainline",
+      "old_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+      "new_blob": "2cbf4cece4454154fc20427ae790b57873b384a0",
+      "followup": "761834a35e49 only adds vendor cleanup notifications and an error-fallthrough flag. No existing line, native cleanup, security check, priority logic, refcount, or reviewed merge resolution is removed or altered. Earlier scoped review remains valid with this additive lifetime fix.",
+      "delta_sha256": "d6f86fa9a108715f867a1dd5b40476aba90bf10a85e9567772ca1f54756a62b3"
+    },
+    {
+      "commit": "72193be6d4bd9ad29dacd998c14dff97f7a6c6c9",
+      "subject": "ANDROID: binder: fix pending prio state for early exit",
+      "old_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+      "new_blob": "2cbf4cece4454154fc20427ae790b57873b384a0",
+      "followup": "761834a35e49 only adds vendor cleanup notifications and an error-fallthrough flag. No existing line, native cleanup, security check, priority logic, refcount, or reviewed merge resolution is removed or altered. Earlier scoped review remains valid with this additive lifetime fix.",
+      "delta_sha256": "d6f86fa9a108715f867a1dd5b40476aba90bf10a85e9567772ca1f54756a62b3"
+    },
+    {
+      "commit": "b7259d0c954545ce8d4fa3d77f74ecbbdafc3b0a",
+      "subject": "FROMLIST: binder: fix UAF caused by offsets overwrite",
+      "old_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+      "new_blob": "2cbf4cece4454154fc20427ae790b57873b384a0",
+      "followup": "761834a35e49 only adds vendor cleanup notifications and an error-fallthrough flag. No existing line, native cleanup, security check, priority logic, refcount, or reviewed merge resolution is removed or altered. Earlier scoped review remains valid with this additive lifetime fix.",
+      "delta_sha256": "d6f86fa9a108715f867a1dd5b40476aba90bf10a85e9567772ca1f54756a62b3"
+    },
+    {
+      "commit": "beb382fdef570d88c1f4a346a5376621975a4c2f",
+      "subject": "ANDROID: binder: fix minimum node priority comparison",
+      "old_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+      "new_blob": "2cbf4cece4454154fc20427ae790b57873b384a0",
+      "followup": "761834a35e49 only adds vendor cleanup notifications and an error-fallthrough flag. No existing line, native cleanup, security check, priority logic, refcount, or reviewed merge resolution is removed or altered. Earlier scoped review remains valid with this additive lifetime fix.",
+      "delta_sha256": "d6f86fa9a108715f867a1dd5b40476aba90bf10a85e9567772ca1f54756a62b3"
+    },
+    {
+      "commit": "2fe4cd43477af4cd29f2770f691da05e794817ed",
+      "subject": "Merge 0d5ec7919f37 (\"Merge tag 'char-misc-6.17-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/char-misc\") into android-mainline",
+      "old_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+      "new_blob": "2cbf4cece4454154fc20427ae790b57873b384a0",
+      "followup": "761834a35e49 only adds vendor cleanup notifications and an error-fallthrough flag. No existing line, native cleanup, security check, priority logic, refcount, or reviewed merge resolution is removed or altered. Earlier scoped review remains valid with this additive lifetime fix.",
+      "delta_sha256": "d6f86fa9a108715f867a1dd5b40476aba90bf10a85e9567772ca1f54756a62b3"
+    },
+    {
+      "commit": "faad7f4deee18f6432b574084358e5d84466a285",
+      "subject": "Merge 6093a688a07d (\"Merge tag 'char-misc-6.18-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/char-misc\") into android-mainline",
+      "old_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+      "new_blob": "2cbf4cece4454154fc20427ae790b57873b384a0",
+      "followup": "761834a35e49 only adds vendor cleanup notifications and an error-fallthrough flag. No existing line, native cleanup, security check, priority logic, refcount, or reviewed merge resolution is removed or altered. Earlier scoped review remains valid with this additive lifetime fix.",
+      "delta_sha256": "d6f86fa9a108715f867a1dd5b40476aba90bf10a85e9567772ca1f54756a62b3"
+    },
+    {
+      "commit": "082b182e284874d530036b44f04188f731a15f31",
+      "subject": "ANDROID: binder: use task->prio for transaction PI",
+      "old_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+      "new_blob": "2cbf4cece4454154fc20427ae790b57873b384a0",
+      "followup": "761834a35e49 only adds vendor cleanup notifications and an error-fallthrough flag. No existing line, native cleanup, security check, priority logic, refcount, or reviewed merge resolution is removed or altered. Earlier scoped review remains valid with this additive lifetime fix.",
+      "delta_sha256": "d6f86fa9a108715f867a1dd5b40476aba90bf10a85e9567772ca1f54756a62b3"
+    },
+    {
+      "commit": "2e3a42ca60fd023c1a904875980940fafc40bf0d",
+      "subject": "UPSTREAM: fix the breakage in close_fd_get_file() calling conventions change",
+      "old_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+      "new_blob": "2cbf4cece4454154fc20427ae790b57873b384a0",
+      "followup": "761834a35e49 only adds vendor cleanup notifications and an error-fallthrough flag. No existing line, native cleanup, security check, priority logic, refcount, or reviewed merge resolution is removed or altered. Earlier scoped review remains valid with this additive lifetime fix.",
+      "delta_sha256": "d6f86fa9a108715f867a1dd5b40476aba90bf10a85e9567772ca1f54756a62b3"
+    },
+    {
+      "commit": "a4f98a7ebd4c4f5374fdfb67e1d555dddc5b53f7",
+      "subject": "Merge 228dfe98a313 (\"Merge tag 'char-misc-6.0-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/char-misc\") into android-mainline",
+      "old_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+      "new_blob": "2cbf4cece4454154fc20427ae790b57873b384a0",
+      "followup": "761834a35e49 only adds vendor cleanup notifications and an error-fallthrough flag. No existing line, native cleanup, security check, priority logic, refcount, or reviewed merge resolution is removed or altered. Earlier scoped review remains valid with this additive lifetime fix.",
+      "delta_sha256": "d6f86fa9a108715f867a1dd5b40476aba90bf10a85e9567772ca1f54756a62b3"
+    },
+    {
+      "commit": "414c88c2cc92ac80b0ebcd5fc46982482af68313",
+      "subject": "Merge 44aeec836da8 (\"Merge tag 'char-misc-6.5-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/char-misc\") into android-mainline",
+      "old_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+      "new_blob": "2cbf4cece4454154fc20427ae790b57873b384a0",
+      "followup": "761834a35e49 only adds vendor cleanup notifications and an error-fallthrough flag. No existing line, native cleanup, security check, priority logic, refcount, or reviewed merge resolution is removed or altered. Earlier scoped review remains valid with this additive lifetime fix.",
+      "delta_sha256": "d6f86fa9a108715f867a1dd5b40476aba90bf10a85e9567772ca1f54756a62b3"
+    },
+    {
+      "commit": "17a8d933b45a00a957c84c7ef30e807622035d3c",
+      "subject": "Merge c26f4fbd5837 (\"Merge tag 'char-misc-6.16-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/char-misc\") into android-mainline",
+      "old_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+      "new_blob": "2cbf4cece4454154fc20427ae790b57873b384a0",
+      "followup": "761834a35e49 only adds vendor cleanup notifications and an error-fallthrough flag. No existing line, native cleanup, security check, priority logic, refcount, or reviewed merge resolution is removed or altered. Earlier scoped review remains valid with this additive lifetime fix.",
+      "delta_sha256": "d6f86fa9a108715f867a1dd5b40476aba90bf10a85e9567772ca1f54756a62b3"
+    }
+  ]
+}

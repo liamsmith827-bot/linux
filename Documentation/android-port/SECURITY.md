@@ -4248,3 +4248,106 @@ only scans the Rust core/kernel/bindings objects. Built-in linkage is verified;
 loadable-module access is not claimed. No new export policy is inferred from the
 absence of an SDK vendor caller. The generated VFS symbol record independently
 confirms that `vfs_splice_read` retains its native GPL-only flag and ACK namespace.
+
+## C Binder vendor hook history and destruction
+
+Twenty candidate patches cover the historical Binder hooks, their four reverts,
+and current replacements. The old separate/consolidated wakeup hooks are absent
+from both final ACK and port. Current wait/receive callbacks are distinct; current
+priority restoration uses a transaction-only callback plus a separate NULL idle
+notification. All 31 current declarations have GPL exports and C callsites.
+Runtime vendor/OEM fields are retained for actual source extension state, without
+historical binary layout preservation. Exact SDK callback consumers are unconfirmed;
+that is not a basis for removing these generic Android source interfaces.
+
+These callbacks execute trusted kernel code. Queue selection/insertion callbacks
+must preserve list ownership, locking, nonempty selected lists and exactly-once
+enqueue/dequeue. Spawn callbacks can exceed the normal thread maximum; allocation
+callbacks can alter async budgets; priority callbacks can suppress restoration.
+Those policies can affect fairness, memory consumption and availability. The port
+retains the requested customization and records these limits rather than treating
+callbacks as security enforcement. Unregistered defaults follow the native paths.
+Native transaction LSM checks still follow the pre-transaction observation hook;
+observation does not imply authorization. The proc-free hook runs after native
+task/credential/dbitmap release and must only access still-live vendor state.
+Callbacks must coordinate registration lifetimes and cannot retain unowned pointers.
+
+`761834a35e49` fixes missing vendor transaction destruction notifications. Normal
+transaction destruction invoked the free hook, while transaction error unwinding
+and outdated asynchronous replacement freed the transaction directly. State allocated
+by init/OEM hooks could therefore leak on repeated invalid or superseded transactions.
+The port notifies before buffer teardown on errors and replacement, and also covers
+early errors before a buffer or OEM allocation exists. A local flag avoids a second
+notification when buffer-error labels fall through to the common error path.
+Callbacks must tolerate absent OEM state and a NULL buffer on early failures.
+The existing normal destruction hook remains after the native locked target snapshot
+and temporary reference acquisition. Native outdated-buffer failure release and FD
+fixup cleanup are unchanged, as are LSM context sizing and transaction permissions.
+
+The extracted C destruction function, all 15 error entry labels, and outdated
+replacement block pass 40 host cases. The previous source fails 80 assertions.
+Checks cover exactly one hook invocation, no simulated vendor allocation left at
+transaction free, hook timing before buffer destruction, and native failure/fixup
+cleanup. Locks, allocation and refcounts use host shims; no Binder syscall, actual
+vendor module, kernel fault injection or concurrency stress was executed.
+Per-candidate evidence is in `evidence/c-binder-vendor-review.json` and the focused
+results are in `evidence/binder-vendor-cleanup-check.json`.
+
+WrapFD's Bazel selftest rule and x86_64 package/Tradefed entry remain. The rule matches
+the candidate exactly. ARM64 packaging is outside the existing SDK build subset;
+`81e18ca6effc` also removes this candidate's ARM64 XML entry. This retains test
+metadata for the selected driver without introducing future-platform execution.
+The WrapFD selftest binary and runtime test have not been run.
+
+## Android configuration and removed telemetry history
+
+Seven decisions are detailed in `evidence/android-history-config-review.json`.
+The temporary vendor-hook disable was exactly reversed; x86_64 hooks remain
+selected and build successfully. Help-syntax repairs are retained for current
+vendor-hook/DM_BOW entries; the other two declarations were removed in final ACK.
+Vendor/OEM runtime storage and task zero-initialization remain configurable and
+enabled for the SDK. Historical KABI reserve padding and its header are omitted.
+Child extension state is cleared before the dup-task vendor notification; no
+binary layout compatibility is promised by the retained runtime fields.
+
+ACK removed the memhealth telemetry driver and all configuration/build/proc ABI
+registrations. Final ACK and port both lack those files and references. The
+original export of mark_victim was removed with it, but later ACK commit
+`3a74b921c02b` independently restored that GPL tracepoint for vendor modules;
+that generic export stays. Scoped local lmkd/framework-AM/SELinux searches found
+no memhealth references, but the removal decision rests on explicit final ACK
+history, not a claim that a search proves no consumer exists. No native OOM
+selection or termination behavior is removed by these historical metadata choices.
+
+Binder's exhaustive allocator KUnit case retains the slow annotation. It keeps
+the same test function while affecting native speed filtering, warning behavior
+and timeout multiplier. Build 103 produced the selected test module; the test
+was not executed. Compilation does not establish runtime correctness.
+
+## Debug-kinfo target selection and CFI rename
+
+Eleven decisions in `evidence/debug-kinfo-source-review.json` account for the
+bootloader debug-kinfo relocation, fixes and metadata evolution, historical
+configuration disable, and mixed CFI rename. The driver requires a
+`google,debug-kinfo` device, memory-region phandle and pre-mapped reserved memory.
+Pinned ACK's x86_64 GKI configuration does not select it, its Kconfig has no default
+enablement, and the exhaustive ACK config search enables it only for ARM64. The
+existing SDK build selects that x86_64 configuration; checked-out virtual-device
+fragments do not enable it. Its source, packed bootloader record and registration
+remain omitted. This does not remove native kallsyms or module-loading functionality.
+CONFIG_OF and KALLSYMS are enabled; no claim is made that those subsystems are unused
+or that every externally customized emulator firmware lacks the interface.
+
+Driver-only fixes for repeated-write unmapping, bounded string copying and new
+native module/symbol layouts are omitted with the driver, without retaining their
+unsafe historical implementations. Native LTS module_memory and relative symbol
+tables remain. Historical disabled status on every architecture is not preserved.
+
+The mixed rename retains CONFIG_CFI in x86_64 and omits unselected ARM64/Microdroid
+configuration and debug-kinfo edits. virtio_dma_buf remains exactly at LTS: callback
+identity must match before the object is treated as a virtio buffer. The historical
+ACK CFI+MODULES exception would report every DMA buffer as virtio and skip exporter
+validation, potentially allowing an invalid extended ops interpretation. Current
+modules are rebuilt using the same KCFI toolchain, so historical binary CFI behavior
+is not preserved. Build 103 compiled the actual module set; runtime DMA-buffer
+interoperability and emulator firmware behavior remain unverified.

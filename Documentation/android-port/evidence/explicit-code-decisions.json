@@ -6179,5 +6179,469 @@
       "evidence/wrapfd-device-ownership-check.json",
       "SECURITY.md: WrapFD driver bounds and ownership"
     ]
+  },
+  {
+    "commit": "3fc5e942554eb435a2afd5113778eefd2a97f19b",
+    "disposition": "superseded",
+    "rationale": "The 2020 transaction-init/set/restore hook implementation was removed by aafad03cb0f3, then replaced by 4db07ca827f0 and f272cfae9a9b. Retain the final transaction storage and current hook signatures/placements, not the old restore(t,task) signature or NULL idle-restore use. Current idle restoration uses the separate c4fbf0e936f8 hook. No historical binary hook ABI is promised.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "761834a35e498f2473977946d9ce8e4a928535cc"
+    ],
+    "evidence": [
+      "evidence/c-binder-vendor-review.json",
+      "evidence/binder-vendor-cleanup-check.json",
+      "SECURITY.md: C Binder vendor hook history and destruction"
+    ]
+  },
+  {
+    "commit": "37d7ed1b228526cac0b61c7e459129cc96fcac71",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "The original separate poll-thread/thread wakeup hooks were consolidated by de3955742da8 and ultimately removed by a4bfc3f2920b after the consolidation was reverted. All three old wakeup hook names are absent from final ACK and port declarations, exports and callsites. Native wakeups remain. Later wait/receive hooks are distinct reviewed interfaces; no obsolete callback ABI is reconstructed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/c-binder-vendor-review.json",
+      "evidence/binder-vendor-cleanup-check.json",
+      "SECURITY.md: C Binder vendor hook history and destruction"
+    ]
+  },
+  {
+    "commit": "de3955742da82a0cce0919f3114b43d336118ab6",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "cd38e54c84ae reverses the two-to-one wakeup-hook consolidation, followed by a4bfc3f2920b removing the separate hooks. Final ACK and port have none of the three old wakeup names. Retain native wakeup behavior and current wait/receive extensions without adding obsolete source interfaces.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/c-binder-vendor-review.json",
+      "evidence/binder-vendor-cleanup-check.json",
+      "SECURITY.md: C Binder vendor hook history and destruction"
+    ]
+  },
+  {
+    "commit": "5ec033b0cc6f095f5b08655cca2ddd383b1eebf1",
+    "disposition": "superseded",
+    "rationale": "The historical patch enlarged the consolidated wakeup signature and added wait/receive callbacks; 1ffbca5669e5 removed all three changes. Final ACK 0c67e28bfc93 reintroduces only wait_for_work and sync_txn_recvd. Retain that current subset; the wakeup hook has no residual code. Existing native waitqueue/wakeup and task-reference handling are preserved.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/c-binder-vendor-review.json",
+      "evidence/binder-vendor-cleanup-check.json",
+      "SECURITY.md: C Binder vendor hook history and destruction"
+    ]
+  },
+  {
+    "commit": "1ffbca5669e5aec32d016a9aada6317539c11e0c",
+    "disposition": "superseded",
+    "rationale": "Full revert read against 5ec033b0cc6f. Its restoration of the old one-argument wakeup hook was subsequently removed; wait/receive callback removal was superseded by 0c67e28bfc93. Final code uses the current ACK wait/receive callbacks and native wakeups. The historical commit message preference for no vendor hooks does not override the requested vendor source compatibility.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/c-binder-vendor-review.json",
+      "evidence/binder-vendor-cleanup-check.json",
+      "SECURITY.md: C Binder vendor hook history and destruction"
+    ]
+  },
+  {
+    "commit": "cd38e54c84ae7ed56af1af6eb2f23df2df70108c",
+    "disposition": "superseded-no-residual-code",
+    "rationale": "Full inverse consolidation patch read. Reintroduced two old wakeup hooks were then removed by a4bfc3f2920b; neither old interface nor the consolidated interface exists at either final tip. No code from this intermediate restoration is needed in the final source API.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/c-binder-vendor-review.json",
+      "evidence/binder-vendor-cleanup-check.json",
+      "SECURITY.md: C Binder vendor hook history and destruction"
+    ]
+  },
+  {
+    "commit": "a4bfc3f2920be55f161ca8dd533481b157cbbee6",
+    "disposition": "reverted",
+    "rationale": "This removes the original two wakeup hooks; verify both declarations/exports/calls remain absent in final ACK and port. Their removal is represented by native LTS wakeups without replaying an intermediate add/remove pair. This does not remove the separate later wait/receive hooks.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/c-binder-vendor-review.json",
+      "evidence/binder-vendor-cleanup-check.json",
+      "SECURITY.md: C Binder vendor hook history and destruction"
+    ]
+  },
+  {
+    "commit": "aafad03cb0f3b67803393cdb0203388c7bfb1563",
+    "disposition": "superseded",
+    "rationale": "This removed original transaction hooks and vendor storage, but final ACK restored the storage and revised set/restore hooks in 4db07ca827f0 and init hook in f272cfae9a9b. Retain those current generic vendor interfaces. The old two-argument restore hook and removed idle call are not recreated; final idle customization is separately named.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "761834a35e498f2473977946d9ce8e4a928535cc"
+    ],
+    "evidence": [
+      "evidence/c-binder-vendor-review.json",
+      "evidence/binder-vendor-cleanup-check.json",
+      "SECURITY.md: C Binder vendor hook history and destruction"
+    ]
+  },
+  {
+    "commit": "4db07ca827f07852a161271df35c5169f2d7ec6b",
+    "disposition": "adapted",
+    "rationale": "Retain runtime transaction vendor data and set-priority/restore-priority callbacks. Storage is actual zero-initialized transaction extension state, not historical KMI padding. Set runs after native Android priority handling; reply/error restore callbacks run with the transaction live before restoration/free. Final restore takes only the transaction and the current task is implicit. Trusted callbacks can alter policy; capability/rlimit/RESET_ON_FORK checks in the normal priority path remain. SDK module use is unconfirmed, so generic source compatibility is retained rather than inferring dispensability.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/c-binder-vendor-review.json",
+      "evidence/binder-vendor-cleanup-check.json",
+      "SECURITY.md: C Binder vendor hook history and destruction"
+    ]
+  },
+  {
+    "commit": "0c67e28bfc93b61f84d8ed2bf4d9cc5f13131739",
+    "disposition": "adapted",
+    "rationale": "Retain wait_for_work under proc inner lock immediately before unlock/schedule, and synchronous receive with t_from held by native temporary reference. Current receiver task and sender task references remain live. Callbacks in locked context must not sleep or retain unreferenced pointers. Full patch reintroduces no wakeup hook; native wait/wakeup semantics are unchanged when callbacks are absent.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/c-binder-vendor-review.json",
+      "evidence/binder-vendor-cleanup-check.json",
+      "SECURITY.md: C Binder vendor hook history and destruction"
+    ]
+  },
+  {
+    "commit": "7fdc7571051ff6bd153f970f9a102bde149ea842",
+    "disposition": "adapted",
+    "rationale": "Retain transaction allocation/receive/free, proc-finish, special queue insertion and buffer-release hooks as generic scheduling/source extension points. enqueue_task defaults true; callback opting out must enqueue exactly once under the existing proc/node locking. Native dead/frozen checks, outstanding accounting, outdated-buffer failure release and fd-fixup cleanup remain. 761834a35e49 adds missing vendor destruction notifications for outdated async replacement and every error path, before buffer destruction and without duplicate fallthrough notification. Otherwise callback-allocated state could leak on attacker-triggered failure or replacement. Forty extracted cleanup cases pass; previous port fails 80 assertions. No real vendor callback/concurrency runtime test.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "761834a35e498f2473977946d9ce8e4a928535cc"
+    ],
+    "evidence": [
+      "evidence/c-binder-vendor-review.json",
+      "evidence/binder-vendor-cleanup-check.json",
+      "SECURITY.md: C Binder vendor hook history and destruction"
+    ]
+  },
+  {
+    "commit": "80a7e6537be6c161060ecd85a095fc1d5e1a6df7",
+    "disposition": "adapted",
+    "rationale": "Retain reply/trans instrumentation and proc preset, with later 71a1a2c8fe8c moving preset before list publication and adding proc argument. Target proc/thread native temporary references cover reply/trans callbacks. trans runs before security_binder_transaction, so it does not imply authorization and callbacks must not treat it as an authorized delivery; native LSM rejection still follows. Preset receives a mutex to acquire when accessing the global proc list and is called without it held.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/c-binder-vendor-review.json",
+      "evidence/binder-vendor-cleanup-check.json",
+      "SECURITY.md: C Binder vendor hook history and destruction"
+    ]
+  },
+  {
+    "commit": "23c3e27095752c88833feba8274e628cbb46661d",
+    "disposition": "adapted",
+    "rationale": "Retain allocator-budget/refusal hook under allocator locking. should_fail starts false; callback refusal returns EPERM before native allocation, and free_async_space remains subject to native async-space/buffer checks. Pointer permits trusted module budget changes and can weaken accounting if misused, so this is not an untrusted security boundary. Callback must preserve size/accounting invariants and not sleep while the lock is held. No callback yields the native allocation path.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/c-binder-vendor-review.json",
+      "evidence/binder-vendor-cleanup-check.json",
+      "SECURITY.md: C Binder vendor hook history and destruction"
+    ]
+  },
+  {
+    "commit": "17fd54af169e6a13b3d7b071b29f1ec2e1962045",
+    "disposition": "adapted",
+    "rationale": "Retain special-work availability/selection, proc transaction, looper exit, spawn, ioctl-end and read-list hooks. Initial outputs preserve native behavior: list NULL, nothing_to_do/force_spawn false, has_work derived from native queues, ret zero only after successful ioctl dispatch. Native failure gotos bypass ioctl_end. A trusted callback may suppress availability, redirect queues or exceed max_threads via force_spawn; preserve for requested source customization, documenting denial-of-service and memory/lifetime obligations rather than presenting hooks as permission checks. Custom lists must be valid nonempty, protected by proc inner lock and paired with teardown; no actual scheduler policy/SDK vendor consumer established.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/c-binder-vendor-review.json",
+      "evidence/binder-vendor-cleanup-check.json",
+      "SECURITY.md: C Binder vendor hook history and destruction"
+    ]
+  },
+  {
+    "commit": "7ae9e04b40fbc0b7a7cafa40cf6a6eaca3214086",
+    "disposition": "adapted",
+    "rationale": "Retain reference creation/deletion notifications with translated handle and node debug ID. Creation occurs while outer proc/node locks protect the initialized reference; deletion occurs before reference storage is freed. Callback receives scalar IDs, not ownership; it must maintain lifetime/locking of any retained proc data. No native handle validation, node refcount or deallocation is removed. Generic diagnostics/source API retained despite no confirmed SDK policy consumer.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/c-binder-vendor-review.json",
+      "evidence/binder-vendor-cleanup-check.json",
+      "SECURITY.md: C Binder vendor hook history and destruction"
+    ]
+  },
+  {
+    "commit": "71a1a2c8fe8cadad26dc2f799eebcf59e8afdce8",
+    "disposition": "adapted",
+    "rationale": "Retain runtime OEM fields and custom-worklist initialization, ordering, availability, reporting and release hooks. Final preset receives the initialized proc before publication; special_list defaults NULL. Deferred release drains the returned list using native binder_release_work, and debug printing applies existing pointer-hashing policy under proc lock. free_proc hook runs before proc memory free but after native task/cred/dbitmap release; callbacks must only access still-live vendor state and cannot assume those released members remain usable. No concrete fg_todo scheduler is added; callback owns list validity, fairness and teardown. Fields are used extension storage, not KMI reserve layout.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/c-binder-vendor-review.json",
+      "evidence/binder-vendor-cleanup-check.json",
+      "SECURITY.md: C Binder vendor hook history and destruction"
+    ]
+  },
+  {
+    "commit": "f272cfae9a9bc7574aa3ceac1f85554cd1e2580e",
+    "disposition": "adapted",
+    "rationale": "Retain transaction vendor initialization after zero allocation/list/lock initialization, before debug/target/buffer population. Callback cannot assume later fields exist. Paired vendor destruction now reaches early errors as well as normal/outdated destruction through 761834a35e49; callbacks must tolerate absent OEM allocation/buffer. Native kzalloc failure never invokes either hook. This avoids leaks from init-hook state on invalid target/transaction failures; exact callback implementation and runtime behavior remain unverified.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "761834a35e498f2473977946d9ce8e4a928535cc"
+    ],
+    "evidence": [
+      "evidence/c-binder-vendor-review.json",
+      "evidence/binder-vendor-cleanup-check.json",
+      "SECURITY.md: C Binder vendor hook history and destruction"
+    ]
+  },
+  {
+    "commit": "3a02a36bceb90de88ddc744c08d20e62606747b5",
+    "disposition": "adapted",
+    "rationale": "Retain pre-priority callback before set_priority_called test. Callback can mark priority handling complete; normal code snapshots desired/node priorities before the callback and otherwise keeps inherit_rt, recipient capability/rlimit and nested priority restoration semantics. Callback is trusted kernel policy, not a user-controlled bypass. Generic source API retained; no existing vendor binary signature compatibility required.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/c-binder-vendor-review.json",
+      "evidence/binder-vendor-cleanup-check.json",
+      "SECURITY.md: C Binder vendor hook history and destruction"
+    ]
+  },
+  {
+    "commit": "4143a83b5cca7b3049e150beaf393493f844a623",
+    "disposition": "adapted",
+    "rationale": "Retain thread OEM state and skip=false callback at entry to binder_do_set_priority, covering both set and restore calls. A trusted callback may deliberately skip restoring a boost, including pending state transitions, so fairness/availability and eventual priority cleanup are its responsibility. With no callback all normal capability/rlimit/RESET_ON_FORK and nested-state logic remains. Storage implements runtime customization and is not historical ABI padding.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/c-binder-vendor-review.json",
+      "evidence/binder-vendor-cleanup-check.json",
+      "SECURITY.md: C Binder vendor hook history and destruction"
+    ]
+  },
+  {
+    "commit": "c4fbf0e936f81ddd7686b357ac191a5ba4b2972b",
+    "disposition": "adapted",
+    "rationale": "Retain dedicated before_restore_priority(NULL) call when a thread is preparing for process work. NULL is the specified idle-state notification; callback must not dereference it. It precedes normal default-priority restoration and does not replace the transaction-specific restore hook. Preserve current source signatures and native default behavior; actual vendor policy execution is not verified.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/c-binder-vendor-review.json",
+      "evidence/binder-vendor-cleanup-check.json",
+      "SECURITY.md: C Binder vendor hook history and destruction"
+    ]
+  },
+  {
+    "commit": "77d1700f41b6bf03340cd1dbb9fafcbcd9ebe4b4",
+    "disposition": "partially-adapted",
+    "rationale": "Retain WrapFD cc_binary_with_abi target, explicit UAPI/tools/selftest include inputs, static linking and x86_64 package/Tradefed registration for the selected SDK driver. Rule and x86_64 added lines match ACK; no test success is inferred from registration. Omit arm64 package addition with the existing scoped build target and remove its XML registration in 81e18ca6effc because that is solely future-platform test execution. No ARM64 implementation/support is claimed. WrapFD selftest binary/runtime were not invoked; existing emulator build validates build-file integration only.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "81e18ca6effc228983f2650b268776d7d668b3a3"
+    ],
+    "evidence": [
+      "evidence/c-binder-vendor-review.json",
+      "evidence/binder-vendor-cleanup-check.json",
+      "SECURITY.md: C Binder vendor hook history and destruction"
+    ]
+  },
+  {
+    "commit": "9edfd6c57a107c02b294dc0142bc464cf629c955",
+    "disposition": "partially-adapted",
+    "rationale": "Four changes are exclusively ---help--- to help. Current vendor-hook and DM_BOW Kconfig entries retain accepted help syntax, allowing native 6.18 configuration parsing. GNSS_CMDLINE_SERIAL and DM_VERITY_AVB entries were subsequently removed in final ACK itself; do not resurrect their obsolete declarations. GNSS Kconfig is byte-identical ACK/LTS/port. SDK build 103 parses the retained entries. No runtime behavior or security check is modified by syntax repair.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/android-history-config-review.json",
+      "SECURITY.md: Android configuration and removed telemetry history"
+    ]
+  },
+  {
+    "commit": "ff0771e5f881fa5596ff35856fc0df11429c9d80",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "Temporary BROKEN dependency and arm64/x86 hook-disable entries were exactly reversed by 0695bfe5fb84 after tracepoint refactoring. All three original blobs are restored by the revert. Keep current enabled x86_64 vendor hooks without BROKEN; build 103 compiles 31 Binder hook exports as a concrete check. No temporary disable or future-platform configuration is ported.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/android-history-config-review.json",
+      "SECURITY.md: Android configuration and removed telemetry history"
+    ]
+  },
+  {
+    "commit": "0695bfe5fb84aa830cfd8712906d7464ca7cb534",
+    "disposition": "partially-adapted",
+    "rationale": "Retain final removal of temporary BROKEN and x86 hook enablement, as required for current generic vendor source interfaces; x86 generated SDK config has ANDROID_VENDOR_HOOKS=y and ANDROID_VENDOR_OEM_DATA=y. Its arm64 defconfig entry is outside the selected build and remains omitted with that file. Exact inverse of ff0771e5f881 verified for all three changed paths. Build 103 confirms integration; callback-specific safety remains separately audited.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/android-history-config-review.json",
+      "SECURITY.md: Android configuration and removed telemetry history"
+    ]
+  },
+  {
+    "commit": "3e9d5f02f0e124633edb3a638fe614466c8d0a51",
+    "disposition": "partially-adapted",
+    "rationale": "Retain configurable vendor/OEM runtime fields, disabled-config empty macros, zero-init helpers, guarded init_task storage and dup_task_struct zeroing before vendor dup-task notification. This prevents copied parent-specific extension data from being mistaken for child state. Runtime fields support current source hooks; original ABI/padding help is rewritten to describe this purpose, and selected SDK enables the option on 64-bit. Omit ANDROID_KABI_RESERVE Kconfig and android_kabi.h entirely because they only preserve historical layouts. No vendor-binary KMI guarantee, and no 32-bit alternate kernel build claimed. Native task allocation/error cleanup remains unchanged.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/android-history-config-review.json",
+      "SECURITY.md: Android configuration and removed telemetry history"
+    ]
+  },
+  {
+    "commit": "bdf5a5a3ec6840ea073252e14703b9005a2cd375",
+    "disposition": "superseded",
+    "rationale": "Original /proc/memhealth OOM telemetry driver, documentation, configuration and module registration were removed by f3583fb7b6bc after three intermediate updates. Read final 423-line removed driver and initial-to-final evolution, plus all original non-driver hunks. Both final ACK and port lack the driver, ABI file, Kconfig and module-list references; do not recreate a removed optional interface. mark_victim export was also removed then, but independently reintroduced by 3a74b921c02b for generic source modules and is retained. This is final-tree/history evidence, not absence-of-consumer reasoning. Scoped local lmkd/framework-AM/SELinux search found no memhealth references, without proving universal absence. No removed telemetry implementation is claimed security-audited for resurrection.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/android-history-config-review.json",
+      "SECURITY.md: Android configuration and removed telemetry history"
+    ]
+  },
+  {
+    "commit": "f3583fb7b6bcdf73427333429b407374c1d62714",
+    "disposition": "partially-adapted",
+    "rationale": "Retain final removal of memhealth driver, proc ABI documentation, build/module registration and config symbols, already absent from the LTS base. The removal patch is deletion-only across all nine paths; full deleted driver and registration/config hunks examined. Do not retain its historical mark_victim export removal because 3a74b921c02b later intentionally restores the generic GPL source-module tracepoint. Native OOM victim selection/termination is not changed by either registration/removal. Avoiding the removed driver also avoids adding its proc allocation/callback/workqueue surface; this does not substitute a new OOM policy.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/android-history-config-review.json",
+      "SECURITY.md: Android configuration and removed telemetry history"
+    ]
+  },
+  {
+    "commit": "bcb641275ef95a1d73d01b6c0cc87a4adba8f036",
+    "disposition": "adapted",
+    "rationale": "Retain exact one-line KUNIT_CASE_SLOW annotation for binder_alloc_exhaustive_test. Native KUnit macro keeps the same function/name and adds slow speed metadata; native runner suppresses slow warnings, permits speed filtering and gives a 3x timeout multiplier. This affects optional test selection/timing, not Binder allocation implementation. Entire test file equals final ACK. SDK config builds binder_alloc_kunit.ko and build 103 produced it, but the test was not loaded/run and no runtime passing result is claimed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/android-history-config-review.json",
+      "SECURITY.md: Android configuration and removed telemetry history"
+    ]
+  },
+  {
+    "commit": "094f5702db8686e9736e799cab89a2e5778a3d86",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit staging-to-Android relocation, renamed enablement and source/header for this unselected driver. The two file moves are content-identical and the remaining eight changed path entries only move build/config references; no generic Binder/ashmem behavior is removed. This is the bootloader reserved-memory debug-kinfo interface, requiring google,debug-kinfo plus a memory-region phandle and pre-mapped reserved memory; it is not native kallsyms/module loading. Pinned ACK x86_64 gki_defconfig does not enable it, Kconfig has no default y, and ACK configuration search only enables it for arm64. The existing emulator build selects x86_64 gki_defconfig and virtual-device fragments do not enable it. Keep the SDK implementation absent, preserving native LTS symbol/module facilities. CONFIG_OF and KALLSYMS are enabled, so this is a specific feature selection, not a claim those subsystems are unused. No arbitrary external emulator firmware or runtime boot has been validated.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/debug-kinfo-source-review.json",
+      "SECURITY.md: Debug-kinfo target selection and CFI rename"
+    ]
+  },
+  {
+    "commit": "ff10ffd961b32cbdf0ff6c00f8ed409a8db4568c",
+    "disposition": "omitted-current-target",
+    "rationale": "Patch removes vunmap from build_info_set to prevent repeated writes using an unmapped buffer. Entire driver remains absent; the unsafe old implementation is not retained and this is not a decision to ship its known crash. This is the bootloader reserved-memory debug-kinfo interface, requiring google,debug-kinfo plus a memory-region phandle and pre-mapped reserved memory; it is not native kallsyms/module loading. Pinned ACK x86_64 gki_defconfig does not enable it, Kconfig has no default y, and ACK configuration search only enables it for arm64. The existing emulator build selects x86_64 gki_defconfig and virtual-device fragments do not enable it. Keep the SDK implementation absent, preserving native LTS symbol/module facilities. CONFIG_OF and KALLSYMS are enabled, so this is a specific feature selection, not a claim those subsystems are unused. No arbitrary external emulator firmware or runtime boot has been validated.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/debug-kinfo-source-review.json",
+      "SECURITY.md: Debug-kinfo target selection and CFI rename"
+    ]
+  },
+  {
+    "commit": "1116c8fd4e788b72ef8e24e276672456ecc8247f",
+    "disposition": "omitted-current-target",
+    "rationale": "Patch removes obsolete module_layout offset fields from the debug-kinfo producer/serialized header following native module_memory conversion. It changes no module allocator or loader. Omit together with the producer; native LTS module_memory implementation remains. This is the bootloader reserved-memory debug-kinfo interface, requiring google,debug-kinfo plus a memory-region phandle and pre-mapped reserved memory; it is not native kallsyms/module loading. Pinned ACK x86_64 gki_defconfig does not enable it, Kconfig has no default y, and ACK configuration search only enables it for arm64. The existing emulator build selects x86_64 gki_defconfig and virtual-device fragments do not enable it. Keep the SDK implementation absent, preserving native LTS symbol/module facilities. CONFIG_OF and KALLSYMS are enabled, so this is a specific feature selection, not a claim those subsystems are unused. No arbitrary external emulator firmware or runtime boot has been validated.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/debug-kinfo-source-review.json",
+      "SECURITY.md: Debug-kinfo target selection and CFI rename"
+    ]
+  },
+  {
+    "commit": "8f7e7b71c4207c64c9e7ee8ddbbe8763be12e6ed",
+    "disposition": "superseded",
+    "rationale": "Historical disable removed the driver from arm64/riscv/x86 defconfigs and added BROKEN. Final ACK later removes BROKEN and enables only arm64. SDK x86 remains unselected; port omits driver/Kconfig completely rather than reinstating a global BROKEN gate or any other-platform configuration. This preserves the current x86 selection, not historical disabled status on every architecture.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/debug-kinfo-source-review.json",
+      "SECURITY.md: Debug-kinfo target selection and CFI rename"
+    ]
+  },
+  {
+    "commit": "b8d72cb07e32f7d26a0beec71336403cb0a475fb",
+    "disposition": "omitted-current-target",
+    "rationale": "Patch removes obsolete architecture module VA range fields from the bootloader record after module_alloc_base became private. Omit the record with its driver; native per-architecture module allocation and address randomization stay intact. This is the bootloader reserved-memory debug-kinfo interface, requiring google,debug-kinfo plus a memory-region phandle and pre-mapped reserved memory; it is not native kallsyms/module loading. Pinned ACK x86_64 gki_defconfig does not enable it, Kconfig has no default y, and ACK configuration search only enables it for arm64. The existing emulator build selects x86_64 gki_defconfig and virtual-device fragments do not enable it. Keep the SDK implementation absent, preserving native LTS symbol/module facilities. CONFIG_OF and KALLSYMS are enabled, so this is a specific feature selection, not a claim those subsystems are unused. No arbitrary external emulator firmware or runtime boot has been validated.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/debug-kinfo-source-review.json",
+      "SECURITY.md: Debug-kinfo target selection and CFI rename"
+    ]
+  },
+  {
+    "commit": "20039e646de3301537a2fe909a4687ea3ed46918",
+    "disposition": "omitted-current-target",
+    "rationale": "Bounded strscpy replaces removed strlcpy only in the debug-kinfo UTS-release copy. Omit because the caller is absent, not because unsafe string copying is acceptable. No native string helper is reverted. This is the bootloader reserved-memory debug-kinfo interface, requiring google,debug-kinfo plus a memory-region phandle and pre-mapped reserved memory; it is not native kallsyms/module loading. Pinned ACK x86_64 gki_defconfig does not enable it, Kconfig has no default y, and ACK configuration search only enables it for arm64. The existing emulator build selects x86_64 gki_defconfig and virtual-device fragments do not enable it. Keep the SDK implementation absent, preserving native LTS symbol/module facilities. CONFIG_OF and KALLSYMS are enabled, so this is a specific feature selection, not a claim those subsystems are unused. No arbitrary external emulator firmware or runtime boot has been validated.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/debug-kinfo-source-review.json",
+      "SECURITY.md: Debug-kinfo target selection and CFI rename"
+    ]
+  },
+  {
+    "commit": "dfed5a4f476b7ae8e3bddecbb7dd809a9a84bbdb",
+    "disposition": "omitted-current-target",
+    "rationale": "Adds module_memory offset to the bootloader metadata structure and fills offsetof(struct module,mem). No generic source-module functionality is implemented by this serialized offset. Native module structure/loader stay LTS and no old binary metadata layout is preserved. This is the bootloader reserved-memory debug-kinfo interface, requiring google,debug-kinfo plus a memory-region phandle and pre-mapped reserved memory; it is not native kallsyms/module loading. Pinned ACK x86_64 gki_defconfig does not enable it, Kconfig has no default y, and ACK configuration search only enables it for arm64. The existing emulator build selects x86_64 gki_defconfig and virtual-device fragments do not enable it. Keep the SDK implementation absent, preserving native LTS symbol/module facilities. CONFIG_OF and KALLSYMS are enabled, so this is a specific feature selection, not a claim those subsystems are unused. No arbitrary external emulator firmware or runtime boot has been validated.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/debug-kinfo-source-review.json",
+      "SECURITY.md: Debug-kinfo target selection and CFI rename"
+    ]
+  },
+  {
+    "commit": "a81a595e197032a01c808a5afb0db770b793feee",
+    "disposition": "omitted-current-target",
+    "rationale": "Adds kallsyms_seqs_of_names physical address to the bootloader record for its symbol search. Native kallsyms lookup/table remains unaffected; omit only the external record producer/field. This is the bootloader reserved-memory debug-kinfo interface, requiring google,debug-kinfo plus a memory-region phandle and pre-mapped reserved memory; it is not native kallsyms/module loading. Pinned ACK x86_64 gki_defconfig does not enable it, Kconfig has no default y, and ACK configuration search only enables it for arm64. The existing emulator build selects x86_64 gki_defconfig and virtual-device fragments do not enable it. Keep the SDK implementation absent, preserving native LTS symbol/module facilities. CONFIG_OF and KALLSYMS are enabled, so this is a specific feature selection, not a claim those subsystems are unused. No arbitrary external emulator firmware or runtime boot has been validated.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/debug-kinfo-source-review.json",
+      "SECURITY.md: Debug-kinfo target selection and CFI rename"
+    ]
+  },
+  {
+    "commit": "962c205e7ed308760a15b79cc7ccfd028a013022",
+    "disposition": "omitted-current-target",
+    "rationale": "Removes deleted CONFIG_KALLSYMS_BASE_RELATIVE logic from debug-kinfo and always records native relative tables. The port keeps native relative kallsyms and does not restore the obsolete configuration or absolute table; producer remains absent. This is the bootloader reserved-memory debug-kinfo interface, requiring google,debug-kinfo plus a memory-region phandle and pre-mapped reserved memory; it is not native kallsyms/module loading. Pinned ACK x86_64 gki_defconfig does not enable it, Kconfig has no default y, and ACK configuration search only enables it for arm64. The existing emulator build selects x86_64 gki_defconfig and virtual-device fragments do not enable it. Keep the SDK implementation absent, preserving native LTS symbol/module facilities. CONFIG_OF and KALLSYMS are enabled, so this is a specific feature selection, not a claim those subsystems are unused. No arbitrary external emulator firmware or runtime boot has been validated.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/debug-kinfo-source-review.json",
+      "SECURITY.md: Debug-kinfo target selection and CFI rename"
+    ]
+  },
+  {
+    "commit": "3d6ae8cb357456cc0c18f271ad599aab45fb2dcb",
+    "disposition": "omitted-current-target",
+    "rationale": "Adds _text physical address and removes obsolete absolute kallsyms declaration/record field solely for bootloader metadata. Omit with driver; native _text and relative symbol tables remain. This is the bootloader reserved-memory debug-kinfo interface, requiring google,debug-kinfo plus a memory-region phandle and pre-mapped reserved memory; it is not native kallsyms/module loading. Pinned ACK x86_64 gki_defconfig does not enable it, Kconfig has no default y, and ACK configuration search only enables it for arm64. The existing emulator build selects x86_64 gki_defconfig and virtual-device fragments do not enable it. Keep the SDK implementation absent, preserving native LTS symbol/module facilities. CONFIG_OF and KALLSYMS are enabled, so this is a specific feature selection, not a claim those subsystems are unused. No arbitrary external emulator firmware or runtime boot has been validated.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/debug-kinfo-source-review.json",
+      "SECURITY.md: Debug-kinfo target selection and CFI rename"
+    ]
+  },
+  {
+    "commit": "35ec97b1af6e60e1fc6f0fd3765845b4c1511980",
+    "disposition": "partially-adapted",
+    "rationale": "Retain CONFIG_CFI rename in selected x86_64 defconfig; generated build 103 config has CFI=y and uses current KCFI. Omit ARM64/Microdroid config and unselected debug-kinfo producer edits. Do not revive the historical virtio_dma_buf CFI/module exception: current file is exactly native LTS and always checks attach callback identity before treating a buffer as virtio. ACK exception makes is_virtio_dma_buf unconditionally true under CFI+MODULES and skips exporter validation, weakening type/ops validation. Rebuilt current-toolchain common/virtual-device modules compile together, including virtio_dma_buf.ko; no old cross-module binary CFI compatibility is required. Runtime GPU/DMA-buffer interoperability remains unverified, not asserted from build success.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/debug-kinfo-source-review.json",
+      "SECURITY.md: Debug-kinfo target selection and CFI rename"
+    ]
   }
 ]

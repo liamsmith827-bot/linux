@@ -1,0 +1,170 @@
+{
+  "source_head": "81e18ca6effc228983f2650b268776d7d668b3a3",
+  "records": [
+    {
+      "commit": "9edfd6c57a107c02b294dc0142bc464cf629c955",
+      "disposition": "partially-adapted",
+      "rationale": "Four changes are exclusively ---help--- to help. Current vendor-hook and DM_BOW Kconfig entries retain accepted help syntax, allowing native 6.18 configuration parsing. GNSS_CMDLINE_SERIAL and DM_VERITY_AVB entries were subsequently removed in final ACK itself; do not resurrect their obsolete declarations. GNSS Kconfig is byte-identical ACK/LTS/port. SDK build 103 parses the retained entries. No runtime behavior or security check is modified by syntax repair.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/android-history-config-review.json",
+        "SECURITY.md: Android configuration and removed telemetry history"
+      ],
+      "subject": "ANDROID: fix up Android-specific Kconfig ---help--- strings",
+      "patch_sha256": "83ee00b19d5c038a539cfee00dda55407a539e99efe60d19332ce39cee1f7a6b"
+    },
+    {
+      "commit": "ff0771e5f881fa5596ff35856fc0df11429c9d80",
+      "disposition": "reverted-no-residual-code",
+      "rationale": "Temporary BROKEN dependency and arm64/x86 hook-disable entries were exactly reversed by 0695bfe5fb84 after tracepoint refactoring. All three original blobs are restored by the revert. Keep current enabled x86_64 vendor hooks without BROKEN; build 103 compiles 31 Binder hook exports as a concrete check. No temporary disable or future-platform configuration is ported.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/android-history-config-review.json",
+        "SECURITY.md: Android configuration and removed telemetry history"
+      ],
+      "subject": "ANDROID: disable ANDROID_VENDOR_HOOKS",
+      "patch_sha256": "570e664a6034d106e50f599649f51dfd3d20fba646aa1a2644fb66c11b0809a1"
+    },
+    {
+      "commit": "0695bfe5fb84aa830cfd8712906d7464ca7cb534",
+      "disposition": "partially-adapted",
+      "rationale": "Retain final removal of temporary BROKEN and x86 hook enablement, as required for current generic vendor source interfaces; x86 generated SDK config has ANDROID_VENDOR_HOOKS=y and ANDROID_VENDOR_OEM_DATA=y. Its arm64 defconfig entry is outside the selected build and remains omitted with that file. Exact inverse of ff0771e5f881 verified for all three changed paths. Build 103 confirms integration; callback-specific safety remains separately audited.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/android-history-config-review.json",
+        "SECURITY.md: Android configuration and removed telemetry history"
+      ],
+      "subject": "Revert \"ANDROID: disable ANDROID_VENDOR_HOOKS\"",
+      "patch_sha256": "dc8a71e977075e915dc077357ad7edc689ec60be27c7b7ff9536bcbc7c772d2a"
+    },
+    {
+      "commit": "3e9d5f02f0e124633edb3a638fe614466c8d0a51",
+      "disposition": "partially-adapted",
+      "rationale": "Retain configurable vendor/OEM runtime fields, disabled-config empty macros, zero-init helpers, guarded init_task storage and dup_task_struct zeroing before vendor dup-task notification. This prevents copied parent-specific extension data from being mistaken for child state. Runtime fields support current source hooks; original ABI/padding help is rewritten to describe this purpose, and selected SDK enables the option on 64-bit. Omit ANDROID_KABI_RESERVE Kconfig and android_kabi.h entirely because they only preserve historical layouts. No vendor-binary KMI guarantee, and no 32-bit alternate kernel build claimed. Native task allocation/error cleanup remains unchanged.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/android-history-config-review.json",
+        "SECURITY.md: Android configuration and removed telemetry history"
+      ],
+      "subject": "ANDROID: Configure out the macros in android_kabi and android_vendor",
+      "patch_sha256": "83fd11b68fb6375c6f28a3a254045e98e090e49e5e18263a74acb4435b59c269"
+    },
+    {
+      "commit": "bdf5a5a3ec6840ea073252e14703b9005a2cd375",
+      "disposition": "superseded",
+      "rationale": "Original /proc/memhealth OOM telemetry driver, documentation, configuration and module registration were removed by f3583fb7b6bc after three intermediate updates. Read final 423-line removed driver and initial-to-final evolution, plus all original non-driver hunks. Both final ACK and port lack the driver, ABI file, Kconfig and module-list references; do not recreate a removed optional interface. mark_victim export was also removed then, but independently reintroduced by 3a74b921c02b for generic source modules and is retained. This is final-tree/history evidence, not absence-of-consumer reasoning. Scoped local lmkd/framework-AM/SELinux search found no memhealth references, without proving universal absence. No removed telemetry implementation is claimed security-audited for resurrection.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/android-history-config-review.json",
+        "SECURITY.md: Android configuration and removed telemetry history"
+      ],
+      "subject": "ANDROID: mm: Memory health driver",
+      "patch_sha256": "fed849f43da5ce3adbb98fe10888f78764118d394c4086170430f9784f3ea995"
+    },
+    {
+      "commit": "f3583fb7b6bcdf73427333429b407374c1d62714",
+      "disposition": "partially-adapted",
+      "rationale": "Retain final removal of memhealth driver, proc ABI documentation, build/module registration and config symbols, already absent from the LTS base. The removal patch is deletion-only across all nine paths; full deleted driver and registration/config hunks examined. Do not retain its historical mark_victim export removal because 3a74b921c02b later intentionally restores the generic GPL source-module tracepoint. Native OOM victim selection/termination is not changed by either registration/removal. Avoiding the removed driver also avoids adding its proc allocation/callback/workqueue surface; this does not substitute a new OOM policy.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/android-history-config-review.json",
+        "SECURITY.md: Android configuration and removed telemetry history"
+      ],
+      "subject": "ANDROID: mm: Removing memhealth driver",
+      "patch_sha256": "e2f974d240d8595ce4ffbd29bb87802fc7c19127e6fb4089a954d965b3be13b4"
+    },
+    {
+      "commit": "bcb641275ef95a1d73d01b6c0cc87a4adba8f036",
+      "disposition": "adapted",
+      "rationale": "Retain exact one-line KUNIT_CASE_SLOW annotation for binder_alloc_exhaustive_test. Native KUnit macro keeps the same function/name and adds slow speed metadata; native runner suppresses slow warnings, permits speed filtering and gives a 3x timeout multiplier. This affects optional test selection/timing, not Binder allocation implementation. Entire test file equals final ACK. SDK config builds binder_alloc_kunit.ko and build 103 produced it, but the test was not loaded/run and no runtime passing result is claimed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/android-history-config-review.json",
+        "SECURITY.md: Android configuration and removed telemetry history"
+      ],
+      "subject": "UPSTREAM: binder: mark binder_alloc_exhaustive_test as slow",
+      "patch_sha256": "7d62568a5803041b1d8d14dc98024e91c3045f0532e7a557bd5d6abb8f2cf880"
+    }
+  ],
+  "memhealth_final_evidence": {
+    "23112ce1886ea26b19be03207c0227a06a6ca009": {
+      "drivers/android/memhealth.c": "absent",
+      "Documentation/ABI/testing/procfs-driver-memhealth": "absent",
+      "drivers/android/Kconfig": {
+        "blob": "8b498ee93256a7fdc09d5bab07c3e907c135ae9e",
+        "memhealth_references": false
+      },
+      "drivers/android/Makefile": {
+        "blob": "b5dc20329ca0aad07f46ce251083a3bc584ec19c",
+        "memhealth_references": false
+      },
+      "modules.bzl": {
+        "blob": "27f0ee295bcd44ad49c630dd992818d342ed99b0",
+        "memhealth_references": false
+      },
+      "arch/x86/configs/gki_defconfig": {
+        "blob": "180b3166b2cce53f484b656cd70bd9dbe4a5b487",
+        "memhealth_references": false
+      },
+      "mm/oom_kill.c": {
+        "mark_victim_GPL_export_retained": true
+      }
+    },
+    "81e18ca6effc228983f2650b268776d7d668b3a3": {
+      "drivers/android/memhealth.c": "absent",
+      "Documentation/ABI/testing/procfs-driver-memhealth": "absent",
+      "drivers/android/Kconfig": {
+        "blob": "f21ad8cb3e93acdd14499528122c3245afb01292",
+        "memhealth_references": false
+      },
+      "drivers/android/Makefile": {
+        "blob": "7783894efa98586f4b80fba13d2769e87a5a3401",
+        "memhealth_references": false
+      },
+      "modules.bzl": {
+        "blob": "27f0ee295bcd44ad49c630dd992818d342ed99b0",
+        "memhealth_references": false
+      },
+      "arch/x86/configs/gki_defconfig": {
+        "blob": "0a3476699adc33a60f0c42ffb1ca8731b47a31de",
+        "memhealth_references": false
+      },
+      "mm/oom_kill.c": {
+        "mark_victim_GPL_export_retained": true
+      }
+    }
+  },
+  "memhealth_history": [
+    "bdf5a5a3ec68",
+    "72d355a5fe16",
+    "06269f5295e1",
+    "a23336c950f1",
+    "f3583fb7b6bc"
+  ],
+  "retained_export_reintroduction": "3a74b921c02b2fb9dd0fa98465d55ec8bb474ad9",
+  "local_consumer_search": {
+    "query": "memhealth|oom_victim_list|direct_reclaim_state",
+    "paths": [
+      "system/memory/lmkd",
+      "frameworks/base/services/core/java/com/android/server/am",
+      "system/sepolicy"
+    ],
+    "pins": "inputs/grapheneos-projects.tsv",
+    "matches": 0,
+    "limit": "Scoped search is not proof of absence; removal disposition is supported by final ACK history."
+  },
+  "validation": "Build 103 passed at the same source head; generated selected config and binder_alloc_kunit module present. No Binder allocation KUnit execution or boot. Current KUnit macro and timeout/filter/warning consumers examined locally.",
+  "remote_sources_used": []
+}
