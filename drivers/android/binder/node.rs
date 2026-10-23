@@ -321,7 +321,9 @@ impl Node {
 
     pub(crate) fn node_prio(&self) -> prio::BinderPriority {
         let flags = self.flags;
-        let priority = (flags & FLAT_BINDER_FLAG_PRIORITY_MASK) as prio::Nice;
+        // The wire field is a signed byte, matching C Binder's s8 decoding.
+        // In particular, negative nice values must not become priorities above 127.
+        let priority = (flags & FLAT_BINDER_FLAG_PRIORITY_MASK) as u8 as i8 as prio::Nice;
         let sched_policy =
             (flags & FLAT_BINDER_FLAG_SCHED_POLICY_MASK) >> FLAT_BINDER_FLAG_SCHED_POLICY_SHIFT;
 

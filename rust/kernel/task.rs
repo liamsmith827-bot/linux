@@ -306,12 +306,14 @@ impl Task {
         unsafe { core::ptr::addr_of!((*self.0.get()).normal_prio).read_volatile() }
     }
 
-    /// Get the rlimit value for RTPRIO.
+    /// Get the rlimit value for RTPRIO, bounded by the highest usable RT priority.
     #[inline]
     pub fn rlimit_rtprio(&self) -> i32 {
         // SAFETY: By the type invariant, we know that `self.0.get()` is valid, and RLIMIT_RTPRIO
         // is a valid limit type.
-        unsafe { bindings::task_rlimit(self.0.get(), bindings::RLIMIT_RTPRIO) as i32 }
+        let limit = unsafe { bindings::task_rlimit(self.0.get(), bindings::RLIMIT_RTPRIO) };
+        // Limits such as RLIM_INFINITY must not truncate to a negative i32.
+        limit.min((bindings::MAX_RT_PRIO - 1) as usize) as i32
     }
 
     /// Get the rlimit value for NICE, converted to a nice value.
