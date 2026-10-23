@@ -525,6 +525,9 @@ struct dpm_watchdog {
 	struct device		*dev;
 	struct task_struct	*tsk;
 	struct timer_list	timer;
+	unsigned int		timeout;
+	unsigned int		warning_timeout;
+	bool			enabled;
 	bool			fatal;
 };
 
@@ -612,15 +615,15 @@ static void dpm_watchdog_handler(struct timer_list *t)
 
 		dev_emerg(wd->dev, "**** DPM device timeout ****\n");
 		show_stack(wd->tsk, NULL, KERN_EMERG);
-		if (dpm_watchdog_all_cpu_backtrace)
+		if (READ_ONCE(dpm_watchdog_all_cpu_backtrace))
 			trigger_allbutcpu_cpu_backtrace(this_cpu);
 		panic("%s %s: unrecoverable failure\n",
 			dev_driver_string(wd->dev), dev_name(wd->dev));
 	}
 
-	time_left = dpm_watchdog_timeout - dpm_watchdog_warning_timeout;
+	time_left = wd->timeout - wd->warning_timeout;
 	dev_warn(wd->dev, "**** DPM device timeout after %u seconds; %u seconds until panic ****\n",
-		 dpm_watchdog_warning_timeout, time_left);
+		 wd->warning_timeout, time_left);
 	show_stack(wd->tsk, NULL, KERN_WARNING);
 
 	wd->fatal = true;
@@ -636,16 +639,22 @@ static void dpm_watchdog_set(struct dpm_watchdog *wd, struct device *dev)
 {
 	struct timer_list *timer = &wd->timer;
 
-	if (!dpm_watchdog_enabled)
+	/* Pair cleanup with this instance, even if the parameter changes. */
+	wd->enabled = READ_ONCE(dpm_watchdog_enabled);
+	if (!wd->enabled)
 		return;
 
 	wd->dev = dev;
 	wd->tsk = current;
-	wd->fatal = dpm_watchdog_timeout == dpm_watchdog_warning_timeout;
+	/* Runtime updates apply to subsequent watchdogs, not an armed timer. */
+	wd->timeout = READ_ONCE(dpm_watchdog_timeout);
+	wd->warning_timeout = min(READ_ONCE(dpm_watchdog_warning_timeout),
+				  wd->timeout);
+	wd->fatal = wd->timeout == wd->warning_timeout;
 
 	timer_setup_on_stack(timer, dpm_watchdog_handler, 0);
 	/* use same timeout value for both suspend and resume */
-	timer->expires = jiffies + HZ * dpm_watchdog_warning_timeout;
+	timer->expires = jiffies + HZ * wd->warning_timeout;
 	add_timer(timer);
 }
 
@@ -657,7 +666,7 @@ static void dpm_watchdog_clear(struct dpm_watchdog *wd)
 {
 	struct timer_list *timer = &wd->timer;
 
-	if (!dpm_watchdog_enabled)
+	if (!wd->enabled)
 		return;
 
 	timer_delete_sync(timer);
