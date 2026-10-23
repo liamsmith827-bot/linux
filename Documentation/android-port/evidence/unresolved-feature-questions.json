@@ -203,5 +203,16 @@
     "result_commits": [
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ]
+  },
+  {
+    "topic": "Rust Binder deferred-completion userspace adoption",
+    "status": "resolved conservative source selection; exact SDK flag use unconfirmed",
+    "candidates": [
+      "d17c7fc3c8aab85da0676b913f9268a8cd402f50"
+    ],
+    "evidence": "Retain TF_DEFER_COMPLETE=0x80 and Rust reply opt-in deferred BR_TRANSACTION_COMPLETE delivery. No flag keeps immediate completion; process queue work, nonblocking reads, looper exit and signal handling flush deferred thread work first, preserving ordering before incoming process work. Ready-list registration/removal stays under the process lock; signal path unregisters before its final thread-queue check to avoid a lost concurrent delivery. Completion is deferred only after reply construction; failure cleanup and remote reply delivery remain. Local pinned IPCThreadState::sendReply currently waits for completion and no exact flag consumer was found in the examined userspace trees; necessity remains unconfirmed, so retain the generic present-driver UAPI conservatively. Callers opting in with owned objects/fds may delay resource release; no claim that the kernel independently enforces the proposed userspace resource-free eligibility policy. C Binder keeps its existing behavior; no new C optimization or claimed syscall reduction.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
   }
 ]

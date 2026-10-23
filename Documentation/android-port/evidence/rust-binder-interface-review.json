@@ -1,0 +1,380 @@
+{
+  "source_head": "7e69f989c0b60554f0fbe18481b21d881824f489",
+  "source_equivalent_build_100": "f1b305f3bd93265a8f00868694fda18e117d4e40",
+  "records": [
+    {
+      "commit": "42393aa5693a216b395461b4edcf1ba46526b64e",
+      "disposition": "partially-adapted",
+      "rationale": "Retain the configured built-in C/module Rust selection, binderfs mount exclusion and GPL exports needed by the source-built Rust module. Positive local userspace evidence: system/extras/kcmdlinemodprobe reads binder.impl and distinguishes locked EPERM from invalid EINVAL before loading rust_binder.ko; SELinux labels/allows that interface. The SDK builds C=y, Rust=m and binderfs=y; exact chosen runtime implementation is unverified. Retain native LTS functions behind the added exports. Replace ACK partial trace-event unlinking with native trace_remove_event_call, restoring native trace_events.c/private trace.h; busy events remain registered for native lifetime handling. Preserve successful-C-init guard against double teardown and active-Rust module pin/failure unwind. C remains chosen after a C mount attempt, even if allocation fails; a Rust init failure after C teardown does not restore C. No runtime driver switch was executed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "be8a3b37ae74ccc9314a4186004ec4d1ca02e50b",
+        "873b2952f13735e7c3cfdeaa2a8a685e184d9b32",
+        "a56219a4a60db3bfbeff93d619a8b36dc61db032",
+        "3f90fca1809468efd1eff3f07a5168067903ffcf"
+      ],
+      "evidence": [
+        "evidence/rust-binder-interface-review.json",
+        "SECURITY.md: Rust Binder selection, polling and mapping locks"
+      ],
+      "subject": "ANDROID: binder: support loading both drivers at the same time",
+      "patch_sha256": "e509b43030b04e3bd7c61b5e37d90d86a613e4c1e54c22aaf9aca0c4242f075c",
+      "paths": {
+        "drivers/android/Kconfig": {
+          "ack_blob": "8b498ee93256a7fdc09d5bab07c3e907c135ae9e",
+          "port_blob": "f21ad8cb3e93acdd14499528122c3245afb01292",
+          "lts_to_port_sha256": "bb63389de788ded19a068ef10316c3d192642a6f4cec98b4246fdfc7960fb69a"
+        },
+        "drivers/android/Makefile": {
+          "ack_blob": "b5dc20329ca0aad07f46ce251083a3bc584ec19c",
+          "port_blob": "7783894efa98586f4b80fba13d2769e87a5a3401",
+          "lts_to_port_sha256": "f74d3ea2e4478dbbb9e193e04d9cc23514698f2f7fb5ed136aa29f4f48c7ffcb"
+        },
+        "drivers/android/binder.c": {
+          "ack_blob": "00d3d5054639b8f5a2d2bcca9ce605523b86c4b9",
+          "port_blob": "1ed0a471130949d14789b38483cbe54958380e24",
+          "lts_to_port_sha256": "f3966354aea45966d45b35fd09fd360e1ce2a8ad693e116e85efd25e1c0f1c44"
+        },
+        "drivers/android/binder/rust_binder_main.rs": {
+          "ack_blob": "0193addad5cb5705967eb2c71bf78c117d1b04a8",
+          "port_blob": "3fdc8d72ef3e7db214e72b3fb627909bd9ad98cd",
+          "lts_to_port_sha256": "9d59b1637c115f99cb17ecf5e5e764ac63dfe3838868fc886dd4bd649e4c3d32"
+        },
+        "drivers/android/binder_internal.h": {
+          "ack_blob": "3dfeff2667f309abc61c1fdda33849eb6a15d29b",
+          "port_blob": "3dfeff2667f309abc61c1fdda33849eb6a15d29b",
+          "lts_to_port_sha256": "6d5ba0b7413d67c3ede0dee58f72394ee8eece905a8ede59443ff9eb8e71ccdd"
+        },
+        "drivers/android/binder_pick.c": {
+          "ack_blob": "e74e259682b8a46e06901dbd0ccc3b7defd49705",
+          "port_blob": "aa93fbbe9d1ac6ddce8f435305b149bf0007b7b3",
+          "lts_to_port_sha256": "7cd416cbe4eb2944453143458cfe3a5877006cfe893ae55d12666d824bda7f91"
+        },
+        "drivers/android/binder_pick.h": {
+          "ack_blob": "b013f41aef11f4163ab805b61b51df17e61b8080",
+          "port_blob": "b013f41aef11f4163ab805b61b51df17e61b8080",
+          "lts_to_port_sha256": "676a3847605b1efd001c82234badc6c3b86d202eedf7663f3948bff4a06a735f"
+        },
+        "drivers/android/binderfs.c": {
+          "ack_blob": "85faf55a25f5fbc1ef8035471549be4604fcd64f",
+          "port_blob": "85faf55a25f5fbc1ef8035471549be4604fcd64f",
+          "lts_to_port_sha256": "a1f78be740e6a3f6822e8cf21a721da61ca577f02fd176103660bda8dcb35ab0"
+        },
+        "fs/file.c": {
+          "ack_blob": "054476fc405c824960b45316df4d085ae02fcc33",
+          "port_blob": "054476fc405c824960b45316df4d085ae02fcc33",
+          "lts_to_port_sha256": "1466a83f641b9ca21b67d55e298c3ab3c0cffb2d85720f6fc661e3c3e4a02d7b"
+        },
+        "kernel/task_work.c": {
+          "ack_blob": "45fd146b85df4eb8bb14db22ccb84ad6d158317e",
+          "port_blob": "45fd146b85df4eb8bb14db22ccb84ad6d158317e",
+          "lts_to_port_sha256": "541f6f24007aa24d0c1eba8804ae27edeeeeb5facff44a5546c9e2fe4ef5e24b"
+        },
+        "kernel/trace/trace.h": {
+          "ack_blob": "1819e4937c3d717b9da142b30becc52fc179b8f0",
+          "port_blob": "39c425a9538a55034103868aefbc1e275b20262a",
+          "lts_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "kernel/trace/trace_events.c": {
+          "ack_blob": "b03d1c7fc147ad43077e6e733946cc8bb4975d43",
+          "port_blob": "45ae4ceb28c87572fc02ef84c7f74d8748c7340a",
+          "lts_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "mm/list_lru.c": {
+          "ack_blob": "bf95d73c9815548a19db6345f856cee9baad22e3",
+          "port_blob": "06b8e74fb8f69d3c41d5542aad72217c001a61aa",
+          "lts_to_port_sha256": "50c598c1009e55c7520dd6e7aa5503efb61ba33857cf5fc928079202fede4c4a"
+        },
+        "mm/memory.c": {
+          "ack_blob": "39228114ccc55425ffc6f5a5b10d4a1fa6d56616",
+          "port_blob": "739cda09ec26726176f841a2d8f4a0ff2d02ad0c",
+          "lts_to_port_sha256": "701d4bc1f12d8aabbe228e47ae9307c931548cb2d2ea99bd5feb9475c88cde84"
+        },
+        "rust/bindings/bindings_helper.h": {
+          "ack_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "port_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "lts_to_port_sha256": "219f093804081c8c8f7117e4b73acb1c4f423fcea4392f92079e0a21d9b299ed"
+        },
+        "security/security.c": {
+          "ack_blob": "7edc4e84c66c3339f2c6529ea0fd13df80b576bb",
+          "port_blob": "4fcc3e3f74dc25dac07cf8fad4a304216a3260d0",
+          "lts_to_port_sha256": "805d928b37de4b9f6fc385123a605e9ea9f8c38e9c639e4663ea26991641c6b9"
+        }
+      }
+    },
+    {
+      "commit": "7a3441d9ba72ae5a53fb9e0d4a24191f4ba030c3",
+      "disposition": "adapted",
+      "rationale": "Retain optimistic per-VMA read locking with mmap_read_lock fallback in use_page_slow, preserving allocation zeroing, mmget_not_zero plus mmput_async, and native LTS check_vma ownership/mixedmap checks. The range mm_lock remains held across insertion and publication, preventing concurrent shrinker unmapping/replacement; only the inner spinlock is released around potentially sleeping insertion. Native Rust mm.rs and the used insertion/zap wrappers remain unchanged. Selected SDK PER_VMA_LOCK=y. On a mismatched/absent VMA return ESRCH; failed insertion leaves the locally owned page to drop. Final outer rate-limited error report replaces the removed detailed inner warning. No contention performance or real mapping/reclaim race tested.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-interface-review.json",
+        "SECURITY.md: Rust Binder selection, polling and mapping locks"
+      ],
+      "subject": "UPSTREAM: rust_binder: use lock_vma_under_rcu() in use_page_slow()",
+      "patch_sha256": "9f2910da3ab25a8745d7e07a5677b1ad299ea96093b6206f6f9508e1a8a88b5b",
+      "paths": {
+        "drivers/android/binder/page_range.rs": {
+          "ack_blob": "b3bc0d6bb28b978d7fe485f507634184b910030e",
+          "port_blob": "a1f9b19b147c8bf4b467d279eed22c03ba0b2ef4",
+          "lts_to_port_sha256": "69ba51a0c95782a91ac82e7e1fdf52bfb2ffd38952e59647f7d3485c9f83f921"
+        }
+      }
+    },
+    {
+      "commit": "a8f096c6bd92813d2c828dd5567fc8052a78efe1",
+      "disposition": "adapted",
+      "rationale": "Retain nonblocking per-VMA locking in the shrinker instead of mmap-wide trylock. Keep LTS stable_trylock_mm before the inner spinlock and VMA lookup; failure returns LRU_SKIP before isolation. Keep native LTS ownership/mixedmap validation, native zap_page_range_single with bounds checks, and the mm mutex until after unmapping, so simultaneous use_page_slow cannot insert a replacement early. Drop the LRU spinlock before zapping; capture trace scalars before potentially freed range/page-info access. This is a best-effort shrinker: with per-VMA locks disabled it skips reclamation, but selected SDK enables them. Does not remove native lifetime synchronization or claim runtime reclaim coverage.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-interface-review.json",
+        "SECURITY.md: Rust Binder selection, polling and mapping locks"
+      ],
+      "subject": "BACKPORT: FROMGIT: rust_binder: use lock_vma_under_rcu() in shrinker",
+      "patch_sha256": "7d3dd4429ee8b90ac4aaf0eeea1d6ef964d360efedf6a96bb653806c3485f1b6",
+      "paths": {
+        "drivers/android/binder/page_range.rs": {
+          "ack_blob": "b3bc0d6bb28b978d7fe485f507634184b910030e",
+          "port_blob": "a1f9b19b147c8bf4b467d279eed22c03ba0b2ef4",
+          "lts_to_port_sha256": "69ba51a0c95782a91ac82e7e1fdf52bfb2ffd38952e59647f7d3485c9f83f921"
+        }
+      }
+    },
+    {
+      "commit": "0d4ff529e118a770d5c05d86f19af6d6fc3702dd",
+      "disposition": "adapted",
+      "rationale": "Native LTS e5049526a7aa already contains TransactionInfo consolidation. Four complete per-file ordered +/- patches (allocation,error,process,thread) are identical; remaining differences are manual Zeroable versus derive, equivalent UserPtr null-pointer safety wording, and ACK priority selection converted to info fields. Retain the native consolidation and Android priority/trace integration, with the subsequent corrected scalar trace signature. Usercopy initializes the wire union before reads; selected 64-bit usize preserves Binder size/pointer widths and checked alignment/addition remains at allocation. Preserve native stored extended-error fixes and source-errno logging guard, not the historical copied-error-state bug. Zeroable remains valid for all final scalar/raw-pointer/optional errno/location fields. This is internal metadata, not KMI layout preservation.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "e5049526a7aacdb53aaaee2e21b0fd8c865f02b4"
+      ],
+      "evidence": [
+        "evidence/rust-binder-interface-review.json",
+        "SECURITY.md: Rust Binder selection, polling and mapping locks"
+      ],
+      "subject": "BACKPORT: rust_binder: introduce TransactionInfo",
+      "patch_sha256": "6ed263de959a1efb3469a5b84de183a22bcd2fa690bce53c501b80f0bc93f456",
+      "paths": {
+        "drivers/android/binder/allocation.rs": {
+          "ack_blob": "498b6b5567e315f9e2388b90719df51b3bce1df8",
+          "port_blob": "498b6b5567e315f9e2388b90719df51b3bce1df8",
+          "lts_to_port_sha256": "c29cb6060059e5bfc73d669d85ea79d2e1139fc900317c0fb200dd69fbfb1730"
+        },
+        "drivers/android/binder/error.rs": {
+          "ack_blob": "7100ffbc58020e7f269c44e4565b5b1ecb1d4814",
+          "port_blob": "7100ffbc58020e7f269c44e4565b5b1ecb1d4814",
+          "lts_to_port_sha256": "43c4fca1b630afdba7bf27683d8e0f1b879d66038a766aa3fc91badb2a87c761"
+        },
+        "drivers/android/binder/process.rs": {
+          "ack_blob": "7d7757321510bf031395f8f707a5c0b55103f206",
+          "port_blob": "5a2092bf9f0ad292122492bd937a5cdc7b625a9d",
+          "lts_to_port_sha256": "e5f53c605f175e52e2bd93df2785a3a7044af0b8451664efbb7e2d80d1b2c6a6"
+        },
+        "drivers/android/binder/thread.rs": {
+          "ack_blob": "9b161efc84c851882ca48356f061f76e015831c7",
+          "port_blob": "70cf6149d4d4ffc5cbdd6fed189be3df57d8c3e8",
+          "lts_to_port_sha256": "10862a627e5f8990f236f09fc8bafc2fddedc3266bc0695d3911cffd615c7940"
+        },
+        "drivers/android/binder/transaction.rs": {
+          "ack_blob": "3271e20887989f233788d029dca7af25ee1941ec",
+          "port_blob": "46b8e24f786731d9e6579f19485b064f9577714c",
+          "lts_to_port_sha256": "9de4d387444a49260a2babffccaa5fb16e7fc33854cded1ea62c5951b47a9fe2"
+        },
+        "rust/kernel/uaccess.rs": {
+          "ack_blob": "155b492731c86894757c68381be3acda92d2ac25",
+          "port_blob": "2035c2877a2b2fcfc05e8eb5de13efd7ae20269a",
+          "lts_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "commit": "d17c7fc3c8aab85da0676b913f9268a8cd402f50",
+      "disposition": "adapted",
+      "rationale": "Retain TF_DEFER_COMPLETE=0x80 and Rust reply opt-in deferred BR_TRANSACTION_COMPLETE delivery. No flag keeps immediate completion; process queue work, nonblocking reads, looper exit and signal handling flush deferred thread work first, preserving ordering before incoming process work. Ready-list registration/removal stays under the process lock; signal path unregisters before its final thread-queue check to avoid a lost concurrent delivery. Completion is deferred only after reply construction; failure cleanup and remote reply delivery remain. Local pinned IPCThreadState::sendReply currently waits for completion and no exact flag consumer was found in the examined userspace trees; necessity remains unconfirmed, so retain the generic present-driver UAPI conservatively. Callers opting in with owned objects/fds may delay resource release; no claim that the kernel independently enforces the proposed userspace resource-free eligibility policy. C Binder keeps its existing behavior; no new C optimization or claimed syscall reduction.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-interface-review.json",
+        "SECURITY.md: Rust Binder selection, polling and mapping locks"
+      ],
+      "subject": "BACKPORT: FROMLIST: rust_binder: add TF_DEFER_COMPLETE flag for avoiding userspace roundtrip",
+      "patch_sha256": "cebd690e9f1583cfc249204d376168408a323396384980b84fb071e5f7f18500",
+      "paths": {
+        "drivers/android/binder/defs.rs": {
+          "ack_blob": "49276b2bee153a5cea24987a044e66b17f2ba488",
+          "port_blob": "49276b2bee153a5cea24987a044e66b17f2ba488",
+          "lts_to_port_sha256": "108f2edea53866d1df498618302c9b48e91b001d3f1c1693d2bcbc7c8462bfce"
+        },
+        "drivers/android/binder/process.rs": {
+          "ack_blob": "7d7757321510bf031395f8f707a5c0b55103f206",
+          "port_blob": "5a2092bf9f0ad292122492bd937a5cdc7b625a9d",
+          "lts_to_port_sha256": "e5f53c605f175e52e2bd93df2785a3a7044af0b8451664efbb7e2d80d1b2c6a6"
+        },
+        "drivers/android/binder/thread.rs": {
+          "ack_blob": "9b161efc84c851882ca48356f061f76e015831c7",
+          "port_blob": "70cf6149d4d4ffc5cbdd6fed189be3df57d8c3e8",
+          "lts_to_port_sha256": "10862a627e5f8990f236f09fc8bafc2fddedc3266bc0695d3911cffd615c7940"
+        },
+        "include/uapi/linux/android/binder.h": {
+          "ack_blob": "cf1dd2deac6ba000b5ff73d73f898555889680af",
+          "port_blob": "bab8238a5af12ec8fb664c0a2332b70d5c1434f9",
+          "lts_to_port_sha256": "4b54b0746850d9106c0acdde3d85368e48a1ec6962c4dc05f7d663bdab76eae8"
+        }
+      }
+    },
+    {
+      "commit": "504034fe60e0b42e0628997a5e4d193accf87177",
+      "disposition": "adapted",
+      "rationale": "Retain lazy process-owned polling queue and thread CondVar split, matching local libbinder setupPolling/handlePolledCommands interface. Queue allocation occurs before node_refs spinlock; SetOnce release/acquire publication makes concurrent poll/wakeup safe to observe and losing allocations use the previously adapted embedded-RCU destructor. Register the waitqueue before checking thread/process readiness; concurrent arrivals are caught by queue checks or wakeup. Process work, directed transaction and reply delivery all propagate OkNotifyPoll and notify the process; return/deferred work for the currently running thread intentionally does not wake a remote poller. pollfree precedes deferred allocation freeing; removal of per-thread synchronize_rcu does not remove the lifetime grace period. Wake-all may wake unrelated polling threads, which recheck readiness. No epoll/thread-exit runtime stress or latency benchmark.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-interface-review.json",
+        "SECURITY.md: Rust Binder selection, polling and mapping locks"
+      ],
+      "subject": "BACKPORT: rust_binder: move (e)poll wait queue to Process",
+      "patch_sha256": "275d5cc44d25200dd851a19b826eea129dde0f0d79f922b8c7d0e8a50eb5ad7a",
+      "paths": {
+        "drivers/android/binder/node.rs": {
+          "ack_blob": "7146516206038345fdb186b0cfb44035173930f3",
+          "port_blob": "fcf724f892100aec5e0078f8b970cc591ac3d5da",
+          "lts_to_port_sha256": "6d97d93ff67361403ed08e002ac02e246b970ffb316992ef178d55d097666dd0"
+        },
+        "drivers/android/binder/process.rs": {
+          "ack_blob": "7d7757321510bf031395f8f707a5c0b55103f206",
+          "port_blob": "5a2092bf9f0ad292122492bd937a5cdc7b625a9d",
+          "lts_to_port_sha256": "e5f53c605f175e52e2bd93df2785a3a7044af0b8451664efbb7e2d80d1b2c6a6"
+        },
+        "drivers/android/binder/thread.rs": {
+          "ack_blob": "9b161efc84c851882ca48356f061f76e015831c7",
+          "port_blob": "70cf6149d4d4ffc5cbdd6fed189be3df57d8c3e8",
+          "lts_to_port_sha256": "10862a627e5f8990f236f09fc8bafc2fddedc3266bc0695d3911cffd615c7940"
+        },
+        "drivers/android/binder/transaction.rs": {
+          "ack_blob": "3271e20887989f233788d029dca7af25ee1941ec",
+          "port_blob": "46b8e24f786731d9e6579f19485b064f9577714c",
+          "lts_to_port_sha256": "9de4d387444a49260a2babffccaa5fb16e7fc33854cded1ea62c5951b47a9fe2"
+        }
+      }
+    }
+  ],
+  "native_equal_blobs": {
+    "kernel/trace/trace.h": "39c425a9538a55034103868aefbc1e275b20262a",
+    "kernel/trace/trace_events.c": "45ae4ceb28c87572fc02ef84c7f74d8748c7340a",
+    "rust/kernel/mm.rs": "4764d7b68f2a7f64d7aaa80404a7515aad03cba3"
+  },
+  "transaction_info_native_comparison": {
+    "drivers/android/binder/allocation.rs": {
+      "ack_change_sha256": "a2fd46373b66b8e1a4ec174c066b9f3471f1f2986e2115cb02a6340df8b30b9f",
+      "lts_change_sha256": "a2fd46373b66b8e1a4ec174c066b9f3471f1f2986e2115cb02a6340df8b30b9f",
+      "identical_changed_lines": true,
+      "remaining_difference": ""
+    },
+    "drivers/android/binder/error.rs": {
+      "ack_change_sha256": "3a1c8818c00dbc37e63f64d523449df19472e399bf945c749a9bfb81e1cbbeaa",
+      "lts_change_sha256": "3a1c8818c00dbc37e63f64d523449df19472e399bf945c749a9bfb81e1cbbeaa",
+      "identical_changed_lines": true,
+      "remaining_difference": ""
+    },
+    "drivers/android/binder/process.rs": {
+      "ack_change_sha256": "b2a6d153a7a32df7cb4f7283e4a39a0ca9f798d7cd0630297002622f047e523b",
+      "lts_change_sha256": "b2a6d153a7a32df7cb4f7283e4a39a0ca9f798d7cd0630297002622f047e523b",
+      "identical_changed_lines": true,
+      "remaining_difference": ""
+    },
+    "drivers/android/binder/thread.rs": {
+      "ack_change_sha256": "6b8727ad651a5c1edead845304ee3b71d495b65885922fd312b52a18391dd9ac",
+      "lts_change_sha256": "6b8727ad651a5c1edead845304ee3b71d495b65885922fd312b52a18391dd9ac",
+      "identical_changed_lines": true,
+      "remaining_difference": ""
+    },
+    "drivers/android/binder/transaction.rs": {
+      "ack_change_sha256": "ccc58e4582c02827e81c1a4cd1b318e138b95b3514e9e06637d38e8c0702d3b3",
+      "lts_change_sha256": "ea354d92bb8fe5e8eb1c0db8102674a1b0161a078cb9e327c2a9da91730a3696",
+      "identical_changed_lines": false,
+      "remaining_difference": "--- LTS changed lines\n\n+++ ACK changed lines\n\n@@ -1,6 +1,5 @@\n\n -    task::Kuid,\n +    task::{Kuid, Pid},\n-+#[derive(Zeroable)]\n +pub(crate) struct TransactionInfo {\n +    pub(crate) from_pid: Pid,\n +    pub(crate) from_tid: Pid,\n@@ -20,6 +19,9 @@\n\n +    pub(crate) is_reply: bool,\n +}\n +\n++// SAFETY: All fields of `TransactionInfo` can be safely zero-initialized.\n++unsafe impl Zeroable for TransactionInfo {}\n++\n +impl TransactionInfo {\n +    #[inline]\n +    pub(crate) fn is_oneway(&self) -> bool {\n@@ -38,6 +40,23 @@\n\n +        if info.is_oneway() {\n -        if trd.flags & TF_CLEAR_BUF != 0 {\n +        if info.flags & TF_CLEAR_BUF != 0 {\n+-        let priority =\n+-            if (trd.flags & TF_ONE_WAY == 0) && prio::is_supported_policy(from.task.policy()) {\n+-                BinderPriority {\n+-                    sched_policy: from.task.policy(),\n+-                    prio: from.task.normal_prio(),\n+-                }\n+-            } else {\n+-                to.default_priority\n+-            };\n++        let priority = if !info.is_oneway() && prio::is_supported_policy(from.task.policy()) {\n++            BinderPriority {\n++                sched_policy: from.task.policy(),\n++                prio: from.task.normal_prio(),\n++            }\n++        } else {\n++            to.default_priority\n++        };\n -            code: trd.code,\n -            flags: trd.flags,\n -            data_size: trd.data_size as _,"
+    },
+    "rust/kernel/uaccess.rs": {
+      "ack_change_sha256": "1ac21e0449a6e3d4235fc3acc964755c0b9559304787345d1c16cae20f33a273",
+      "lts_change_sha256": "7b92bb0ec6dd73ceafe4de55b5b6044820f95632bff2c39896552ad07f6ddfaf",
+      "identical_changed_lines": false,
+      "remaining_difference": "--- LTS changed lines\n\n+++ ACK changed lines\n\n@@ -1,3 +1,3 @@\n\n-+// SAFETY: Null pointer is a valid value.\n++// SAFETY: `UserPtr` is represented as a raw pointer, which can be safely zero-initialized.\n +unsafe impl Zeroable for UserPtr {}\n +"
+    }
+  },
+  "module_proof": {
+    "build": "sdk-build-attempt-100",
+    "module_sha256": "4f6b0c99084671d8056168bba16127a97e110d539f6d191d954bad020782c3fc",
+    "symvers_sha256": "76186c001ece8be8f84964fdb6d022f5c7253616367bfe9f2642b4b25c8d881b",
+    "exports": {
+      "binder_try_unload_builtin": {
+        "module_import": true,
+        "export": "0x7851be11\tbinder_try_unload_builtin\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+      },
+      "binder_remove_trace_events": {
+        "module_import": true,
+        "export": "0x23ec689c\tbinder_remove_trace_events\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+      },
+      "file_close_fd": {
+        "module_import": true,
+        "export": "0x42823200\tfile_close_fd\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+      },
+      "task_work_add": {
+        "module_import": true,
+        "export": "0x5bf13af4\ttask_work_add\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+      },
+      "list_lru_add": {
+        "module_import": true,
+        "export": "0x636a1a9f\tlist_lru_add\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+      },
+      "list_lru_del": {
+        "module_import": true,
+        "export": "0x636a1a9f\tlist_lru_del\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+      },
+      "zap_page_range_single": {
+        "module_import": true,
+        "export": "0xa336ccbc\tzap_page_range_single\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+      },
+      "security_binder_set_context_mgr": {
+        "module_import": true,
+        "export": "0x216aa26d\tsecurity_binder_set_context_mgr\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+      },
+      "security_binder_transaction": {
+        "module_import": true,
+        "export": "0xae1d773e\tsecurity_binder_transaction\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+      },
+      "security_binder_transfer_binder": {
+        "module_import": true,
+        "export": "0xae1d773e\tsecurity_binder_transfer_binder\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+      },
+      "security_binder_transfer_file": {
+        "module_import": true,
+        "export": "0x5723c106\tsecurity_binder_transfer_file\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+      }
+    }
+  },
+  "local_userspace": {
+    "system/extras": {
+      "head": "5b8e9ee4f15faa60218b08bb09abae41e1f6bd0e",
+      "paths": [
+        "kcmdlinemodprobe/main.rs",
+        "kcmdlinemodprobe/kcmdlinemodprobe_cpp.cc",
+        "kcmdlinemodprobe/kcmdlinemodprobe.rc"
+      ]
+    },
+    "frameworks/native": {
+      "head": "0aaefdd08d6b19d8c32799a6ae9b2e164f70de64",
+      "paths": [
+        "libs/binder/IPCThreadState.cpp: setupPolling, handlePolledCommands, sendReply"
+      ]
+    },
+    "system/sepolicy": "private/{genfs_contexts,file.te,kcmdlinemodprobe.te}; pinned in original grapheneos-projects.tsv"
+  },
+  "validation": "All six complete candidate patches read; final affected branches, native lifetime/locking helpers and prior selector/RCU/init corrections examined. Build 100 is source equivalent and already verified both images/all 145 modules, signatures and export tables. No new source changes or redundant build for this batch; no runtime Binder/poll/VMA tests. Embedded commit-message URLs were not accessed.",
+  "remote_sources_used": []
+}

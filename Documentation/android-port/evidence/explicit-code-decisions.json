@@ -6028,5 +6028,82 @@
       "evidence/rust-binder-debug-review.json",
       "SECURITY.md: Rust Binder diagnostic controls"
     ]
+  },
+  {
+    "commit": "42393aa5693a216b395461b4edcf1ba46526b64e",
+    "disposition": "partially-adapted",
+    "rationale": "Retain the configured built-in C/module Rust selection, binderfs mount exclusion and GPL exports needed by the source-built Rust module. Positive local userspace evidence: system/extras/kcmdlinemodprobe reads binder.impl and distinguishes locked EPERM from invalid EINVAL before loading rust_binder.ko; SELinux labels/allows that interface. The SDK builds C=y, Rust=m and binderfs=y; exact chosen runtime implementation is unverified. Retain native LTS functions behind the added exports. Replace ACK partial trace-event unlinking with native trace_remove_event_call, restoring native trace_events.c/private trace.h; busy events remain registered for native lifetime handling. Preserve successful-C-init guard against double teardown and active-Rust module pin/failure unwind. C remains chosen after a C mount attempt, even if allocation fails; a Rust init failure after C teardown does not restore C. No runtime driver switch was executed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "be8a3b37ae74ccc9314a4186004ec4d1ca02e50b",
+      "873b2952f13735e7c3cfdeaa2a8a685e184d9b32",
+      "a56219a4a60db3bfbeff93d619a8b36dc61db032",
+      "3f90fca1809468efd1eff3f07a5168067903ffcf"
+    ],
+    "evidence": [
+      "evidence/rust-binder-interface-review.json",
+      "SECURITY.md: Rust Binder selection, polling and mapping locks"
+    ]
+  },
+  {
+    "commit": "7a3441d9ba72ae5a53fb9e0d4a24191f4ba030c3",
+    "disposition": "adapted",
+    "rationale": "Retain optimistic per-VMA read locking with mmap_read_lock fallback in use_page_slow, preserving allocation zeroing, mmget_not_zero plus mmput_async, and native LTS check_vma ownership/mixedmap checks. The range mm_lock remains held across insertion and publication, preventing concurrent shrinker unmapping/replacement; only the inner spinlock is released around potentially sleeping insertion. Native Rust mm.rs and the used insertion/zap wrappers remain unchanged. Selected SDK PER_VMA_LOCK=y. On a mismatched/absent VMA return ESRCH; failed insertion leaves the locally owned page to drop. Final outer rate-limited error report replaces the removed detailed inner warning. No contention performance or real mapping/reclaim race tested.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-interface-review.json",
+      "SECURITY.md: Rust Binder selection, polling and mapping locks"
+    ]
+  },
+  {
+    "commit": "a8f096c6bd92813d2c828dd5567fc8052a78efe1",
+    "disposition": "adapted",
+    "rationale": "Retain nonblocking per-VMA locking in the shrinker instead of mmap-wide trylock. Keep LTS stable_trylock_mm before the inner spinlock and VMA lookup; failure returns LRU_SKIP before isolation. Keep native LTS ownership/mixedmap validation, native zap_page_range_single with bounds checks, and the mm mutex until after unmapping, so simultaneous use_page_slow cannot insert a replacement early. Drop the LRU spinlock before zapping; capture trace scalars before potentially freed range/page-info access. This is a best-effort shrinker: with per-VMA locks disabled it skips reclamation, but selected SDK enables them. Does not remove native lifetime synchronization or claim runtime reclaim coverage.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-interface-review.json",
+      "SECURITY.md: Rust Binder selection, polling and mapping locks"
+    ]
+  },
+  {
+    "commit": "0d4ff529e118a770d5c05d86f19af6d6fc3702dd",
+    "disposition": "adapted",
+    "rationale": "Native LTS e5049526a7aa already contains TransactionInfo consolidation. Four complete per-file ordered +/- patches (allocation,error,process,thread) are identical; remaining differences are manual Zeroable versus derive, equivalent UserPtr null-pointer safety wording, and ACK priority selection converted to info fields. Retain the native consolidation and Android priority/trace integration, with the subsequent corrected scalar trace signature. Usercopy initializes the wire union before reads; selected 64-bit usize preserves Binder size/pointer widths and checked alignment/addition remains at allocation. Preserve native stored extended-error fixes and source-errno logging guard, not the historical copied-error-state bug. Zeroable remains valid for all final scalar/raw-pointer/optional errno/location fields. This is internal metadata, not KMI layout preservation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "e5049526a7aacdb53aaaee2e21b0fd8c865f02b4"
+    ],
+    "evidence": [
+      "evidence/rust-binder-interface-review.json",
+      "SECURITY.md: Rust Binder selection, polling and mapping locks"
+    ]
+  },
+  {
+    "commit": "d17c7fc3c8aab85da0676b913f9268a8cd402f50",
+    "disposition": "adapted",
+    "rationale": "Retain TF_DEFER_COMPLETE=0x80 and Rust reply opt-in deferred BR_TRANSACTION_COMPLETE delivery. No flag keeps immediate completion; process queue work, nonblocking reads, looper exit and signal handling flush deferred thread work first, preserving ordering before incoming process work. Ready-list registration/removal stays under the process lock; signal path unregisters before its final thread-queue check to avoid a lost concurrent delivery. Completion is deferred only after reply construction; failure cleanup and remote reply delivery remain. Local pinned IPCThreadState::sendReply currently waits for completion and no exact flag consumer was found in the examined userspace trees; necessity remains unconfirmed, so retain the generic present-driver UAPI conservatively. Callers opting in with owned objects/fds may delay resource release; no claim that the kernel independently enforces the proposed userspace resource-free eligibility policy. C Binder keeps its existing behavior; no new C optimization or claimed syscall reduction.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-interface-review.json",
+      "SECURITY.md: Rust Binder selection, polling and mapping locks"
+    ]
+  },
+  {
+    "commit": "504034fe60e0b42e0628997a5e4d193accf87177",
+    "disposition": "adapted",
+    "rationale": "Retain lazy process-owned polling queue and thread CondVar split, matching local libbinder setupPolling/handlePolledCommands interface. Queue allocation occurs before node_refs spinlock; SetOnce release/acquire publication makes concurrent poll/wakeup safe to observe and losing allocations use the previously adapted embedded-RCU destructor. Register the waitqueue before checking thread/process readiness; concurrent arrivals are caught by queue checks or wakeup. Process work, directed transaction and reply delivery all propagate OkNotifyPoll and notify the process; return/deferred work for the currently running thread intentionally does not wake a remote poller. pollfree precedes deferred allocation freeing; removal of per-thread synchronize_rcu does not remove the lifetime grace period. Wake-all may wake unrelated polling threads, which recheck readiness. No epoll/thread-exit runtime stress or latency benchmark.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-interface-review.json",
+      "SECURITY.md: Rust Binder selection, polling and mapping locks"
+    ]
   }
 ]

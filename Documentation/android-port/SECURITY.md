@@ -4099,3 +4099,51 @@ reports are independent of the debug mask/rate limit. Source-equivalent build
 100 verifies compilation; no logging stress, debug toggle or cancellation run
 was performed. rust-binder-debug-review.json records every candidate and the
 built module symbol/hash evidence. No additional remote resource was accessed.
+
+## Rust Binder selection, polling and mapping locks
+
+The six interface candidates in `evidence/rust-binder-interface-review.json`
+are retained with the earlier selector, native trace cleanup and module-lifetime
+adaptations. Local `system/extras/kcmdlinemodprobe` positively consumes the
+selector's parameter and its EPERM/EINVAL distinction. The produced Rust module
+imports all eleven relevant selector/core/LSM symbols and the image exports them
+as GPL symbols. This does not establish which implementation an SDK boot selects.
+Native trace implementation and private header remain byte-for-byte at LTS;
+resource teardown is guarded against failed built-in initialization, and an
+activated Rust module remains pinned because it has no complete teardown path.
+Failure after unloading C still does not restore C automatically.
+
+For page insertion, optimistic VMA locking falls back to the mmap read lock.
+The shrinker instead skips a contended VMA, without blocking under its LRU lock.
+Both preserve native ownership/mixedmap checks, asynchronous mm release and the
+range mutex that serializes insertion against unmapping. LTS's mutex lifetime
+protection remains in the destructor and shrinker. The selected build enables
+per-VMA locks; with that configuration disabled the changed shrinker would skip
+these pages. No mapping/reclaim race or contention benchmark was run.
+
+Local libbinder supports polling. The process-owned queue registers its waiter
+before checking readiness; process work, directed transactions and replies wake
+pollers, which recheck their own readiness. Lazy allocation happens outside the
+node-reference spinlock. The previously reviewed SetOnce publication and embedded
+RCU destructor preserve visibility and defer freeing after pollfree, including
+when a redundant allocation loses publication. Removing the thread's synchronous
+RCU destructor does not remove the grace period for poll waiters.
+
+TF_DEFER_COMPLETE remains an opt-in Rust reply behavior. Deferred thread work is
+flushed before process work, on nonblocking reads and when a signal or looper
+return requires leaving the wait. Registration removal precedes the final
+thread-queue check on interruption. The checked-out libbinder sendReply still
+waits for completion, and exact SDK adoption of the new flag is unconfirmed and
+recorded. Retention preserves the current driver's generic UAPI; it does not
+assert future-platform necessity. A caller that opts in while retaining resources
+can delay their release until further work arrives; the kernel does not enforce
+the proposed userspace rule that only replies without owned objects/fds use it.
+C Binder's behavior remains unchanged. No syscall reduction or runtime epoll
+coverage is claimed.
+
+The TransactionInfo consolidation is already largely present in native LTS
+`e5049526a7aa`; per-file changed-line comparisons record its small ACK-specific
+priority and Zeroable adaptations. The port keeps the native extended-error
+fixes and actual-errno logging guard. These internal metadata changes impose no
+historical layout contract. Build 100 covers this source-equivalent batch; its
+compilation and artifact checks do not establish runtime behavior.
