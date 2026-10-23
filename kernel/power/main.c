@@ -397,6 +397,20 @@ static ssize_t pm_test_store(struct kobject *kobj, struct kobj_attribute *attr,
 power_attr(pm_test);
 #endif /* CONFIG_PM_SLEEP_DEBUG */
 
+static DEFINE_MUTEX(suspend_stats_lock);
+
+void dpm_save_failed_dev(const char *name)
+{
+	mutex_lock(&suspend_stats_lock);
+
+	strscpy(suspend_stats.failed_devs[suspend_stats.last_failed_dev],
+		name, sizeof(suspend_stats.failed_devs[0]));
+	suspend_stats.last_failed_dev++;
+	suspend_stats.last_failed_dev %= REC_FAILED_NUM;
+
+	mutex_unlock(&suspend_stats_lock);
+}
+
 static const char * const suspend_step_names[] = {
 	[SUSPEND_WORKING] = "",
 	[SUSPEND_FREEZE] = "freeze",

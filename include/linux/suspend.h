@@ -72,14 +72,7 @@ struct suspend_stats {
 
 extern struct suspend_stats suspend_stats;
 
-static inline void dpm_save_failed_dev(const char *name)
-{
-	strscpy(suspend_stats.failed_devs[suspend_stats.last_failed_dev],
-		name,
-		sizeof(suspend_stats.failed_devs[0]));
-	suspend_stats.last_failed_dev++;
-	suspend_stats.last_failed_dev %= REC_FAILED_NUM;
-}
+void dpm_save_failed_dev(const char *name);
 
 static inline void dpm_save_failed_errno(int err)
 {
