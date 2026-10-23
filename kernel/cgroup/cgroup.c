@@ -3061,12 +3061,13 @@ struct task_struct *cgroup_procs_write_start(char *buf, bool threadgroup,
 {
 	struct task_struct *tsk;
 	pid_t pid;
-	bool force_migration = false;
+	bool force_migration;
 
 	if (kstrtoint(strstrip(buf), 0, &pid) || pid < 0)
 		return ERR_PTR(-EINVAL);
 
 retry_find_task:
+	force_migration = false;
 	rcu_read_lock();
 	if (pid) {
 		tsk = find_task_by_vpid(pid);
