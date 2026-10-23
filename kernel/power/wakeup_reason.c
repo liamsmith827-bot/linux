@@ -34,7 +34,7 @@
  * either base or nested wakeup reasons during suspend/resume flow.
  * @siblings - for membership on leaf or parent IRQ lists
  * @irq      - the IRQ number
- * @irq_name - the name associated with the IRQ, or a default if none
+ * @irq_name - owned name snapshot, or a permanent default if unavailable
  */
 struct wakeup_irq_node {
 	struct list_head siblings;
@@ -72,14 +72,18 @@ static ktime_t curr_stime; /* monotonic boottime offset after last suspend */
 static void init_node(struct wakeup_irq_node *p, int irq)
 {
 	struct irq_desc *desc;
+	const char *name = default_irq_name;
 
 	INIT_LIST_HEAD(&p->siblings);
 
 	p->irq = irq;
 	desc = irq_to_desc(irq);
 	if (desc && desc->action && desc->action->name)
-		p->irq_name = desc->action->name;
-	else
+		name = desc->action->name;
+
+	/* The IRQ action and its name may disappear before the next suspend. */
+	p->irq_name = kstrdup_const(name, GFP_ATOMIC);
+	if (!p->irq_name)
 		p->irq_name = default_irq_name;
 }
 
@@ -103,6 +107,7 @@ static void delete_list(struct list_head *head)
 	while (!list_empty(head)) {
 		n = list_first_entry(head, struct wakeup_irq_node, siblings);
 		list_del(&n->siblings);
+		kfree_const(n->irq_name);
 		kmem_cache_free(wakeup_irq_nodes_cache, n);
 	}
 }
@@ -183,7 +188,7 @@ void log_threaded_irq_wakeup_reason(int irq, int parent_irq)
 	 * both highly improbable - given the set/clear timing - and very low
 	 * impact (parent IRQ gets logged instead of the specific child).
 	 */
-	if (!capture_reasons)
+	if (!READ_ONCE(capture_reasons))
 		return;
 
 	spin_lock_irqsave(&wakeup_reason_lock, flags);
@@ -266,7 +271,8 @@ void clear_wakeup_reasons(void)
 	delete_list(&leaf_irqs);
 	delete_list(&parent_irqs);
 	wakeup_reason = RESUME_NONE;
-	capture_reasons = true;
+	/* Initialization failure must not enable logging through a NULL cache. */
+	capture_reasons = wakeup_irq_nodes_cache != NULL;
 
 	spin_unlock_irqrestore(&wakeup_reason_lock, flags);
 }

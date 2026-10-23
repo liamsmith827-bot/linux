@@ -22,6 +22,7 @@
 #define MAX_WAKEUP_REASON_IRQ_NAME_LEN 64
 
 #ifdef CONFIG_SUSPEND
+/* Callers must keep the IRQ descriptor, action and name live during the call. */
 void log_irq_wakeup_reason(int irq);
 void log_threaded_irq_wakeup_reason(int irq, int parent_irq);
 void log_suspend_abort_reason(const char *fmt, ...);
