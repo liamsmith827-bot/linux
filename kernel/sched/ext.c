@@ -1876,7 +1876,6 @@ static bool consume_dispatch_q(struct scx_sched *sch, struct rq *rq,
 			       struct scx_dispatch_q *dsq)
 {
 	struct task_struct *p;
-	bool disallow = false;
 retry:
 	/*
 	 * This retry loop can repeatedly race against scx_bypass() dequeueing
@@ -1898,6 +1897,7 @@ retry:
 
 	nldsq_for_each_task(p, dsq) {
 		struct rq *task_rq = task_rq(p);
+		bool disallow = false;
 
 		trace_android_vh_scx_task_can_run_on(&disallow, p, rq);
 		if (disallow)
@@ -4137,11 +4137,11 @@ repeat_iter:
 
 		if (old_class != new_class && p->se.sched_delayed)
 			dequeue_task(task_rq(p), p, DEQUEUE_SLEEP | DEQUEUE_DELAYED | DEQUEUE_NOCLOCK);
-		trace_android_vh_scx_task_switch_finish(p, 0);
 
 		scoped_guard (sched_change, p, DEQUEUE_SAVE | DEQUEUE_MOVE | DEQUEUE_NOCLOCK) {
 			p->sched_class = new_class;
 			check_class_changing(task_rq(p), p, old_class);
+			trace_android_vh_scx_task_switch_finish(p, 0);
 		}
 
 		check_class_changed(task_rq(p), p, old_class, p->prio);
@@ -5001,8 +5001,8 @@ repeat_iter:
 			p->scx.slice = SCX_SLICE_DFL;
 			p->sched_class = new_class;
 			check_class_changing(task_rq(p), p, old_class);
+			trace_android_vh_scx_task_switch_finish(p, 1);
 		}
-		trace_android_vh_scx_task_switch_finish(p, 1);
 
 		check_class_changed(task_rq(p), p, old_class, p->prio);
 	}
