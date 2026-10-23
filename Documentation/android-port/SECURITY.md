@@ -4652,3 +4652,23 @@ no platform-specific addition is needed for this history. Twenty native file,
 function and fragment witnesses support the decisions. The tests mentioned in
 historical commit messages and documentation were not run. Build 105 covers
 the unchanged source; no remote source was accessed.
+
+# Original block crypto and metadata encryption
+
+The initial block-crypto and dm-default-key patches are resolved in
+`evidence/block-crypto-initial-review.json`. Native block crypto preserves
+request keyslot lifetime, alignment and type validation, synchronous ciphers
+and completion handling. Read fallback saves its iterator and context, removes
+the submitted context and restores callbacks before completing decryption.
+The existing allocation rescue and Android skip flags retain their separate
+justifications. Fifteen native or previously tested source witnesses support
+this group.
+
+Pinned goldfish fstab, vold and libdm provide positive metadata-encryption
+consumers. The retained target matches their modern table syntax and preserves
+redaction, sensitive cleanup, checked IV bounds and crypto-sector alignment.
+Its skip policy assumes file keys have at least the protection of metadata
+keys; skip flags remain kernel-controlled state. The complete target is
+unchanged since its recorded extracted host tests. These tests and build 105
+do not establish runtime encryption, wrapped-hardware operation or bootability.
+Only local sources were used.
