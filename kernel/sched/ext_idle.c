@@ -697,7 +697,8 @@ static void update_builtin_idle(int cpu, bool idle)
 	if (idle)
 		trace_android_vh_scx_cpu_allowed(NULL, cpu, &allowed);
 
-	assign_cpu(cpu, idle_cpus, idle && allowed);
+	idle = idle && allowed;
+	assign_cpu(cpu, idle_cpus, idle);
 
 #ifdef CONFIG_SCHED_SMT
 	if (sched_smt_active()) {

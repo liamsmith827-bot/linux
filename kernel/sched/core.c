@@ -3383,7 +3383,9 @@ static int __set_cpus_allowed_ptr_locked(struct task_struct *p,
 	 */
 	dest_cpu = cpumask_any_and_distribute(cpu_valid_mask, ctx->new_mask);
 	trace_android_rvh_set_cpus_allowed_by_task(cpu_valid_mask, ctx->new_mask, p, &dest_cpu);
-	if (dest_cpu >= nr_cpu_ids) {
+	if (dest_cpu >= nr_cpu_ids ||
+	    !cpumask_test_cpu(dest_cpu, cpu_valid_mask) ||
+	    !cpumask_test_cpu(dest_cpu, ctx->new_mask)) {
 		ret = -EINVAL;
 		goto out;
 	}

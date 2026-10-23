@@ -1256,11 +1256,12 @@ long sched_setaffinity(pid_t pid, const struct cpumask *in_mask)
 			return -EPERM;
 	}
 
-	trace_android_vh_sched_setaffinity_early(p, in_mask, &skip);
-	if (skip)
-		return retval;
 	retval = security_task_setscheduler(p);
 	if (retval)
+		return retval;
+
+	trace_android_vh_sched_setaffinity_early(p, in_mask, &skip);
+	if (skip)
 		return retval;
 
 	/*
