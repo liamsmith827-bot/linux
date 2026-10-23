@@ -5681,6 +5681,7 @@ dequeue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
 		WARN_ON_ONCE(!se->sched_delayed);
 	} else {
 		bool delay = sleep;
+		bool delay_allowed;
 		/*
 		 * DELAY_DEQUEUE relies on spurious wakeups, special task
 		 * states must not suffer spurious wakeups, excempt them.
@@ -5690,8 +5691,9 @@ dequeue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
 
 		WARN_ON_ONCE(delay && se->sched_delayed);
 
+		delay_allowed = delay;
 		trace_android_rvh_dequeue_entity_delayed(cfs_rq, se, &delay);
-		if (sched_feat(DELAY_DEQUEUE) && delay &&
+		if (sched_feat(DELAY_DEQUEUE) && delay_allowed && delay &&
 		    !entity_eligible(cfs_rq, se)) {
 			update_load_avg(cfs_rq, se, 0);
 			set_delayed(se);
@@ -9300,9 +9302,13 @@ again:
 	 */
 	prev = rq->donor;
 	trace_android_rvh_before_pick_task_fair(rq, &p, prev, rf);
+	if (unlikely(prev != rq->donor))
+		return RETRY_TASK;
 	if (!p) {
 		p = pick_task_fair(rq, rf);
 		trace_android_rvh_replace_next_task_fair(rq, &p, prev);
+		if (unlikely(prev != rq->donor))
+			return RETRY_TASK;
 	}
 	if (!p)
 		goto idle;
