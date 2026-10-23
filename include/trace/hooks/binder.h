@@ -51,6 +51,11 @@ DECLARE_HOOK(android_vh_binder_transaction_received,
 	TP_PROTO(struct binder_transaction *t, struct binder_proc *proc,
 		struct binder_thread *thread, uint32_t cmd),
 	TP_ARGS(t, proc, thread, cmd));
+/*
+ * Called once before a transaction is destroyed, including errors and outdated
+ * async work. Early failures may have only run binder_transaction_init, so
+ * callbacks must tolerate absent OEM state and a NULL transaction buffer.
+ */
 DECLARE_HOOK(android_vh_free_oem_binder_struct,
 	TP_PROTO(struct binder_transaction *t),
 	TP_ARGS(t));

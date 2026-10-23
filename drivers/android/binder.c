@@ -3132,6 +3132,7 @@ static int binder_proc_transaction(struct binder_transaction *t,
 	if (t_outdated) {
 		struct binder_buffer *buffer = t_outdated->buffer;
 
+		trace_android_vh_free_oem_binder_struct(t_outdated);
 		t_outdated->buffer = NULL;
 		buffer->transaction = NULL;
 		trace_binder_transaction_update_buffer_release(buffer);
@@ -3309,6 +3310,7 @@ static void binder_transaction(struct binder_proc *proc,
 	const void __user *user_buffer = (const void __user *)
 				(uintptr_t)tr->data.ptr.buffer;
 	bool is_nested = false;
+	bool vendor_data_freed = false;
 
 	e = binder_transaction_log_add(&binder_transaction_log);
 	e->debug_id = t_debug_id;
@@ -4078,6 +4080,9 @@ err_bad_object_type:
 err_bad_offset:
 err_bad_parent:
 err_copy_data_failed:
+	/* Release vendor state while the transaction buffer is still valid. */
+	trace_android_vh_free_oem_binder_struct(t);
+	vendor_data_freed = true;
 	binder_cleanup_deferred_txn_lists(&sgc_head, &pf_head);
 	binder_free_txn_fixups(t);
 	trace_binder_transaction_failed_buffer_release(t->buffer);
@@ -4103,6 +4108,9 @@ err_bad_call_stack:
 err_empty_call_stack:
 err_dead_binder:
 err_invalid_target_handle:
+	/* Early errors may precede buffer allocation and the OEM allocation hook. */
+	if (!vendor_data_freed)
+		trace_android_vh_free_oem_binder_struct(t);
 	if (target_node) {
 		binder_dec_node(target_node, 1, 0);
 		binder_dec_node_tmpref(target_node);
