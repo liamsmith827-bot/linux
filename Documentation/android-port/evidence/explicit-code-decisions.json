@@ -6963,5 +6963,239 @@
       "evidence/overlay-history-review.json",
       "SECURITY.md: OverlayFS history and native permission model"
     ]
+  },
+  {
+    "commit": "b05bef535d7dba4c3ecc22eb624cf62d6b2e5f12",
+    "disposition": "superseded",
+    "rationale": "Full three-file original read. Its void callback and unconditional lower-open notification were removed by 972cde43ff77 and restored through later error-aware versions. Retain the final interface, not unsafe historical assumptions. Positive consumer: pinned MediaProvider FuseDaemon.cpp registers pf_canonical_path, checks is_app_accessible_path, replies with a backing path or ENOENT; pinned CTS FileObserverTest expects OPEN/MODIFY/CLOSE_WRITE for external storage. Retain canonical watch routing and the final int/error contract. Original-path read permission and security_path_notify checks remain native before canonicalization; trusted FUSE provider/daemon determines the backing path. Native fd CLASS cleanup and path references remain. No old binary dentry layout is preserved.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "0d3cecaef139e7a04c5e3a0297644569b0b6fd92"
+    ],
+    "evidence": [
+      "evidence/fsnotify-canonical-review.json",
+      "evidence/fsnotify-canonical-check.json",
+      "SECURITY.md: Canonical filesystem notifications"
+    ]
+  },
+  {
+    "commit": "94139142d9c65591ac13912eae1d9655ba8aed6f",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "rationale": "Both unique merge hunks read: retain native path_permission and security_path_notify with error cleanup for fanotify and inotify, not historical inode_permission2. fanotify_user.c is exactly LTS. The canonical inotify extension applies only after native path authorization. No native LSM check is dropped.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/fsnotify-canonical-review.json",
+      "evidence/fsnotify-canonical-check.json",
+      "SECURITY.md: Canonical filesystem notifications"
+    ]
+  },
+  {
+    "commit": "0066ae3a5ecb169c787955a223c60d6df05b9c18",
+    "disposition": "superseded",
+    "rationale": "Full merge repair read. Historical duplicate fsnotify_parent wrapper and obsolete function signatures are absent; keep current native fsnotify_name/dentry/parent dispatch, plus final canonical lower-open support. No old build-only workaround is required.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "0d3cecaef139e7a04c5e3a0297644569b0b6fd92"
+    ],
+    "evidence": [
+      "evidence/fsnotify-canonical-review.json",
+      "evidence/fsnotify-canonical-check.json",
+      "SECURITY.md: Canonical filesystem notifications"
+    ]
+  },
+  {
+    "commit": "58dc0ef35a07c7625aff1d38e4bf2f3b0a4c65d0",
+    "disposition": "superseded",
+    "rationale": "Full upstream restoration read. Keep native name/dentry/file notification and permission helper structure; do not retain the malformed intermediate NULL lower-path argument or old directory-event implementation. Final lower-open behavior is adapted separately. 0d3cecaef139 keeps the original post-open event when optional canonical lookup or lower notification fails, and emits only once if the returned path equals the original. This does not let denied watch registration fall back: inotify_add_watch still returns daemon errors except ENOSYS. The obsolete priority early-return is removed from fsnotify_file; native pre-content, open permission, mmap/truncate and access-permission helpers remain unchanged. Extracted-source host checks cover 1890 cases; previous code fails 202 assertions, adapted code passes. This is not an actual FUSE/LSM/event-queue test.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "0d3cecaef139e7a04c5e3a0297644569b0b6fd92"
+    ],
+    "evidence": [
+      "evidence/fsnotify-canonical-review.json",
+      "evidence/fsnotify-canonical-check.json",
+      "SECURITY.md: Canonical filesystem notifications"
+    ]
+  },
+  {
+    "commit": "ce97c01ab3613176cce1c5af60cb6e743fc34844",
+    "disposition": "superseded",
+    "rationale": "Full one-hunk fix read: it corrected the lower-path argument in a historical open callback. Current fsnotify_path passes the actual referenced path to native fsnotify_parent. Preserve that effect without the obsolete wrapper signature.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "0d3cecaef139e7a04c5e3a0297644569b0b6fd92"
+    ],
+    "evidence": [
+      "evidence/fsnotify-canonical-review.json",
+      "evidence/fsnotify-canonical-check.json",
+      "SECURITY.md: Canonical filesystem notifications"
+    ]
+  },
+  {
+    "commit": "972cde43ff770d43987655d37bc49156c7c6f889",
+    "disposition": "superseded",
+    "rationale": "Full three-file removal read. The historical sdcardfs retirement does not justify omitting the current FUSE interface: f37e05049bf8 and cdbf344d3522 restore it and pinned MediaProvider implements it. Positive consumer: pinned MediaProvider FuseDaemon.cpp registers pf_canonical_path, checks is_app_accessible_path, replies with a backing path or ENOENT; pinned CTS FileObserverTest expects OPEN/MODIFY/CLOSE_WRITE for external storage. Retain canonical watch routing and the final int/error contract. Original-path read permission and security_path_notify checks remain native before canonicalization; trusted FUSE provider/daemon determines the backing path. Native fd CLASS cleanup and path references remain. No old binary dentry layout is preserved.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "0d3cecaef139e7a04c5e3a0297644569b0b6fd92"
+    ],
+    "evidence": [
+      "evidence/fsnotify-canonical-review.json",
+      "evidence/fsnotify-canonical-check.json",
+      "SECURITY.md: Canonical filesystem notifications"
+    ]
+  },
+  {
+    "commit": "f37e05049bf8197901ec042818a64110e59fac41",
+    "disposition": "adapted",
+    "rationale": "Full original restoration read. Retain inotify canonical watch routing and runtime dentry callback, upgraded to the final int/error signature; discard only dead #if 0 open code and historical function locations. Positive consumer: pinned MediaProvider FuseDaemon.cpp registers pf_canonical_path, checks is_app_accessible_path, replies with a backing path or ENOENT; pinned CTS FileObserverTest expects OPEN/MODIFY/CLOSE_WRITE for external storage. Retain canonical watch routing and the final int/error contract. Original-path read permission and security_path_notify checks remain native before canonicalization; trusted FUSE provider/daemon determines the backing path. Native fd CLASS cleanup and path references remain. No old binary dentry layout is preserved. 0d3cecaef139 keeps the original post-open event when optional canonical lookup or lower notification fails, and emits only once if the returned path equals the original. This does not let denied watch registration fall back: inotify_add_watch still returns daemon errors except ENOSYS. The obsolete priority early-return is removed from fsnotify_file; native pre-content, open permission, mmap/truncate and access-permission helpers remain unchanged. Extracted-source host checks cover 1890 cases; previous code fails 202 assertions, adapted code passes. This is not an actual FUSE/LSM/event-queue test.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "0d3cecaef139e7a04c5e3a0297644569b0b6fd92"
+    ],
+    "evidence": [
+      "evidence/fsnotify-canonical-review.json",
+      "evidence/fsnotify-canonical-check.json",
+      "SECURITY.md: Canonical filesystem notifications"
+    ]
+  },
+  {
+    "commit": "ffea51ec1f7aabc06400be93092ccd3fcb84ea95",
+    "disposition": "superseded-no-residual-code",
+    "rationale": "Full patch read. It removes only dead #if 0 fragments introduced by f37e05049bf8. They are absent in final ACK and port; active lower-open notification is accounted independently through cdbf344d3522 and 0d3cecaef139.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/fsnotify-canonical-review.json",
+      "evidence/fsnotify-canonical-check.json",
+      "SECURITY.md: Canonical filesystem notifications"
+    ]
+  },
+  {
+    "commit": "3ca8e9b706ed5683c2e3bea851369fcc12090f52",
+    "disposition": "superseded",
+    "rationale": "Full lower-open patch read. c6850347ea42 removed it temporarily, then cdbf344d3522 restored it with an error contract. Preserve its Android FileObserver purpose through the final adaptation, not unconditional historical path use. 0d3cecaef139 keeps the original post-open event when optional canonical lookup or lower notification fails, and emits only once if the returned path equals the original. This does not let denied watch registration fall back: inotify_add_watch still returns daemon errors except ENOSYS. The obsolete priority early-return is removed from fsnotify_file; native pre-content, open permission, mmap/truncate and access-permission helpers remain unchanged. Extracted-source host checks cover 1890 cases; previous code fails 202 assertions, adapted code passes. This is not an actual FUSE/LSM/event-queue test.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "0d3cecaef139e7a04c5e3a0297644569b0b6fd92"
+    ],
+    "evidence": [
+      "evidence/fsnotify-canonical-review.json",
+      "evidence/fsnotify-canonical-check.json",
+      "SECURITY.md: Canonical filesystem notifications"
+    ]
+  },
+  {
+    "commit": "4a6cfd13678f233d4f9294b87257e1dc1d564a20",
+    "disposition": "merge-resolution-adapted-net-state",
+    "rationale": "Both unique remerge hunks read. Keep alteredpath/canonical_path locals and canonical path_put while adopting native CLASS(fd, f) cleanup; do not retain a second fdput or obsolete fput label. All early exits still release the held fd automatically. Host checks instrument canonical references and watch-error exits; native descriptor wrapper is retained directly.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/fsnotify-canonical-review.json",
+      "evidence/fsnotify-canonical-check.json",
+      "SECURITY.md: Canonical filesystem notifications"
+    ]
+  },
+  {
+    "commit": "c6850347ea42522ed0241871a6bc60803c2e64ae",
+    "disposition": "superseded",
+    "rationale": "Full temporary lower-open removal read. It was superseded by cdbf344d3522, which reinstates lower-open notification alongside the current path API. Positive consumer: pinned MediaProvider FuseDaemon.cpp registers pf_canonical_path, checks is_app_accessible_path, replies with a backing path or ENOENT; pinned CTS FileObserverTest expects OPEN/MODIFY/CLOSE_WRITE for external storage. Retain canonical watch routing and the final int/error contract. Original-path read permission and security_path_notify checks remain native before canonicalization; trusted FUSE provider/daemon determines the backing path. Native fd CLASS cleanup and path references remain. No old binary dentry layout is preserved. 0d3cecaef139 keeps the original post-open event when optional canonical lookup or lower notification fails, and emits only once if the returned path equals the original. This does not let denied watch registration fall back: inotify_add_watch still returns daemon errors except ENOSYS. The obsolete priority early-return is removed from fsnotify_file; native pre-content, open permission, mmap/truncate and access-permission helpers remain unchanged. Extracted-source host checks cover 1890 cases; previous code fails 202 assertions, adapted code passes. This is not an actual FUSE/LSM/event-queue test.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "0d3cecaef139e7a04c5e3a0297644569b0b6fd92"
+    ],
+    "evidence": [
+      "evidence/fsnotify-canonical-review.json",
+      "evidence/fsnotify-canonical-check.json",
+      "SECURITY.md: Canonical filesystem notifications"
+    ]
+  },
+  {
+    "commit": "6abad20301225ec521dcecfecedb477da9af83b3",
+    "disposition": "merge-resolution-adapted-net-state",
+    "rationale": "The unique dentry_operations resolution retains native d_unalias_trylock/d_unalias_unlock and the canonical callback together. Port keeps both native fields and final int return type, with no historical KABI reserve fields or binary layout promise.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/fsnotify-canonical-review.json",
+      "evidence/fsnotify-canonical-check.json",
+      "SECURITY.md: Canonical filesystem notifications"
+    ]
+  },
+  {
+    "commit": "badfc4d0051bc4fb7548e877859adfc22b60c896",
+    "disposition": "superseded",
+    "rationale": "Full six-file error-contract patch read. The original was temporarily removed by 36f98b664458, then reapplied by cdbf344d3522; preserve the final contract and later reply bounds. Positive consumer: pinned MediaProvider FuseDaemon.cpp registers pf_canonical_path, checks is_app_accessible_path, replies with a backing path or ENOENT; pinned CTS FileObserverTest expects OPEN/MODIFY/CLOSE_WRITE for external storage. Retain canonical watch routing and the final int/error contract. Original-path read permission and security_path_notify checks remain native before canonicalization; trusted FUSE provider/daemon determines the backing path. Native fd CLASS cleanup and path references remain. No old binary dentry layout is preserved. 0d3cecaef139 keeps the original post-open event when optional canonical lookup or lower notification fails, and emits only once if the returned path equals the original. This does not let denied watch registration fall back: inotify_add_watch still returns daemon errors except ENOSYS. The obsolete priority early-return is removed from fsnotify_file; native pre-content, open permission, mmap/truncate and access-permission helpers remain unchanged. Extracted-source host checks cover 1890 cases; previous code fails 202 assertions, adapted code passes. This is not an actual FUSE/LSM/event-queue test.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "9e4d89fab8be269cdfa979c81871aff240be829d",
+      "0d3cecaef139e7a04c5e3a0297644569b0b6fd92"
+    ],
+    "evidence": [
+      "evidence/fsnotify-canonical-review.json",
+      "evidence/fsnotify-canonical-check.json",
+      "SECURITY.md: Canonical filesystem notifications"
+    ]
+  },
+  {
+    "commit": "36f98b664458010e10bbc267cba54a4ac151f94f",
+    "disposition": "superseded",
+    "rationale": "Full six-file removal read. Do not reinstate void callbacks, ignore daemon errors or process canonical-path payloads on error replies. cdbf344d3522 restores explicit failures/cached ENOSYS fallback; the port retains that final state with the notification-only adaptation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "0d3cecaef139e7a04c5e3a0297644569b0b6fd92"
+    ],
+    "evidence": [
+      "evidence/fsnotify-canonical-review.json",
+      "evidence/fsnotify-canonical-check.json",
+      "SECURITY.md: Canonical filesystem notifications"
+    ]
+  },
+  {
+    "commit": "cdbf344d35221a455ef865aa22a10ebcd0f828c5",
+    "disposition": "adapted",
+    "rationale": "Full six-file reapplication and current FUSE implementations read. Retain daemon/ENOMEM errors, cached ENOSYS fallback with path_get, int callback, and inotify registration rejection. Preserve 9e4d89fab8be zero-size EBADMSG and bounded NUL termination before kern_path; error replies do not trigger lookup. FUSE BPF backing returns its held backing path. Positive consumer: pinned MediaProvider FuseDaemon.cpp registers pf_canonical_path, checks is_app_accessible_path, replies with a backing path or ENOENT; pinned CTS FileObserverTest expects OPEN/MODIFY/CLOSE_WRITE for external storage. Retain canonical watch routing and the final int/error contract. Original-path read permission and security_path_notify checks remain native before canonicalization; trusted FUSE provider/daemon determines the backing path. Native fd CLASS cleanup and path references remain. No old binary dentry layout is preserved. 0d3cecaef139 keeps the original post-open event when optional canonical lookup or lower notification fails, and emits only once if the returned path equals the original. This does not let denied watch registration fall back: inotify_add_watch still returns daemon errors except ENOSYS. The obsolete priority early-return is removed from fsnotify_file; native pre-content, open permission, mmap/truncate and access-permission helpers remain unchanged. Extracted-source host checks cover 1890 cases; previous code fails 202 assertions, adapted code passes. This is not an actual FUSE/LSM/event-queue test.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "9e4d89fab8be269cdfa979c81871aff240be829d",
+      "0d3cecaef139e7a04c5e3a0297644569b0b6fd92"
+    ],
+    "evidence": [
+      "evidence/fsnotify-canonical-review.json",
+      "evidence/fsnotify-canonical-check.json",
+      "SECURITY.md: Canonical filesystem notifications"
+    ]
+  },
+  {
+    "commit": "2d7c64be2629c266d25539979dcb76ea28680213",
+    "disposition": "adapted",
+    "rationale": "Full three-file hook patch read. Retain android_vh_fsnotify_open declaration, call and GPL tracepoint exports; built common symvers from attempt 104 contains both tracepoint and iterator. It receives a borrowed file pointer and mutable event mask before notification, including exec-open bits. Trusted vendor callbacks can suppress/change post-open observation, so provider lifetime and event policy matter; the hook is not a replacement for native LSM/open-permission gates. Concrete SDK vendor callback is unverified; generic source customization is retained as requested. 0d3cecaef139 keeps the original post-open event when optional canonical lookup or lower notification fails, and emits only once if the returned path equals the original. This does not let denied watch registration fall back: inotify_add_watch still returns daemon errors except ENOSYS. The obsolete priority early-return is removed from fsnotify_file; native pre-content, open permission, mmap/truncate and access-permission helpers remain unchanged. Extracted-source host checks cover 1890 cases; previous code fails 202 assertions, adapted code passes. This is not an actual FUSE/LSM/event-queue test.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "0d3cecaef139e7a04c5e3a0297644569b0b6fd92"
+    ],
+    "evidence": [
+      "evidence/fsnotify-canonical-review.json",
+      "evidence/fsnotify-canonical-check.json",
+      "SECURITY.md: Canonical filesystem notifications"
+    ]
+  },
+  {
+    "commit": "dd5c9369672eb1c7fca7545321556594e0ec1ce9",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "rationale": "All unique remerge hunks across three paths read, including deleted rtc/hctosys.c and the broad fsnotify rollback. Keep exact native RTC class implementation with rtc_hctosys(rtc), range checking and native registration call, not the historical missing zero-argument helper. Subsequent 0066ae3a5ecb/58dc0ef35a07/ce97c01ab361 explicitly repair this bad fsnotify merge; retain current native APIs and final error-aware canonical integration rather than replaying the rollback. No upstream notification or permission logic is discarded.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "0d3cecaef139e7a04c5e3a0297644569b0b6fd92"
+    ],
+    "evidence": [
+      "evidence/fsnotify-canonical-review.json",
+      "evidence/fsnotify-canonical-check.json",
+      "SECURITY.md: Canonical filesystem notifications"
+    ]
   }
 ]

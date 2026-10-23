@@ -4416,3 +4416,43 @@ preserves canonical-path inotify routing alongside the native fd accessor;
 FUSE is a concrete provider. That merge decision does not certify all provider
 runtime behavior. No security callback or permission check is removed by these
 resolutions.
+
+### Canonical filesystem notifications
+
+`evidence/fsnotify-canonical-review.json` resolves seventeen candidates covering
+canonical-path history, vendor notification hooks and four merge resolutions.
+The pinned MediaProvider implements `pf_canonical_path`, and pinned CTS checks
+FileObserver open/modify/close events on external storage. Retain the runtime
+callback and inotify routing, with the final error-return contract, native fd
+cleanup, original-path permission/LSM checks and held backing-path references.
+The old void callback, disabled code and intermediate bad merge are superseded.
+Native RTC and fanotify code are kept exactly for mixed merge resolutions.
+
+`0d3cecaef139` fixes notification loss in the ACK integration. An open event is
+post-operation and its caller ignores the return value, but ACK returned early
+when canonical lookup failed, suppressing the native event as well. The port
+always sends the native original-path notification, attempts the optional lower
+notification only on successful lookup, and avoids sending the same path twice.
+Inotify watch registration still propagates daemon/ENOMEM failures; ENOSYS keeps
+its documented original-path fallback. The stale permission-priority shortcut
+in fsnotify_file is removed; native pre-content/open/access/mmap/truncate
+permission handling remains unchanged. Zero-size canonical replies still fail
+with EBADMSG, and bounded NUL termination is preserved before daemon-context
+lookup by the earlier `9e4d89fab8be` fix.
+
+`check_fsnotify_canonical.py` extracts the actual notification functions and the
+inotify canonical-path tail, using instrumented path references and event
+callbacks. All 1,890 cases pass; the previous source fails 202 assertions.
+These host checks do not execute kernel FUSE transport, inotify queues, SELinux,
+concurrent operations or CTS. The source provider's authorization policy is not
+certified: MediaProvider still has a TODO for uid access to path contents beyond
+its is_app_accessible_path check. Canonical routing intentionally connects
+stacked views, so trusted providers must return authorized backing paths.
+
+The generic GPL-exported `android_vh_fsnotify_open` hook remains available even
+though an SDK vendor callback has not been established. Its mutable mask lets a
+trusted callback change or suppress post-open observation; native access-control
+checks remain separate. A callback receives a borrowed file pointer and must
+respect its lifetime. No historical dentry binary layout is preserved. All
+sources used for these decisions are local pinned checkouts; embedded links in
+commit messages and CTS comments were not accessed.
