@@ -5587,7 +5587,7 @@ out_unlock:
 static int alloc_and_link_pwqs(struct workqueue_struct *wq)
 {
 	bool highpri = wq->flags & WQ_HIGHPRI;
-	int cpu, ret;
+	int cpu, ret = -EINVAL;
 	bool skip = false;
 
 	lockdep_assert_held(&wq_pool_mutex);
@@ -5647,9 +5647,15 @@ static int alloc_and_link_pwqs(struct workqueue_struct *wq)
 	return 0;
 
 oem_skip:
-	return ret;
+	if (!ret)
+		return 0;
+	if (ret > 0)
+		ret = -EINVAL;
+	goto out_free_pwqs;
 
 enomem:
+	ret = -ENOMEM;
+out_free_pwqs:
 	if (wq->cpu_pwq) {
 		for_each_possible_cpu(cpu) {
 			struct pool_workqueue *pwq = *per_cpu_ptr(wq->cpu_pwq, cpu);
@@ -5660,7 +5666,7 @@ enomem:
 		free_percpu(wq->cpu_pwq);
 		wq->cpu_pwq = NULL;
 	}
-	return -ENOMEM;
+	return ret;
 }
 
 static int wq_clamp_max_active(int max_active, unsigned int flags,
