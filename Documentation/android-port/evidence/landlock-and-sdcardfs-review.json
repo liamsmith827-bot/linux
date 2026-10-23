@@ -1,0 +1,316 @@
+{
+  "source_head": "b78140f3f22a4da3a64d9a7805659063864fd758",
+  "records": [
+    {
+      "commit": "b60006ea880b221844780438dd57c486553c2624",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain ABI 8 and LANDLOCK_RESTRICT_SELF_TSYNC with the final ACK queue-lifetime, serialization and interruption fixes. Reviewed all eight paths, the complete final TSYNC implementation and its differences from the initial implementation. Current syscall prerequisites, ruleset merging and error abort retain native checks; sibling domains and logging state are intentionally overwritten by this API, potentially relaxing a sibling policy. This is an explicit compatibility/security tradeoff, not monotonic per-thread confinement. Retain the configured generic Android syscall interface conservatively; no SDK TSYNC caller was established. Import the matching ABI/flag selftest adjustments in b78140f3f22a while preserving LTS test fixes.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "b78140f3f22a4da3a64d9a7805659063864fd758"
+      ],
+      "evidence": [
+        "evidence/landlock-and-sdcardfs-review.json",
+        "SECURITY.md: Landlock thread synchronization and obsolete sdcardfs exports"
+      ],
+      "patch_sha256": "809c6fc9d98ce08d65e51ea4d7a4d87153a731f580b5c2dbfe5756ab1da07bc1"
+    },
+    {
+      "commit": "a8590b4853db8a49888d09e10901f531c08c227a",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain all changes in final tsync.c: task_work_add failure drops the task reference, clears and removes the unused last slot, and decrements both preparation/unfinished counters. Cancellation and release warn and skip impossible null entries. This prevents cancellation from dereferencing failed-enqueue slots and recycles reserved storage. Checked full patch and complete current queue/release protocol; actual concurrency is unverified.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/landlock-and-sdcardfs-review.json",
+        "SECURITY.md: Landlock thread synchronization and obsolete sdcardfs exports"
+      ],
+      "patch_sha256": "cf4abfea25c06b98ab6df8372d84e2e60200b75972cee8ea0ba4aaa7aa4b53fc"
+    },
+    {
+      "commit": "86224e0d58822d4f8537d1246226b9f35c569316",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain complete const annotations and size_t cancellation index from the final ACK implementation. The index now matches the growable work-array size and the const views identify read-only access; these are implementation correctness/maintenance changes to the retained generic interface, not historical KMI padding.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/landlock-and-sdcardfs-review.json",
+        "SECURITY.md: Landlock thread synchronization and obsolete sdcardfs exports"
+      ],
+      "patch_sha256": "e89239772fe04e5938e2327b0dc1e5855c26ee54ac901fd05333b5943cb92415"
+    },
+    {
+      "commit": "4a68bc1e70e8f1f0c8e3caf3fe91d722906344d6",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain exec_update_lock write trylock and final unlock to serialize competing TSYNC operations. Failed acquisition returns native restart_syscall, which sets TIF_SIGPENDING and returns ERESTARTNOINTR, allowing pending task work before retry. A blocking acquisition could deadlock two synchronizing sibling threads. Native signal/task-work algorithms remain unchanged apart from separately attributed OEM storage/export additions.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/landlock-and-sdcardfs-review.json",
+        "SECURITY.md: Landlock thread synchronization and obsolete sdcardfs exports"
+      ],
+      "patch_sha256": "ec8c71199f210a17d7fcdb138457ae02880df37166af17fc6258bbb6805c151e"
+    },
+    {
+      "commit": "19cd388eb41a709d1b2649be85c4c6fcf9a3bf93",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain interruption cleanup: set ERESTARTNOINTR, opportunistically cancel queued works, break the preparation loop, release ready_to_commit, then wait for all unfinished work before releasing contexts and the serialization lock. Do not restore the old extra all_prepared wait after cancellation. Current callbacks abort prepared credentials on error; no live signal or scheduling validation is claimed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/landlock-and-sdcardfs-review.json",
+        "SECURITY.md: Landlock thread synchronization and obsolete sdcardfs exports"
+      ],
+      "patch_sha256": "385254100d30ccc4a47bb99a2b41a1acb2b92cddb6fc3a0364e3eccf01a2e7b4"
+    },
+    {
+      "commit": "d098f695a3d82b1401429dfff7e63e0b1482f0ec",
+      "disposition": "applied",
+      "rationale": "Apply both base-test renames and the new TSYNC tests for one/multiple threads, no_new_privs propagation, diverging domains and competing enablement. Retain the final follow-up test additions without replacing the LTS test tree. These tests document the selected API and compile with exported port headers; they were not executed and the historical coverage percentage is not a result of this port.",
+      "result_commits": [
+        "b78140f3f22a4da3a64d9a7805659063864fd758"
+      ],
+      "evidence": [
+        "evidence/landlock-and-sdcardfs-review.json",
+        "SECURITY.md: Landlock thread synchronization and obsolete sdcardfs exports"
+      ],
+      "patch_sha256": "8723ab6dbcb9852a55c562f6786bbd083851a37a56a5cce98dd8b156e5ed7494"
+    },
+    {
+      "commit": "b60246db58d03058f908276fb29b4e6b27f18f5d",
+      "disposition": "applied",
+      "rationale": "Apply the complete best-effort signal-interruption test and required include ordering to the selected TSYNC test file. It uses 200 idle siblings and a signaler; its own source explicitly does not guarantee coverage of the kernel interruption branch. Compilation passed only; do not infer runtime coverage, race freedom or a deterministic regression check.",
+      "result_commits": [
+        "b78140f3f22a4da3a64d9a7805659063864fd758"
+      ],
+      "evidence": [
+        "evidence/landlock-and-sdcardfs-review.json",
+        "SECURITY.md: Landlock thread synchronization and obsolete sdcardfs exports"
+      ],
+      "patch_sha256": "1cd77ddeb8206105fbe628fb2d05db35ce4db9c9a0617ad22b1af16e165ee317"
+    },
+    {
+      "commit": "785b29c5a2a9b3ac738a9e8965d5f92e426a6014",
+      "disposition": "applied",
+      "rationale": "Apply the complete ABI 8 thread-synchronization documentation and date adjustment, because the kernel exposes this API. Preserve surrounding LTS documentation rather than leaving the new ABI undocumented. No runtime or kernel code changes in this documentation commit.",
+      "result_commits": [
+        "b78140f3f22a4da3a64d9a7805659063864fd758"
+      ],
+      "evidence": [
+        "evidence/landlock-and-sdcardfs-review.json",
+        "SECURITY.md: Landlock thread synchronization and obsolete sdcardfs exports"
+      ],
+      "patch_sha256": "a9970f5c03728e66d5f4d35415689da926d77becd7870e03dcc5e29d38768057"
+    },
+    {
+      "commit": "57b6c57060335682786f4d49645e1f77f6bbb962",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain the fd=-1 exception only for LOG_SUBDOMAINS_OFF optionally combined with TSYNC. Unknown flags and other invalid fd combinations still fail native validation; no ruleset layer is created for this logging-only operation. This copies the calling thread Landlock configuration to siblings, including replacing their domains, as the selected TSYNC API specifies. Apply all accompanying audit and flag tests onto the LTS tests in b78140f3f22a; all three affected programs compile but are not executed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "b78140f3f22a4da3a64d9a7805659063864fd758"
+      ],
+      "evidence": [
+        "evidence/landlock-and-sdcardfs-review.json",
+        "SECURITY.md: Landlock thread synchronization and obsolete sdcardfs exports"
+      ],
+      "patch_sha256": "225343d52ce8c60b83c2499a01f797389bbbe162575c01cd888b5a4436b1f478"
+    },
+    {
+      "commit": "1c5c687f589b9a8ab007e63e3c57c6f9471eb040",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain all comment wrapping in final tsync.c; full patch changes no C statements or synchronization behavior. Its text accompanies the retained implementation and has no independent security or binary-layout effect.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/landlock-and-sdcardfs-review.json",
+        "SECURITY.md: Landlock thread synchronization and obsolete sdcardfs exports"
+      ],
+      "patch_sha256": "0bac43f25f301516685b152f72c184f42a990823540291d4bf62c20cc233b7e4"
+    },
+    {
+      "commit": "c0dbfed5ff9fce7a701a33587ea5fea6a84f4dc3",
+      "disposition": "superseded",
+      "rationale": "All three original paths and all six added symbol exports reviewed. ACK a96c98dd7a30 later explicitly removes set_fs_pwd, free_fs_struct, copy_fs_struct, vfs_read, vfs_write and security_path_chown exports together with sdcardfs. None of these exports exists at either pinned final tip or in the port. Keep native functions and current separately justified adaptations; do not resurrect historical module exports. This conclusion is based on positive removal history and exact export absence, not a failed consumer search.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/landlock-and-sdcardfs-review.json",
+        "SECURITY.md: Landlock thread synchronization and obsolete sdcardfs exports"
+      ],
+      "patch_sha256": "a90f5e32dc405e4ad6fe3df854d42f7bd45cd9626e9fb19855cad57fa71d332d"
+    },
+    {
+      "commit": "43fd3e30ceb6233a4f8c184d2692f3324405533c",
+      "disposition": "superseded",
+      "rationale": "The sole change makes security_path_chown a GPL export. Later ACK a96c98dd7a30 removes that export entirely; it is absent from ACK, LTS and port while the native path_chown security dispatcher remains. No historical export-license change survives to port. Only the relevant removal hunks of a96c98dd7a30 were examined here; its other paths are not finalized by this decision.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/landlock-and-sdcardfs-review.json",
+        "SECURITY.md: Landlock thread synchronization and obsolete sdcardfs exports"
+      ],
+      "patch_sha256": "54a29743d5086472457951cd6ced3f49c23a8550f1147bfcc5081354b624a288"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "security/landlock/Makefile",
+      "scope": "whole file",
+      "identical_to_ack": true,
+      "blob": "ffa7646d99f3ef0fd839a590c63d62fbb59252f6",
+      "sha256": "4b71cf53bf5be6b44974ffd17da736e9a551eeaf81ceeae11601719b79f852b0"
+    },
+    {
+      "path": "security/landlock/cred.h",
+      "scope": "whole file",
+      "identical_to_ack": true,
+      "blob": "c10a06727eb1d32e1147e69a66120f89d1da2442",
+      "sha256": "672d2180e2120574a8bc94fc49af611b8d6b3998988d250b7568e0d01fb41674"
+    },
+    {
+      "path": "security/landlock/limits.h",
+      "scope": "whole file",
+      "identical_to_ack": true,
+      "blob": "eb584f47288d655cc8d48ef1eedd4151631294ad",
+      "sha256": "a1a074e918c041faded0bda316b32f5718a1022566858aa01f01588a27fd061e"
+    },
+    {
+      "path": "security/landlock/syscalls.c",
+      "scope": "whole file",
+      "identical_to_ack": true,
+      "blob": "935075b85b271f181854a1844d1fbcdc2db231d3",
+      "sha256": "b976217b39bebd171bbc22d1d0825557b8b183f12d6df34b173d56c983c93b2a"
+    },
+    {
+      "path": "security/landlock/tsync.c",
+      "scope": "whole file",
+      "identical_to_ack": true,
+      "blob": "595a61dc6ec901afe97ddcb3c76cbdb94b0da854",
+      "sha256": "34d7536c8f08322838fd7077f43e8c21fd85ac6e0f58f1bf8c784f98b92d86f9"
+    },
+    {
+      "path": "security/landlock/tsync.h",
+      "scope": "whole file",
+      "identical_to_ack": true,
+      "blob": "ef86bb61c2f6eea18fa0acae1a7767899a4668b8",
+      "sha256": "88fb49f49adbb85b129e84e8f43374e241a1e7aac5ea6ccd4d938ed9e148c9c4"
+    },
+    {
+      "path": "tools/testing/selftests/landlock/tsync_test.c",
+      "scope": "whole file",
+      "identical_to_ack": true,
+      "blob": "9cf1491bbaaff42e06909c24daf2e51071b907b7",
+      "sha256": "449a8666d17677f811b81e7c5f6f1bbe4e7d5eccbf721b08ecf36f1ce807c079"
+    },
+    {
+      "path": "security/landlock/cred.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "sha256": "61e5f77af829d6d7947cd9e38522590f2b47fa66f7d2ca2e9d5dd93a3fd74968"
+    },
+    {
+      "path": "security/landlock/ruleset.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "sha256": "3f22393b58a20b3e0bb70964485e3eee88a2435acc509a2a529ec9fc4df8e2b5"
+    },
+    {
+      "path": "security/landlock/task.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "sha256": "92228852cee02712e56cc126ac3d9eb8d8e6854bddcfe3f478ae7fbcf7f2af92"
+    },
+    {
+      "path": "security/landlock/fs.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "sha256": "17daf498e0685802c5cba9fc1ec3721d3c632dd7cc584eb3eced28086fe6eb76"
+    },
+    {
+      "path": "security/landlock/net.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "sha256": "b4a3088d8f3d57118158308a8e338dcb90a6ddcef3b2ba831a1685b2570f1bb6"
+    },
+    {
+      "path": "fs/fs_struct.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "sha256": "dfb27ae16982f252124f708339b5989b9e9bdc5a62bccef1aefe68538ff22133"
+    },
+    {
+      "path": "kernel/task_work.c",
+      "scope": "whole file excluding separately attributed EXPORT_SYMBOL_GPL(task_work_add);",
+      "remainder_identical_to_lts": true,
+      "sha256": "35cf66468deb606ed3e1881fd2fdd1c53e734261d2fc2e51bf4434eef4706652"
+    },
+    {
+      "path": "include/linux/sched/signal.h",
+      "scope": "whole file excluding separately attributed ANDROID_OEM_DATA(1);",
+      "remainder_identical_to_lts": true,
+      "sha256": "e1c20b682578022e6245dde8040e0997be0b47bb72db348eb516f2c3f0dc6dab"
+    },
+    {
+      "path": "include/uapi/linux/landlock.h",
+      "scope": "whole file after removing only b600 TSYNC definition/documentation and 57b6 logging clarification",
+      "remainder_identical_to_lts": true,
+      "sha256": "e818ca8069cb8059b7a31f6b672dc8e5d1680f58ee4ae59431b5aa1629c5d645"
+    },
+    {
+      "path": "fs/fs_struct.c",
+      "scope": "only six sdcardfs-era exports",
+      "symbols_absent_from_ack_lts_and_port": [
+        "set_fs_pwd",
+        "free_fs_struct",
+        "copy_fs_struct"
+      ]
+    },
+    {
+      "path": "fs/read_write.c",
+      "scope": "only six sdcardfs-era exports",
+      "symbols_absent_from_ack_lts_and_port": [
+        "vfs_read",
+        "vfs_write"
+      ]
+    },
+    {
+      "path": "security/security.c",
+      "scope": "only six sdcardfs-era exports",
+      "symbols_absent_from_ack_lts_and_port": [
+        "security_path_chown"
+      ]
+    }
+  ],
+  "local_sources": [
+    {
+      "repository": "../grapheneos-17/bionic",
+      "commit": "e93ce48518dc0fba69878cb4ace37a3525862cbe",
+      "files": {
+        "libc/SECCOMP_ALLOWLIST_COMMON.TXT": "ff5f568282194d72f3bf94ff293fb35a8712926391b9c62f173bdb78d009cd92",
+        "libc/kernel/uapi/linux/landlock.h": "ad8e1c002fd3f6d7753c3b2e7233b0c5bb5170b54ecdd028183ea72b284db433"
+      },
+      "evidence": "Common seccomp allowlist exposes the three Landlock syscalls, with a comment about conditional Chrome GPU probing. Pinned bionic header has logging flags but no TSYNC define. This is not evidence of a TSYNC caller."
+    }
+  ],
+  "additional_local_history": "Queried existing local mainline 9e947d96915af63e28896caae85a81b74855621b Landlock TSYNC history; no additional mainline code was imported.",
+  "scope": "Full candidate patches; initial/final TSYNC source comparison; native credential hooks, caller prerequisites, commit/abort and native task-work/restart functions; current configuration and scoped Android searches. Removal commit a96c98dd7a30 examined only for the six exports, not its entire deletion.",
+  "security": "TSYNC intentionally replaces sibling Landlock domains and logging state irrespective of existing restrictions. A less restricted sibling can therefore relax another sibling Landlock configuration. Preserve this explicit opt-in ACK API for compatibility, with sibling threads sharing policy authority; do not describe it as monotonic per-thread confinement. The caller still must satisfy native no_new_privs or CAP_SYS_ADMIN checks, ruleset validation/merging and maximum layer rules. No-new-privs is propagated when set and never cleared. Different credentials are prepared from each sibling and only the Landlock blob is replaced; identical credentials may share the new credential reference. Native other-LSM checks and filesystem/network access checks remain. Allocation failure, signal cancellation and serialized retry were source-reviewed, not concurrency-tested.",
+  "uncertainty": "SDK runtime use of TSYNC is unconfirmed. Searches of pinned system, bionic, frameworks, packages and device trees located generic syscall exposure and generated/prebuilt names, but no definite TSYNC caller. This does not prove it is unnecessary: retain this configured generic userspace security interface conservatively, without adding a future platform. Broader per-application assumptions about thread isolation and runtime scheduling behavior remain unverified.",
+  "validation": {
+    "kernel": "Build 110 passed at b78140f3f22a through ARCH=x86_64 common/build_virt.sh, producing both kernel images, 100 common and 45 virtual-device modules. All 145 signatures and module flag/CRC tables passed; tampered signature control rejected. 659 protected exports verified. No emulator boot or Landlock runtime tests.",
+    "selftests": "Compile only; no test program executed, no live Landlock policy installed and no emulator boot.",
+    "command": "make -C tools/testing/selftests/landlock OUTPUT=/tmp/ack-landlock-review-tests KHDR_INCLUDES=-I/home/liamsmith/src/kernel/kernel_manifest-6.18/out/bazel/output_user_root/961789292c522f6ecd25a5ebbdd4dcbc/execroot/_main/bazel-out/k8-fastbuild/bin/common/kernel_x86_64_headers_unpacked/usr/include /tmp/ack-landlock-review-tests/base_test /tmp/ack-landlock-review-tests/tsync_test /tmp/ack-landlock-review-tests/audit_test",
+    "exit_code": 0,
+    "log": "  CC       base_test\n  CC       tsync_test\n  CC       audit_test\n",
+    "artifacts": {
+      "base_test": "48fd20d152986ff1bccd1c8e9c27618383fbcc6d0dc2cbbb7c642ea8b8c07144",
+      "tsync_test": "2733db4eb28315f84e19f393b192f6a09158cf79ed1d436e28ef047ff424ce51",
+      "audit_test": "2c049c484fbfd69e4bc6d9428df5a810bb7c01b6095534685247e732f83bf27c"
+    }
+  },
+  "remote_sources_used": []
+}

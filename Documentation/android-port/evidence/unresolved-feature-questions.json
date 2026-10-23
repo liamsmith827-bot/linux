@@ -334,5 +334,26 @@
     "result_commits": [
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ]
+  },
+  {
+    "topic": "SDK Landlock TSYNC consumers and per-thread isolation assumptions",
+    "status": "final conservative API-retention decision; runtime necessity and behavior unconfirmed",
+    "candidates": [
+      "b60006ea880b221844780438dd57c486553c2624",
+      "a8590b4853db8a49888d09e10901f531c08c227a",
+      "86224e0d58822d4f8537d1246226b9f35c569316",
+      "4a68bc1e70e8f1f0c8e3caf3fe91d722906344d6",
+      "19cd388eb41a709d1b2649be85c4c6fcf9a3bf93",
+      "d098f695a3d82b1401429dfff7e63e0b1482f0ec",
+      "b60246db58d03058f908276fb29b4e6b27f18f5d",
+      "785b29c5a2a9b3ac738a9e8965d5f92e426a6014",
+      "57b6c57060335682786f4d49645e1f77f6bbb962",
+      "1c5c687f589b9a8ab007e63e3c57c6f9471eb040"
+    ],
+    "evidence": "SDK runtime use of TSYNC is unconfirmed. Searches of pinned system, bionic, frameworks, packages and device trees located generic syscall exposure and generated/prebuilt names, but no definite TSYNC caller. This does not prove it is unnecessary: retain this configured generic userspace security interface conservatively, without adding a future platform. Broader per-application assumptions about thread isolation and runtime scheduling behavior remain unverified. TSYNC intentionally replaces sibling Landlock domains and logging state irrespective of existing restrictions. A less restricted sibling can therefore relax another sibling Landlock configuration. Preserve this explicit opt-in ACK API for compatibility, with sibling threads sharing policy authority; do not describe it as monotonic per-thread confinement. The caller still must satisfy native no_new_privs or CAP_SYS_ADMIN checks, ruleset validation/merging and maximum layer rules. No-new-privs is propagated when set and never cleared. Different credentials are prepared from each sibling and only the Landlock blob is replaced; identical credentials may share the new credential reference. Native other-LSM checks and filesystem/network access checks remain. Allocation failure, signal cancellation and serialized retry were source-reviewed, not concurrency-tested.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "b78140f3f22a4da3a64d9a7805659063864fd758"
+    ]
   }
 ]

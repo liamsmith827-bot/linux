@@ -4929,3 +4929,43 @@ These are host shims, not live sysfs, suspend, notifications or concurrency.
 Build108 verifies the first fix; build109 verifies both corrections and all
 145 signed common/virtual-device modules. No remote
 resources were accessed, including links embedded in historical commit messages.
+
+# Landlock thread synchronization and obsolete sdcardfs exports
+
+`evidence/landlock-and-sdcardfs-review.json` resolves the ten-commit TSYNC
+series and two obsolete sdcardfs export patches. The configured Landlock ABI 8
+and TSYNC implementation are retained, including queue-entry cleanup,
+serialization and interrupted-operation fixes. The caller retains native
+no_new_privs/CAP_SYS_ADMIN prerequisites, ruleset validation and layer limits.
+No-new-privs propagates to sibling threads when set and is never cleared.
+Different sibling credentials are cloned individually, replacing their Landlock
+blob; identical credentials can share the new reference. Native filesystem,
+network, task and credential hooks and other LSM state remain intact.
+
+This API has a material security tradeoff: its explicit contract replaces
+sibling Landlock domains and logging configurations regardless of their prior
+restrictions. A less restricted sibling can relax another sibling's Landlock
+configuration. Retaining ACK compatibility therefore gives sibling threads
+shared policy authority; it does not preserve an assumption of irreversible,
+independent Landlock confinement within a process. The logging-only fd=-1 form
+also propagates the caller's Landlock configuration. This is an added opt-in
+interface, not removal of a native access-control check or reversal of an LTS
+fix. Allocation failure, task-reference lifetime, interruption cancellation,
+completion barriers and trylock/restart handling were examined at source level;
+no scheduler/concurrency or application-isolation runtime result is claimed.
+
+The pinned bionic seccomp allowlist exposes the Landlock syscalls and mentions
+conditional Chrome GPU probing. Its header lacks TSYNC, and scoped searches did
+not establish an SDK TSYNC caller. That uncertainty is retained explicitly;
+the current generic userspace interface is conservatively kept under the
+compatibility priority rather than treating search absence as proof of no need.
+The matching API documentation and tests are applied onto LTS without reverting
+its newer test fixes. Three affected test programs compile against exported
+port headers; none was run, and upstream coverage claims are not port results.
+
+For sdcardfs, positive ACK removal history a96c98dd7a30 supersedes the six
+historical module exports and the security_path_chown export-license change.
+All six exports are absent at both pinned tips and in the port; native functions
+and security dispatch remain. The rest of that large removal is not finalized
+by this scoped review. All evidence is local; embedded source links were not
+accessed.
