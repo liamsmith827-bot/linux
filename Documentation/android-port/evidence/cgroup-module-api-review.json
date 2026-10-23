@@ -1,0 +1,233 @@
+{
+  "source_head": "97a12e6cd2f30ae23c066542dba341deff8aa734",
+  "records": [
+    {
+      "commit": "7333bd73c055e8ebe9862316eaaff691e0eace27",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Both added exports retain cgroup_taskset_first/next for the generic Android cgroup attach hooks, which hand modules a cgroup_taskset. Native iterator functions are byte-identical to LTS, including current subsystem-configuration guard and destination css choice. Taskset iteration uses the migration caller serialization and borrowed task/css pointers, not an independent refcounted snapshot. This is source-level GPL module customization, not historical binary KMI.",
+      "evidence": [
+        "evidence/cgroup-module-api-review.json",
+        "evidence/cgroup-free-hook-check.json",
+        "SECURITY.md: Cgroup module interfaces and teardown ordering"
+      ],
+      "patch_sha256": "b004f5df9bf75f21bba997b0d25af25d1eb456c17617da9d070213e0cc018839"
+    },
+    {
+      "commit": "14d550944977b657e35b568537d17df57b21df79",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain all three GPL css_task_iter_start/next/end exports as a complete module iteration interface. Whole native functions match LTS. The iterator holds current task and css-set references under native css_set_lock; next releases the previous task, end is required even after early termination. A module must hold any separately retained task reference and valid starting CSS lifetime. Native synchronization remains, and this does not expose iteration as an unprivileged syscall.",
+      "evidence": [
+        "evidence/cgroup-module-api-review.json",
+        "evidence/cgroup-free-hook-check.json",
+        "SECURITY.md: Cgroup module interfaces and teardown ordering"
+      ],
+      "patch_sha256": "94005447a2dcd792d885a2af5e3b5b6a28cbc97af70c7cd288480027b7a53fef"
+    },
+    {
+      "commit": "d855180e1dbbeff3b7d889eddad857bb95c8c13f",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain GPL cgroup_add_dfl_cftypes for generic Android vendor controller extensions on cgroup v2. Function and registration implementation are native LTS, including disabled-subsystem handling, default-only flag, mutex serialization and error cleanup. No new cgroup file is instantiated merely by exporting the function. Modules adding controls must implement appropriate permissions/LSM policy and preserve callback/descriptor lifetime until removal; default cftype modes do not make arbitrary new module handlers safe.",
+      "evidence": [
+        "evidence/cgroup-module-api-review.json",
+        "evidence/cgroup-free-hook-check.json",
+        "SECURITY.md: Cgroup module interfaces and teardown ordering"
+      ],
+      "patch_sha256": "e149ddd230870c3bafd870ad726a4de4177ce6345e9da42187a2211a3098c87a"
+    },
+    {
+      "commit": "de6da281a2faf66f37fc5c5477002fc45b9c6bca",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain GPL cgroup_rm_cftypes as the teardown counterpart to exported registration helpers. Native removal body and locked removal path match LTS: unregister cftypes and remove kernfs files before callbacks/module storage can disappear. The module must unregister successfully before unload and obey registration serialization; the export alone does not automatically pin module callbacks or guarantee arbitrary module unload correctness. CONFIG_MODULE_UNLOAD=y makes this paired interface relevant to the selected configuration.",
+      "evidence": [
+        "evidence/cgroup-module-api-review.json",
+        "evidence/cgroup-free-hook-check.json",
+        "SECURITY.md: Cgroup module interfaces and teardown ordering"
+      ],
+      "patch_sha256": "67413468cb19c2a9a6a74cf192296831199d08a0ed49740dcfc8c25f5585c31a"
+    },
+    {
+      "commit": "1d899b8bc9f76df897ac841d17e7c97da1ecf6d9",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Complete patch adds only cgroup_add_legacy_cftypes export despite the message also mentioning a helper. Retain that GPL source API alongside v2 addition and removal, with whole native implementation and __CFTYPE_NOT_ON_DFL preserved. Pinned Android cpu/cpuset profiles positively use legacy paths; exact external registration consumer remains unconfirmed. No historical ABI padding or new legacy hierarchy is added.",
+      "evidence": [
+        "evidence/cgroup-module-api-review.json",
+        "evidence/cgroup-free-hook-check.json",
+        "SECURITY.md: Cgroup module interfaces and teardown ordering"
+      ],
+      "patch_sha256": "a19b5524bfa22612c2af1047c590ec88a3857d39253259797738510dd561b6f7"
+    },
+    {
+      "commit": "fec071c24f0608cd614124766c6166a02ce7479b",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "97a12e6cd2f30ae23c066542dba341deff8aa734"
+      ],
+      "rationale": "Read all three changed paths and retain four generic CPU-controller lifecycle notifications plus GPL cpu_cgrp_subsys export. sched_move_task notification precedes task_rq_lock and sees the pre-update scheduler group; native scoped sched_change guards, SCX move and conditional reschedule stay intact. Early allocation receives NULL parent for root, ordinary allocation is after successful sched_create_group and cannot replace errors. Adapt 97a12e6cd2f3: notify css_free BEFORE sched_unregister_group queues the final RCU free, preventing an already-reclaimed CSS from reaching a callback. Original post-unregister placement had no surrounding RCU read lock in css_free_rwork_fn; the tracepoint own later protection cannot retroactively protect it. This deliberately changes notification ordering relative to native fair/RT unregister; callbacks must finish vendor cleanup before teardown, accept already-released CSS, and never retain it or resurrect its dead refcount. Whole native teardown is preserved. Exact vendor callback policies remain unverified.",
+      "evidence": [
+        "evidence/cgroup-module-api-review.json",
+        "evidence/cgroup-free-hook-check.json",
+        "SECURITY.md: Cgroup module interfaces and teardown ordering"
+      ],
+      "patch_sha256": "07a7de4eb0d2c6349dac8ec593a0bed66df89f1c113e4207ba5e3ac2bbe8e075"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/cgroup/cgroup.c",
+      "function": "cgroup_taskset_first",
+      "sha256": "cfed8c3b2965dfc77574fda7d791a951622bd7934c71bf85fa16fd38bb79a919",
+      "relationship": "whole native function after precisely listed lifecycle notifications, otherwise exact"
+    },
+    {
+      "path": "kernel/cgroup/cgroup.c",
+      "function": "cgroup_taskset_next",
+      "sha256": "e36cb63761f07c82e7b20ad14b34efc127e1259c729c692825c41e0becba3151",
+      "relationship": "whole native function after precisely listed lifecycle notifications, otherwise exact"
+    },
+    {
+      "path": "kernel/cgroup/cgroup.c",
+      "function": "css_task_iter_start",
+      "sha256": "d90bd5d97326a541242b6ef8c251aee4c04bdbd84ed2c3bacca0d3d30590103c",
+      "relationship": "whole native function after precisely listed lifecycle notifications, otherwise exact"
+    },
+    {
+      "path": "kernel/cgroup/cgroup.c",
+      "function": "css_task_iter_next",
+      "sha256": "523b4494e03733497c5c0561332bfcbd8e70dd8becddd53855b1f058002c2f2f",
+      "relationship": "whole native function after precisely listed lifecycle notifications, otherwise exact"
+    },
+    {
+      "path": "kernel/cgroup/cgroup.c",
+      "function": "css_task_iter_end",
+      "sha256": "973792fd38cfff65b7f692663ecc70260c50594b78c21d6f597f3be3828ddb6f",
+      "relationship": "whole native function after precisely listed lifecycle notifications, otherwise exact"
+    },
+    {
+      "path": "kernel/cgroup/cgroup.c",
+      "function": "cgroup_add_dfl_cftypes",
+      "sha256": "35cb35c025fc9ba3253191aff3bf949a9268d74aa8009f839ab90d3254e550f7",
+      "relationship": "whole native function after precisely listed lifecycle notifications, otherwise exact"
+    },
+    {
+      "path": "kernel/cgroup/cgroup.c",
+      "function": "cgroup_add_legacy_cftypes",
+      "sha256": "87ae1ab1e29654435e1a184af7ea0bd0d08137b30fd2f74626eaf746abb49b58",
+      "relationship": "whole native function after precisely listed lifecycle notifications, otherwise exact"
+    },
+    {
+      "path": "kernel/cgroup/cgroup.c",
+      "function": "cgroup_rm_cftypes",
+      "sha256": "117079236ff08d42d605fdc544795ab200bec394c98fc8912d2012627170d8f1",
+      "relationship": "whole native function after precisely listed lifecycle notifications, otherwise exact"
+    },
+    {
+      "path": "kernel/cgroup/cgroup.c",
+      "function": "cgroup_add_cftypes",
+      "sha256": "e1fc72a968561d6316f1fa48acad486ce06a8574ad812effec3b9408de988cfb",
+      "relationship": "whole native function after precisely listed lifecycle notifications, otherwise exact"
+    },
+    {
+      "path": "kernel/cgroup/cgroup.c",
+      "function": "cgroup_rm_cftypes_locked",
+      "sha256": "f60fd8b142fc5ec452d2ffeb57f932c64d9b53fb15c4f48c1be62f1e4d6cbe23",
+      "relationship": "whole native function after precisely listed lifecycle notifications, otherwise exact"
+    },
+    {
+      "path": "kernel/cgroup/cgroup.c",
+      "function": "cgroup_add_file",
+      "sha256": "4bf31b9c9683823565c704076f122ec621fca8e9af9c896692b612ceb569bd03",
+      "relationship": "whole native function after precisely listed lifecycle notifications, otherwise exact"
+    },
+    {
+      "path": "kernel/cgroup/cgroup.c",
+      "function": "cgroup_addrm_files",
+      "sha256": "5e55ec81abffde673205c431509d81ffa7da059bc5e9586886cb54d8215b7209",
+      "relationship": "whole native function after precisely listed lifecycle notifications, otherwise exact"
+    },
+    {
+      "path": "kernel/cgroup/cgroup.c",
+      "function": "cgroup_file_write",
+      "sha256": "5ad59e3f16bc6e6bace0bf3535b0c03ca5d0b98927cd6297493583eb61574994",
+      "relationship": "whole native function after precisely listed lifecycle notifications, otherwise exact"
+    },
+    {
+      "path": "kernel/cgroup/cgroup.c",
+      "function": "css_free_rwork_fn",
+      "sha256": "a71e1efb675f26d172eee5c28d7e1200aca4b4742fee7fab9f76e34ed155f389",
+      "relationship": "whole native function after precisely listed lifecycle notifications, otherwise exact"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "sched_move_task",
+      "sha256": "faa18e3e5fd19a69478c4f04db5aeca0488296e27003815ce46e8d02dbf02709",
+      "relationship": "whole native function after precisely listed lifecycle notifications, otherwise exact"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "cpu_cgroup_css_alloc",
+      "sha256": "461c56648f4f6c47068099749ca7c5283b9e4a94b17fad86afd97b57630c1bb8",
+      "relationship": "whole native function after precisely listed lifecycle notifications, otherwise exact"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "cpu_cgroup_css_free",
+      "sha256": "26b994f311cf37d2b3a9955f34f2a5a4cdce6a393855217822ab3099f9522dff",
+      "relationship": "whole native function after precisely listed lifecycle notifications, otherwise exact"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "sched_free_group",
+      "sha256": "eeb7fa69f909b0b678e02760dcf2135674913119be2835fcae73db9504b41f4c",
+      "relationship": "whole native function after precisely listed lifecycle notifications, otherwise exact"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "sched_free_group_rcu",
+      "sha256": "980dc6941941f4ce83d12f56e54e0fd5e42cca1423bdb69741b1ec391a637fa9",
+      "relationship": "whole native function after precisely listed lifecycle notifications, otherwise exact"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "sched_unregister_group",
+      "sha256": "6adf25ae0b3752763e4b859546def7ef77472f4d5494f59aaa85637c4bdb2e3d",
+      "relationship": "whole native function after precisely listed lifecycle notifications, otherwise exact"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "sched_create_group",
+      "sha256": "fbc7a3e01acd8f6cff747d51d25446b54108efd6d39c3f42748c934fcf1a9c38",
+      "relationship": "whole native function after precisely listed lifecycle notifications, otherwise exact"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "cpu_cgroup_css_released",
+      "sha256": "f2ab5c51570fc819a92f811c410cc746fe6c1d3c69d3d91a855a53cb97d66532",
+      "relationship": "whole native function after precisely listed lifecycle notifications, otherwise exact"
+    }
+  ],
+  "security": "These exports retain native core implementations and permit trusted vendor module source customization. Registration APIs require descriptor/callback lifetime through successful removal and do not automatically keep arbitrary modules alive. Hook ordering fix preserves native RCU teardown and prevents notification after possible reclamation; it deliberately changes post-unregister observation to pre-unregister cleanup. No callback may acquire a new reference to the already-dead CSS.",
+  "uncertainty": "No exact callback/registration consumer found in scoped manifest/common-modules or GrapheneOS system/core/frameworks/native search. This is not evidence of universal absence; retain generic Android vendor source interfaces conservatively under the compatibility priority. No actual module control registration, unload race, runtime migration, or boot verified.",
+  "validation": "Whole native-body comparisons; 16 extracted-free-function scheduling models have zero invalid reads, versus seven for old code. Reclamation is modeled, not a reproduced kernel RCU race. Full build needed for 97a12e6cd2f3.",
+  "remote_sources_used": [],
+  "subsequent_build_verification": {
+    "run": "sdk-build-attempt-134",
+    "source": "5ef031bd0c535c61b84f5d00a453f0fb7819e87e",
+    "result": "Full existing emulator workflow succeeded. 100 common and 45 virtual-device modules verified against exact build certificate, tampered payload rejected; 659 protected exports and all 145 module flag/CRC tables checked. Kernel image and both module distributions generated; no runtime verification."
+  }
+}

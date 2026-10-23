@@ -935,8 +935,8 @@ cache attributes and failure cleanup remain in place. Build verification for
 this source change is recorded as build 31: the original workflow succeeded,
 all 145 module signatures verified, and the tampered-payload control was rejected.
 
-The complete retained hook registry has 766 declarations and 766 corresponding
-exports, including the separate Rust Binder registry and LMK trace event.
+At its recorded source checkpoint, the retained hook registry had 766 declarations
+and 766 corresponding exports, including the separate Rust Binder registry and LMK trace event.
 `evidence/vendor-hook-registry-review.json` records declarations, exports and
 literal call sites. Rust's generated wrappers and the externally triggered LMK
 event explain four nonliteral invocation paths. The remaining two scheduler
@@ -945,6 +945,10 @@ final ACK; their source declarations remain without inventing new scheduler
 behavior. This is an interface and registry review, not final approval of each
 call site's memory lifetime or locking. Those implementation candidates are
 reviewed independently. No userspace hook-registration interface is added.
+The later topology-scope review additionally omits four architecture-only literal
+call sites (frequency scale, AMU FIE, topology completion and thermal statistics),
+while retaining their shared declarations/exports. See that review for the exact
+source pin and architecture evidence; the earlier literal-call count is historical.
 
 ## Module build and linker integration review
 
@@ -5841,3 +5845,200 @@ The generated SDK configuration selects schedutil. Exact SDK callback consumers
 and their policies remain unconfirmed; the scoped negative searches are not
 omission proof. No physical CPU power savings, runtime correctness or thermal
 behavior is verified by this source review. No remote resources were accessed.
+
+# Architecture topology scope and EAS configuration
+
+`evidence/topology-scope-review.json` resolves 24 candidates, including old maximum
+capacity state, architecture callbacks, exports, removals/reintroductions and the
+current EAS eligibility hook. `2ed111267d9e` restores drivers/base/arch_topology.c
+and include/linux/arch_topology.h exactly to pinned LTS. GENERIC_ARCH_TOPOLOGY is a
+hidden option selected only by ARM, ARM64, RISC-V and PA-RISC; x86 cannot select its
+object. Generated SDK configuration confirms it is absent. Native x86 topology
+and APERF/MPERF remain exact LTS. This is positive architecture/build evidence,
+not an assumption that unlocated consumers do not exist.
+
+Omit the non-x86 call sites, additional per-CPU hw_pressure export and
+initialization-complete state/declaration. None was a linkable/executable SDK
+facility. Shared Android trace declarations and GPL registry entries remain for
+source-module registration compatibility. Their actual consumers remain
+unconfirmed; these call sites are not claimed to emit SDK events. Earlier final
+historical-capacity decisions are annotated with this narrower implementation
+scope. Native hardware-pressure calculations, export and local-variable fix are
+preserved. Old ACK root-domain max-capacity machinery was explicitly reverted and
+is absent from both tips; it is not recreated.
+
+The EAS eligibility hook is architecture-independent Android configuration support,
+retained without enabling ENERGY_MODEL for SDK. Its final placement returns true
+before all native eligibility checks, including SMT exclusion, frequency invariance
+and cpufreq readiness. A trusted vendor must supply a coherent policy; the hook
+is not limited to the historical asymmetric-capacity exception. Default false
+continues native checks, and the whole domain-building body is native. No EAS,
+thermal, AMU or future-platform runtime correctness is claimed. Only local pinned
+sources were used; commit-message URLs were not accessed.
+
+# Scheduler domain merges and inactive compatibility controls
+
+`evidence/scheduler-topology-merges-review.json` resolves five ordinary candidates
+and five merges, examining every unique hunk. Native cpuset locking, synchronous
+hotplug handling and deferred energy-domain rebuild work remain; old CPU Pause
+resume shortcuts and approximate root-domain maximum state are not restored.
+Generic GPL rebuild_sched_domains remains a sleeping, lock-constrained kernel
+source API. Existing LTS mutex wrappers coexist with the LOCKDEP-only export.
+
+GrapheneOS init positively writes sched_child_runs_first. Retain its proc scalar,
+0644 handler and debug reporting, but it has no scheduling consumer and the whole
+fork-placement function is native. Writing it does not change child/parent order.
+Similarly, the sched_getaffinity hook declaration/export survives in final ACK,
+but the invocation was removed with a later syscall split. Preserve that final
+registry interface and native query behavior, consistent with the earlier registry
+review. The intent behind non-restoration is unresolved; no consumer-absence claim
+or runtime notification guarantee is made. The large later split merge is still
+provisional; this batch examines only its affinity-removal region as supporting
+history, not all its unique changes.
+
+Merge resolutions retain current callbacks with native diagnostics, current wake
+flags, native energy/hardware-pressure logic and correctly guarded bridge exports.
+Obsolete nice-range bypass, old signatures, duplicated unlock and historical
+vendor-array size are not resurrected. Current CPU-selection overrides still
+require trusted callbacks to choose valid CPUs and preserve affinity/placement
+obligations; this review does not prove arbitrary vendor policy safe. No remote
+resource, runtime scheduler test, emulator boot or Android OS build was used.
+
+# Cpuset historical reverts and native serialization
+
+`evidence/cpuset-history-review.json` resolves nine historical candidates using
+complete patches, current native function/file comparisons and final ACK removal
+checks. Preserve current LTS deadline/cpuset serialization, referenced task lookup,
+active/possible CPU handling and partition state. Do not replay the old removal
+of deadline accounting safeguards based on its claim that they were irrelevant to
+Android. Current locks and task-reference guards remain native; no sleeping call
+is moved into the old RCU-only syscall lookup.
+
+The requested-cpumask scheme and its empty-buffer fix were explicitly removed from
+ACK. Neither tip contains its field or allocation path. Current LTS parsing and
+v1/v2 behavior are retained without asserting equivalence of every old ABI corner
+case. Likewise, current native cpuset_mutex does not justify replaying a 2020
+semaphore-to-mutex patch: upstream lock hierarchy and serialization evolved after
+both historical conversions. The native non-root active-CPU helper is retained;
+top-cpuset/fallback paths deliberately permit possible offline CPUs, so no blanket
+active-only guarantee is claimed. No runtime hotplug/concurrency or latency test,
+remote resource, Android OS build or emulator boot was used.
+
+# Cgroup callback semantics and migration retries
+
+`evidence/cgroup-hooks-review.json` resolves 16 candidates. Retain final generic
+Android notifications and explicit policy controls, including current v1/v2 task
+lookup interfaces. Positive Android process-group configuration uses cpu/cpuset
+controllers; exact vendor callback policies remain unresolved and are not presumed
+unnecessary. Removed old requested-mask/admission overrides remain removed.
+
+The kernel-thread hook deliberately permits a trusted callback to override
+no_cgroup_migration/PF_NO_SETAFFINITY rejection for a selected PF_KTHREAD task.
+The existing credential checks and native controller checks still run, but a bad callback can strand
+kernel work or undermine scheduling availability. `f170aa56e193` resets this
+permission for each lookup retry. The extracted 4,096-case model has zero current
+failures versus 144 stale acceptances before the fix; forced leader changes are
+not a reproduced kernel race or exploit. `c3756f712d3d` keeps native __acquires
+attached to the extended prototype; the ACK semicolon detached it. Sparse was not
+available and was not run. `876263e2b929` removes a duplicate trace include.
+
+The fork hook may skip the parent-affinity setter and must preserve valid child
+placement; it does not change memory-node inheritance or the CLONE_INTO_CGROUP
+path. Notifications retain native return paths and borrowed lifetimes. The v1
+attach-result event reports failed attach attempts too, but is not reached after
+earlier credential denial. General controller attach notification precedes each
+controller attach callback; CPU attach notification follows scheduler moves.
+CPU-online notification executes under current function-scope uclamp mutex and RCU
+guards when enabled, unlike the original historical after-unlock site. Callbacks
+must not sleep or re-acquire that mutex. Cpuset-online notification is after its
+full unlock and omits the root early-return path. The separate Android CAP_SYS_NICE exception enables cross-UID migration by
+system_server: pinned ZygoteInit grants that capability, libprocessgroup opens or
+caches cgroup task files, and the local system_server SELinux policy permits it.
+Its historic current-only capability check weakens upstream `1756d7994ad8`, which
+uses open-time credentials to prevent a less-privileged opener from recruiting a
+privileged writer. `0b81c1a66cdf` requires both file_ns_capable and ns_capable in the
+target task user namespace for this exception. Native root/owner/saved-UID opener
+rules are unchanged. Existing ACK current-writer authority is also required;
+privileged-opener/unprivileged-writer handoff gains no new capability exception.
+A handoff relying solely on newly privileged writer credentials now fails by
+design. This is a justified compatibility restriction to preserve native security
+intent, not an assertion that cgroup-v1 authorization is identical to LTS. Normal
+same-credential authorized Android operations remain permitted by the model.
+`evidence/cgroup-open-credentials-check.json` reports 12,288 extracted-function
+cases with no failures; the previous code attaches in 432 modeled denied-opener
+cases. LSMs, actual fd handoff, and runtime migration were not executed.
+No runtime policy, migration,
+latency or emulator boot is verified. No remote source was accessed.
+
+# Cgroup module interfaces and teardown ordering
+
+`evidence/cgroup-module-api-review.json` resolves six candidates. Retain GPL
+exports for taskset/CSS iteration and default/legacy control-file registration
+with matching removal. Their implementations remain native LTS. Iterators require
+paired end and proper references for retained tasks; cftype arrays and callbacks
+must remain valid until successful unregister before module unload. Exports do
+not automatically create files, grant userspace permissions, or pin arbitrary
+module callback lifetimes. New module controls need their own access policy.
+Exact vendor consumers are unconfirmed, so the generic Android source interfaces
+are conservatively retained; absence in a scoped search is not omission evidence.
+
+Retain four CPU-controller lifecycle hooks and cpu_cgrp_subsys export. Task-move
+notification runs before the native rq lock/update; root allocation receives a
+NULL parent; ordinary allocation occurs only after successful native allocation.
+`97a12e6cd2f3` moves the CSS-free notification before sched_unregister_group. The
+old order queued sched_free_group_rcu first, permitting a grace period and free
+before the trace callback entered its own RCU protection. css_free_rwork_fn does
+not hold an enclosing read lock. Native fair/RT unregister and final deferred
+free are unchanged. The callback now observes pre-unregister scheduler state and
+must complete vendor cleanup before teardown. This changed order is necessary
+for object lifetime safety; the dead CSS must not be retained or resurrected.
+Sixteen extracted-function scheduling models pass; the previous code has seven
+modeled reads after reclamation. This is not a real RCU stress test or exploit.
+Build 134 subsequently succeeded with this correction: kernel image and both module
+distributions generated; all 145 module signatures and CRC/flag tables verified.
+No remote was accessed.
+
+# Affinity callbacks and native constraints
+
+`evidence/affinity-hooks-review.json` resolves eight candidates. Keep generic
+Android affinity policy hooks with matching source declarations/exports, including
+the restored sched_setaffinity result event and the actual sca_migrate_same hook
+name. Pinned Bionic pthread_setaffinity_np uses the public syscall. Exact vendor
+registrations remain unconfirmed; source interfaces are retained conservatively.
+
+`5ef031bd0c53` requires replacement destination CPUs to belong to both the native
+valid mask and requested mask, after bounds validation. This restores the native
+selector invariant; the callback cannot make an empty/invalid intersection valid
+by returning an arbitrary in-range CPU. Kernel/migration-disabled tasks still use
+the native online mask; others use active CPUs. Invalid output returns EINVAL
+before mask update/move with native unlock. Callbacks must not reject required
+migrate-enable transitions; the prior out-of-range rejection already relied on
+this contract. The fix does not guarantee safe arbitrary vendor policy.
+
+The same commit moves early affinity suppression after native LSM authorization.
+Ownership and capability checks also remain before it. A policy can suppress an
+authorized affinity change and return success, but cannot skip the LSM check or
+receive an LSM-denied request at this site. The later result hook can report a
+status differing from the operation outcome without rolling it back. The context
+hook may intentionally ignore remembered userspace affinity for kernel-origin
+changes and can mutate flags/pointers; trusted callbacks must preserve storage,
+cpuset constraints, and locking rules. The native __sched_setaffinity body,
+including cpuset/deadline checks and concurrent-cpuset-update handling, is intact.
+
+The is_cpu_allowed hook only restricts normal placement: migration-disabled and
+per-CPU kernel paths keep their native exceptions. sched_ext remote checks keep
+native task-possible/migration-disabled/offline tests and existing proxy guards.
+Its dispatch veto is reached after local/previous/global queued-work acceptance,
+so it is not an absolute CPU-pause control. Its idle veto now clears SMT as well
+as per-CPU eligibility, including idle-to-idle changes; otherwise stale SMT bits
+could continue advertising a vetoed core. Native idle-mask races/advisory nature
+remain. NULL task arguments are valid for idle/dispatch callbacks.
+
+Host models cover 36,288 destination, 768 authorization, and 8,192 idle-mask cases
+with zero current failures; old controls fail 14,688, 108, and 768 respectively.
+These are extracted-code/shim checks, not actual migration, LSM execution, CPU
+hotplug or emulator boot. The initial authorization harness name collided with
+libc; the final harness uses a private name and all reported results use it.
+Build 134 subsequently passed with the complete kernel/common-module/virtual-device
+workflow; all 145 module signatures and CRC/flag tables verified. No additional
+remote source was accessed.

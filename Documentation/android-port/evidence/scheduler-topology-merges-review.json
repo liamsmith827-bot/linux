@@ -1,0 +1,221 @@
+{
+  "source_head": "2ed111267d9e5725b076fe4566ee2fed53b4b754",
+  "records": [
+    {
+      "commit": "1d3a64fbd214f26d8776433e87de6ff7b8265b4a",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "All three paths read with full inverse ba399ba6b24f. Final ACK/port contain neither resume_cpus nor public cpuset_hotplug_workfn; do not restore old CPU Pause active-mask mutation before cpus_write_lock. Current whole native cpuset_handle_hotplug is synchronous under its documented CPU-hotplug locking and is retained; that evolved implementation is not this old resume shortcut.",
+      "evidence": [
+        "evidence/scheduler-topology-merges-review.json",
+        "SECURITY.md: Scheduler domain merges and inactive compatibility controls"
+      ],
+      "patch_sha256": "ba2ef3ba4633f08fb183ce3dea4d369a21613c3fd85beffe83a79623ec111a42"
+    },
+    {
+      "commit": "ba399ba6b24f6026e2e52f5422219461d05f8a18",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "All three inverse paths read. Removed CPU Pause resume shortcut and external cpuset worker entry remain absent. Current native synchronous cpuset_handle_hotplug, native rebuild wrapper and CPU locking remain, rather than reconstructing the historical asynchronous worker merely to replay this removal.",
+      "evidence": [
+        "evidence/scheduler-topology-merges-review.json",
+        "SECURITY.md: Scheduler domain merges and inactive compatibility controls"
+      ],
+      "patch_sha256": "8f407bdaa334fce9cb621c53b0fc8e7e0a509b7fa1ef8ab6c1e37daf26de1c88"
+    },
+    {
+      "commit": "20ba031cf861da67cc979257802c7ef7de0f4ad1",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Single export addition read. Keep GPL rebuild_sched_domains for generic Android vendor scheduler source control; whole body is native, including cpus_read_lock and native cpuset locking helper. Sleeping API must not be called under incompatible rq/CPU-write locks. It has no new userspace entry point. Original late energy-model motivation does not limit generic domain rebuilding to future hardware; actual SDK module registration/caller remains unconfirmed.",
+      "evidence": [
+        "evidence/scheduler-topology-merges-review.json",
+        "SECURITY.md: Scheduler domain merges and inactive compatibility controls"
+      ],
+      "patch_sha256": "a44cb507fef6be23f8112c05b1ae0b2272dcb3323c319e8b856b01c86dfb6fd6"
+    },
+    {
+      "commit": "2957198485d62fe4ef6dabcb10ee537cbde284d4",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three paths read. Retain sched_child_runs_first scalar, 0644 proc_dointvec sysctl, declaration and debug output as Android userspace compatibility. Positive pinned GrapheneOS system/core/rootdir/init.rc writes zero to this exact proc path. Full task_fork_fair is native and no scheduling consumer of this scalar exists in current source: the control is storage/reporting only, not child-first execution. Original inherited comment describes obsolete semantics; rationale does not rely on commit-message CTS claims. Values have no scheduler effect; no old fork ordering is restored.",
+      "evidence": [
+        "evidence/scheduler-topology-merges-review.json",
+        "SECURITY.md: Scheduler domain merges and inactive compatibility controls"
+      ],
+      "patch_sha256": "27cd62804fcf8d978bff10c9003b8c5dd12603a0d28635581ca3561bd1335e24"
+    },
+    {
+      "commit": "4c58a1addcb8943148556f00fd40d1cbec1ddbb2",
+      "disposition": "partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three paths read. Preserve final ACK shared restricted sched_getaffinity declaration and GPL export. The call in core.c was removed with the syscall split in merge 1dfbe413d21f and is absent from final ACK syscalls.c; current whole sched_getaffinity equals LTS. Keep that final effective API/behavior, as the prior registry review specified, rather than invent a callback invocation. Historical intent behind non-restoration is unresolved; no claim that all possible consumers are unnecessary. A module can register, but this kernel does not issue affinity-query notifications from that site.",
+      "evidence": [
+        "evidence/scheduler-topology-merges-review.json",
+        "SECURITY.md: Scheduler domain merges and inactive compatibility controls"
+      ],
+      "patch_sha256": "39ae284fa719fc653534c6cbff2dc70974768a63a066ff990876d15cbbe50564"
+    },
+    {
+      "commit": "49b98891d4ff9517432f035ab0743ce716b57076",
+      "disposition": "merge-resolution-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Both unique resolution hunks read. Keep native bsearch include plus Android scheduler trace include. Preserve native br_mdb_full GPL export under CONFIG_BRIDGE, including the native closing endif; final whole bridge trace block equals LTS. Do not propagate the historical unconditional bridge-export/endif deletion. Other network exports have separate decisions.",
+      "evidence": [
+        "evidence/scheduler-topology-merges-review.json",
+        "SECURITY.md: Scheduler domain merges and inactive compatibility controls"
+      ],
+      "patch_sha256": "662bf630ee7f72e0a644f2be9c60c5e32b107c927ab88f1ac6d8de1f4428aae9"
+    },
+    {
+      "commit": "de9864839ce9ff48e6da84d555c512aadc276fab",
+      "disposition": "merge-resolution-partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "8771c5fb4ae85a547ef9ccb03a1f5210c7de997c"
+      ],
+      "rationale": "All unique hunks in both paths read. Retain native compute-energy trace export and Android sched_switch export; obsolete check_preempt_curr export is replaced by current wakeup_preempt. Historical unlocked nice allowed=false is superseded by locked-veto plus reintroduced two-argument hook and 8771c5fb range guard. Native scoped-lock affinity query survives later syscall split, while its historical callback invocation is absent final ACK (4c58 decision). Keep native evolved EAS builder/eligibility logic and separately retained current early override; do not restore obsolete EM complexity limit, duplicated unlock or removed structure fields.",
+      "evidence": [
+        "evidence/scheduler-topology-merges-review.json",
+        "SECURITY.md: Scheduler domain merges and inactive compatibility controls"
+      ],
+      "patch_sha256": "de9676523a24dea55845fc89d491f3874ceb33722c91d18ccbc6c67f2dd4c2af"
+    },
+    {
+      "commit": "5191af5a2ba3d2c94475e09993ac54205a095e26",
+      "disposition": "merge-resolution-partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "2ed111267d9e5725b076fe4566ee2fed53b4b754"
+      ],
+      "rationale": "All seven unique hunks across four paths read. Use native hw_pressure naming/clock accounting and later local pressure rename; omit non-x86 pressure export/emission per topology-scope review. Preserve initialized -1 CPU-overutilized callback before native energy-enabled/util-fits checks, current task-selection hooks and native is_rd_overutilized flow. Historical find-energy sync signature is gone; current fair selector equals native after current vendor-selection additions. Busiest-group callback is separately retained at its final renamed site, not the old dropped EAS-specific position. Keep native domain debug text without obsolete max-capacity field plus build-domain notification.",
+      "evidence": [
+        "evidence/scheduler-topology-merges-review.json",
+        "SECURITY.md: Scheduler domain merges and inactive compatibility controls"
+      ],
+      "patch_sha256": "131b89ab4cae72675dcb533db59df319cba3372b8bb142f4c237df8cebe0ccfc"
+    },
+    {
+      "commit": "0c964b2bcfb1d35193a7ea14e3a5cd67637d7fa2",
+      "disposition": "merge-resolution-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Both unique hunks read. Keep Android storage-only sched_child_runs_first interface and native __read_mostly sched_migration_cost; do not restore obsolete const_debug annotation. Preserve native sched_domains_mutex_lock/unlock wrappers alongside conditional GPL mutex export under CONFIG_LOCKDEP. SDK LOCKDEP=n means that export is not present in this artifact; config/source compatibility is retained without enabling lockdep.",
+      "evidence": [
+        "evidence/scheduler-topology-merges-review.json",
+        "SECURITY.md: Scheduler domain merges and inactive compatibility controls"
+      ],
+      "patch_sha256": "e5b58c9456acac58de8a79af3fca8036d0286403b43a22e5c085392d87eaf64f"
+    },
+    {
+      "commit": "0dd08d580104ee2f0606890820dd879bb80e3d96",
+      "disposition": "merge-resolution-partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All eight unique hunks across six paths read, including non-conflict rt.c adjustment. Preserve wake/show hooks alongside native WF_TTWU and stop/SCX diagnostics; fair/RT callbacks receive current low-nibble domain flags, with initialized -1 override and trusted CPU-selection obligations. Native migrate-disable rq fields and SMP migrate_swap declaration remain; old 96-word rq vendor reserve is absent final ACK and not frozen, final OEM storage is separately reviewed. Do not carry this historical deletion of upstream energy rebuild machinery: native current em_rebuild_sched_domains workqueue and rebuild_sched_domains_energy are retained, with current EAS readiness tests and explicit later Android override. Old frequency source/scalar domain code is not restored.",
+      "evidence": [
+        "evidence/scheduler-topology-merges-review.json",
+        "SECURITY.md: Scheduler domain merges and inactive compatibility controls"
+      ],
+      "patch_sha256": "51e5e361e875863b50e173293fad779d36208fc30858c71855dbf7b1f7759845"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/cgroup/cpuset.c",
+      "function": "rebuild_sched_domains",
+      "sha256": "c561ec594521c4e97de73dbceccc55558d6538a89091ae80b539b3a80502d7a4",
+      "relationship": "whole native function after the explicitly specified callback removals, if any"
+    },
+    {
+      "path": "kernel/cgroup/cpuset.c",
+      "function": "cpuset_handle_hotplug",
+      "sha256": "f6f6b2a55405cbd8a1fd91094a0ca9066d6248c28ff7e95f35f1fbadb5642c09",
+      "relationship": "whole native function after the explicitly specified callback removals, if any"
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "task_fork_fair",
+      "sha256": "f88b86c2d49ddec842a10f9104c0e8f9c00f8fbe8f81103351efd24b84290b9f",
+      "relationship": "whole native function after the explicitly specified callback removals, if any"
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "sched_getaffinity",
+      "sha256": "f19c4f3c3d8bd638ffaf9c9a5ae9506d4a9135fc75b17cc437643a6002e48b54",
+      "relationship": "whole native function after the explicitly specified callback removals, if any"
+    },
+    {
+      "path": "kernel/sched/topology.c",
+      "function": "sched_domains_mutex_lock",
+      "sha256": "67843b2815f3b5f570d003229e46f4b36dcf26665daa3ba45e8d110a1dc31416",
+      "relationship": "whole native function after the explicitly specified callback removals, if any"
+    },
+    {
+      "path": "kernel/sched/topology.c",
+      "function": "sched_domains_mutex_unlock",
+      "sha256": "229bb8441fcc6880c4a04e6d65e9fbbf6db650a785a1db4b884c044fe598387d",
+      "relationship": "whole native function after the explicitly specified callback removals, if any"
+    },
+    {
+      "path": "kernel/sched/topology.c",
+      "function": "rebuild_sched_domains_energy",
+      "sha256": "69095defc68e2f6132702af5849dca3a384aa8c01ff99e6492a73ca7bf5737a4",
+      "relationship": "whole native function after the explicitly specified callback removals, if any"
+    },
+    {
+      "path": "kernel/power/energy_model.c",
+      "function": "em_rebuild_sched_domains",
+      "sha256": "601bdbf63b788a39e116553dc12d16e0409734959036bd10ff7e63d722e6c205",
+      "relationship": "whole native function after the explicitly specified callback removals, if any"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "sched_show_task",
+      "sha256": "ea1f7d65967834034e45debb756a1dcae16de100bf4f83c51cf357e3ba6d7395",
+      "relationship": "whole native function after the explicitly specified callback removals, if any"
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "cpu_overutilized",
+      "sha256": "4fed099f87a7abe506353f8f98c2531ca263899281adaab57632fa843e975d5c",
+      "relationship": "whole native function after the explicitly specified callback removals, if any"
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "select_task_rq_fair",
+      "sha256": "0559d4aee715258594b0faae20b93fbf1905d786fddb86d13f9ae56f0ad8de24",
+      "relationship": "whole native function after the explicitly specified callback removals, if any"
+    },
+    {
+      "path": "net/core/net-traces.c",
+      "region": "CONFIG_BRIDGE block",
+      "sha256": "5f2dd0c45ba4b8cbd1019b8a7b016645759502f8799ff506f107379d75e44395",
+      "relationship": "whole native guarded include/export block"
+    }
+  ],
+  "child_scalar_references": "2ed111267d9e5725b076fe4566ee2fed53b4b754:kernel/sched/debug.c:1143:\tP(sysctl_sched_child_runs_first);\n2ed111267d9e5725b076fe4566ee2fed53b4b754:kernel/sched/fair.c:108:unsigned int sysctl_sched_child_runs_first __read_mostly;\n2ed111267d9e5725b076fe4566ee2fed53b4b754:kernel/sched/fair.c:165:\t\t.data           = &sysctl_sched_child_runs_first,\n2ed111267d9e5725b076fe4566ee2fed53b4b754:kernel/sched/sched.h:109:extern unsigned int sysctl_sched_child_runs_first;\n",
+  "consumer_evidence": {
+    "path": "grapheneos-17/system/core/rootdir/init.rc",
+    "sha256": "71bcc80b5c70f87f1b0c5dcf23be86c15c90c5237e83bce1319b7a35c331b334",
+    "statement": "Positive write to retained compatibility proc file; does not establish child-first semantics or CTS results."
+  },
+  "affinity_history": {
+    "removal_merge": "1dfbe413d21f18f714cca818435299947bf5649a",
+    "scope": "Only affinity-query removal region examined for 4c58 history; this separate six-hunk large merge remains provisional.",
+    "uncertainty": "Intent behind not restoring callback in final ACK is unknown. Shared registration source API and final native query behavior retained; no claim that any hypothetical callback consumer is unnecessary."
+  },
+  "security": "Native cpuset/CPU locks, energy-domain deferred work, RCU cleanup, permission checks and weight-table bounds are preserved. Trusted CPU-selection overrides can choose illegal CPUs or defeat placement policy if callbacks are faulty; no arbitrary-callback safety is claimed. Child-runs-first knob is storage-only, so it cannot restore obsolete fork scheduling. No registered query callback is invoked by current sched_getaffinity. Merge-specific decisions cover unique hunks, not approval of all parent changes.",
+  "validation": "Complete five remerge diffs and five ordinary patches; native function/block comparisons and positive local init consumer. Existing build 131 runs for source 2ed111267d9e. No source change, boot, hotplug/affinity or runtime scheduling test in this batch.",
+  "remote_sources_used": []
+}

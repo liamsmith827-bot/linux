@@ -1,0 +1,337 @@
+{
+  "source_head": "0b81c1a66cdf3702cc470bcb1ba1ba7cb14f5d3c",
+  "records": [
+    {
+      "commit": "a88f61676008ec35f14b487000a14a7249395570",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "0b81c1a66cdf3702cc470bcb1ba1ba7cb14f5d3c"
+      ],
+      "rationale": "Read complete original patch, temporary inverse 631c0bba0a53 and reintroduction eba773ab53d0. Retain Android cross-UID cgroup-v1 migration for CAP_SYS_NICE in the target task user namespace. Positive pinned ZygoteInit grants system_server SYS_NICE and libprocessgroup opens/caches task files for cross-task writes; SELinux system_server policy permits sys_nice. Original current-credential-only capability check bypasses the purpose of upstream 1756d7994ad8 open-time authorization. Adapt 0b81c1a66cdf to require BOTH file_ns_capable and ns_capable on this additional path. Root/UID/saved-UID opener rules stay native, and current-writer authority is not widened. Mismatched-credential handoff formerly relying solely on writer capabilities now fails deliberately; same authorized opener/writer remains supported. 12288 extracted-function cases pass versus 432 denied-opener attachment attempts in previous code; no actual exploit or LSM execution claimed.",
+      "evidence": [
+        "evidence/cgroup-hooks-review.json",
+        "evidence/cgroup-migration-retry-check.json",
+        "evidence/cgroup-open-credentials-check.json",
+        "SECURITY.md: Cgroup callback semantics and migration retries"
+      ],
+      "patch_sha256": "cc03a07e54c51d0fe0bd7a15ddd237a6c36d50788da5f84805ff63afb33b0ec9"
+    },
+    {
+      "commit": "631c0bba0a537c4bf872d99fc0d0791bd5577b7e",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "Read full removal and later eba773ab53d0 inverse. Final ACK restores capability-based cross-UID cgroup-v1 moves; current local Android evidence independently supports this interface. Do not omit the final permission exception based on the temporary commit message claiming no longer required. Restore it with opener-and-writer authorization, not the historic current-only check.",
+      "evidence": [
+        "evidence/cgroup-hooks-review.json",
+        "evidence/cgroup-migration-retry-check.json",
+        "evidence/cgroup-open-credentials-check.json",
+        "SECURITY.md: Cgroup callback semantics and migration retries"
+      ],
+      "patch_sha256": "8de1e90ad8b7459b1bdf3e957fa523cc9b1b4242703c8afc804b50cf70d87c6e"
+    },
+    {
+      "commit": "eba773ab53d07ef0710070fcc4a9d197ff24d68b",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "0b81c1a66cdf3702cc470bcb1ba1ba7cb14f5d3c"
+      ],
+      "rationale": "Read complete reintroduction. Retain final CAP_SYS_NICE migration exception with 0b81c1a66cdf opener-and-writer authorization, preserving native open-time credential security intent. Historical message reports permission failures after removal; this is historical author evidence, not an emulator test performed here. Pinned ZygoteInit/libprocessgroup provide independent current source evidence; actual boot/profile application remains unverified.",
+      "evidence": [
+        "evidence/cgroup-hooks-review.json",
+        "evidence/cgroup-migration-retry-check.json",
+        "evidence/cgroup-open-credentials-check.json",
+        "SECURITY.md: Cgroup callback semantics and migration retries"
+      ],
+      "patch_sha256": "ae10a567ed392db500c734131192696971b638b603314407237023a44f03aa0b"
+    },
+    {
+      "commit": "4d1ac6a16011e73519b9107aea5c84befb6cbbb3",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "All three paths read with complete explicit removal 034ddf86f70f. Old update_cpus_allowed wrapper/override depended on deleted cpus_requested storage and is absent final ACK/port. Do not restore the return-zero bypass of native set_cpus_allowed_ptr. Current generic cpuset fork/attach notifications are distinct interfaces; native current attachment/mask updates remain.",
+      "evidence": [
+        "evidence/cgroup-hooks-review.json",
+        "evidence/cgroup-migration-retry-check.json",
+        "evidence/cgroup-open-credentials-check.json",
+        "SECURITY.md: Cgroup callback semantics and migration retries"
+      ],
+      "patch_sha256": "e0f59900e2e275db59115885db194c9b4146461abb1c121c2bf84f2338d07520"
+    },
+    {
+      "commit": "73dde48992593e3ab2b73b4596c24ff68a4055c4",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three paths read. Retain ordinary cpuset CSS-online and task-attach notifications/declarations/GPL exports. Attach callback follows native CPU affinity, memory-node and spread-flag updates under caller cpuset serialization, including CLONE_INTO_CGROUP. Online callback follows cpuset_full_unlock and is skipped for root/no-parent early return; no atomic snapshot across later updates is promised. Borrowed css/task pointers require proper references if retained. Entire functions equal native plus notifications.",
+      "evidence": [
+        "evidence/cgroup-hooks-review.json",
+        "evidence/cgroup-migration-retry-check.json",
+        "evidence/cgroup-open-credentials-check.json",
+        "SECURITY.md: Cgroup callback semantics and migration retries"
+      ],
+      "patch_sha256": "0c508265f2dd9bd682b2eac7d0664486c56707bea1b5ac3ff75e253990b4a929"
+    },
+    {
+      "commit": "766148eaf2737c1c214e88606adecea860cce4ac",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "876263e2b929c77426398421761c2f815338dc3f"
+      ],
+      "rationale": "All three paths read. Retain initialized-false restricted cpuset_fork control only for same non-root cpuset. True skips native parent-affinity setter and preserves whatever affinity the child/callback established; memory-node inheritance and CLONE_INTO_CGROUP path stay native. Trusted callback must preserve valid cpuset/affinity constraints; output name is not proof the core enforces them. Remove duplicated cgroup trace include in 876263e2b929; one include serves all three sites.",
+      "evidence": [
+        "evidence/cgroup-hooks-review.json",
+        "evidence/cgroup-migration-retry-check.json",
+        "evidence/cgroup-open-credentials-check.json",
+        "SECURITY.md: Cgroup callback semantics and migration retries"
+      ],
+      "patch_sha256": "ce83b264288843b2c2c2442be25d41bc8791b107f55158fe22310ff3f358de48"
+    },
+    {
+      "commit": "7d91e4ee75c2190c9dade185e8f54ad7384a0c2e",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "All three original paths read with e50c1e9235b5 removal and fc45b70eda9b reintroduction. Keep final four-argument cgroup_set_task event, not old two-argument signature. Current v1 write reports attachment return value, destination group, task and threadgroup after native permissions/attempt; old event definition is superseded, not separately layered.",
+      "evidence": [
+        "evidence/cgroup-hooks-review.json",
+        "evidence/cgroup-migration-retry-check.json",
+        "evidence/cgroup-open-credentials-check.json",
+        "SECURITY.md: Cgroup callback semantics and migration retries"
+      ],
+      "patch_sha256": "542fccef52883b7d23c3bb4e7abe5eef7bd869321df2a6a8e4dedcb75544c5d1"
+    },
+    {
+      "commit": "e50c1e9235b559f750dc56a5bec625a97e1c67c5",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "All three inverse paths read. Explicit later fc45b70eda9b restores richer notification; do not treat temporary removal as final ACK behavior. Final matching declaration/export/site is retained with native permission/lifetime handling.",
+      "evidence": [
+        "evidence/cgroup-hooks-review.json",
+        "evidence/cgroup-migration-retry-check.json",
+        "evidence/cgroup-open-credentials-check.json",
+        "SECURITY.md: Cgroup callback semantics and migration retries"
+      ],
+      "patch_sha256": "52e6a142fb2471d98e2beef99b44206d09786eed2d0e0095beb43e79bca4640c"
+    },
+    {
+      "commit": "fc45b70eda9b1584240cc4db37745855c7128001",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "0b81c1a66cdf3702cc470bcb1ba1ba7cb14f5d3c"
+      ],
+      "rationale": "All three paths read. Retain four-argument ordinary cgroup-v1 attach-result notification before cgroup_procs_write_finish. It reports both successful and failed attach attempts but is not reached on earlier lookup or credential denial; ret is by value, not override. Native open-time f_cred ownership check remains. The separate ACK CAP_SYS_NICE exception is explicitly adapted in 0b81c1a66cdf to require opener and current writer authority; only after accounting for that exception and hook/destination additions does the whole function equal LTS. No equivalent v2 result event is invented. Actual SDK callback and latency gains are unverified.",
+      "evidence": [
+        "evidence/cgroup-hooks-review.json",
+        "evidence/cgroup-migration-retry-check.json",
+        "evidence/cgroup-open-credentials-check.json",
+        "SECURITY.md: Cgroup callback semantics and migration retries"
+      ],
+      "patch_sha256": "85b69d2b1abd3997bb72f0441620e7f4aa3b9eeec2059ba1561785d39d958409"
+    },
+    {
+      "commit": "5025118c304d2188bf6fe81504a40fec55592418",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three paths read. Retain ordinary controller attach callback inside successful cgroup_migrate_execute, immediately before each implemented ss->attach after tset->ssid assignment. Native can_attach/cancel/commit/lifetime code is unchanged. Callback is notification without return replacement, receives transient taskset and subsystem, and must obey caller locking. Keep CREATE_TRACE_POINTS undef to avoid duplicate trace instantiation; use current complete declaration syntax.",
+      "evidence": [
+        "evidence/cgroup-hooks-review.json",
+        "evidence/cgroup-migration-retry-check.json",
+        "evidence/cgroup-open-credentials-check.json",
+        "SECURITY.md: Cgroup callback semantics and migration retries"
+      ],
+      "patch_sha256": "1560251ebc42322755633bd167fe823b2fd879848f416e95e076786f0421b2aa"
+    },
+    {
+      "commit": "d4f032e36b84cba331ff9b5e16aa4d447c44391a",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "All five original paths read with b0ea1feeefe0 removal and d92d1f1ddc6a reintroduction. Preserve final enum-lock-mode/destination-cgroup API and per-lookup initialized override, not old bool-locked prototype or stale per-call permission. Original added semicolon detached native __acquires annotation; final adaptation fixes it rather than preserving this analysis regression.",
+      "evidence": [
+        "evidence/cgroup-hooks-review.json",
+        "evidence/cgroup-migration-retry-check.json",
+        "evidence/cgroup-open-credentials-check.json",
+        "SECURITY.md: Cgroup callback semantics and migration retries"
+      ],
+      "patch_sha256": "425559110dee40f42fbd9459722275a1f4785080a4512b7dd4b3e73982e56e09"
+    },
+    {
+      "commit": "b0ea1feeefe084d787ebbd2de78441f4c896fa9e",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "All five removal paths read. Later d92d1f1ddc6a restores restricted kernel-thread migration policy hook on current native task lookup/lock-mode implementation. Do not apply temporary deletion to final source; no removed historical prototype or lock protocol is restored.",
+      "evidence": [
+        "evidence/cgroup-hooks-review.json",
+        "evidence/cgroup-migration-retry-check.json",
+        "evidence/cgroup-open-credentials-check.json",
+        "SECURITY.md: Cgroup callback semantics and migration retries"
+      ],
+      "patch_sha256": "ab67ebee6a8593e92612d9403b769538c4914a0af58c23a0ca60017284763dae"
+    },
+    {
+      "commit": "d92d1f1ddc6aff54038639ab2a60a9b2d1e89535",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "f170aa56e1931d86173880c815ef4a6373510306",
+        "c3756f712d3d46e3e9a87aaee914ec149520a7f4"
+      ],
+      "rationale": "All five paths read. Keep explicit Android opt-in allowing selected PF_KTHREAD tasks past native no_cgroup_migration/PF_NO_SETAFFINITY rejection, with destination passed from v1/v2 callers. Native controller/credential checks still run; this is a deliberate relaxation of kernel-thread placement safeguards and can strand tasks or starve RT work if a callback is wrong. Adapt f170aa56e193 to reset force_migration at every retry_find_task, preventing an earlier decision from being reused after leader retry. Preserve native lock-mode, references, RCU and retry sequence. c3756f712d3d removes the premature prototype semicolon so native __acquires remains attached; no Sparse run claimed.",
+      "evidence": [
+        "evidence/cgroup-hooks-review.json",
+        "evidence/cgroup-migration-retry-check.json",
+        "evidence/cgroup-open-credentials-check.json",
+        "SECURITY.md: Cgroup callback semantics and migration retries"
+      ],
+      "patch_sha256": "87f78dbde9859cf4d2845429f0e6338159ef33b9078f7ec0c18407350f162551"
+    },
+    {
+      "commit": "5fed80f580b61142de850e015188b8b4b9504383",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three paths read. Retain restricted CPU-controller attach notification after all native sched_move_task(task,false) operations. Final declaration lives in trace/hooks/cgroup.h with common vendor GPL export. Native group membership and SCX/migration behavior are preserved before the event; taskset is borrowed under cgroup migration serialization. Exact callback remains unconfirmed; generic Android vendor source contract retained.",
+      "evidence": [
+        "evidence/cgroup-hooks-review.json",
+        "evidence/cgroup-migration-retry-check.json",
+        "evidence/cgroup-open-credentials-check.json",
+        "SECURITY.md: Cgroup callback semantics and migration retries"
+      ],
+      "patch_sha256": "71189dd6670dffbce5f8e9caaeb8deca81745f09568876361e25e280b91bcd48"
+    },
+    {
+      "commit": "30c8f8754407acb97efb8dbbf0fc4d81497c6133",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three paths read. Keep CPU-controller online notification after successful native scx_tg_online, sched_online_group and uclamp propagation; failed SCX online skips it. Current ACK and port use function-scope uclamp mutex and RCU guards, so under configured UCLAMP_TASK_GROUP the callback runs while BOTH remain held until return. This differs from the original patch placement after explicit mutex unlock; retain final native/ACK context and require nonblocking callbacks which do not re-acquire that mutex. No blanket after-unlock claim.",
+      "evidence": [
+        "evidence/cgroup-hooks-review.json",
+        "evidence/cgroup-migration-retry-check.json",
+        "evidence/cgroup-open-credentials-check.json",
+        "SECURITY.md: Cgroup callback semantics and migration retries"
+      ],
+      "patch_sha256": "f17753de67a5c44b92de241dc9224750c79dcd9124b365d182620683fcd31afc"
+    },
+    {
+      "commit": "efd8dbe42d0e5e8a344604cb579a8f6b173aff3d",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "All three paths read with explicit final removal 1fcd7476b52f. The cpu_cgroup_can_attach return override/declaration/export is absent final ACK/port; whole current admission function equals LTS, preserving RT and SCX checks. Do not reintroduce a removed controller-admission bypass merely because attach/online notifications remain.",
+      "evidence": [
+        "evidence/cgroup-hooks-review.json",
+        "evidence/cgroup-migration-retry-check.json",
+        "evidence/cgroup-open-credentials-check.json",
+        "SECURITY.md: Cgroup callback semantics and migration retries"
+      ],
+      "patch_sha256": "731d4cf8864dcac0491afa22e7bde7d34e5b1ee1d396483ff45b9ab7f47462f5"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/cgroup/cgroup.c",
+      "function": "cgroup_migrate_execute",
+      "sha256": "f039ce47b55415e4aa90651112cac3f3618f9c8c78833f6d13368bbd9b53c0bc",
+      "relationship": "whole LTS function after removing precisely listed callback/control/argument additions and, for v1, the separately reviewed opener-and-writer capability exception"
+    },
+    {
+      "path": "kernel/cgroup/cgroup.c",
+      "function": "__cgroup_procs_write",
+      "sha256": "3770a2113f6b212854242235ddafad1ede1d2c8d052d9e45b4f1f0fc3645f225",
+      "relationship": "whole LTS function after removing precisely listed callback/control/argument additions and, for v1, the separately reviewed opener-and-writer capability exception"
+    },
+    {
+      "path": "kernel/cgroup/cgroup-v1.c",
+      "function": "__cgroup1_procs_write",
+      "sha256": "a56bb8209baf5951e7577d67e6fcf547aa62b2cb22adb3bed1af9f34e4e3c070",
+      "relationship": "whole LTS function after removing precisely listed callback/control/argument additions and, for v1, the separately reviewed opener-and-writer capability exception"
+    },
+    {
+      "path": "kernel/cgroup/cgroup.c",
+      "function": "cgroup_procs_write_start",
+      "sha256": "51b318349850d4e4e8eb2c36f31da2955025d517333949a6bdc90d7ab8d0f2e0",
+      "relationship": "whole LTS function after removing precisely listed callback/control/argument additions and, for v1, the separately reviewed opener-and-writer capability exception"
+    },
+    {
+      "path": "kernel/cgroup/cpuset.c",
+      "function": "cpuset_attach_task",
+      "sha256": "ac3be6e84d5fdac8b02edb231201988ee4462d05da6d56fc1206678fac4e4ab1",
+      "relationship": "whole LTS function after removing precisely listed callback/control/argument additions and, for v1, the separately reviewed opener-and-writer capability exception"
+    },
+    {
+      "path": "kernel/cgroup/cpuset.c",
+      "function": "cpuset_css_online",
+      "sha256": "1149136b70a8128eb8e62f2439a38ce2e057e9f8ebc97142f66243ecf2e420f3",
+      "relationship": "whole LTS function after removing precisely listed callback/control/argument additions and, for v1, the separately reviewed opener-and-writer capability exception"
+    },
+    {
+      "path": "kernel/cgroup/cpuset.c",
+      "function": "cpuset_fork",
+      "sha256": "097e933e822bb10a59a876a64e1eb44fa31c55d360f67acf3d942523cb064191",
+      "relationship": "whole LTS function after removing precisely listed callback/control/argument additions and, for v1, the separately reviewed opener-and-writer capability exception"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "cpu_cgroup_attach",
+      "sha256": "ebcebd8477dc4dcf87b0bd5803f41c463e5661babeb20fff7881d42092648816",
+      "relationship": "whole LTS function after removing precisely listed callback/control/argument additions and, for v1, the separately reviewed opener-and-writer capability exception"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "cpu_cgroup_css_online",
+      "sha256": "d46eae6bdad8006997f4e19e4a2b390f725cc09914967f6f804d8eb8eb41f355",
+      "relationship": "whole LTS function after removing precisely listed callback/control/argument additions and, for v1, the separately reviewed opener-and-writer capability exception"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "cpu_cgroup_can_attach",
+      "sha256": "ceb6bce758ea60292c0c90dc9cdb06c43c56f66289061eff3c6e76f173f2290f",
+      "relationship": "whole LTS function after removing precisely listed callback/control/argument additions and, for v1, the separately reviewed opener-and-writer capability exception"
+    },
+    {
+      "path": "kernel/cgroup/cgroup-internal.h",
+      "sha256": "f7ce93c7298ed934f20e0a9c54d830568b6f5b2123bed6aff19151efcabf4aec",
+      "relationship": "whole native header plus destination argument, retaining attached __acquires"
+    }
+  ],
+  "consumer_evidence": {
+    "path": "grapheneos-17/system/core/libprocessgroup/profiles/cgroups.json",
+    "sha256": "ab2ed667ff45958843fb0c6ee953a5512def0ae87470c4358aa9576a6a4b2e22",
+    "statement": "Pinned Android process-group configuration positively defines cpu/cpuset controller paths. This establishes subsystem use, not named callback registration."
+  },
+  "uncertainty": "Scoped searches in manifest common-modules and GrapheneOS system/core/frameworks/native do not establish actual vendor callback policies. Generic source interfaces retained conservatively; no consumer-absence omission rationale. Forced retry test is a control-flow injection, not proof of a naturally reproduced kernel-thread leader race.",
+  "security": "Kernel-thread migration override deliberately bypasses two native placement restrictions only for opt-in PF_KTHREAD callbacks; downstream controller checks stay native; v1 authorization adds the separately reviewed opener-and-writer capability exception. A bad policy can strand per-CPU/kernel work or starve real-time service. Per-lookup reset prevents stale override reuse. Fork hook may skip affinity normalization; callback must uphold cpuset constraints. Notification hooks retain original return/lifetime paths, but borrowed taskset/task/css pointers cannot be retained without appropriate ownership. CPU-online callback runs under native uclamp_mutex and RCU guards in this configured tree. Annotation repair preserves source-analysis metadata; Sparse unavailable and not run.",
+  "validation": "4096 extracted-function retry cases pass; previous control has 144 stale-override acceptances. 12288 extracted v1 credential cases pass; prior code has 432 denied-opener attachment attempts. Native-body comparisons cover v1/v2 callers and all hook sites after precisely listed additions. Build 132 passed for f170/876; build 133 runs for c375 and 0b81 fixes. No boot or runtime migration validation.",
+  "remote_sources_used": [],
+  "additional_consumer_witnesses": [
+    {
+      "path": "grapheneos-17/frameworks/base/core/java/com/android/internal/os/ZygoteInit.java",
+      "sha256": "a373f6283865b1593c0d7878d06c2542f3cfe29ae4c69b805232f15c809a02ba"
+    },
+    {
+      "path": "grapheneos-17/system/core/libprocessgroup/task_profiles.cpp",
+      "sha256": "410c070bd06c3497f4f1784e4f387aeed45e1b4c5bc17c5b10ade3c75a5a6256"
+    },
+    {
+      "path": "grapheneos-17/system/sepolicy/private/system_server.te",
+      "sha256": "b941fc1f6f8bbe18ace17989092614f43f921303ff44a16f5b72f781079a513c"
+    }
+  ],
+  "native_authorization_fix": {
+    "commit": "1756d7994ad85c2479af6ae5a9750b92324685af",
+    "ancestor_of_pinned_lts": true,
+    "meaning": "Use open-time credentials against privileged-writer confused-deputy scenarios; capability branch adapted to opener AND writer, with namespace capability/LSM helpers preserved."
+  },
+  "subsequent_build_verification": {
+    "run": "sdk-build-attempt-133",
+    "source": "0b81c1a66cdf3702cc470bcb1ba1ba7cb14f5d3c",
+    "result": "Full emulator workflow succeeded; 145 module signatures verified against build certificate; modified payload rejected; all 145 module flag/CRC tables match and 659 protected exports decoded. No runtime verification."
+  }
+}

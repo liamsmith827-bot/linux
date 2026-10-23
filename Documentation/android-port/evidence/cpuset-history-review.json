@@ -1,0 +1,209 @@
+{
+  "source_head": "2ed111267d9e5725b076fe4566ee2fed53b4b754",
+  "records": [
+    {
+      "commit": "44ee678655a096a418e1fdabd0c972749017b5ec",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "All three paths read. Do not retain historical removal of cpuset serialization around scheduler changes or replacement of task references with an RCU-held sleeping call. Later 4fb867eea029 restores these protections; current native __sched_setscheduler takes cpuset_lock for transitions involving deadline policy, with current native recheck/error/success handling. Native do_sched_setscheduler uses scoped find_get_task. The old message assertion that deadline accounting races are not an Android issue is not accepted as omission rationale.",
+      "evidence": [
+        "evidence/cpuset-history-review.json",
+        "SECURITY.md: Cpuset historical reverts and native serialization"
+      ],
+      "patch_sha256": "b6579f96f2b368e312add763f2258b148a5b156abfa834db65c6bdf745b26d13"
+    },
+    {
+      "commit": "4fb867eea02944c7b0b2f56ca7df868e26b739ed",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "All three paths read. Retain current native deadline/cpuset serialization and referenced task lookup through the evolved cpuset_lock and CLASS(find_get_task) interfaces. Do not restore unconditional pi-gated legacy percpu read locking or raw historical wrappers. Commit message names 18695a120055 as reverted, but actual hunks restore the earlier 44ee serialization/task-lifetime changes; disposition follows the code, not that mistaken identifier.",
+      "evidence": [
+        "evidence/cpuset-history-review.json",
+        "SECURITY.md: Cpuset historical reverts and native serialization"
+      ],
+      "patch_sha256": "883be78d1da591832ed42d92e3b85be6ad6a2f5c9c9b84115e303868a48c7060"
+    },
+    {
+      "commit": "c8dc4422c6f9c2ae543d5a169f081acccbcfc8f5",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Complete single-file change read across storage/allocation/free, hierarchy validation, parse/update/readout, online and root init. Explicit final inverse 3fc3fe757fde removes cpus_requested scheme, and final ACK/port have no such cpuset field. Keep current LTS cpus_allowed/effective/partition implementation and v1/v2-specific behavior, not an additional historical requested-mask allocation. This is explicit removal evidence, not inability to locate an Android cpuset consumer.",
+      "evidence": [
+        "evidence/cpuset-history-review.json",
+        "SECURITY.md: Cpuset historical reverts and native serialization"
+      ],
+      "patch_sha256": "d82690f4e35c1c851ebdb11f3ae74aff7fa83affbd0cb2d547511ec28188787d"
+    },
+    {
+      "commit": "54a1b2c153a2f7505b6ec7bc544b318c94dfff82",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "Complete single-file empty-buffer fix read with final 3fc3fe757fde removal. The cpus_requested storage and parser path it fixes no longer exist in either final ACK or port. Current update_cpumask and parse_cpuset_cpulist equal LTS; retain current parsing/validation, without claiming historical v1/v2 hotplug or empty-input semantics are identical. No stale old field or partial parser fix is reintroduced.",
+      "evidence": [
+        "evidence/cpuset-history-review.json",
+        "SECURITY.md: Cpuset historical reverts and native serialization"
+      ],
+      "patch_sha256": "75d71c4399a7798864dfc35fdc4559a53a8c61dbd81032d4b259336975093f6d"
+    },
+    {
+      "commit": "3fc3fe757fde930aa2a1eb0a955276949093342a",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "All removal hunks read, including allocation failure unwinding, readout and online initialization. Final ACK/port omit the entire requested-mask scheme; current native parser, partition state, cpumask allocation and legacy cpuset implementation are retained. The current tree is not a verbatim 6.1-era inverse and no old present-mask/hotplug rule is reapplied.",
+      "evidence": [
+        "evidence/cpuset-history-review.json",
+        "SECURITY.md: Cpuset historical reverts and native serialization"
+      ],
+      "patch_sha256": "a2d84a1123878f66be41a581eab89c7f65a30af4b06e1bcedb41080af90c730b"
+    },
+    {
+      "commit": "bca99ddbf0bee7ac8cdbca7087ee98463cb9474b",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Whole helper patch read with 9756c8115dbf inverse. Native LTS now provides guarantee_active_cpus, intersecting task_cpu_possible_mask with active CPUs and walking cpuset ancestors under RCU; current whole function is native. This already represents the required active-CPU selection principle in a more evolved interface. Top-cpuset/fallback cpuset_cpus_allowed may deliberately return possible offline CPUs; do not overstate a universal active-only mask guarantee.",
+      "evidence": [
+        "evidence/cpuset-history-review.json",
+        "SECURITY.md: Cpuset historical reverts and native serialization"
+      ],
+      "patch_sha256": "99fa01a9181b394bb557e119d0a865601e2437d475e627cb4ab00d4e75ac42b2"
+    },
+    {
+      "commit": "9756c8115dbf3c64ae96f8df8fa1f8365c2ee6fe",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "Whole inverse read. Do not restore cpu_online_mask-based guarantee_online_cpus from this CPU Pause revert. Current native guarantee_active_cpus and cpuset_cpus_allowed handle active/possible masks and partition fallback; preserve LTS behavior. Later upstream evolution supersedes the temporary old helper state.",
+      "evidence": [
+        "evidence/cpuset-history-review.json",
+        "SECURITY.md: Cpuset historical reverts and native serialization"
+      ],
+      "patch_sha256": "da6dcc197e77f5a62948a0e9e2a15d2de9b1f642e418ad9f74587294530b5e77"
+    },
+    {
+      "commit": "18695a120055687d79ee4f2644dafdff4cc100d4",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "All single-file lock-conversion hunks read with complete inverse 34ef9324f3af, including init, hotplug drops/reacquisition, hierarchy and cpuset write paths. Do not replay this historical locking conversion. Current LTS independently uses cpuset_mutex with current full-lock helpers and scheduler deadline serialization. A matching primitive name is not proof that the 2020 patch or its lost lockdep assertion remains applicable.",
+      "evidence": [
+        "evidence/cpuset-history-review.json",
+        "SECURITY.md: Cpuset historical reverts and native serialization"
+      ],
+      "patch_sha256": "2fb6e536c70052b7fa231034150d5b03fae60786824c3a29a03d39c20d0589af"
+    },
+    {
+      "commit": "34ef9324f3aff281154be2112c22e27c62457694",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "All inverse lock-conversion hunks read. Current LTS mutex architecture supersedes the intermediate percpu_rwsem restoration; no old semaphore object/init/read wrapper is reintroduced. Native cpuset lock hierarchy, hotplug handling and task lifetime logic remain. No unsupported latency or contention improvement is claimed for either historical primitive.",
+      "evidence": [
+        "evidence/cpuset-history-review.json",
+        "SECURITY.md: Cpuset historical reverts and native serialization"
+      ],
+      "patch_sha256": "a0bd8020461c417fc88d6c9e05523d48f1d2030eed4eef3fb81e3c82415f5b25"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/cgroup/cpuset-v1.c",
+      "sha256": "4ab5b5819b6eb0b4e02da34bf6705c3da0dc0957eb816eed86b858ed4d9b80fc",
+      "relationship": "whole pinned LTS file"
+    },
+    {
+      "path": "kernel/cgroup/cpuset-internal.h",
+      "sha256": "95f12247a729d0d2404effeaf71bb1eafe7daacfc4e83975a5cbc8937ed88b7f",
+      "relationship": "whole pinned LTS file"
+    },
+    {
+      "path": "include/linux/cpuset.h",
+      "sha256": "4df55277dc7306b43f53472430a8393b17dd6fd28c0357082857fb3e230dad94",
+      "relationship": "whole pinned LTS file"
+    },
+    {
+      "path": "kernel/cgroup/cpuset.c",
+      "function": "cpuset_lock",
+      "sha256": "4de19fae212a0964631306afd716a69fecc978133c406a5eebb3cb2c1da283e6",
+      "relationship": "whole native LTS function"
+    },
+    {
+      "path": "kernel/cgroup/cpuset.c",
+      "function": "cpuset_unlock",
+      "sha256": "ccf0902ec1252071b827664372c4b28e875f7adc51ad1bd1b48988569794d37b",
+      "relationship": "whole native LTS function"
+    },
+    {
+      "path": "kernel/cgroup/cpuset.c",
+      "function": "cpuset_full_lock",
+      "sha256": "f70e3e42d9d4ed8c1c049cc6240969d0af61d2f425180d510d65d3399721f199",
+      "relationship": "whole native LTS function"
+    },
+    {
+      "path": "kernel/cgroup/cpuset.c",
+      "function": "cpuset_full_unlock",
+      "sha256": "77e9d2876414273e79f6d1c7bfd5873f01b1c69b9579005ec8af433ed1b33ab6",
+      "relationship": "whole native LTS function"
+    },
+    {
+      "path": "kernel/cgroup/cpuset.c",
+      "function": "rebuild_sched_domains",
+      "sha256": "c561ec594521c4e97de73dbceccc55558d6538a89091ae80b539b3a80502d7a4",
+      "relationship": "whole native LTS function"
+    },
+    {
+      "path": "kernel/cgroup/cpuset.c",
+      "function": "cpuset_handle_hotplug",
+      "sha256": "f6f6b2a55405cbd8a1fd91094a0ca9066d6248c28ff7e95f35f1fbadb5642c09",
+      "relationship": "whole native LTS function"
+    },
+    {
+      "path": "kernel/cgroup/cpuset.c",
+      "function": "cpuset_hotplug_update_tasks",
+      "sha256": "9b7334f4203a70a2266b4f2ba1ff33dfcbdb81d67cd722e26a696c7236779e50",
+      "relationship": "whole native LTS function"
+    },
+    {
+      "path": "kernel/cgroup/cpuset.c",
+      "function": "update_cpumask",
+      "sha256": "b7e361d6aa611eb0debfbd438ad991d4c24f97695953182f6f8974e9f186cac5",
+      "relationship": "whole native LTS function"
+    },
+    {
+      "path": "kernel/cgroup/cpuset.c",
+      "function": "parse_cpuset_cpulist",
+      "sha256": "0c6d375f4639a0100af4cd4ba6176bbd31af87d7728e927e99772435f7c32414",
+      "relationship": "whole native LTS function"
+    },
+    {
+      "path": "kernel/cgroup/cpuset.c",
+      "function": "guarantee_active_cpus",
+      "sha256": "a14b4c86709be14310f4c1923b0fcf4beda3947028bde58f08e01862140609bd",
+      "relationship": "whole native LTS function"
+    },
+    {
+      "path": "kernel/cgroup/cpuset.c",
+      "function": "cpuset_cpus_allowed",
+      "sha256": "aeaaa8cf38e71dc5a3b6f50905b1b31d5f8ea3d3fcb8480cee783dc21fdd88b0",
+      "relationship": "whole native LTS function"
+    },
+    {
+      "path": "kernel/cgroup/cpuset.c",
+      "function": "cpuset_cpus_allowed_fallback",
+      "sha256": "7a0986ce8501dd67abfe957eb858292c083c5de0dd5b69bc2b68cb6f4b62e9f9",
+      "relationship": "whole native LTS function"
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "do_sched_setscheduler",
+      "sha256": "0be438592b112c95b55a862385686d8fc4f85a79631331eeaa0d30e9e1de2dd7",
+      "relationship": "whole native scoped task-reference caller"
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "__sched_setscheduler",
+      "sha256": "cdeaf462edc32658e63785dd4e82ce0e287e811c3156faa8765a92f9f4958fdc",
+      "relationship": "whole native function after removing current priority/SCX notifications; locking body unchanged"
+    }
+  ],
+  "security": "Preserve native deadline admission/cpuset serialization and reference-held task lookup. Do not treat obsolete Android comment as permission to reintroduce bandwidth races or sleeping inside old RCU lookup. Keep current LTS active/possible CPU and partition semantics, rather than historical CPU Pause shortcuts. Primitive-name resemblance does not establish patch equivalence. No source change or runtime hotplug/concurrency benchmark performed.",
+  "uncertainty": "This review establishes representation/removal of historical code and current native invariants, not equivalence of every old cpuset ABI corner case. Android userspace uses cpusets; omission is based on explicit final ACK reversion and native evolution, not negative consumer searches.",
+  "validation": "All nine complete patches, whole native files/functions, current scheduler callback-only diff and final ACK field/lock removal checked. Existing SDK build 131 passed before this documentation batch; no runtime scheduling or hotplug verification.",
+  "remote_sources_used": []
+}
