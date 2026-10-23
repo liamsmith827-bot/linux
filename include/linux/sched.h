@@ -1252,6 +1252,7 @@ struct task_struct {
 	raw_spinlock_t			pi_lock;
 
 	struct wake_q_node		wake_q;
+	/* Advisory wake-batch size; concurrent wakers may overwrite it. */
 	int				wake_q_count;
 
 #ifdef CONFIG_RT_MUTEXES
