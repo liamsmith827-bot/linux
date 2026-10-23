@@ -1,0 +1,1435 @@
+{
+  "source_head": "ca332f5bd33e106e4cdfe2217e303e5f59ba8365",
+  "records": [
+    {
+      "commit": "01df5435d96401845c929ee82018ad4608d6326e",
+      "disposition": "merge-resolution-adapted-net-state",
+      "rationale": "Examine both unique remerge-resolution hunks, not the 333 first-parent files. Binder unmapping resolution combines native check_vma ownership validation with Android before/after tracepoints; retain both in the final per-VMA-lock shrinker while preserving LTS mm mutex lifetime. Task-exit resolution keeps native kthread detection/exit before restored profile_task_exit, then native KCOV/KMSAN ordering. The latter has the concrete UID accounting notifier consumer in drivers/misc/uid_sys_stats.c and local framework /proc/uid_cputime and /proc/uid_io readers. No native kthread early-exit behavior is reordered or bypassed; ordinary task is live through its notifier. Later exit hooks are separate candidates, not unique changes attributed to this merge. Parents remain separately inventoried.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/binder-merge-vfs-review.json",
+        "SECURITY.md: Binder merge resolution and VFS namespace imports"
+      ],
+      "subject": "Merge 6.18.19 into android17-6.18",
+      "patch_sha256": "5ae386c3c53c4067e973b166f71c332fcc6d54429d162c0ea639fb65f41dfb82",
+      "path_blobs": {
+        "drivers/android/binder/page_range.rs": {
+          "ack": "b3bc0d6bb28b978d7fe485f507634184b910030e",
+          "port": "a1f9b19b147c8bf4b467d279eed22c03ba0b2ef4"
+        },
+        "kernel/exit.c": {
+          "ack": "3ab1e04a44bac470548ec5f620d71d9fef8092bd",
+          "port": "818395a946adf0cd41871c138016fa3751d2d61c"
+        }
+      }
+    },
+    {
+      "commit": "fd2cbc1b7ab7d6c29bd875c1b509b86fcadf6964",
+      "disposition": "partially-adapted",
+      "rationale": "Retain Android VFS source-module namespace declarations and matching imports as a generic module policy, not historical ABI layout preservation. Entire patch mechanically checked: 82 export replacements plus 76 import additions and no other nonblank changed lines. Restore two imports lost during LTS filesystem reconciliation in 349c8bdc72bb; retain all remaining declarations except adapting vfs_splice_read to keep its native GPL-only flag while adding the namespace. ext4/F2FS are built in for SDK; those declarations also preserve their supported module configuration without adding a platform. Native modpost/loader check import declarations, not actual filesystem identity: this prevents accidental API use, not malicious trusted-module access. Four exports become GPL-only (kern_path,generic_file_open,kernel_read,kernel_write); retain that ACK source policy. Reject the opposite conversion for vfs_splice_read, which dropped the native GPL-only restriction; keep EXPORT_SYMBOL_NS_GPL. Namespace metadata does not replace native licensing checks. No vendor-binary compatibility promise. The retained namespace does not weaken VFS permission/data-integrity checks; function bodies are unaffected by this candidate. Build 102 will validate the final SDK integration; alternate allmodconfig and runtime module insertion are not claimed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "349c8bdc72bbf68b6e73ae6ba00e728f406241e3",
+        "ca332f5bd33e106e4cdfe2217e303e5f59ba8365"
+      ],
+      "evidence": [
+        "evidence/binder-merge-vfs-review.json",
+        "SECURITY.md: Binder merge resolution and VFS namespace imports"
+      ],
+      "subject": "ANDROID: GKI: set vfs-only exports into their own namespace",
+      "patch_sha256": "8774eb11e4e26a79b19323c4b45f8d355a4de74f1850f52c434fc9a54534103c",
+      "path_blobs": {
+        "drivers/android/binder/rust_binderfs.c": {
+          "ack": "968cf39f7879d6861ea390c2a7ec1efd0f4cd098",
+          "port": "968cf39f7879d6861ea390c2a7ec1efd0f4cd098"
+        },
+        "drivers/block/zloop.c": {
+          "ack": "91218380e617f2cc46121cac644670986227f302",
+          "port": "ec919343f5f7496ad515484fa3617057ceb2a7f3"
+        },
+        "drivers/mtd/nand/raw/nandsim.c": {
+          "ack": "4d68afff57a8f75dfd1a4ad6c2b5dea1d4f5b7d3",
+          "port": "abd92fd3f545d9370073bd710cfa339e1c07eda0"
+        },
+        "drivers/mtd/ubi/build.c": {
+          "ack": "a11cec54bbeddcb41ccce2c07ec08609c39e8fec",
+          "port": "94c3f9797b496d4136cda62404bdab7a9ce6dc15"
+        },
+        "drivers/nvme/target/core.c": {
+          "ack": "00fda0341be85539b22f091e99ea569f045924b5",
+          "port": "628fc62e3894b610840e5aefe2490982c75a0e8e"
+        },
+        "drivers/target/target_core_configfs.c": {
+          "ack": "258c2fb2dc278a4c6d7d64392859b9153e902394",
+          "port": "38d32aadba3e3ead479d88ee1e8dadd596c22944"
+        },
+        "drivers/target/target_core_file.c": {
+          "ack": "9b27f2f28a71807afb7608fbca8942a092fe92fa",
+          "port": "b795ec1ae84efcb01096cc2c51eac524d048ab72"
+        },
+        "drivers/usb/gadget/function/f_mass_storage.c": {
+          "ack": "8c621459ed665a8e08cd02031eb30a2530bd6bfc",
+          "port": "213b9601bf467bcd6b6857bcdb381eec3f84945b"
+        },
+        "drivers/usb/gadget/function/f_uac1_legacy.c": {
+          "ack": "a333d6ff10ac6294928b4d3a923e6490a4eb6964",
+          "port": "1a52d17f5bbccf1e0eb635610f01a9c580b18457"
+        },
+        "drivers/usb/gadget/function/storage_common.c": {
+          "ack": "22678eb29516d007690603c66a0840bba3270e89",
+          "port": "22678eb29516d007690603c66a0840bba3270e89"
+        },
+        "fs/9p/v9fs.c": {
+          "ack": "c46bc6a9bc6b68b51904223b658cb28f18ccad96",
+          "port": "c46bc6a9bc6b68b51904223b658cb28f18ccad96"
+        },
+        "fs/adfs/super.c": {
+          "ack": "ca4ee0678225a60cfebe7660c32be6a6d239f0c2",
+          "port": "ca4ee0678225a60cfebe7660c32be6a6d239f0c2"
+        },
+        "fs/affs/super.c": {
+          "ack": "4660395104e2738a91ff2d4d47fdfdd7a6d0fb17",
+          "port": "7d12a485ddf0041a6977ccb7a555988d7860c522"
+        },
+        "fs/afs/main.c": {
+          "ack": "4b29c149a0d1305562664e291a723e09a0a74945",
+          "port": "4b29c149a0d1305562664e291a723e09a0a74945"
+        },
+        "fs/attr.c": {
+          "ack": "44fb2c6667d9235b707f871cefd45e8a586d3a08",
+          "port": "da406f4308cf16df82c186366af21b422c4cd58c"
+        },
+        "fs/autofs/init.c": {
+          "ack": "29f7d8a21164dc98ee05ce54324892428bafd046",
+          "port": "29f7d8a21164dc98ee05ce54324892428bafd046"
+        },
+        "fs/bad_inode.c": {
+          "ack": "13f7bbbb0de747ecfd90a41c09991972bb7cef0d",
+          "port": "13f7bbbb0de747ecfd90a41c09991972bb7cef0d"
+        },
+        "fs/befs/linuxvfs.c": {
+          "ack": "8760d31f22af22bdcb47b81f4419111ae3200c7c",
+          "port": "7e3c7ef79d4d4107325d8c1004b84a8a502739da"
+        },
+        "fs/bfs/inode.c": {
+          "ack": "27048bc44899d9dcbce04f7b4140a4e5b13e17e4",
+          "port": "601fec94d08e0d9d84d9a7bbcc3f5c88b83d9dfe"
+        },
+        "fs/binfmt_misc.c": {
+          "ack": "47a328482dd4256040ae46bbdb6065d6c756f187",
+          "port": "21d09f0308117e5ceb0ba9e78294bb1f586df14d"
+        },
+        "fs/btrfs/super.c": {
+          "ack": "2f2fbaa1ff7eca2688c6f9eb475879ba9c6904e0",
+          "port": "ca7c3216569abba0aeef0b608f45fd21fba7a08d"
+        },
+        "fs/buffer.c": {
+          "ack": "b3d92a66fadb2984e6f7e515eb233fa6dec88a3f",
+          "port": "9fde276268b2506eb564f37cad2db6aede8a0f01"
+        },
+        "fs/cachefiles/main.c": {
+          "ack": "e99d0c574aa92517a9290e0d7c8ffe79db9707dd",
+          "port": "e99d0c574aa92517a9290e0d7c8ffe79db9707dd"
+        },
+        "fs/ceph/super.c": {
+          "ack": "f9847c12c5328617122e2dead004883b2c28f72e",
+          "port": "f9847c12c5328617122e2dead004883b2c28f72e"
+        },
+        "fs/coda/psdev.c": {
+          "ack": "8dd0352c46783f260fc61cf6ba0c1564bdf44c97",
+          "port": "c37fcfbfa48d6fa050bccc5b7e2890cf32a2a06e"
+        },
+        "fs/cramfs/inode.c": {
+          "ack": "fd37800500f105839f0ab93d41a84cc76060f902",
+          "port": "fd37800500f105839f0ab93d41a84cc76060f902"
+        },
+        "fs/dcache.c": {
+          "ack": "b7006b880f5f80310d73f87f98b935182d8df6d7",
+          "port": "d468573115d542c91ad980b40c48a0118e4a9f9f"
+        },
+        "fs/direct-io.c": {
+          "ack": "ac60e5064fd9943b46af0224bb89e2dbfb600100",
+          "port": "4ab29b6c626f9ef1a9e27c7e616489ff3aa378b8"
+        },
+        "fs/ecryptfs/main.c": {
+          "ack": "69ee2abf9c8c7ffa8e273cf9ef0db2640fa812aa",
+          "port": "69ee2abf9c8c7ffa8e273cf9ef0db2640fa812aa"
+        },
+        "fs/efivarfs/super.c": {
+          "ack": "3bb405c1e294356cd3ee483c5bbd9d18c173498b",
+          "port": "934a43cb8e24cc80d6a92d29b41a9a845973ba93"
+        },
+        "fs/efs/inode.c": {
+          "ack": "87bb38c12caac1d1594f99b322982e75ff1397b5",
+          "port": "87bb38c12caac1d1594f99b322982e75ff1397b5"
+        },
+        "fs/erofs/super.c": {
+          "ack": "3cf63c1715422c1ae9533600f94b9f1587f41e87",
+          "port": "684782e7ef8f28c813cb68b4e3f1178a58409d7b"
+        },
+        "fs/exfat/super.c": {
+          "ack": "5aaa8ae1b6589308de80381c5e21ab5a9549dafb",
+          "port": "5aaa8ae1b6589308de80381c5e21ab5a9549dafb"
+        },
+        "fs/ext2/super.c": {
+          "ack": "a70d0360a0f9e34f596269dc2ee0aca12cf16dec",
+          "port": "a70d0360a0f9e34f596269dc2ee0aca12cf16dec"
+        },
+        "fs/ext4/super.c": {
+          "ack": "5d6422ad70098a1671516d372e8bc0771f4b2721",
+          "port": "5c486cb271550fd564497b54d6bddca5b954a852"
+        },
+        "fs/f2fs/super.c": {
+          "ack": "ac11a7fe86f4aae5ad2a483a7cd9a453c49c2cd5",
+          "port": "78aabdb9f8d50a4ff456859351c2ca6f0702f6b9"
+        },
+        "fs/fat/inode.c": {
+          "ack": "19479f5cef02dedf56fc3bf00d7da09c515c9faa",
+          "port": "19479f5cef02dedf56fc3bf00d7da09c515c9faa"
+        },
+        "fs/fat/namei_msdos.c": {
+          "ack": "afb0b50599fc2acbcf7324f67a37efa16e183caf",
+          "port": "afb0b50599fc2acbcf7324f67a37efa16e183caf"
+        },
+        "fs/fat/namei_vfat.c": {
+          "ack": "aadd5251184a25af4d12bd7746a92e6e8b2a075d",
+          "port": "aadd5251184a25af4d12bd7746a92e6e8b2a075d"
+        },
+        "fs/file.c": {
+          "ack": "054476fc405c824960b45316df4d085ae02fcc33",
+          "port": "054476fc405c824960b45316df4d085ae02fcc33"
+        },
+        "fs/freevxfs/vxfs_super.c": {
+          "ack": "052cf215160b25b540d661cfb700f5d8d9a1995e",
+          "port": "052cf215160b25b540d661cfb700f5d8d9a1995e"
+        },
+        "fs/fs-writeback.c": {
+          "ack": "864c16c89ed7c892b3f0facd9bb4f2d63eca65b8",
+          "port": "573184c679cac56da39a71cba98adbe1f26b91c3"
+        },
+        "fs/fs_types.c": {
+          "ack": "2b2bc88155408ae4d34116e9152044e8173175f1",
+          "port": "2b2bc88155408ae4d34116e9152044e8173175f1"
+        },
+        "fs/fuse/inode.c": {
+          "ack": "ebf09a0728a22e5be4996486d665026d678bf9a5",
+          "port": "a5139814998df386afaf5a42bd768b997d636514"
+        },
+        "fs/gfs2/main.c": {
+          "ack": "714b53200b4add90b2613e69b901a08d2a825e28",
+          "port": "7d73b65e8a51552dc989678a34b020cbefdc3c09"
+        },
+        "fs/hfs/super.c": {
+          "ack": "14b6e1b8018ae80bab12486c9d88e7a2f38f75af",
+          "port": "bf28c8f81754a13b553b8cc65b1fb86fd900a6e8"
+        },
+        "fs/hfsplus/super.c": {
+          "ack": "5ca42783f2515123847bb68a56913d047560cfa2",
+          "port": "13a34514a8b11e490b76fdd2d8e0e56b685c16a3"
+        },
+        "fs/hpfs/super.c": {
+          "ack": "3d84640712f106701cc631893dee9a3a18a87154",
+          "port": "8ef633ce4fb13727aa33070852e38e963c096fa8"
+        },
+        "fs/incfs/main.c": {
+          "ack": "b955c84631e7adca01677fe8a7cfc4ffabe1ecd6",
+          "port": "b955c84631e7adca01677fe8a7cfc4ffabe1ecd6"
+        },
+        "fs/inode.c": {
+          "ack": "ced2a9c76a6bfc144590be2e5d09a797224f3b96",
+          "port": "6c25fbd059860556efb1f5a879e3e58e6cc37177"
+        },
+        "fs/ioctl.c": {
+          "ack": "03c25b476da63b8a07e058b1459f45eade77b996",
+          "port": "03c25b476da63b8a07e058b1459f45eade77b996"
+        },
+        "fs/isofs/inode.c": {
+          "ack": "780409577f229491bca250edbed9801770b3fd49",
+          "port": "f362fa3f9e3a59274cf90b00088e38483765e3e0"
+        },
+        "fs/jbd2/journal.c": {
+          "ack": "23e5ac6a0b9117611d2705fc0ff8830583627bcb",
+          "port": "fd77b2d2979efae2215115ce234344667232fdee"
+        },
+        "fs/jffs2/super.c": {
+          "ack": "bae47792c433bf186c06ef0f04ae5517a24516c8",
+          "port": "bae47792c433bf186c06ef0f04ae5517a24516c8"
+        },
+        "fs/jfs/super.c": {
+          "ack": "9cc82d26ad345e1bb8df672538d74336aef411c1",
+          "port": "8fb1db248079df121073d410a12355032f2adcaf"
+        },
+        "fs/libfs.c": {
+          "ack": "085606a7a213d54969f51a31483d47c8d4de384f",
+          "port": "8976d1623c05dcf2f82ed96d5652cfeed677ee1d"
+        },
+        "fs/minix/inode.c": {
+          "ack": "0f79112768d395ae40ab645c174543c3e5a8c140",
+          "port": "3662b5a032dd89a9eae48fcadebee8b1fbd59260"
+        },
+        "fs/mpage.c": {
+          "ack": "5150dac9c4831c302795162f187af79dad8d58a7",
+          "port": "5150dac9c4831c302795162f187af79dad8d58a7"
+        },
+        "fs/namei.c": {
+          "ack": "bd52c0b1a77e73a2d1f8852675f15adce807d284",
+          "port": "22c06bf3959e51d1963b7013777218c30002631f"
+        },
+        "fs/namespace.c": {
+          "ack": "5723280a01ad6e961b07c352f64bf5a9577a258d",
+          "port": "65b1155e1b481498635aabec79db2d5f9fae17c0"
+        },
+        "fs/netfs/main.c": {
+          "ack": "3f771852411a5ebae7a97ab27c1bd6391ca3fa88",
+          "port": "031a21cfaec804b424920a5ef16a96a791817030"
+        },
+        "fs/nfs/inode.c": {
+          "ack": "71f1757e05150060b69a91fedc956a433d8f3f8a",
+          "port": "86950c4269a12f76d8501f4bd45a6439c62864fe"
+        },
+        "fs/nfs/nfs4super.c": {
+          "ack": "9492dae78033e38e515c99eaa0381388c285e03b",
+          "port": "9492dae78033e38e515c99eaa0381388c285e03b"
+        },
+        "fs/nfsd/nfsctl.c": {
+          "ack": "ad6017f395d1bfffa4ad345b4718d1184a1a4f8d",
+          "port": "d655607852661261cfd2768f5e4fdc877794f78f"
+        },
+        "fs/nilfs2/super.c": {
+          "ack": "4d6f3e44eb9e7f6f758c77b2fb19703e6dc494ba",
+          "port": "75ea846eae6dd22dcf560a92829cbc676437075a"
+        },
+        "fs/nls/nls_base.c": {
+          "ack": "18229e7b25531caa78a6c5397e2c01b952d01e4b",
+          "port": "18229e7b25531caa78a6c5397e2c01b952d01e4b"
+        },
+        "fs/nls/nls_euc-jp.c": {
+          "ack": "b7993fd573dc7705d5ac7803e9c6ad70bd16c26b",
+          "port": "b7993fd573dc7705d5ac7803e9c6ad70bd16c26b"
+        },
+        "fs/nls/nls_koi8-ru.c": {
+          "ack": "21072ab0d1cea3f13ef155548303c524f2895e36",
+          "port": "21072ab0d1cea3f13ef155548303c524f2895e36"
+        },
+        "fs/ntfs3/super.c": {
+          "ack": "8dc40cf2119c558ea5316031e122396a993ff878",
+          "port": "42151d7c692137640d20c1e77ff9dca27be4ae0e"
+        },
+        "fs/ocfs2/dlmfs/dlmfs.c": {
+          "ack": "04cc0be15c987bee2c4c0876692d13d7279f0fa0",
+          "port": "04cc0be15c987bee2c4c0876692d13d7279f0fa0"
+        },
+        "fs/ocfs2/super.c": {
+          "ack": "d375b842c5c34c3ac4b20eb7dc17fb34944b61e9",
+          "port": "92e71ba467ba080c0e3020c55933b7b1a650ad32"
+        },
+        "fs/omfs/inode.c": {
+          "ack": "d870ee211ffc536f4a5b2c1b1344a095d64f6d55",
+          "port": "64818f1e834524ccc17417ee29f354568224f128"
+        },
+        "fs/open.c": {
+          "ack": "b5c8a16aad324e5a38ab7d5638338b7d2c066278",
+          "port": "b5c8a16aad324e5a38ab7d5638338b7d2c066278"
+        },
+        "fs/orangefs/orangefs-mod.c": {
+          "ack": "81384542604266de566f872d43c92d2cb22be9c8",
+          "port": "81384542604266de566f872d43c92d2cb22be9c8"
+        },
+        "fs/overlayfs/super.c": {
+          "ack": "e48d3aef2cdcc79fa5f35e6641f3e1c70eb43e15",
+          "port": "8d91b47891e9623aeac43df79d9ef81f837de1da"
+        },
+        "fs/pstore/blk.c": {
+          "ack": "27828f42575064f558b6fc3dfd650687d74c3dfe",
+          "port": "27828f42575064f558b6fc3dfd650687d74c3dfe"
+        },
+        "fs/qnx4/inode.c": {
+          "ack": "16d22e8d7394bd44aa54474b0061267f7e256187",
+          "port": "cad12bb468c09e43785a4b5064238b45f600a39e"
+        },
+        "fs/qnx6/inode.c": {
+          "ack": "e20a2978abc4b84793782cbb68c2fecf9927872e",
+          "port": "e20a2978abc4b84793782cbb68c2fecf9927872e"
+        },
+        "fs/read_write.c": {
+          "ack": "81a67209cb925ac23449966439181d2f3d196ead",
+          "port": "01e4d1f590ed8379fabcd1481609e2f2b71594b8"
+        },
+        "fs/romfs/super.c": {
+          "ack": "ff0983162e4839df7105e0e6c7c8f396afddbe20",
+          "port": "ff0983162e4839df7105e0e6c7c8f396afddbe20"
+        },
+        "fs/smb/client/cifsfs.c": {
+          "ack": "673ac3ba344fe6e3ca5b2cf0eadda0512d91198f",
+          "port": "bf2f349d748c5fa6ce3cfd8edff10d33611086ce"
+        },
+        "fs/smb/server/server.c": {
+          "ack": "4c84c927ab6bf2f10f2f927fdb43982db15683ed",
+          "port": "b69c4712cf5e1aa9d1a8ebe259e9aa052629a748"
+        },
+        "fs/splice.c": {
+          "ack": "2ae899283f7f5759f6f5e466c792bba88c6ae8fe",
+          "port": "eee09290882ed384b1221dc4b5eb6066ab274fda"
+        },
+        "fs/squashfs/super.c": {
+          "ack": "03769b71a13af65725fe3397b0f4681c4684fe9b",
+          "port": "03769b71a13af65725fe3397b0f4681c4684fe9b"
+        },
+        "fs/stat.c": {
+          "ack": "d1cb31a855dddd2f8f8ab21dd6377f7b9e93da8a",
+          "port": "ee99590ff9b5728301cc6bd4508366ebf6af529e"
+        },
+        "fs/super.c": {
+          "ack": "b6291a8d9dc84abfd2746e6f9d3c96ed8b1c3f5e",
+          "port": "2b3a23617f933ed4c21c5f33d829f987ff1a9989"
+        },
+        "fs/sync.c": {
+          "ack": "841733fdac0b5e1b230bd45966031728d5cc817e",
+          "port": "841733fdac0b5e1b230bd45966031728d5cc817e"
+        },
+        "fs/ubifs/super.c": {
+          "ack": "9e31bf969f8c21131216e5330dccf234d1a5e302",
+          "port": "9e31bf969f8c21131216e5330dccf234d1a5e302"
+        },
+        "fs/udf/super.c": {
+          "ack": "15c8a6eb64558d2d0e90fc007356b575ac663ca5",
+          "port": "6c92496e8fc795e9548222c2ffb0446fc96b6ede"
+        },
+        "fs/ufs/super.c": {
+          "ack": "852a7bbc1c173a23587f14ac805fd7db41f38043",
+          "port": "f481e9bf3331f45bc931f81370ddf8122f2dd522"
+        },
+        "fs/vboxsf/super.c": {
+          "ack": "2c0e3bae8c4b4dcea5bbe8cd8f1e7db8a0f9f8f2",
+          "port": "2c0e3bae8c4b4dcea5bbe8cd8f1e7db8a0f9f8f2"
+        },
+        "fs/xattr.c": {
+          "ack": "a92f0295486856f9ef273bd01705e8d2b2a55324",
+          "port": "a92f0295486856f9ef273bd01705e8d2b2a55324"
+        },
+        "fs/xfs/xfs_super.c": {
+          "ack": "5dce9f8f0f94e051a1c5ba4ec782bdc62382edaf",
+          "port": "5dce9f8f0f94e051a1c5ba4ec782bdc62382edaf"
+        },
+        "fs/zonefs/super.c": {
+          "ack": "4fc4e235d8f56249cc23979c42c3e219324b8e5b",
+          "port": "4fc4e235d8f56249cc23979c42c3e219324b8e5b"
+        },
+        "lib/test_lockup.c": {
+          "ack": "4798d49d6f0e3ed4d8df6eae9ad8318c25eac398",
+          "port": "1f5731277ff10b0161cd365d19b590107cc53e05"
+        },
+        "net/9p/mod.c": {
+          "ack": "d07bd26d4f007cbbe3bf4621579d4f1e0238972e",
+          "port": "d07bd26d4f007cbbe3bf4621579d4f1e0238972e"
+        },
+        "net/9p/trans_fd.c": {
+          "ack": "0494760a81d11f08e8ddbde0906526bdb02e87e9",
+          "port": "a0442b42ab64c7ed6f0ca24a147c3c14e5715acf"
+        },
+        "net/sunrpc/sunrpc_syms.c": {
+          "ack": "06b0289137c037ba40620cf2888fc8953d81a333",
+          "port": "18107341c146ef7aa92d10f47a9a82ecd64d1772"
+        }
+      }
+    }
+  ],
+  "merge_resolution": "diff --git a/drivers/android/binder/page_range.rs b/drivers/android/binder/page_range.rs\nremerge CONFLICT (content): Merge conflict in drivers/android/binder/page_range.rs\nindex 2d1e03ce069d..6686634ecf61 100644\n--- a/drivers/android/binder/page_range.rs\n+++ b/drivers/android/binder/page_range.rs\n@@ -778,19 +778,13 @@ fn drop(self: Pin<&mut Self>) {\n     // SAFETY: The lru lock is locked when this method is called.\n     unsafe { bindings::spin_unlock(&raw mut (*lru).lock) };\n \n-<<<<<<< e11a237a359e (ANDROID: GKI: update symbol list file for xiaomi)\n-    if let Some(vma) = mmap_read.vma_lookup(vma_addr) {\n-        let user_page_addr = vma_addr + (page_index << PAGE_SHIFT);\n-        crate::trace::trace_unmap_user_start(pid, page_index);\n-        vma.zap_page_range_single(user_page_addr, PAGE_SIZE);\n-        crate::trace::trace_unmap_user_end(pid, page_index);\n-=======\n     if let Some(unchecked_vma) = mmap_read.vma_lookup(vma_addr) {\n         if let Some(vma) = check_vma(unchecked_vma, range_ptr) {\n+            crate::trace::trace_unmap_user_start(pid, page_index);\n             let user_page_addr = vma_addr + (page_index << PAGE_SHIFT);\n             vma.zap_page_range_single(user_page_addr, PAGE_SIZE);\n+            crate::trace::trace_unmap_user_end(pid, page_index);\n         }\n->>>>>>> 4aea1dc4cad1 (Linux 6.18.19)\n     }\n \n     drop(mmap_read);\ndiff --git a/kernel/exit.c b/kernel/exit.c\nremerge CONFLICT (content): Merge conflict in kernel/exit.c\nindex e6ade940e280..3ecd163df7c0 100644\n--- a/kernel/exit.c\n+++ b/kernel/exit.c\n@@ -906,14 +906,11 @@ void __noreturn do_exit(long code)\n \tWARN_ON(irqs_disabled());\n \tWARN_ON(tsk->plug);\n \n-<<<<<<< e11a237a359e (ANDROID: GKI: update symbol list file for xiaomi)\n-\tprofile_task_exit(tsk);\n-=======\n \tkthread = tsk_is_kthread(tsk);\n \tif (unlikely(kthread))\n \t\tkthread_do_exit(kthread, code);\n \n->>>>>>> 4aea1dc4cad1 (Linux 6.18.19)\n+\tprofile_task_exit(tsk);\n \tkcov_task_exit(tsk);\n \tkmsan_task_exit(tsk);\n \n",
+  "namespace_patch_counts": {
+    "+MODULE_IMPORT_NS": 76,
+    "-EXPORT_SYMBOL": 76,
+    "+EXPORT_SYMBOL_NS": 73,
+    "-EXPORT_SYMBOL_GPL": 6,
+    "+EXPORT_SYMBOL_NS_GPL": 5,
+    "+EXPORT_SYMBOL_GPL": 4
+  },
+  "license_changes": {
+    "kern_path": {
+      "before": "EXPORT_SYMBOL",
+      "after": "EXPORT_SYMBOL_GPL"
+    },
+    "generic_file_open": {
+      "before": "EXPORT_SYMBOL",
+      "after": "EXPORT_SYMBOL_GPL"
+    },
+    "kernel_read": {
+      "before": "EXPORT_SYMBOL",
+      "after": "EXPORT_SYMBOL_GPL"
+    },
+    "kernel_write": {
+      "before": "EXPORT_SYMBOL",
+      "after": "EXPORT_SYMBOL_GPL"
+    },
+    "vfs_splice_read": {
+      "before": "EXPORT_SYMBOL_GPL",
+      "after": "EXPORT_SYMBOL_NS"
+    }
+  },
+  "namespace_changes": [
+    {
+      "path": "drivers/android/binder/rust_binderfs.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "drivers/block/zloop.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "drivers/mtd/nand/raw/nandsim.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "drivers/mtd/ubi/build.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "drivers/nvme/target/core.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "drivers/target/target_core_configfs.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "drivers/target/target_core_file.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "drivers/usb/gadget/function/f_mass_storage.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "drivers/usb/gadget/function/f_uac1_legacy.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "drivers/usb/gadget/function/storage_common.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/9p/v9fs.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/adfs/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/affs/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/afs/main.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/attr.c",
+      "change": "-EXPORT_SYMBOL(setattr_prepare);"
+    },
+    {
+      "path": "fs/attr.c",
+      "change": "+EXPORT_SYMBOL_NS(setattr_prepare, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/attr.c",
+      "change": "-EXPORT_SYMBOL(inode_newsize_ok);"
+    },
+    {
+      "path": "fs/attr.c",
+      "change": "+EXPORT_SYMBOL_NS(inode_newsize_ok, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/attr.c",
+      "change": "-EXPORT_SYMBOL(notify_change);"
+    },
+    {
+      "path": "fs/attr.c",
+      "change": "+EXPORT_SYMBOL_NS(notify_change, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/autofs/init.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/bad_inode.c",
+      "change": "-EXPORT_SYMBOL(make_bad_inode);"
+    },
+    {
+      "path": "fs/bad_inode.c",
+      "change": "+EXPORT_SYMBOL_NS(make_bad_inode, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/bad_inode.c",
+      "change": "-EXPORT_SYMBOL(is_bad_inode);"
+    },
+    {
+      "path": "fs/bad_inode.c",
+      "change": "+EXPORT_SYMBOL_NS(is_bad_inode, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/befs/linuxvfs.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/bfs/inode.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/binfmt_misc.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/btrfs/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "-EXPORT_SYMBOL(end_buffer_write_sync);"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "+EXPORT_SYMBOL_NS(end_buffer_write_sync, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "-EXPORT_SYMBOL(mark_buffer_async_write);"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "+EXPORT_SYMBOL_NS(mark_buffer_async_write, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "-EXPORT_SYMBOL(mark_buffer_dirty);"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "+EXPORT_SYMBOL_NS(mark_buffer_dirty, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "-EXPORT_SYMBOL(mark_buffer_write_io_error);"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "+EXPORT_SYMBOL_NS(mark_buffer_write_io_error, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "-EXPORT_SYMBOL(__brelse);"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "+EXPORT_SYMBOL_NS(__brelse, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "-EXPORT_SYMBOL(__bforget);"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "+EXPORT_SYMBOL_NS(__bforget, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "-EXPORT_SYMBOL(__breadahead);"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "+EXPORT_SYMBOL_NS(__breadahead, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "-EXPORT_SYMBOL(__bread_gfp);"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "+EXPORT_SYMBOL_NS(__bread_gfp, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "-EXPORT_SYMBOL(create_empty_buffers);"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "+EXPORT_SYMBOL_NS(create_empty_buffers, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "-EXPORT_SYMBOL(clean_bdev_aliases);"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "+EXPORT_SYMBOL_NS(clean_bdev_aliases, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "-EXPORT_SYMBOL(generic_write_end);"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "+EXPORT_SYMBOL_NS(generic_write_end, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "-EXPORT_SYMBOL(block_is_partially_uptodate);"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "+EXPORT_SYMBOL_NS(block_is_partially_uptodate, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "-EXPORT_SYMBOL(generic_cont_expand_simple);"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "+EXPORT_SYMBOL_NS(generic_cont_expand_simple, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "-EXPORT_SYMBOL(generic_block_bmap);"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "+EXPORT_SYMBOL_NS(generic_block_bmap, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "-EXPORT_SYMBOL(__sync_dirty_buffer);"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "+EXPORT_SYMBOL_NS(__sync_dirty_buffer, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "-EXPORT_SYMBOL(sync_dirty_buffer);"
+    },
+    {
+      "path": "fs/buffer.c",
+      "change": "+EXPORT_SYMBOL_NS(sync_dirty_buffer, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/cachefiles/main.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/ceph/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/coda/psdev.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/cramfs/inode.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/dcache.c",
+      "change": "-EXPORT_SYMBOL(d_obtain_alias);"
+    },
+    {
+      "path": "fs/dcache.c",
+      "change": "+EXPORT_SYMBOL_NS(d_obtain_alias, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/dcache.c",
+      "change": "-EXPORT_SYMBOL(d_add_ci);"
+    },
+    {
+      "path": "fs/dcache.c",
+      "change": "+EXPORT_SYMBOL_NS(d_add_ci, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/dcache.c",
+      "change": "-EXPORT_SYMBOL(d_move);"
+    },
+    {
+      "path": "fs/dcache.c",
+      "change": "+EXPORT_SYMBOL_NS(d_move, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/dcache.c",
+      "change": "-EXPORT_SYMBOL(d_splice_alias);"
+    },
+    {
+      "path": "fs/dcache.c",
+      "change": "+EXPORT_SYMBOL_NS(d_splice_alias, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/direct-io.c",
+      "change": "-EXPORT_SYMBOL(__blockdev_direct_IO);"
+    },
+    {
+      "path": "fs/direct-io.c",
+      "change": "+EXPORT_SYMBOL_NS(__blockdev_direct_IO, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/ecryptfs/main.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/efivarfs/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/efs/inode.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/erofs/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/exfat/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/ext2/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/ext4/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/f2fs/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/fat/inode.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/fat/namei_msdos.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/fat/namei_vfat.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/file.c",
+      "change": "-EXPORT_SYMBOL(close_fd);"
+    },
+    {
+      "path": "fs/file.c",
+      "change": "+EXPORT_SYMBOL_NS(close_fd, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/freevxfs/vxfs_super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/fs-writeback.c",
+      "change": "-EXPORT_SYMBOL(__mark_inode_dirty);"
+    },
+    {
+      "path": "fs/fs-writeback.c",
+      "change": "+EXPORT_SYMBOL_NS(__mark_inode_dirty, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/fs-writeback.c",
+      "change": "-EXPORT_SYMBOL(try_to_writeback_inodes_sb);"
+    },
+    {
+      "path": "fs/fs-writeback.c",
+      "change": "+EXPORT_SYMBOL_NS(try_to_writeback_inodes_sb, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/fs-writeback.c",
+      "change": "-EXPORT_SYMBOL(write_inode_now);"
+    },
+    {
+      "path": "fs/fs-writeback.c",
+      "change": "+EXPORT_SYMBOL_NS(write_inode_now, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/fs-writeback.c",
+      "change": "-EXPORT_SYMBOL(sync_inode_metadata);"
+    },
+    {
+      "path": "fs/fs-writeback.c",
+      "change": "+EXPORT_SYMBOL_NS(sync_inode_metadata, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/fs_types.c",
+      "change": "-EXPORT_SYMBOL_GPL(fs_ftype_to_dtype);"
+    },
+    {
+      "path": "fs/fs_types.c",
+      "change": "+EXPORT_SYMBOL_NS_GPL(fs_ftype_to_dtype, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/fuse/inode.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/gfs2/main.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/hfs/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/hfsplus/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/hpfs/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/incfs/main.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "-EXPORT_SYMBOL(drop_nlink);"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "+EXPORT_SYMBOL_NS(drop_nlink, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "-EXPORT_SYMBOL(set_nlink);"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "+EXPORT_SYMBOL_NS(set_nlink, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "-EXPORT_SYMBOL(inode_init_once);"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "+EXPORT_SYMBOL_NS(inode_init_once, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "-EXPORT_SYMBOL(ihold);"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "+EXPORT_SYMBOL_NS(ihold, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "-EXPORT_SYMBOL(__insert_inode_hash);"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "+EXPORT_SYMBOL_NS(__insert_inode_hash, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "-EXPORT_SYMBOL(__remove_inode_hash);"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "+EXPORT_SYMBOL_NS(__remove_inode_hash, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "-EXPORT_SYMBOL(clear_inode);"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "+EXPORT_SYMBOL_NS(clear_inode, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "-EXPORT_SYMBOL(unlock_new_inode);"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "+EXPORT_SYMBOL_NS(unlock_new_inode, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "-EXPORT_SYMBOL(iget5_locked);"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "+EXPORT_SYMBOL_NS(iget5_locked, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "-EXPORT_SYMBOL(iunique);"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "+EXPORT_SYMBOL_NS(iunique, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "-EXPORT_SYMBOL(ilookup5);"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "+EXPORT_SYMBOL_NS(ilookup5, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "-EXPORT_SYMBOL(touch_atime);"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "+EXPORT_SYMBOL_NS(touch_atime, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "-EXPORT_SYMBOL(file_remove_privs);"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "+EXPORT_SYMBOL_NS(file_remove_privs, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "-EXPORT_SYMBOL(init_special_inode);"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "+EXPORT_SYMBOL_NS(init_special_inode, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "-EXPORT_SYMBOL(inode_init_owner);"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "+EXPORT_SYMBOL_NS(inode_init_owner, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "-EXPORT_SYMBOL(inode_dio_wait);"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "+EXPORT_SYMBOL_NS(inode_dio_wait, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "-EXPORT_SYMBOL(inode_set_flags);"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "+EXPORT_SYMBOL_NS(inode_set_flags, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "-EXPORT_SYMBOL(timestamp_truncate);"
+    },
+    {
+      "path": "fs/inode.c",
+      "change": "+EXPORT_SYMBOL_NS(timestamp_truncate, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/ioctl.c",
+      "change": "-EXPORT_SYMBOL(fiemap_fill_next_extent);"
+    },
+    {
+      "path": "fs/ioctl.c",
+      "change": "+EXPORT_SYMBOL_NS(fiemap_fill_next_extent, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/ioctl.c",
+      "change": "-EXPORT_SYMBOL(fiemap_prep);"
+    },
+    {
+      "path": "fs/ioctl.c",
+      "change": "+EXPORT_SYMBOL_NS(fiemap_prep, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/isofs/inode.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/jbd2/journal.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/jffs2/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/jfs/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/libfs.c",
+      "change": "-EXPORT_SYMBOL(generic_read_dir);"
+    },
+    {
+      "path": "fs/libfs.c",
+      "change": "+EXPORT_SYMBOL_NS(generic_read_dir, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/libfs.c",
+      "change": "-EXPORT_SYMBOL(__generic_file_fsync);"
+    },
+    {
+      "path": "fs/libfs.c",
+      "change": "+EXPORT_SYMBOL_NS(__generic_file_fsync, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/libfs.c",
+      "change": "-EXPORT_SYMBOL(generic_file_fsync);"
+    },
+    {
+      "path": "fs/libfs.c",
+      "change": "+EXPORT_SYMBOL_NS(generic_file_fsync, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/minix/inode.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/mpage.c",
+      "change": "-EXPORT_SYMBOL(mpage_readahead);"
+    },
+    {
+      "path": "fs/mpage.c",
+      "change": "+EXPORT_SYMBOL_NS(mpage_readahead, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/mpage.c",
+      "change": "-EXPORT_SYMBOL(mpage_read_folio);"
+    },
+    {
+      "path": "fs/mpage.c",
+      "change": "+EXPORT_SYMBOL_NS(mpage_read_folio, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/mpage.c",
+      "change": "-EXPORT_SYMBOL(mpage_writepages);"
+    },
+    {
+      "path": "fs/mpage.c",
+      "change": "+EXPORT_SYMBOL_NS(mpage_writepages, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/namei.c",
+      "change": "-EXPORT_SYMBOL(kern_path);"
+    },
+    {
+      "path": "fs/namei.c",
+      "change": "+EXPORT_SYMBOL_GPL(kern_path);"
+    },
+    {
+      "path": "fs/namei.c",
+      "change": "-EXPORT_SYMBOL(vfs_create);"
+    },
+    {
+      "path": "fs/namei.c",
+      "change": "+EXPORT_SYMBOL_NS(vfs_create, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/namei.c",
+      "change": "-EXPORT_SYMBOL(vfs_mkdir);"
+    },
+    {
+      "path": "fs/namei.c",
+      "change": "+EXPORT_SYMBOL_NS(vfs_mkdir, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/namei.c",
+      "change": "-EXPORT_SYMBOL(vfs_rmdir);"
+    },
+    {
+      "path": "fs/namei.c",
+      "change": "+EXPORT_SYMBOL_NS(vfs_rmdir, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/namei.c",
+      "change": "-EXPORT_SYMBOL(vfs_unlink);"
+    },
+    {
+      "path": "fs/namei.c",
+      "change": "+EXPORT_SYMBOL_NS(vfs_unlink, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/namei.c",
+      "change": "-EXPORT_SYMBOL(vfs_link);"
+    },
+    {
+      "path": "fs/namei.c",
+      "change": "+EXPORT_SYMBOL_NS(vfs_link, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/namei.c",
+      "change": "-EXPORT_SYMBOL(vfs_rename);"
+    },
+    {
+      "path": "fs/namei.c",
+      "change": "+EXPORT_SYMBOL_NS(vfs_rename, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/namespace.c",
+      "change": "-EXPORT_SYMBOL_GPL(mnt_want_write_file);"
+    },
+    {
+      "path": "fs/namespace.c",
+      "change": "+EXPORT_SYMBOL_NS_GPL(mnt_want_write_file, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/namespace.c",
+      "change": "-EXPORT_SYMBOL(mnt_drop_write_file);"
+    },
+    {
+      "path": "fs/namespace.c",
+      "change": "+EXPORT_SYMBOL_NS(mnt_drop_write_file, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/netfs/main.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/nfs/inode.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/nfs/nfs4super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/nfsd/nfsctl.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/nilfs2/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/nls/nls_base.c",
+      "change": "-EXPORT_SYMBOL(unload_nls);"
+    },
+    {
+      "path": "fs/nls/nls_base.c",
+      "change": "-EXPORT_SYMBOL(load_nls);"
+    },
+    {
+      "path": "fs/nls/nls_base.c",
+      "change": "-EXPORT_SYMBOL(load_nls_default);"
+    },
+    {
+      "path": "fs/nls/nls_base.c",
+      "change": "+EXPORT_SYMBOL_NS(unload_nls, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/nls/nls_base.c",
+      "change": "+EXPORT_SYMBOL_NS(load_nls, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/nls/nls_base.c",
+      "change": "+EXPORT_SYMBOL_NS(load_nls_default, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/nls/nls_euc-jp.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/nls/nls_koi8-ru.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/ntfs3/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/ocfs2/dlmfs/dlmfs.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/ocfs2/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/omfs/inode.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/open.c",
+      "change": "-EXPORT_SYMBOL(filp_open);"
+    },
+    {
+      "path": "fs/open.c",
+      "change": "+EXPORT_SYMBOL_NS(filp_open, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/open.c",
+      "change": "-EXPORT_SYMBOL(generic_file_open);"
+    },
+    {
+      "path": "fs/open.c",
+      "change": "+EXPORT_SYMBOL_GPL(generic_file_open);"
+    },
+    {
+      "path": "fs/orangefs/orangefs-mod.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/overlayfs/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/pstore/blk.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/qnx4/inode.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/qnx6/inode.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/read_write.c",
+      "change": "-EXPORT_SYMBOL(kernel_read);"
+    },
+    {
+      "path": "fs/read_write.c",
+      "change": "+EXPORT_SYMBOL_GPL(kernel_read);"
+    },
+    {
+      "path": "fs/read_write.c",
+      "change": "-EXPORT_SYMBOL(kernel_write);"
+    },
+    {
+      "path": "fs/read_write.c",
+      "change": "+EXPORT_SYMBOL_GPL(kernel_write);"
+    },
+    {
+      "path": "fs/romfs/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/smb/client/cifsfs.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/smb/server/server.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/splice.c",
+      "change": "-EXPORT_SYMBOL(iter_file_splice_write);"
+    },
+    {
+      "path": "fs/splice.c",
+      "change": "+EXPORT_SYMBOL_NS(iter_file_splice_write, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/splice.c",
+      "change": "-EXPORT_SYMBOL_GPL(vfs_splice_read);"
+    },
+    {
+      "path": "fs/splice.c",
+      "change": "+EXPORT_SYMBOL_NS(vfs_splice_read, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/squashfs/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/stat.c",
+      "change": "-EXPORT_SYMBOL(generic_fillattr);"
+    },
+    {
+      "path": "fs/stat.c",
+      "change": "+EXPORT_SYMBOL_NS(generic_fillattr, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/super.c",
+      "change": "-EXPORT_SYMBOL(kill_block_super);"
+    },
+    {
+      "path": "fs/super.c",
+      "change": "+EXPORT_SYMBOL_NS(kill_block_super, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/sync.c",
+      "change": "-EXPORT_SYMBOL(sync_filesystem);"
+    },
+    {
+      "path": "fs/sync.c",
+      "change": "+EXPORT_SYMBOL_NS(sync_filesystem, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/ubifs/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/udf/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/ufs/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/vboxsf/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/xattr.c",
+      "change": "-EXPORT_SYMBOL_GPL(vfs_setxattr);"
+    },
+    {
+      "path": "fs/xattr.c",
+      "change": "+EXPORT_SYMBOL_NS_GPL(vfs_setxattr, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/xattr.c",
+      "change": "-EXPORT_SYMBOL_GPL(vfs_getxattr);"
+    },
+    {
+      "path": "fs/xattr.c",
+      "change": "+EXPORT_SYMBOL_NS_GPL(vfs_getxattr, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/xattr.c",
+      "change": "-EXPORT_SYMBOL_GPL(vfs_listxattr);"
+    },
+    {
+      "path": "fs/xattr.c",
+      "change": "+EXPORT_SYMBOL_NS_GPL(vfs_listxattr, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/xfs/xfs_super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "fs/zonefs/super.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "lib/test_lockup.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "net/9p/mod.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "net/9p/trans_fd.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    },
+    {
+      "path": "net/sunrpc/sunrpc_syms.c",
+      "change": "+MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");"
+    }
+  ],
+  "namespace_policy": "Native explicit import validation is retained. It is not an access-control boundary against arbitrary loaded kernel code and does not prove a module is a filesystem. No kernel function body changed by this candidate.",
+  "validation": "Full unique merge resolution read; native kthread ordering and profile notifier concrete consumers examined. Full namespace patch parsed with an exhaustive assertion rejecting any nonmetadata changed line, and every added declaration verified in current source with the explicit GPL-preserving vfs_splice_read adaptation. Build 101 covers imports; build 102 pending for final GPL flag. No namespace runtime rejection, module insertion or filesystem-as-module build performed.",
+  "remote_sources_used": []
+}

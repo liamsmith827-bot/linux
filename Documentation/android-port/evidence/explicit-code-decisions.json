@@ -6105,5 +6105,31 @@
       "evidence/rust-binder-interface-review.json",
       "SECURITY.md: Rust Binder selection, polling and mapping locks"
     ]
+  },
+  {
+    "commit": "01df5435d96401845c929ee82018ad4608d6326e",
+    "disposition": "merge-resolution-adapted-net-state",
+    "rationale": "Examine both unique remerge-resolution hunks, not the 333 first-parent files. Binder unmapping resolution combines native check_vma ownership validation with Android before/after tracepoints; retain both in the final per-VMA-lock shrinker while preserving LTS mm mutex lifetime. Task-exit resolution keeps native kthread detection/exit before restored profile_task_exit, then native KCOV/KMSAN ordering. The latter has the concrete UID accounting notifier consumer in drivers/misc/uid_sys_stats.c and local framework /proc/uid_cputime and /proc/uid_io readers. No native kthread early-exit behavior is reordered or bypassed; ordinary task is live through its notifier. Later exit hooks are separate candidates, not unique changes attributed to this merge. Parents remain separately inventoried.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/binder-merge-vfs-review.json",
+      "SECURITY.md: Binder merge resolution and VFS namespace imports"
+    ]
+  },
+  {
+    "commit": "fd2cbc1b7ab7d6c29bd875c1b509b86fcadf6964",
+    "disposition": "partially-adapted",
+    "rationale": "Retain Android VFS source-module namespace declarations and matching imports as a generic module policy, not historical ABI layout preservation. Entire patch mechanically checked: 82 export replacements plus 76 import additions and no other nonblank changed lines. Restore two imports lost during LTS filesystem reconciliation in 349c8bdc72bb; retain all remaining declarations except adapting vfs_splice_read to keep its native GPL-only flag while adding the namespace. ext4/F2FS are built in for SDK; those declarations also preserve their supported module configuration without adding a platform. Native modpost/loader check import declarations, not actual filesystem identity: this prevents accidental API use, not malicious trusted-module access. Four exports become GPL-only (kern_path,generic_file_open,kernel_read,kernel_write); retain that ACK source policy. Reject the opposite conversion for vfs_splice_read, which dropped the native GPL-only restriction; keep EXPORT_SYMBOL_NS_GPL. Namespace metadata does not replace native licensing checks. No vendor-binary compatibility promise. The retained namespace does not weaken VFS permission/data-integrity checks; function bodies are unaffected by this candidate. Build 102 will validate the final SDK integration; alternate allmodconfig and runtime module insertion are not claimed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "349c8bdc72bbf68b6e73ae6ba00e728f406241e3",
+      "ca332f5bd33e106e4cdfe2217e303e5f59ba8365"
+    ],
+    "evidence": [
+      "evidence/binder-merge-vfs-review.json",
+      "SECURITY.md: Binder merge resolution and VFS namespace imports"
+    ]
   }
 ]

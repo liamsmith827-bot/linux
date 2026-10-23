@@ -4147,3 +4147,30 @@ priority and Zeroable adaptations. The port keeps the native extended-error
 fixes and actual-errno logging guard. These internal metadata changes impose no
 historical layout contract. Build 100 covers this source-equivalent batch; its
 compilation and artifact checks do not establish runtime behavior.
+
+## Binder merge resolution and VFS namespace imports
+
+Merge `01df5435d964` has two unique resolution hunks. The Binder hunk combines
+native VMA ownership checking with Android unmap tracing; the final per-VMA-lock
+path retains both. The exit hunk preserves native kthread early termination before
+profile_task_exit and KCOV/KMSAN cleanup. The profile notifier has a concrete UID
+accounting consumer, with framework readers for /proc/uid_cputime and /proc/uid_io.
+Its presence is not inferred only from a hook name. The merge's first-parent
+changes are not counted as additional unique resolution code.
+
+The complete `fd2cbc1b7ab7` patch contains only 82 export replacements and 76
+namespace imports. `349c8bdc72bb` restores the two missing ext4/F2FS imports after
+native filesystem reconciliation. The SDK builds these filesystems in, but the
+module declarations keep the selected source-module policy consistent without
+adding hardware support. Existing modpost and loader namespace validation remains.
+An import declaration does not establish that a module is a filesystem and is
+not a security boundary against arbitrary trusted kernel code.
+
+ACK changes kern_path, generic_file_open, kernel_read and kernel_write to GPL-only
+exports. That source policy is retained. Its opposite change to vfs_splice_read
+would remove the native LTS GPL-only flag, so `ca332f5bd33e` uses
+EXPORT_SYMBOL_NS_GPL instead. Explicit namespace imports are not a replacement
+for native license verification. No VFS implementation, permission check, splice
+bounds check or userspace ABI changes with these metadata corrections. Historical
+vendor binary compatibility is not preserved. Alternate filesystem module configs
+and runtime loading are untested; the SDK builds check the selected integration.
