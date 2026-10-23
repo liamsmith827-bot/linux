@@ -4693,3 +4693,27 @@ its schema and role were classified without claiming a semantic review of
 every generated entry. Native equality and unchanged earlier review witnesses
 are recorded. Build 105 covers compilation only; no runtime crypto or UFS
 verification is claimed. Only local sources were used.
+
+# Inline-encryption upstream refresh
+
+The 52-file refresh `c2b86b727a41` is resolved in
+`evidence/inline-upstream-refresh-review.json`. Native request contexts and
+crypto profiles provide the keyslot-ownership conversion. Later completion
+handling releases keyslots before the final bio completion, when upper layers
+may evict their key. Native allocation errors, every-limb DUN checks, bounded
+key initialization and RAW-only fallback remain. Native integrity/profile
+registration rejects unsupported combinations; current queue-limit updates
+return an error instead of silently removing an active crypto profile.
+
+Current fscrypt setup, multi-device checks and F2FS crypto/physical merge checks
+are retained. Upstream `9dad5feb49a5` supersedes the old local NOFS wrapper:
+key setup may load crypto modules and acquire locks whose owners allocate
+with GFP_KERNEL, so this port does not claim NOFS-safe key setup. The existing
+Android default-key, skip-state, asynchronous zeroout and allocation-rescue
+adaptations keep their separate security analyses. UFS host/core files remain
+exactly LTS, with the native custom-profile interface instead of historical
+crypto-vops. No new physical-platform support is introduced.
+
+Native equality and unchanged earlier-review witnesses are recorded. Build
+105 covers compilation, not the runtime tests reported in the old commit
+message. No remote source was accessed for this review.
