@@ -4174,3 +4174,77 @@ for native license verification. No VFS implementation, permission check, splice
 bounds check or userspace ABI changes with these metadata corrections. Historical
 vendor binary compatibility is not preserved. Alternate filesystem module configs
 and runtime loading are untested; the SDK builds check the selected integration.
+
+## WrapFD driver bounds and ownership
+
+The driver and its use-state follow-up are retained for the selected 64-bit MMU
+SDK configuration. The local libwrapfd library opens /dev/wrapfd and exposes the
+same fixed-width ioctl records. Checked-out SELinux policy permits device creation
+and LOAD to system_server, while apps receive DMA-buffer ioctls and designated
+HALs receive the ownership/guest subset. These source observations are not proof
+of runtime policy enforcement. The driver preserves anonymous-inode LSM creation,
+FD reservation, native DMA mapping/cache synchronization and VFS read verification.
+
+`328a500f0012` repairs several input and I/O boundary failures. Zero-length loads
+validate the destination and return without allocating an empty request list or
+waiting for a completion that cannot occur. Internal nonempty requests check
+aligned file extents against signed offset limits and destination arithmetic
+against pointer bounds. Request splitting uses native MAX_RW_COUNT, derived from
+INT_MAX even on 64-bit, and is clamped to at least one page. Extreme module parameter
+values therefore cannot produce a zero divisor or an oversized VFS request.
+
+A subrequest entirely in the tail bounce pages must not enter the direct-buffer
+segment. The missing upper-bound predicate previously allowed subtraction past
+that segment's end, and potentially an out-of-range pointer calculation. The port
+checks both ends. Each request now records the minimum bytes needed through the
+requested file end, so an earlier short read cannot be concealed by another
+request returning alignment padding. Errors are recorded while every queued
+request still completes before file, buffer or request storage is released.
+An error can still leave partial destination writes; LOAD is not transactional.
+
+The publication failure path previously dropped the new Wrap while holding the
+same inner mutex that its destructor acquires. The port extracts content, unlocks,
+then destroys the failed wrapper. A failed rewrap also restores the previous
+write permission before returning content to the original wrapper. The underlying
+file mode is immutable, so the previously valid protection remains restorable.
+The old implementation could leave a failed permission upgrade in effect.
+
+Device get/put calls now count matching successful acquisitions. Previously, two
+gets by one device acquired two DMA-buffer references, but the first put cleared
+the owner; the second put then failed and ownership could be reassigned early.
+The port retains the owner until the final matching put and checks count growth.
+This does not relax the caller's obligation to keep the file and device valid,
+and a device reference does not guarantee that a driver remains bound. Task-owner
+mm checks now use a single volatile read, without dereferencing a potentially
+exiting mm pointer. The existing group-leader ownership model is retained.
+
+The use-state guard keeps LOAD outside the content mutex while blocking rewrap,
+empty and new ownership acquisition during active use. Mmap's deferred task work
+keeps the pending counter alive until syscall return; wrapper destruction clears
+its internal raw file pointer. Read-only mapping and remap_file_pages protection
+remain. LOAD still does not require ownership, matching ACK; checked-out apps/HAL
+policy excludes it. Concurrent LOADs, source-file mutation, task-group leader exit
+and actual DMA/mmap races remain unverified. The supplied ACK header also declares
+is_wrapfd_vma without a driver definition. No local common-module caller was found,
+but that is not proof of dispensability and no working export is claimed.
+
+Three extracted-function harnesses pass: 3,886 I/O geometry/completion cases,
+72 publication/protection cases and 3,488 device ownership assertions. The original
+ACK controls fail 911 cases, 25 cases and 1,612 assertions respectively. Geometry
+checks compare every simulated destination byte and surrounding sentinels. Host
+allocation/file/lock/completion shims do not reproduce actual asynchronous kernel
+I/O; the mutex shim detects recursive locking rather than hanging. The four exact
+ACK selftest files are retained after review, including mapped/unaligned loads,
+ownership and remapping tests, but were not executed or claimed to pass. These
+selftests contain pre-existing weak assertions/unchecked string termination; the
+focused host checks are distinct evidence. See `evidence/wrapfd-driver-review.json`.
+
+Build 102 passed at `328a500f0012`, including both images, 100 common modules
+and 45 virtual-device modules; all signatures and module flag/CRC tables passed
+validation. System.map contains both WrapFD get/put C entry points, but Module.symvers
+does not export them to loadable modules. The supplied ACK has the same mechanism:
+`#[export]` supplies linkage/type checking and the automatic GPL export generator
+only scans the Rust core/kernel/bindings objects. Built-in linkage is verified;
+loadable-module access is not claimed. No new export policy is inferred from the
+absence of an SDK vendor caller. The generated VFS symbol record independently
+confirms that `vfs_splice_read` retains its native GPL-only flag and ACK namespace.

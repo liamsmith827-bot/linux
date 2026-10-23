@@ -1,0 +1,274 @@
+{
+  "source_head": "328a500f00121c20b291b021d31d28ac7449f7ec",
+  "records": [
+    {
+      "commit": "2416ad797c31a8520de3d32d7fc91a60afd5eb3d",
+      "disposition": "adapted",
+      "rationale": "Retain the selected 64-bit MMU Rust WrapFD device, exact fixed-width UAPI, dma-buf content, task/device ownership, guest mapping control, rewrap/empty/load, compat ioctls, fdinfo and associated native-helper bindings. Positive local libwrapfd and system_server/HAL/app SELinux policy consumers are pinned. Preserve native file reservation, anonymous-inode LSM, DMA mapping/cache synchronization and VFS read verification. Adapt with 328a500f0012: checked/aligned extents, native 32-bit MAX_RW_COUNT, nonzero page-sized request splitting, zero-length no-I/O success after bounds checks, correct tail-only iovec selection and per-request minimum completion rather than aggregate bytes that can hide an earlier short read. Also unlock before failed wrapper destruction, restore original protection if rewrap publication fails, use a single volatile read of exiting task mm, and retain device ownership until every successful get has its matching put. Host checks pass 3886 I/O cases, 72 publication cases and 3488 device assertions; original ACK fails their controls. Current driver does not require owner status for LOAD, which remains restricted by checked-out SELinux policy; no stronger ownership guarantee or coherent concurrent LOAD/file-mutation snapshot is claimed. is_wrapfd_vma is an unimplemented declaration in supplied ACK too, not a verified interface. Build 102 passed at 328a500f0012 with both images and all 145 signed modules. The get/put C symbols are built in but absent from Module.symvers: ACK #[export] supplies C linkage/signature checking, while automatic GPL exports cover Rust core/kernel/bindings objects, not this driver. No loadable-module export or kernel ioctl/DMA/mmap execution is claimed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "328a500f00121c20b291b021d31d28ac7449f7ec",
+        "f744d35f5a432220ed9b6df007264d36623e2237"
+      ],
+      "evidence": [
+        "evidence/wrapfd-driver-review.json",
+        "evidence/wrapfd-io-check.json",
+        "evidence/wrapfd-publication-check.json",
+        "evidence/wrapfd-device-ownership-check.json",
+        "SECURITY.md: WrapFD driver bounds and ownership"
+      ],
+      "subject": "ANDROID: rust: wrapfd rust kernel driver.",
+      "patch_sha256": "86f50580b3e44364a108f407cb0b1cbdee604e8c4f293f026043dd0191f8dcc5",
+      "path_blobs": {
+        "drivers/android/Kconfig": {
+          "ack": "8b498ee93256a7fdc09d5bab07c3e907c135ae9e",
+          "port": "f21ad8cb3e93acdd14499528122c3245afb01292",
+          "lts_to_port_sha256": "bb63389de788ded19a068ef10316c3d192642a6f4cec98b4246fdfc7960fb69a"
+        },
+        "drivers/android/Makefile": {
+          "ack": "b5dc20329ca0aad07f46ce251083a3bc584ec19c",
+          "port": "7783894efa98586f4b80fba13d2769e87a5a3401",
+          "lts_to_port_sha256": "f74d3ea2e4478dbbb9e193e04d9cc23514698f2f7fb5ed136aa29f4f48c7ffcb"
+        },
+        "drivers/android/wrapfd/Kconfig": {
+          "ack": "9bd87b73470d4a38ac0253bbf99ea7fcd4fc2efc",
+          "port": "9bd87b73470d4a38ac0253bbf99ea7fcd4fc2efc",
+          "lts_to_port_sha256": "69f708d4ffd56fb3919cddaca1d3a1822080f15b19460c30b8f7ff6df71f59b9"
+        },
+        "drivers/android/wrapfd/Makefile": {
+          "ack": "ebad78a820786aeafd5e1a05431fd365c0a9356f",
+          "port": "ebad78a820786aeafd5e1a05431fd365c0a9356f",
+          "lts_to_port_sha256": "4a3182190854e2eb94d0f8ef63f1c9d3f713bb8c4ae41b4fc060d203d7305c60"
+        },
+        "drivers/android/wrapfd/content.rs": {
+          "ack": "06b221db8475054e5ef6111440a9e13024fe2d5e",
+          "port": "7e7774eea88bc3f5af7e63457b48693f42ef9eec",
+          "lts_to_port_sha256": "8fb2429eef02f13fe5476af5ad2e715b951ae7fb1bec699aa169ecfeda70a32c"
+        },
+        "drivers/android/wrapfd/io_context.rs": {
+          "ack": "df6fcbac2a54dd79c68483f0b925fcd472c9ebc3",
+          "port": "1c7599a45863ccb8119a0a43c2e24f3a57d53beb",
+          "lts_to_port_sha256": "59045d70b15843a22f44467a9f92755bbe3ad3ca10d943a2041bed285f36e082"
+        },
+        "drivers/android/wrapfd/rust_wrapfd.rs": {
+          "ack": "dfa77bfa1dadeb905873af6373cd3a234489f2ee",
+          "port": "dfa77bfa1dadeb905873af6373cd3a234489f2ee",
+          "lts_to_port_sha256": "130792bd4e72a9b0e0e42ed307ebe62e3042d0dbd65b791ab88f6762aba1f103"
+        },
+        "drivers/android/wrapfd/wrap.rs": {
+          "ack": "24f525c76e4f68511428ad1e9c58699ce43be747",
+          "port": "a193438d95d2aac81bb95cbc73f95561094ba05f",
+          "lts_to_port_sha256": "c5093c2d204afaea7dd804d546055dfa2c800f59ef7b3f214a43ad012a157a2d"
+        },
+        "drivers/android/wrapfd/wrapfd_device.rs": {
+          "ack": "d714a5eea3122e9e67824c9df477b85ebbe47b8e",
+          "port": "d714a5eea3122e9e67824c9df477b85ebbe47b8e",
+          "lts_to_port_sha256": "d48d6c3b4aee1b34cf63308223fb994236ac2fc8bab0824341878b116f7688ff"
+        },
+        "include/linux/wrapfd.h": {
+          "ack": "0d06d84234c0cc920715a3df47451acb2e0a1f7c",
+          "port": "bf400b733f97945a9faf410f9547ab55092ec13f",
+          "lts_to_port_sha256": "cacd6ce07d4c6cfc3c724c60f28e0e8d854331a4856cb286a6e031b7ccd7509d"
+        },
+        "include/uapi/linux/wrapfd.h": {
+          "ack": "55b1eef424455430b5b9ec82db1a1b83d5f53366",
+          "port": "55b1eef424455430b5b9ec82db1a1b83d5f53366",
+          "lts_to_port_sha256": "ac267882ebb9324138db504fd414bc111661567cdf6f6bbd9b4739d754873f9f"
+        },
+        "rust/bindings/bindings_helper.h": {
+          "ack": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "port": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "lts_to_port_sha256": "219f093804081c8c8f7117e4b73acb1c4f423fcea4392f92079e0a21d9b299ed"
+        },
+        "rust/helpers/compat.c": {
+          "ack": "d6e8a3143c83bc9f65dae1f28ff80b90e59fd537",
+          "port": "d6e8a3143c83bc9f65dae1f28ff80b90e59fd537",
+          "lts_to_port_sha256": "641f5f52f93b2259d38cbfbb625a21e72fd5404d926b42859ec9a680fd7fddc8"
+        },
+        "rust/helpers/file.c": {
+          "ack": "c3b107048a39870bcfcf95c26ed34b0772039fcb",
+          "port": "c3b107048a39870bcfcf95c26ed34b0772039fcb",
+          "lts_to_port_sha256": "1aa98f19f1aa7042d7bef5dafc7ec459697432c9102b861f0a5a414627c5dc11"
+        },
+        "rust/helpers/fs.c": {
+          "ack": "07c94798153f9d78831c5723ce308dd89646fec8",
+          "port": "07c94798153f9d78831c5723ce308dd89646fec8",
+          "lts_to_port_sha256": "6506e40fffc3e589898e2ee36cac396d5a2a7a956183c4f8eebb435155f7d69b"
+        },
+        "rust/helpers/helpers.c": {
+          "ack": "3b33dca096e6c5abb9f8e8f55945afdc92d32866",
+          "port": "3b33dca096e6c5abb9f8e8f55945afdc92d32866",
+          "lts_to_port_sha256": "b734371a8b2100e5b3d47c5abcef00e21cf0fc787b89842f0916c0d5b9a6e1ca"
+        },
+        "rust/helpers/mm.c": {
+          "ack": "4aeb0afde22c06569954f58aae2ff32014d86672",
+          "port": "4aeb0afde22c06569954f58aae2ff32014d86672",
+          "lts_to_port_sha256": "8db650960f9eb5f99cf5a6e023bb2f550f48850eb30266194cec835759e40c2a"
+        },
+        "rust/helpers/rbtree.c": {
+          "ack": "b689a74d55bdbb4e819c316ad3434cb1feeca84d",
+          "port": "b689a74d55bdbb4e819c316ad3434cb1feeca84d",
+          "lts_to_port_sha256": "b8be5588ee3b522b33e80bc7f546888ddfc7937d79148f673250452269c7b3e2"
+        },
+        "rust/helpers/uio.c": {
+          "ack": "7e16fd6bb092f26b3ece7f4b0c6a3d81d7382a53",
+          "port": "7e16fd6bb092f26b3ece7f4b0c6a3d81d7382a53",
+          "lts_to_port_sha256": "2958a912b05578f370472929df78b81b8add691d23efb276f84700c0a1b2b4b8"
+        },
+        "rust/kernel/device.rs": {
+          "ack": "91a3f6632953859a2c80cfa14d87a4faee9e4101",
+          "port": "e5c5ff5c0216a1f9c7618e87243551ce611af380",
+          "lts_to_port_sha256": "b9a4c858f95b2bdb1b154e32652fa587b30dfa0c77a5acfd25dc8ea6c4335876"
+        },
+        "rust/kernel/mm/virt.rs": {
+          "ack": "714cb376d9c85c4a9448dc72a238dfcdfb94f383",
+          "port": "714cb376d9c85c4a9448dc72a238dfcdfb94f383",
+          "lts_to_port_sha256": "d026ff95f12a1a023904c68c2c950e481c149df899a09622557545ff01d9109a"
+        },
+        "rust/kernel/transmute.rs": {
+          "ack": "fe85008a8a8542f698fed854e41a7cdcf2c8200e",
+          "port": "fe85008a8a8542f698fed854e41a7cdcf2c8200e",
+          "lts_to_port_sha256": "201b26e7be7be22c4de9cbfe46dafdcdd965c429d3478131fecc4c096ec59e26"
+        },
+        "rust/uapi/uapi_helper.h": {
+          "ack": "a8a19845955336cb2e23baa2302c9987768995fa",
+          "port": "0b60db5db384805e8a10498838a1db889d27a3d1",
+          "lts_to_port_sha256": "4df9d10f7e3c59f99b534f565d66f0e1fe509d6129e9b89d0c403ca87a1023a3"
+        }
+      }
+    },
+    {
+      "commit": "16b3a304c6e9b3bf3de749f647b490065aed0435",
+      "disposition": "adapted",
+      "rationale": "Retain the use-state guard and owned dma-buf snapshot so LOAD performs I/O outside the content mutex. acquire_ownership/get_mappable reject InUse or UsageBlocked before taking the content mutex; rewrap/empty require an exclusive Available state, and RAII restores state after failures. Normal ioctl/mmap/llseek hold a shared use guard; GET_STATE can report empty while replacement is in progress, as specified by this ACK patch. Reviewed all guard callsites and drop order: content guard is declared after use guard and drops first, avoiding reverse state-lock acquisition on return. PinnedDrop clears the internal file pointer before wrapper destruction while deferred mmap tasks retain only WrapInfo. 328a500f0012 fixes the publication-failure destructor relock and failed protection rollback; no syscall latency or concurrent state-machine runtime test is claimed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "328a500f00121c20b291b021d31d28ac7449f7ec"
+      ],
+      "evidence": [
+        "evidence/wrapfd-driver-review.json",
+        "evidence/wrapfd-io-check.json",
+        "evidence/wrapfd-publication-check.json",
+        "evidence/wrapfd-device-ownership-check.json",
+        "SECURITY.md: WrapFD driver bounds and ownership"
+      ],
+      "subject": "ANDROID: wrapfd: Prevents load() and acquire_ownership() from blocking.",
+      "patch_sha256": "54756a646f8dfd4f3ed43d4e6d631a27db0befa28511b2dec3bc07b2f77b3dba",
+      "path_blobs": {
+        "drivers/android/wrapfd/content.rs": {
+          "ack": "06b221db8475054e5ef6111440a9e13024fe2d5e",
+          "port": "7e7774eea88bc3f5af7e63457b48693f42ef9eec",
+          "lts_to_port_sha256": "8fb2429eef02f13fe5476af5ad2e715b951ae7fb1bec699aa169ecfeda70a32c"
+        },
+        "drivers/android/wrapfd/wrap.rs": {
+          "ack": "24f525c76e4f68511428ad1e9c58699ce43be747",
+          "port": "a193438d95d2aac81bb95cbc73f95561094ba05f",
+          "lts_to_port_sha256": "c5093c2d204afaea7dd804d546055dfa2c800f59ef7b3f214a43ad012a157a2d"
+        }
+      }
+    },
+    {
+      "commit": "f0126ec43703cee09408e2e8d6bde77d87803ce6",
+      "disposition": "adapted-build-metadata",
+      "rationale": "Retain the four exact ACK selftest files for the selected WrapFD driver. Full 1116-line C suite and Makefile/config read: exercises system/CMA dma-buf heaps, aligned/unaligned mapped and unmapped loads with surrounding poison checks, ownership/rewrap/guest state, mmap/mremap/fork, remap_file_pages rejection, fdinfo/ioctl and CLOEXEC. CMA tests explicitly skip a missing heap; this is generic current-driver test coverage, not an added physical platform. Root/device checks and temporary-file/DMA allocation are only in an explicitly executed test binary. These tests have not been compiled or run by this audit, and kernel build success is not their pass result. The source includes old weak error assertions and unchecked fdinfo string termination; retaining it does not certify the harness, and the focused extracted-function tests are separately identified.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/wrapfd-driver-review.json",
+        "evidence/wrapfd-io-check.json",
+        "evidence/wrapfd-publication-check.json",
+        "evidence/wrapfd-device-ownership-check.json",
+        "SECURITY.md: WrapFD driver bounds and ownership"
+      ],
+      "subject": "ANDROID: selftests/wrapfd: add kselftest for wrapfd",
+      "patch_sha256": "7b20b46dccba91e3888bdc7a14e11c8b8e7131741cc7bd5c99272d45dcc5e56d",
+      "path_blobs": {
+        "tools/testing/selftests/drivers/wrapfd/.gitignore": {
+          "ack": "a8ba46c8e53f080182ea11faa9f492ebd2b8eb7f",
+          "port": "a8ba46c8e53f080182ea11faa9f492ebd2b8eb7f",
+          "lts_to_port_sha256": "0106b86b6bb0cffc48cd473dec93d4d114713dadd08d508a12e1acd69ba7e9e7"
+        },
+        "tools/testing/selftests/drivers/wrapfd/Makefile": {
+          "ack": "338017793138d206d74f22eb60437fc7f5cb9765",
+          "port": "338017793138d206d74f22eb60437fc7f5cb9765",
+          "lts_to_port_sha256": "d3b99782af8c615379ad3f979f539d60bfc9a2129fca1349e0b1e35d1c930d77"
+        },
+        "tools/testing/selftests/drivers/wrapfd/config": {
+          "ack": "4dea8a31d73fbe961352330683a43896532d3098",
+          "port": "4dea8a31d73fbe961352330683a43896532d3098",
+          "lts_to_port_sha256": "f9f243282e1b128a89d4aa903b2f6ac27ea6b254c2102ce0c7a49fb915cef78b"
+        },
+        "tools/testing/selftests/drivers/wrapfd/wrapfd.c": {
+          "ack": "ea4951983b5fed3e42b2ae020fac264f07025566",
+          "port": "ea4951983b5fed3e42b2ae020fac264f07025566",
+          "lts_to_port_sha256": "198049a5eabe5ec29fcc115483bdd2c5258fc07a7bc86e95545b2f761c41ba19"
+        }
+      }
+    }
+  ],
+  "local_consumers": {
+    "system/memory/libwrapfd": {
+      "head": "f91e18ccc73c0cce1194f3aef4a841c1a15003b3",
+      "paths": [
+        "rust/lib.rs",
+        "rust/ioctls.rs",
+        "rust/tests.rs"
+      ]
+    },
+    "system/sepolicy": {
+      "pin_inventory": "inputs/grapheneos-projects.tsv",
+      "paths": [
+        "private/file_contexts",
+        "private/system_server.te",
+        "private/app.te",
+        "private/domain.te",
+        "private/wrapfd_hal_domain.te"
+      ]
+    }
+  },
+  "native_interfaces_reviewed": [
+    "fs/read_write.c: vfs_iocb_iter_read and rw_verify_area call",
+    "include/linux/fs.h: MAX_RW_COUNT uses INT_MAX rather than LONG_MAX",
+    "drivers/dma-buf/dma-buf.c: mmap adjusts vm_file, bounds and calls exporter; native llseek/ioctl",
+    "rust/kernel/dma_buf/buf.rs: vmap lifetime and CPU access begin/end; bounded memcpy",
+    "rust/kernel/anon_inodes.rs: previous corrected owned-context release and allocation error return",
+    "kernel/fork.c, kernel/exit.c: task mm lifetime, snapshot read only, never dereference",
+    "rust/kernel/mm/virt.rs: MAYWRITE clear and remap-file-pages prohibition",
+    "rust/helpers/{compat,file,fs,mm,rbtree,uio}.c: native forwarding thunks",
+    "rust/kernel/transmute.rs: four fixed-width ioctl records contain explicit padding/reserved fields; no uninitialized implicit padding on selected 64-bit layout"
+  ],
+  "validation": {
+    "io": "3886 cases pass; original ACK 911 failed cases",
+    "publication": "72 cases pass; original ACK 25 failed cases",
+    "device_ownership": "3488 assertions pass; original ACK 1612 failures",
+    "build": "sdk-build-attempt-102 passed; both kernel images, 100 common modules and 45 virtual-device modules; all signatures and flag/CRC tables checked",
+    "not_run": [
+      "kernel ioctls",
+      "actual DMA/direct I/O",
+      "mmap/remap/exec",
+      "runtime SELinux checks",
+      "WrapFD kselftest binary",
+      "concurrent driver stress"
+    ],
+    "c_linkage": {
+      "source_head": "328a500f00121c20b291b021d31d28ac7449f7ec",
+      "System.map": [
+        "ffffffff8228cfa0 T wrapfd_get_mappable",
+        "ffffffff8228d350 T wrapfd_put_mappable"
+      ],
+      "module_exports": [],
+      "symvers_sha256": "f7c9ab688082c79ce7eec4b377a2ba19c66284fec2efeb32b7b3f2a982789b07",
+      "explanation": "#[export] only supplies C linkage and type checking here; rust/exports.c auto-exports the core/kernel/bindings objects, not rust_wrapfd.o. The supplied ACK uses the same mechanism. Driver get/put are available for built-in callers; no working loadable-module exports are asserted."
+    }
+  },
+  "security_limits": [
+    "LOAD retains ACK permissions and can run without task/device ownership; app/HAL checked-out policies exclude this ioctl, while system_server can use it. No additional owner check invented from absent consumer evidence.",
+    "Parallel LOADs and mutable source files are not an atomic snapshot or coherent transaction; errors can leave partial writes in the destination, as with direct I/O.",
+    "Device references keep objects alive, not drivers bound; callers must preserve the file until all matching puts, as documented.",
+    "Owner is tracked through the task group leader, with mm-null clearing. Exact multi-thread leader-exit semantics remain untested.",
+    "The supplied ACK declares is_wrapfd_vma in include/linux/wrapfd.h but provides no definition in the driver; no local common-module consumer was found. This does not establish dispensability or promise a working symbol.",
+    "get/put have built-in C linkage but no module export records in build 102. Supplied ACK uses the same #[export] and Makefile mechanism; no loadable-module API compatibility is established."
+  ],
+  "remote_sources_used": []
+}

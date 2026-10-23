@@ -6121,7 +6121,7 @@
   {
     "commit": "fd2cbc1b7ab7d6c29bd875c1b509b86fcadf6964",
     "disposition": "partially-adapted",
-    "rationale": "Retain Android VFS source-module namespace declarations and matching imports as a generic module policy, not historical ABI layout preservation. Entire patch mechanically checked: 82 export replacements plus 76 import additions and no other nonblank changed lines. Restore two imports lost during LTS filesystem reconciliation in 349c8bdc72bb; retain all remaining declarations except adapting vfs_splice_read to keep its native GPL-only flag while adding the namespace. ext4/F2FS are built in for SDK; those declarations also preserve their supported module configuration without adding a platform. Native modpost/loader check import declarations, not actual filesystem identity: this prevents accidental API use, not malicious trusted-module access. Four exports become GPL-only (kern_path,generic_file_open,kernel_read,kernel_write); retain that ACK source policy. Reject the opposite conversion for vfs_splice_read, which dropped the native GPL-only restriction; keep EXPORT_SYMBOL_NS_GPL. Namespace metadata does not replace native licensing checks. No vendor-binary compatibility promise. The retained namespace does not weaken VFS permission/data-integrity checks; function bodies are unaffected by this candidate. Build 102 will validate the final SDK integration; alternate allmodconfig and runtime module insertion are not claimed.",
+    "rationale": "Retain Android VFS source-module namespace declarations and matching imports as a generic module policy, not historical ABI layout preservation. Entire patch mechanically checked: 82 export replacements plus 76 import additions and no other nonblank changed lines. Restore two imports lost during LTS filesystem reconciliation in 349c8bdc72bb; retain all remaining declarations except adapting vfs_splice_read to keep its native GPL-only flag while adding the namespace. ext4/F2FS are built in for SDK; those declarations also preserve their supported module configuration without adding a platform. Native modpost/loader check import declarations, not actual filesystem identity: this prevents accidental API use, not malicious trusted-module access. Four exports become GPL-only (kern_path,generic_file_open,kernel_read,kernel_write); retain that ACK source policy. Reject the opposite conversion for vfs_splice_read, which dropped the native GPL-only restriction; keep EXPORT_SYMBOL_NS_GPL. Namespace metadata does not replace native licensing checks. No vendor-binary compatibility promise. The retained namespace does not weaken VFS permission/data-integrity checks; function bodies are unaffected by this candidate. Build 102 passed; generated Module.symvers records vfs_splice_read as EXPORT_SYMBOL_GPL in the retained namespace. All 145 generated module flag/CRC tables pass. Alternate allmodconfig and runtime module insertion are not claimed.",
     "result_commits": [
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
       "349c8bdc72bbf68b6e73ae6ba00e728f406241e3",
@@ -6130,6 +6130,54 @@
     "evidence": [
       "evidence/binder-merge-vfs-review.json",
       "SECURITY.md: Binder merge resolution and VFS namespace imports"
+    ]
+  },
+  {
+    "commit": "2416ad797c31a8520de3d32d7fc91a60afd5eb3d",
+    "disposition": "adapted",
+    "rationale": "Retain the selected 64-bit MMU Rust WrapFD device, exact fixed-width UAPI, dma-buf content, task/device ownership, guest mapping control, rewrap/empty/load, compat ioctls, fdinfo and associated native-helper bindings. Positive local libwrapfd and system_server/HAL/app SELinux policy consumers are pinned. Preserve native file reservation, anonymous-inode LSM, DMA mapping/cache synchronization and VFS read verification. Adapt with 328a500f0012: checked/aligned extents, native 32-bit MAX_RW_COUNT, nonzero page-sized request splitting, zero-length no-I/O success after bounds checks, correct tail-only iovec selection and per-request minimum completion rather than aggregate bytes that can hide an earlier short read. Also unlock before failed wrapper destruction, restore original protection if rewrap publication fails, use a single volatile read of exiting task mm, and retain device ownership until every successful get has its matching put. Host checks pass 3886 I/O cases, 72 publication cases and 3488 device assertions; original ACK fails their controls. Current driver does not require owner status for LOAD, which remains restricted by checked-out SELinux policy; no stronger ownership guarantee or coherent concurrent LOAD/file-mutation snapshot is claimed. is_wrapfd_vma is an unimplemented declaration in supplied ACK too, not a verified interface. Build 102 passed at 328a500f0012 with both images and all 145 signed modules. The get/put C symbols are built in but absent from Module.symvers: ACK #[export] supplies C linkage/signature checking, while automatic GPL exports cover Rust core/kernel/bindings objects, not this driver. No loadable-module export or kernel ioctl/DMA/mmap execution is claimed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "328a500f00121c20b291b021d31d28ac7449f7ec",
+      "f744d35f5a432220ed9b6df007264d36623e2237"
+    ],
+    "evidence": [
+      "evidence/wrapfd-driver-review.json",
+      "evidence/wrapfd-io-check.json",
+      "evidence/wrapfd-publication-check.json",
+      "evidence/wrapfd-device-ownership-check.json",
+      "SECURITY.md: WrapFD driver bounds and ownership"
+    ]
+  },
+  {
+    "commit": "16b3a304c6e9b3bf3de749f647b490065aed0435",
+    "disposition": "adapted",
+    "rationale": "Retain the use-state guard and owned dma-buf snapshot so LOAD performs I/O outside the content mutex. acquire_ownership/get_mappable reject InUse or UsageBlocked before taking the content mutex; rewrap/empty require an exclusive Available state, and RAII restores state after failures. Normal ioctl/mmap/llseek hold a shared use guard; GET_STATE can report empty while replacement is in progress, as specified by this ACK patch. Reviewed all guard callsites and drop order: content guard is declared after use guard and drops first, avoiding reverse state-lock acquisition on return. PinnedDrop clears the internal file pointer before wrapper destruction while deferred mmap tasks retain only WrapInfo. 328a500f0012 fixes the publication-failure destructor relock and failed protection rollback; no syscall latency or concurrent state-machine runtime test is claimed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "328a500f00121c20b291b021d31d28ac7449f7ec"
+    ],
+    "evidence": [
+      "evidence/wrapfd-driver-review.json",
+      "evidence/wrapfd-io-check.json",
+      "evidence/wrapfd-publication-check.json",
+      "evidence/wrapfd-device-ownership-check.json",
+      "SECURITY.md: WrapFD driver bounds and ownership"
+    ]
+  },
+  {
+    "commit": "f0126ec43703cee09408e2e8d6bde77d87803ce6",
+    "disposition": "adapted-build-metadata",
+    "rationale": "Retain the four exact ACK selftest files for the selected WrapFD driver. Full 1116-line C suite and Makefile/config read: exercises system/CMA dma-buf heaps, aligned/unaligned mapped and unmapped loads with surrounding poison checks, ownership/rewrap/guest state, mmap/mremap/fork, remap_file_pages rejection, fdinfo/ioctl and CLOEXEC. CMA tests explicitly skip a missing heap; this is generic current-driver test coverage, not an added physical platform. Root/device checks and temporary-file/DMA allocation are only in an explicitly executed test binary. These tests have not been compiled or run by this audit, and kernel build success is not their pass result. The source includes old weak error assertions and unchecked fdinfo string termination; retaining it does not certify the harness, and the focused extracted-function tests are separately identified.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/wrapfd-driver-review.json",
+      "evidence/wrapfd-io-check.json",
+      "evidence/wrapfd-publication-check.json",
+      "evidence/wrapfd-device-ownership-check.json",
+      "SECURITY.md: WrapFD driver bounds and ownership"
     ]
   }
 ]
