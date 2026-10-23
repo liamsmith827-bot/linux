@@ -1009,7 +1009,7 @@ ssize_t vfs_splice_read(struct file *in, loff_t *ppos,
 
 	return do_splice_read(in, ppos, pipe, len, flags);
 }
-EXPORT_SYMBOL_NS(vfs_splice_read, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
+EXPORT_SYMBOL_NS_GPL(vfs_splice_read, "ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver");
 
 /**
  * splice_direct_to_actor - splices data directly between two non-pipes
