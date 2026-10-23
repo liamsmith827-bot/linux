@@ -16,6 +16,7 @@ DECLARE_HOOK(android_vh_printk_hotplug,
 DECLARE_HOOK(android_vh_printk_caller_id,
 	TP_PROTO(u32 *caller_id),
 	TP_ARGS(caller_id));
+/* Formatting callbacks must stay within size; the last byte is kept NUL. */
 DECLARE_HOOK(android_vh_printk_caller,
 	TP_PROTO(char *caller, size_t size, u32 id, int *ret),
 	TP_ARGS(caller, size, id, ret));

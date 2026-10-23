@@ -12,6 +12,13 @@
 struct printk_ringbuffer;
 struct printk_record;
 
+/*
+ * Record hooks run after commit with a private, bounded snapshot of the record.
+ * The snapshot and its buffers are valid only during the synchronous callback;
+ * modifying them does not modify the committed log. Use the ringbuffer reader
+ * protocol to inspect other records, which can be concurrently reused. Callbacks
+ * must not sleep and must respect printk recursion/NMI context constraints.
+ */
 DECLARE_RESTRICTED_HOOK(android_rvh_logbuf,
 	TP_PROTO(struct printk_ringbuffer *rb, struct printk_record *r),
 	TP_ARGS(rb, r), true)

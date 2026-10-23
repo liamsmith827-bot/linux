@@ -643,12 +643,13 @@ static ssize_t info_print_ext_header(char *buf, size_t size,
 				     struct printk_info *info)
 {
 	u64 ts_usec = info->ts_nsec;
-	char caller[20];
+	char caller[20] = { };
 #ifdef CONFIG_PRINTK_CALLER
 	int vh_ret = 0;
 	u32 id = info->caller_id;
 
 	trace_android_vh_printk_ext_header(caller, sizeof(caller), id, &vh_ret);
+	caller[sizeof(caller) - 1] = '\0';
 
 	if (!vh_ret)
 		snprintf(caller, sizeof(caller), ",caller=%c%u",
@@ -1368,10 +1369,11 @@ static size_t print_time(u64 ts, char *buf)
 #ifdef CONFIG_PRINTK_CALLER
 static size_t print_caller(u32 id, char *buf)
 {
-	char caller[12];
+	char caller[12] = { };
 	int vh_ret = 0;
 
 	trace_android_vh_printk_caller(caller, sizeof(caller), id, &vh_ret);
+	caller[sizeof(caller) - 1] = '\0';
 	if (!vh_ret)
 		snprintf(caller, sizeof(caller), "%c%u",
 			 id & 0x80000000 ? 'C' : 'T', id & ~0x80000000);
@@ -2229,6 +2231,58 @@ static u16 printk_sprint(char *text, u16 size, int facility,
 	return text_len;
 }
 
+/* Allocate the snapshot only when a record hook is enabled. */
+static noinline void printk_commit_record_with_hooks(struct prb_reserved_entry *e,
+		struct printk_record *r, enum printk_info_flags flags,
+		bool continuation, u16 text_len)
+{
+	struct printk_ringbuffer *rb = e->rb;
+	struct printk_info info = *r->info;
+	char text[PRINTKRB_RECORD_MAX] = { };
+	struct printk_record snapshot = {
+		.info = &info,
+		.text_buf = text,
+		.text_buf_size = min_t(unsigned int, r->text_buf_size, sizeof(text)),
+	};
+
+	/* The reservation protects the source only until commit. */
+	info.text_len = min_t(unsigned int, info.text_len,
+			     snapshot.text_buf_size ? snapshot.text_buf_size - 1 : 0);
+	if (info.text_len)
+		memcpy(text, r->text_buf, info.text_len);
+
+	if (flags & LOG_NEWLINE)
+		prb_final_commit(e);
+	else
+		prb_commit(e);
+
+	if (continuation) {
+		trace_android_vh_logbuf_pr_cont(&snapshot,
+					      min_t(u16, text_len, info.text_len));
+	} else {
+		trace_android_rvh_logbuf(rb, &snapshot);
+		trace_android_vh_logbuf(rb, &snapshot);
+	}
+}
+
+static void printk_commit_record(struct prb_reserved_entry *e,
+		struct printk_record *r, enum printk_info_flags flags,
+		bool continuation, u16 text_len)
+{
+	bool enabled = continuation ? trace_android_vh_logbuf_pr_cont_enabled() :
+		(trace_android_rvh_logbuf_enabled() || trace_android_vh_logbuf_enabled());
+
+	if (enabled) {
+		printk_commit_record_with_hooks(e, r, flags, continuation, text_len);
+		return;
+	}
+
+	if (flags & LOG_NEWLINE)
+		prb_final_commit(e);
+	else
+		prb_commit(e);
+}
+
 __printf(4, 0)
 int vprintk_store(int facility, int level,
 		  const struct dev_printk_info *dev_info,
@@ -2297,14 +2351,10 @@ int vprintk_store(int facility, int level,
 			if (flags & LOG_FORCE_CON)
 				r.info->flags |= LOG_FORCE_CON;
 
-			if (flags & LOG_NEWLINE) {
+			if (flags & LOG_NEWLINE)
 				r.info->flags |= LOG_NEWLINE;
-				prb_final_commit(&e);
-			} else {
-				prb_commit(&e);
-			}
 
-			trace_android_vh_logbuf_pr_cont(&r, text_len);
+			printk_commit_record(&e, &r, flags, true, text_len);
 			ret = text_len;
 			goto out;
 		}
@@ -2339,13 +2389,7 @@ int vprintk_store(int facility, int level,
 		memcpy(&r.info->dev_info, dev_info, sizeof(r.info->dev_info));
 
 	/* A message without a trailing newline can be continued. */
-	if (!(flags & LOG_NEWLINE))
-		prb_commit(&e);
-	else
-		prb_final_commit(&e);
-
-	trace_android_rvh_logbuf(prb, &r);
-	trace_android_vh_logbuf(prb, &r);
+	printk_commit_record(&e, &r, flags, false, text_len + trunc_msg_len);
 	ret = text_len + trunc_msg_len;
 out:
 	printk_exit_irqrestore(recursion_ptr, irqflags);
