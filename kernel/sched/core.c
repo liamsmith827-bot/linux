@@ -4551,8 +4551,11 @@ bool cpus_share_resources(int this_cpu, int that_cpu)
 	return per_cpu(sd_share_id, this_cpu) == per_cpu(sd_share_id, that_cpu);
 }
 
-static inline bool ttwu_queue_cond(struct task_struct *p, int cpu)
+static inline bool ttwu_queue_allowed(struct task_struct *p, int cpu)
 {
+	if ((unsigned int)cpu >= nr_cpu_ids)
+		return false;
+
 	/* See SCX_OPS_ALLOW_QUEUED_WAKEUP. */
 	if (!scx_allow_ttwu_queue(p))
 		return false;
@@ -4573,15 +4576,20 @@ static inline bool ttwu_queue_cond(struct task_struct *p, int cpu)
 	if (!cpumask_test_cpu(cpu, p->cpus_ptr))
 		return false;
 
+	return cpu != smp_processor_id();
+}
+
+static inline bool ttwu_queue_cond(struct task_struct *p, int cpu)
+{
+	if (!ttwu_queue_allowed(p, cpu))
+		return false;
+
 	/*
 	 * If the CPU does not share cache, then queue the task on the
 	 * remote rqs wakelist to avoid accessing remote data.
 	 */
 	if (!cpus_share_cache(smp_processor_id(), cpu))
 		return true;
-
-	if (cpu == smp_processor_id())
-		return false;
 
 	/*
 	 * If the wakee cpu is idle, or the task is descheduling and the
@@ -4607,7 +4615,7 @@ static bool ttwu_queue_wakelist(struct task_struct *p, int cpu, int wake_flags)
 	trace_android_rvh_ttwu_cond(cpu, &cond);
 
 	if ((sched_feat(TTWU_QUEUE) && ttwu_queue_cond(p, cpu)) ||
-			cond) {
+	    (cond && ttwu_queue_allowed(p, cpu))) {
 		sched_clock_cpu(cpu); /* Sync clocks across CPUs */
 		__ttwu_queue_wakelist(p, cpu, wake_flags);
 		return true;
@@ -6196,7 +6204,8 @@ void sched_exec(void)
 		if (dest_cpu == smp_processor_id())
 			return;
 
-		if (unlikely(!cpu_active(dest_cpu)))
+		if (unlikely((unsigned int)dest_cpu >= nr_cpu_ids ||
+			     !cpu_active(dest_cpu) || !task_allowed_on_cpu(p, dest_cpu)))
 			return;
 
 		arg = (struct migration_arg){ p, dest_cpu };
