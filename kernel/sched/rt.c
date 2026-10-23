@@ -1895,7 +1895,9 @@ static int find_lowest_rq(struct task_struct *sched_ctx, struct task_struct *exe
 	}
 
 	trace_android_rvh_find_lowest_rq(sched_ctx, exec_ctx, lowest_mask, ret, &cpu);
-	if (cpu >= 0)
+	/* Keep the CPU and execution-context constraints of cpupri_find(). */
+	if ((unsigned int)cpu < nr_cpu_ids && cpu_active(cpu) &&
+	    (!exec_ctx || cpumask_test_cpu(cpu, &exec_ctx->cpus_mask)))
 		return cpu;
 
 	if (!ret)
