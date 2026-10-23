@@ -233,6 +233,10 @@ static int idletimer_resume(struct notifier_block *notifier,
 	if (!timer)
 		return NOTIFY_DONE;
 
+	/* Boottime alarms already account for time spent suspended. */
+	if (timer->timer_type & XT_IDLETIMER_ALARM)
+		return NOTIFY_DONE;
+
 	switch (pm_event) {
 	case PM_SUSPEND_PREPARE:
 		timer->last_suspend_time =
@@ -342,17 +346,18 @@ static int idletimer_tg_create(struct idletimer_tg_info *info)
 	info->timer->last_modified_timer =
 		ktime_to_timespec64(ktime_get_boottime());
 
-	info->timer->pm_nb.notifier_call = idletimer_resume;
-	ret = register_pm_notifier(&info->timer->pm_nb);
-	if (ret)
-		printk(KERN_WARNING "[%s] Failed to register pm notifier %d\n",
-		       __func__, ret);
-
 	INIT_WORK(&info->timer->work, idletimer_tg_work);
 
 	timer_setup(&info->timer->timer, idletimer_tg_expired, 0);
 	mod_timer(&info->timer->timer,
 		  secs_to_jiffies(info->timeout) + jiffies);
+
+	/* Publish the notifier only after its timer and work are initialized. */
+	info->timer->pm_nb.notifier_call = idletimer_resume;
+	ret = register_pm_notifier(&info->timer->pm_nb);
+	if (ret)
+		printk(KERN_WARNING "[%s] Failed to register pm notifier %d\n",
+		       __func__, ret);
 
 	return 0;
 
@@ -411,12 +416,6 @@ static int idletimer_tg_create_v1(struct idletimer_tg_info_v1 *info)
 	info->timer->last_modified_timer =
 		ktime_to_timespec64(ktime_get_boottime());
 
-	info->timer->pm_nb.notifier_call = idletimer_resume;
-	ret = register_pm_notifier(&info->timer->pm_nb);
-	if (ret)
-		printk(KERN_WARNING "[%s] Failed to register pm notifier %d\n",
-		       __func__, ret);
-
 	INIT_WORK(&info->timer->work, idletimer_tg_work);
 
 	if (info->timer->timer_type & XT_IDLETIMER_ALARM) {
@@ -431,6 +430,13 @@ static int idletimer_tg_create_v1(struct idletimer_tg_info_v1 *info)
 		mod_timer(&info->timer->timer,
 				secs_to_jiffies(info->timeout) + jiffies);
 	}
+
+	/* Publish the notifier only after its timer and work are initialized. */
+	info->timer->pm_nb.notifier_call = idletimer_resume;
+	ret = register_pm_notifier(&info->timer->pm_nb);
+	if (ret)
+		printk(KERN_WARNING "[%s] Failed to register pm notifier %d\n",
+		       __func__, ret);
 
 	return 0;
 
