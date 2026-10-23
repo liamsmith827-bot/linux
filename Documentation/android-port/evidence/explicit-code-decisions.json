@@ -15901,5 +15901,44 @@
       "evidence/picker-revert-pair-review.json",
       "SECURITY.md: Historical picker revert pair"
     ]
+  },
+  {
+    "commit": "99545883fb8c7d4425546b3a35ac613441fb5ed7",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "530ed4ae20386bf2149e9aa4d8bd0416e57d5071"
+    ],
+    "rationale": "Full three-path original four-hook addition read. Keep current fork-init, diagnostic, exec-suppression and evolved CPU-argument wake-list hook, with matching final declarations/exports. Fork event is mid __sched_fork, after CFS setup but before statistics/DL/RT initialization; callbacks cannot assume initialization complete or preserve writes overwritten later. Diagnostic events preserve native panic check/dump/taint; may see prev or NULL and cannot sleep. Exec skip preserves valid current placement without selecting another CPU. Wake override is adapted by 530ed4ae2038 to retain native mandatory queued-wakeup eligibility while allowing scheduling heuristics/feature preference override. Exec direct class selection additionally validates range/active/affinity before CPU-indexed use.",
+    "evidence": [
+      "evidence/wakeup-exec-hooks-review.json",
+      "evidence/wakeup-exec-hooks-check.json",
+      "SECURITY.md: Wake-list eligibility and exec selection"
+    ]
+  },
+  {
+    "commit": "fd1fba66e163f398179cd20155b7a4ba1070a882",
+    "disposition": "superseded",
+    "result_commits": [],
+    "rationale": "Full three-path inverse read. Temporary removal was explicitly undone by 707220588637; retain final four generic source interfaces instead of removing them. Current diagnostic helper is __might_resched with native print_preempt_disable_ip, not obsolete ___might_sleep context; hook signatures/sites follow current source, not historical textual replay.",
+    "evidence": [
+      "evidence/wakeup-exec-hooks-review.json",
+      "evidence/wakeup-exec-hooks-check.json",
+      "SECURITY.md: Wake-list eligibility and exec selection"
+    ]
+  },
+  {
+    "commit": "707220588637689113f655e62735152614a7a9f8",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "530ed4ae20386bf2149e9aa4d8bd0416e57d5071"
+    ],
+    "rationale": "Full three-path reintroduction read, including int cpu addition to ttwu_cond and updated native wake-list context. Preserve all generic hooks without Qualcomm device implementation. Adapt cond=true so it cannot bypass native SCX queued-wakeup opt-in, stop-class exclusion, active/affinity/non-self conditions. Callback can still force queueing past cache/idle heuristics and TTWU_QUEUE feature flag when eligible. Preserve direct exec selector guard and current scoped pi_lock cleanup. Native no-callback wake path reconstructed exactly after factoring shared helper; no blanket arbitrary callback safety or runtime latency/power claim.",
+    "evidence": [
+      "evidence/wakeup-exec-hooks-review.json",
+      "evidence/wakeup-exec-hooks-check.json",
+      "SECURITY.md: Wake-list eligibility and exec selection"
+    ]
   }
 ]

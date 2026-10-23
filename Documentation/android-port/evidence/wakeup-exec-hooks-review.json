@@ -1,0 +1,134 @@
+{
+  "source_head": "530ed4ae20386bf2149e9aa4d8bd0416e57d5071",
+  "records": [
+    {
+      "commit": "99545883fb8c7d4425546b3a35ac613441fb5ed7",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "530ed4ae20386bf2149e9aa4d8bd0416e57d5071"
+      ],
+      "rationale": "Full three-path original four-hook addition read. Keep current fork-init, diagnostic, exec-suppression and evolved CPU-argument wake-list hook, with matching final declarations/exports. Fork event is mid __sched_fork, after CFS setup but before statistics/DL/RT initialization; callbacks cannot assume initialization complete or preserve writes overwritten later. Diagnostic events preserve native panic check/dump/taint; may see prev or NULL and cannot sleep. Exec skip preserves valid current placement without selecting another CPU. Wake override is adapted by 530ed4ae2038 to retain native mandatory queued-wakeup eligibility while allowing scheduling heuristics/feature preference override. Exec direct class selection additionally validates range/active/affinity before CPU-indexed use.",
+      "evidence": [
+        "evidence/wakeup-exec-hooks-review.json",
+        "evidence/wakeup-exec-hooks-check.json",
+        "SECURITY.md: Wake-list eligibility and exec selection"
+      ],
+      "patch_sha256": "b92de2320719a159d37a2177d806fc5379ac92aa7d5a6854fd615c648c92721b"
+    },
+    {
+      "commit": "fd1fba66e163f398179cd20155b7a4ba1070a882",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "Full three-path inverse read. Temporary removal was explicitly undone by 707220588637; retain final four generic source interfaces instead of removing them. Current diagnostic helper is __might_resched with native print_preempt_disable_ip, not obsolete ___might_sleep context; hook signatures/sites follow current source, not historical textual replay.",
+      "evidence": [
+        "evidence/wakeup-exec-hooks-review.json",
+        "evidence/wakeup-exec-hooks-check.json",
+        "SECURITY.md: Wake-list eligibility and exec selection"
+      ],
+      "patch_sha256": "dca66e8528a45f75a7d5eae7373eff9a4307ef1757310dc6cfdc94a6364292a1"
+    },
+    {
+      "commit": "707220588637689113f655e62735152614a7a9f8",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "530ed4ae20386bf2149e9aa4d8bd0416e57d5071"
+      ],
+      "rationale": "Full three-path reintroduction read, including int cpu addition to ttwu_cond and updated native wake-list context. Preserve all generic hooks without Qualcomm device implementation. Adapt cond=true so it cannot bypass native SCX queued-wakeup opt-in, stop-class exclusion, active/affinity/non-self conditions. Callback can still force queueing past cache/idle heuristics and TTWU_QUEUE feature flag when eligible. Preserve direct exec selector guard and current scoped pi_lock cleanup. Native no-callback wake path reconstructed exactly after factoring shared helper; no blanket arbitrary callback safety or runtime latency/power claim.",
+      "evidence": [
+        "evidence/wakeup-exec-hooks-review.json",
+        "evidence/wakeup-exec-hooks-check.json",
+        "SECURITY.md: Wake-list eligibility and exec selection"
+      ],
+      "patch_sha256": "dce345863d3a5ff42caa171ac76a4cc776245dc2581f38e83fa11d86e1d8eafc"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/sched/core.c",
+      "function": "__schedule_bug",
+      "sha256": "851cb3aecc0993b643697e77685dc68543cf533b8076672c9d4b8390938e0aa1",
+      "relationship": "Whole native function after explicitly listed differences",
+      "removed_or_replaced": [
+        [
+          "\ttrace_android_rvh_schedule_bug(prev);\n\n",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "__might_resched",
+      "sha256": "54de643c6a56416a601619749f9839f6554dca23f9d59aa5b6293de531fcf279",
+      "relationship": "Whole native function after explicitly listed differences",
+      "removed_or_replaced": [
+        [
+          "\ttrace_android_rvh_schedule_bug(NULL);\n\n",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "__sched_fork",
+      "sha256": "5f269dceb99e4d2e29e8e7004107c2a7a7b64955c31203c84adec3011fe7d6a3",
+      "relationship": "Whole native function after explicitly listed differences",
+      "removed_or_replaced": [
+        [
+          "\tWARN_ON_ONCE(p->is_blocked);\n",
+          ""
+        ],
+        [
+          "\n\ttrace_android_rvh_sched_fork_init(p);\n",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "sched_exec",
+      "sha256": "d46306f00987042b312b4468c1b66e1633eadc2be3d7b783fbe451d901cd9fce",
+      "relationship": "Whole native function after explicitly listed differences",
+      "removed_or_replaced": [
+        [
+          "\tbool cond = false;\n\n\ttrace_android_rvh_sched_exec(&cond);\n\tif (cond)\n\t\treturn;\n",
+          ""
+        ],
+        [
+          "(unsigned int)dest_cpu >= nr_cpu_ids ||\n\t\t\t     !cpu_active(dest_cpu) || !task_allowed_on_cpu(p, dest_cpu)",
+          "!cpu_active(dest_cpu)"
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "ttwu_queue_allowed",
+      "sha256": "b0c705da08af22663ccc1e2c66c8d2bdc50a2873e3ee60efca5f8668bb80f3d1",
+      "relationship": "Mandatory SCX/stop/active/affinity/non-self checks factored into shared helper; inlining/restoring self check to its original position reproduces entire LTS condition, plus range guard"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "ttwu_queue_cond",
+      "sha256": "5ab21b39f82146c864e9d0773fa93f8e5eed5a2b0f68984cab803d5b7b01d305",
+      "relationship": "Mandatory SCX/stop/active/affinity/non-self checks factored into shared helper; inlining/restoring self check to its original position reproduces entire LTS condition, plus range guard"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "ttwu_queue_wakelist",
+      "sha256": "7cafd251217f9f22961e3c6396ee8f1426fb694f4667eb3f56fab44f65ba941c",
+      "relationship": "Native clock/queue/return body; override permits heuristics but now shares mandatory eligibility"
+    }
+  ],
+  "security": "Preserve mandatory native queue protocol and CPU constraints instead of allowing broad boolean override to weaken them. Cache/idle heuristics and TTWU_QUEUE preference remain overridable. Exec may call class directly, so guard it independently under pi_lock. Diagnostic/fork callbacks retain native ordering and partial-initialization/atomic context contracts.",
+  "uncertainty": "No exact installed SDK callbacks or benefit is established. Interfaces are retained rather than omitted from absent consumers. Actual SCX behavior, IPIs, stoppers, hotplug and locking are not executed by the host tests.",
+  "validation": "7168 wake and 3584 exec model cases pass, including scoped-lock cleanup. Old control fails 3728 wake/960 exec cases and produces 4224 modeled invalid accesses. Initial host guard shim used increment value as loop condition, causing compiler to see an uninitialized arg path; corrected to unconditional one-iteration scope to match native blocking guard. Build 140 completed successfully; all 145 module signatures and flag/CRC tables verified.",
+  "remote_sources_used": [],
+  "subsequent_build_verification": {
+    "run": "sdk-build-attempt-140",
+    "evidence": [
+      "evidence/build-results.json",
+      "evidence/module-tables-build-140.json"
+    ]
+  }
+}

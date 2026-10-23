@@ -6351,3 +6351,28 @@ their state before the first candidate. No historical three-argument callback
 protocol or accounting move is replayed onto current EEVDF/donor/SCX selection.
 The reported old crash and boot tests are historical evidence only, not current
 runtime verification. No source change or remote access was required.
+
+# Wake-list eligibility and exec selection
+
+`evidence/wakeup-exec-hooks-review.json` resolves the original four-hook addition,
+temporary inverse and reintroduction. Commit 530ed4ae20386bf2149e9aa4d8bd0416e57d5071 factors native mandatory
+queued-wakeup eligibility into a helper shared by default and vendor-forced paths.
+SCX opt-in, stop-class exclusion, active CPU, affinity and non-self conditions
+remain mandatory, with CPU range checked first. Vendor policy may still override
+cache/idle heuristics and TTWU_QUEUE preference when eligible. Inlining the helper
+and restoring self-check position reproduces the complete native condition;
+self CPU always shares cache with itself. No native queue/clock operation is lost.
+
+Exec selection calls the class directly, bypassing the common guarded selector.
+Validate range/active/affinity under the native scoped pi_lock before consuming
+its result. Early vendor exec suppression simply keeps the current placement.
+Fork-init callback remains before stats/DL/RT initialization; diagnostic hooks
+preserve panic/dump/taint and may execute in atomic context with a NULL argument.
+Exact SDK callbacks remain unconfirmed; no hardware-specific implementation is
+introduced by these generic interfaces.
+
+Host checks pass 7168 wake and 3584 exec cases with lock cleanup; old control
+produces 4224 modeled invalid accesses and also violates queue/affinity policy.
+No real IPI, stopper, SCX callback, hotplug race or kernel fault was executed.
+Build 140 succeeded; all 145 module signatures and flag/CRC tables verified.
+No remote source was accessed.
