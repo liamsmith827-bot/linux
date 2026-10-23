@@ -206,6 +206,10 @@ pub(crate) fn trace_transaction_update_buffer_release(debug_id: usize) {
 
 #[inline]
 pub(crate) fn trace_update_page_range(pid: Pid, allocate: bool, start: usize, end: usize) {
+    // Page-range callers use page indices; the Binder trace ABI reports bytes.
+    // Keep diagnostics bounded even for an empty or reversed input range.
+    let start = start.saturating_mul(kernel::page::PAGE_SIZE);
+    let end = end.saturating_mul(kernel::page::PAGE_SIZE).max(start);
     // SAFETY: Always safe to call.
     unsafe { binder_update_page_range(pid as c_int, allocate, start, end) }
 }

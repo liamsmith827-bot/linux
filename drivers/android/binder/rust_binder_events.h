@@ -175,14 +175,14 @@ TRACE_EVENT(binder_transaction_node_send,
 
 		__entry->debug_id = t_debug_id;
 		__entry->node_debug_id = rust_binder_node_debug_id(node);
-		__entry->node_ptr = rust_binder_node_debug_id(node);
+		__entry->node_ptr = rust_binder_node_ptr(node);
 		__entry->types =
 			(orig_is_handle << 0) |
 			(tran_is_handle << 1) |
 			(orig_is_strong << 2) |
 			(tran_is_strong << 3);
 		__entry->original_handle = orig_is_handle ? original->handle : 0;
-		__entry->translated_handle = tran_is_handle ? original->handle : 0;
+		__entry->translated_handle = tran_is_handle ? translated->handle : 0;
 	),
 	TP_printk("transaction=%d node=%d ptr=0x%016llx: %s%s [%d] ==> %s%s [%d]",
 		  __entry->debug_id, __entry->node_debug_id,

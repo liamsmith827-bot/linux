@@ -16,6 +16,8 @@
 #include <trace/hooks/vendor_hooks.h>
 
 typedef void *rust_binder_transaction;
+typedef void *rust_binder_thread;
+struct task_struct;
 
 /*
  * Following tracepoints are not exported in tracefs and provide a
