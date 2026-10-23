@@ -1,0 +1,151 @@
+{
+  "source_head": "4e85d32c517aa88882e56232b6710e5fa14f7e83",
+  "records": [
+    {
+      "commit": "2d4940748d007acd58e2fe9f4fb13973732b4fa3",
+      "disposition": "already-represented-upstream",
+      "rationale": "Both changed paths and native upstream 4a169a95d885 reviewed. That commit is an ancestor of both pinned trees; current declarations and complete parent-state get/set functions are native LTS. Native conditional success if a parent operation is unavailable remains; do not add duplicate QTI-specific wrappers or change caller initialization requirements.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/irq-interfaces-history-review.json",
+        "SECURITY.md: IRQ source exports and history"
+      ],
+      "patch_sha256": "660de3710b89bb1ef0072a921d19768e09a683eb21a5af0b289e8a0fc421b985"
+    },
+    {
+      "commit": "cb343eac848ff7516060260f165094d5e2e09e85",
+      "disposition": "reverted-no-residual-code",
+      "rationale": "Both paths and explicit native revert b388fa501425 reviewed. Original c5e5ec033c4a and its revert are ancestors of ACK and LTS. handle_percpu_devid_fasteoi_ipi is absent in final ACK/LTS/port; complete current handle_percpu_devid_irq remains native. The later native flow supersedes the separate IPI helper. This is positive removal/history evidence, not a consumer-search-based omission.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/irq-interfaces-history-review.json",
+        "SECURITY.md: IRQ source exports and history"
+      ],
+      "patch_sha256": "73d493292773b1c5eb9d7cc3099cc1819a7c4b6b98bb79cbaab94dbcf83ce529"
+    },
+    {
+      "commit": "4c01e71cc8a173a87b5ac473a6a036759ec5f5b4",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain both GPL interrupt-statistics source exports. Complete current kstat_irqs_cpu and kstat_irqs_usr are exact LTS; current usr wrapper uses native RCU rather than importing historical locking. The per-CPU accessor still requires a valid CPU and protection against descriptor removal by its caller; the export adds no lifetime pin. No SDK external-module consumer established in manifest common-modules source search; retain generic diagnostic API conservatively.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/irq-interfaces-history-review.json",
+        "SECURITY.md: IRQ source exports and history"
+      ],
+      "patch_sha256": "11f6fc197e186382468fc315fb0df2d05872984dd42e9993d5cf7feb12fa4c3d"
+    },
+    {
+      "commit": "2cb5bf9e38e510655f1f5d2cbd37478938c1c1a8",
+      "disposition": "partially-adapted-net-state",
+      "rationale": "Retain architecture-independent source export of irq_to_desc for the configured sparse IRQ core, with subsequent df30793b7c7b GPL correction. Do not preserve its temporary non-GPL marking or old radix-tree body: current complete lookup is native mtree_load and has no implicit lifetime pin. Trusted callers must provide appropriate descriptor lifetime/locking. This intentionally expands module API availability beyond native PowerPC-KVM-only export scope without changing lookup/allocator internals; exact SDK external consumer unconfirmed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/irq-interfaces-history-review.json",
+        "SECURITY.md: IRQ source exports and history"
+      ],
+      "patch_sha256": "a17742e70078cedb241ab0c5bc28eb059c463c75d9a361354c985ededbe24623"
+    },
+    {
+      "commit": "df30793b7c7bef91f002dd48397c629de8c527dd",
+      "disposition": "adapted-net-state",
+      "rationale": "Keep the complete GPL export correction for irq_to_desc, already present in current port. Export scope is source-module compatibility; native maple-tree lookup and descriptor RCU lifetime remain, not historical radix-tree/KMI layout.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/irq-interfaces-history-review.json",
+        "SECURITY.md: IRQ source exports and history"
+      ],
+      "patch_sha256": "043d08051f72f66659d0c710e381db81edbba7f35527f1cf6289c157cf5688f9"
+    },
+    {
+      "commit": "056194b6bea19fa1a588df3db8b251c37f0a9d53",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain the one-line GPL irq_do_set_affinity export for rebuilt generic interrupt-balancing modules. Complete body is exact LTS, including housekeeping filtering, online CPU checks unless force is requested, controller status handling and thread affinity updates. Caller must hold the required descriptor lock/protect lifetime; force remains privileged trusted-kernel policy. No new userspace permission path is added and no exact SDK module caller established.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/irq-interfaces-history-review.json",
+        "SECURITY.md: IRQ source exports and history"
+      ],
+      "patch_sha256": "3ddd192a47c6ba499a2a0bf5815359cc4b8a5428e1f36921ac6deb163bec3e17"
+    },
+    {
+      "commit": "eb68fa0008410096ea29581b58a4bd9f00d26019",
+      "disposition": "merge-resolution-adapted-net-state",
+      "rationale": "The only unique remerge resolution keeps native IRQD_IRQ_INPROGRESS|IRQD_WAKEUP_ARMED mask and Android abnormal-wakeup logging for a no-suspend IRQ marked wakeup. Complete irq_can_handle_pm is exact LTS after removing that observation/braces. Native armed-wakeup handling and IRQ eligibility decisions remain. Name formatting occurs synchronously within the native descriptor-protected call context, with the previously reviewed wakeup report copying text; no old mask variable/branch is restored.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/irq-interfaces-history-review.json",
+        "SECURITY.md: IRQ source exports and history"
+      ],
+      "patch_sha256": "a414d09e2bd8637867e9b3961a024c25a461a116d947e5f80b3915e28ed11af5"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/irq/chip.c",
+      "function": "irq_chip_set_parent_state",
+      "whole_function_identical_to_lts": true,
+      "sha256": "01d04f99397d5b70a2273bfbc49d8b84f5b356b12b1152bc69822c61f793a165"
+    },
+    {
+      "path": "kernel/irq/chip.c",
+      "function": "irq_chip_get_parent_state",
+      "whole_function_identical_to_lts": true,
+      "sha256": "5c6db6113b4db94cb00f13994d6999f84ffd887655fe58b5802c907342141e6d"
+    },
+    {
+      "path": "kernel/irq/chip.c",
+      "function": "handle_percpu_devid_irq",
+      "whole_function_identical_to_lts": true,
+      "sha256": "ec4bc563fb68b90e58575eb66d5ea4ca744449195a694e6380ccad1dbe3ae1a4"
+    },
+    {
+      "path": "kernel/irq/irqdesc.c",
+      "function": "irq_to_desc",
+      "whole_function_identical_to_lts": true,
+      "sha256": "35c597ebbf596c41a7a916b75d994a007368f24c7a190fb3b2b5f9ce0908cb97"
+    },
+    {
+      "path": "kernel/irq/irqdesc.c",
+      "function": "kstat_irqs_cpu",
+      "whole_function_identical_to_lts": true,
+      "sha256": "5719cffdd20867d6143340a8d78ccc1927f706de612a6324122d1331330da63a"
+    },
+    {
+      "path": "kernel/irq/irqdesc.c",
+      "function": "kstat_irqs_usr",
+      "whole_function_identical_to_lts": true,
+      "sha256": "46a085d670d7d5003f9f8def62f186e555fbd832d07df32af78086c5fcd9fb69"
+    },
+    {
+      "path": "kernel/irq/manage.c",
+      "function": "irq_do_set_affinity",
+      "whole_function_identical_to_lts": true,
+      "sha256": "3e25c544951358a042201ed5a146262b478ec141acdab17bc5072d47154dacef"
+    },
+    {
+      "path": "kernel/irq/chip.c",
+      "function": "irq_can_handle_pm",
+      "identical_to_lts_except": "abnormal-wakeup observation in native no-inprogress/no-armed branch",
+      "sha256": "69884544e6320f4b6c81412dbd8f1ec3fee9bbb61648f915d065c1e538effdd7"
+    }
+  ],
+  "security": "Generic IRQ GPL export scope intentionally grows for trusted source modules; no descriptor lifetime pin is implied. Native maple-tree/RCU, count accesses, controller affinity implementation and IRQ state predicates remain. Users of raw descriptors and per-CPU statistics must preserve native lifetime/locking/CPU-index contracts. Old separate fasteoi IPI flow is positively reverted upstream and absent in final ACK. Wakeup diagnostic observation does not alter IRQ handling decisions.",
+  "uncertainty": "No exact external caller of the four newly exposed symbols found in manifest common-modules C/header source search. Generic source exports are retained conservatively, not claimed to be exercised by SDK modules. No interrupt/affinity runtime test.",
+  "local_resources": [
+    "Pinned ACK and LTS commit history/source",
+    "Pinned manifest common-modules source",
+    "Existing wakeup-history review"
+  ],
+  "remote_sources_used": [],
+  "validation": "Complete patch and unique merge-resolution review; current whole-function equality proofs above. Build 115 succeeded at this source head, including images, all 145 modules, signatures and module-table checks; no IRQ runtime execution."
+}

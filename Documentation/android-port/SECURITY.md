@@ -5132,3 +5132,50 @@ invalidate native restoration. A trusted implementation would need a complete
 format, integrity/confidentiality and failure protocol; none is added or claimed
 here. Existing d7f2fd2bd53e keeps swap rotation accounting balanced across callback
 changes. No bootloader integration, suspend, swap, hibernation or emulator was run.
+
+# Printk hook record ownership and formatting
+
+`evidence/printk-history-review.json` records nine dispositions, including the
+unique printk merge resolution. Keep current generic caller, hotplug and logbuf
+hooks and the native _printk_deferred GPL export. The obsolete exported function
+named printk_deferred is superseded by its native macro/replacement symbol.
+Hotplug skip can delay console output and caller hooks can change attribution;
+these remain explicit freedoms of trusted vendor modules. Exact SDK users were
+not established, so retention is conservative and does not claim runtime use.
+
+`4e85d32c517a` repairs record ownership: native commit makes the record available
+for later reuse, so passing raw writer pointers to subsequent callbacks is not
+safe. The enabled-hook noinline helper copies metadata and bounded text while
+the reservation owns it, commits with native finalization semantics, then invokes
+the hooks in their original order with the snapshot. Disabled hooks use native
+commit directly. Signatures, timing, valid record contents and printk return
+values remain. Changes through the snapshot cannot change the committed log;
+this deliberately rejects post-publication raw-ring mutation. Other records must
+be read through the native reader protocol, and snapshot pointers cannot outlive
+the synchronous callback. Native ringbuffer, nbcon and printk_safe are unchanged.
+
+The helper adds 1,024 bytes of text plus metadata to the stack only when enabled.
+Native recursion limits remain, but nested IRQ/NMI stack usage is not runtime
+verified. Formatting callbacks receive initialized 12/20-byte buffers whose last
+byte is forced to NUL, bounding subsequent string reads while retaining valid
+callback output. This is not protection against malicious kernel module writes.
+
+The extracted-code check passes 1,024 record-reuse and 3,900 formatting cases;
+the original ACK controls fail both checks. It overwrites host source storage at
+commit and checks bounded strings before calling host printf. It does not execute
+kernel ringbuffer concurrency, real tracepoints, IRQ/NMI paths or an emulator.
+
+# IRQ source exports and history
+
+`evidence/irq-interfaces-history-review.json` records seven dispositions. Native
+parent-state helpers already represent the old ACK addition. The separate
+fasteoi IPI helper was explicitly reverted upstream and is absent in final ACK;
+retain the native current flow. The IRQ wakeup merge preserves native masks and
+decisions with only the identified Android diagnostic observation.
+
+Keep current GPL exports for descriptor lookup, interrupt counts and locked
+affinity changes. Complete function bodies remain LTS, including maple-tree/RCU
+and housekeeping/online-CPU behavior. Broader module visibility is intentional
+source compatibility, and does not pin a descriptor lifetime or validate an
+arbitrary callback's locking/CPU arguments. No exact SDK external caller was
+established, so retention is conservative. No IRQ or affinity operation was run.

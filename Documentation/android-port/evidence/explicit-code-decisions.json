@@ -9749,5 +9749,202 @@
       "evidence/pm-runtime-history-review.json",
       "SECURITY.md: PM runtime, freezer and snapshot customization"
     ]
+  },
+  {
+    "commit": "44043ee002fa87a84cc3e43557d7d42cfa1b7f9f",
+    "disposition": "superseded",
+    "rationale": "Single export patch and explicit revert ea2bf27237e0 reviewed. Do not resurrect the historical printk_deferred function symbol: native public printk_deferred is now a macro targeting _printk_deferred, whose current GPL export is preserved via 839c8821c759. Source call compatibility is retained without historical symbol identity.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/printk-history-review.json",
+      "evidence/printk-hook-buffers-check.json",
+      "SECURITY.md: Printk hook record ownership and formatting"
+    ]
+  },
+  {
+    "commit": "ea2bf27237e01befb6bbbcc889274407f5b11e88",
+    "disposition": "superseded",
+    "rationale": "Complete revert reviewed. It removes only the obsolete printk_deferred export before conversion to a macro. Current ACK/port have no such export and retain the replacement _printk_deferred export. No logging behavior needs restoration from either side of this historical pair.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/printk-history-review.json",
+      "evidence/printk-hook-buffers-check.json",
+      "SECURITY.md: Printk hook record ownership and formatting"
+    ]
+  },
+  {
+    "commit": "839c8821c7596dfb3bb52d3edb3400c083f1ab4e",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain the complete one-line GPL export of _printk_deferred. Its whole function body is exact LTS, with native deferred-console behavior. This supports rebuilt vendor scheduler callbacks in atomic contexts; it neither promises that arbitrary logging recursion is safe nor preserves the obsolete binary symbol. Exact SDK external-module caller unconfirmed; retain current generic source interface conservatively.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/printk-history-review.json",
+      "evidence/printk-hook-buffers-check.json",
+      "SECURITY.md: Printk hook record ownership and formatting"
+    ]
+  },
+  {
+    "commit": "7aaa29b82b28311196ff28ff06346ba7df7a9d85",
+    "disposition": "adapted-net-state",
+    "rationale": "All three paths reviewed: preserve default-zero console-hotplug skip hook, current declaration and GPL export. Except this hook/early return, complete console_cpu_notify is exact LTS, including newer console_flush_type and nbcon handling. A trusted callback can intentionally suppress hotplug console flushing, delaying diagnostic visibility; it does not remove ring-buffer storage. No definite SDK callback was found, so generic source policy customization is retained conservatively.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/printk-history-review.json",
+      "evidence/printk-hook-buffers-check.json",
+      "SECURITY.md: Printk hook record ownership and formatting"
+    ]
+  },
+  {
+    "commit": "b5aeebd6f1d5338cf6bd9ba70c4f445018ba99bd",
+    "disposition": "merge-resolution-adapted-net-state",
+    "rationale": "The sole unique remerge hunk keeps Android hotplug skip alongside native console_flush_type declaration. Whole current console_cpu_notify matches LTS after removing that explicit default-zero policy block. Native newer printk and nbcon files remain; no older console implementation is imported.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/printk-history-review.json",
+      "evidence/printk-hook-buffers-check.json",
+      "SECURITY.md: Printk hook record ownership and formatting"
+    ]
+  },
+  {
+    "commit": "0b906a84107f1eec39259ed30480a4004b92ed9c",
+    "disposition": "adapted-net-state",
+    "rationale": "All three paths reviewed. Retain custom nonzero caller ID and both formatting hooks/declarations/GPL exports. Preserve zero-ID and ret=0 native fallback behavior. 4e85d32c517a initializes 12/20-byte temporary arrays and forces the last byte to NUL after each formatting callback, preventing uninitialized or unterminated callback output from making native %s consumption read beyond the buffer. Valid bounded callback strings remain unchanged; malformed output is bounded/empty. Formatting can intentionally alter attribution; trusted hooks must not write outside the provided size or recurse unsafely.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "4e85d32c517aa88882e56232b6710e5fa14f7e83"
+    ],
+    "evidence": [
+      "evidence/printk-history-review.json",
+      "evidence/printk-hook-buffers-check.json",
+      "SECURITY.md: Printk hook record ownership and formatting"
+    ]
+  },
+  {
+    "commit": "914c22ed33ac36b871673bdf6ecca8fbc4e775b7",
+    "disposition": "adapted-net-state",
+    "rationale": "All three paths reviewed. Preserve the current android_vh_logbuf declaration/export and after-commit callback timing (the commit message historical initial_logbuf name is not the actual API). Adapt in 4e85d32c517a: capture bounded metadata/text under the ring reservation, then commit and pass a private snapshot. Previously the hook received raw pointers after native commit released ownership and other writers could recycle data. Snapshot writes no longer change the committed log; retaining post-commit raw-ring mutation would violate native ownership. No definite SDK callback consumer was established; the current generic logging observation API is retained conservatively.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "4e85d32c517aa88882e56232b6710e5fa14f7e83"
+    ],
+    "evidence": [
+      "evidence/printk-history-review.json",
+      "evidence/printk-hook-buffers-check.json",
+      "SECURITY.md: Printk hook record ownership and formatting"
+    ]
+  },
+  {
+    "commit": "1d9270e9e195799982831b7916dfab8c7eb5d522",
+    "disposition": "adapted-net-state",
+    "rationale": "All three paths reviewed. Keep continuation hook/declaration/export and appended-length argument after native commit, using the same owned snapshot adaptation. Preserve complete continued record text and metadata for valid native reservations and bound appended length to snapshot data. Native continuation reservation, newline/finalization, truncation and return count remain. Callback pointers are synchronous-only; no reader may retain them or assume source ring storage remains reserved.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "4e85d32c517aa88882e56232b6710e5fa14f7e83"
+    ],
+    "evidence": [
+      "evidence/printk-history-review.json",
+      "evidence/printk-hook-buffers-check.json",
+      "SECURITY.md: Printk hook record ownership and formatting"
+    ]
+  },
+  {
+    "commit": "6edee2163e4ce0ec712dc3a3abb6ac3ccb118707",
+    "disposition": "adapted-net-state",
+    "rationale": "All three paths reviewed. Retain restricted hook before regular logbuf hook with condition true, so its existing CPU/context semantics remain. Both observe a bounded snapshot after commit; neither gets raw reusable ring data. Callback order remains but no global timestamp ordering across CPUs is guaranteed by this patch. Native reservation/publication/recursion algorithms are unchanged. Trusted callbacks must handle IRQ/NMI/recursion context and use the native ring reader protocol for other records.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "4e85d32c517aa88882e56232b6710e5fa14f7e83"
+    ],
+    "evidence": [
+      "evidence/printk-history-review.json",
+      "evidence/printk-hook-buffers-check.json",
+      "SECURITY.md: Printk hook record ownership and formatting"
+    ]
+  },
+  {
+    "commit": "2d4940748d007acd58e2fe9f4fb13973732b4fa3",
+    "disposition": "already-represented-upstream",
+    "rationale": "Both changed paths and native upstream 4a169a95d885 reviewed. That commit is an ancestor of both pinned trees; current declarations and complete parent-state get/set functions are native LTS. Native conditional success if a parent operation is unavailable remains; do not add duplicate QTI-specific wrappers or change caller initialization requirements.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/irq-interfaces-history-review.json",
+      "SECURITY.md: IRQ source exports and history"
+    ]
+  },
+  {
+    "commit": "cb343eac848ff7516060260f165094d5e2e09e85",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "Both paths and explicit native revert b388fa501425 reviewed. Original c5e5ec033c4a and its revert are ancestors of ACK and LTS. handle_percpu_devid_fasteoi_ipi is absent in final ACK/LTS/port; complete current handle_percpu_devid_irq remains native. The later native flow supersedes the separate IPI helper. This is positive removal/history evidence, not a consumer-search-based omission.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/irq-interfaces-history-review.json",
+      "SECURITY.md: IRQ source exports and history"
+    ]
+  },
+  {
+    "commit": "4c01e71cc8a173a87b5ac473a6a036759ec5f5b4",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain both GPL interrupt-statistics source exports. Complete current kstat_irqs_cpu and kstat_irqs_usr are exact LTS; current usr wrapper uses native RCU rather than importing historical locking. The per-CPU accessor still requires a valid CPU and protection against descriptor removal by its caller; the export adds no lifetime pin. No SDK external-module consumer established in manifest common-modules source search; retain generic diagnostic API conservatively.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/irq-interfaces-history-review.json",
+      "SECURITY.md: IRQ source exports and history"
+    ]
+  },
+  {
+    "commit": "2cb5bf9e38e510655f1f5d2cbd37478938c1c1a8",
+    "disposition": "partially-adapted-net-state",
+    "rationale": "Retain architecture-independent source export of irq_to_desc for the configured sparse IRQ core, with subsequent df30793b7c7b GPL correction. Do not preserve its temporary non-GPL marking or old radix-tree body: current complete lookup is native mtree_load and has no implicit lifetime pin. Trusted callers must provide appropriate descriptor lifetime/locking. This intentionally expands module API availability beyond native PowerPC-KVM-only export scope without changing lookup/allocator internals; exact SDK external consumer unconfirmed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/irq-interfaces-history-review.json",
+      "SECURITY.md: IRQ source exports and history"
+    ]
+  },
+  {
+    "commit": "df30793b7c7bef91f002dd48397c629de8c527dd",
+    "disposition": "adapted-net-state",
+    "rationale": "Keep the complete GPL export correction for irq_to_desc, already present in current port. Export scope is source-module compatibility; native maple-tree lookup and descriptor RCU lifetime remain, not historical radix-tree/KMI layout.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/irq-interfaces-history-review.json",
+      "SECURITY.md: IRQ source exports and history"
+    ]
+  },
+  {
+    "commit": "056194b6bea19fa1a588df3db8b251c37f0a9d53",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain the one-line GPL irq_do_set_affinity export for rebuilt generic interrupt-balancing modules. Complete body is exact LTS, including housekeeping filtering, online CPU checks unless force is requested, controller status handling and thread affinity updates. Caller must hold the required descriptor lock/protect lifetime; force remains privileged trusted-kernel policy. No new userspace permission path is added and no exact SDK module caller established.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/irq-interfaces-history-review.json",
+      "SECURITY.md: IRQ source exports and history"
+    ]
+  },
+  {
+    "commit": "eb68fa0008410096ea29581b58a4bd9f00d26019",
+    "disposition": "merge-resolution-adapted-net-state",
+    "rationale": "The only unique remerge resolution keeps native IRQD_IRQ_INPROGRESS|IRQD_WAKEUP_ARMED mask and Android abnormal-wakeup logging for a no-suspend IRQ marked wakeup. Complete irq_can_handle_pm is exact LTS after removing that observation/braces. Native armed-wakeup handling and IRQ eligibility decisions remain. Name formatting occurs synchronously within the native descriptor-protected call context, with the previously reviewed wakeup report copying text; no old mask variable/branch is restored.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/irq-interfaces-history-review.json",
+      "SECURITY.md: IRQ source exports and history"
+    ]
   }
 ]
