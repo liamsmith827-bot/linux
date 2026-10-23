@@ -4592,3 +4592,28 @@ profile comparisons and superseded signatures are not replayed. Existing GPL
 exports, fallback rescue and dm-default-key integration remain separately
 justified. Build 105 covers the unchanged code; no runtime crypto test or remote
 source was used.
+
+# Device-mapper encryption history
+
+Fourteen decisions in `evidence/dm-crypto-history-review.json` cover the original
+keyslot manager, device-mapper passthrough and replacement-table handling,
+casefold/error propagation, generic source interfaces and two merges. Native
+profiles retain locked slot lifetime, key-pointer cleanup on eviction errors,
+PM ordering, child capability intersection and rejection of shrinking table
+capabilities. Native table operations release SRCU on every exit, including
+missing-table errors; old implementations that skipped this release are not
+restored. Native wrapped operations use the first device under their documented
+homogeneous-provider assumption; this does not certify mixed hardware providers.
+
+Native casefold/decryption error propagation and folio release remain. The
+fscrypt OEM array and configuration-safe bio context helper are conservatively
+retained generic source interfaces; actual SDK consumers were not established.
+OEM storage does not preserve historical offsets, and vendor code must respect
+const operation-table lifetime. The uncertainty is recorded separately.
+
+The 117-path temporary block rollback and its restoration cancel exactly: the
+complete inverse patches match, including context and modes, after removing
+blob IDs and hunk locations. This proof avoids replaying a temporary removal
+of upstream fixes; parent candidates still have independent dispositions.
+Fourteen native file/function witnesses support this group. Build 105 covers
+the unchanged code; no runtime crypto/filesystem test or remote source was used.
