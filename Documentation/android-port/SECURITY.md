@@ -4672,3 +4672,24 @@ keys; skip flags remain kernel-controlled state. The complete target is
 unchanged since its recorded extracted host tests. These tests and build 105
 do not establish runtime encryption, wrapped-hardware operation or bootability.
 Only local sources were used.
+
+# Inline-encryption v6 refresh
+
+The 33 non-ABI paths of `cfd7e6c13c2a` are resolved in
+`evidence/inline-v6-refresh-review.json`. Native implementations cover the
+configuration split, original encryption modes, larger DUNs, prepared keys,
+multi-device filesystems and keyslot lookup. The review preserves native clone
+allocation errors, complete DUN continuity checks, key-reference cleanup,
+request ownership and device power/locking order. It does not restore the old
+void clone API or its incomplete context/continuity checks. The current fscrypt
+key lists use RCU publication; the historical READ_ONCE pointer scheme is not
+reintroduced. Android skip flags and the previously justified zeroout and
+allocation-rescue changes remain.
+
+The UFS implementation is exactly the pinned LTS version. Native removal of
+block bounce buffering supersedes that call-site edit. The generated arm64
+ABI XML is omitted under the requested exclusion of historical binary KMI;
+its schema and role were classified without claiming a semantic review of
+every generated entry. Native equality and unchanged earlier review witnesses
+are recorded. Build 105 covers compilation only; no runtime crypto or UFS
+verification is claimed. Only local sources were used.
