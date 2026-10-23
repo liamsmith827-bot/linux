@@ -6042,3 +6042,114 @@ libc; the final harness uses a private name and all reported results use it.
 Build 134 subsequently passed with the complete kernel/common-module/virtual-device
 workflow; all 145 module signatures and CRC/flag tables verified. No additional
 remote source was accessed.
+
+# Android video frame limits
+
+`evidence/video-frame-limit-review.json` resolves three historical candidates.
+Retain VIDEO_MAX_FRAME and VB2_MAX_FRAME at 64. Pinned Bionic defines 64; the
+selected common kernel includes videobuf2/UVC and the existing virtual workflow
+builds Vivid and v4l2loopback. The temporary revert to 32 was explicitly undone.
+Both entire headers differ from LTS only by the constant, and the entire current
+videobuf2 core is native. Its dynamic array/bitmap storage, count clamps, offset
+encoding cap, and file-I/O bounds remain. Vivid's explicit limits are 64 or more.
+The constant is a default/minimum queue count, not a universal maximum. Increased
+default capacity can increase device-user memory consumption; third-party driver
+correctness is not established by core bounds alone. Exact SDK application need
+for more than 32 buffers remains unconfirmed; Android header/config compatibility
+is retained conservatively with positive local evidence. Build 134 covers this
+unchanged source. No streaming/queue-init runtime test or remote access occurred.
+
+# Scheduler module APIs and per-runqueue storage
+
+`evidence/scheduler-module-api-review.json` resolves four candidates. Keep generic
+GPL APIs for feature state/names, cpuset masks, stopper work, priority tables,
+base slice, PELT load sum, active balancing and priority lists. Native bodies and
+constants are retained, with existing separately reviewed callback plumbing.
+Build 134 emits the expected symbols; sched_energy_present remains conditional
+and absent because ENERGY_MODEL=n. Current debug.c is built unconditionally,
+independent of stale historical SCHED_DEBUG commentary. Direct feature writes
+must synchronize static keys, displayed bits and hotplug; internal APIs do not
+validate arbitrary module inputs, references or caller context. The native
+feature debugfs writer still holds its locks. Exact external callers are not
+established by the scoped search, so interfaces are conservatively preserved.
+
+The 16-u64 per-runqueue OEM field remains functional, zero-initialized static
+per-CPU storage: 128 bytes per possible CPU. It offers source-level state for
+vendor scheduler callbacks, not preservation of old structure size/offsets or
+96-word historical reserves. Vendor access needs its own scheduler-context
+synchronization and reference lifetime management. No actual consumer behavior,
+scheduler policy or runtime boot is verified. No remote was accessed, including
+the lore link embedded in one historical commit message.
+
+# Scheduler merge resolutions across core updates
+
+`evidence/scheduler-merge-followups-review.json` resolves ten nonempty merges;
+all unique remerge hunks were read. Keep native callback types, diagnostic
+reporting, current/donor distinction, acquire ordering, task-possible masks,
+current PSI/uclamp ordering, EEVDF augmented-tree math and delayed dequeue.
+Android notifications/source exports remain at their current sites. Old CFS
+ideal-runtime/preempt helpers, duplicate schedutil arithmetic, and superseded SCX
+cgroup-finish APIs are not restored. The old exported latency scalar remains an
+explicitly unconfirmed external source interface, with no native EEVDF use; a
+shared obsolete tick-hook declaration is not proof of an actual call site.
+
+Whole selected functions compare to LTS after precisely enumerated Android
+changes. Migration callbacks may bypass native hot-task/accounting work only
+when taking over the operation, and must restore rq locking and correct state;
+normal callback-free paths retain native operations. Wakeup/donor, proxy and
+SCX extensions beyond these merge resolutions remain separately assessed.
+These are unique-resolution decisions, not wholesale acceptance of either merge
+parent or proof of runtime policy correctness. Build 134 covers unchanged code.
+No remote links embedded in historical merge messages were accessed.
+
+# Fair selection hooks and native dequeue exclusions
+
+`evidence/fair-selection-hooks-review.json` resolves eight candidates. Keep final
+before-picker and replacement callbacks and current preemption controls; obsolete
+CFS pick-entity/old preemption signatures stay removed. Pointer initialization is
+matched to the current API: before-picker sees NULL, replacement sees an assigned
+task, and entity state is derived only after a non-NULL result. A callback-supplied
+task bypasses native EEVDF choice and must be a valid runnable fair task on this
+runqueue with consistent hierarchy and lifetime. No arbitrary-pointer validation
+or fairness/performance improvement is claimed.
+
+`9e5ff622cd6e` retries selection if either callback returns after rq->donor changes,
+before stale previous-donor state reaches native class/group switching. The
+existing RETRY_TASK path handles this just as other lock-drop restarts. The same
+commit restricts delayed-dequeue policy to suppressing a native-permitted delay;
+non-sleep, special-state and throttled dequeue exclusions remain authoritative.
+ACK otherwise permits setting delay=true after those exclusions. Allowing this
+can violate immediate removal and task-state/throttle invariants; local evidence
+did not justify preserving that override. Legitimate skip behavior remains, while
+forcing an excluded delay is intentionally incompatible. Native task-based
+throttle accounting (including ancestor eb962f251fbb) and delayed-finish paths stay.
+
+The place_entity pointer conversion has a narrower effect than its historical
+message claims: the final callback runs after vruntime/deadline assignment, so
+changing only the pointed-to local does not change stored placement. We preserve
+that final behavior instead of inventing a new application point. Callbacks can
+separately mutate se, subject to their trusted scheduling obligations.
+
+Extracted host models pass 1,536 selector and 768 dequeue cases; previous controls
+fail 960 and 28. These are injected state changes and shim checks, not kernel
+concurrency, actual LSM execution, streaming, or a runtime fairness test. Build
+135 subsequently passed: all 145 module signatures and CRC/flag tables verified.
+No remote source, including upstream commit-message links, was accessed. Exact callback policies remain unconfirmed.
+
+# Scheduler event ordering and writable results
+
+`evidence/scheduler-event-history-review.json` resolves six candidates. Preserve
+current int flags on pre/post class events, ordinary final tick notification, and
+restricted tick-entry after the rq clock update. Tick entry holds the rq lock;
+final tick notification follows unlock but still cannot sleep in tick context.
+Native current/donor accounting, PSI/uclamp ordering and class callbacks remain.
+
+The after-dequeue hook is not merely observational despite its commit wording:
+it receives a writable bool result and that value is returned. A module changing
+it must maintain matching actual delayed-dequeue/class/task state; false success
+can break scheduler bookkeeping and lifetime assumptions. The native result is
+the default. We retain this explicit final Android source policy interface under
+the compatibility priority, without claiming that arbitrary overrides preserve
+native invariants. Exact SDK consumers are unconfirmed; no hardware-specific
+WALT implementation is introduced by these generic events. No runtime scheduler
+accounting or boot verification is claimed. No remote source was accessed.

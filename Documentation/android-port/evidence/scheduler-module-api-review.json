@@ -1,0 +1,145 @@
+{
+  "source_head": "53f6fb1d78a7f7ca944b89a3fa36be80fc3e6bd5",
+  "records": [
+    {
+      "commit": "5cfe879a2a8cf46edc391ba74906eec5c85510cc",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain sysctl_sched_features and sched_feat_names GPL exports plus matching internal declaration. Full three-path patch read. Current names and static-key arrays both derive from the same features.h; no old table size or feature enumeration ABI is preserved. This native scheduler now builds debug.c unconditionally through build_utility.c, despite stale SCHED_DEBUG wording in core.c; actual build 134 contains both exports and sched_feat_keys. Direct module writes must synchronize feature bits/static keys and CPU hotplug appropriately; exporting variables does not automatically use the native debugfs writer locks. Trusted modules may change scheduler behavior, so no claim that raw writes are equivalent to the guarded debugfs API.",
+      "evidence": [
+        "evidence/scheduler-module-api-review.json",
+        "SECURITY.md: Scheduler module APIs and per-runqueue storage"
+      ],
+      "patch_sha256": "0e047a29cf261ef9ef904785188f5abd92b20252591c05a51af28221531d04db"
+    },
+    {
+      "commit": "4d4666820ab7226238d1018e4944a99298f50969",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Read all four paths. Retain GPL exports for native cpuset_cpus_allowed, push_cpu_stop, 40-entry weight/multiplier arrays, base-slice tunable and externally linked ___update_load_sum. Whole cpuset/stopper functions and arrays match LTS; load-sum math matches LTS after the separately reviewed force-update hook. Keep current native default base slice 700000 ns and normalization machinery, not a new default. Module callers must observe stopper CPU/context/task-reference ownership, PELT units/locking and weight index bounds. Export does not turn these internal helpers into validated arbitrary-input APIs or preserve binary signatures.",
+      "evidence": [
+        "evidence/scheduler-module-api-review.json",
+        "SECURITY.md: Scheduler module APIs and per-runqueue storage"
+      ],
+      "patch_sha256": "fcc39c4e67d80d4e894865a697c93aa31b7ebc194e00db98e20bcd7fc1810d71"
+    },
+    {
+      "commit": "e29b8a3ccb4ca5fc76b626a7f1fc8e8901664990",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Read three full paths. Retain GPL active_load_balance_cpu_stop plus plist_add/plist_del and conditionally sched_energy_present. Native active-balance function differs only by external linkage and the existing migration-hook rq_flags pointer; retain native active-CPU/stopper/active_balance checks, RCU domain lookup and cleanup. Plist implementations are byte-identical. The energy static-key definition/export remains under ENERGY_MODEL && SCHEDUTIL and is not emitted in this SDK config (ENERGY_MODEL=n); generic Android configuration support is preserved without enabling another platform. The commit-message lore URL was not accessed and provides no fetched evidence.",
+      "evidence": [
+        "evidence/scheduler-module-api-review.json",
+        "SECURITY.md: Scheduler module APIs and per-runqueue storage"
+      ],
+      "patch_sha256": "a7a086b29ed5ef8b6167ff47ea0aac6e7f0bbb397c00d199d0a2a70380f980d4"
+    },
+    {
+      "commit": "81262d62cd04efeafbf69adb92e78c38eb1190d3",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Read complete one-path addition. Retain the 16-u64 ANDROID_OEM_DATA_ARRAY in struct rq as functional source-accessible per-runqueue vendor storage for the retained scheduler callbacks. CONFIG_ANDROID_VENDOR_OEM_DATA=y expands it to u64 android_oem_data1[16], and runqueues uses static per-CPU definition with zero initialization. It adds 128 bytes per possible CPU, not a historical layout/offset promise; old 96-word vendor reserve is not reinstated. Exact external storage consumer is unconfirmed; retain current generic vendor-customization contract conservatively. Modules must synchronize access with the scheduler/callback context and manage any stored references; core code supplies no object ownership or locking for arbitrary data.",
+      "evidence": [
+        "evidence/scheduler-module-api-review.json",
+        "SECURITY.md: Scheduler module APIs and per-runqueue storage"
+      ],
+      "patch_sha256": "e9e42db95fb84654a91ac7572dfa47808919f74eccc8298e83066901ad359174"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/cgroup/cpuset.c",
+      "function": "cpuset_cpus_allowed",
+      "sha256": "aeaaa8cf38e71dc5a3b6f50905b1b31d5f8ea3d3fcb8480cee783dc21fdd88b0",
+      "relationship": "native function after precisely listed pre-existing hook/linkage changes"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "push_cpu_stop",
+      "sha256": "db2295dec00615bf8abbd1461b29eec0e2dcf186201736d3f6641e65cf0bafc4",
+      "relationship": "native function after precisely listed pre-existing hook/linkage changes"
+    },
+    {
+      "path": "lib/plist.c",
+      "function": "plist_add",
+      "sha256": "4b4cf43c9cf9d2aa3bc2f3f8c24551651a2951a672294b5d8b7619e34bc05750",
+      "relationship": "native function after precisely listed pre-existing hook/linkage changes"
+    },
+    {
+      "path": "lib/plist.c",
+      "function": "plist_del",
+      "sha256": "20b41a381a0806c4c8991d7e9a5ad48624dfc21ae6b9ea30c823b13b82ceeda2",
+      "relationship": "native function after precisely listed pre-existing hook/linkage changes"
+    },
+    {
+      "path": "kernel/sched/debug.c",
+      "function": "sched_feat_set",
+      "sha256": "a78cca25679ac4001fc324a62aeb80c8a1105dba91fb9adfa38d4cdd61f56664",
+      "relationship": "native function after precisely listed pre-existing hook/linkage changes"
+    },
+    {
+      "path": "kernel/sched/debug.c",
+      "function": "sched_feat_write",
+      "sha256": "a1ce9ba25a28e7f945fc7c2adf66797619932fb4e644b177d494a026f8f418c0",
+      "relationship": "native function after precisely listed pre-existing hook/linkage changes"
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "active_load_balance_cpu_stop",
+      "sha256": "c85e847a50f1797f7945dc55c2a46bd319a68a2864d27f2d915705a2e55d95f4",
+      "relationship": "native function after precisely listed pre-existing hook/linkage changes"
+    },
+    {
+      "path": "kernel/sched/pelt.c",
+      "function": "___update_load_sum",
+      "sha256": "cac14cabaeb9925a347ce11ec5bbe108cfd4b8da845b723ec1bbdb4fff60d487",
+      "relationship": "native function after precisely listed pre-existing hook/linkage changes"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "declaration": "sched_prio_to_weight",
+      "sha256": "b557d06b6467770bf2690a329a6b72bd879ef7471b0b9fea08430d89fa20637c",
+      "relationship": "entire constant 40-element native table"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "declaration": "sched_prio_to_wmult",
+      "sha256": "c4530e75daa07e869cad3a7921b1f402ae9b319b5ba6f202feea6b2a22f6561b",
+      "relationship": "entire constant 40-element native table"
+    }
+  ],
+  "build_evidence": {
+    "run": "sdk-build-attempt-134",
+    "vmlinux_symvers_sha256": "3ceee3a4732577e4e9442c723809340d88a931965deebccf8eba6b68b82dec5a",
+    "config_sha256": "48f19810fd5e10021d64b96e82cdb2b0b587f7cb24b3b4b5660b6732ae05cd09",
+    "GPL_symbols_present": [
+      "sysctl_sched_features",
+      "sched_feat_names",
+      "sched_feat_keys",
+      "cpuset_cpus_allowed",
+      "push_cpu_stop",
+      "sched_prio_to_weight",
+      "sched_prio_to_wmult",
+      "sysctl_sched_base_slice",
+      "___update_load_sum",
+      "active_load_balance_cpu_stop",
+      "plist_add",
+      "plist_del"
+    ],
+    "conditionally_absent": [
+      "sched_energy_present"
+    ]
+  },
+  "security": "Native internal APIs retain their calling contracts. Stopper helpers require correct CPU/work/reference setup; PELT needs synchronized valid state; direct tunable/static-key updates require caller serialization and consistency. Per-rq OEM storage is functional kernel-private data with no core ownership protocol, not historical ABI padding.",
+  "uncertainty": "Scoped manifest virtual-device search did not identify these particular external callers/storage consumers. This is not proof of absence; retain generic Android vendor source contracts under explicit compatibility priority. No runtime scheduler-policy, module use or boot test is claimed.",
+  "validation": "Whole bodies/tables/conditional definitions compared locally; actual build 134 exports inspected. No new source edits or new compilation required.",
+  "remote_sources_used": []
+}

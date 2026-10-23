@@ -1,0 +1,107 @@
+{
+  "source_head": "9e5ff622cd6e617658a3f0cad6fbd307643f2c6d",
+  "records": [
+    {
+      "commit": "2935d588b1378b98d53e27fab1d79808248a5f1a",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three paths read. Retain ordinary android_vh_scheduler_tick rather than old restricted name, allowing the current ordinary trace registration mechanism. Final site is at end of sched_tick AFTER rq_unlock, native perf/workqueue/load-balance work. It still executes in tick context and is not a permission to sleep. Native whole tick function equals LTS after just the two Android callbacks, preserving current/donor accounting distinction.",
+      "evidence": [
+        "evidence/scheduler-event-history-review.json",
+        "SECURITY.md: Scheduler event ordering and writable results"
+      ],
+      "patch_sha256": "aaf7d17d725771b132591e3ffffc0a27fbf4d2a81abdf71764448dfdd27041f3"
+    },
+    {
+      "commit": "a3c57fcffc259ec6685b657ac3f70e9d488a0268",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Both changed paths read. Retain int flags on current restricted pre-enqueue/dequeue events, with matching calls/declarations/exports. Old no-op disabled macros are superseded by final common trace-hook infrastructure. Flags report the current native/Android event domain by value, not an override; earlier raw numeric historical values are not a binary ABI promise. Native clock/uclamp and PSI ordering is retained.",
+      "evidence": [
+        "evidence/scheduler-event-history-review.json",
+        "SECURITY.md: Scheduler event ordering and writable results"
+      ],
+      "patch_sha256": "2ee8e8457508d654692e28d8f5de3c9d5430352bfeee106bb532e7b3f9934eee"
+    },
+    {
+      "commit": "e0bcb90ef949b10214d23d6c1eb28c9d61a4bfdd",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full single-file move read. Preserve pre-class enqueue/dequeue notifications for vendor accounting before native class callbacks. Current enqueue follows uclamp increment; dequeue follows uclamp decrement and native pre-dequeue accounting. Independent after events remain for post-class state. Callback runs under caller scheduler locking and must not corrupt membership/accounting; the move itself does not remove native class work.",
+      "evidence": [
+        "evidence/scheduler-event-history-review.json",
+        "SECURITY.md: Scheduler event ordering and writable results"
+      ],
+      "patch_sha256": "021d590d9829d18d6c75828ceb494933fd9a326142fed48192456f85754bdffb"
+    },
+    {
+      "commit": "a4aa38731edb2deb3153f6aa9719e76e7518117c",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full single-file reorder read. Keep restricted tick_entry after native update_rq_clock while rq is locked, before native hardware-pressure, donor class tick and remaining tick accounting. Current outer scheduler_tick event is a different unlocked notification. Preserve native curr versus donor use; no stale pre-update clock site or platform-specific pressure implementation is restored.",
+      "evidence": [
+        "evidence/scheduler-event-history-review.json",
+        "SECURITY.md: Scheduler event ordering and writable results"
+      ],
+      "patch_sha256": "205f09cd36d371bc720fa5cc5311d912f8948eb478e6614cd331a2c73344b88a"
+    },
+    {
+      "commit": "a1290fe02102e2dc56dd312bd65fa2b3bdfb4ebb",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Both paths read. Retain flags on both after-enqueue/dequeue events. Final after-dequeue signature additionally takes bool *dequeue_task_result from 18b7754108c1. These generic source events are retained for Android vendor accounting even though historical motivation names WALT; no Qualcomm hardware support is added and exact SDK callback remains unconfirmed.",
+      "evidence": [
+        "evidence/scheduler-event-history-review.json",
+        "SECURITY.md: Scheduler event ordering and writable results"
+      ],
+      "patch_sha256": "903a468bba88c3b510350456d8b6fbc19505150019843731103d9db96a3ecb74"
+    },
+    {
+      "commit": "18b7754108c117c455195abbcb6b142797cc5d88",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Both paths read. Retain final pointer to initialized native class dequeue result at after_dequeue_task. Despite notification wording in the message, bool * is writable and its final value is returned to callers; it can change whether the core believes delayed removal succeeded. Preserve this explicit final source interface rather than silently converting it to a read-only copy. A callback changing it must also keep actual task/class/delayed state consistent, or scheduling/accounting/lifetime invariants may break. Native class result remains the default and all pre-dequeue native operations stay. This is a trusted module policy contract, not an assertion that arbitrary return overrides are safe.",
+      "evidence": [
+        "evidence/scheduler-event-history-review.json",
+        "SECURITY.md: Scheduler event ordering and writable results"
+      ],
+      "patch_sha256": "f7fd2b25724f87d7739ad561c3adbce2759713c3e602eb261303f632dfc2b5a5"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/sched/core.c",
+      "function": "sched_tick",
+      "sha256": "3278a30f1e6803e2f7ca23f28c186fb2d33e92506ad47058da8c577f6b039a1f",
+      "relationship": "whole native function after explicitly listed hooks and separate queue-mask tracking"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "enqueue_task",
+      "sha256": "83731f43e73c99310745a066725320f1aaaac0913fd5c8e24460197e2c202b40",
+      "relationship": "whole native function after explicitly listed hooks and separate queue-mask tracking"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "dequeue_task",
+      "sha256": "6b9a1c9bb9eb407dab1cbc7e29bf63460adea3a5e207cd2867b9f6ed7cb0e5af",
+      "relationship": "whole native function after explicitly listed hooks and separate queue-mask tracking"
+    }
+  ],
+  "security": "Tick entry is locked after clock update; ordinary final tick notification is after unlock but still tick context. Pre/post class events retain native ordering. after_dequeue result is genuinely writable: a policy can override core-visible success and must keep actual task/delayed state consistent. No blanket read-only-notification or arbitrary callback safety claim.",
+  "uncertainty": "Exact SDK callbacks are unconfirmed. Retain generic Android module source contracts rather than omit on absent scoped consumer evidence. No WALT/platform implementation, runtime accounting validation, or latency benefit is claimed.",
+  "validation": "Complete patch review, matching declarations/exports and whole native-body comparisons. Code is unchanged by these six decisions; build 135 passed, with all 145 module signatures and version tables verified.",
+  "remote_sources_used": []
+}

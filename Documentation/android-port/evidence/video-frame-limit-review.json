@@ -1,0 +1,86 @@
+{
+  "source_head": "53f6fb1d78a7f7ca944b89a3fa36be80fc3e6bd5",
+  "records": [
+    {
+      "commit": "e81694723af1c2d89edcd1948e77a8d53126d5a5",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Read both constant changes and later revert/reintroduction. Retain VIDEO_MAX_FRAME=64 and VB2_MAX_FRAME=64 for Android public headers and configured V4L2/videobuf2 infrastructure. Pinned Bionic UAPI positively defines VIDEO_MAX_FRAME 64, and the unchanged manifest builds vivid and v4l2loopback modules while common kernel includes videobuf2 and uvcvideo. The two full headers differ from LTS only by these constants; the entire videobuf2 core implementation is LTS. This changes a functional default buffer capacity, not merely historical binary layout.",
+      "evidence": [
+        "evidence/video-frame-limit-review.json",
+        "SECURITY.md: Android video frame limits"
+      ],
+      "patch_sha256": "b0514d5013fe580794d616ccc4a5289b6e78e0abdd543933ed6cb9dd828c17be"
+    },
+    {
+      "commit": "833169bb8db9881e36fc6d0939b193ba1ee17288",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "Full two-line inverse restores 32 but is later explicitly undone by 71a85bd24554. The complete inverse text is present upstream but not in final ACK/port because the final Android constant contract is 64. Do not classify this as already represented in the port merely because a pinned-LTS reverse check succeeds. The temporary no-longer-required message is superseded by final local code and current Bionic 64 evidence.",
+      "evidence": [
+        "evidence/video-frame-limit-review.json",
+        "SECURITY.md: Android video frame limits"
+      ],
+      "patch_sha256": "5b6870213b5cd218cce805bb136d82081fe2411bb2673f00a6b6717fc0dc8614"
+    },
+    {
+      "commit": "71a85bd245540ee14ca9d2b30ba73b1b81bc8a0d",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Read complete two-path restoration. Keep both values at 64, matching pinned Bionic and compile-time VB2_MAX_FRAME==VIDEO_MAX_FRAME assertion. Native vb2_core_queue_init uses this as a default and minimum, not a global upper bound; explicit queues may support more. Native current drivers with explicit max_num_buffers use 64 or greater (Hantro 64; Vivid 64/1024/32768; Vicodec 64). Configured built Vivid therefore does not trip the increased minimum by its declared limit. Actual queue initialization and streaming are not verified. Native dynamic storage/bitmap allocation, request clamping, MAX_BUFFER_INDEX cap and file-I/O bounds remain; doubling the default may increase authorized device-user memory consumption and does not prove every third-party driver handles 64 correctly.",
+      "evidence": [
+        "evidence/video-frame-limit-review.json",
+        "SECURITY.md: Android video frame limits"
+      ],
+      "patch_sha256": "79cd4931ccb58ba06a4f4701420ffc5e9f444a7646242cba295a39d75b324dc6"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "include/media/videobuf2-core.h",
+      "sha256": "223ffc44ad14954d7e15648727feb4e60aa5cd7b10d5c57626d38d03811e4361",
+      "relationship": "whole LTS header plus one 32-to-64 constant change"
+    },
+    {
+      "path": "include/uapi/linux/videodev2.h",
+      "sha256": "ced0371098f80ee3a6c2a690ed8c4755613b157ababcb7c36de919964bfa2a07",
+      "relationship": "whole LTS header plus one 32-to-64 constant change"
+    },
+    {
+      "path": "drivers/media/common/videobuf2/videobuf2-core.c",
+      "sha256": "3910403dc6f8e1df11b0d95cfd456635a36f48c7984717e28497a0489de49ad5",
+      "relationship": "whole file exactly native LTS"
+    },
+    {
+      "path": "include/media/videobuf2-v4l2.h",
+      "sha256": "1f8f8e436356f10d26273a3a71089aea58976419749e069729ec3e515b9b7d06",
+      "relationship": "whole file exactly native LTS"
+    },
+    {
+      "path": "drivers/media/test-drivers/vivid/vivid-core.c",
+      "sha256": "7fa710c190cf32e414589c45f4e2e6205add7367f6e5905d90cb92cbcede7647",
+      "relationship": "whole file exactly native LTS"
+    },
+    {
+      "path": "drivers/media/test-drivers/vivid/vivid-core.h",
+      "sha256": "66d313ff8aa12095df46c5262b01c67b3ebc5786cfe3d229bca7ce0b5c0f9535",
+      "relationship": "whole file exactly native LTS"
+    }
+  ],
+  "consumer_evidence": {
+    "bionic_path": "grapheneos-17/bionic/libc/kernel/uapi/linux/videodev2.h",
+    "bionic_sha256": "331427e1b2cd49ef58c9a2c9dd0ea94cde17e1f044820739840a4f4bdedc04ad",
+    "virtual_fragment_sha256": "e63c143d165c2c4df5223e4df8d174e9d43fd0d5fd02b05769cb2b3b2f4d5503",
+    "common_config_sha256": "48f19810fd5e10021d64b96e82cdb2b0b587f7cb24b3b4b5660b6732ae05cd09",
+    "build": "sdk-build-attempt-134",
+    "statement": "Bionic defines 64. Common built-ins list videobuf2, videodev and uvcvideo; virtual build emits vivid.ko and v4l2loopback.ko. The distributed kernel_x86_64_dot_config describes the common kernel and does not independently describe virtual mixed-build extra modules."
+  },
+  "security": "Default/minimum queue count increases; actual storage uses native dynamic array and bitmap sizing, buffer counts are clamped, and fileio array/count bound both use VB2_MAX_FRAME. Device-user memory consumption may grow. This is not a promise that all third-party drivers work with 64 or that 64 is a universal maximum. No driver security checks are removed.",
+  "uncertainty": "No SDK streaming or queue-init runtime validation; exact application need for >32 simultaneous buffers remains unconfirmed. Retain current Android header/configuration compatibility, supported by positive Bionic constant and built common/virtual media infrastructure, rather than omit based on missing runtime evidence.",
+  "validation": "Whole-header and whole-core comparisons, current explicit driver max_num_buffers definitions inspected, full build 134 passed. No new source change or additional build needed for these decisions.",
+  "remote_sources_used": []
+}

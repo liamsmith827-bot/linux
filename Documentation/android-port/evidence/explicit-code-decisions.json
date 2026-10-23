@@ -14957,5 +14957,382 @@
       "evidence/affinity-hook-guards-check.json",
       "SECURITY.md: Affinity callbacks and native constraints"
     ]
+  },
+  {
+    "commit": "e81694723af1c2d89edcd1948e77a8d53126d5a5",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Read both constant changes and later revert/reintroduction. Retain VIDEO_MAX_FRAME=64 and VB2_MAX_FRAME=64 for Android public headers and configured V4L2/videobuf2 infrastructure. Pinned Bionic UAPI positively defines VIDEO_MAX_FRAME 64, and the unchanged manifest builds vivid and v4l2loopback modules while common kernel includes videobuf2 and uvcvideo. The two full headers differ from LTS only by these constants; the entire videobuf2 core implementation is LTS. This changes a functional default buffer capacity, not merely historical binary layout.",
+    "evidence": [
+      "evidence/video-frame-limit-review.json",
+      "SECURITY.md: Android video frame limits"
+    ]
+  },
+  {
+    "commit": "833169bb8db9881e36fc6d0939b193ba1ee17288",
+    "disposition": "superseded",
+    "result_commits": [],
+    "rationale": "Full two-line inverse restores 32 but is later explicitly undone by 71a85bd24554. The complete inverse text is present upstream but not in final ACK/port because the final Android constant contract is 64. Do not classify this as already represented in the port merely because a pinned-LTS reverse check succeeds. The temporary no-longer-required message is superseded by final local code and current Bionic 64 evidence.",
+    "evidence": [
+      "evidence/video-frame-limit-review.json",
+      "SECURITY.md: Android video frame limits"
+    ]
+  },
+  {
+    "commit": "71a85bd245540ee14ca9d2b30ba73b1b81bc8a0d",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Read complete two-path restoration. Keep both values at 64, matching pinned Bionic and compile-time VB2_MAX_FRAME==VIDEO_MAX_FRAME assertion. Native vb2_core_queue_init uses this as a default and minimum, not a global upper bound; explicit queues may support more. Native current drivers with explicit max_num_buffers use 64 or greater (Hantro 64; Vivid 64/1024/32768; Vicodec 64). Configured built Vivid therefore does not trip the increased minimum by its declared limit. Actual queue initialization and streaming are not verified. Native dynamic storage/bitmap allocation, request clamping, MAX_BUFFER_INDEX cap and file-I/O bounds remain; doubling the default may increase authorized device-user memory consumption and does not prove every third-party driver handles 64 correctly.",
+    "evidence": [
+      "evidence/video-frame-limit-review.json",
+      "SECURITY.md: Android video frame limits"
+    ]
+  },
+  {
+    "commit": "5cfe879a2a8cf46edc391ba74906eec5c85510cc",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain sysctl_sched_features and sched_feat_names GPL exports plus matching internal declaration. Full three-path patch read. Current names and static-key arrays both derive from the same features.h; no old table size or feature enumeration ABI is preserved. This native scheduler now builds debug.c unconditionally through build_utility.c, despite stale SCHED_DEBUG wording in core.c; actual build 134 contains both exports and sched_feat_keys. Direct module writes must synchronize feature bits/static keys and CPU hotplug appropriately; exporting variables does not automatically use the native debugfs writer locks. Trusted modules may change scheduler behavior, so no claim that raw writes are equivalent to the guarded debugfs API.",
+    "evidence": [
+      "evidence/scheduler-module-api-review.json",
+      "SECURITY.md: Scheduler module APIs and per-runqueue storage"
+    ]
+  },
+  {
+    "commit": "4d4666820ab7226238d1018e4944a99298f50969",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Read all four paths. Retain GPL exports for native cpuset_cpus_allowed, push_cpu_stop, 40-entry weight/multiplier arrays, base-slice tunable and externally linked ___update_load_sum. Whole cpuset/stopper functions and arrays match LTS; load-sum math matches LTS after the separately reviewed force-update hook. Keep current native default base slice 700000 ns and normalization machinery, not a new default. Module callers must observe stopper CPU/context/task-reference ownership, PELT units/locking and weight index bounds. Export does not turn these internal helpers into validated arbitrary-input APIs or preserve binary signatures.",
+    "evidence": [
+      "evidence/scheduler-module-api-review.json",
+      "SECURITY.md: Scheduler module APIs and per-runqueue storage"
+    ]
+  },
+  {
+    "commit": "e29b8a3ccb4ca5fc76b626a7f1fc8e8901664990",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Read three full paths. Retain GPL active_load_balance_cpu_stop plus plist_add/plist_del and conditionally sched_energy_present. Native active-balance function differs only by external linkage and the existing migration-hook rq_flags pointer; retain native active-CPU/stopper/active_balance checks, RCU domain lookup and cleanup. Plist implementations are byte-identical. The energy static-key definition/export remains under ENERGY_MODEL && SCHEDUTIL and is not emitted in this SDK config (ENERGY_MODEL=n); generic Android configuration support is preserved without enabling another platform. The commit-message lore URL was not accessed and provides no fetched evidence.",
+    "evidence": [
+      "evidence/scheduler-module-api-review.json",
+      "SECURITY.md: Scheduler module APIs and per-runqueue storage"
+    ]
+  },
+  {
+    "commit": "81262d62cd04efeafbf69adb92e78c38eb1190d3",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Read complete one-path addition. Retain the 16-u64 ANDROID_OEM_DATA_ARRAY in struct rq as functional source-accessible per-runqueue vendor storage for the retained scheduler callbacks. CONFIG_ANDROID_VENDOR_OEM_DATA=y expands it to u64 android_oem_data1[16], and runqueues uses static per-CPU definition with zero initialization. It adds 128 bytes per possible CPU, not a historical layout/offset promise; old 96-word vendor reserve is not reinstated. Exact external storage consumer is unconfirmed; retain current generic vendor-customization contract conservatively. Modules must synchronize access with the scheduler/callback context and manage any stored references; core code supplies no object ownership or locking for arbitrary data.",
+    "evidence": [
+      "evidence/scheduler-module-api-review.json",
+      "SECURITY.md: Scheduler module APIs and per-runqueue storage"
+    ]
+  },
+  {
+    "commit": "1e5e020b085d7b6f8f8bddb3ea297d1d793c61d1",
+    "disposition": "merge-resolution-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "One complete unique hunk. Retain external migrate_swap declaration with current signature; do not restore removed BALANCE_WORK/BALANCE_PUSH constants. Native current queue_balance_callback uses struct balance_callback and balance_push_callback exclusion. This resolution concerns exported source helpers and evolved native balance plumbing, not old callback layout.",
+    "evidence": [
+      "evidence/scheduler-merge-followups-review.json",
+      "SECURITY.md: Scheduler merge resolutions across core updates"
+    ]
+  },
+  {
+    "commit": "1e5781383b49d38b5af343b192bf8ecc575391b1",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "One full unique hunk removes the duplicate historical schedutil_cpu_util implementation/export rather than retaining an obsolete utilization model. Final ACK and port no longer contain that name in cpufreq_schedutil.c; current whole sugov_get_util equals pinned LTS, using effective_cpu_util and sugov_effective_cpu_perf with SCX handling. Do not resurrect old RT/DL/IRQ arithmetic or old module symbol solely from earlier history. Other current governor callbacks remain separately reviewed.",
+    "evidence": [
+      "evidence/scheduler-merge-followups-review.json",
+      "SECURITY.md: Scheduler merge resolutions across core updates"
+    ]
+  },
+  {
+    "commit": "367ad519237de9718af2a870d5f0f869ec569627",
+    "disposition": "merge-resolution-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "One unique hunk combines native print_preempt_disable_ip(offsets & MIGHT_RESCHED_PREEMPT_MASK, ...) with the Android schedule_bug(NULL) notification. Current entire __might_resched is LTS plus this event; native warning guards, reporting, stack dump and taint stay. Callback must handle NULL and diagnostic context; no replacement of native checks by old preempt_offset logic.",
+    "evidence": [
+      "evidence/scheduler-merge-followups-review.json",
+      "SECURITY.md: Scheduler merge resolutions across core updates"
+    ]
+  },
+  {
+    "commit": "b4eb04643154140a31db6975dfb13bd2620a2072",
+    "disposition": "merge-resolution-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "One unique hunk keeps the Android external __migrate_task prototype and accepts native struct balance_callback instead of old callback_head. Current helper body equals LTS after external linkage/indentation, and current header declares the native callback type. Keep native lock annotations and callback exclusion; do not preserve old historical type/layout.",
+    "evidence": [
+      "evidence/scheduler-merge-followups-review.json",
+      "SECURITY.md: Scheduler merge resolutions across core updates"
+    ]
+  },
+  {
+    "commit": "af736aef72e53e3231bc5a398439320e2a44d4f0",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All unique fair.c hunks read: retain the previously reviewed inert sysctl_sched_latency GPL scalar (no native EEVDF use; external source consumer unconfirmed), entity enqueue/dequeue/tick events and current externally linked set_next_entity including bool first. Keep newer native sum_w_vruntime accounting and min_vruntime/min_slice augmented tree, not the historical min_deadline tree or rb_add_cached. Removed old check_preempt_tick implementation and old pick-next/wakeup signatures stay removed; shared check_preempt_tick declaration/export remains without inventing a call, as final ACK does. Current pick_next_entity retains native EEVDF/delayed dequeue with existing null-result guard. Current check_preempt_wakeup_fair has separately reviewed initialized-false preempt/ignore policy before native slice-protection logic; no old ideal_runtime/granularity formulas are restored.",
+    "evidence": [
+      "evidence/scheduler-merge-followups-review.json",
+      "SECURITY.md: Scheduler merge resolutions across core updates"
+    ]
+  },
+  {
+    "commit": "662100c8e61044374da90c4088c255e43e63ed04",
+    "disposition": "merge-resolution-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Both unique core.c hunks read. Retain is_cpu_allowed callback with native task_possible checks now in task_allowed_on_cpu, not lost merely because removed from the later return expression. Retain CPU cgroup attach event after native scheduler moves and current native cancel handling. Obsolete scx_cgroup_finish_attach API is absent final ACK/current; modern scx_cgroup_move_task within sched_move_task and native can_attach/cancel protocol remain. No old SCX cgroup interface or protection is copied wholesale.",
+    "evidence": [
+      "evidence/scheduler-merge-followups-review.json",
+      "SECURITY.md: Scheduler merge resolutions across core updates"
+    ]
+  },
+  {
+    "commit": "12c824a9384055c9220315be1d491e0a736c33c6",
+    "disposition": "merge-resolution-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "One unique wakeup hunk. Keep Android try_to_wake_up notification after smp_cond_load_acquire of on_cpu, with current select_task_rq taking &wake_flags so SCX changes can propagate. Preserve native acquire ordering and flag API; do not restore old value argument or OR WF_TTWU expression. Other proxy/wakeup extensions are covered separately, not certified by this single-hunk review.",
+    "evidence": [
+      "evidence/scheduler-merge-followups-review.json",
+      "SECURITY.md: Scheduler merge resolutions across core updates"
+    ]
+  },
+  {
+    "commit": "e3cec126d4087d1aebe7dce1091f2e0940b7523d",
+    "disposition": "merge-resolution-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "One unique enqueue hunk keeps Android before/after class notifications and accepts native movement of sched_info/PSI accounting. Current entire enqueue_task equals LTS after these two events and separately introduced rq queue-mask update; native PSI follows class enqueue and native uclamp handling precedes it. Do not reinsert the removed old ENQUEUE_RESTORE-gated accounting block or double-charge scheduling/PSI state.",
+    "evidence": [
+      "evidence/scheduler-merge-followups-review.json",
+      "SECURITY.md: Scheduler merge resolutions across core updates"
+    ]
+  },
+  {
+    "commit": "109c3b5589007ef1b02cffd1db4a8b01ca8c8c2d",
+    "disposition": "merge-resolution-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "One unique RT-selection hunk retains native separate READ_ONCE(rq->curr) and READ_ONCE(rq->donor) plus Android this_cpu/this_cpu_rq setup for separately reviewed sync placement. Current native contention expression uses rt_task(donor) and donor priority with current-task affinity, rather than assuming donor==curr. Preserve proxy-execution distinction; no wholesale old RT implementation replacement.",
+    "evidence": [
+      "evidence/scheduler-merge-followups-review.json",
+      "SECURITY.md: Scheduler merge resolutions across core updates"
+    ]
+  },
+  {
+    "commit": "8b60e1cfb1e46f47bff521e863c97bcaafe395e6",
+    "disposition": "merge-resolution-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Both unique fair.c hunks read. Keep native long degrades/hot types with initialized Android can_migrate veto, and combine migration callback with native sched_task_hot accounting. Current can_migrate_task is LTS plus veto after clearing hot marker. detach_task callback may handle migration itself and skip native path; then callback must preserve task/rq state, locking and accounting, including hot-task bookkeeping. With default detached=0 all native hot flags/statistics, deactivate and CPU move remain. Callback may temporarily drop the rq lock but must reacquire it and use valid rq_flags; no native automatic safety guarantee for arbitrary callback actions.",
+    "evidence": [
+      "evidence/scheduler-merge-followups-review.json",
+      "SECURITY.md: Scheduler merge resolutions across core updates"
+    ]
+  },
+  {
+    "commit": "771633a2e96dee0d46f5864365e304efa4929ac8",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Read all three paths. Historical pick_next_entity hook and original check_preempt_wakeup name/signature are gone from final ACK/current. Preserve evolved check_preempt_wakeup_fair policy with initialized-false preempt/ignore and current entity/wake arguments, rather than reinstall old CFS buddy selector. Whole current wakeup-preemption function is native LTS plus the hook after update_curr and before native slice/EEVDF decisions. Forced preemption wins if both outputs are true; suppression can reduce fairness/latency guarantees and requires trusted vendor policy.",
+    "evidence": [
+      "evidence/fair-selection-hooks-review.json",
+      "evidence/fair-hook-guards-check.json",
+      "SECURITY.md: Fair selection hooks and native dequeue exclusions"
+    ]
+  },
+  {
+    "commit": "384f64c12cddfbc30d8605c689fb66b0f712fedc",
+    "disposition": "superseded",
+    "result_commits": [],
+    "rationale": "Full initialization fix read. Its historical replace hook exposed both task and entity pointers on simple/non-simple branches; that interface is removed by 6e7f9208c7b6. Current replacement hook receives only an already-assigned task pointer, and the newer before hook starts with p=NULL. se is assigned only after non-NULL task selection and is no longer a callback output. The old se=NULL/repick implementation need not be restored to preserve initialization safety.",
+    "evidence": [
+      "evidence/fair-selection-hooks-review.json",
+      "evidence/fair-hook-guards-check.json",
+      "SECURITY.md: Fair selection hooks and native dequeue exclusions"
+    ]
+  },
+  {
+    "commit": "f7ede2b168eae07969bfb8b9167ddc205d6651b9",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Both paths read. Keep the semantic addition of an independent suppress-preemption output and later placement after matching/updating entities, through the current renamed richer check_preempt_wakeup_fair hook. Current preempt and ignore start false. Existing native early checks precede it; when no override is set, all native EEVDF slice-protection logic remains. No old wakeup_granularity formula or old four-argument signature is reinstated.",
+    "evidence": [
+      "evidence/fair-selection-hooks-review.json",
+      "evidence/fair-hook-guards-check.json",
+      "SECURITY.md: Fair selection hooks and native dequeue exclusions"
+    ]
+  },
+  {
+    "commit": "cf22aa5ebd2028803c804d34c681df8cb0763fed",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Both paths read. Preserve pointer argument in the final place_entity event and its matching GPL export. Crucial limitation: current call is AFTER se->vruntime and se->deadline assignment; writing only through the u64 *vruntime argument changes a no-longer-used local and does not alter the stored placement. A callback can separately mutate the supplied se, but the pointer conversion alone does not deliver the optimization claimed by the old message. Keep exact final ACK placement rather than inventing an earlier execution point that would bypass native EEVDF calculation. Actual vendor use remains unconfirmed.",
+    "evidence": [
+      "evidence/fair-selection-hooks-review.json",
+      "evidence/fair-hook-guards-check.json",
+      "SECURITY.md: Fair selection hooks and native dequeue exclusions"
+    ]
+  },
+  {
+    "commit": "6e7f9208c7b6c542e4e7deb4c65b092bb2705479",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Read complete three-path partial revert. Remove the obsolete six-argument replacement API, entity output, repick flag and duplicate simple-path invocation. Later 3d5bad71a798 intentionally restores a smaller three-argument event, and 4343ec795e14 adds a separate before-selector hook. Do not reapply the historical deletion to the modern interface or reconstruct old CFS hierarchy-selection code.",
+    "evidence": [
+      "evidence/fair-selection-hooks-review.json",
+      "evidence/fair-hook-guards-check.json",
+      "SECURITY.md: Fair selection hooks and native dequeue exclusions"
+    ]
+  },
+  {
+    "commit": "3d5bad71a79830f131d55d077053e1e8993f2f6d",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "9e5ff622cd6e617658a3f0cad6fbd307643f2c6d"
+    ],
+    "rationale": "All three paths read. Retain three-argument replacement event after native pick_task_fair on the fallback path when before-selector hook supplies no task. p is assigned before exposure and NULL retains native idle/balance behavior. Adapt 9e5ff622cd6e to return RETRY_TASK if callback returns after rq->donor changes, before dereferencing/using previous donor for class/group switching. Callbacks must return a valid runnable fair-class task on this rq and preserve hierarchy/state; the core does not validate arbitrary pointer or fair-eligibility substitutions. Native remainder of selection/switching is retained.",
+    "evidence": [
+      "evidence/fair-selection-hooks-review.json",
+      "evidence/fair-hook-guards-check.json",
+      "SECURITY.md: Fair selection hooks and native dequeue exclusions"
+    ]
+  },
+  {
+    "commit": "7899fcdd55c36da64371ca96fa73d009fc6b013d",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "9e5ff622cd6e617658a3f0cad6fbd307643f2c6d"
+    ],
+    "rationale": "All three paths read. Retain delay-suppression callback only in the non-DEQUEUE_DELAYED path. Adapt 9e5ff622cd6e to preserve the native pre-callback delay permission and AND it with callback output. A callback can suppress an ordinary eligible-for-deferral sleep, but cannot turn non-sleep, DEQUEUE_SPECIAL or DEQUEUE_THROTTLE into delayed removal. This deliberately narrows ACK writable-bool behavior to its stated skip purpose and preserves native task-state/throttle invariants, including ancestor eb962f251fbb. Actual entity eligibility and DELAY_DEQUEUE feature checks still apply. Initial ACK position otherwise permits forcing true after native exclusions; no need for that unsafe override was established from local sources.",
+    "evidence": [
+      "evidence/fair-selection-hooks-review.json",
+      "evidence/fair-hook-guards-check.json",
+      "SECURITY.md: Fair selection hooks and native dequeue exclusions"
+    ]
+  },
+  {
+    "commit": "4343ec795e1454f758d1edb3c085dd56bba51ffa",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "9e5ff622cd6e617658a3f0cad6fbd307643f2c6d"
+    ],
+    "rationale": "All three paths read. Retain initialized-NULL before-picker callback with rq, previous donor and rq_flags, skipping native pick plus later replacement when it supplies p. Adapt 9e5ff622cd6e with donor revalidation immediately after it, using existing RETRY_TASK protocol if donor changed across a callback lock drop. p remains NULL at the only goto-again path (idle balancing), so no stale non-NULL selection is reused there; no gratuitous reset needed. Native DL-server handoff, hierarchy updates and idle balancing remain after selection. Supplying a task bypasses native EEVDF selection, so callback must enforce runnable fair-task/rq/lifetime constraints; no scheduler fairness benefit is verified.",
+    "evidence": [
+      "evidence/fair-selection-hooks-review.json",
+      "evidence/fair-hook-guards-check.json",
+      "SECURITY.md: Fair selection hooks and native dequeue exclusions"
+    ]
+  },
+  {
+    "commit": "2935d588b1378b98d53e27fab1d79808248a5f1a",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All three paths read. Retain ordinary android_vh_scheduler_tick rather than old restricted name, allowing the current ordinary trace registration mechanism. Final site is at end of sched_tick AFTER rq_unlock, native perf/workqueue/load-balance work. It still executes in tick context and is not a permission to sleep. Native whole tick function equals LTS after just the two Android callbacks, preserving current/donor accounting distinction.",
+    "evidence": [
+      "evidence/scheduler-event-history-review.json",
+      "SECURITY.md: Scheduler event ordering and writable results"
+    ]
+  },
+  {
+    "commit": "a3c57fcffc259ec6685b657ac3f70e9d488a0268",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Both changed paths read. Retain int flags on current restricted pre-enqueue/dequeue events, with matching calls/declarations/exports. Old no-op disabled macros are superseded by final common trace-hook infrastructure. Flags report the current native/Android event domain by value, not an override; earlier raw numeric historical values are not a binary ABI promise. Native clock/uclamp and PSI ordering is retained.",
+    "evidence": [
+      "evidence/scheduler-event-history-review.json",
+      "SECURITY.md: Scheduler event ordering and writable results"
+    ]
+  },
+  {
+    "commit": "e0bcb90ef949b10214d23d6c1eb28c9d61a4bfdd",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Full single-file move read. Preserve pre-class enqueue/dequeue notifications for vendor accounting before native class callbacks. Current enqueue follows uclamp increment; dequeue follows uclamp decrement and native pre-dequeue accounting. Independent after events remain for post-class state. Callback runs under caller scheduler locking and must not corrupt membership/accounting; the move itself does not remove native class work.",
+    "evidence": [
+      "evidence/scheduler-event-history-review.json",
+      "SECURITY.md: Scheduler event ordering and writable results"
+    ]
+  },
+  {
+    "commit": "a4aa38731edb2deb3153f6aa9719e76e7518117c",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Full single-file reorder read. Keep restricted tick_entry after native update_rq_clock while rq is locked, before native hardware-pressure, donor class tick and remaining tick accounting. Current outer scheduler_tick event is a different unlocked notification. Preserve native curr versus donor use; no stale pre-update clock site or platform-specific pressure implementation is restored.",
+    "evidence": [
+      "evidence/scheduler-event-history-review.json",
+      "SECURITY.md: Scheduler event ordering and writable results"
+    ]
+  },
+  {
+    "commit": "a1290fe02102e2dc56dd312bd65fa2b3bdfb4ebb",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Both paths read. Retain flags on both after-enqueue/dequeue events. Final after-dequeue signature additionally takes bool *dequeue_task_result from 18b7754108c1. These generic source events are retained for Android vendor accounting even though historical motivation names WALT; no Qualcomm hardware support is added and exact SDK callback remains unconfirmed.",
+    "evidence": [
+      "evidence/scheduler-event-history-review.json",
+      "SECURITY.md: Scheduler event ordering and writable results"
+    ]
+  },
+  {
+    "commit": "18b7754108c117c455195abbcb6b142797cc5d88",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Both paths read. Retain final pointer to initialized native class dequeue result at after_dequeue_task. Despite notification wording in the message, bool * is writable and its final value is returned to callers; it can change whether the core believes delayed removal succeeded. Preserve this explicit final source interface rather than silently converting it to a read-only copy. A callback changing it must also keep actual task/class/delayed state consistent, or scheduling/accounting/lifetime invariants may break. Native class result remains the default and all pre-dequeue native operations stay. This is a trusted module policy contract, not an assertion that arbitrary return overrides are safe.",
+    "evidence": [
+      "evidence/scheduler-event-history-review.json",
+      "SECURITY.md: Scheduler event ordering and writable results"
+    ]
   }
 ]

@@ -1,0 +1,159 @@
+{
+  "source_head": "9e5ff622cd6e617658a3f0cad6fbd307643f2c6d",
+  "records": [
+    {
+      "commit": "771633a2e96dee0d46f5864365e304efa4929ac8",
+      "disposition": "partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Read all three paths. Historical pick_next_entity hook and original check_preempt_wakeup name/signature are gone from final ACK/current. Preserve evolved check_preempt_wakeup_fair policy with initialized-false preempt/ignore and current entity/wake arguments, rather than reinstall old CFS buddy selector. Whole current wakeup-preemption function is native LTS plus the hook after update_curr and before native slice/EEVDF decisions. Forced preemption wins if both outputs are true; suppression can reduce fairness/latency guarantees and requires trusted vendor policy.",
+      "evidence": [
+        "evidence/fair-selection-hooks-review.json",
+        "evidence/fair-hook-guards-check.json",
+        "SECURITY.md: Fair selection hooks and native dequeue exclusions"
+      ],
+      "patch_sha256": "d6587eaecfa25b0e3346f29983a36c8b8e5b1a13acdf94b0dbc7d7010126f0ce"
+    },
+    {
+      "commit": "384f64c12cddfbc30d8605c689fb66b0f712fedc",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "Full initialization fix read. Its historical replace hook exposed both task and entity pointers on simple/non-simple branches; that interface is removed by 6e7f9208c7b6. Current replacement hook receives only an already-assigned task pointer, and the newer before hook starts with p=NULL. se is assigned only after non-NULL task selection and is no longer a callback output. The old se=NULL/repick implementation need not be restored to preserve initialization safety.",
+      "evidence": [
+        "evidence/fair-selection-hooks-review.json",
+        "evidence/fair-hook-guards-check.json",
+        "SECURITY.md: Fair selection hooks and native dequeue exclusions"
+      ],
+      "patch_sha256": "c1ebb2ab01eb4705aa7080464f0324a0f97c0051d5031c08c6d7664098ea5723"
+    },
+    {
+      "commit": "f7ede2b168eae07969bfb8b9167ddc205d6651b9",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Both paths read. Keep the semantic addition of an independent suppress-preemption output and later placement after matching/updating entities, through the current renamed richer check_preempt_wakeup_fair hook. Current preempt and ignore start false. Existing native early checks precede it; when no override is set, all native EEVDF slice-protection logic remains. No old wakeup_granularity formula or old four-argument signature is reinstated.",
+      "evidence": [
+        "evidence/fair-selection-hooks-review.json",
+        "evidence/fair-hook-guards-check.json",
+        "SECURITY.md: Fair selection hooks and native dequeue exclusions"
+      ],
+      "patch_sha256": "8b6f6d5fef0529e2c8a158cee980540bb6b57022c183fba3855ffd42874272d2"
+    },
+    {
+      "commit": "cf22aa5ebd2028803c804d34c681df8cb0763fed",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Both paths read. Preserve pointer argument in the final place_entity event and its matching GPL export. Crucial limitation: current call is AFTER se->vruntime and se->deadline assignment; writing only through the u64 *vruntime argument changes a no-longer-used local and does not alter the stored placement. A callback can separately mutate the supplied se, but the pointer conversion alone does not deliver the optimization claimed by the old message. Keep exact final ACK placement rather than inventing an earlier execution point that would bypass native EEVDF calculation. Actual vendor use remains unconfirmed.",
+      "evidence": [
+        "evidence/fair-selection-hooks-review.json",
+        "evidence/fair-hook-guards-check.json",
+        "SECURITY.md: Fair selection hooks and native dequeue exclusions"
+      ],
+      "patch_sha256": "7f32eb6b618bb38749d047f9395ec8313301dde0ef11211971a37d8c4c63e14e"
+    },
+    {
+      "commit": "6e7f9208c7b6c542e4e7deb4c65b092bb2705479",
+      "disposition": "partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Read complete three-path partial revert. Remove the obsolete six-argument replacement API, entity output, repick flag and duplicate simple-path invocation. Later 3d5bad71a798 intentionally restores a smaller three-argument event, and 4343ec795e14 adds a separate before-selector hook. Do not reapply the historical deletion to the modern interface or reconstruct old CFS hierarchy-selection code.",
+      "evidence": [
+        "evidence/fair-selection-hooks-review.json",
+        "evidence/fair-hook-guards-check.json",
+        "SECURITY.md: Fair selection hooks and native dequeue exclusions"
+      ],
+      "patch_sha256": "19fde09d48abaac4a90ef8b1ce849d02a1a9b1c2344ebc21d672958fef175a09"
+    },
+    {
+      "commit": "3d5bad71a79830f131d55d077053e1e8993f2f6d",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "9e5ff622cd6e617658a3f0cad6fbd307643f2c6d"
+      ],
+      "rationale": "All three paths read. Retain three-argument replacement event after native pick_task_fair on the fallback path when before-selector hook supplies no task. p is assigned before exposure and NULL retains native idle/balance behavior. Adapt 9e5ff622cd6e to return RETRY_TASK if callback returns after rq->donor changes, before dereferencing/using previous donor for class/group switching. Callbacks must return a valid runnable fair-class task on this rq and preserve hierarchy/state; the core does not validate arbitrary pointer or fair-eligibility substitutions. Native remainder of selection/switching is retained.",
+      "evidence": [
+        "evidence/fair-selection-hooks-review.json",
+        "evidence/fair-hook-guards-check.json",
+        "SECURITY.md: Fair selection hooks and native dequeue exclusions"
+      ],
+      "patch_sha256": "ebebd9d0fca96a405f1c7c91c02f712b678c3cbf3ab9b39d8e550ef82d6c9e9c"
+    },
+    {
+      "commit": "7899fcdd55c36da64371ca96fa73d009fc6b013d",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "9e5ff622cd6e617658a3f0cad6fbd307643f2c6d"
+      ],
+      "rationale": "All three paths read. Retain delay-suppression callback only in the non-DEQUEUE_DELAYED path. Adapt 9e5ff622cd6e to preserve the native pre-callback delay permission and AND it with callback output. A callback can suppress an ordinary eligible-for-deferral sleep, but cannot turn non-sleep, DEQUEUE_SPECIAL or DEQUEUE_THROTTLE into delayed removal. This deliberately narrows ACK writable-bool behavior to its stated skip purpose and preserves native task-state/throttle invariants, including ancestor eb962f251fbb. Actual entity eligibility and DELAY_DEQUEUE feature checks still apply. Initial ACK position otherwise permits forcing true after native exclusions; no need for that unsafe override was established from local sources.",
+      "evidence": [
+        "evidence/fair-selection-hooks-review.json",
+        "evidence/fair-hook-guards-check.json",
+        "SECURITY.md: Fair selection hooks and native dequeue exclusions"
+      ],
+      "patch_sha256": "68db3ce49f24b51096e99d7dd0f6d3418bd092c5a05b9946eaf08b382cd4fe10"
+    },
+    {
+      "commit": "4343ec795e1454f758d1edb3c085dd56bba51ffa",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "9e5ff622cd6e617658a3f0cad6fbd307643f2c6d"
+      ],
+      "rationale": "All three paths read. Retain initialized-NULL before-picker callback with rq, previous donor and rq_flags, skipping native pick plus later replacement when it supplies p. Adapt 9e5ff622cd6e with donor revalidation immediately after it, using existing RETRY_TASK protocol if donor changed across a callback lock drop. p remains NULL at the only goto-again path (idle balancing), so no stale non-NULL selection is reused there; no gratuitous reset needed. Native DL-server handoff, hierarchy updates and idle balancing remain after selection. Supplying a task bypasses native EEVDF selection, so callback must enforce runnable fair-task/rq/lifetime constraints; no scheduler fairness benefit is verified.",
+      "evidence": [
+        "evidence/fair-selection-hooks-review.json",
+        "evidence/fair-hook-guards-check.json",
+        "SECURITY.md: Fair selection hooks and native dequeue exclusions"
+      ],
+      "patch_sha256": "ea9a24d0cb10f82640e1e4e11aa743be6df50a1d026d2d7a160e1d73f486c2fd"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "check_preempt_wakeup_fair",
+      "sha256": "4824c828080260d5bd12912ab8dbb7c8e0b38685a0596e4b14146937968e261a",
+      "relationship": "whole LTS function after precisely enumerated hook/selection-interface additions"
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "place_entity",
+      "sha256": "e12794208ee28235ea7d94ba64056cd7d4fe55097724dbd746df0489d248c62b",
+      "relationship": "whole LTS function after precisely enumerated hook/selection-interface additions"
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "dequeue_entity",
+      "sha256": "14e8bf8999d2cf908662ee7788e62869f0bbbe9649db1a40cd7b43d790603ebb",
+      "relationship": "whole LTS function after precisely enumerated hook/selection-interface additions"
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "pick_task_fair",
+      "sha256": "e9bda41ebf57b035de52df469e8301b3a0690e6b0568e52e849b4e216acd6914",
+      "relationship": "whole LTS function after precisely enumerated hook/selection-interface additions"
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "pick_next_task_fair",
+      "sha256": "25ec62410551b89020c81723f90f5591182909eba549ed410a845cbb7b02f289",
+      "relationship": "whole LTS function after precisely enumerated hook/selection-interface additions"
+    }
+  ],
+  "security": "Fair selectors must retry after donor changes. Native special/throttle/non-sleep delayed-dequeue exclusions cannot be overridden to true; legitimate delay suppression is retained. Before/replacement callbacks still control fair task selection and must obey rq locking, runnable/class/hierarchy and lifetime contracts. Preemption controls can force/suppress policy and affect availability; they are trusted kernel customization, not arbitrary-pointer validation.",
+  "semantic_limitations": "place_entity pointer writes alone affect only an already-consumed local; no earlier application point invented. Old CFS selection/preemption signatures remain absent. Exact vendor consumer and actual runtime policy remain unconfirmed; generic source interfaces retained conservatively, with justified narrowing where native correctness invariants require it.",
+  "validation": "1536 fair-selection and 768 delayed-dequeue host cases pass; old controls fail 960 and 28 respectively. Donor changes are injected, not reproduced kernel races. Host harness initial dangling-pointer warning was corrected with static modeled rq storage. Build 135 is running for this source.",
+  "remote_sources_used": [],
+  "subsequent_build_verification": {
+    "run": "sdk-build-attempt-135",
+    "source": "9e5ff622cd6e617658a3f0cad6fbd307643f2c6d",
+    "result": "Existing emulator workflow passed; kernel image, 100 common and 45 virtual modules generated. All 145 signatures verified with build certificate, modified-payload control rejected; all module CRC/flag tables match, 659 protected exports decoded. No runtime validation."
+  }
+}
