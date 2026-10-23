@@ -1,0 +1,516 @@
+{
+  "source_head": "4b5a05d8f96b2a0e600530b3f8ad28f2eacd0eee",
+  "records": [
+    {
+      "commit": "a61ad61ecb80b8656aab70fefb4aefd553219644",
+      "disposition": "adapted",
+      "rationale": "Retain Rust Binder priority inheritance for Android libbinder scheduler-policy/minimum-priority/inherit-RT flags, matching the configured optional Rust driver and native Binder semantics. Adapt node decoding to sign-extend the wire priority byte as C Binder does; negative nice values otherwise become large positive values. Clamp unsigned RLIMIT_RTPRIO to the legal maximum before signed conversion, preserving zero-limit fallback and preventing large limits from truncating negative. Preserve CAP_SYS_NICE checks, RLIMIT_NICE bounds, RESET_ON_FORK, process default priority, once-only thread selection, pending/abort restoration and the selected-thread saved priority. Keep the port comparison against the desired priority after RT suppression, matching native Binder; ACK boundary still compares against the original caller priority. Native scheduler implementation is not replaced by these Rust wrappers. Invalid node priorities remain subject to native scheduler validation; no new privilege is granted by an out-of-range value.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "f7ca990e55b113f7e60d43e2895cfe3331af1666"
+      ],
+      "evidence": [
+        "evidence/rust-binder-priority-hooks-review.json",
+        "SECURITY.md: Rust Binder priority and trace interfaces"
+      ],
+      "subject": "ANDROID: rust_binder: priority inheritance",
+      "patch_sha256": "692cbdce1ea7ffb5e3d89540e54bfc6df065b63897b115a16810a74cd871829f",
+      "paths": {
+        "drivers/android/binder/defs.rs": {
+          "ack_blob": "49276b2bee153a5cea24987a044e66b17f2ba488",
+          "port_blob": "49276b2bee153a5cea24987a044e66b17f2ba488",
+          "lts_to_port_sha256": "108f2edea53866d1df498618302c9b48e91b001d3f1c1693d2bcbc7c8462bfce"
+        },
+        "drivers/android/binder/node.rs": {
+          "ack_blob": "7146516206038345fdb186b0cfb44035173930f3",
+          "port_blob": "fcf724f892100aec5e0078f8b970cc591ac3d5da",
+          "lts_to_port_sha256": "6d97d93ff67361403ed08e002ac02e246b970ffb316992ef178d55d097666dd0"
+        },
+        "drivers/android/binder/prio.rs": {
+          "ack_blob": "751033dae38d9a95f9f25dded65140f817b83a53",
+          "port_blob": "751033dae38d9a95f9f25dded65140f817b83a53",
+          "lts_to_port_sha256": "f5e5566f5696ff8ae7e5a245d7ab65f8ad257d8002e3b89152530038297c943f"
+        },
+        "drivers/android/binder/process.rs": {
+          "ack_blob": "7d7757321510bf031395f8f707a5c0b55103f206",
+          "port_blob": "819f8ac19148ccde2432d55a051cc8924fd76c5b",
+          "lts_to_port_sha256": "c0474841852df98cc0ad1d3f2a776c8dd89e7c745c15c17455ab89bd6fbf57a7"
+        },
+        "drivers/android/binder/rust_binder_main.rs": {
+          "ack_blob": "0193addad5cb5705967eb2c71bf78c117d1b04a8",
+          "port_blob": "3fdc8d72ef3e7db214e72b3fb627909bd9ad98cd",
+          "lts_to_port_sha256": "9d59b1637c115f99cb17ecf5e5e764ac63dfe3838868fc886dd4bd649e4c3d32"
+        },
+        "drivers/android/binder/thread.rs": {
+          "ack_blob": "9b161efc84c851882ca48356f061f76e015831c7",
+          "port_blob": "70cf6149d4d4ffc5cbdd6fed189be3df57d8c3e8",
+          "lts_to_port_sha256": "10862a627e5f8990f236f09fc8bafc2fddedc3266bc0695d3911cffd615c7940"
+        },
+        "drivers/android/binder/transaction.rs": {
+          "ack_blob": "3271e20887989f233788d029dca7af25ee1941ec",
+          "port_blob": "46b8e24f786731d9e6579f19485b064f9577714c",
+          "lts_to_port_sha256": "9de4d387444a49260a2babffccaa5fb16e7fc33854cded1ea62c5951b47a9fe2"
+        },
+        "rust/helpers/task.c": {
+          "ack_blob": "a8fe3ac6aa326e232f0212477db2b70911859999",
+          "port_blob": "a8fe3ac6aa326e232f0212477db2b70911859999",
+          "lts_to_port_sha256": "9f73969c0e55e55bf7456a33aa452d2dab10aa1f3b3b5b87370eb7164fc5c622"
+        },
+        "rust/kernel/task.rs": {
+          "ack_blob": "ad5efcfe5bd660d5cb433c0642b29599aede5c24",
+          "port_blob": "1ca29152b56e7a05d7dd80839dbad9077f2f70f8",
+          "lts_to_port_sha256": "43ab3652e66b46e75c06580a3409038ff8b23255dd825697c7c8736bc9b2eb95"
+        }
+      }
+    },
+    {
+      "commit": "d18b094879d813bf5acbb4d3d6069a37df52bd10",
+      "disposition": "adapted",
+      "rationale": "Retain saturating subtraction in RT-to-kernel priority conversion. This is a security-relevant panic/overflow guard for malformed or extreme inputs; the final signed implementation saturates to the signed bound, rather than promising the zero result described for the earlier unsigned implementation. All 256 wire bytes across four policies and additional i32 extremes pass extracted checks. Fair conversion receives a signed byte or bounded task/nice limit on the reviewed paths. No native scheduler validation is removed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-priority-hooks-review.json",
+        "SECURITY.md: Rust Binder priority and trace interfaces"
+      ],
+      "subject": "ANDROID: rust_binder: fix overflow in to_kernel_prio()",
+      "patch_sha256": "b2e954caaf1e087ae2f145095cf58205b80c11be67e0465f68465c57ba00fbcd",
+      "paths": {
+        "drivers/android/binder/prio.rs": {
+          "ack_blob": "751033dae38d9a95f9f25dded65140f817b83a53",
+          "port_blob": "751033dae38d9a95f9f25dded65140f817b83a53",
+          "lts_to_port_sha256": "f5e5566f5696ff8ae7e5a245d7ab65f8ad257d8002e3b89152530038297c943f"
+        }
+      }
+    },
+    {
+      "commit": "80c8d66849ffe4a2f65d668e51e97fc7e4dd390a",
+      "disposition": "adapted",
+      "rationale": "Retain the historical fix to save policy and priority from the actual selected Binder thread, not the receiving process group leader. The final ACK boundary regressed this line, while the selected port restores the effect. Extracted tests deliberately give the target process and target thread different priorities and check the thread value, together with pending/abort restoration. This prevents persistent wrong scheduling after a transaction; it adds no scheduling privilege.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-priority-hooks-review.json",
+        "SECURITY.md: Rust Binder priority and trace interfaces"
+      ],
+      "subject": "ANDROID: rust_binder: use correct task for saved_priority",
+      "patch_sha256": "af59aea9197766112fd09da23d7252de895594a5443be5b72d5394c25856ea1c",
+      "paths": {
+        "drivers/android/binder/transaction.rs": {
+          "ack_blob": "3271e20887989f233788d029dca7af25ee1941ec",
+          "port_blob": "46b8e24f786731d9e6579f19485b064f9577714c",
+          "lts_to_port_sha256": "9de4d387444a49260a2babffccaa5fb16e7fc33854cded1ea62c5951b47a9fe2"
+        }
+      }
+    },
+    {
+      "commit": "b5c3877484900b0f3214e4fd6b5bef9df2ca8bb0",
+      "disposition": "adapted",
+      "rationale": "Retain default-priority restoration before get_work_or_register publishes the waiting thread in the ready list. Reading the entire get_work path shows local/deferred work handling preceding restoration, and registration/interruptible waiting following it. A remote sender can boost a published thread, so a later unconditional restoration could overwrite that boost. No restore remains inside the waiting loop. This ordering is reviewed together with 29293a1515c0; host decision checks do not claim to reproduce scheduler races.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-priority-hooks-review.json",
+        "SECURITY.md: Rust Binder priority and trace interfaces"
+      ],
+      "subject": "ANDROID: rust_binder: restore priority earlier in get_work()",
+      "patch_sha256": "a7749e3cb46dd8644c1346f11ef459e47a7ac13e80bfb4d15a8c9c0f2ed06832",
+      "paths": {
+        "drivers/android/binder/thread.rs": {
+          "ack_blob": "9b161efc84c851882ca48356f061f76e015831c7",
+          "port_blob": "70cf6149d4d4ffc5cbdd6fed189be3df57d8c3e8",
+          "lts_to_port_sha256": "10862a627e5f8990f236f09fc8bafc2fddedc3266bc0695d3911cffd615c7940"
+        }
+      }
+    },
+    {
+      "commit": "29293a1515c0adc7eae6bd98e96297395a460070",
+      "disposition": "adapted",
+      "rationale": "Retain sender-side on_thread_selected before pushing work to a ready target thread under the process state lock. This restores Android priority inheritance before wakeup instead of relying exclusively on receiver self-boost. The once-only atomic selection prevents double application when do_work calls selection again. Dead-thread/error return still retains ownership of work for cleanup, and priority/rlimit validation is shared with the receiver path. Necessary companion ordering is retained in b5c387748490.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-priority-hooks-review.json",
+        "SECURITY.md: Rust Binder priority and trace interfaces"
+      ],
+      "subject": "ANDROID: rust_binder: boost priority when sending",
+      "patch_sha256": "a76b91050227b71ba3b3d68f3935f056cb2f2e8694af43a41cc8e4e172b7454b",
+      "paths": {
+        "drivers/android/binder/process.rs": {
+          "ack_blob": "7d7757321510bf031395f8f707a5c0b55103f206",
+          "port_blob": "819f8ac19148ccde2432d55a051cc8924fd76c5b",
+          "lts_to_port_sha256": "c0474841852df98cc0ad1d3f2a776c8dd89e7c745c15c17455ab89bd6fbf57a7"
+        }
+      }
+    },
+    {
+      "commit": "ef05a784aa800974497a69f77b7d0302fdda70b4",
+      "disposition": "adapted",
+      "rationale": "Retain source-module vendor hooks after setting and before restoring Rust Binder priority, their Rust wrappers, C declarations/definitions and GPL tracepoint exports. Live Transaction and Task borrows cover each synchronous invocation. Hooks are bare kernel trace hooks, not new tracefs events or userspace entry points. Vendor callbacks execute trusted kernel code and must obey locking/context/lifetime rules. Exact SDK vendor callbacks are not established by the local checkouts; retain the generic customization interface under the compatibility-first requirement, without adding another platform driver.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-priority-hooks-review.json",
+        "SECURITY.md: Rust Binder priority and trace interfaces"
+      ],
+      "subject": "ANDROID: rust_binder: add vendor hooks for priority setting",
+      "patch_sha256": "ebf9ea42f6493e7dc2954f3bc66b44120998a97260916509fd6d29c38f9fe5a0",
+      "paths": {
+        "drivers/android/binder/Makefile": {
+          "ack_blob": "3ef6ef16f398b8542f6465f6b17a4ee9136ab900",
+          "port_blob": "3ef6ef16f398b8542f6465f6b17a4ee9136ab900",
+          "lts_to_port_sha256": "a6d38eba488f236abf6f3c034d4b99a0cde2d8cfd0331924a72243530acb1de4"
+        },
+        "drivers/android/binder/rust_binder_hooks.c": {
+          "ack_blob": "e2acdd525e53b2e70613647c1c5cd1449bd8ac64",
+          "port_blob": "e2acdd525e53b2e70613647c1c5cd1449bd8ac64",
+          "lts_to_port_sha256": "381564e8d2729e1cf69e22d35bf94a8a80a3925e9c7e2d0977258e1193f43645"
+        },
+        "drivers/android/binder/rust_binder_hooks.h": {
+          "ack_blob": "d07d13e85f2df7231b6c7fbded7894c05fa69cbc",
+          "port_blob": "d07d13e85f2df7231b6c7fbded7894c05fa69cbc",
+          "lts_to_port_sha256": "6ec2e15a3ecc04a4c32edb22106a20c8089625395d4e8d4defc21127917c9f05"
+        },
+        "drivers/android/binder/thread.rs": {
+          "ack_blob": "9b161efc84c851882ca48356f061f76e015831c7",
+          "port_blob": "70cf6149d4d4ffc5cbdd6fed189be3df57d8c3e8",
+          "lts_to_port_sha256": "10862a627e5f8990f236f09fc8bafc2fddedc3266bc0695d3911cffd615c7940"
+        },
+        "drivers/android/binder/trace.rs": {
+          "ack_blob": "f34eb205a82c657352a37528cc10aa34a9a2d720",
+          "port_blob": "fc6cc5e026856057fb41e838f374769823a39e55",
+          "lts_to_port_sha256": "ef9b2dddfa51f1f3eecf1d1f0f90c02fba27103397140cbd8be7584c7be1eb72"
+        },
+        "rust/bindings/bindings_helper.h": {
+          "ack_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "port_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "lts_to_port_sha256": "219f093804081c8c8f7117e4b73acb1c4f423fcea4392f92079e0a21d9b299ed"
+        }
+      }
+    },
+    {
+      "commit": "37d395f049443ba8fe571381a1b55aa025a00e13",
+      "disposition": "adapted",
+      "rationale": "Retain built-in hook definitions and exports even when CONFIG_ANDROID_BINDER_IPC_RUST=m, avoiding a vendor source-module load dependency on rust_binder.ko. Retain runtime RUST_BINDER_LAYOUT metadata populated before Rust Binder publishes its filesystem; these computed offsets are functional C/Rust interoperability, not fixed historical KMI padding. Adapt pointer metadata to use the actual ARef pointer offset and DArc<Node> allocation container; no claim that the pinned compiler previously produced an incorrect offset is made. Successful activation pins module text/data as documented in the earlier initialization review; inactive modules cannot emit the hooks. Layout contains offsets, not module pointers, and consumers must only use live objects supplied by the active driver.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "3f90fca1809468efd1eff3f07a5168067903ffcf",
+        "4b5a05d8f96b2a0e600530b3f8ad28f2eacd0eee"
+      ],
+      "evidence": [
+        "evidence/rust-binder-priority-hooks-review.json",
+        "SECURITY.md: Rust Binder priority and trace interfaces"
+      ],
+      "subject": "ANDROID: rust_binder: make rust_binder_hooks built-in",
+      "patch_sha256": "f843eede52ee67508713c88a982c014eec3070205d48040a15868ff214ad28b5",
+      "paths": {
+        "drivers/android/Makefile": {
+          "ack_blob": "b5dc20329ca0aad07f46ce251083a3bc584ec19c",
+          "port_blob": "7783894efa98586f4b80fba13d2769e87a5a3401",
+          "lts_to_port_sha256": "f74d3ea2e4478dbbb9e193e04d9cc23514698f2f7fb5ed136aa29f4f48c7ffcb"
+        },
+        "drivers/android/binder/Makefile": {
+          "ack_blob": "3ef6ef16f398b8542f6465f6b17a4ee9136ab900",
+          "port_blob": "3ef6ef16f398b8542f6465f6b17a4ee9136ab900",
+          "lts_to_port_sha256": "a6d38eba488f236abf6f3c034d4b99a0cde2d8cfd0331924a72243530acb1de4"
+        },
+        "drivers/android/binder/rust_binder.h": {
+          "ack_blob": "931fd0e46583a42f24db990a87d1dcfbb49ef3bb",
+          "port_blob": "4394f98d4d8fb2906bcb4d5c9f99278ee1e74cba",
+          "lts_to_port_sha256": "0f82208777b577aea869ce1d0f286dad2c9ccd6f5b7dc94079383e5817647afb"
+        },
+        "drivers/android/binder/rust_binder_hooks.c": {
+          "ack_blob": "e2acdd525e53b2e70613647c1c5cd1449bd8ac64",
+          "port_blob": "e2acdd525e53b2e70613647c1c5cd1449bd8ac64",
+          "lts_to_port_sha256": "381564e8d2729e1cf69e22d35bf94a8a80a3925e9c7e2d0977258e1193f43645"
+        },
+        "drivers/android/binder/rust_binder_main.rs": {
+          "ack_blob": "0193addad5cb5705967eb2c71bf78c117d1b04a8",
+          "port_blob": "3fdc8d72ef3e7db214e72b3fb627909bd9ad98cd",
+          "lts_to_port_sha256": "9d59b1637c115f99cb17ecf5e5e764ac63dfe3838868fc886dd4bd649e4c3d32"
+        }
+      }
+    },
+    {
+      "commit": "6a6602755e08abe3327610530b53c6c8c25d32ce",
+      "disposition": "adapted",
+      "rationale": "Retain public include/trace/hooks/rust_binder.h location and the old local forwarding header. This supports source-module inclusion without importing tracefs events. Adapt the final hook header to declare its rust_binder_thread opaque type and task_struct forward declaration: the later looper hook used a type otherwise declared only by the private Binder header. Existing in-tree inclusion order hid that source-interface dependency. Trace declaration names and argument types remain unchanged.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "3ca803b94e613ec8c74910262daf980df71e821f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-priority-hooks-review.json",
+        "SECURITY.md: Rust Binder priority and trace interfaces"
+      ],
+      "subject": "ANDROID: rust_binder: move rust_binder_hooks.h into include/trace/hooks",
+      "patch_sha256": "4e959d4f226627ceadb8980e390d17372d2daac9848c4a4626f85cd942ed630e",
+      "paths": {
+        "drivers/android/binder/rust_binder_hooks.c": {
+          "ack_blob": "e2acdd525e53b2e70613647c1c5cd1449bd8ac64",
+          "port_blob": "e2acdd525e53b2e70613647c1c5cd1449bd8ac64",
+          "lts_to_port_sha256": "381564e8d2729e1cf69e22d35bf94a8a80a3925e9c7e2d0977258e1193f43645"
+        },
+        "drivers/android/binder/rust_binder_hooks.h": {
+          "ack_blob": "d07d13e85f2df7231b6c7fbded7894c05fa69cbc",
+          "port_blob": "d07d13e85f2df7231b6c7fbded7894c05fa69cbc",
+          "lts_to_port_sha256": "6ec2e15a3ecc04a4c32edb22106a20c8089625395d4e8d4defc21127917c9f05"
+        },
+        "include/trace/hooks/rust_binder.h": {
+          "ack_blob": "400910fabbef34fc97cf92fc053377d814da35a5",
+          "port_blob": "1a989bc399dd775c9489536f62bfe24bc85f5c20",
+          "lts_to_port_sha256": "07a19e391d7082f1805d57cab781d9e8878f81c76e948e443c6b33cf46032aaa"
+        },
+        "rust/bindings/bindings_helper.h": {
+          "ack_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "port_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "lts_to_port_sha256": "219f093804081c8c8f7117e4b73acb1c4f423fcea4392f92079e0a21d9b299ed"
+        }
+      }
+    },
+    {
+      "commit": "d7fe9b25a9598ee729b0027d9e2981498c641c02",
+      "disposition": "adapted",
+      "rationale": "Retain READ_ONCE in the process-task C accessor and its conservative RCU/null-use contract for source-module consumers. In this selected source Process.task is a non-null, reference-owning ARef<Task>; no future nulling implementation or future platform is imported by retaining the accessor. Adapt its layout metadata to include ARef::PTR_OFFSET rather than assuming its pointer begins the wrapper. A borrowed pointer remains valid only while the owner/reference protocol keeps the task alive; the helper does not acquire a task reference.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "4b5a05d8f96b2a0e600530b3f8ad28f2eacd0eee"
+      ],
+      "evidence": [
+        "evidence/rust-binder-priority-hooks-review.json",
+        "SECURITY.md: Rust Binder priority and trace interfaces"
+      ],
+      "subject": "ANDROID: rust_binder: future proof rust_binder_process_task()",
+      "patch_sha256": "debaa0306e7084aaca2ddf30ff09dd245bf14ff6e17e81aee48983de8b090f99",
+      "paths": {
+        "drivers/android/binder/rust_binder.h": {
+          "ack_blob": "931fd0e46583a42f24db990a87d1dcfbb49ef3bb",
+          "port_blob": "4394f98d4d8fb2906bcb4d5c9f99278ee1e74cba",
+          "lts_to_port_sha256": "0f82208777b577aea869ce1d0f286dad2c9ccd6f5b7dc94079383e5817647afb"
+        }
+      }
+    },
+    {
+      "commit": "e9f6dbe33551d52d0aaf11c787acb800b376878d",
+      "disposition": "adapted",
+      "rationale": "Retain thread-task C accessor and computed thread layout entry. A priority hook may run on the receiving thread, so current is not a substitute for the sending thread obtained from the transaction. The current Thread.task owns an ARef and stays live with its Thread; the conservative null/RCU documentation does not implement task release or allow retaining an unreferenced pointer. Metadata now includes ARef::PTR_OFFSET. No binary layout continuity or new platform support is added.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "4b5a05d8f96b2a0e600530b3f8ad28f2eacd0eee"
+      ],
+      "evidence": [
+        "evidence/rust-binder-priority-hooks-review.json",
+        "SECURITY.md: Rust Binder priority and trace interfaces"
+      ],
+      "subject": "ANDROID: rust_binder: add rust_binder_thread_task()",
+      "patch_sha256": "6ae2628fd2a081faf7882f56b6eb29faf12bbc9c2c512d30f33262a99952e394",
+      "paths": {
+        "drivers/android/binder/rust_binder.h": {
+          "ack_blob": "931fd0e46583a42f24db990a87d1dcfbb49ef3bb",
+          "port_blob": "4394f98d4d8fb2906bcb4d5c9f99278ee1e74cba",
+          "lts_to_port_sha256": "0f82208777b577aea869ce1d0f286dad2c9ccd6f5b7dc94079383e5817647afb"
+        },
+        "drivers/android/binder/thread.rs": {
+          "ack_blob": "9b161efc84c851882ca48356f061f76e015831c7",
+          "port_blob": "70cf6149d4d4ffc5cbdd6fed189be3df57d8c3e8",
+          "lts_to_port_sha256": "10862a627e5f8990f236f09fc8bafc2fddedc3266bc0695d3911cffd615c7940"
+        }
+      }
+    },
+    {
+      "commit": "38426ae909c9393a05aa368df60c52afd79971dc",
+      "disposition": "omitted-kmi-only",
+      "rationale": "Omit all ANDROID_BACKPORT_RESERVE members, matching Rust zero initializers and android_kabi.h include added by this patch. Every changed hunk solely reserves space for future binary KMI continuity; the functional runtime offset fields from earlier commits remain. The user expressly excludes existing vendor binary compatibility. Rebuilt modules consume the current smaller metadata struct and matching generated bindings; no executable behavior or field used by current accessors is removed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/rust-binder-priority-hooks-review.json",
+        "SECURITY.md: Rust Binder priority and trace interfaces"
+      ],
+      "subject": "ANDROID: rust_binder: reserve space in RUST_BINDER_LAYOUT",
+      "patch_sha256": "24e46104492faae849e440e5f348de7f7f81ee2d694ddf25b667238024af9ea5",
+      "paths": {
+        "drivers/android/binder/node.rs": {
+          "ack_blob": "7146516206038345fdb186b0cfb44035173930f3",
+          "port_blob": "fcf724f892100aec5e0078f8b970cc591ac3d5da",
+          "lts_to_port_sha256": "6d97d93ff67361403ed08e002ac02e246b970ffb316992ef178d55d097666dd0"
+        },
+        "drivers/android/binder/process.rs": {
+          "ack_blob": "7d7757321510bf031395f8f707a5c0b55103f206",
+          "port_blob": "819f8ac19148ccde2432d55a051cc8924fd76c5b",
+          "lts_to_port_sha256": "c0474841852df98cc0ad1d3f2a776c8dd89e7c745c15c17455ab89bd6fbf57a7"
+        },
+        "drivers/android/binder/rust_binder.h": {
+          "ack_blob": "931fd0e46583a42f24db990a87d1dcfbb49ef3bb",
+          "port_blob": "4394f98d4d8fb2906bcb4d5c9f99278ee1e74cba",
+          "lts_to_port_sha256": "0f82208777b577aea869ce1d0f286dad2c9ccd6f5b7dc94079383e5817647afb"
+        },
+        "drivers/android/binder/rust_binder_main.rs": {
+          "ack_blob": "0193addad5cb5705967eb2c71bf78c117d1b04a8",
+          "port_blob": "3fdc8d72ef3e7db214e72b3fb627909bd9ad98cd",
+          "lts_to_port_sha256": "9d59b1637c115f99cb17ecf5e5e764ac63dfe3838868fc886dd4bd649e4c3d32"
+        },
+        "drivers/android/binder/thread.rs": {
+          "ack_blob": "9b161efc84c851882ca48356f061f76e015831c7",
+          "port_blob": "70cf6149d4d4ffc5cbdd6fed189be3df57d8c3e8",
+          "lts_to_port_sha256": "10862a627e5f8990f236f09fc8bafc2fddedc3266bc0695d3911cffd615c7940"
+        },
+        "drivers/android/binder/transaction.rs": {
+          "ack_blob": "3271e20887989f233788d029dca7af25ee1941ec",
+          "port_blob": "46b8e24f786731d9e6579f19485b064f9577714c",
+          "lts_to_port_sha256": "9de4d387444a49260a2babffccaa5fb16e7fc33854cded1ea62c5951b47a9fe2"
+        }
+      }
+    },
+    {
+      "commit": "4ff84a79852bb177a7d7f07edc3d9030d1b87c68",
+      "disposition": "adapted",
+      "rationale": "Retain looper start/stop vendor hook, three public flag constants, built-in exports and Rust wrapper. Existing command validation/state transitions remain; dispatch consolidates register/enter/exit and emits the hook with only REGISTERED/ENTERED/EXITED bits while holding the thread lock. Release marks EXITED and emits it before unwinding. Trusted callbacks must not sleep or recursively take the held thread lock, and this is a state notification rather than a promised exactly-once event. Add the missing opaque thread typedef to the public hook header. Exact SDK callback necessity remains uncertain, so retain the generic source customization interface conservatively.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "3ca803b94e613ec8c74910262daf980df71e821f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-priority-hooks-review.json",
+        "SECURITY.md: Rust Binder priority and trace interfaces"
+      ],
+      "subject": "ANDROID: rust_binder: vh for starting/stopping being a binder thread",
+      "patch_sha256": "5abada0d223291504f7430f17c24436b1f00bc07488a651d85ce5f44a42263be",
+      "paths": {
+        "drivers/android/binder/rust_binder.h": {
+          "ack_blob": "931fd0e46583a42f24db990a87d1dcfbb49ef3bb",
+          "port_blob": "4394f98d4d8fb2906bcb4d5c9f99278ee1e74cba",
+          "lts_to_port_sha256": "0f82208777b577aea869ce1d0f286dad2c9ccd6f5b7dc94079383e5817647afb"
+        },
+        "drivers/android/binder/rust_binder_hooks.c": {
+          "ack_blob": "e2acdd525e53b2e70613647c1c5cd1449bd8ac64",
+          "port_blob": "e2acdd525e53b2e70613647c1c5cd1449bd8ac64",
+          "lts_to_port_sha256": "381564e8d2729e1cf69e22d35bf94a8a80a3925e9c7e2d0977258e1193f43645"
+        },
+        "drivers/android/binder/thread.rs": {
+          "ack_blob": "9b161efc84c851882ca48356f061f76e015831c7",
+          "port_blob": "70cf6149d4d4ffc5cbdd6fed189be3df57d8c3e8",
+          "lts_to_port_sha256": "10862a627e5f8990f236f09fc8bafc2fddedc3266bc0695d3911cffd615c7940"
+        },
+        "drivers/android/binder/trace.rs": {
+          "ack_blob": "f34eb205a82c657352a37528cc10aa34a9a2d720",
+          "port_blob": "fc6cc5e026856057fb41e838f374769823a39e55",
+          "lts_to_port_sha256": "ef9b2dddfa51f1f3eecf1d1f0f90c02fba27103397140cbd8be7584c7be1eb72"
+        },
+        "include/trace/hooks/rust_binder.h": {
+          "ack_blob": "400910fabbef34fc97cf92fc053377d814da35a5",
+          "port_blob": "1a989bc399dd775c9489536f62bfe24bc85f5c20",
+          "lts_to_port_sha256": "07a19e391d7082f1805d57cab781d9e8878f81c76e948e443c6b33cf46032aaa"
+        }
+      }
+    },
+    {
+      "commit": "3b0586933ae7fc12b3fe607ddcbbbc2d04a179dc",
+      "disposition": "adapted",
+      "rationale": "Retain Binder-named trace events and callsites for Android atrace/Perfetto: local atrace explicitly requires transaction, received and allocation events, while Perfetto registers and parses them. Full patch reviewed, including Arc::DATA_OFFSET, runtime layout/accessors, page shrinker snapshots, return/command bounds checks and trace wrappers. Live Rust references protect synchronous pointer reads; page shrinker copies scalar pid/index before releasing locks and does not retain freed range pointers. Adapt diagnostic node_ptr to the user-supplied node address, translated_handle to the translated object, and page-range indices to byte offsets/sizes expected by native Binder tracing. Saturation/reversed-range handling affects diagnostics only. Derive C pointer offsets from their actual Rust containers. Task/transaction metadata is exposed through the existing tracefs access policy, not transaction payload data. Native LTS tracing implementation remains, with driver-selection event removal assessed separately; this decision does not finalize the dual-driver selector.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "3ca803b94e613ec8c74910262daf980df71e821f",
+        "4b5a05d8f96b2a0e600530b3f8ad28f2eacd0eee"
+      ],
+      "evidence": [
+        "evidence/rust-binder-priority-hooks-review.json",
+        "SECURITY.md: Rust Binder priority and trace interfaces"
+      ],
+      "subject": "ANDROID: rust_binder: add all tracepoints",
+      "patch_sha256": "3cdfd8604de4174847dab60efe01e9eb345d611cebcbd8c7cebe7070dc7289d3",
+      "paths": {
+        "drivers/android/binder/allocation.rs": {
+          "ack_blob": "498b6b5567e315f9e2388b90719df51b3bce1df8",
+          "port_blob": "498b6b5567e315f9e2388b90719df51b3bce1df8",
+          "lts_to_port_sha256": "c29cb6060059e5bfc73d669d85ea79d2e1139fc900317c0fb200dd69fbfb1730"
+        },
+        "drivers/android/binder/node.rs": {
+          "ack_blob": "7146516206038345fdb186b0cfb44035173930f3",
+          "port_blob": "fcf724f892100aec5e0078f8b970cc591ac3d5da",
+          "lts_to_port_sha256": "6d97d93ff67361403ed08e002ac02e246b970ffb316992ef178d55d097666dd0"
+        },
+        "drivers/android/binder/page_range.rs": {
+          "ack_blob": "b3bc0d6bb28b978d7fe485f507634184b910030e",
+          "port_blob": "a1f9b19b147c8bf4b467d279eed22c03ba0b2ef4",
+          "lts_to_port_sha256": "69ba51a0c95782a91ac82e7e1fdf52bfb2ffd38952e59647f7d3485c9f83f921"
+        },
+        "drivers/android/binder/process.rs": {
+          "ack_blob": "7d7757321510bf031395f8f707a5c0b55103f206",
+          "port_blob": "819f8ac19148ccde2432d55a051cc8924fd76c5b",
+          "lts_to_port_sha256": "c0474841852df98cc0ad1d3f2a776c8dd89e7c745c15c17455ab89bd6fbf57a7"
+        },
+        "drivers/android/binder/rust_binder.h": {
+          "ack_blob": "931fd0e46583a42f24db990a87d1dcfbb49ef3bb",
+          "port_blob": "4394f98d4d8fb2906bcb4d5c9f99278ee1e74cba",
+          "lts_to_port_sha256": "0f82208777b577aea869ce1d0f286dad2c9ccd6f5b7dc94079383e5817647afb"
+        },
+        "drivers/android/binder/rust_binder_events.h": {
+          "ack_blob": "4fc540c9234c552a8aaded8654fa3d75322aadcc",
+          "port_blob": "7c38b3ff9afd6cd99f05d07544fd13cf8c088274",
+          "lts_to_port_sha256": "2c5e755faa49f0e81e28c3b7dd8ecd24db15253ea5f4ef3336f9c05f3f22aefe"
+        },
+        "drivers/android/binder/rust_binder_main.rs": {
+          "ack_blob": "0193addad5cb5705967eb2c71bf78c117d1b04a8",
+          "port_blob": "3fdc8d72ef3e7db214e72b3fb627909bd9ad98cd",
+          "lts_to_port_sha256": "9d59b1637c115f99cb17ecf5e5e764ac63dfe3838868fc886dd4bd649e4c3d32"
+        },
+        "drivers/android/binder/thread.rs": {
+          "ack_blob": "9b161efc84c851882ca48356f061f76e015831c7",
+          "port_blob": "70cf6149d4d4ffc5cbdd6fed189be3df57d8c3e8",
+          "lts_to_port_sha256": "10862a627e5f8990f236f09fc8bafc2fddedc3266bc0695d3911cffd615c7940"
+        },
+        "drivers/android/binder/trace.rs": {
+          "ack_blob": "f34eb205a82c657352a37528cc10aa34a9a2d720",
+          "port_blob": "fc6cc5e026856057fb41e838f374769823a39e55",
+          "lts_to_port_sha256": "ef9b2dddfa51f1f3eecf1d1f0f90c02fba27103397140cbd8be7584c7be1eb72"
+        },
+        "drivers/android/binder/transaction.rs": {
+          "ack_blob": "3271e20887989f233788d029dca7af25ee1941ec",
+          "port_blob": "46b8e24f786731d9e6579f19485b064f9577714c",
+          "lts_to_port_sha256": "9de4d387444a49260a2babffccaa5fb16e7fc33854cded1ea62c5951b47a9fe2"
+        },
+        "rust/kernel/sync/arc.rs": {
+          "ack_blob": "921e19333b895f0d971591c4753047d0248a3029",
+          "port_blob": "921e19333b895f0d971591c4753047d0248a3029",
+          "lts_to_port_sha256": "724aca816ee74c28b0a828780eada2cd077bf258e38322ce5e00700ce310f738"
+        }
+      }
+    }
+  ],
+  "scope": "Complete thirteen candidate patches, resulting priority paths and ordering, C/Rust trace layouts/accessors, vendor hook declarations/exports and trace data/callsites. Native scheduler internals and the separate C/Rust driver selector are not blanket-finalized.",
+  "local_evidence": [
+    "frameworks/native/libs/binder/Binder.cpp: BBinder::setMinSchedulerPolicy bounds and setInheritRt",
+    "frameworks/native/libs/binder/Parcel.cpp: schedPolicyMask encodes low eight priority bits",
+    "frameworks/native/cmds/atrace/atrace.cpp and atrace.rc: required Binder events and trace controls",
+    "external/perfetto/src/traced/probes/ftrace/event_info.cc and predefined_tracepoints.cc: Binder event registrations and fields",
+    "system/sepolicy/private/traced_probes.te and shell.te: existing tracefs access policy",
+    "drivers/android/binder.c: signed s8 node priority, desired-priority comparison and native limit enforcement",
+    "rust/kernel/sync/arc.rs: transparent NonNull Arc, repr(C) ArcInner and DATA_OFFSET",
+    "rust/kernel/sync/aref.rs: owned NonNull task pointer and computed PTR_OFFSET",
+    "drivers/android/binder/page_range.rs and process.rs: page-index range callers and scalar shrinker trace snapshots"
+  ],
+  "checks": [
+    "evidence/rust-binder-priority-check.json"
+  ],
+  "validation": "3731 extracted priority assertions pass; ACK boundary control has 646 failures. Native task/capability/rlimit/scheduler/locks/hooks are host shims. Build 99 passed 4b5a05d8f96b including all priority/trace/layout changes, both images, 100 common and 45 virtual-device modules, 145 verified signatures with tampered control rejected, and 659 protected exports/145 matching flag/CRC tables. No Binder IPC, actual scheduling/concurrency, trace session, vendor callback or module load executed.",
+  "remote_sources_used": [],
+  "builtin_exports_build_98": {
+    "source_head": "f7ca990e55b113f7e60d43e2895cfe3331af1666",
+    "artifact": "../kernel_manifest-6.18/common_dist/kernel_x86_64_Module.symvers",
+    "sha256": "76186c001ece8be8f84964fdb6d022f5c7253616367bfe9f2642b4b25c8d881b",
+    "lines": [
+      "0x33d5e1aa\tRUST_BINDER_LAYOUT\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+      "0x82627b5e\t__tracepoint_android_vh_rust_binder_set_priority\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+      "0x82627b5e\t__tracepoint_android_vh_rust_binder_restore_priority\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+      "0x82627b5e\t__tracepoint_android_vh_rust_binder_looper_entry\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+      "0x20528af1\trust_do_trace_android_vh_rust_binder_set_priority\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+      "0xd4401722\trust_do_trace_android_vh_rust_binder_restore_priority\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+      "0x2bfe578c\trust_do_trace_android_vh_rust_binder_looper_entry\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+    ]
+  }
+}

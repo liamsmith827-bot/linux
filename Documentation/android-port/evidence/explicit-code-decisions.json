@@ -5438,5 +5438,475 @@
       "evidence/rust-ashmem-history-cfi-review.json",
       "SECURITY.md: Rust integration history and ashmem selection"
     ]
+  },
+  {
+    "commit": "a61ad61ecb80b8656aab70fefb4aefd553219644",
+    "disposition": "adapted",
+    "rationale": "Retain Rust Binder priority inheritance for Android libbinder scheduler-policy/minimum-priority/inherit-RT flags, matching the configured optional Rust driver and native Binder semantics. Adapt node decoding to sign-extend the wire priority byte as C Binder does; negative nice values otherwise become large positive values. Clamp unsigned RLIMIT_RTPRIO to the legal maximum before signed conversion, preserving zero-limit fallback and preventing large limits from truncating negative. Preserve CAP_SYS_NICE checks, RLIMIT_NICE bounds, RESET_ON_FORK, process default priority, once-only thread selection, pending/abort restoration and the selected-thread saved priority. Keep the port comparison against the desired priority after RT suppression, matching native Binder; ACK boundary still compares against the original caller priority. Native scheduler implementation is not replaced by these Rust wrappers. Invalid node priorities remain subject to native scheduler validation; no new privilege is granted by an out-of-range value.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "f7ca990e55b113f7e60d43e2895cfe3331af1666"
+    ],
+    "evidence": [
+      "evidence/rust-binder-priority-hooks-review.json",
+      "SECURITY.md: Rust Binder priority and trace interfaces"
+    ]
+  },
+  {
+    "commit": "d18b094879d813bf5acbb4d3d6069a37df52bd10",
+    "disposition": "adapted",
+    "rationale": "Retain saturating subtraction in RT-to-kernel priority conversion. This is a security-relevant panic/overflow guard for malformed or extreme inputs; the final signed implementation saturates to the signed bound, rather than promising the zero result described for the earlier unsigned implementation. All 256 wire bytes across four policies and additional i32 extremes pass extracted checks. Fair conversion receives a signed byte or bounded task/nice limit on the reviewed paths. No native scheduler validation is removed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-priority-hooks-review.json",
+      "SECURITY.md: Rust Binder priority and trace interfaces"
+    ]
+  },
+  {
+    "commit": "80c8d66849ffe4a2f65d668e51e97fc7e4dd390a",
+    "disposition": "adapted",
+    "rationale": "Retain the historical fix to save policy and priority from the actual selected Binder thread, not the receiving process group leader. The final ACK boundary regressed this line, while the selected port restores the effect. Extracted tests deliberately give the target process and target thread different priorities and check the thread value, together with pending/abort restoration. This prevents persistent wrong scheduling after a transaction; it adds no scheduling privilege.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-priority-hooks-review.json",
+      "SECURITY.md: Rust Binder priority and trace interfaces"
+    ]
+  },
+  {
+    "commit": "b5c3877484900b0f3214e4fd6b5bef9df2ca8bb0",
+    "disposition": "adapted",
+    "rationale": "Retain default-priority restoration before get_work_or_register publishes the waiting thread in the ready list. Reading the entire get_work path shows local/deferred work handling preceding restoration, and registration/interruptible waiting following it. A remote sender can boost a published thread, so a later unconditional restoration could overwrite that boost. No restore remains inside the waiting loop. This ordering is reviewed together with 29293a1515c0; host decision checks do not claim to reproduce scheduler races.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-priority-hooks-review.json",
+      "SECURITY.md: Rust Binder priority and trace interfaces"
+    ]
+  },
+  {
+    "commit": "29293a1515c0adc7eae6bd98e96297395a460070",
+    "disposition": "adapted",
+    "rationale": "Retain sender-side on_thread_selected before pushing work to a ready target thread under the process state lock. This restores Android priority inheritance before wakeup instead of relying exclusively on receiver self-boost. The once-only atomic selection prevents double application when do_work calls selection again. Dead-thread/error return still retains ownership of work for cleanup, and priority/rlimit validation is shared with the receiver path. Necessary companion ordering is retained in b5c387748490.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-priority-hooks-review.json",
+      "SECURITY.md: Rust Binder priority and trace interfaces"
+    ]
+  },
+  {
+    "commit": "ef05a784aa800974497a69f77b7d0302fdda70b4",
+    "disposition": "adapted",
+    "rationale": "Retain source-module vendor hooks after setting and before restoring Rust Binder priority, their Rust wrappers, C declarations/definitions and GPL tracepoint exports. Live Transaction and Task borrows cover each synchronous invocation. Hooks are bare kernel trace hooks, not new tracefs events or userspace entry points. Vendor callbacks execute trusted kernel code and must obey locking/context/lifetime rules. Exact SDK vendor callbacks are not established by the local checkouts; retain the generic customization interface under the compatibility-first requirement, without adding another platform driver.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-priority-hooks-review.json",
+      "SECURITY.md: Rust Binder priority and trace interfaces"
+    ]
+  },
+  {
+    "commit": "37d395f049443ba8fe571381a1b55aa025a00e13",
+    "disposition": "adapted",
+    "rationale": "Retain built-in hook definitions and exports even when CONFIG_ANDROID_BINDER_IPC_RUST=m, avoiding a vendor source-module load dependency on rust_binder.ko. Retain runtime RUST_BINDER_LAYOUT metadata populated before Rust Binder publishes its filesystem; these computed offsets are functional C/Rust interoperability, not fixed historical KMI padding. Adapt pointer metadata to use the actual ARef pointer offset and DArc<Node> allocation container; no claim that the pinned compiler previously produced an incorrect offset is made. Successful activation pins module text/data as documented in the earlier initialization review; inactive modules cannot emit the hooks. Layout contains offsets, not module pointers, and consumers must only use live objects supplied by the active driver.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "3f90fca1809468efd1eff3f07a5168067903ffcf",
+      "4b5a05d8f96b2a0e600530b3f8ad28f2eacd0eee"
+    ],
+    "evidence": [
+      "evidence/rust-binder-priority-hooks-review.json",
+      "SECURITY.md: Rust Binder priority and trace interfaces"
+    ]
+  },
+  {
+    "commit": "6a6602755e08abe3327610530b53c6c8c25d32ce",
+    "disposition": "adapted",
+    "rationale": "Retain public include/trace/hooks/rust_binder.h location and the old local forwarding header. This supports source-module inclusion without importing tracefs events. Adapt the final hook header to declare its rust_binder_thread opaque type and task_struct forward declaration: the later looper hook used a type otherwise declared only by the private Binder header. Existing in-tree inclusion order hid that source-interface dependency. Trace declaration names and argument types remain unchanged.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "3ca803b94e613ec8c74910262daf980df71e821f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-priority-hooks-review.json",
+      "SECURITY.md: Rust Binder priority and trace interfaces"
+    ]
+  },
+  {
+    "commit": "d7fe9b25a9598ee729b0027d9e2981498c641c02",
+    "disposition": "adapted",
+    "rationale": "Retain READ_ONCE in the process-task C accessor and its conservative RCU/null-use contract for source-module consumers. In this selected source Process.task is a non-null, reference-owning ARef<Task>; no future nulling implementation or future platform is imported by retaining the accessor. Adapt its layout metadata to include ARef::PTR_OFFSET rather than assuming its pointer begins the wrapper. A borrowed pointer remains valid only while the owner/reference protocol keeps the task alive; the helper does not acquire a task reference.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "4b5a05d8f96b2a0e600530b3f8ad28f2eacd0eee"
+    ],
+    "evidence": [
+      "evidence/rust-binder-priority-hooks-review.json",
+      "SECURITY.md: Rust Binder priority and trace interfaces"
+    ]
+  },
+  {
+    "commit": "e9f6dbe33551d52d0aaf11c787acb800b376878d",
+    "disposition": "adapted",
+    "rationale": "Retain thread-task C accessor and computed thread layout entry. A priority hook may run on the receiving thread, so current is not a substitute for the sending thread obtained from the transaction. The current Thread.task owns an ARef and stays live with its Thread; the conservative null/RCU documentation does not implement task release or allow retaining an unreferenced pointer. Metadata now includes ARef::PTR_OFFSET. No binary layout continuity or new platform support is added.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "4b5a05d8f96b2a0e600530b3f8ad28f2eacd0eee"
+    ],
+    "evidence": [
+      "evidence/rust-binder-priority-hooks-review.json",
+      "SECURITY.md: Rust Binder priority and trace interfaces"
+    ]
+  },
+  {
+    "commit": "38426ae909c9393a05aa368df60c52afd79971dc",
+    "disposition": "omitted-kmi-only",
+    "rationale": "Omit all ANDROID_BACKPORT_RESERVE members, matching Rust zero initializers and android_kabi.h include added by this patch. Every changed hunk solely reserves space for future binary KMI continuity; the functional runtime offset fields from earlier commits remain. The user expressly excludes existing vendor binary compatibility. Rebuilt modules consume the current smaller metadata struct and matching generated bindings; no executable behavior or field used by current accessors is removed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/rust-binder-priority-hooks-review.json",
+      "SECURITY.md: Rust Binder priority and trace interfaces"
+    ]
+  },
+  {
+    "commit": "4ff84a79852bb177a7d7f07edc3d9030d1b87c68",
+    "disposition": "adapted",
+    "rationale": "Retain looper start/stop vendor hook, three public flag constants, built-in exports and Rust wrapper. Existing command validation/state transitions remain; dispatch consolidates register/enter/exit and emits the hook with only REGISTERED/ENTERED/EXITED bits while holding the thread lock. Release marks EXITED and emits it before unwinding. Trusted callbacks must not sleep or recursively take the held thread lock, and this is a state notification rather than a promised exactly-once event. Add the missing opaque thread typedef to the public hook header. Exact SDK callback necessity remains uncertain, so retain the generic source customization interface conservatively.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "3ca803b94e613ec8c74910262daf980df71e821f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-priority-hooks-review.json",
+      "SECURITY.md: Rust Binder priority and trace interfaces"
+    ]
+  },
+  {
+    "commit": "3b0586933ae7fc12b3fe607ddcbbbc2d04a179dc",
+    "disposition": "adapted",
+    "rationale": "Retain Binder-named trace events and callsites for Android atrace/Perfetto: local atrace explicitly requires transaction, received and allocation events, while Perfetto registers and parses them. Full patch reviewed, including Arc::DATA_OFFSET, runtime layout/accessors, page shrinker snapshots, return/command bounds checks and trace wrappers. Live Rust references protect synchronous pointer reads; page shrinker copies scalar pid/index before releasing locks and does not retain freed range pointers. Adapt diagnostic node_ptr to the user-supplied node address, translated_handle to the translated object, and page-range indices to byte offsets/sizes expected by native Binder tracing. Saturation/reversed-range handling affects diagnostics only. Derive C pointer offsets from their actual Rust containers. Task/transaction metadata is exposed through the existing tracefs access policy, not transaction payload data. Native LTS tracing implementation remains, with driver-selection event removal assessed separately; this decision does not finalize the dual-driver selector.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "3ca803b94e613ec8c74910262daf980df71e821f",
+      "4b5a05d8f96b2a0e600530b3f8ad28f2eacd0eee"
+    ],
+    "evidence": [
+      "evidence/rust-binder-priority-hooks-review.json",
+      "SECURITY.md: Rust Binder priority and trace interfaces"
+    ]
+  },
+  {
+    "commit": "c7f0753ca253525d4ce8e6db45c43a021dd33985",
+    "disposition": "adapted",
+    "rationale": "Retain native compat_ptr_ioctl forwarding in the Rust Binder file operations and remove the redundant Rust compat wrapper. Binder commands use compatible fixed-width structures through a pointer or ignore the argument, so native compat pointer conversion is appropriate; the SDK selects IA32/COMPAT. The native fs/ioctl.c compat_ptr_ioctl function is unchanged (unrelated fiemap export namespace changes remain). Usercopy bounds and ioctl validation stay in the common Rust path. No 32-bit userspace client was executed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "80ea0934fdd13e16a11ce55c248437043e52846f",
+    "disposition": "adapted",
+    "rationale": "Retain CONFIG_COMPAT gating of the compat_ptr_ioctl initializer as the required companion to native compat forwarding. The zeroed file_operations fallback leaves the callback absent when disabled, instead of referencing a bindgen-unavailable NULL macro. SDK enables COMPAT; the disabled branch was source-reviewed but not separately built. This is a shared configuration guard, with no extra platform implementation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "9df6d8eb03d40ed4a482a64353187a85f193228d",
+    "disposition": "adapted",
+    "rationale": "Retain moving the owned Allocation drop into the Some arm of BC_FREE_BUFFER. The looper_need_return update still precedes destruction, its temporary thread lock guard is dropped at the statement boundary, and None remains a no-op. The final trace call precedes the same drop. This removes a redundant Option drop path without changing buffer ownership or claiming measured performance.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "c8a05e776c37234d63682f91ab122b80a7ef62cd",
+    "disposition": "adapted",
+    "rationale": "Retain the minimum-node-priority comparison against desired priority after RT inheritance suppression, rather than the original caller priority. This restores the historical fix whose effect was lost at the ACK boundary and matches native C Binder. The already recorded extracted priority checks cover both inherit_rt values and FIFO tie preference; no additional scheduling privilege is granted.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "c375448ca4c34cb24d61fefcdd04e293397f87e1",
+    "disposition": "adapted",
+    "rationale": "Retain the target process default priority for oneway transactions and unsupported sender policies. The current Transaction::new condition inherits the sender task only for a synchronous transaction with a supported policy; otherwise it reads to.default_priority. Node minimums and recipient capability/resource-limit checks still apply later. This preserves native asynchronous Binder behavior rather than borrowing an unrelated sender default.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "d15f367f7fa0bd6da99a526bd9073cd6e663f398",
+    "disposition": "adapted",
+    "rationale": "Retain explicit rust_binder_wait, rust_binder_waitlcl and rust_binder_freeze symbol names for existing Android process/wait-channel diagnostics. The entire patch only adds comments/export_name attributes; it does not alter waiting/freezing, publish a module export, or preserve binary KMI. Source annotations and successful Rust-driver compilation are evidence; no actual ps/wchan output was exercised.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "061cd5e7299648ac183f9af7aa35d241d17f0586",
+    "disposition": "adapted",
+    "rationale": "Retain crate_name=\"rust_binder\" while the individual Rust object remains rust_binder_main.o and the linked module rust_binder.ko. This keeps the intended module/log identity with the existing composite C/Rust Kbuild arrangement. It changes compiler naming rather than runtime policy, and requires no dependency modification or historical ABI layout.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "a6fa1e2b3cbe0e3a8848422109513702f7c7d2a2",
+    "disposition": "adapted",
+    "rationale": "Retain Task/ARef equality at the current-process checks in get_current_thread and mmap. Task equality compares raw task identity and ARef delegates to the referenced Task, as separately reviewed; both checks still compare the owning task with current.group_leader and return EINVAL for another process. This is a source refactoring, not numeric PID equality or weakened process isolation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "5212ba8922bd9fea04a15e97430f8b822aee2222",
+    "disposition": "adapted",
+    "rationale": "Retain allocation tracing with explicit data_size, offsets_size and buffers_size scalars instead of a pointer to the obsolete transaction-data structure after TransactionInfo integration. Current callsite uses the local sizes used by the copy/allocation path; event field names/types are unchanged for atrace/Perfetto. Removing the cast also avoids depending on two structure layouts being identical. The stale data-pointer safety comment is not evidence of a live pointer dependency.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "84879c8c3d84452c2b6cc309c13d18716f9233ed",
+    "disposition": "adapted",
+    "rationale": "Retain setting Pending and the saved parent priority before nested-reply restoration, including the failure path. The current reply_inner sets state under prio_lock after constructing/delivering the reply or its error; the shared restore path can abort if an incoming nested transaction has superseded it. This is the companion to the reviewed pending/abort protocol, preventing restoration of the wrong parent priority. Concurrency was source-reviewed, not runtime tested.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "fcc8ec78de519fe20752e844c3401f637d3269e4",
+    "disposition": "adapted",
+    "rationale": "Retain read-only binderfs features/transaction_report advertising the implemented Rust Binder generic-netlink report interface. The feature initializer is true and file-creation failure propagates through existing filesystem setup; no writable setting is introduced. C Binder has the analogous capability file. Local Android uses Binder report netlink, although a reader of this particular feature filename was not established; capability truth and source/userspace interface compatibility justify retention without claiming a demonstrated SDK read.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "da2402dd6d292c0b8d2d4b0e0255364998c004b1",
+    "disposition": "adapted",
+    "rationale": "Retain retrying atomic fetch_add when it returns zero, so internal usize debug IDs can use zero as absent/uninitialized even after counter wrap. Relaxed ordering suffices for an identifier counter rather than object publication. Logs and TransactionInfo use the sentinel; the u32 UAPI projection can still wrap and is not claimed globally unique. No new access-control authority is based on the counter.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "e2f26a52bf5dc8436968ab52a5758b6d9e5f11da",
+    "disposition": "adapted",
+    "rationale": "Retain Kuid::current_euid for both outgoing transaction and reply sender identity, instead of the opener group leader task euid. The helper calls native current_euid, reflecting the submitting task subjective credentials; this avoids identifying a different thread credential context. Existing security::binder_transaction/transfer checks against pinned process credentials remain independently enforced. Local native C Binder likewise uses current_euid; no credential check is bypassed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "f4449e8af850d903dc151af71ee1c8d2bb5c0408",
+    "disposition": "adapted",
+    "rationale": "Retain current.group_leader identity check before Allocation drop schedules close_on_free descriptors. This avoids closing unrelated descriptor numbers in a different process context during cleanup. Target-process references keep identity valid; kernel-thread/process-exit cleanup skips these closes. Existing allocation failure or invalid-fd errors can skip closes and are not claimed eliminated. Native fd ownership and DeferredFdCloser behavior remain separately reviewed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "4f90f9b71209fdb979874ce733b771fa6dd09f73",
+    "disposition": "adapted",
+    "rationale": "Retain updating NodeDeath cleared state under node_refs, then dropping node_refs before scheduling a notification onto thread/process work lists. The final clear_death preserves handle/cookie validation and the state decision, while moving queueing and possible final destruction outside the reference lock. This is a required preparation for the spinlock conversion, not a change to user notification contents.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "3234474195863cc7ff8f37a164e1fd1883475a28",
+    "disposition": "adapted",
+    "rationale": "Retain NodeDeath ownership inside NodeRefInfo during process cleanup: mark it cleared without taking/dropping the reference under node_refs. The final deferred_release subsequently takes by_handle/by_node trees, releases the lock, and drops both trees. This prevents recursive/final destruction under the reference spinlock while still removing remote node links and clearing notifications.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "deb1b4fda7d8be51dcb860a6dfead128c108da14",
+    "disposition": "adapted",
+    "rationale": "Retain vacant-entry reservation reuse in insert_or_update_handle and explicitly release node_refs before returning ESRCH with newly initialized NodeRefInfo owners. Tree storage and UniqueArc allocations occur before locking; bitmap growth releases/reacquires the lock and repeats the node lookup. Existing-node absorb leaves an existing owner and clears transferred counts. The dead-process check and insertion ordering remain, preventing missed cleanup and destructors under the spinlock.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "5d59eb711bc6253d300978c8f62bd9ae6de52249",
+    "disposition": "adapted",
+    "rationale": "Retain Process.node_refs as SpinLock with matching initializer together with its complete allocation/destructor-preparation series. All node_refs lock sites in process.rs and freeze.rs were inspected: usercopy occurs outside guards; tree/message reserves precede locking; bitmap/freeze-vector allocation retries release locks and revalidate; terminal node/death/vector ownership is deferred outside guards. Bitmap replacement frees native kmalloc storage through bitmap_free/kfree; failed poll SetOnce publication uses the previously adapted embedded-RCU PollCondVarBox destructor, not synchronize_rcu under the lock. Debug formatting uses existing seq-file operations. This reduces the mutex preemption/priority-inversion window without claiming a measured SDK latency or exhaustive runtime lockdep/concurrency result.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "09414a80ed6c1af988fae06554d28c28bc2f4b15",
+    "disposition": "adapted",
+    "rationale": "Retain logarithmic lower-bound node-debug enumeration, adapted in f1b305f3bd93 to checked_add for the caller-supplied starting pointer. UINT64_MAX now returns the zero/empty result instead of panicking with CONFIG_RUST_OVERFLOW_CHECKS=y or wrapping to the first node. All other lookups return the first strictly greater node, matching native C Binder. The existing process lock protects the cursor and field copy; usercopy occurs outside it. Local ProcessState::getKernelReferences uses this ioctl. Extracted checks pass 2052 cases; the ACK control panics in 125 maximum-pointer cases, demonstrating a user-triggerable denial-of-service defect in the unadapted code.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "f1b305f3bd93265a8f00868694fda18e117d4e40"
+    ],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "3deed10abfb11390078cf0473f17967077136a52",
+    "disposition": "already-represented-upstream",
+    "rationale": "Retain pinned-LTS extended-error fix: mutate the stored per-thread error, clear on query/new transaction, and deliver reply construction errors to the originating thread without overwriting an existing error. Caller still gets transaction-complete for a failed reply. Debug formatting and moved debug-id generation are also present. Final logging/netlink adaptations preserve these effects, with first-error checks under the thread lock and bounded usercopy after unlocking. Local IPCThreadState::logExtendedError consumes the interface. Later native only-print-with-source behavior is preserved; no duplicate patch is applied.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "a77715a18da8ddfd6474090235eca3bf721b1787",
+    "disposition": "already-represented-upstream",
+    "rationale": "Retain pinned-LTS fix removing the outdated queued oneway allocation node before TF_UPDATE_TXN discards it, preventing a false completion from advancing the live oneway queue. The removed node and obsolete transaction owners are declared before the process guard so their destruction occurs after unlocking. Normal cancel/thread-exit still completes an actually active oneway transaction. Final port keeps this exact control effect alongside tracing/logging; no duplicate patch is applied.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "0487f3a4e332e5bcaccdf0c4facf1d7f8dd38c92",
+    "disposition": "already-represented-upstream",
+    "rationale": "Retain pinned-LTS abnormal freeze-listener cleanup when the last node reference is dropped or the process exits. It removes the listener from both lookup/list relationships, breaking the reference cycle, and returns emptied vector ownership for destruction outside locking. Current update_ref declares cleanup owners before its guard and process exit takes the listener map before cleaning it. Subsequent spinlock preparation is retained without undoing this LTS lifetime fix; no duplicate patch is applied.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "fb1cf0c36f9fc2544483ca9db21933f4f277b768",
+    "disposition": "adapted",
+    "rationale": "Retain bitmap-backed per-process Binder handle allocation through the previously reviewed IdPool. It preserves manager-only handle zero, acquires a bit only after both tree insertions succeed, releases it when the corresponding reference is removed, and detects a bitmap/tree mismatch without returning an occupied handle. Tree/node storage is reserved before locking; growth and shrink allocation release node_refs and revalidate after reacquisition. The second by_node lookup handles concurrent insertion, while the unused reservation has not set its bit. Shrink failure leaves a valid old bitmap. This avoids linear tree walks at increasing handle counts; no benchmark from the historical message was reproduced or adopted as SDK evidence.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "a9db114383c86bbc874bf477f2a8236cfd712256",
+    "disposition": "adapted",
+    "rationale": "Retain KVVec<Arc> context/process ownership in place of manual intrusive-list removal. CONTEXTS and Context.manager remain mutexes, allowing fallible GFP_KERNEL vector growth; new context/process registration propagates allocation failure and the local Arc unwinds the unpublished object. Deregistration compares Arc identity and the caller holds an owner while retain removes the registry reference. Snapshots clone owners under the same mutex, and PID filtering holds live Task references. Context manager UID/LSM checks remain unchanged. The refactoring supports the selected driver and shared later memory-management changes, without a new platform or binary-layout promise.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "ec0bfee750f43e829f95e1fafa91ef1bbd197398",
+    "disposition": "adapted",
+    "rationale": "Retain conservative shrinking of Context.manager.all_procs after deregistration: trigger only below one-quarter capacity and target twice the remaining length. Under that predicate len*2 is bounded by the existing allocation capacity. The manager mutex permits GFP_KERNEL reallocation; the already reviewed KVVec shrink implementation preserves data/capacity on failure. Caller-owned Process Arc prevents destruction of the removed process under the manager lock. This releases excess metadata memory without claiming measured latency or changing registration semantics.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
+  },
+  {
+    "commit": "68650726d7ef5ed3c66afdc2bebaff98eb9fbcb9",
+    "disposition": "adapted",
+    "rationale": "Retain KVVec for files_to_translate and descriptor reservations so large Binder fd-array metadata can use vmalloc instead of requiring a large contiguous allocation. Current prepare_file_list takes Allocation out of its spinlock before translation, and error cleanup/commit occur outside that lock. Per-file references and FileDescriptorReservation RAII remain; failure releases uninstalled reservations, and installation occurs only after transaction usercopy succeeds. Checked vector capacity/allocation and native fd limits still apply. The smaller u32 close_on_free vector intentionally remains KVec as in the patch; no claim that all contiguous Binder allocations are removed. Historical QEMU/benchmark claims and linked resources were not independently accessed or reproduced.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-runtime-review.json",
+      "SECURITY.md: Rust Binder lifecycle and query review"
+    ]
   }
 ]

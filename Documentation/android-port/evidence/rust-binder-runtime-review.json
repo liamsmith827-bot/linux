@@ -1,0 +1,642 @@
+{
+  "source_head": "f1b305f3bd93265a8f00868694fda18e117d4e40",
+  "records": [
+    {
+      "commit": "c7f0753ca253525d4ce8e6db45c43a021dd33985",
+      "disposition": "adapted",
+      "rationale": "Retain native compat_ptr_ioctl forwarding in the Rust Binder file operations and remove the redundant Rust compat wrapper. Binder commands use compatible fixed-width structures through a pointer or ignore the argument, so native compat pointer conversion is appropriate; the SDK selects IA32/COMPAT. The native fs/ioctl.c compat_ptr_ioctl function is unchanged (unrelated fiemap export namespace changes remain). Usercopy bounds and ioctl validation stay in the common Rust path. No 32-bit userspace client was executed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "UPSTREAM: rust_binder: use compat_ptr_ioctl",
+      "patch_sha256": "6c918ad5a9da85957c82de9d02d89971b0cf4485c5a5f6f1fc57b126f4dfb70a",
+      "paths": {
+        "drivers/android/binder/process.rs": {
+          "ack_blob": "7d7757321510bf031395f8f707a5c0b55103f206",
+          "port_blob": "5a2092bf9f0ad292122492bd937a5cdc7b625a9d",
+          "lts_to_port_sha256": "e5f53c605f175e52e2bd93df2785a3a7044af0b8451664efbb7e2d80d1b2c6a6"
+        },
+        "drivers/android/binder/rust_binder_main.rs": {
+          "ack_blob": "0193addad5cb5705967eb2c71bf78c117d1b04a8",
+          "port_blob": "3fdc8d72ef3e7db214e72b3fb627909bd9ad98cd",
+          "lts_to_port_sha256": "9d59b1637c115f99cb17ecf5e5e764ac63dfe3838868fc886dd4bd649e4c3d32"
+        }
+      }
+    },
+    {
+      "commit": "80ea0934fdd13e16a11ce55c248437043e52846f",
+      "disposition": "adapted",
+      "rationale": "Retain CONFIG_COMPAT gating of the compat_ptr_ioctl initializer as the required companion to native compat forwarding. The zeroed file_operations fallback leaves the callback absent when disabled, instead of referencing a bindgen-unavailable NULL macro. SDK enables COMPAT; the disabled branch was source-reviewed but not separately built. This is a shared configuration guard, with no extra platform implementation.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "UPSTREAM: rust_binder: Fix build failure if !CONFIG_COMPAT",
+      "patch_sha256": "a9126bc50d689fe4b4a6a3fcc9dc203cf989c3e5b6a75a16b25f618cd6b0c157",
+      "paths": {
+        "drivers/android/binder/rust_binder_main.rs": {
+          "ack_blob": "0193addad5cb5705967eb2c71bf78c117d1b04a8",
+          "port_blob": "3fdc8d72ef3e7db214e72b3fb627909bd9ad98cd",
+          "lts_to_port_sha256": "9d59b1637c115f99cb17ecf5e5e764ac63dfe3838868fc886dd4bd649e4c3d32"
+        }
+      }
+    },
+    {
+      "commit": "9df6d8eb03d40ed4a482a64353187a85f193228d",
+      "disposition": "adapted",
+      "rationale": "Retain moving the owned Allocation drop into the Some arm of BC_FREE_BUFFER. The looper_need_return update still precedes destruction, its temporary thread lock guard is dropped at the statement boundary, and None remains a no-op. The final trace call precedes the same drop. This removes a redundant Option drop path without changing buffer ownership or claiming measured performance.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "UPSTREAM: rust_binder: move BC_FREE_BUFFER drop inside if statement",
+      "patch_sha256": "0a9c23ee9f50239f076093f79dd72147b4e13858e38ab13af01dc0f0a07ecb43",
+      "paths": {
+        "drivers/android/binder/thread.rs": {
+          "ack_blob": "9b161efc84c851882ca48356f061f76e015831c7",
+          "port_blob": "70cf6149d4d4ffc5cbdd6fed189be3df57d8c3e8",
+          "lts_to_port_sha256": "10862a627e5f8990f236f09fc8bafc2fddedc3266bc0695d3911cffd615c7940"
+        }
+      }
+    },
+    {
+      "commit": "c8a05e776c37234d63682f91ab122b80a7ef62cd",
+      "disposition": "adapted",
+      "rationale": "Retain the minimum-node-priority comparison against desired priority after RT inheritance suppression, rather than the original caller priority. This restores the historical fix whose effect was lost at the ACK boundary and matches native C Binder. The already recorded extracted priority checks cover both inherit_rt values and FIFO tie preference; no additional scheduling privilege is granted.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "ANDROID: rust_binder: compare node_prio to desired prio",
+      "patch_sha256": "3865aeaccf9e6da56da1116f238838198d52aec1c1fcf8b28e6e2a57c5b913e9",
+      "paths": {
+        "drivers/android/binder/transaction.rs": {
+          "ack_blob": "3271e20887989f233788d029dca7af25ee1941ec",
+          "port_blob": "46b8e24f786731d9e6579f19485b064f9577714c",
+          "lts_to_port_sha256": "9de4d387444a49260a2babffccaa5fb16e7fc33854cded1ea62c5951b47a9fe2"
+        }
+      }
+    },
+    {
+      "commit": "c375448ca4c34cb24d61fefcdd04e293397f87e1",
+      "disposition": "adapted",
+      "rationale": "Retain the target process default priority for oneway transactions and unsupported sender policies. The current Transaction::new condition inherits the sender task only for a synchronous transaction with a supported policy; otherwise it reads to.default_priority. Node minimums and recipient capability/resource-limit checks still apply later. This preserves native asynchronous Binder behavior rather than borrowing an unrelated sender default.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "ANDROID: rust_binder: use target_proc prio for oneway calls",
+      "patch_sha256": "6ac9adf3bc1033cf96669b62c3a223db938140863cabe4bb0f0412714ef84520",
+      "paths": {
+        "drivers/android/binder/transaction.rs": {
+          "ack_blob": "3271e20887989f233788d029dca7af25ee1941ec",
+          "port_blob": "46b8e24f786731d9e6579f19485b064f9577714c",
+          "lts_to_port_sha256": "9de4d387444a49260a2babffccaa5fb16e7fc33854cded1ea62c5951b47a9fe2"
+        }
+      }
+    },
+    {
+      "commit": "d15f367f7fa0bd6da99a526bd9073cd6e663f398",
+      "disposition": "adapted",
+      "rationale": "Retain explicit rust_binder_wait, rust_binder_waitlcl and rust_binder_freeze symbol names for existing Android process/wait-channel diagnostics. The entire patch only adds comments/export_name attributes; it does not alter waiting/freezing, publish a module export, or preserve binary KMI. Source annotations and successful Rust-driver compilation are evidence; no actual ps/wchan output was exercised.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "UPSTREAM: rust_binder: avoid name mangling for get_work[_local]",
+      "patch_sha256": "ad817e79d25fc095eef874df52768ccd0a36f625c1ca01671ef0b0a27b1cac3b",
+      "paths": {
+        "drivers/android/binder/process.rs": {
+          "ack_blob": "7d7757321510bf031395f8f707a5c0b55103f206",
+          "port_blob": "5a2092bf9f0ad292122492bd937a5cdc7b625a9d",
+          "lts_to_port_sha256": "e5f53c605f175e52e2bd93df2785a3a7044af0b8451664efbb7e2d80d1b2c6a6"
+        },
+        "drivers/android/binder/thread.rs": {
+          "ack_blob": "9b161efc84c851882ca48356f061f76e015831c7",
+          "port_blob": "70cf6149d4d4ffc5cbdd6fed189be3df57d8c3e8",
+          "lts_to_port_sha256": "10862a627e5f8990f236f09fc8bafc2fddedc3266bc0695d3911cffd615c7940"
+        }
+      }
+    },
+    {
+      "commit": "061cd5e7299648ac183f9af7aa35d241d17f0586",
+      "disposition": "adapted",
+      "rationale": "Retain crate_name=\"rust_binder\" while the individual Rust object remains rust_binder_main.o and the linked module rust_binder.ko. This keeps the intended module/log identity with the existing composite C/Rust Kbuild arrangement. It changes compiler naming rather than runtime policy, and requires no dependency modification or historical ABI layout.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "UPSTREAM: rust_binder: override crate name to rust_binder",
+      "patch_sha256": "bcbf9a0ae9ad22008ab6df86e7198571abd56116a714cb2d9a0dcbb0809331ff",
+      "paths": {
+        "drivers/android/binder/rust_binder_main.rs": {
+          "ack_blob": "0193addad5cb5705967eb2c71bf78c117d1b04a8",
+          "port_blob": "3fdc8d72ef3e7db214e72b3fb627909bd9ad98cd",
+          "lts_to_port_sha256": "9d59b1637c115f99cb17ecf5e5e764ac63dfe3838868fc886dd4bd649e4c3d32"
+        }
+      }
+    },
+    {
+      "commit": "a6fa1e2b3cbe0e3a8848422109513702f7c7d2a2",
+      "disposition": "adapted",
+      "rationale": "Retain Task/ARef equality at the current-process checks in get_current_thread and mmap. Task equality compares raw task identity and ARef delegates to the referenced Task, as separately reviewed; both checks still compare the owning task with current.group_leader and return EINVAL for another process. This is a source refactoring, not numeric PID equality or weakened process isolation.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "UPSTREAM: rust_binder: make use of == for Task",
+      "patch_sha256": "41607b6a7ea272740ff23c7bcc74b87916f175f1d638055dc1c388e1ec3badcf",
+      "paths": {
+        "drivers/android/binder/process.rs": {
+          "ack_blob": "7d7757321510bf031395f8f707a5c0b55103f206",
+          "port_blob": "5a2092bf9f0ad292122492bd937a5cdc7b625a9d",
+          "lts_to_port_sha256": "e5f53c605f175e52e2bd93df2785a3a7044af0b8451664efbb7e2d80d1b2c6a6"
+        }
+      }
+    },
+    {
+      "commit": "5212ba8922bd9fea04a15e97430f8b822aee2222",
+      "disposition": "adapted",
+      "rationale": "Retain allocation tracing with explicit data_size, offsets_size and buffers_size scalars instead of a pointer to the obsolete transaction-data structure after TransactionInfo integration. Current callsite uses the local sizes used by the copy/allocation path; event field names/types are unchanged for atrace/Perfetto. Removing the cast also avoids depending on two structure layouts being identical. The stale data-pointer safety comment is not evidence of a live pointer dependency.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "ANDROID: rust_binder: adjust binder_transaction_alloc_buf",
+      "patch_sha256": "da4167ad8ae7722b1c28cdb4d7da191fd251ca5e3c6d66c6ad5b37affcc6f51f",
+      "paths": {
+        "drivers/android/binder/rust_binder_events.h": {
+          "ack_blob": "4fc540c9234c552a8aaded8654fa3d75322aadcc",
+          "port_blob": "7c38b3ff9afd6cd99f05d07544fd13cf8c088274",
+          "lts_to_port_sha256": "2c5e755faa49f0e81e28c3b7dd8ecd24db15253ea5f4ef3336f9c05f3f22aefe"
+        },
+        "drivers/android/binder/thread.rs": {
+          "ack_blob": "9b161efc84c851882ca48356f061f76e015831c7",
+          "port_blob": "70cf6149d4d4ffc5cbdd6fed189be3df57d8c3e8",
+          "lts_to_port_sha256": "10862a627e5f8990f236f09fc8bafc2fddedc3266bc0695d3911cffd615c7940"
+        },
+        "drivers/android/binder/trace.rs": {
+          "ack_blob": "f34eb205a82c657352a37528cc10aa34a9a2d720",
+          "port_blob": "fc6cc5e026856057fb41e838f374769823a39e55",
+          "lts_to_port_sha256": "ef9b2dddfa51f1f3eecf1d1f0f90c02fba27103397140cbd8be7584c7be1eb72"
+        }
+      }
+    },
+    {
+      "commit": "84879c8c3d84452c2b6cc309c13d18716f9233ed",
+      "disposition": "adapted",
+      "rationale": "Retain setting Pending and the saved parent priority before nested-reply restoration, including the failure path. The current reply_inner sets state under prio_lock after constructing/delivering the reply or its error; the shared restore path can abort if an incoming nested transaction has superseded it. This is the companion to the reviewed pending/abort protocol, preventing restoration of the wrong parent priority. Concurrency was source-reviewed, not runtime tested.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "ANDROID: rust_binder: update prio_state on nested reply",
+      "patch_sha256": "c18043d8f83a99d5bb87de417561f3fc3606800e2b97a94a55640ae5e872b072",
+      "paths": {
+        "drivers/android/binder/thread.rs": {
+          "ack_blob": "9b161efc84c851882ca48356f061f76e015831c7",
+          "port_blob": "70cf6149d4d4ffc5cbdd6fed189be3df57d8c3e8",
+          "lts_to_port_sha256": "10862a627e5f8990f236f09fc8bafc2fddedc3266bc0695d3911cffd615c7940"
+        }
+      }
+    },
+    {
+      "commit": "fcc8ec78de519fe20752e844c3401f637d3269e4",
+      "disposition": "adapted",
+      "rationale": "Retain read-only binderfs features/transaction_report advertising the implemented Rust Binder generic-netlink report interface. The feature initializer is true and file-creation failure propagates through existing filesystem setup; no writable setting is introduced. C Binder has the analogous capability file. Local Android uses Binder report netlink, although a reader of this particular feature filename was not established; capability truth and source/userspace interface compatibility justify retention without claiming a demonstrated SDK read.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "UPSTREAM: rust_binderfs: add transaction_report feature entry",
+      "patch_sha256": "d7c6d04d3b872b1b8d5a6f538a9dabdf0bcf3729e8760f78eac2fb2523ea0fc4",
+      "paths": {
+        "drivers/android/binder/rust_binderfs.c": {
+          "ack_blob": "968cf39f7879d6861ea390c2a7ec1efd0f4cd098",
+          "port_blob": "968cf39f7879d6861ea390c2a7ec1efd0f4cd098",
+          "lts_to_port_sha256": "7e1c59fe8c53ba5018f51538b9946e43a3a2451d3069023db8a09227f4a64a38"
+        }
+      }
+    },
+    {
+      "commit": "da2402dd6d292c0b8d2d4b0e0255364998c004b1",
+      "disposition": "adapted",
+      "rationale": "Retain retrying atomic fetch_add when it returns zero, so internal usize debug IDs can use zero as absent/uninitialized even after counter wrap. Relaxed ordering suffices for an identifier counter rather than object publication. Logs and TransactionInfo use the sentinel; the u32 UAPI projection can still wrap and is not claimed globally unique. No new access-control authority is based on the counter.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "BACKPORT: FROMGIT: rust_binder: never return 0 from next_debug_id",
+      "patch_sha256": "3f891fd7cd5f142bd43f1e9f41ac11d4112eb9fcc8cd3deea5ab26521c7214b2",
+      "paths": {
+        "drivers/android/binder/rust_binder_main.rs": {
+          "ack_blob": "0193addad5cb5705967eb2c71bf78c117d1b04a8",
+          "port_blob": "3fdc8d72ef3e7db214e72b3fb627909bd9ad98cd",
+          "lts_to_port_sha256": "9d59b1637c115f99cb17ecf5e5e764ac63dfe3838868fc886dd4bd649e4c3d32"
+        }
+      }
+    },
+    {
+      "commit": "e2f26a52bf5dc8436968ab52a5758b6d9e5f11da",
+      "disposition": "adapted",
+      "rationale": "Retain Kuid::current_euid for both outgoing transaction and reply sender identity, instead of the opener group leader task euid. The helper calls native current_euid, reflecting the submitting task subjective credentials; this avoids identifying a different thread credential context. Existing security::binder_transaction/transfer checks against pinned process credentials remain independently enforced. Local native C Binder likewise uses current_euid; no credential check is bypassed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "UPSTREAM: rust_binder: use current_euid() for transaction sender identity",
+      "patch_sha256": "268b5cb2ae9788b7f0dfef2aa2d13002eea7410aa0c69c7e83b8979c0b2557f3",
+      "paths": {
+        "drivers/android/binder/transaction.rs": {
+          "ack_blob": "3271e20887989f233788d029dca7af25ee1941ec",
+          "port_blob": "46b8e24f786731d9e6579f19485b064f9577714c",
+          "lts_to_port_sha256": "9de4d387444a49260a2babffccaa5fb16e7fc33854cded1ea62c5951b47a9fe2"
+        }
+      }
+    },
+    {
+      "commit": "f4449e8af850d903dc151af71ee1c8d2bb5c0408",
+      "disposition": "adapted",
+      "rationale": "Retain current.group_leader identity check before Allocation drop schedules close_on_free descriptors. This avoids closing unrelated descriptor numbers in a different process context during cleanup. Target-process references keep identity valid; kernel-thread/process-exit cleanup skips these closes. Existing allocation failure or invalid-fd errors can skip closes and are not claimed eliminated. Native fd ownership and DeferredFdCloser behavior remain separately reviewed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "UPSTREAM: rust_binder: check current before closing fds",
+      "patch_sha256": "35fe42aecaa34a5d9d35959066fd46d013563368c364e127798856146745dee9",
+      "paths": {
+        "drivers/android/binder/allocation.rs": {
+          "ack_blob": "498b6b5567e315f9e2388b90719df51b3bce1df8",
+          "port_blob": "498b6b5567e315f9e2388b90719df51b3bce1df8",
+          "lts_to_port_sha256": "c29cb6060059e5bfc73d669d85ea79d2e1139fc900317c0fb200dd69fbfb1730"
+        }
+      }
+    },
+    {
+      "commit": "4f90f9b71209fdb979874ce733b771fa6dd09f73",
+      "disposition": "adapted",
+      "rationale": "Retain updating NodeDeath cleared state under node_refs, then dropping node_refs before scheduling a notification onto thread/process work lists. The final clear_death preserves handle/cookie validation and the state decision, while moving queueing and possible final destruction outside the reference lock. This is a required preparation for the spinlock conversion, not a change to user notification contents.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "FROMGIT: rust_binder: schedule NodeDeath outside of node_refs lock",
+      "patch_sha256": "edb1b9fda0bedb804c8f94a84b18e1f8308462ba46f3470a812ffd29ddbd0bc0",
+      "paths": {
+        "drivers/android/binder/process.rs": {
+          "ack_blob": "7d7757321510bf031395f8f707a5c0b55103f206",
+          "port_blob": "5a2092bf9f0ad292122492bd937a5cdc7b625a9d",
+          "lts_to_port_sha256": "e5f53c605f175e52e2bd93df2785a3a7044af0b8451664efbb7e2d80d1b2c6a6"
+        }
+      }
+    },
+    {
+      "commit": "3234474195863cc7ff8f37a164e1fd1883475a28",
+      "disposition": "adapted",
+      "rationale": "Retain NodeDeath ownership inside NodeRefInfo during process cleanup: mark it cleared without taking/dropping the reference under node_refs. The final deferred_release subsequently takes by_handle/by_node trees, releases the lock, and drops both trees. This prevents recursive/final destruction under the reference spinlock while still removing remote node links and clearing notifications.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "FROMGIT: rust_binder: keep NodeDeath in NodeRefInfo during process cleanup",
+      "patch_sha256": "8b84a094ea95a1ba112c0c836ed7febe5901398b9f45eeac2f6fd8c5dfc17106",
+      "paths": {
+        "drivers/android/binder/process.rs": {
+          "ack_blob": "7d7757321510bf031395f8f707a5c0b55103f206",
+          "port_blob": "5a2092bf9f0ad292122492bd937a5cdc7b625a9d",
+          "lts_to_port_sha256": "e5f53c605f175e52e2bd93df2785a3a7044af0b8451664efbb7e2d80d1b2c6a6"
+        }
+      }
+    },
+    {
+      "commit": "deb1b4fda7d8be51dcb860a6dfead128c108da14",
+      "disposition": "adapted",
+      "rationale": "Retain vacant-entry reservation reuse in insert_or_update_handle and explicitly release node_refs before returning ESRCH with newly initialized NodeRefInfo owners. Tree storage and UniqueArc allocations occur before locking; bitmap growth releases/reacquires the lock and repeats the node lookup. Existing-node absorb leaves an existing owner and clears transferred counts. The dead-process check and insertion ordering remain, preventing missed cleanup and destructors under the spinlock.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "FROMGIT: rust_binder: avoid destructors in insert_or_update_handle()",
+      "patch_sha256": "a79d0b0f905b69e46e3cf3587127dd5c3cb1530a1927d789618d1d25796a6577",
+      "paths": {
+        "drivers/android/binder/process.rs": {
+          "ack_blob": "7d7757321510bf031395f8f707a5c0b55103f206",
+          "port_blob": "5a2092bf9f0ad292122492bd937a5cdc7b625a9d",
+          "lts_to_port_sha256": "e5f53c605f175e52e2bd93df2785a3a7044af0b8451664efbb7e2d80d1b2c6a6"
+        }
+      }
+    },
+    {
+      "commit": "5d59eb711bc6253d300978c8f62bd9ae6de52249",
+      "disposition": "adapted",
+      "rationale": "Retain Process.node_refs as SpinLock with matching initializer together with its complete allocation/destructor-preparation series. All node_refs lock sites in process.rs and freeze.rs were inspected: usercopy occurs outside guards; tree/message reserves precede locking; bitmap/freeze-vector allocation retries release locks and revalidate; terminal node/death/vector ownership is deferred outside guards. Bitmap replacement frees native kmalloc storage through bitmap_free/kfree; failed poll SetOnce publication uses the previously adapted embedded-RCU PollCondVarBox destructor, not synchronize_rcu under the lock. Debug formatting uses existing seq-file operations. This reduces the mutex preemption/priority-inversion window without claiming a measured SDK latency or exhaustive runtime lockdep/concurrency result.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "FROMGIT: rust_binder: update Process::node_refs to use SpinLock",
+      "patch_sha256": "8d4a231370849b963cfef1ec781ab8300b96daa500db590699a7b070eadcdd71",
+      "paths": {
+        "drivers/android/binder/process.rs": {
+          "ack_blob": "7d7757321510bf031395f8f707a5c0b55103f206",
+          "port_blob": "5a2092bf9f0ad292122492bd937a5cdc7b625a9d",
+          "lts_to_port_sha256": "e5f53c605f175e52e2bd93df2785a3a7044af0b8451664efbb7e2d80d1b2c6a6"
+        }
+      }
+    },
+    {
+      "commit": "09414a80ed6c1af988fae06554d28c28bc2f4b15",
+      "disposition": "adapted",
+      "rationale": "Retain logarithmic lower-bound node-debug enumeration, adapted in f1b305f3bd93 to checked_add for the caller-supplied starting pointer. UINT64_MAX now returns the zero/empty result instead of panicking with CONFIG_RUST_OVERFLOW_CHECKS=y or wrapping to the first node. All other lookups return the first strictly greater node, matching native C Binder. The existing process lock protects the cursor and field copy; usercopy occurs outside it. Local ProcessState::getKernelReferences uses this ioctl. Extracted checks pass 2052 cases; the ACK control panics in 125 maximum-pointer cases, demonstrating a user-triggerable denial-of-service defect in the unadapted code.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "f1b305f3bd93265a8f00868694fda18e117d4e40"
+      ],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "BACKPORT: FROMGIT: rust_binder: speed up get_node_debug_info using lower_bound iter",
+      "patch_sha256": "c9f520ef7167a1f6880ad54ea9ba3a62d95bde5d1556d0e6e85f925b2ea7529c",
+      "paths": {
+        "drivers/android/binder/process.rs": {
+          "ack_blob": "7d7757321510bf031395f8f707a5c0b55103f206",
+          "port_blob": "5a2092bf9f0ad292122492bd937a5cdc7b625a9d",
+          "lts_to_port_sha256": "e5f53c605f175e52e2bd93df2785a3a7044af0b8451664efbb7e2d80d1b2c6a6"
+        }
+      }
+    },
+    {
+      "commit": "3deed10abfb11390078cf0473f17967077136a52",
+      "disposition": "already-represented-upstream",
+      "rationale": "Retain pinned-LTS extended-error fix: mutate the stored per-thread error, clear on query/new transaction, and deliver reply construction errors to the originating thread without overwriting an existing error. Caller still gets transaction-complete for a failed reply. Debug formatting and moved debug-id generation are also present. Final logging/netlink adaptations preserve these effects, with first-error checks under the thread lock and bounded usercopy after unlocking. Local IPCThreadState::logExtendedError consumes the interface. Later native only-print-with-source behavior is preserved; no duplicate patch is applied.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "FROMLIST: rust_binder: fix BINDER_GET_EXTENDED_ERROR",
+      "patch_sha256": "7e2bfed1d150db3b9bc268d8771cf441d877997cacc0e5a4c907d6f4e3e0e009",
+      "paths": {
+        "drivers/android/binder/error.rs": {
+          "ack_blob": "7100ffbc58020e7f269c44e4565b5b1ecb1d4814",
+          "port_blob": "7100ffbc58020e7f269c44e4565b5b1ecb1d4814",
+          "lts_to_port_sha256": "43c4fca1b630afdba7bf27683d8e0f1b879d66038a766aa3fc91badb2a87c761"
+        },
+        "drivers/android/binder/thread.rs": {
+          "ack_blob": "9b161efc84c851882ca48356f061f76e015831c7",
+          "port_blob": "70cf6149d4d4ffc5cbdd6fed189be3df57d8c3e8",
+          "lts_to_port_sha256": "10862a627e5f8990f236f09fc8bafc2fddedc3266bc0695d3911cffd615c7940"
+        },
+        "drivers/android/binder/transaction.rs": {
+          "ack_blob": "3271e20887989f233788d029dca7af25ee1941ec",
+          "port_blob": "46b8e24f786731d9e6579f19485b064f9577714c",
+          "lts_to_port_sha256": "9de4d387444a49260a2babffccaa5fb16e7fc33854cded1ea62c5951b47a9fe2"
+        }
+      }
+    },
+    {
+      "commit": "a77715a18da8ddfd6474090235eca3bf721b1787",
+      "disposition": "already-represented-upstream",
+      "rationale": "Retain pinned-LTS fix removing the outdated queued oneway allocation node before TF_UPDATE_TXN discards it, preventing a false completion from advancing the live oneway queue. The removed node and obsolete transaction owners are declared before the process guard so their destruction occurs after unlocking. Normal cancel/thread-exit still completes an actually active oneway transaction. Final port keeps this exact control effect alongside tracing/logging; no duplicate patch is applied.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "UPSTREAM: rust_binder: avoid calling pending_oneway_finished() on TF_UPDATE_TXN",
+      "patch_sha256": "c4c715b9d0f99b88a716582ec41820db71a80a4293847a961850462bad7dc78b",
+      "paths": {
+        "drivers/android/binder/allocation.rs": {
+          "ack_blob": "498b6b5567e315f9e2388b90719df51b3bce1df8",
+          "port_blob": "498b6b5567e315f9e2388b90719df51b3bce1df8",
+          "lts_to_port_sha256": "c29cb6060059e5bfc73d669d85ea79d2e1139fc900317c0fb200dd69fbfb1730"
+        },
+        "drivers/android/binder/transaction.rs": {
+          "ack_blob": "3271e20887989f233788d029dca7af25ee1941ec",
+          "port_blob": "46b8e24f786731d9e6579f19485b064f9577714c",
+          "lts_to_port_sha256": "9de4d387444a49260a2babffccaa5fb16e7fc33854cded1ea62c5951b47a9fe2"
+        }
+      }
+    },
+    {
+      "commit": "0487f3a4e332e5bcaccdf0c4facf1d7f8dd38c92",
+      "disposition": "already-represented-upstream",
+      "rationale": "Retain pinned-LTS abnormal freeze-listener cleanup when the last node reference is dropped or the process exits. It removes the listener from both lookup/list relationships, breaking the reference cycle, and returns emptied vector ownership for destruction outside locking. Current update_ref declares cleanup owners before its guard and process exit takes the listener map before cleaning it. Subsequent spinlock preparation is retained without undoing this LTS lifetime fix; no duplicate patch is applied.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "UPSTREAM: rust_binder: clear freeze listener on node removal",
+      "patch_sha256": "525dc1d22d7f1a72bbadb524efccd56dcc53e3ca388f4f338c58dc24a5539981",
+      "paths": {
+        "drivers/android/binder/freeze.rs": {
+          "ack_blob": "588dcb85212dfef5970e70f36f5c900adff30f45",
+          "port_blob": "588dcb85212dfef5970e70f36f5c900adff30f45",
+          "lts_to_port_sha256": "053588f793a8b6cadbcac03d36c0f8c76547a0e523e696db18244205952a1a24"
+        },
+        "drivers/android/binder/node.rs": {
+          "ack_blob": "7146516206038345fdb186b0cfb44035173930f3",
+          "port_blob": "fcf724f892100aec5e0078f8b970cc591ac3d5da",
+          "lts_to_port_sha256": "6d97d93ff67361403ed08e002ac02e246b970ffb316992ef178d55d097666dd0"
+        },
+        "drivers/android/binder/process.rs": {
+          "ack_blob": "7d7757321510bf031395f8f707a5c0b55103f206",
+          "port_blob": "5a2092bf9f0ad292122492bd937a5cdc7b625a9d",
+          "lts_to_port_sha256": "e5f53c605f175e52e2bd93df2785a3a7044af0b8451664efbb7e2d80d1b2c6a6"
+        }
+      }
+    },
+    {
+      "commit": "fb1cf0c36f9fc2544483ca9db21933f4f277b768",
+      "disposition": "adapted",
+      "rationale": "Retain bitmap-backed per-process Binder handle allocation through the previously reviewed IdPool. It preserves manager-only handle zero, acquires a bit only after both tree insertions succeed, releases it when the corresponding reference is removed, and detects a bitmap/tree mismatch without returning an occupied handle. Tree/node storage is reserved before locking; growth and shrink allocation release node_refs and revalidate after reacquisition. The second by_node lookup handles concurrent insertion, while the unused reservation has not set its bit. Shrink failure leaves a valid old bitmap. This avoids linear tree walks at increasing handle counts; no benchmark from the historical message was reproduced or adopted as SDK evidence.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "UPSTREAM: rust_binder: use bitmap for allocation of handles",
+      "patch_sha256": "b0e1c643936ca0bb62cccfc78dcb6f12c9094219dd6351cf4a23dba8cc24abf3",
+      "paths": {
+        "drivers/android/binder/process.rs": {
+          "ack_blob": "7d7757321510bf031395f8f707a5c0b55103f206",
+          "port_blob": "5a2092bf9f0ad292122492bd937a5cdc7b625a9d",
+          "lts_to_port_sha256": "e5f53c605f175e52e2bd93df2785a3a7044af0b8451664efbb7e2d80d1b2c6a6"
+        }
+      }
+    },
+    {
+      "commit": "a9db114383c86bbc874bf477f2a8236cfd712256",
+      "disposition": "adapted",
+      "rationale": "Retain KVVec<Arc> context/process ownership in place of manual intrusive-list removal. CONTEXTS and Context.manager remain mutexes, allowing fallible GFP_KERNEL vector growth; new context/process registration propagates allocation failure and the local Arc unwinds the unpublished object. Deregistration compares Arc identity and the caller holds an owner while retain removes the registry reference. Snapshots clone owners under the same mutex, and PID filtering holds live Task references. Context manager UID/LSM checks remain unchanged. The refactoring supports the selected driver and shared later memory-management changes, without a new platform or binary-layout promise.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "UPSTREAM: rust_binder: refactor context management to use KVVec",
+      "patch_sha256": "ee0480ba4828937157deef3c282e14d060d509bd999645fb5753b12695214696",
+      "paths": {
+        "drivers/android/binder/context.rs": {
+          "ack_blob": "171215206a6323871149adf38880353858f66c3d",
+          "port_blob": "171215206a6323871149adf38880353858f66c3d",
+          "lts_to_port_sha256": "7e97bd3784d5924f1a25722014dec0dc18d92c77e097414ba3d960d263e91447"
+        },
+        "drivers/android/binder/process.rs": {
+          "ack_blob": "7d7757321510bf031395f8f707a5c0b55103f206",
+          "port_blob": "5a2092bf9f0ad292122492bd937a5cdc7b625a9d",
+          "lts_to_port_sha256": "e5f53c605f175e52e2bd93df2785a3a7044af0b8451664efbb7e2d80d1b2c6a6"
+        }
+      }
+    },
+    {
+      "commit": "ec0bfee750f43e829f95e1fafa91ef1bbd197398",
+      "disposition": "adapted",
+      "rationale": "Retain conservative shrinking of Context.manager.all_procs after deregistration: trigger only below one-quarter capacity and target twice the remaining length. Under that predicate len*2 is bounded by the existing allocation capacity. The manager mutex permits GFP_KERNEL reallocation; the already reviewed KVVec shrink implementation preserves data/capacity on failure. Caller-owned Process Arc prevents destruction of the removed process under the manager lock. This releases excess metadata memory without claiming measured latency or changing registration semantics.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "UPSTREAM: rust_binder: shrink all_procs when deregistering processes",
+      "patch_sha256": "b643d17f2c5ac74df1e03d7c106c7167121da692d3825c2ba0788e25590df2b0",
+      "paths": {
+        "drivers/android/binder/context.rs": {
+          "ack_blob": "171215206a6323871149adf38880353858f66c3d",
+          "port_blob": "171215206a6323871149adf38880353858f66c3d",
+          "lts_to_port_sha256": "7e97bd3784d5924f1a25722014dec0dc18d92c77e097414ba3d960d263e91447"
+        }
+      }
+    },
+    {
+      "commit": "68650726d7ef5ed3c66afdc2bebaff98eb9fbcb9",
+      "disposition": "adapted",
+      "rationale": "Retain KVVec for files_to_translate and descriptor reservations so large Binder fd-array metadata can use vmalloc instead of requiring a large contiguous allocation. Current prepare_file_list takes Allocation out of its spinlock before translation, and error cleanup/commit occur outside that lock. Per-file references and FileDescriptorReservation RAII remain; failure releases uninstalled reservations, and installation occurs only after transaction usercopy succeeds. Checked vector capacity/allocation and native fd limits still apply. The smaller u32 close_on_free vector intentionally remains KVec as in the patch; no claim that all contiguous Binder allocations are removed. Historical QEMU/benchmark claims and linked resources were not independently accessed or reproduced.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-runtime-review.json",
+        "SECURITY.md: Rust Binder lifecycle and query review"
+      ],
+      "subject": "FROMGIT: rust_binder: use KVVec for files_to_translate",
+      "patch_sha256": "1f5c112db24f2c766ca799e4a4b6a013b0bff54828e28ddc0752d740625688a8",
+      "paths": {
+        "drivers/android/binder/allocation.rs": {
+          "ack_blob": "498b6b5567e315f9e2388b90719df51b3bce1df8",
+          "port_blob": "498b6b5567e315f9e2388b90719df51b3bce1df8",
+          "lts_to_port_sha256": "c29cb6060059e5bfc73d669d85ea79d2e1139fc900317c0fb200dd69fbfb1730"
+        }
+      }
+    }
+  ],
+  "upstream_changed_line_equivalence": {
+    "3deed10abfb1": {
+      "lts_commit": "bd818dcf4783ef5b924732f0ec52d931b94459bf",
+      "comparison": "Ordered added/removed lines, whitespace normalized, equal per path; context and commit metadata excluded. Final source effects separately reviewed.",
+      "paths": {
+        "drivers/android/binder/error.rs": "7ce2b67a6689a2f9b6c1402ac429d0bbf0506e497e20f4b0ca7ff00752c38501",
+        "drivers/android/binder/thread.rs": "41d4861ceba528d388cd33e5df1d5697612a693862e3ddc5ff10c953f1cbbe9e",
+        "drivers/android/binder/transaction.rs": "6f741f50f5fc2914c777f6b14046d015b72214dcaf9a222c5ed76fadbf6c3c63"
+      }
+    },
+    "a77715a18da8": {
+      "lts_commit": "667599e718329b4e8396e6958aa16295554278ee",
+      "comparison": "Ordered added/removed lines, whitespace normalized, equal per path; context and commit metadata excluded. Final source effects separately reviewed.",
+      "paths": {
+        "drivers/android/binder/allocation.rs": "0c49b144bd1a08e1c78654bc6f16db14df7e8c1661270084da52bb9195fe6850",
+        "drivers/android/binder/transaction.rs": "2c33ab206d050098eb8b693025bb8256f5a5049513f286d25d2d102807ccc5dc"
+      }
+    },
+    "0487f3a4e332": {
+      "lts_commit": "91b27f8172cdbf265240104772fd042a461a7767",
+      "comparison": "Ordered added/removed lines, whitespace normalized, equal per path; context and commit metadata excluded. Final source effects separately reviewed.",
+      "paths": {
+        "drivers/android/binder/freeze.rs": "19feafcbdb6ab257fc8b0c632f2efcf0e509223e834229d79bfca02187f75b27",
+        "drivers/android/binder/node.rs": "2d8c7f6330d07b07dd169c9cb29fd86f2798ac6aee453393c09cab3a2e9ee649",
+        "drivers/android/binder/process.rs": "6f3286c17c0092c1bb87c6625f39ce16470005852580650d2f20735433060fcd"
+      }
+    }
+  },
+  "scope": "Complete 26 candidate patches and final directly affected control/data paths. All node_refs lock sites in process.rs and freeze.rs, their cleanup/ownership and allocation helpers reviewed; this is not a runtime lockdep or entire-driver correctness proof. Complete context.rs, handle insertion/removal, fd translation/commit and vector shrink paths also examined.",
+  "local_evidence": [
+    "frameworks/native/libs/binder/ProcessState.cpp: getKernelReferences, extended_error feature reads",
+    "frameworks/native/libs/binder/IPCThreadState.cpp: logExtendedError and ioctl",
+    "drivers/android/binder.c: strict greater-than node enumeration and current_euid sender",
+    "drivers/android/binder/{process,thread,node,allocation,freeze,transaction,error}.rs: final locking, transfer, cleanup and query paths",
+    "rust/kernel/{task.rs,sync/aref.rs,sync/poll.rs,sync/set_once.rs,id_pool.rs,bitmap.rs}: identity, deferred frees and allocation behavior",
+    "lib/bitmap.c: bitmap_free delegates to kfree",
+    "fs/ioctl.c: unchanged compat_ptr_ioctl implementation"
+  ],
+  "checks": [
+    "evidence/rust-binder-node-query-check.json",
+    "evidence/rust-binder-priority-check.json",
+    "evidence/rust-container-api-review.json",
+    "evidence/rust-ratelimit-lockdep-review.json"
+  ],
+  "validation": "Build 100 passed source f1b305f3bd93 with both images, 100 common and 45 virtual-device modules, 145 verified signatures with tampered control rejected, and 659 protected exports/145 matching flag/CRC tables. Node-query change passes 2052 host cases with 125 ACK-control panics. Existing priority checks and native-source comparisons support the scoped decisions. No Android process, actual ioctl, concurrency/lockdep, task credential override or descriptor cleanup executed.",
+  "remote_sources_used": []
+}

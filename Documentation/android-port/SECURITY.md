@@ -3907,3 +3907,152 @@ usercopy/error handling and the memfd-only shmem gate remain; unknown memfd ioct
 return ENOTTY. The SDK builds IA32/COMPAT, but no actual 32-bit client was run.
 The independent shared EOF/page-emulation question remains open and is not
 certified by these ashmem decisions. No remote resource was accessed.
+
+## Rust Binder priority and trace interfaces
+
+Retain Android priority inheritance in the optional Rust Binder driver. Local
+libbinder validates nice priorities -20..19 and RT priorities 1..99 and encodes
+the priority in eight wire bits. Native C Binder decodes those bits through s8.
+f7ca990e55b1 fixes Rust's unsigned interpretation of negative nice priorities and
+bounds the unsigned RLIMIT_RTPRIO before converting to i32, so large/infinite
+limits cannot truncate negative. CAP_SYS_NICE, zero-RT-limit fallback, bounded
+RLIMIT_NICE and native scheduler validation remain. RESET_ON_FORK is retained.
+These Rust adaptations do not replace native scheduler implementation or give
+malformed node flags authority to bypass its priority range checks.
+
+Keep the selected port's comparison against desired priority after suppressing
+unrequested RT inheritance, matching C Binder. Save the actual selected thread's
+policy/priority, preserving the effect of 80c8d66849ff even though the final ACK
+boundary regressed that line. The pending/abort protocol and once-only atomic
+selection remain. Restore the default priority before publishing a waiting
+thread in the ready list; retain sender-side boosting before delivery/wakeup.
+These two ordering changes prevent a waiter overwriting an incoming boost and
+avoid relying only on receiver self-boost. RT conversion retains saturating
+subtraction; in the final signed types it saturates to the signed bound, not the
+zero described in the historical unsigned implementation's commit message.
+
+check_rust_binder_priority.py extracts the real decoding, limit conversion,
+priority setting and selection methods. It passes 3,731 assertions over every
+wire byte/policy, signed extremes, zero/large resource limits, capability cases,
+distinct target-thread/process priorities, pending restoration and once-only
+selection. The pinned ACK control has 646 failed assertions. Task storage,
+capability reads, scheduler effects, locks and hooks are host shims. This checks
+decisions, not real Binder IPC, concurrent priority restoration or scheduling.
+
+Retain priority and looper vendor hooks as generic source customization APIs;
+exact SDK vendor callbacks are unconfirmed, which is explicitly recorded in
+unresolved-feature-questions.json. Bare hooks are not exposed as tracefs events.
+They invoke trusted kernel callbacks synchronously with live borrowed objects;
+looper notifications run under the thread lock and callbacks must obey that
+context. They report state, without promising exactly-once notification.
+
+Hook definitions and the seven GPL exports remain built-in when Rust Binder is
+a module. Build 98's Module.symvers confirms all seven resolve to vmlinux. This
+avoids requiring an early-loaded vendor module to depend on rust_binder.ko.
+RUST_BINDER_LAYOUT contains this build's computed offsets and is published
+before the driver filesystem. Successful activation pins the module as described
+above; inactive modules cannot generate these hooks. Consumers must only read
+live objects supplied by the driver. Retain READ_ONCE and conservative null/RCU
+contracts for task accessors; current Process/Thread task fields own non-null
+ARef values. No future task-nulling implementation is imported.
+
+4b5a05d8f96b derives task-pointer offsets using ARef::PTR_OFFSET and the node
+allocation offset using DArc<Node>, avoiding assumptions about wrapper field
+position or the alignment of a different container type. This describes the
+current layout rather than fixing a historical binary layout; no incorrect
+offset in the pinned compiler's previous output is asserted. The metadata's
+ANDROID_BACKPORT_RESERVE padding and corresponding Rust zeros remain omitted
+because their sole purpose is historical KMI continuity. Vendor modules must be
+rebuilt. 3ca803b94e61 also declares the public looper hook's opaque thread type
+and forward-declares task_struct, removing dependence on the private header's
+inclusion order.
+
+Keep Binder trace names used by local atrace and Perfetto. The complete trace
+patch was reviewed, including all callsites, C field accessors, layout constants
+and the shrinker path that copies scalar pid/page index before dropping locks.
+3ca803b94e61 corrects node_ptr to the user-supplied node address, translated_handle
+to the translated object's handle, and page-range traces from page indices to
+byte units. Diagnostic conversion saturates and clamps reversed ranges; it does
+not change memory allocation. Exposing the actual user node address restores
+the native C tracing information class, subject to existing tracefs DAC/SELinux
+policy; it is not a kernel pointer or transaction payload. Return-command string
+lookups remain bounded. Event removal for the dual-driver selector is a separate
+review, not certified by this trace decision. Build 99 passed the later trace/layout changes with both images and all 145
+modules/signatures and matching export tables; no trace session, vendor callback
+or driver load was run.
+No additional remote resource was accessed. Exact per-commit evidence and result
+IDs are in rust-binder-priority-hooks-review.json.
+
+## Rust Binder lifecycle and query review
+
+f1b305f3bd93 bounds the caller-controlled node-debug lookup at UINT64_MAX. The
+ACK lower-bound optimization added one to the supplied pointer without checking
+for overflow; the SDK enables Rust overflow checks, making that ioctl argument
+a kernel-panic trigger. The port now returns the empty result at the maximum,
+as native C Binder's strictly-greater traversal does. Other queries retain the
+logarithmic lookup under the process lock, with usercopy after unlocking. Local
+ProcessState::getKernelReferences consumes this interface. The extracted method
+passes 2,052 cases over empty/populated maps and pointer boundaries; the pinned
+ACK control panics in 125 cases. Trees, usercopy, references and locks are host
+shims, so this is no claim of an executed kernel ioctl or concurrent traversal.
+
+Three reviewed ACK fixes already have equivalent changed lines in pinned LTS:
+3deed10abfb1 matches bd818dcf4783 for extended errors, a77715a18da8 matches
+667599e71832 for obsolete oneway transaction cleanup, and 0487f3a4e332 matches
+91b27f8172cd for abnormal freeze-listener removal. Ordered added/removed lines
+match per file after whitespace normalization, independently of differing patch
+context. The final source was checked for each effect. Preserve stored extended
+errors and remote reply-error delivery; preserve removing the obsolete queued
+transaction's oneway node before drop; preserve breaking the listener reference
+cycle when its node reference disappears. None is replayed as a duplicate.
+
+Keep the node_refs spinlock conversion together with all allocation/destructor
+preparation. All lock sites in process.rs and freeze.rs were inspected. Usercopy
+is outside the guards; node/message/tree allocation precedes locking; bitmap and
+freeze-vector expansion releases/reacquires and revalidates. Terminal tree,
+NodeRefInfo, NodeDeath and vector ownership is moved outside guards. Clearing a
+death notification remains atomic under node_refs, while queueing occurs after
+unlocking. Process cleanup keeps NodeDeath in NodeRefInfo until the detached
+trees are dropped. Insertion preserves reservations and releases node_refs before
+returning a dead-process error with newly initialized objects. Native bitmap_free
+uses kfree; rejected poll initialization uses the earlier embedded-RCU destructor.
+This source review does not replace runtime lockdep or a concurrency proof.
+
+Preserve current-task subjective EUID for outgoing transactions and replies,
+independently of the existing LSM checks using pinned process credentials. Keep
+object-identity Task/ARef comparisons for current-process ownership and descriptor
+cleanup. Allocation destruction only schedules close_on_free in the target
+process context, avoiding unrelated descriptors in another process. Existing
+allocation/invalid-fd failures may skip closes; this review does not claim to fix
+those cases. BC_FREE_BUFFER keeps its explicit owned drop after the temporary
+looper flag lock guard has ended.
+
+Keep native compat_ptr_ioctl for pointer/ignored Binder ioctl arguments, gated by
+CONFIG_COMPAT. SDK IA32/COMPAT builds it; no 32-bit client was run. Keep target
+process default priority for oneway calls, minimum-node comparison after RT
+suppression, and pending parent-priority state for nested replies. Their
+capability/resource-limit and once-only selection guards remain as reviewed above.
+
+Retain stable diagnostic crate/wait-symbol names, scalar allocation trace fields,
+zero-skipping internal debug IDs, and the read-only transaction_report capability
+file for the implemented netlink interface. Local libbinder reads extended_error
+and uses netlink reports; a reader of transaction_report itself was not found,
+and is not claimed. Internal IDs and their u32 UAPI projections can wrap and are
+not security identities. No performance measurement is inferred from source
+optimizations. The full 26-candidate record and result IDs are in
+rust-binder-runtime-review.json. Build 100 passed the query adaptation with both images, 100 common and 45
+virtual-device modules, 145 verified signatures with tampered control rejected,
+and 659 protected exports/145 matching flag/CRC tables. No runtime Binder
+session, descriptor cleanup or credential override was executed. No
+additional remote resource was accessed.
+
+Retain bitmap-backed handle allocation with manager-only zero, bit/tree
+consistency checks and allocation retries outside node_refs. Context/process
+registries use KVVec<Arc> under mutexes with propagated registration errors,
+identity-based deregistration and live snapshots. Shrinking only below one-quarter
+capacity to twice the length bounds arithmetic and leaves valid data on failure.
+FD translation metadata and reservations also use KVVec; translation, rollback
+and fd installation occur after taking Allocation out of its spinlock. The
+smaller close_on_free u32 vector remains KVec. These selections retain Android
+runtime and memory-pressure behavior, without adopting historical benchmark or
+QEMU results as measurements of this port.
