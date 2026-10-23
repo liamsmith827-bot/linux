@@ -1326,7 +1326,11 @@ int get_nohz_timer_target(void)
 	bool done = false;
 
 	trace_android_rvh_get_nohz_timer_target(&cpu, &done);
-	if (done)
+	if (unlikely((unsigned int)cpu >= nr_cpu_ids || !cpu_online(cpu))) {
+		cpu = smp_processor_id();
+		done = false;
+	}
+	if (done && housekeeping_cpu(cpu, HK_TYPE_KERNEL_NOISE))
 		return cpu;
 
 	if (housekeeping_cpu(cpu, HK_TYPE_KERNEL_NOISE)) {
