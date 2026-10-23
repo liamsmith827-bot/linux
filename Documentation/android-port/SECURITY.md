@@ -4056,3 +4056,46 @@ and fd installation occur after taking Allocation out of its spinlock. The
 smaller close_on_free u32 vector remains KVec. These selections retain Android
 runtime and memory-pressure behavior, without adopting historical benchmark or
 QEMU results as measurements of this port.
+
+## Rust Binder diagnostic controls
+
+Retain the ten reviewed debug-mask, lifecycle logging and error-location changes
+with the selected Rust Binder driver. The C uint module parameter retains 0644
+permissions, native parsing/store serialization and the same default 0x7 mask as
+C Binder. The Rust Atomic<u32> has transparent representation and native atomic
+reads; build 100's module symbol is four bytes. No concurrent parameter-write or
+sysfs behavior was executed. Exact SDK use of this optional diagnostic control
+is unconfirmed; retaining it preserves the current driver's configuration API.
+
+All category callsites were reviewed. Replacing unconditional warning/error
+prints with optional info output changes diagnostic visibility, including
+severity and suppression. Validation, return codes, reference transitions,
+cleanup, BR_ERROR delivery and extended-error updates remain outside the mask.
+Later per-callsite rate limits remain in force, so repeated malformed requests
+cannot produce an unlimited stream from one callsite. This is not a lossless
+security audit log. The DeathNotification category is disabled by default;
+enabling it exposes existing cookie/handle metadata through printk access
+policy. No transaction payload or dereferenced user address is formatted.
+
+Worker cancellation records use a captured owning PID in ThreadError,
+DeliverCode and FreezeMessage instead of misidentifying the worker. Those scalar
+snapshots are diagnostic and can outlive PID reuse; they are not authorization
+identities. Constructor argument changes preserve the same work ownership,
+skip flag, return codes and cancellation behavior.
+
+ErrorLocation stores a static reference and formats only basename:line. Its
+transparent Option permits None to be zero initialized without creating a null
+reference. Active module pinning keeps the static location alive. Track-caller
+constructor/closure changes retain reply/errno values. Option<Error> likewise
+uses the already reviewed NonZeroI32 representation; None maps to numeric zero
+in log output and Some retains the original negative errno. There is no change
+to public error structure layout.
+
+Consolidated failure printing uses the final TransactionInfo and still requires
+an actual source errno, retaining the relevant LTS fix. Failed replies keep their
+remote failure while returning transaction-complete to the replying caller.
+TF_CLEAR_BUF and error cleanup remain unchanged. Ring histories and netlink
+reports are independent of the debug mask/rate limit. Source-equivalent build
+100 verifies compilation; no logging stress, debug toggle or cancellation run
+was performed. rust-binder-debug-review.json records every candidate and the
+built module symbol/hash evidence. No additional remote resource was accessed.

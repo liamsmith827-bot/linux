@@ -5908,5 +5908,125 @@
       "evidence/rust-binder-runtime-review.json",
       "SECURITY.md: Rust Binder lifecycle and query review"
     ]
+  },
+  {
+    "commit": "ee963ce24e80a99cf611531119524c95c308f633",
+    "disposition": "adapted",
+    "rationale": "Retain Rust Binder dynamic debug categories, mask and C uint module parameter with 0644 permissions, defaulting to UserError/FailedTransaction/DeadTransaction exactly like C Binder. The generic Atomic<u32> uses transparent storage and native atomic-read helpers; the built module has a four-byte debug-mask symbol. Kernel parameter parsing/locking and sysfs permissions remain native. TGID/PID formatting and process open/flush/release instrumentation are diagnostic-only. The later rate-limited printk form is retained; disabling logs does not disable validation or cleanup. Exact SDK debug-mask activation is unconfirmed, so retain this current-driver diagnostic configuration interface conservatively.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-debug-review.json",
+      "SECURITY.md: Rust Binder diagnostic controls"
+    ]
+  },
+  {
+    "commit": "ad7b7cec3693a7a3289131d2c9916005e32881aa",
+    "disposition": "adapted",
+    "rationale": "Retain mask-controlled, subsequently rate-limited UserError messages for invalid freeze references, cookies and notification states. The full patch only changes logging calls/format arguments; every original EINVAL return and state predicate is retained. Lowering severity from unconditional warning to optional info is intentional diagnostic policy; it neither accepts invalid commands nor promises every occurrence is logged.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-debug-review.json",
+      "SECURITY.md: Rust Binder diagnostic controls"
+    ]
+  },
+  {
+    "commit": "3d2685e983bbb065efb1864ecbd6aa5822d44905",
+    "disposition": "adapted",
+    "rationale": "Retain UserError logging for invalid handle/refcount/death-notification operations. The new get_transaction_node match returns the same NodeRef or converted error as the former question-mark propagation; weak-as-strong and invalid decrement rejection remain. All other changes are formatting/log selection. Cookie mismatch still restores the original death owner before returning. Current per-callsite rate limiting reduces repeated user-triggered logging, with no functional work hidden inside print arguments.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-debug-review.json",
+      "SECURITY.md: Rust Binder diagnostic controls"
+    ]
+  },
+  {
+    "commit": "d02ff88f9425a0b4deaed485d507a8f67203b62e",
+    "disposition": "adapted",
+    "rationale": "Retain UserError diagnostics for FDA alignment, scatter/gather bounds, usercopy failures and malformed transaction/reply stacks. Full patch reviewed: arithmetic/alignment checks and all error values remain; converting the apply_sg error branch to question-mark propagation only removes a redundant print. The explicit pop_transaction_to_reply match preserves conversion/return behavior. Logs format scalar metadata and errors, not dereferenced user pointers or transaction payloads.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-debug-review.json",
+      "SECURITY.md: Rust Binder diagnostic controls"
+    ]
+  },
+  {
+    "commit": "0139324591bfccec3f4fcb668f88ae222cca6117",
+    "disposition": "adapted",
+    "rationale": "Retain FailedTransaction details and fd-fixup diagnostics, reconciled through the later consolidated failure print. Retain the pinned-LTS rule that a transaction failure print requires an actual source errno, avoiding treating pending/dead statuses as an errno. Reply/error delivery and buffer ownership are outside logging. The final mask/rate-limit guards can suppress output but do not alter failure processing.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-debug-review.json",
+      "SECURITY.md: Rust Binder diagnostic controls"
+    ]
+  },
+  {
+    "commit": "b70d97c3cd5afb31f4becd0015118e618678caec",
+    "disposition": "adapted",
+    "rationale": "Retain optional DeathNotification diagnostics for allocation failure, request/clear lifecycle and BR_DEAD_BINDER delivery. BR_ERROR remains pushed before the OOM log, notification registration/clearing is unchanged, and delivery logs a cookie only after the existing delivered-list insertion. This category is off in the default 0x7 mask and is rate-limited when enabled; enabling it reveals existing diagnostic cookie/handle metadata through printk policy, not transaction contents.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-debug-review.json",
+      "SECURITY.md: Rust Binder diagnostic controls"
+    ]
+  },
+  {
+    "commit": "883880854a72ca501f17af2062228a9aabbe929c",
+    "disposition": "adapted",
+    "rationale": "Retain cancellation/dead-transaction diagnostics with captured owning process PID in ThreadError, DeliverCode and FreezeMessage. Cancel can run on a worker, so storing the originating PID avoids misleading worker identity. These are scalar metadata additions; constructors/calls preserve the same return codes, skip flag, work ownership and notification flow. Cancel still drops/returns work as before; it does not re-send completed work because of logging. PID values are diagnostic snapshots and may later be reused, not authorization identities.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-debug-review.json",
+      "SECURITY.md: Rust Binder diagnostic controls"
+    ]
+  },
+  {
+    "commit": "867eade4772138ae82b11641976883a158286951",
+    "disposition": "adapted",
+    "rationale": "Retain caller-location tracking in BinderError and basename:line formatting used by failed-transaction logs. All constructors and conversions retain their original reply/source values; closure/direct-call forms capture the driver callsite rather than a function-pointer adapter. ErrorLocation is transparent over a static shared reference, making zero Option represent None; no zero reference itself is constructed. Static locations stay live with the pinned active module. Formatting prints filename/line, not the pointer address, and unknown log location remains an explicit fallback.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-debug-review.json",
+      "SECURITY.md: Rust Binder diagnostic controls"
+    ]
+  },
+  {
+    "commit": "500630948c0d58e087f5d5df2054bed999ce4d9e",
+    "disposition": "adapted",
+    "rationale": "Retain Option<Error> in TransactionInfo instead of a raw errno. Error is transparent over NonZeroI32 with ZeroableOption support, so zero initialization remains valid and None represents absent error. Log conversion maps None to zero and Some to its unchanged native negative errno; reply failure copies the same optional source. This is internal representation with no historical KMI obligation and no change to the numeric UAPI/netlink error representation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-debug-review.json",
+      "SECURITY.md: Rust Binder diagnostic controls"
+    ]
+  },
+  {
+    "commit": "092d07f794d920ccadd3b05a69a3bf2ab3f71c0d",
+    "disposition": "adapted",
+    "rationale": "Retain consolidated failure logging after final TransactionInfo status is known, separately from return work passed to the calling thread. This includes failed replies whose caller receives BR_TRANSACTION_COMPLETE while the original sender receives BR_FAILED_REPLY. Local branch-to-question-mark rewrites preserve allocation/copy errors, TF_CLEAR_BUF still applies before publication, and native stored extended-error/first-error semantics remain. Final print requires Some(errno), preserving the LTS source-error guard. Removing unused is_dead only removes a diagnostic filter; transaction logs/netlink report paths remain independent of the mask and rate limit.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-binder-debug-review.json",
+      "SECURITY.md: Rust Binder diagnostic controls"
+    ]
   }
 ]

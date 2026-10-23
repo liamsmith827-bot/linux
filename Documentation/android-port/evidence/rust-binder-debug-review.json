@@ -1,0 +1,323 @@
+{
+  "source_head": "d08d0414ca5ed3be8f4bb37bd010248813d757c2",
+  "source_equivalent_build_100": "f1b305f3bd93265a8f00868694fda18e117d4e40",
+  "records": [
+    {
+      "commit": "ee963ce24e80a99cf611531119524c95c308f633",
+      "disposition": "adapted",
+      "rationale": "Retain Rust Binder dynamic debug categories, mask and C uint module parameter with 0644 permissions, defaulting to UserError/FailedTransaction/DeadTransaction exactly like C Binder. The generic Atomic<u32> uses transparent storage and native atomic-read helpers; the built module has a four-byte debug-mask symbol. Kernel parameter parsing/locking and sysfs permissions remain native. TGID/PID formatting and process open/flush/release instrumentation are diagnostic-only. The later rate-limited printk form is retained; disabling logs does not disable validation or cleanup. Exact SDK debug-mask activation is unconfirmed, so retain this current-driver diagnostic configuration interface conservatively.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-debug-review.json",
+        "SECURITY.md: Rust Binder diagnostic controls"
+      ],
+      "subject": "UPSTREAM: rust_binder: Add dynamic debug logging mask",
+      "patch_sha256": "3df43ecfe9fda8f9afe68aa4926463512d75d7de1495b01dff8e6f688cab3a1a",
+      "paths": {
+        "drivers/android/binder/debug.rs": {
+          "ack_blob": "6d8dcddf461913579f65c8152b00549f01f7d31d",
+          "port_blob": "6d8dcddf461913579f65c8152b00549f01f7d31d",
+          "lts_to_port_sha256": "1306e193f5d9b1a645c434adfd3f3984532b013d52c5404a49bbb739b45c0a1d"
+        },
+        "drivers/android/binder/process.rs": {
+          "ack_blob": "7d7757321510bf031395f8f707a5c0b55103f206",
+          "port_blob": "5a2092bf9f0ad292122492bd937a5cdc7b625a9d",
+          "lts_to_port_sha256": "e5f53c605f175e52e2bd93df2785a3a7044af0b8451664efbb7e2d80d1b2c6a6"
+        },
+        "drivers/android/binder/rust_binder_main.rs": {
+          "ack_blob": "0193addad5cb5705967eb2c71bf78c117d1b04a8",
+          "port_blob": "3fdc8d72ef3e7db214e72b3fb627909bd9ad98cd",
+          "lts_to_port_sha256": "9d59b1637c115f99cb17ecf5e5e764ac63dfe3838868fc886dd4bd649e4c3d32"
+        },
+        "drivers/android/binder/rust_binderfs.c": {
+          "ack_blob": "968cf39f7879d6861ea390c2a7ec1efd0f4cd098",
+          "port_blob": "968cf39f7879d6861ea390c2a7ec1efd0f4cd098",
+          "lts_to_port_sha256": "7e1c59fe8c53ba5018f51538b9946e43a3a2451d3069023db8a09227f4a64a38"
+        },
+        "rust/kernel/task.rs": {
+          "ack_blob": "ad5efcfe5bd660d5cb433c0642b29599aede5c24",
+          "port_blob": "1ca29152b56e7a05d7dd80839dbad9077f2f70f8",
+          "lts_to_port_sha256": "43ab3652e66b46e75c06580a3409038ff8b23255dd825697c7c8736bc9b2eb95"
+        }
+      }
+    },
+    {
+      "commit": "ad7b7cec3693a7a3289131d2c9916005e32881aa",
+      "disposition": "adapted",
+      "rationale": "Retain mask-controlled, subsequently rate-limited UserError messages for invalid freeze references, cookies and notification states. The full patch only changes logging calls/format arguments; every original EINVAL return and state predicate is retained. Lowering severity from unconditional warning to optional info is intentional diagnostic policy; it neither accepts invalid commands nor promises every occurrence is logged.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-debug-review.json",
+        "SECURITY.md: Rust Binder diagnostic controls"
+      ],
+      "subject": "UPSTREAM: rust_binder: Implement BINDER_DEBUG_USER_ERROR for freezer-related operation",
+      "patch_sha256": "e374e8cc3e0a1d76397d290a66d7097fac92c780d449ab5608206da6b7bb7a18",
+      "paths": {
+        "drivers/android/binder/freeze.rs": {
+          "ack_blob": "588dcb85212dfef5970e70f36f5c900adff30f45",
+          "port_blob": "588dcb85212dfef5970e70f36f5c900adff30f45",
+          "lts_to_port_sha256": "053588f793a8b6cadbcac03d36c0f8c76547a0e523e696db18244205952a1a24"
+        }
+      }
+    },
+    {
+      "commit": "3d2685e983bbb065efb1864ecbd6aa5822d44905",
+      "disposition": "adapted",
+      "rationale": "Retain UserError logging for invalid handle/refcount/death-notification operations. The new get_transaction_node match returns the same NodeRef or converted error as the former question-mark propagation; weak-as-strong and invalid decrement rejection remain. All other changes are formatting/log selection. Cookie mismatch still restores the original death owner before returning. Current per-callsite rate limiting reduces repeated user-triggered logging, with no functional work hidden inside print arguments.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-debug-review.json",
+        "SECURITY.md: Rust Binder diagnostic controls"
+      ],
+      "subject": "UPSTREAM: rust_binder: Implement BINDER_DEBUG_USER_ERROR for refcounting and death notifications",
+      "patch_sha256": "bd5f21d8c42350b49d88d3b537a4d57391cfd80157cbdc72c46969e5485f0d71",
+      "paths": {
+        "drivers/android/binder/node.rs": {
+          "ack_blob": "7146516206038345fdb186b0cfb44035173930f3",
+          "port_blob": "fcf724f892100aec5e0078f8b970cc591ac3d5da",
+          "lts_to_port_sha256": "6d97d93ff67361403ed08e002ac02e246b970ffb316992ef178d55d097666dd0"
+        },
+        "drivers/android/binder/process.rs": {
+          "ack_blob": "7d7757321510bf031395f8f707a5c0b55103f206",
+          "port_blob": "5a2092bf9f0ad292122492bd937a5cdc7b625a9d",
+          "lts_to_port_sha256": "e5f53c605f175e52e2bd93df2785a3a7044af0b8451664efbb7e2d80d1b2c6a6"
+        }
+      }
+    },
+    {
+      "commit": "d02ff88f9425a0b4deaed485d507a8f67203b62e",
+      "disposition": "adapted",
+      "rationale": "Retain UserError diagnostics for FDA alignment, scatter/gather bounds, usercopy failures and malformed transaction/reply stacks. Full patch reviewed: arithmetic/alignment checks and all error values remain; converting the apply_sg error branch to question-mark propagation only removes a redundant print. The explicit pop_transaction_to_reply match preserves conversion/return behavior. Logs format scalar metadata and errors, not dereferenced user pointers or transaction payloads.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-debug-review.json",
+        "SECURITY.md: Rust Binder diagnostic controls"
+      ],
+      "subject": "UPSTREAM: rust_binder: Implement BINDER_DEBUG_USER_ERROR for transaction parsing failures",
+      "patch_sha256": "2cdb7f73fbd12f8d2708bf9c192a0c4b79cbd044e17e7663bbe8eb548afdc404",
+      "paths": {
+        "drivers/android/binder/thread.rs": {
+          "ack_blob": "9b161efc84c851882ca48356f061f76e015831c7",
+          "port_blob": "70cf6149d4d4ffc5cbdd6fed189be3df57d8c3e8",
+          "lts_to_port_sha256": "10862a627e5f8990f236f09fc8bafc2fddedc3266bc0695d3911cffd615c7940"
+        }
+      }
+    },
+    {
+      "commit": "0139324591bfccec3f4fcb668f88ae222cca6117",
+      "disposition": "adapted",
+      "rationale": "Retain FailedTransaction details and fd-fixup diagnostics, reconciled through the later consolidated failure print. Retain the pinned-LTS rule that a transaction failure print requires an actual source errno, avoiding treating pending/dead statuses as an errno. Reply/error delivery and buffer ownership are outside logging. The final mask/rate-limit guards can suppress output but do not alter failure processing.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-debug-review.json",
+        "SECURITY.md: Rust Binder diagnostic controls"
+      ],
+      "subject": "BACKPORT: rust_binder: Implement BINDER_DEBUG_FAILED_TRANSACTION",
+      "patch_sha256": "60d32dd7b09fa1566172eb14d874b9a8edd6fc26cec0f1623bcf9b9cf98040d5",
+      "paths": {
+        "drivers/android/binder/thread.rs": {
+          "ack_blob": "9b161efc84c851882ca48356f061f76e015831c7",
+          "port_blob": "70cf6149d4d4ffc5cbdd6fed189be3df57d8c3e8",
+          "lts_to_port_sha256": "10862a627e5f8990f236f09fc8bafc2fddedc3266bc0695d3911cffd615c7940"
+        },
+        "drivers/android/binder/transaction.rs": {
+          "ack_blob": "3271e20887989f233788d029dca7af25ee1941ec",
+          "port_blob": "46b8e24f786731d9e6579f19485b064f9577714c",
+          "lts_to_port_sha256": "9de4d387444a49260a2babffccaa5fb16e7fc33854cded1ea62c5951b47a9fe2"
+        }
+      }
+    },
+    {
+      "commit": "b70d97c3cd5afb31f4becd0015118e618678caec",
+      "disposition": "adapted",
+      "rationale": "Retain optional DeathNotification diagnostics for allocation failure, request/clear lifecycle and BR_DEAD_BINDER delivery. BR_ERROR remains pushed before the OOM log, notification registration/clearing is unchanged, and delivery logs a cookie only after the existing delivered-list insertion. This category is off in the default 0x7 mask and is rate-limited when enabled; enabling it reveals existing diagnostic cookie/handle metadata through printk policy, not transaction contents.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-debug-review.json",
+        "SECURITY.md: Rust Binder diagnostic controls"
+      ],
+      "subject": "UPSTREAM: rust_binder: Implement BINDER_DEBUG_DEATH_NOTIFICATION",
+      "patch_sha256": "b35ceafb93048185cd22fccd5d5cfe319eda4311030939d48f2d58bc299fea9c",
+      "paths": {
+        "drivers/android/binder/node.rs": {
+          "ack_blob": "7146516206038345fdb186b0cfb44035173930f3",
+          "port_blob": "fcf724f892100aec5e0078f8b970cc591ac3d5da",
+          "lts_to_port_sha256": "6d97d93ff67361403ed08e002ac02e246b970ffb316992ef178d55d097666dd0"
+        },
+        "drivers/android/binder/process.rs": {
+          "ack_blob": "7d7757321510bf031395f8f707a5c0b55103f206",
+          "port_blob": "5a2092bf9f0ad292122492bd937a5cdc7b625a9d",
+          "lts_to_port_sha256": "e5f53c605f175e52e2bd93df2785a3a7044af0b8451664efbb7e2d80d1b2c6a6"
+        }
+      }
+    },
+    {
+      "commit": "883880854a72ca501f17af2062228a9aabbe929c",
+      "disposition": "adapted",
+      "rationale": "Retain cancellation/dead-transaction diagnostics with captured owning process PID in ThreadError, DeliverCode and FreezeMessage. Cancel can run on a worker, so storing the originating PID avoids misleading worker identity. These are scalar metadata additions; constructors/calls preserve the same return codes, skip flag, work ownership and notification flow. Cancel still drops/returns work as before; it does not re-send completed work because of logging. PID values are diagnostic snapshots and may later be reused, not authorization identities.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-debug-review.json",
+        "SECURITY.md: Rust Binder diagnostic controls"
+      ],
+      "subject": "BACKPORT: rust_binder: Implement BINDER_DEBUG_DEAD_TRANSACTION",
+      "patch_sha256": "143f9074d6c339f2bd911c144682059adef9837546baa7b0f7d270d93fd9f90b",
+      "paths": {
+        "drivers/android/binder/freeze.rs": {
+          "ack_blob": "588dcb85212dfef5970e70f36f5c900adff30f45",
+          "port_blob": "588dcb85212dfef5970e70f36f5c900adff30f45",
+          "lts_to_port_sha256": "053588f793a8b6cadbcac03d36c0f8c76547a0e523e696db18244205952a1a24"
+        },
+        "drivers/android/binder/node.rs": {
+          "ack_blob": "7146516206038345fdb186b0cfb44035173930f3",
+          "port_blob": "fcf724f892100aec5e0078f8b970cc591ac3d5da",
+          "lts_to_port_sha256": "6d97d93ff67361403ed08e002ac02e246b970ffb316992ef178d55d097666dd0"
+        },
+        "drivers/android/binder/rust_binder_main.rs": {
+          "ack_blob": "0193addad5cb5705967eb2c71bf78c117d1b04a8",
+          "port_blob": "3fdc8d72ef3e7db214e72b3fb627909bd9ad98cd",
+          "lts_to_port_sha256": "9d59b1637c115f99cb17ecf5e5e764ac63dfe3838868fc886dd4bd649e4c3d32"
+        },
+        "drivers/android/binder/thread.rs": {
+          "ack_blob": "9b161efc84c851882ca48356f061f76e015831c7",
+          "port_blob": "70cf6149d4d4ffc5cbdd6fed189be3df57d8c3e8",
+          "lts_to_port_sha256": "10862a627e5f8990f236f09fc8bafc2fddedc3266bc0695d3911cffd615c7940"
+        },
+        "drivers/android/binder/transaction.rs": {
+          "ack_blob": "3271e20887989f233788d029dca7af25ee1941ec",
+          "port_blob": "46b8e24f786731d9e6579f19485b064f9577714c",
+          "lts_to_port_sha256": "9de4d387444a49260a2babffccaa5fb16e7fc33854cded1ea62c5951b47a9fe2"
+        }
+      }
+    },
+    {
+      "commit": "867eade4772138ae82b11641976883a158286951",
+      "disposition": "adapted",
+      "rationale": "Retain caller-location tracking in BinderError and basename:line formatting used by failed-transaction logs. All constructors and conversions retain their original reply/source values; closure/direct-call forms capture the driver callsite rather than a function-pointer adapter. ErrorLocation is transparent over a static shared reference, making zero Option represent None; no zero reference itself is constructed. Static locations stay live with the pinned active module. Formatting prints filename/line, not the pointer address, and unknown log location remains an explicit fallback.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-debug-review.json",
+        "SECURITY.md: Rust Binder diagnostic controls"
+      ],
+      "subject": "BACKPORT: FROMGIT: rust_binder: track caller location in BinderError",
+      "patch_sha256": "97dda3d77210ffac1417a2a23f850a29b9bcc43eddd8118ed73f5da606ed45f9",
+      "paths": {
+        "drivers/android/binder/context.rs": {
+          "ack_blob": "171215206a6323871149adf38880353858f66c3d",
+          "port_blob": "171215206a6323871149adf38880353858f66c3d",
+          "lts_to_port_sha256": "7e97bd3784d5924f1a25722014dec0dc18d92c77e097414ba3d960d263e91447"
+        },
+        "drivers/android/binder/error.rs": {
+          "ack_blob": "7100ffbc58020e7f269c44e4565b5b1ecb1d4814",
+          "port_blob": "7100ffbc58020e7f269c44e4565b5b1ecb1d4814",
+          "lts_to_port_sha256": "43c4fca1b630afdba7bf27683d8e0f1b879d66038a766aa3fc91badb2a87c761"
+        },
+        "drivers/android/binder/process.rs": {
+          "ack_blob": "7d7757321510bf031395f8f707a5c0b55103f206",
+          "port_blob": "5a2092bf9f0ad292122492bd937a5cdc7b625a9d",
+          "lts_to_port_sha256": "e5f53c605f175e52e2bd93df2785a3a7044af0b8451664efbb7e2d80d1b2c6a6"
+        },
+        "drivers/android/binder/thread.rs": {
+          "ack_blob": "9b161efc84c851882ca48356f061f76e015831c7",
+          "port_blob": "70cf6149d4d4ffc5cbdd6fed189be3df57d8c3e8",
+          "lts_to_port_sha256": "10862a627e5f8990f236f09fc8bafc2fddedc3266bc0695d3911cffd615c7940"
+        }
+      }
+    },
+    {
+      "commit": "500630948c0d58e087f5d5df2054bed999ce4d9e",
+      "disposition": "adapted",
+      "rationale": "Retain Option<Error> in TransactionInfo instead of a raw errno. Error is transparent over NonZeroI32 with ZeroableOption support, so zero initialization remains valid and None represents absent error. Log conversion maps None to zero and Some to its unchanged native negative errno; reply failure copies the same optional source. This is internal representation with no historical KMI obligation and no change to the numeric UAPI/netlink error representation.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-debug-review.json",
+        "SECURITY.md: Rust Binder diagnostic controls"
+      ],
+      "subject": "FROMGIT: rust_binder: store Option<Error> in TransactionInfo",
+      "patch_sha256": "3f91bee0a4863e0c0996988fb2eec111f3f1c5889637b4713db4889f66a35258",
+      "paths": {
+        "drivers/android/binder/thread.rs": {
+          "ack_blob": "9b161efc84c851882ca48356f061f76e015831c7",
+          "port_blob": "70cf6149d4d4ffc5cbdd6fed189be3df57d8c3e8",
+          "lts_to_port_sha256": "10862a627e5f8990f236f09fc8bafc2fddedc3266bc0695d3911cffd615c7940"
+        },
+        "drivers/android/binder/transaction.rs": {
+          "ack_blob": "3271e20887989f233788d029dca7af25ee1941ec",
+          "port_blob": "46b8e24f786731d9e6579f19485b064f9577714c",
+          "lts_to_port_sha256": "9de4d387444a49260a2babffccaa5fb16e7fc33854cded1ea62c5951b47a9fe2"
+        }
+      }
+    },
+    {
+      "commit": "092d07f794d920ccadd3b05a69a3bf2ab3f71c0d",
+      "disposition": "adapted",
+      "rationale": "Retain consolidated failure logging after final TransactionInfo status is known, separately from return work passed to the calling thread. This includes failed replies whose caller receives BR_TRANSACTION_COMPLETE while the original sender receives BR_FAILED_REPLY. Local branch-to-question-mark rewrites preserve allocation/copy errors, TF_CLEAR_BUF still applies before publication, and native stored extended-error/first-error semantics remain. Final print requires Some(errno), preserving the LTS source-error guard. Removing unused is_dead only removes a diagnostic filter; transaction logs/netlink report paths remain independent of the mask and rate limit.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-binder-debug-review.json",
+        "SECURITY.md: Rust Binder diagnostic controls"
+      ],
+      "subject": "BACKPORT: FROMGIT: rust_binder: consolidate transaction failure prints",
+      "patch_sha256": "d4dcc3b8c8c45a9961a54b84e8687135776e0c9fb1248e25c1e3249ca79212ac",
+      "paths": {
+        "drivers/android/binder/error.rs": {
+          "ack_blob": "7100ffbc58020e7f269c44e4565b5b1ecb1d4814",
+          "port_blob": "7100ffbc58020e7f269c44e4565b5b1ecb1d4814",
+          "lts_to_port_sha256": "43c4fca1b630afdba7bf27683d8e0f1b879d66038a766aa3fc91badb2a87c761"
+        },
+        "drivers/android/binder/thread.rs": {
+          "ack_blob": "9b161efc84c851882ca48356f061f76e015831c7",
+          "port_blob": "70cf6149d4d4ffc5cbdd6fed189be3df57d8c3e8",
+          "lts_to_port_sha256": "10862a627e5f8990f236f09fc8bafc2fddedc3266bc0695d3911cffd615c7940"
+        },
+        "drivers/android/binder/transaction.rs": {
+          "ack_blob": "3271e20887989f233788d029dca7af25ee1941ec",
+          "port_blob": "46b8e24f786731d9e6579f19485b064f9577714c",
+          "lts_to_port_sha256": "9de4d387444a49260a2babffccaa5fb16e7fc33854cded1ea62c5951b47a9fe2"
+        }
+      }
+    }
+  ],
+  "scope": "Ten complete candidate patches and final debug.rs/error.rs, affected diagnostic branches, native module-parameter handling, Atomic representation/load and Option<Error>/ErrorLocation initialization. No source changes needed for this batch.",
+  "local_evidence": [
+    "drivers/android/binder.c: native debug bit numbers, default mask and 0644 parameter",
+    "drivers/android/binder/rust_binderfs.c: C uint parameter frontend",
+    "rust/kernel/sync/atomic.rs and atomic/{internal,predefine}.rs: transparent representation/native reads",
+    "rust/kernel/error.rs: NonZeroI32 and ZeroableOption",
+    "kernel/params.c: parameter parser/store serialization and permission installation",
+    "kernel/fork.c: TGID assignment at task initialization",
+    "drivers/android/binder/{debug,error,thread,transaction,process,node,freeze}.rs: final guards/calls/metadata"
+  ],
+  "module_artifact": {
+    "build": "sdk-build-attempt-100",
+    "sha256": "4f6b0c99084671d8056168bba16127a97e110d539f6d191d954bad020782c3fc",
+    "symbols": [
+      "0000000000000c40 0000000000000004 D rust_binder_debug_mask",
+      "00000000000164a0 000000000000025a T rust_binder_freeze",
+      "000000000001a280 0000000000000723 T rust_binder_wait",
+      "000000000001a9c0 00000000000002d9 T rust_binder_waitlcl"
+    ]
+  },
+  "validation": "Source-equivalent build 100 produced both images and all 145 modules with verified signatures and export tables. No runtime debug-mask/sysfs write, cancellation trace, printk stress or concurrent parameter change executed. Existing ratelimit review covers the shared printk guard; failure semantics were reviewed alongside the prior lifecycle and native-LTS equivalent fix evidence.",
+  "remote_sources_used": []
+}
