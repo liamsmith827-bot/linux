@@ -1,0 +1,364 @@
+{
+  "source_head": "d5a30aac4af10245fbcc2389f4f7c06de532532b",
+  "records": [
+    {
+      "commit": "bc17c02a8507ac43a7bd6468f18a50b7571cd46c",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain both wakeup-reason sysfs attributes, matching ABI documentation, PM notifier/reporting and source-module API through the current list-based implementation. All ten original paths examined. Pinned SystemSuspend opens and reads both files after suspend attempts, so this is a current generic Android runtime interface. Initial fixed IRQ array/unbounded output, obsolete process diagnostics and old syscore callback structure are superseded. Preserve native suspend/freezer return paths and current callback error data. Adapt saved IRQ names/cache-failure handling in 55607d0a35a3 and active-source reporting to native SRCU, initialized output and constant-format logging in cfa8849595ba; no old RCU protection is retained against LTS SRCU removal.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "55607d0a35a331dbafb89df3505b5c2649f2bf7d",
+        "cfa8849595ba4756572df369aec5147bf92cccd4",
+        "d5a30aac4af10245fbcc2389f4f7c06de532532b"
+      ],
+      "evidence": [
+        "evidence/wakeup-history-review.json",
+        "evidence/wakeup-reason-name-check.json",
+        "evidence/wakeup-source-report-check.json",
+        "SECURITY.md: Wakeup report lifetime and LTS read-side protection"
+      ],
+      "patch_sha256": "3c65538f98f1a7d0f3c6ef506bd27a1dcf907427b33dd519ad9629f84624e986"
+    },
+    {
+      "commit": "b19f0cc3fe48f73fdce9d4294c1c6a2b12d706eb",
+      "disposition": "partially-adapted-net-state",
+      "rationale": "All eight paths reviewed. Retain sorted leaf/parent IRQ reporting, abort/abnormal reports, CONFIG_SUSPEND stubs, s2idle clearing, centralized pending-wakeup reports and current device/syscore failure messages. Keep native IRQ flow and native freezer diagnostics; old process-local duplicate reports are gone. ARM GIC-v3-only logging is omitted for x86 SDK and that driver remains exactly LTS. The retained generic implementation is adapted for owned action-name snapshots and unavailable-cache capture in 55607d0a35a3, and native SRCU/initialized/literal-string reporting in cfa8849595ba. Positive SystemSuspend consumer evidence supports the interface, not a claim of live SDK suspend execution.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "55607d0a35a331dbafb89df3505b5c2649f2bf7d",
+        "cfa8849595ba4756572df369aec5147bf92cccd4"
+      ],
+      "evidence": [
+        "evidence/wakeup-history-review.json",
+        "evidence/wakeup-reason-name-check.json",
+        "evidence/wakeup-source-report-check.json",
+        "SECURITY.md: Wakeup report lifetime and LTS read-side protection"
+      ],
+      "patch_sha256": "3423e7b08d3fb7ffed0897407c14155dc92080895df95ff06f363dc46c150b4b"
+    },
+    {
+      "commit": "f46fe356eb445eb66c454822030bfc88ba3bd7e7",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain initialized node iterator and internal static linkage; the unsigned time-format cast portion is superseded by 4636de5d964b signed formatting and negative-duration clamps. Node names are now independently owned and released by 55607d0a35a3, preserving full sysfs names when allocation succeeds. Full single-file patch reviewed; these are implementation correctness changes rather than a KMI requirement.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "55607d0a35a331dbafb89df3505b5c2649f2bf7d"
+      ],
+      "evidence": [
+        "evidence/wakeup-history-review.json",
+        "evidence/wakeup-reason-name-check.json",
+        "evidence/wakeup-source-report-check.json",
+        "SECURITY.md: Wakeup report lifetime and LTS read-side protection"
+      ],
+      "patch_sha256": "d9c07e210e99930b8721e0b0f17458edd7aca6fab51b36a8ca54caa11d6a2d0f"
+    },
+    {
+      "commit": "2488b4d45f34f134282ac441a6f674348f1230f0",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain the GPL export of log_threaded_irq_wakeup_reason for rebuilt vendor modules, with current source declaration/stub. Its caller must keep the IRQ descriptor/action/name live during the call; records now own names after return. No in-tree SDK registration/caller was established for this exported child-IRQ customization API; retain conservatively as part of the current generic reporting interface, without importing GIC platform support or promising existing binary compatibility.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "55607d0a35a331dbafb89df3505b5c2649f2bf7d"
+      ],
+      "evidence": [
+        "evidence/wakeup-history-review.json",
+        "evidence/wakeup-reason-name-check.json",
+        "evidence/wakeup-source-report-check.json",
+        "SECURITY.md: Wakeup report lifetime and LTS read-side protection"
+      ],
+      "patch_sha256": "263afa323bef3f285a428e341f7a61d22f81b63e2b0d489d478c5e2ce7bd01d5"
+    },
+    {
+      "commit": "8f61f09d3c9d6078e2832ef771c183cc6c07175d",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain all explicit RESUME_NONE/IRQ/ABORT/ABNORMAL state transitions and output selection. IRQ events do not overwrite abort/abnormal reasons; abort/abnormal records only claim RESUME_NONE. Clearing resets state and enables capture only when the node cache exists after 55607d0a35a3. Later c87a moves printk outside the reason lock without changing the state contract. This is diagnostic classification, not suspend authorization.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "55607d0a35a331dbafb89df3505b5c2649f2bf7d"
+      ],
+      "evidence": [
+        "evidence/wakeup-history-review.json",
+        "evidence/wakeup-reason-name-check.json",
+        "evidence/wakeup-source-report-check.json",
+        "SECURITY.md: Wakeup report lifetime and LTS read-side protection"
+      ],
+      "patch_sha256": "e0f985a629c188a150be4079b4c989fd7dbfe52e044935c90367d13c60f06962"
+    },
+    {
+      "commit": "7a626b43ed8dcab4f55ab3af95ce20721c574f4e",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain both GPL exports for log_suspend_abort_reason and log_abnormal_wakeup_reason. Full patch contains only these source-module exports; they reuse bounded report storage and native format semantics. Kernel callers must supply a valid format and matching arguments; the composed-string caller is corrected separately in cfa8849595ba. No historical binary CRC/layout preservation is introduced.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/wakeup-history-review.json",
+        "evidence/wakeup-reason-name-check.json",
+        "evidence/wakeup-source-report-check.json",
+        "SECURITY.md: Wakeup report lifetime and LTS read-side protection"
+      ],
+      "patch_sha256": "f3fe2d832675bbcad4cedb6202b96b773e061a25ccf574b0f634c869bf8eb060"
+    },
+    {
+      "commit": "c87a4e876a92b024560d4d87687d9e12c2c9713e",
+      "disposition": "adapted-net-state",
+      "rationale": "All five paths reviewed. Retain two-slot pending IRQ name snapshots, native wakeup IRQ slot clearing, CONFIG_PM_SLEEP declaration/stub correction, and deferred printing after releasing raw/reason locks at the recorded suspend stages. Retain bounded eight-entry printk snapshots/truncation warning while sysfs remains page-bounded. The later copy at printk time did not protect the list-held borrowed name; 55607d0a35a3 fixes ownership at initial capture. No claim of complete console/IRQ lockdep or runtime suspend validation.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "55607d0a35a331dbafb89df3505b5c2649f2bf7d"
+      ],
+      "evidence": [
+        "evidence/wakeup-history-review.json",
+        "evidence/wakeup-reason-name-check.json",
+        "evidence/wakeup-source-report-check.json",
+        "SECURITY.md: Wakeup report lifetime and LTS read-side protection"
+      ],
+      "patch_sha256": "c17b12ff1f05848d9944d3a171e3b95d82b7ff684b8be3b0e95bc82a0c6a0f48"
+    },
+    {
+      "commit": "4636de5d964b7b29c19cfabd92d72b624d78f52f",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain the complete negative-duration clamps and signed seconds/nanoseconds output. Pinned SystemSuspend parses two floating-point durations; negative observations are clamped rather than printed as large unsigned values. This does not provide an atomic multi-clock snapshot or prove coherent runtime intervals; it changes diagnostic output only.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/wakeup-history-review.json",
+        "evidence/wakeup-reason-name-check.json",
+        "evidence/wakeup-source-report-check.json",
+        "SECURITY.md: Wakeup report lifetime and LTS read-side protection"
+      ],
+      "patch_sha256": "2869b9b9e16f5911ff10418e27b65cefeec0e68360311fbe63ae85bb24ce729e"
+    },
+    {
+      "commit": "0f2cb7cf80335db55cd3c406134e8def59f16814",
+      "disposition": "merge-resolution-partially-adapted-net-state",
+      "rationale": "All seventeen paths of the unique remerge diff examined, including Cuttlefish config and timespec64 edits outside conflict markers. Keep current Binder priority inheritance, security-context flags, transaction-data pointer and binderfs handling; cpufreq/UID statistics and power-report build entries; native epoll signal/wait and folio BIO completion; current proc stack/time entries; native PR_SET_VMA/PAC cases. Retain final timespec64 wakeup/IDLETIMER reporting with the separately recorded lifetime/PM publication fixes. Historical Clang cross-toolchain code, Cuttlefish defconfig, extra_free_kbytes/old page counters and old dataread trace are absent from final ACK/native scopes and not resurrected. Native allocator watermarks remain after the explicit trusted adjustment hook. Preserve the native !wakeup || pm_debug_messages_on diagnostic condition instead of the old merge suppression. Detailed per-path evidence is in the linked report.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "55607d0a35a331dbafb89df3505b5c2649f2bf7d",
+        "cfa8849595ba4756572df369aec5147bf92cccd4",
+        "f3f057ef8e9a43dbdbe2bb7b09d4e88c756e9969",
+        "f9788ed2879e42426529eced8d0ed4bd245985c2"
+      ],
+      "evidence": [
+        "evidence/wakeup-history-review.json",
+        "evidence/wakeup-reason-name-check.json",
+        "evidence/wakeup-source-report-check.json",
+        "SECURITY.md: Wakeup report lifetime and LTS read-side protection"
+      ],
+      "patch_sha256": "73f4d1d8f46229a371821a3a52e1f216f9566408633d4909ec81485738046b72"
+    }
+  ],
+  "scoped_witnesses": [
+    {
+      "path": "drivers/android/binder.c",
+      "function": "binder_init_node_ilocked",
+      "identical_to": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "sha256": "e2571d84f8696941946d1ba415b09fc0a7dacb0b29109dd95ab03d3264bc21aa"
+    },
+    {
+      "path": "fs/eventpoll.c",
+      "function": "ep_poll",
+      "identical_to": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "7f09b40d73aa07689c79fcb8dd23740accf8cb64bffa76eaf98e2d3ec9efe475"
+    },
+    {
+      "path": "fs/eventpoll.c",
+      "function": "ep_send_events",
+      "identical_to": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "b133842343f3920a6c0230d2c8a03012a0bd635a832370c117f000953d417433"
+    },
+    {
+      "path": "fs/mpage.c",
+      "function": "mpage_read_end_io",
+      "identical_to": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "46ca9b5b6ac74e5572f9d214e24127eff33fa966c6f2675b2036bd7efc451f24"
+    },
+    {
+      "path": "fs/mpage.c",
+      "function": "mpage_write_end_io",
+      "identical_to": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "b0550ea0cc087772fe3c8346cb835f2e9f64bae2d7e36e138d0f767d994f1200"
+    },
+    {
+      "path": "drivers/base/power/wakeup.c",
+      "function": "wakeup_source_remove",
+      "identical_to": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "6f929a5662e2de76e38a5606ccdfab0a8d33924eadf8cd5f6e316da67fe65099"
+    },
+    {
+      "path": "drivers/base/power/wakeup.c",
+      "function": "wakeup_source_unregister",
+      "identical_to": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "b3627422e618233f32278d345240d311701be1fa2b741137222f188577efd1fa"
+    },
+    {
+      "path": "drivers/base/power/wakeup.c",
+      "function": "pm_print_active_wakeup_sources",
+      "identical_to": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "d5dd4f8d64d8d569e6c81e9e94eaed932bd4e37a2ba8e220b1d3e14d7faa2715"
+    },
+    {
+      "path": "drivers/base/power/wakeup.c",
+      "function": "pm_get_wakeup_count",
+      "identical_to": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "42e0d4df6d0236abe837c90998da385e27f6b21ab29dad25180f72636534a56b"
+    },
+    {
+      "path": "drivers/base/power/wakeup.c",
+      "function": "pm_save_wakeup_count",
+      "identical_to": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "fc6a2dc46319d5943103d915ffe016272aa225184d56848537cf2bfd5c730cdd"
+    },
+    {
+      "path": "mm/page_alloc.c",
+      "function": "__setup_per_zone_wmarks",
+      "scope": "whole function excluding separately attributed vendor adjustment hook",
+      "remainder_identical_to_lts": true,
+      "sha256": "f7a807021378e52a4ebeddbb0a686eaf3f58491a0d76759ac72ef28598645c57"
+    },
+    {
+      "path": "drivers/base/syscore.c",
+      "scope": "whole file excluding wakeup header and log call",
+      "remainder_identical_to_lts": true,
+      "sha256": "cfd666e3af98f3662f8b455b07583a1f94652a152d06ab141699a852b8b3e048"
+    },
+    {
+      "path": "drivers/irqchip/irq-gic-v3.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "sha256": "d33e823766f386380608fe985dac9a2eacb9178435f200c03f8ac87fe5fd0db3"
+    },
+    {
+      "path": "kernel/power/wakeup_reason.c",
+      "function": "last_resume_reason_show",
+      "identical_to_ack": true,
+      "sha256": "f9479851af2bbd01cd00286d281d80acf31400bbea502d2c92c66b0e3bec2721"
+    },
+    {
+      "path": "kernel/power/wakeup_reason.c",
+      "function": "last_suspend_time_show",
+      "identical_to_ack": true,
+      "sha256": "71254dee79fdf5a115352f40ce9d8ebbebec83eb1810a152b24083353fc17868"
+    },
+    {
+      "path": "kernel/power/wakeup_reason.c",
+      "function": "print_wakeup_sources",
+      "identical_to_ack": true,
+      "sha256": "d3effe720f47259c562739c8636b7d54614b9c9e7d7d522961b3de51bdad6700"
+    },
+    {
+      "path": "kernel/power/wakeup_reason.c",
+      "function": "__log_abort_or_abnormal_wake",
+      "identical_to_ack": true,
+      "sha256": "72920214adc6916187cbd051cbe19c41d7f307461eade6785fefef26b2d4592a"
+    },
+    {
+      "path": "kernel/power/wakeup_reason.c",
+      "function": "wakeup_reason_pm_event",
+      "identical_to_ack": true,
+      "sha256": "6e47f709ed031d3beed940126597202a10bbff5357e2c427ae3f74bfaba66407"
+    },
+    {
+      "path": "kernel/power/wakeup_reason.c",
+      "function": "wakeup_reason_init",
+      "identical_to_ack": true,
+      "sha256": "fef78f52fda3deccf1a5fad9a201483c9987b5cb741e91173d947f1978ee3115"
+    },
+    {
+      "path": "mm/page_alloc.c",
+      "term": "extra_free_kbytes",
+      "absent_in_ack_lts_port": true
+    },
+    {
+      "path": "mm/page_alloc.c",
+      "term": "nr_kernel_pages",
+      "absent_in_ack_lts_port": true
+    },
+    {
+      "path": "mm/page_alloc.c",
+      "term": "nr_all_pages",
+      "absent_in_ack_lts_port": true
+    },
+    {
+      "path": "mm/page_alloc.c",
+      "term": "dma_reserve",
+      "absent_in_ack_lts_port": true
+    },
+    {
+      "path": "fs/mpage.c",
+      "term": "trace_android_fs_dataread_end",
+      "absent_in_ack_lts_port": true
+    },
+    {
+      "path": "Makefile",
+      "term": "CLANG_TRIPLE",
+      "absent_in_ack_lts_port": true
+    },
+    {
+      "path": "Makefile",
+      "term": "GCC_TOOLCHAIN_DIR",
+      "absent_in_ack_lts_port": true
+    },
+    {
+      "path": "drivers/misc/Kconfig",
+      "term": "UID_SYS_STATS_DEBUG",
+      "absent_in_ack_lts_port": true
+    },
+    {
+      "path": "drivers/misc/Makefile",
+      "term": "CONFIG_HABANA_AI",
+      "absent_in_ack_lts_port": true
+    },
+    {
+      "path": "arch/x86/configs/x86_64_cuttlefish_defconfig",
+      "absent_in_ack_lts_port": true
+    }
+  ],
+  "merge_resolution": {
+    "commit": "0f2cb7cf80335db55cd3c406134e8def59f16814",
+    "sha256": "73f4d1d8f46229a371821a3a52e1f216f9566408633d4909ec81485738046b72",
+    "path_decisions": {
+      "Makefile": "Old Clang Android triple/GCC_TOOLCHAIN_DIR selection is superseded; original emulator workflow uses current pinned Clang/Kleaf integration.",
+      "arch/x86/configs/x86_64_cuttlefish_defconfig": "Historical target absent in final ACK and LTS; current SDK enables XFRM_INTERFACE, XFRM_STATISTICS, NET_IPGRE_DEMUX, PCI/MSI and FS_ENCRYPTION; L2TP/PPTP/PPPOL2TP are modules. No Cuttlefish target added.",
+      "drivers/android/binder.c": "Current node initialization matches final ACK, retaining inherit_rt and txn_security_ctx. Current binder_open retains priority fallback and binderfs i_private/device references. Native credential ownership remains; old tr->trd representation is superseded by current transaction handling.",
+      "drivers/cpufreq/cpufreq.c": "Both cpufreq_times and native cpu_cooling includes retained.",
+      "drivers/misc/Kconfig": "UID_SYS_STATS retained; old DEBUG option absent all tips; native pvpanic Kconfig directory source retained.",
+      "drivers/misc/Makefile": "UID statistics object, unconditional cardreader directory and native pvpanic directory build retained; old HABANA_AI path superseded at both tips.",
+      "fs/eventpoll.c": "Complete ep_poll and ep_send_events match LTS; fatal-signal handling retained; obsolete freezable_schedule wrapper is absent final ACK. Native wait-list locking and timeout recheck kept.",
+      "fs/mpage.c": "Historical end-read trace absent final ACK; complete current read/write end_io functions match native folio iteration and completion. Separate cleancache/source namespaces are not attributed to this merge.",
+      "fs/proc/base.c": "Current CPU_FREQ_TIMES time_in_state and STACKLEAK_METRICS stack_depth entries coexist.",
+      "include/uapi/linux/android/binder.h": "Current scheduling mask/RT inheritance and security-context flags coexist; no historic field conflict replay.",
+      "kernel/fork.c": "Current cpufreq_times include and native stackleak_task_init remain; obsolete direct stackleak include absent LTS too.",
+      "kernel/power/Makefile": "CONFIG_SUSPEND wakeup_reason.o and CONFIG_ENERGY_MODEL energy_model.o both retained.",
+      "kernel/power/process.c": "Native !wakeup || pm_debug_messages_on condition and tasklist lock retained, plus separately attributed Android observation hooks; do not restore historic unconditional/debug-only suppression.",
+      "kernel/power/wakeup_reason.c": "64-bit time conversion remains in complete last_suspend_time_show, with later signed output and negative clamps; owned IRQ name adaptation is separately documented.",
+      "kernel/sys.c": "Current native PR_SET_VMA and PR_PAC_RESET_KEYS dispatch retain break and native validation; architecture-specific PAC implementation is not an added x86 feature.",
+      "mm/page_alloc.c": "Old extra_free_kbytes/page-counter declarations absent final ACK/LTS; native complete watermark calculation retained except trusted adjustment hook. Native managed-page/div64/movable-zone/promotion logic preserved.",
+      "net/netfilter/xt_IDLETIMER.c": "Retain final timespec64 boottime/subtraction/notification state with native timer_shutdown/seconds conversion and corrected notifier publication/locked show snapshot. Old reset implementation is superseded by final shared helper."
+    }
+  },
+  "local_sources": [
+    {
+      "repository": "../grapheneos-17/system/hardware/interfaces",
+      "commit": "9c3469aa3d4aeec5b2bc8e8ae8fdb4437dab4edb",
+      "files": {
+        "suspend/aidl/default/main.cpp": "4512a6d72cbf38a15f4000375d802dbc2b05a7a3c988ae60a731bb7711107b89",
+        "suspend/aidl/default/SystemSuspend.cpp": "2bb2bfbbeb683d7b03101a88093ab1bc3ee9d3b06fc7d2eb69297a928aa92dee"
+      }
+    },
+    {
+      "repository": "../grapheneos-17/system/sepolicy",
+      "commit": "d0cc2f0daa28f3e8c89afb7f07f1b879581bb676",
+      "files": {
+        "private/system_suspend.te": "06a4d770046ca7ed746dca1b0ac7ed3786de8bda49289f8647668c3d308dba5e",
+        "private/genfs_contexts": "68f4e3a4e80d7916ee54ffe34e97d055b6e29db2aaf08b77874cc92ae5cac2a9"
+      }
+    }
+  ],
+  "consumer": "SystemSuspend main.cpp opens both sysfs attributes and passes the FDs to SystemSuspend. SystemSuspend.cpp reads two durations and line-separated wake reasons after each suspend attempt; its virtual-device fallback can block suspend if native control nodes are unavailable. Policy labels and grants the read access. Source compatibility is positively established; SDK suspend activation was not tested.",
+  "security": "55607d0a35a3 snapshots action names using kstrdup_const(GFP_ATOMIC), frees with kfree_const when clearing either list, preserves permanent names without allocation and falls back to the permanent unknown name on allocation failure. This prevents later print/sysfs reads from retaining driver-owned storage beyond IRQ teardown (native free_irq returns the name; virtio_pci frees its msix_names storage after free_irq). Native IRQ flow holds the descriptor lock during direct capture. The exported threaded helper requires the descriptor/action/name to remain live during the call; no new lock inversion is introduced. Capture remains disabled after cache initialization failure. cfa8849595ba uses wakeup_srcu, matching native wakeup_source_remove synchronize_srcu, initializes nonzero-capacity output and treats composed names as data with a constant %s format. Native wakeup event counters, PM return values, registration/removal and print_active SRCU implementation remain. Diagnostic clamps do not guarantee an atomic clock interval. Separate watchdog/BPF extensions are not finalized by this scoped review.",
+  "validation": "Owned-name extracted check: 76 cases pass, original ACK 27 failures. Source report extracted check: 244 cases pass, original ACK 1020 shim-observed contract/output failures. These use host allocator/IRQ/list/lock/format shims and do not execute kernel IRQ teardown, SRCU grace periods, suspend or sysfs; no exploit or runtime claim. Build 111 passed at d5a30aac4af1 through the unchanged emulator workflow: both kernel images, 100 common plus 45 virtual-device modules, 145 verified signatures and flag/CRC tables, tampered signature control rejected, 659 protected exports.",
+  "remote_sources_used": []
+}

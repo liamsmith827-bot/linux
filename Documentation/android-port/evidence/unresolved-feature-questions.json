@@ -355,5 +355,35 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
       "b78140f3f22a4da3a64d9a7805659063864fd758"
     ]
+  },
+  {
+    "topic": "SDK wakeup-reason runtime activation and threaded IRQ export",
+    "status": "final source retention/adaptation; runtime unverified",
+    "candidates": [
+      "bc17c02a8507ac43a7bd6468f18a50b7571cd46c",
+      "b19f0cc3fe48f73fdce9d4294c1c6a2b12d706eb",
+      "f46fe356eb445eb66c454822030bfc88ba3bd7e7",
+      "2488b4d45f34f134282ac441a6f674348f1230f0",
+      "8f61f09d3c9d6078e2832ef771c183cc6c07175d",
+      "7a626b43ed8dcab4f55ab3af95ce20721c574f4e",
+      "c87a4e876a92b024560d4d87687d9e12c2c9713e",
+      "4636de5d964b7b29c19cfabd92d72b624d78f52f"
+    ],
+    "evidence": "SystemSuspend main.cpp opens both sysfs attributes and passes the FDs to SystemSuspend. SystemSuspend.cpp reads two durations and line-separated wake reasons after each suspend attempt; its virtual-device fallback can block suspend if native control nodes are unavailable. Policy labels and grants the read access. Source compatibility is positively established; SDK suspend activation was not tested. No definite SDK caller of the exported threaded-IRQ helper was established. Retain source-module customization conservatively; callers must protect the live IRQ action during capture.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "55607d0a35a331dbafb89df3505b5c2649f2bf7d",
+      "cfa8849595ba4756572df369aec5147bf92cccd4"
+    ]
+  },
+  {
+    "topic": "DPM watchdog dynamic parameter lifecycle",
+    "status": "unresolved review question; implementation candidates remain provisional",
+    "candidates": [
+      "75b728aaef8a7105fd28f7585c64314c8a4bc8a6",
+      "ca8f3e8eda58e0b9278a448e2db755c025295608"
+    ],
+    "evidence": "While reading device-suspend report contexts, observed dpm_watchdog_set and dpm_watchdog_clear independently read writable dpm_watchdog_enabled, and handler/set read writable timeout pairs. Need examine whether changing parameters during an armed callback can skip cleanup, clear an uninitialized timer, or produce inconsistent timeouts. No final conclusion or runtime result; see drivers/base/power/main.c at d5a30aac4af10245fbcc2389f4f7c06de532532b",
+    "result_commits": []
   }
 ]

@@ -9099,5 +9099,144 @@
       "evidence/landlock-and-sdcardfs-review.json",
       "SECURITY.md: Landlock thread synchronization and obsolete sdcardfs exports"
     ]
+  },
+  {
+    "commit": "bc17c02a8507ac43a7bd6468f18a50b7571cd46c",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain both wakeup-reason sysfs attributes, matching ABI documentation, PM notifier/reporting and source-module API through the current list-based implementation. All ten original paths examined. Pinned SystemSuspend opens and reads both files after suspend attempts, so this is a current generic Android runtime interface. Initial fixed IRQ array/unbounded output, obsolete process diagnostics and old syscore callback structure are superseded. Preserve native suspend/freezer return paths and current callback error data. Adapt saved IRQ names/cache-failure handling in 55607d0a35a3 and active-source reporting to native SRCU, initialized output and constant-format logging in cfa8849595ba; no old RCU protection is retained against LTS SRCU removal.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "55607d0a35a331dbafb89df3505b5c2649f2bf7d",
+      "cfa8849595ba4756572df369aec5147bf92cccd4",
+      "d5a30aac4af10245fbcc2389f4f7c06de532532b"
+    ],
+    "evidence": [
+      "evidence/wakeup-history-review.json",
+      "evidence/wakeup-reason-name-check.json",
+      "evidence/wakeup-source-report-check.json",
+      "SECURITY.md: Wakeup report lifetime and LTS read-side protection"
+    ]
+  },
+  {
+    "commit": "b19f0cc3fe48f73fdce9d4294c1c6a2b12d706eb",
+    "disposition": "partially-adapted-net-state",
+    "rationale": "All eight paths reviewed. Retain sorted leaf/parent IRQ reporting, abort/abnormal reports, CONFIG_SUSPEND stubs, s2idle clearing, centralized pending-wakeup reports and current device/syscore failure messages. Keep native IRQ flow and native freezer diagnostics; old process-local duplicate reports are gone. ARM GIC-v3-only logging is omitted for x86 SDK and that driver remains exactly LTS. The retained generic implementation is adapted for owned action-name snapshots and unavailable-cache capture in 55607d0a35a3, and native SRCU/initialized/literal-string reporting in cfa8849595ba. Positive SystemSuspend consumer evidence supports the interface, not a claim of live SDK suspend execution.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "55607d0a35a331dbafb89df3505b5c2649f2bf7d",
+      "cfa8849595ba4756572df369aec5147bf92cccd4"
+    ],
+    "evidence": [
+      "evidence/wakeup-history-review.json",
+      "evidence/wakeup-reason-name-check.json",
+      "evidence/wakeup-source-report-check.json",
+      "SECURITY.md: Wakeup report lifetime and LTS read-side protection"
+    ]
+  },
+  {
+    "commit": "f46fe356eb445eb66c454822030bfc88ba3bd7e7",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain initialized node iterator and internal static linkage; the unsigned time-format cast portion is superseded by 4636de5d964b signed formatting and negative-duration clamps. Node names are now independently owned and released by 55607d0a35a3, preserving full sysfs names when allocation succeeds. Full single-file patch reviewed; these are implementation correctness changes rather than a KMI requirement.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "55607d0a35a331dbafb89df3505b5c2649f2bf7d"
+    ],
+    "evidence": [
+      "evidence/wakeup-history-review.json",
+      "evidence/wakeup-reason-name-check.json",
+      "evidence/wakeup-source-report-check.json",
+      "SECURITY.md: Wakeup report lifetime and LTS read-side protection"
+    ]
+  },
+  {
+    "commit": "2488b4d45f34f134282ac441a6f674348f1230f0",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain the GPL export of log_threaded_irq_wakeup_reason for rebuilt vendor modules, with current source declaration/stub. Its caller must keep the IRQ descriptor/action/name live during the call; records now own names after return. No in-tree SDK registration/caller was established for this exported child-IRQ customization API; retain conservatively as part of the current generic reporting interface, without importing GIC platform support or promising existing binary compatibility.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "55607d0a35a331dbafb89df3505b5c2649f2bf7d"
+    ],
+    "evidence": [
+      "evidence/wakeup-history-review.json",
+      "evidence/wakeup-reason-name-check.json",
+      "evidence/wakeup-source-report-check.json",
+      "SECURITY.md: Wakeup report lifetime and LTS read-side protection"
+    ]
+  },
+  {
+    "commit": "8f61f09d3c9d6078e2832ef771c183cc6c07175d",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain all explicit RESUME_NONE/IRQ/ABORT/ABNORMAL state transitions and output selection. IRQ events do not overwrite abort/abnormal reasons; abort/abnormal records only claim RESUME_NONE. Clearing resets state and enables capture only when the node cache exists after 55607d0a35a3. Later c87a moves printk outside the reason lock without changing the state contract. This is diagnostic classification, not suspend authorization.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "55607d0a35a331dbafb89df3505b5c2649f2bf7d"
+    ],
+    "evidence": [
+      "evidence/wakeup-history-review.json",
+      "evidence/wakeup-reason-name-check.json",
+      "evidence/wakeup-source-report-check.json",
+      "SECURITY.md: Wakeup report lifetime and LTS read-side protection"
+    ]
+  },
+  {
+    "commit": "7a626b43ed8dcab4f55ab3af95ce20721c574f4e",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain both GPL exports for log_suspend_abort_reason and log_abnormal_wakeup_reason. Full patch contains only these source-module exports; they reuse bounded report storage and native format semantics. Kernel callers must supply a valid format and matching arguments; the composed-string caller is corrected separately in cfa8849595ba. No historical binary CRC/layout preservation is introduced.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/wakeup-history-review.json",
+      "evidence/wakeup-reason-name-check.json",
+      "evidence/wakeup-source-report-check.json",
+      "SECURITY.md: Wakeup report lifetime and LTS read-side protection"
+    ]
+  },
+  {
+    "commit": "c87a4e876a92b024560d4d87687d9e12c2c9713e",
+    "disposition": "adapted-net-state",
+    "rationale": "All five paths reviewed. Retain two-slot pending IRQ name snapshots, native wakeup IRQ slot clearing, CONFIG_PM_SLEEP declaration/stub correction, and deferred printing after releasing raw/reason locks at the recorded suspend stages. Retain bounded eight-entry printk snapshots/truncation warning while sysfs remains page-bounded. The later copy at printk time did not protect the list-held borrowed name; 55607d0a35a3 fixes ownership at initial capture. No claim of complete console/IRQ lockdep or runtime suspend validation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "55607d0a35a331dbafb89df3505b5c2649f2bf7d"
+    ],
+    "evidence": [
+      "evidence/wakeup-history-review.json",
+      "evidence/wakeup-reason-name-check.json",
+      "evidence/wakeup-source-report-check.json",
+      "SECURITY.md: Wakeup report lifetime and LTS read-side protection"
+    ]
+  },
+  {
+    "commit": "4636de5d964b7b29c19cfabd92d72b624d78f52f",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain the complete negative-duration clamps and signed seconds/nanoseconds output. Pinned SystemSuspend parses two floating-point durations; negative observations are clamped rather than printed as large unsigned values. This does not provide an atomic multi-clock snapshot or prove coherent runtime intervals; it changes diagnostic output only.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/wakeup-history-review.json",
+      "evidence/wakeup-reason-name-check.json",
+      "evidence/wakeup-source-report-check.json",
+      "SECURITY.md: Wakeup report lifetime and LTS read-side protection"
+    ]
+  },
+  {
+    "commit": "0f2cb7cf80335db55cd3c406134e8def59f16814",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "rationale": "All seventeen paths of the unique remerge diff examined, including Cuttlefish config and timespec64 edits outside conflict markers. Keep current Binder priority inheritance, security-context flags, transaction-data pointer and binderfs handling; cpufreq/UID statistics and power-report build entries; native epoll signal/wait and folio BIO completion; current proc stack/time entries; native PR_SET_VMA/PAC cases. Retain final timespec64 wakeup/IDLETIMER reporting with the separately recorded lifetime/PM publication fixes. Historical Clang cross-toolchain code, Cuttlefish defconfig, extra_free_kbytes/old page counters and old dataread trace are absent from final ACK/native scopes and not resurrected. Native allocator watermarks remain after the explicit trusted adjustment hook. Preserve the native !wakeup || pm_debug_messages_on diagnostic condition instead of the old merge suppression. Detailed per-path evidence is in the linked report.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "55607d0a35a331dbafb89df3505b5c2649f2bf7d",
+      "cfa8849595ba4756572df369aec5147bf92cccd4",
+      "f3f057ef8e9a43dbdbe2bb7b09d4e88c756e9969",
+      "f9788ed2879e42426529eced8d0ed4bd245985c2"
+    ],
+    "evidence": [
+      "evidence/wakeup-history-review.json",
+      "evidence/wakeup-reason-name-check.json",
+      "evidence/wakeup-source-report-check.json",
+      "SECURITY.md: Wakeup report lifetime and LTS read-side protection"
+    ]
   }
 ]

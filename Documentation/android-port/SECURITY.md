@@ -4969,3 +4969,46 @@ All six exports are absent at both pinned tips and in the port; native functions
 and security dispatch remain. The rest of that large removal is not finalized
 by this scoped review. All evidence is local; embedded source links were not
 accessed.
+
+# Wakeup report lifetime and LTS read-side protection
+
+`evidence/wakeup-history-review.json` resolves eight wakeup-report patches and
+the seventeen-path 0f2cb7cf8033 merge, including edits outside conflict markers.
+Pinned SystemSuspend opens both reporting attributes, parses two durations and
+reads wakeup lines after suspend attempts. Policy supplies matching read access.
+Retain this generic Android interface and module exports; actual SDK suspend
+activation is unverified, and virtual-device userspace can disable its suspend
+loop when control files are unavailable. ARM GIC-only additions remain omitted.
+
+`55607d0a35a3` fixes list records that retained driver-owned IRQ-name pointers.
+Native free_irq permits name storage to be retired, and virtio_pci frees its
+msix_names after unregistering IRQs. Capture now owns nonpermanent names with
+kstrdup_const/GFP_ATOMIC and clearing either list releases them with kfree_const.
+Permanent kernel names need no allocation; allocation failure reports the
+permanent unknown name. Full sysfs names are preserved when copying succeeds.
+Native direct IRQ capture holds the descriptor lock; source-module callers of
+the threaded helper must keep the action/name live during capture. No descriptor
+lock is newly taken under the reason lock. Capture is also disabled if node-cache
+initialization failed, preventing a later s2idle clear from enabling NULL-cache
+allocation. The fast capture-state read is marked READ_ONCE. The host extraction
+check passes 76 cases; original ACK fails 27 ownership/fallback/capture checks.
+
+`cfa8849595ba` preserves the LTS wakeup-source lifetime protocol in the ACK-added
+report helper: use wakeup_srcu, because native removal waits on synchronize_srcu,
+not ordinary RCU. Initialize nonzero-sized output even for an empty list and
+avoid touching zero-sized output. Pass the composed message through a constant
+%s format so device names cannot become varargs directives. This removes stale
+source access, uninitialized report reads and format misuse paths without
+changing native event counters, suspend decisions or source removal. The
+extracted report/caller check passes 244 cases; original ACK fails 1020 explicit
+shim contract/output assertions. These are host checks, not live IRQ/SRCU race
+tests or exploit demonstrations.
+
+Retain the later bounded printk snapshot outside reason/raw locks and signed
+nonnegative duration reporting. The clock clamp is not a coherent multi-clock
+snapshot guarantee. Current native epoll wait/signal handling, folio completion,
+allocator watermark calculations (apart from the explicit trusted hook), and
+freezer diagnostics are preserved in the reviewed merge. Obsolete Clang,
+Cuttlefish, extra_free_kbytes and old tracing code is not revived. Separate DPM
+watchdog parameter lifecycle and BPF reporting changes remain for their own
+reviews. All sources used here were local; no embedded URL was accessed.
