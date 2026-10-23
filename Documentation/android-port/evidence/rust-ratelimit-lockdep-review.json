@@ -1,0 +1,246 @@
+{
+  "source_head": "5093b31657259de903bf7fb9921ed636428dce36",
+  "records": [
+    {
+      "commit": "c5be5bf0ca6c9bd717ac805f9a2071bc282b697a",
+      "disposition": "adapted",
+      "rationale": "Retain the lockdep API relocation, old sync-level re-exports, explicit static constructor and Send implementation as prerequisites for static raw-spinlock/rate-limit initialization. This is not only a file move: the constructor makes static pin/no-Drop obligations explicit and Send permits moving pinned ownership between tasks without moving its allocation. Native lockdep register/unregister synchronization remains unchanged, and public as_ptr still places raw-pointer validity obligations on the caller. Omit the purely maintainer-ownership entry, consistently with the port metadata policy. SDK disables DEBUG_LOCK_ALLOC; that configuration does not justify removing source compatibility for Android diagnostic configurations. Non-SDK configurations and documentation examples were not compiled.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-ratelimit-lockdep-review.json",
+        "SECURITY.md: Rust rate limiting and static lock initialization"
+      ],
+      "subject": "BACKPORT: FROMGIT: rust: sync: move lockdep types to rust/kernel/sync/lockdep.rs",
+      "patch_sha256": "974dcdeaebc299625368b0231c2c94ffd8f7da9592d1baab5b9013f8ec91a481",
+      "paths": {
+        "MAINTAINERS": {
+          "ack_blob": "84a2b5a742a5acec23a761eb6ffbc70e6c2ded6e",
+          "port_blob": "12daeb8d343840a71b02c00560a0ae72aaf67240",
+          "lts_to_port_sha256": "0f939156f818fc435c005e2d688bd93b71dc9fb58aa5e52f1eb4225cac1fd2e1"
+        },
+        "rust/kernel/sync.rs": {
+          "ack_blob": "da5733f0783dc00d9c084d423f8ed55958f03ac7",
+          "port_blob": "da5733f0783dc00d9c084d423f8ed55958f03ac7",
+          "lts_to_port_sha256": "e3543e13866759661228797be22c48a9be1e15a51072d31d03a103497cbe4ae5"
+        },
+        "rust/kernel/sync/lockdep.rs": {
+          "ack_blob": "d9222be0fb29e3e68731f11c51aef357fa67b901",
+          "port_blob": "d9222be0fb29e3e68731f11c51aef357fa67b901",
+          "lts_to_port_sha256": "f6ef1671789f0c58883271fe6d80b72eea66c15a77b395dd251a16c96bdc1e11"
+        }
+      }
+    },
+    {
+      "commit": "8d1f524115e325feff1fc7740a719c9b1b5f6542",
+      "disposition": "adapted",
+      "rationale": "Retain the raw-spinlock const initializer and raw lockdep map construction required by static Rust rate limiters. The selected x86 SMP arch_spinlock_t is a qspinlock whose unlocked native initializer is all zero; the Rust constructor uses that value. Debug magic, owner CPU/pointer sentinels and wait-type fields match native C initializers by source inspection, with LD_WAIT_INV equal to zero. Current SDK disables DEBUG_SPINLOCK and DEBUG_LOCK_ALLOC; other listed architectures and alternative debug configurations are not claimed compiled. Shared cfg branches are retained within the required generic constructor, without adding another platform driver. Native lock operations and lock layout are unchanged.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-ratelimit-lockdep-review.json",
+        "SECURITY.md: Rust rate limiting and static lock initialization"
+      ],
+      "subject": "BACKPORT: FROMGIT: rust: sync: add const constructor for raw_spinlock_t",
+      "patch_sha256": "5056b0695b543cfc151d8b6e58026ee89b12c4b90894fb5c8bc692d887070f18",
+      "paths": {
+        "include/linux/spinlock_types_raw.h": {
+          "ack_blob": "0d579fb9496ca7d3e8f0566f58ca1833dc89b30f",
+          "port_blob": "0d579fb9496ca7d3e8f0566f58ca1833dc89b30f",
+          "lts_to_port_sha256": "9343bb01eb51f5ef2be2d862111d9b1f5d7d65ed2f8598c3d0ddeb92ad12c43b"
+        },
+        "rust/bindings/lib.rs": {
+          "ack_blob": "948740badfe6b91f51bb977397c5d01043892153",
+          "port_blob": "550c7655a547c6ada7ac88913e307dd1a9491bdb",
+          "lts_to_port_sha256": "2f473b9c52db4f64f6748384d5a4c58e853912b8bdd50701f0e3855cca7c1c8f"
+        },
+        "rust/kernel/sync/lock/spinlock.rs": {
+          "ack_blob": "7ff82437614906161e8f750c69054553cda6714e",
+          "port_blob": "7ff82437614906161e8f750c69054553cda6714e",
+          "lts_to_port_sha256": "e4e6447b51fbc4235f53ee855057279923d3354e84f48cb446cfc7fabe9ef68b"
+        },
+        "rust/kernel/sync/lockdep.rs": {
+          "ack_blob": "d9222be0fb29e3e68731f11c51aef357fa67b901",
+          "port_blob": "d9222be0fb29e3e68731f11c51aef357fa67b901",
+          "lts_to_port_sha256": "f6ef1671789f0c58883271fe6d80b72eea66c15a77b395dd251a16c96bdc1e11"
+        }
+      }
+    },
+    {
+      "commit": "6efd82a128d8df28bdefb7b6991c8a914919fd57",
+      "disposition": "adapted",
+      "rationale": "Retain pinned Ratelimit, static per-callsite state, initialization/exit helpers and all pr_*_ratelimited macros for selected Rust Binder diagnostics. State initialization matches native RATELIMIT_STATE_INIT, including zero flags/counters and native defaults of 5*HZ and burst 10. ___ratelimit owns synchronization and remains exactly LTS, including its current atomic budget, contention and interval-reset behavior. The macro evaluates print arguments only if admitted; selected uses are diagnostics, not functional side effects. pr_debug preserves debug-assertion gating. Suppression can hide repeated diagnostic lines, intentionally limiting caller-induced log flooding; no lossless diagnostic stream is promised. Pinned dynamic state and static-only constructor preserve internal lock addresses.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-ratelimit-lockdep-review.json",
+        "SECURITY.md: Rust rate limiting and static lock initialization"
+      ],
+      "subject": "BACKPORT: FROMGIT: rust: add pr_*_ratelimited! macros for printing",
+      "patch_sha256": "64a5f8e0a78870402da341070d6488a5a28fda127019ef673dacc3082303701e",
+      "paths": {
+        "rust/helpers/helpers.c": {
+          "ack_blob": "3b33dca096e6c5abb9f8e8f55945afdc92d32866",
+          "port_blob": "3b33dca096e6c5abb9f8e8f55945afdc92d32866",
+          "lts_to_port_sha256": "b734371a8b2100e5b3d47c5abcef00e21cf0fc787b89842f0916c0d5b9a6e1ca"
+        },
+        "rust/helpers/ratelimit.c": {
+          "ack_blob": "e5052f568b810d21e9ef63e05606cff9b7f71926",
+          "port_blob": "e5052f568b810d21e9ef63e05606cff9b7f71926",
+          "lts_to_port_sha256": "393a18ad27c811f15a7bf6125cb64c3fba6de340e4b3e9feea9126e92a263bf1"
+        },
+        "rust/kernel/lib.rs": {
+          "ack_blob": "c19c5ecbaf6eb1f399d9e4f731817c90abaa9073",
+          "port_blob": "c19c5ecbaf6eb1f399d9e4f731817c90abaa9073",
+          "lts_to_port_sha256": "cab23f5bc8f04cd78304720af4ae1ed4284a8eb6c9607e2b534eda903749fc99"
+        },
+        "rust/kernel/prelude.rs": {
+          "ack_blob": "b34f33c046b5421761b72f238e83ce9931049826",
+          "port_blob": "b34f33c046b5421761b72f238e83ce9931049826",
+          "lts_to_port_sha256": "e418fad4c68af2d9088a893fdb927da3d1c1f465218ef4b032cb3d4fa70c446d"
+        },
+        "rust/kernel/ratelimit.rs": {
+          "ack_blob": "2c54099cf11e4353fb3150c328f901e49338ac1f",
+          "port_blob": "2c54099cf11e4353fb3150c328f901e49338ac1f",
+          "lts_to_port_sha256": "efa6bd3b490f14368819f9455974ac5d1dfff04dc8f582cba600fd9a0adc6ca0"
+        },
+        "rust/kernel/sync/lock/spinlock.rs": {
+          "ack_blob": "7ff82437614906161e8f750c69054553cda6714e",
+          "port_blob": "7ff82437614906161e8f750c69054553cda6714e",
+          "lts_to_port_sha256": "e4e6447b51fbc4235f53ee855057279923d3354e84f48cb446cfc7fabe9ef68b"
+        }
+      }
+    },
+    {
+      "commit": "6a5af8310338c1d9f30eecc37ce3bf4f6c46f134",
+      "disposition": "adapted",
+      "rationale": "Retain replacement of Rust Binder diagnostic print calls with per-callsite rate-limited macros and added terminating newlines. Full candidate patch and all ten affected paths were examined; normalized token comparison confirms only print-macro selection, string newline and formatting differences. Return/error handling, cleanup, transaction data and warning conditions remain unchanged. Native rate limiting reduces log/CPU pressure from repeated malformed Binder requests, while suppressing repeated diagnostic messages after the budget. Ring transaction logs and netlink report sends themselves are not rate-limited by this patch. This scoped decision does not finalize the complete algorithms in these files.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-ratelimit-lockdep-review.json",
+        "SECURITY.md: Rust rate limiting and static lock initialization"
+      ],
+      "subject": "BACKPORT: FROMGIT: rust_binder: use pr_*_ratelimited! for printing",
+      "patch_sha256": "54b102103fe2d959c9dbbe1899604beccd29fb0e81f426490bfcc89f44faef48",
+      "paths": {
+        "drivers/android/binder/allocation.rs": {
+          "ack_blob": "498b6b5567e315f9e2388b90719df51b3bce1df8",
+          "port_blob": "498b6b5567e315f9e2388b90719df51b3bce1df8",
+          "lts_to_port_sha256": "c29cb6060059e5bfc73d669d85ea79d2e1139fc900317c0fb200dd69fbfb1730"
+        },
+        "drivers/android/binder/context.rs": {
+          "ack_blob": "171215206a6323871149adf38880353858f66c3d",
+          "port_blob": "171215206a6323871149adf38880353858f66c3d",
+          "lts_to_port_sha256": "7e97bd3784d5924f1a25722014dec0dc18d92c77e097414ba3d960d263e91447"
+        },
+        "drivers/android/binder/debug.rs": {
+          "ack_blob": "6d8dcddf461913579f65c8152b00549f01f7d31d",
+          "port_blob": "6d8dcddf461913579f65c8152b00549f01f7d31d",
+          "lts_to_port_sha256": "1306e193f5d9b1a645c434adfd3f3984532b013d52c5404a49bbb739b45c0a1d"
+        },
+        "drivers/android/binder/freeze.rs": {
+          "ack_blob": "588dcb85212dfef5970e70f36f5c900adff30f45",
+          "port_blob": "588dcb85212dfef5970e70f36f5c900adff30f45",
+          "lts_to_port_sha256": "053588f793a8b6cadbcac03d36c0f8c76547a0e523e696db18244205952a1a24"
+        },
+        "drivers/android/binder/node.rs": {
+          "ack_blob": "7146516206038345fdb186b0cfb44035173930f3",
+          "port_blob": "8650fc88287132d90d5976e946555c4925465e86",
+          "lts_to_port_sha256": "d1eb227f0b0e82796a8d2362339aba3c58f877658dbea056e863728407feb4d3"
+        },
+        "drivers/android/binder/page_range.rs": {
+          "ack_blob": "b3bc0d6bb28b978d7fe485f507634184b910030e",
+          "port_blob": "a1f9b19b147c8bf4b467d279eed22c03ba0b2ef4",
+          "lts_to_port_sha256": "69ba51a0c95782a91ac82e7e1fdf52bfb2ffd38952e59647f7d3485c9f83f921"
+        },
+        "drivers/android/binder/process.rs": {
+          "ack_blob": "7d7757321510bf031395f8f707a5c0b55103f206",
+          "port_blob": "0aee8c17037443879e21acd3cc897819d135ecd4",
+          "lts_to_port_sha256": "25f52b2c4181ba11cfa2806ffc8be4147a9b4c2c7b5e1e03e926a5634ce55905"
+        },
+        "drivers/android/binder/range_alloc/tree.rs": {
+          "ack_blob": "0f8edb9a67f82350ec9a3d269cbaf7342bd934a6",
+          "port_blob": "0f8edb9a67f82350ec9a3d269cbaf7342bd934a6",
+          "lts_to_port_sha256": "079c55dcd6299f2d2cccd5e85173da3a513438b7a96e5935867778dca4aea535"
+        },
+        "drivers/android/binder/thread.rs": {
+          "ack_blob": "9b161efc84c851882ca48356f061f76e015831c7",
+          "port_blob": "e9f14b2568286e83f3c60bfb842b5a6aef27ef05",
+          "lts_to_port_sha256": "588245ea70c33eb8cdf05abd1d79b8a7e31adad1d6118f5f1cd513600e6d43a7"
+        },
+        "drivers/android/binder/transaction.rs": {
+          "ack_blob": "3271e20887989f233788d029dca7af25ee1941ec",
+          "port_blob": "46b8e24f786731d9e6579f19485b064f9577714c",
+          "lts_to_port_sha256": "9de4d387444a49260a2babffccaa5fb16e7fc33854cded1ea62c5951b47a9fe2"
+        }
+      }
+    }
+  ],
+  "diagnostic_patch_token_witnesses": {
+    "drivers/android/binder/allocation.rs": {
+      "before_sha256": "07db90ff99bb0b3902d43a783994903b1f720a983ec63c526d0e90fd138bdf3f",
+      "after_sha256": "9ae442938c8ab4b6d06930092319b1fc825c41f6fdcbdc8e7ad46ab809dc129f",
+      "normalized_tokens_equal": true
+    },
+    "drivers/android/binder/context.rs": {
+      "before_sha256": "ae19044b35c6b5365667f16cc668aa83a2dafb00b975b842cd14bd2719101e09",
+      "after_sha256": "c7a3e9dd6ffff07d05cdae603abd3a26d0d744d7f2ee24d33db3b46a21c5ac00",
+      "normalized_tokens_equal": true
+    },
+    "drivers/android/binder/debug.rs": {
+      "before_sha256": "e3813dda6c2a0e2547b0b122ddd9cbd0126283ae7584c53d6714cdda37135f06",
+      "after_sha256": "6ca6587c8c36b4ebec0951975356caae94058129b35c9319fd62a8712ccb5a7d",
+      "normalized_tokens_equal": true
+    },
+    "drivers/android/binder/freeze.rs": {
+      "before_sha256": "b8aa0930068a53dca6900fd91ff0a6a80778b862bda966b5a8e77ed7a9b89db5",
+      "after_sha256": "d4275358932d7c3e932eab6f8fb220bf4d70112fe495f19ea17cb3e2441afe17",
+      "normalized_tokens_equal": true
+    },
+    "drivers/android/binder/node.rs": {
+      "before_sha256": "f286cd052294ab2fb9afba02f7f1a856940c92bc240d15653ba681fa2367e9ff",
+      "after_sha256": "45a79b4481e3d267d79ecd891bfcb59188bd620735b5c41ebea2d10fade3583b",
+      "normalized_tokens_equal": true
+    },
+    "drivers/android/binder/page_range.rs": {
+      "before_sha256": "3ff7f930c7a9c4373ef66c74ce40bc383e5de14622aa7d10ef954c5323b8735f",
+      "after_sha256": "3682aa32f462968bde8aad4d10b8792733a257f56da2860af88c0284adb58b9b",
+      "normalized_tokens_equal": true
+    },
+    "drivers/android/binder/process.rs": {
+      "before_sha256": "01d662653ece7830130343a02601f0616471f7ab4cef88088eb4c028e8a3ab16",
+      "after_sha256": "0886d8b90289feb71b8e45f4bab5c9d4e8120ca9a808c8754e6d1144dd37b515",
+      "normalized_tokens_equal": true
+    },
+    "drivers/android/binder/range_alloc/tree.rs": {
+      "before_sha256": "6f456bd49d00fcd318854715545fe418c1ef294515667137c2b392f94d56bac5",
+      "after_sha256": "644f7a1b97efe71da6d7e273566c57552070391de82375b945fb8ba6e48eca3c",
+      "normalized_tokens_equal": true
+    },
+    "drivers/android/binder/thread.rs": {
+      "before_sha256": "41ef98c3c5ea279f0d6876a2e4a55e8361ef8fabd95184fb742450cd6e4771db",
+      "after_sha256": "122b2a58adf2abc8a792671eed3071340ed7f3043d10c0ad2c10cb5f8365ea06",
+      "normalized_tokens_equal": true
+    },
+    "drivers/android/binder/transaction.rs": {
+      "before_sha256": "d10f3b872e8960e1be9da02e54b868a2d4274ae876d001c47ed6b5bbc92dbf84",
+      "after_sha256": "c5397b4325e4ea1b07114fb4e6866268431b3b2a27e748f9495b15091b83fc76",
+      "normalized_tokens_equal": true
+    }
+  },
+  "token_comparison_scope": "Ignore comments/whitespace, strip escaped newline from string tokens, and normalize pr_err/pr_warn/pr_info/pr_debug_ratelimited identifiers. Supplement to full patch reading, not semantic proof.",
+  "local_evidence": [
+    "include/linux/{spinlock_types_raw.h,lockdep_types.h,ratelimit.h,ratelimit_types.h}",
+    "arch/x86/include/asm/spinlock_types.h and include/asm-generic/qspinlock_types.h",
+    "lib/ratelimit.c",
+    "kernel/locking/lockdep.c: dynamic-key register/unregister",
+    "common_dist/kernel_x86_64_dot_config from build 95: SMP=y,HZ=250,DEBUG_SPINLOCK=n,DEBUG_LOCK_ALLOC=n"
+  ],
+  "validation": "Retained code compiled in successful SDK build 95. No runtime rate-limit timing, lockdep, alternate-configuration or concurrency tests performed. No source changes required for these four candidates.",
+  "remote_sources_used": []
+}

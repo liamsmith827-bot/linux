@@ -3698,3 +3698,115 @@ claimed. Error values still return through the unlock path. The selected kernel
 has no panic unwinding or PREEMPT_RT behavior verified here. Mask-only page helpers
 retain native base-page units for DMA and direct-I/O buffer geometry. The complete
 WrapFD driver, including caller arithmetic, remains a separate audit item.
+
+## Rust netlink reports and Binder initialization
+
+The Rust generic-netlink and Binder reporting candidates are retained for a
+confirmed platform consumer: local frameworks/native BinderNetlink joins the
+`binder` family / `report` group, and frameworks/base CachedAppOptimizer receives
+transaction failures and oneway-spam reports. The report contains transaction
+metadata (context, PIDs/TIDs, flags, code and 32-bit payload size), not transaction
+payloads. Its existing size field remains a 32-bit ABI; it is not a lossless
+representation of arbitrary usize values. Family and attribute IDs match the C
+Binder API and platform parser. Separate failure and spam reports remain possible.
+
+`320c37fcab42` bounds netlink allocation arithmetic and attribute payload lengths,
+rejects invalid groups before giving away SKB ownership, and excludes negative
+listener errors. Native multicast returns early without consuming the SKB on an
+invalid group; ACK's ManuallyDrop placement leaked it. Native nla_len is u16,
+so a larger Rust string could otherwise generate a truncated wire attribute.
+The selected Binder context strings do not establish a reachable oversized-string
+exploit; this corrects the generic wrapper's API. `4ad2bc23b3b2` derives aligned
+header lengths from native types after build 94 showed that bindgen did not
+export the C sizeof macros. The signed arithmetic check also includes both native
+headers and alignment. All selected native netlink C implementations remain LTS.
+
+`5093b3165725` makes family registration and operations unsafe with explicit
+registration-lifetime requirements. Raw family identifiers are changed by native
+registration and have no per-operation Rust ownership token. A static allocation
+alone does not prove that registration remains live or excludes a racing
+re-registration. The selected Binder calls now document their invariant: register
+once before binderfs publication, retain the registration, and keep the active
+module resident. A source caller must obey this contract; this is a deliberate
+source-interface correction to prevent unsupported safe usage. No historical
+vendor binary ABI is preserved.
+
+The family preserves native C Binder's multicast flags and network namespace
+behavior; it introduces no new per-group capability gate. Local SELinux policy
+allows system_server generic netlink sockets and forbids them for untrusted apps.
+Thus the metadata boundary depends on the platform's existing socket policy and
+privileged listeners. Policy execution and message delivery were not tested.
+MAINTAINERS globs and the organizational net.rs rename are omitted: the new API
+is exposed through the native LTS net.rs alongside its PHY submodule, as adapted
+in 8dca59f73173. No networking functionality is removed by that layout choice.
+
+Source review also found that active Rust Binder had no teardown for its binderfs
+or shrinker callbacks, although the generated Rust module exit permits unloading
+and SDK CONFIG_MODULE_UNLOAD=y. `3f90fca18094` takes a permanent module reference
+only after successful activation. This intentionally prevents active driver
+unloading until shutdown; it does not claim to implement complete Binder teardown.
+The inactive path that retains C Binder takes no reference and remains unloadable.
+The SDK disables forced module unloading. A loader reference protects the
+publication-to-reference interval while init is running.
+
+If binderfs initialization fails, unregister the successfully registered shrinker
+and then destroy its unused LRU. Native shrinker_free waits for outstanding
+callbacks before the module can be freed. Registration failure creates no page
+ranges because no filesystem was published. A failed shrinker allocation now
+returns ENOMEM instead of converting the earlier zero return value to an error.
+The native callback machinery and module loader are unchanged.
+
+Both transaction logs use 32 pinned, separately locked slots. Their bounded
+context-name copies and byte-string formatting do not overread a name without a
+NUL in its 16-byte buffer. Ring ordering is best-effort, including debug-id wrap
+handling; it is not an audit log of every IPC. GrapheneOS dumpstate explicitly
+reads both files, which are created with stats=global and carry local
+binderfs_logs_transaction_history SELinux labels. Local policy permits dumpstate
+and system_server and restricts other domains. No policy changes are made.
+
+Log allocations now remain locally owned through fallible registration and are
+published infallibly on success, releasing both on initialization failure. A
+concurrent early mount/transaction in the short interval between filesystem and
+log publication can observe an empty log or omit an initial diagnostic record;
+transaction processing still works. This bounded diagnostic limitation avoids
+leaking log allocations on failed module loads. Failure after unloading C still
+does not restore C automatically, as documented in the earlier selector review.
+
+The extracted netlink checks exercise 55 cases / 347 assertions; the original
+ACK control fails 86 assertions. Extracted Binder initialization/shrinker/log
+preparation checks cover nine cases / 73 assertions; ACK fails 14 assertions.
+These use host allocation/FFI/lifecycle shims. They do not execute real sockets,
+LSM policy, shrinker concurrency, module loading/unloading or Binder IPC.
+Build 95 verifies the bounded-netlink implementation; build 96 passed with
+the later lifetime changes, both images and all 145 signed modules. See rust-netlink-binder-report-review.json and the
+recorded build results. No remote resources were accessed for this review.
+
+## Rust rate limiting and static lock initialization
+
+Retain the four lockdep/const-spinlock/rate-limit/Binder-print candidates reviewed
+in rust-ratelimit-lockdep-review.json. Selected Binder error paths can otherwise
+print repeatedly in response to malformed requests. The replacement limits
+messages per call site using native defaults (5*HZ, burst 10), without suppressing
+transaction processing, error returns, cleanup, netlink sends or the ring logs.
+Repeated messages can be suppressed; these diagnostics are not a complete audit
+trail. Formatting arguments are evaluated only for admitted messages. All changed
+arguments were examined as diagnostic reads, and normalized token comparison
+of all ten files confirms only print-macro, newline and formatting changes.
+
+Rust state calls the unchanged LTS ___ratelimit implementation, including native
+atomic budgets and contended interval behavior. Static initialization matches
+RATELIMIT_STATE_INIT with zero initial flags/counters. Dynamic state is pinned;
+static construction explicitly requires permanent placement. Both keep the
+internal raw-lock address stable. SDK x86 SMP uses a zero-initialized qspinlock,
+matching the Rust const constructor. Debug spinlock sentinels and lockdep wait
+types match the C initializers by inspection; SDK does not enable those debug
+configurations, so their compilation and runtime behavior are not claimed tested.
+
+The lockdep relocation retains the old sync re-exports and dynamic key lifetime.
+Its new Send bound permits transferring pinned ownership, without relocating the
+key allocation; native dynamic-key register/unregister paths use their existing
+synchronization. The explicit static constructor forbids destruction of a static
+key. Only the organizational MAINTAINERS addition is omitted. Native lockdep and
+rate-limit C files remain exactly LTS. The required shared initializer retains
+its existing cfg branches, without adding drivers for future platforms. Existing
+documentation examples are not treated as compiled doctests.

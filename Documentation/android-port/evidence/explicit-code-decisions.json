@@ -5168,5 +5168,108 @@
       "evidence/rust-wrapfd-dependency-review.json",
       "SECURITY.md: Rust WrapFD lifetime and IRQ helpers"
     ]
+  },
+  {
+    "commit": "61864d0de7c16495fae9227a7f9c718ee44a90ac",
+    "disposition": "adapted",
+    "rationale": "Retain the generic netlink multicast wrapper, C inline helpers and bindings for Rust Binder reports consumed by GrapheneOS CachedAppOptimizer. Adapt message lengths to native signed arithmetic and u16 attribute bounds; reject invalid multicast groups before transferring SKB ownership and treat listener errors as no listeners. Header sizes derive from generated native types because C size macros are not exported by bindgen. Registration and operations now expose unsafe lifetime contracts: the family must stay registered and must not race registration/unregistration. The Binder caller establishes that invariant before filesystem publication and keeps it after successful activation. These are deliberate source-API corrections, with no historical binary KMI requirement. Native LTS netlink C implementations remain byte-identical. The extracted host checks cover size/ownership failures, not real netlink traffic or concurrency.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "8dca59f73173962431ab7982e1c62be4dd4cdba1",
+      "320c37fcab424e175f6570b2c8c1494a75cdd0e3",
+      "4ad2bc23b3b21be8ee096d0184234457faf62f11",
+      "5093b31657259de903bf7fb9921ed636428dce36"
+    ],
+    "evidence": [
+      "evidence/rust-netlink-binder-report-review.json",
+      "SECURITY.md: Rust netlink reports and Binder initialization"
+    ]
+  },
+  {
+    "commit": "578a8118406c0eda35202bc35b5483918ffd6910",
+    "disposition": "partially-adapted",
+    "rationale": "Omit the purely organizational net.rs to net/mod.rs rename and two MAINTAINERS ownership globs. Preserve the native LTS net.rs module location and its PHY submodule, adding the functional netlink submodule there in 8dca59f73173. Rust would otherwise see conflicting module locations; the selected layout builds without changing the module namespace or removing networking behavior. This is an organizational adaptation, not a target-based exclusion of the netlink feature.",
+    "result_commits": [
+      "8dca59f73173962431ab7982e1c62be4dd4cdba1"
+    ],
+    "evidence": [
+      "evidence/rust-netlink-binder-report-review.json",
+      "SECURITY.md: Rust netlink reports and Binder initialization"
+    ]
+  },
+  {
+    "commit": "880b03dc7652a5fdfac240b43ea15ee07216beab",
+    "disposition": "adapted",
+    "rationale": "Retain the Rust Binder transaction-failure and oneway-spam multicast reports, NET dependency and UAPI bindings. GrapheneOS BinderNetlink resolves the binder/report family and CachedAppOptimizer consumes error/PID/size/oneway information. Preserve the existing attribute numbering and separate spam/failure reports, optional registration when C remains active, and reply error semantics. Adapt registration/calls to explicit lifetime contracts and retain active module text after publication; native group allocation and authorization are unchanged. Reports expose transaction metadata to allowed generic-netlink listeners, not payloads; local SELinux denies generic sockets to untrusted apps and allows system_server. Runtime policy enforcement, report delivery and the wider Rust Binder implementation are not certified by this scoped decision.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "3f90fca1809468efd1eff3f07a5168067903ffcf",
+      "5093b31657259de903bf7fb9921ed636428dce36"
+    ],
+    "evidence": [
+      "evidence/rust-netlink-binder-report-review.json",
+      "SECURITY.md: Rust netlink reports and Binder initialization"
+    ]
+  },
+  {
+    "commit": "12972e025fdb5c74ec72c0a2b42a4fc5daf39c07",
+    "disposition": "adapted",
+    "rationale": "Retain both 32-entry Rust Binder transaction-history files, matching positive GrapheneOS dumpstate consumers and binderfs SELinux labels. Per-slot spinlocks protect copying; bounded context-name copies and bounded byte-string formatting do not overread unterminated 16-byte names. Preserve signed reply handle display, failure location/errno and exclusion of pending-frozen status from the failure log. Atomic cursor wrapping and debug-id ordering intentionally provide a best-effort diagnostic ring, not a complete ordered transaction stream. Adapt initialization to prepare locally owned allocations and publish them only after all fallible registration completes; failures now release both buffers. The short interval after filesystem publication and before infallible log publication can omit initial diagnostic records, which is documented and preferable to leaking allocations on failed loads. Successful activation retains module text; inactive loads remain unloadable. Native LTS Binder implementation and access-control paths are not replaced by this optional Rust implementation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "3f90fca1809468efd1eff3f07a5168067903ffcf"
+    ],
+    "evidence": [
+      "evidence/rust-netlink-binder-report-review.json",
+      "SECURITY.md: Rust netlink reports and Binder initialization"
+    ]
+  },
+  {
+    "commit": "c5be5bf0ca6c9bd717ac805f9a2071bc282b697a",
+    "disposition": "adapted",
+    "rationale": "Retain the lockdep API relocation, old sync-level re-exports, explicit static constructor and Send implementation as prerequisites for static raw-spinlock/rate-limit initialization. This is not only a file move: the constructor makes static pin/no-Drop obligations explicit and Send permits moving pinned ownership between tasks without moving its allocation. Native lockdep register/unregister synchronization remains unchanged, and public as_ptr still places raw-pointer validity obligations on the caller. Omit the purely maintainer-ownership entry, consistently with the port metadata policy. SDK disables DEBUG_LOCK_ALLOC; that configuration does not justify removing source compatibility for Android diagnostic configurations. Non-SDK configurations and documentation examples were not compiled.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-ratelimit-lockdep-review.json",
+      "SECURITY.md: Rust rate limiting and static lock initialization"
+    ]
+  },
+  {
+    "commit": "8d1f524115e325feff1fc7740a719c9b1b5f6542",
+    "disposition": "adapted",
+    "rationale": "Retain the raw-spinlock const initializer and raw lockdep map construction required by static Rust rate limiters. The selected x86 SMP arch_spinlock_t is a qspinlock whose unlocked native initializer is all zero; the Rust constructor uses that value. Debug magic, owner CPU/pointer sentinels and wait-type fields match native C initializers by source inspection, with LD_WAIT_INV equal to zero. Current SDK disables DEBUG_SPINLOCK and DEBUG_LOCK_ALLOC; other listed architectures and alternative debug configurations are not claimed compiled. Shared cfg branches are retained within the required generic constructor, without adding another platform driver. Native lock operations and lock layout are unchanged.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-ratelimit-lockdep-review.json",
+      "SECURITY.md: Rust rate limiting and static lock initialization"
+    ]
+  },
+  {
+    "commit": "6efd82a128d8df28bdefb7b6991c8a914919fd57",
+    "disposition": "adapted",
+    "rationale": "Retain pinned Ratelimit, static per-callsite state, initialization/exit helpers and all pr_*_ratelimited macros for selected Rust Binder diagnostics. State initialization matches native RATELIMIT_STATE_INIT, including zero flags/counters and native defaults of 5*HZ and burst 10. ___ratelimit owns synchronization and remains exactly LTS, including its current atomic budget, contention and interval-reset behavior. The macro evaluates print arguments only if admitted; selected uses are diagnostics, not functional side effects. pr_debug preserves debug-assertion gating. Suppression can hide repeated diagnostic lines, intentionally limiting caller-induced log flooding; no lossless diagnostic stream is promised. Pinned dynamic state and static-only constructor preserve internal lock addresses.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-ratelimit-lockdep-review.json",
+      "SECURITY.md: Rust rate limiting and static lock initialization"
+    ]
+  },
+  {
+    "commit": "6a5af8310338c1d9f30eecc37ce3bf4f6c46f134",
+    "disposition": "adapted",
+    "rationale": "Retain replacement of Rust Binder diagnostic print calls with per-callsite rate-limited macros and added terminating newlines. Full candidate patch and all ten affected paths were examined; normalized token comparison confirms only print-macro selection, string newline and formatting differences. Return/error handling, cleanup, transaction data and warning conditions remain unchanged. Native rate limiting reduces log/CPU pressure from repeated malformed Binder requests, while suppressing repeated diagnostic messages after the budget. Ring transaction logs and netlink report sends themselves are not rate-limited by this patch. This scoped decision does not finalize the complete algorithms in these files.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-ratelimit-lockdep-review.json",
+      "SECURITY.md: Rust rate limiting and static lock initialization"
+    ]
   }
 ]

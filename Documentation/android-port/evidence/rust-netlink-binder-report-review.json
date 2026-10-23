@@ -1,0 +1,191 @@
+{
+  "source_head": "5093b31657259de903bf7fb9921ed636428dce36",
+  "records": [
+    {
+      "commit": "61864d0de7c16495fae9227a7f9c718ee44a90ac",
+      "disposition": "adapted",
+      "rationale": "Retain the generic netlink multicast wrapper, C inline helpers and bindings for Rust Binder reports consumed by GrapheneOS CachedAppOptimizer. Adapt message lengths to native signed arithmetic and u16 attribute bounds; reject invalid multicast groups before transferring SKB ownership and treat listener errors as no listeners. Header sizes derive from generated native types because C size macros are not exported by bindgen. Registration and operations now expose unsafe lifetime contracts: the family must stay registered and must not race registration/unregistration. The Binder caller establishes that invariant before filesystem publication and keeps it after successful activation. These are deliberate source-API corrections, with no historical binary KMI requirement. Native LTS netlink C implementations remain byte-identical. The extracted host checks cover size/ownership failures, not real netlink traffic or concurrency.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "8dca59f73173962431ab7982e1c62be4dd4cdba1",
+        "320c37fcab424e175f6570b2c8c1494a75cdd0e3",
+        "4ad2bc23b3b21be8ee096d0184234457faf62f11",
+        "5093b31657259de903bf7fb9921ed636428dce36"
+      ],
+      "evidence": [
+        "evidence/rust-netlink-binder-report-review.json",
+        "SECURITY.md: Rust netlink reports and Binder initialization"
+      ],
+      "subject": "BACKPORT: FROMLIST: rust: netlink: add raw netlink abstraction",
+      "patch_sha256": "483c33b7970d4577abe33cffd50c77f6ed79c2bce9db56d6456545e8e4f5ee50",
+      "paths": {
+        "rust/bindings/bindings_helper.h": {
+          "ack_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "port_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "lts_to_port_sha256": "219f093804081c8c8f7117e4b73acb1c4f423fcea4392f92079e0a21d9b299ed"
+        },
+        "rust/helpers/helpers.c": {
+          "ack_blob": "3b33dca096e6c5abb9f8e8f55945afdc92d32866",
+          "port_blob": "3b33dca096e6c5abb9f8e8f55945afdc92d32866",
+          "lts_to_port_sha256": "b734371a8b2100e5b3d47c5abcef00e21cf0fc787b89842f0916c0d5b9a6e1ca"
+        },
+        "rust/helpers/net/genetlink.c": {
+          "ack_blob": "3530b69f6cf70726d2efc9667c98df0e0524496d",
+          "port_blob": "3530b69f6cf70726d2efc9667c98df0e0524496d",
+          "lts_to_port_sha256": "524287234b4073bfc7f592390c8325bf95580264761a2f9ae12185e3dcd1a09f"
+        },
+        "rust/kernel/net/mod.rs": {
+          "ack_blob": "8ecae7577ed29541d137c5ddadddebf296f41681",
+          "port_blob": null,
+          "lts_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "rust/kernel/net/netlink.rs": {
+          "ack_blob": "2c0ff74a978b0e31c8a159cf2c29907f7576ef21",
+          "port_blob": "f6f365088421340780bf9f413824c3cba2dcb872",
+          "lts_to_port_sha256": "d74f84b938c446fab06fd3a6104bd3b559d49f2d5ca457ae634bf7c868ef986f"
+        }
+      }
+    },
+    {
+      "commit": "578a8118406c0eda35202bc35b5483918ffd6910",
+      "disposition": "partially-adapted",
+      "rationale": "Omit the purely organizational net.rs to net/mod.rs rename and two MAINTAINERS ownership globs. Preserve the native LTS net.rs module location and its PHY submodule, adding the functional netlink submodule there in 8dca59f73173. Rust would otherwise see conflicting module locations; the selected layout builds without changing the module namespace or removing networking behavior. This is an organizational adaptation, not a target-based exclusion of the netlink feature.",
+      "result_commits": [
+        "8dca59f73173962431ab7982e1c62be4dd4cdba1"
+      ],
+      "evidence": [
+        "evidence/rust-netlink-binder-report-review.json",
+        "SECURITY.md: Rust netlink reports and Binder initialization"
+      ],
+      "subject": "FROMLIST: rust: net: add rust/kernel/net to NETWORKING [GENERAL]",
+      "patch_sha256": "73d1c664b0ad45b82825c284e27958ce2e69b3e551e750b1afb50d33ded8f00a",
+      "paths": {
+        "MAINTAINERS": {
+          "ack_blob": "84a2b5a742a5acec23a761eb6ffbc70e6c2ded6e",
+          "port_blob": "12daeb8d343840a71b02c00560a0ae72aaf67240",
+          "lts_to_port_sha256": "0f939156f818fc435c005e2d688bd93b71dc9fb58aa5e52f1eb4225cac1fd2e1"
+        },
+        "rust/kernel/net.rs": {
+          "ack_blob": null,
+          "port_blob": "8ecae7577ed29541d137c5ddadddebf296f41681",
+          "lts_to_port_sha256": "fe11e33d6d44e0a14a6d20fb669ebfbb19e83f25e943bdfa37ed57c7d808cdb9"
+        },
+        "rust/kernel/net/mod.rs": {
+          "ack_blob": "8ecae7577ed29541d137c5ddadddebf296f41681",
+          "port_blob": null,
+          "lts_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    },
+    {
+      "commit": "880b03dc7652a5fdfac240b43ea15ee07216beab",
+      "disposition": "adapted",
+      "rationale": "Retain the Rust Binder transaction-failure and oneway-spam multicast reports, NET dependency and UAPI bindings. GrapheneOS BinderNetlink resolves the binder/report family and CachedAppOptimizer consumes error/PID/size/oneway information. Preserve the existing attribute numbering and separate spam/failure reports, optional registration when C remains active, and reply error semantics. Adapt registration/calls to explicit lifetime contracts and retain active module text after publication; native group allocation and authorization are unchanged. Reports expose transaction metadata to allowed generic-netlink listeners, not payloads; local SELinux denies generic sockets to untrusted apps and allows system_server. Runtime policy enforcement, report delivery and the wider Rust Binder implementation are not certified by this scoped decision.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "3f90fca1809468efd1eff3f07a5168067903ffcf",
+        "5093b31657259de903bf7fb9921ed636428dce36"
+      ],
+      "evidence": [
+        "evidence/rust-netlink-binder-report-review.json",
+        "SECURITY.md: Rust netlink reports and Binder initialization"
+      ],
+      "subject": "BACKPORT: FROMLIST: rust_binder: report netlink transactions",
+      "patch_sha256": "e8590c05aa9ba2e71fbc03f448481f186f8cbb3d886222450229e9ba97a5bdd4",
+      "paths": {
+        "drivers/android/Kconfig": {
+          "ack_blob": "8b498ee93256a7fdc09d5bab07c3e907c135ae9e",
+          "port_blob": "f21ad8cb3e93acdd14499528122c3245afb01292",
+          "lts_to_port_sha256": "bb63389de788ded19a068ef10316c3d192642a6f4cec98b4246fdfc7960fb69a"
+        },
+        "drivers/android/binder/netlink.rs": {
+          "ack_blob": "a521bcf15c7e5f01f83f93ece8d3be622c7760c8",
+          "port_blob": "4fa9c116bc4d340bd3d44b5f177354a85f735a04",
+          "lts_to_port_sha256": "f1790ae8042cac9136b295e13ca51c204b57f7d6a572b61d8ab2741f7f51124a"
+        },
+        "drivers/android/binder/rust_binder_main.rs": {
+          "ack_blob": "0193addad5cb5705967eb2c71bf78c117d1b04a8",
+          "port_blob": "3fdc8d72ef3e7db214e72b3fb627909bd9ad98cd",
+          "lts_to_port_sha256": "9d59b1637c115f99cb17ecf5e5e764ac63dfe3838868fc886dd4bd649e4c3d32"
+        },
+        "drivers/android/binder/thread.rs": {
+          "ack_blob": "9b161efc84c851882ca48356f061f76e015831c7",
+          "port_blob": "e9f14b2568286e83f3c60bfb842b5a6aef27ef05",
+          "lts_to_port_sha256": "588245ea70c33eb8cdf05abd1d79b8a7e31adad1d6118f5f1cd513600e6d43a7"
+        },
+        "drivers/android/binder/transaction.rs": {
+          "ack_blob": "3271e20887989f233788d029dca7af25ee1941ec",
+          "port_blob": "46b8e24f786731d9e6579f19485b064f9577714c",
+          "lts_to_port_sha256": "9de4d387444a49260a2babffccaa5fb16e7fc33854cded1ea62c5951b47a9fe2"
+        },
+        "rust/uapi/uapi_helper.h": {
+          "ack_blob": "a8a19845955336cb2e23baa2302c9987768995fa",
+          "port_blob": "0b60db5db384805e8a10498838a1db889d27a3d1",
+          "lts_to_port_sha256": "4df9d10f7e3c59f99b534f565d66f0e1fe509d6129e9b89d0c403ca87a1023a3"
+        }
+      }
+    },
+    {
+      "commit": "12972e025fdb5c74ec72c0a2b42a4fc5daf39c07",
+      "disposition": "adapted",
+      "rationale": "Retain both 32-entry Rust Binder transaction-history files, matching positive GrapheneOS dumpstate consumers and binderfs SELinux labels. Per-slot spinlocks protect copying; bounded context-name copies and bounded byte-string formatting do not overread unterminated 16-byte names. Preserve signed reply handle display, failure location/errno and exclusion of pending-frozen status from the failure log. Atomic cursor wrapping and debug-id ordering intentionally provide a best-effort diagnostic ring, not a complete ordered transaction stream. Adapt initialization to prepare locally owned allocations and publish them only after all fallible registration completes; failures now release both buffers. The short interval after filesystem publication and before infallible log publication can omit initial diagnostic records, which is documented and preferable to leaking allocations on failed loads. Successful activation retains module text; inactive loads remain unloadable. Native LTS Binder implementation and access-control paths are not replaced by this optional Rust implementation.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "3f90fca1809468efd1eff3f07a5168067903ffcf"
+      ],
+      "evidence": [
+        "evidence/rust-netlink-binder-report-review.json",
+        "SECURITY.md: Rust netlink reports and Binder initialization"
+      ],
+      "subject": "BACKPORT: FROMGIT: rust_binder: add transaction_log and failed_transaction_log",
+      "patch_sha256": "e99e1a6da35e610722b46d091ee9b3aff938c70bb4403c35bc930b988c15b593",
+      "paths": {
+        "drivers/android/binder/rust_binder_internal.h": {
+          "ack_blob": "50a50df14c7708d1943ccdc2afac193738ab81e8",
+          "port_blob": "50a50df14c7708d1943ccdc2afac193738ab81e8",
+          "lts_to_port_sha256": "486b19380d637c8803282371534e84405eeb6c29308d5aa098975c7f40e88f58"
+        },
+        "drivers/android/binder/rust_binder_main.rs": {
+          "ack_blob": "0193addad5cb5705967eb2c71bf78c117d1b04a8",
+          "port_blob": "3fdc8d72ef3e7db214e72b3fb627909bd9ad98cd",
+          "lts_to_port_sha256": "9d59b1637c115f99cb17ecf5e5e764ac63dfe3838868fc886dd4bd649e4c3d32"
+        },
+        "drivers/android/binder/rust_binderfs.c": {
+          "ack_blob": "968cf39f7879d6861ea390c2a7ec1efd0f4cd098",
+          "port_blob": "968cf39f7879d6861ea390c2a7ec1efd0f4cd098",
+          "lts_to_port_sha256": "7e1c59fe8c53ba5018f51538b9946e43a3a2451d3069023db8a09227f4a64a38"
+        },
+        "drivers/android/binder/thread.rs": {
+          "ack_blob": "9b161efc84c851882ca48356f061f76e015831c7",
+          "port_blob": "e9f14b2568286e83f3c60bfb842b5a6aef27ef05",
+          "lts_to_port_sha256": "588245ea70c33eb8cdf05abd1d79b8a7e31adad1d6118f5f1cd513600e6d43a7"
+        },
+        "drivers/android/binder/transaction.rs": {
+          "ack_blob": "3271e20887989f233788d029dca7af25ee1941ec",
+          "port_blob": "46b8e24f786731d9e6579f19485b064f9577714c",
+          "lts_to_port_sha256": "9de4d387444a49260a2babffccaa5fb16e7fc33854cded1ea62c5951b47a9fe2"
+        }
+      }
+    }
+  ],
+  "scope": "Full four candidate patches, complete new netlink wrapper/helpers and Binder report generation read. Binder transaction-log additions and actual report/dumpstate consumers examined. The initialization correction also covers the existing shrinker and module lifetime; it does not finalize every base Rust Binder candidate.",
+  "local_evidence": [
+    "grapheneos-17/frameworks/native/libs/binder/BinderNetlink.cpp: family/group lookup, attributes and subscription",
+    "grapheneos-17/frameworks/base/services/core/jni/com_android_server_am_CachedAppOptimizer.cpp: handleBinderReport",
+    "grapheneos-17/frameworks/native/cmds/dumpstate/dumpstate.cpp: transaction and failed-transaction log collection",
+    "grapheneos-17/system/sepolicy/private/{system_server.te,app_neverallows.te,domain.te,dumpstate.te,genfs_contexts}: generic socket and binderfs log policy",
+    "drivers/android/{binder_netlink.c,binder/rust_binderfs.c}: native family flags, filesystem registration/failure paths and stats=global log creation",
+    "rust/macros/module.rs: generated module exit drops only BinderModule fields",
+    "kernel/module/main.c: active init reference, unload reference check and __module_get",
+    "mm/shrinker.c: shrinker_free waits for outstanding callbacks before deferred native freeing",
+    "mm/list_lru.c: list_lru_destroy",
+    "net/netlink/genetlink.c and include/net/genetlink.h: registration mutation, native SKB transfer and group validation",
+    "lib/nlattr.c: signed arithmetic and u16 nla_len storage"
+  ],
+  "checks": [
+    "evidence/rust-netlink-ownership-check.json",
+    "evidence/rust-binder-init-check.json"
+  ],
+  "validation": "Build 94 failed on unavailable bindgen constants; 4ad2bc23b3b2 corrects this. Build 95 passed the bounded-netlink implementation. Build 96 passed source 5093b3165725 including Binder lifetime and unsafe contracts: both images, 100 common and 45 virtual-device modules, all 145 signatures verified, tampered control rejected, 659 protected exports and 145 module flag/CRC tables checked. No actual sockets, module loads/unloads, shrinker races or Binder transactions executed.",
+  "remote_sources_used": []
+}
