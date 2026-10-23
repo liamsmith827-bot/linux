@@ -5271,5 +5271,172 @@
       "evidence/rust-ratelimit-lockdep-review.json",
       "SECURITY.md: Rust rate limiting and static lock initialization"
     ]
+  },
+  {
+    "commit": "4f25dd829c562a2ca0ae64762bffebaa7f987cbe",
+    "disposition": "adapted",
+    "rationale": "Retain typed integer module parameters and immutable default/SetOnce access for WrapFD max_nr_load_reqs and min_bytes_per_req. Adapt the setter to cast kernel_param.arg back to ModuleParamAccess<T> and then access .value; ACK incorrectly cast the complete container to its first declared field, whose offset Rust does not guarantee. Invalid strings leave state untouched, the first successful assignment is published, and duplicates return EEXIST as in ACK. Earlier default references remain valid because the default is not mutated. Native module parameter locking, parsing entrypoints and ownership remain LTS. Supported generated operations are Copy primitive integers; no mutable sysfs values or historical layout guarantees are introduced.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "aa0a73a857cc1347ef6d29e09629b496bf76140f"
+    ],
+    "evidence": [
+      "evidence/rust-module-parameter-review.json",
+      "SECURITY.md: Rust module parameter compatibility"
+    ]
+  },
+  {
+    "commit": "37ad4d634b224b19f4f98c748adc87c02eca278a",
+    "disposition": "adapted",
+    "rationale": "Retain checked radix parsing required by Rust integer module parameters, adapted to consume one leading sign before radix selection and a single trailing newline. This preserves native meanings such as +010=8 and +0x10=16 and accepts native newline-terminated input, while rejecting extra signs including -+1 and 0x+1. Retain ACK binary/explicit-octal extensions and unsigned negative zero; native unsigned C parsing is stricter on the latter. Bounds checks precede the unchecked conversion when negating; min/max and overflow cases across all ten types pass extracted tests. Invalid/overflow input continues to return EINVAL rather than claiming identical native errno behavior. Native lib/kstrtox.c is byte-identical to LTS.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "aa0a73a857cc1347ef6d29e09629b496bf76140f"
+    ],
+    "evidence": [
+      "evidence/rust-module-parameter-review.json",
+      "SECURITY.md: Rust module parameter compatibility"
+    ]
+  },
+  {
+    "commit": "2699f85e5e689ad1c6462d6081dd4b1a9ab2d195",
+    "disposition": "adapted",
+    "rationale": "Retain module! parameter declarations, type-to-ops mapping, __param records and built-in/loadable parm/parmtype metadata. The selected WrapFD declares two usize tuning parameters; the successful build contains both metadata records and compiles the actual generated declarations. Parsing validates group delimiters, required field order, supported primitive types and trailing tokens; default literals are typechecked by Rust. Static records pass the complete ModuleParamAccess pointer, matching the corrected setter/getter. The subsequent ACK read-only sysfs change supersedes the original zero permissions. Existing Module init/exit machinery remains; this review does not certify unsupported macro syntaxes or documentation examples (which contain a stale read() accessor).",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-module-parameter-review.json",
+      "SECURITY.md: Rust module parameter compatibility"
+    ]
+  },
+  {
+    "commit": "48ef7b6577ae7f1eaa95f9de4dd657ca1763954e",
+    "disposition": "adapted",
+    "rationale": "Retain read-only sysfs parameter output (0444) and getter operations for WrapFD tuning inspection. Native add_sysfs_param installs no store method when write bits are absent. Adapt get_param to the bounded Formatter and return EINVAL on formatting failure before writing a NUL; RawFormatter tracks the attempted size beyond the buffer, so its position is not inherently bounded as ACK claimed. The current generated integer types have short output, so no reachable existing long-Display exploit is asserted. The extracted generic callback control demonstrates the boundary with guarded host storage. Format remains decimal plus newline with a trailing NUL outside the returned count. No writable runtime knob is added.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "aa0a73a857cc1347ef6d29e09629b496bf76140f"
+    ],
+    "evidence": [
+      "evidence/rust-module-parameter-review.json",
+      "SECURITY.md: Rust module parameter compatibility"
+    ]
+  },
+  {
+    "commit": "9d239c3200382bec6f609d9dd52709ff15b88e6a",
+    "disposition": "superseded-no-residual-code",
+    "rationale": "The temporary Rust-with-MODVERSIONS workaround removed the !MODVERSIONS gate by suppressing all Rust exports. ACK explicitly reverted it in 6a72cc1b8572. Native LTS now supports Rust via EXTENDED_MODVERSIONS and GENDWARFKSYMS; retain that support and real GPL exports. This is required by the selected Rust Binder module. The separate conditional helper-export list follows the retained inline-helper strategy, not this obsolete blanket export suppression.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/rust-ashmem-history-cfi-review.json",
+      "SECURITY.md: Rust integration history and ashmem selection"
+    ]
+  },
+  {
+    "commit": "6a72cc1b8572a5b680bf712cd601f7fe3fdf4ba7",
+    "disposition": "superseded-no-residual-code",
+    "rationale": "The revert restores real Rust exports but temporarily reintroduces !MODVERSIONS. Preserve the resulting export behavior with native LTS EXTENDED_MODVERSIONS/GENDWARFKSYMS rather than replaying the obsolete gate. The current SDK builds with RUST, MODVERSIONS and EXTENDED_MODVERSIONS all enabled, and Rust Binder is distributed as a module with verified CRC tables. Both historical patches were read; this is replacement by mature native support, not preservation of an Android binary KMI.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/rust-ashmem-history-cfi-review.json",
+      "SECURITY.md: Rust integration history and ashmem selection"
+    ]
+  },
+  {
+    "commit": "19f145cefca5621fd2dd6693def69fe1a476b2d7",
+    "disposition": "adapted",
+    "rationale": "Retain lru_status bindgen newtype plus cfi_encoding=10lru_status, Rust feature declarations, direct native-typed shrinker callback and deletion of the temporary C trampoline. The selected SDK enables CFI and integer normalization without permissive mode. Offline inspection of build 97 rust_binder.ko gives callback tag 0xb01d9dea, equal to a C callback using the enum and typedef extracted from native list_lru.h; an unsigned-int return control gives 0xa0498a8a. This preserves the CFI check instead of bypassing it. Native callback behavior and LTS list-LRU implementation are unchanged; no callback or CFI trap was executed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-ashmem-history-cfi-review.json",
+      "SECURITY.md: Rust integration history and ashmem selection"
+    ]
+  },
+  {
+    "commit": "4b36150879c41c7fe6252bbcdc5bb8d02178b83f",
+    "disposition": "adapted",
+    "rationale": "Retain the one-line reset.h bindgen inclusion as a generic vendor module source interface. It adds declarations/types and no reset-controller driver, registration or config enablement. SDK CONFIG_RESET_CONTROLLER is disabled and the native header supplies optional/error stubs; a concrete Rust reset consumer was not found in the checked-out common-modules Rust sources. Runtime necessity is therefore unconfirmed, not disproven. The conservative decision follows the requested source-customization priority and does not add a future platform implementation. Native reset.h is unchanged. This uncertainty is recorded in unresolved-feature-questions.json.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-ashmem-history-cfi-review.json",
+      "SECURITY.md: Rust integration history and ashmem selection"
+    ]
+  },
+  {
+    "commit": "c2d2bec89da852542669929ee4f04fbc64691318",
+    "disposition": "superseded-no-residual-code",
+    "rationale": "The temporary ASHMEM_RUST-to-ASHMEM cleanup was completely reverted by 12c57ba8e300, then replaced by the later 3f69bddf45ef/ebdb82c03e6a source selection. Keep final ASHMEM=y depending on SHMEM and RUST, final ashmem.rs/ashmem_exports.c filenames, and the existing ashmem_rust module metadata name. No intermediate rename or obsolete selector is replayed. The SDK has Rust enabled and successfully compiles its built-in ashmem implementation; ARM64 defconfig history is outside the x86 target.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/rust-ashmem-history-cfi-review.json",
+      "SECURITY.md: Rust integration history and ashmem selection"
+    ]
+  },
+  {
+    "commit": "12c57ba8e30004cb382099c48c9a621b747230c1",
+    "disposition": "superseded-no-residual-code",
+    "rationale": "This historical revert temporarily restored ASHMEM_RUST selection for a C fallback when Rust did not support software-tag KASAN. It is superseded by the final source selection, with one Rust ashmem implementation and memfd ioctl shim. Current SDK is x86_64 with RUST=y and does not select KASAN_SW_TAGS; its existing manifest compiles the required device ABI. Do not reinstate the obsolete C fallback configuration. All rename, Kconfig, Makefile and conditional-binding/ioctl changes were checked against the final trees.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/rust-ashmem-history-cfi-review.json",
+      "SECURITY.md: Rust integration history and ashmem selection"
+    ]
+  },
+  {
+    "commit": "ebdb82c03e6adc63d7eaf683c5e5555b49d6a3bc",
+    "disposition": "adapted",
+    "rationale": "Retain final removal of the duplicate C ashmem and C memfd-shim implementations and their obsolete config selectors. The required ashmem device and memfd compatibility APIs remain in the selected, fully reviewed Rust driver; this is implementation replacement, not removal of the legacy userspace API. Native memfd seal checks, CAP_SYS_ADMIN purge behavior, shmem memfd gate and live file references remain. Local libcutils tests exercise names, sizes, seals, pin compatibility and file IDs. The x86 SDK selects ASHMEM and RUST and builds without the legacy C files; no separate ARM64 fallback is needed for this target.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-ashmem-history-cfi-review.json",
+      "SECURITY.md: Rust integration history and ashmem selection"
+    ]
+  },
+  {
+    "commit": "d8ebfa28662f94b45b81beaad2333599df256777",
+    "disposition": "adapted",
+    "rationale": "Retain the separate 32-bit ASHMEM_GET_FILE_ID ioctl encoding, compat_ptr conversion and exactly-u32 output for both real ashmem and memfd compatibility, plus ENOTTY for unknown memfd ioctls. The bionic UAPI uses unsigned long, whose ioctl size differs across 32/64-bit applications; local libcutils AshmemCompatFileIDTest compares its unsigned-long result with fstat. SDK enables IA32/COMPAT. Truncating the inode to the compat width follows this existing ABI; it does not promise globally unique 64-bit IDs to 32-bit clients. UserSliceWriter retains bounded usercopy/fault behavior; per-file locking protects real-ashmem backing lookup. No actual 32-bit userspace program was executed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/rust-ashmem-history-cfi-review.json",
+      "SECURITY.md: Rust integration history and ashmem selection"
+    ]
+  },
+  {
+    "commit": "751d06ec7120b66307b05409e2b446876bf41629",
+    "disposition": "adapted",
+    "rationale": "Retain one final Rust ashmem implementation for positive local libcutils/ART legacy-application consumers, including real ashmem, memfd compatibility, range/purge tracking, shrinker lifetime, source exports and administrator controls. The two base-import patches have identical stable patch IDs and new-file contents. Reconcile their original ASHMEM_RUST selection and filenames through the later final ASHMEM configuration. The complete selected drivers/staging/android subtree is byte-identical to reviewed checkpoint 3ea7a304b5dc, whose scoped generic-source-review records cover mutex/reference ownership, monotonic protection, bounded names/pin ranges, native sealing, backing mmap prohibition and shrinker teardown. Retain security adaptations 9c710998db9a (legacy GET_PIN_STATUS payload and toggle-read counts) and 3ea7a304b5dc (CAP_SYS_ADMIN for global toggle writes). Required generic Rust dependencies have separate final reviews. The independent shared EOF/page-emulation compatibility question remains unresolved and is not certified here. Historical KMI or inactive C fallbacks are not reintroduced.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "9c710998db9abbd219b66df0014232cbe21d5a66",
+      "3ea7a304b5dc436d878053200c03609b692c6006"
+    ],
+    "evidence": [
+      "evidence/rust-ashmem-history-cfi-review.json",
+      "SECURITY.md: Rust integration history and ashmem selection"
+    ]
+  },
+  {
+    "commit": "f0233386601b19245f0203d870286d0e39dfc8d5",
+    "disposition": "adapted",
+    "rationale": "Retain one final Rust ashmem implementation for positive local libcutils/ART legacy-application consumers, including real ashmem, memfd compatibility, range/purge tracking, shrinker lifetime, source exports and administrator controls. The two base-import patches have identical stable patch IDs and new-file contents. Reconcile their original ASHMEM_RUST selection and filenames through the later final ASHMEM configuration. The complete selected drivers/staging/android subtree is byte-identical to reviewed checkpoint 3ea7a304b5dc, whose scoped generic-source-review records cover mutex/reference ownership, monotonic protection, bounded names/pin ranges, native sealing, backing mmap prohibition and shrinker teardown. Retain security adaptations 9c710998db9a (legacy GET_PIN_STATUS payload and toggle-read counts) and 3ea7a304b5dc (CAP_SYS_ADMIN for global toggle writes). Required generic Rust dependencies have separate final reviews. The independent shared EOF/page-emulation compatibility question remains unresolved and is not certified here. Historical KMI or inactive C fallbacks are not reintroduced.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "9c710998db9abbd219b66df0014232cbe21d5a66",
+      "3ea7a304b5dc436d878053200c03609b692c6006"
+    ],
+    "evidence": [
+      "evidence/rust-ashmem-history-cfi-review.json",
+      "SECURITY.md: Rust integration history and ashmem selection"
+    ]
   }
 ]

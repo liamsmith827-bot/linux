@@ -1,0 +1,514 @@
+{
+  "source_head": "aa0a73a857cc1347ef6d29e09629b496bf76140f",
+  "records": [
+    {
+      "commit": "9d239c3200382bec6f609d9dd52709ff15b88e6a",
+      "disposition": "superseded-no-residual-code",
+      "rationale": "The temporary Rust-with-MODVERSIONS workaround removed the !MODVERSIONS gate by suppressing all Rust exports. ACK explicitly reverted it in 6a72cc1b8572. Native LTS now supports Rust via EXTENDED_MODVERSIONS and GENDWARFKSYMS; retain that support and real GPL exports. This is required by the selected Rust Binder module. The separate conditional helper-export list follows the retained inline-helper strategy, not this obsolete blanket export suppression.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/rust-ashmem-history-cfi-review.json",
+        "SECURITY.md: Rust integration history and ashmem selection"
+      ],
+      "subject": "ANDROID: Allow MODVERSIONS + Rust with no symbol export",
+      "patch_sha256": "e5fcfb57b32aa907ab9dd0c9e185e85ccf1fb3b356c730cb2fe986b5c9ef0a2a",
+      "paths": {
+        "init/Kconfig": {
+          "ack_blob": "92021a195d4748dc832b6e30156bb421134683da",
+          "port_blob": "1f2551a17a753f76fce2efbdfb8081aab40b9c72",
+          "lts_to_port_sha256": "2f34d19e2f71a946718625546e69e489c2b11dfc77ade61ca6a891901b63206d"
+        },
+        "rust/exports.c": {
+          "ack_blob": "1b52460b0f4eeef6df9081abb9b7e054a28c3c21",
+          "port_blob": "1b52460b0f4eeef6df9081abb9b7e054a28c3c21",
+          "lts_to_port_sha256": "dbdd6cddf38014b53cb5b95f284c707688a4b414087b845f9f073aed366cbbbe"
+        }
+      }
+    },
+    {
+      "commit": "6a72cc1b8572a5b680bf712cd601f7fe3fdf4ba7",
+      "disposition": "superseded-no-residual-code",
+      "rationale": "The revert restores real Rust exports but temporarily reintroduces !MODVERSIONS. Preserve the resulting export behavior with native LTS EXTENDED_MODVERSIONS/GENDWARFKSYMS rather than replaying the obsolete gate. The current SDK builds with RUST, MODVERSIONS and EXTENDED_MODVERSIONS all enabled, and Rust Binder is distributed as a module with verified CRC tables. Both historical patches were read; this is replacement by mature native support, not preservation of an Android binary KMI.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/rust-ashmem-history-cfi-review.json",
+        "SECURITY.md: Rust integration history and ashmem selection"
+      ],
+      "subject": "Revert \"ANDROID: Allow MODVERSIONS + Rust with no symbol export\"",
+      "patch_sha256": "2426d1b8b5dd3e48df09da1c17b1a7222c9241ed1f47a0a232891237053ce0b0",
+      "paths": {
+        "init/Kconfig": {
+          "ack_blob": "92021a195d4748dc832b6e30156bb421134683da",
+          "port_blob": "1f2551a17a753f76fce2efbdfb8081aab40b9c72",
+          "lts_to_port_sha256": "2f34d19e2f71a946718625546e69e489c2b11dfc77ade61ca6a891901b63206d"
+        },
+        "rust/exports.c": {
+          "ack_blob": "1b52460b0f4eeef6df9081abb9b7e054a28c3c21",
+          "port_blob": "1b52460b0f4eeef6df9081abb9b7e054a28c3c21",
+          "lts_to_port_sha256": "dbdd6cddf38014b53cb5b95f284c707688a4b414087b845f9f073aed366cbbbe"
+        }
+      }
+    },
+    {
+      "commit": "19f145cefca5621fd2dd6693def69fe1a476b2d7",
+      "disposition": "adapted",
+      "rationale": "Retain lru_status bindgen newtype plus cfi_encoding=10lru_status, Rust feature declarations, direct native-typed shrinker callback and deletion of the temporary C trampoline. The selected SDK enables CFI and integer normalization without permissive mode. Offline inspection of build 97 rust_binder.ko gives callback tag 0xb01d9dea, equal to a C callback using the enum and typedef extracted from native list_lru.h; an unsigned-int return control gives 0xa0498a8a. This preserves the CFI check instead of bypassing it. Native callback behavior and LTS list-LRU implementation are unchanged; no callback or CFI trap was executed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-ashmem-history-cfi-review.json",
+        "SECURITY.md: Rust integration history and ashmem selection"
+      ],
+      "subject": "BACKPORT: rust: declare cfi_encoding for lru_status",
+      "patch_sha256": "517e7639cb24f394eab97ef3f64ad5e4245c7a440bd41a98559753f5476d26e1",
+      "paths": {
+        "drivers/android/binder/Makefile": {
+          "ack_blob": "3ef6ef16f398b8542f6465f6b17a4ee9136ab900",
+          "port_blob": "3ef6ef16f398b8542f6465f6b17a4ee9136ab900",
+          "lts_to_port_sha256": "a6d38eba488f236abf6f3c034d4b99a0cde2d8cfd0331924a72243530acb1de4"
+        },
+        "drivers/android/binder/page_range.rs": {
+          "ack_blob": "b3bc0d6bb28b978d7fe485f507634184b910030e",
+          "port_blob": "a1f9b19b147c8bf4b467d279eed22c03ba0b2ef4",
+          "lts_to_port_sha256": "69ba51a0c95782a91ac82e7e1fdf52bfb2ffd38952e59647f7d3485c9f83f921"
+        },
+        "drivers/android/binder/page_range_helper.c": {
+          "ack_blob": null,
+          "port_blob": null,
+          "lts_to_port_sha256": "b35e5e0fdeac92cff2bb404c3ca08c58b4b529cd476738190c839ec50dc08ea9"
+        },
+        "drivers/android/binder/page_range_helper.h": {
+          "ack_blob": null,
+          "port_blob": null,
+          "lts_to_port_sha256": "01c8d5add5901411bbeaed63d1542aa967edc81f18da61ac48b02aa8666b7759"
+        },
+        "rust/bindgen_parameters": {
+          "ack_blob": "f7f9a3686de0d01b0c08958699ed58ff4a8910dc",
+          "port_blob": "f7f9a3686de0d01b0c08958699ed58ff4a8910dc",
+          "lts_to_port_sha256": "5bab2353f4f79182bee3abd0d3d814e3cc0013b34cde0cacd82db3761237be5e"
+        },
+        "rust/bindings/bindings_helper.h": {
+          "ack_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "port_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "lts_to_port_sha256": "219f093804081c8c8f7117e4b73acb1c4f423fcea4392f92079e0a21d9b299ed"
+        },
+        "rust/bindings/lib.rs": {
+          "ack_blob": "948740badfe6b91f51bb977397c5d01043892153",
+          "port_blob": "550c7655a547c6ada7ac88913e307dd1a9491bdb",
+          "lts_to_port_sha256": "2f473b9c52db4f64f6748384d5a4c58e853912b8bdd50701f0e3855cca7c1c8f"
+        },
+        "rust/uapi/lib.rs": {
+          "ack_blob": "83c4795acbff1da852639bcbd9bcf5fb66b7e070",
+          "port_blob": "5c8a8fa46eec0cce9c262ad350c042a069989b66",
+          "lts_to_port_sha256": "3bf223051a3023556a4e48bb8614664e1c39716465a861a17be681ca83a92ddf"
+        }
+      }
+    },
+    {
+      "commit": "4b36150879c41c7fe6252bbcdc5bb8d02178b83f",
+      "disposition": "adapted",
+      "rationale": "Retain the one-line reset.h bindgen inclusion as a generic vendor module source interface. It adds declarations/types and no reset-controller driver, registration or config enablement. SDK CONFIG_RESET_CONTROLLER is disabled and the native header supplies optional/error stubs; a concrete Rust reset consumer was not found in the checked-out common-modules Rust sources. Runtime necessity is therefore unconfirmed, not disproven. The conservative decision follows the requested source-customization priority and does not add a future platform implementation. Native reset.h is unchanged. This uncertainty is recorded in unresolved-feature-questions.json.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-ashmem-history-cfi-review.json",
+        "SECURITY.md: Rust integration history and ashmem selection"
+      ],
+      "subject": "ANDROID: rust: generate bindings for reset.h",
+      "patch_sha256": "ef9562e6cdb4b1f403a32a363744c98726ab6a9bf8d4ac870bfe9cc0e9c1c18b",
+      "paths": {
+        "rust/bindings/bindings_helper.h": {
+          "ack_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "port_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "lts_to_port_sha256": "219f093804081c8c8f7117e4b73acb1c4f423fcea4392f92079e0a21d9b299ed"
+        }
+      }
+    },
+    {
+      "commit": "c2d2bec89da852542669929ee4f04fbc64691318",
+      "disposition": "superseded-no-residual-code",
+      "rationale": "The temporary ASHMEM_RUST-to-ASHMEM cleanup was completely reverted by 12c57ba8e300, then replaced by the later 3f69bddf45ef/ebdb82c03e6a source selection. Keep final ASHMEM=y depending on SHMEM and RUST, final ashmem.rs/ashmem_exports.c filenames, and the existing ashmem_rust module metadata name. No intermediate rename or obsolete selector is replayed. The SDK has Rust enabled and successfully compiles its built-in ashmem implementation; ARM64 defconfig history is outside the x86 target.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/rust-ashmem-history-cfi-review.json",
+        "SECURITY.md: Rust integration history and ashmem selection"
+      ],
+      "subject": "ANDROID: ashmem: Cleanup ashmem kconfig options",
+      "patch_sha256": "09d78c84dd657e5b16ea5327cfe80bc91360143cf8551b6acc922137d0629d36",
+      "paths": {
+        "arch/arm64/configs/gki_defconfig": {
+          "ack_blob": "a3e1c0d60d5220b6be8b306157a331fc1696afb0",
+          "port_blob": null,
+          "lts_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "arch/x86/configs/gki_defconfig": {
+          "ack_blob": "180b3166b2cce53f484b656cd70bd9dbe4a5b487",
+          "port_blob": "0a3476699adc33a60f0c42ffb1ca8731b47a31de",
+          "lts_to_port_sha256": "9500eb36607b584eab2c0e00df24a51e985cb3bab5918ea6e70e1ed7f9db77a4"
+        },
+        "drivers/staging/android/Kconfig": {
+          "ack_blob": "b432280beeb4b16c70c8294999ff1848033331e7",
+          "port_blob": "b432280beeb4b16c70c8294999ff1848033331e7",
+          "lts_to_port_sha256": "4e84450f9da65dc86ff601e054e3780222f8641c9831cbfeed0428c7c865c840"
+        },
+        "drivers/staging/android/Makefile": {
+          "ack_blob": "0732228e3aabeec157f5aa6b01318581ff3a8d6a",
+          "port_blob": "0732228e3aabeec157f5aa6b01318581ff3a8d6a",
+          "lts_to_port_sha256": "9bc423cfdfda3bb27b8e596b2dcfd35d6d90d4c59c8ded5ef0a1febf8bb5e9d5"
+        },
+        "drivers/staging/android/ashmem.rs": {
+          "ack_blob": "8d4e156d40e541da5a33230eaeb2a098f54ee511",
+          "port_blob": "0c6af979bcf00ffab0efe0a472dd109690b5d4b4",
+          "lts_to_port_sha256": "3da758331c637aa54535277fbd98c3878b4306ae7283b0c584436470ca1898c6"
+        },
+        "drivers/staging/android/ashmem_exports.c": {
+          "ack_blob": "373110484c164777810796a10955a2c8fd61a29d",
+          "port_blob": "373110484c164777810796a10955a2c8fd61a29d",
+          "lts_to_port_sha256": "472cd81077a92adc776074ca30f28eca3a907782586c17a83d3844ef1e3a71b9"
+        },
+        "drivers/staging/android/ashmem_rust.rs": {
+          "ack_blob": null,
+          "port_blob": null,
+          "lts_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "drivers/staging/android/ashmem_rust_exports.c": {
+          "ack_blob": null,
+          "port_blob": null,
+          "lts_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "mm/shmem.c": {
+          "ack_blob": "c83f7f79f64cc7dd4ab7dcfa9ae245ce1d01a3e6",
+          "port_blob": "82f8b5e6b7d87b959763e105c8f17c6a04f4ae1d",
+          "lts_to_port_sha256": "448e42cdd5e7625b9c91871f13046c915a3c3f381f88b4739c5615a5443b4473"
+        },
+        "rust/bindings/bindings_helper.h": {
+          "ack_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "port_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "lts_to_port_sha256": "219f093804081c8c8f7117e4b73acb1c4f423fcea4392f92079e0a21d9b299ed"
+        }
+      }
+    },
+    {
+      "commit": "12c57ba8e30004cb382099c48c9a621b747230c1",
+      "disposition": "superseded-no-residual-code",
+      "rationale": "This historical revert temporarily restored ASHMEM_RUST selection for a C fallback when Rust did not support software-tag KASAN. It is superseded by the final source selection, with one Rust ashmem implementation and memfd ioctl shim. Current SDK is x86_64 with RUST=y and does not select KASAN_SW_TAGS; its existing manifest compiles the required device ABI. Do not reinstate the obsolete C fallback configuration. All rename, Kconfig, Makefile and conditional-binding/ioctl changes were checked against the final trees.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/rust-ashmem-history-cfi-review.json",
+        "SECURITY.md: Rust integration history and ashmem selection"
+      ],
+      "subject": "Revert \"ANDROID: ashmem: Cleanup ashmem kconfig options\"",
+      "patch_sha256": "e06c1f8aaa790834b4f0a68fc5ce27b7ce46a6e3cad1b448f24e04c4b6cf4f90",
+      "paths": {
+        "arch/arm64/configs/gki_defconfig": {
+          "ack_blob": "a3e1c0d60d5220b6be8b306157a331fc1696afb0",
+          "port_blob": null,
+          "lts_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "arch/x86/configs/gki_defconfig": {
+          "ack_blob": "180b3166b2cce53f484b656cd70bd9dbe4a5b487",
+          "port_blob": "0a3476699adc33a60f0c42ffb1ca8731b47a31de",
+          "lts_to_port_sha256": "9500eb36607b584eab2c0e00df24a51e985cb3bab5918ea6e70e1ed7f9db77a4"
+        },
+        "drivers/staging/android/Kconfig": {
+          "ack_blob": "b432280beeb4b16c70c8294999ff1848033331e7",
+          "port_blob": "b432280beeb4b16c70c8294999ff1848033331e7",
+          "lts_to_port_sha256": "4e84450f9da65dc86ff601e054e3780222f8641c9831cbfeed0428c7c865c840"
+        },
+        "drivers/staging/android/Makefile": {
+          "ack_blob": "0732228e3aabeec157f5aa6b01318581ff3a8d6a",
+          "port_blob": "0732228e3aabeec157f5aa6b01318581ff3a8d6a",
+          "lts_to_port_sha256": "9bc423cfdfda3bb27b8e596b2dcfd35d6d90d4c59c8ded5ef0a1febf8bb5e9d5"
+        },
+        "drivers/staging/android/ashmem.rs": {
+          "ack_blob": "8d4e156d40e541da5a33230eaeb2a098f54ee511",
+          "port_blob": "0c6af979bcf00ffab0efe0a472dd109690b5d4b4",
+          "lts_to_port_sha256": "3da758331c637aa54535277fbd98c3878b4306ae7283b0c584436470ca1898c6"
+        },
+        "drivers/staging/android/ashmem_exports.c": {
+          "ack_blob": "373110484c164777810796a10955a2c8fd61a29d",
+          "port_blob": "373110484c164777810796a10955a2c8fd61a29d",
+          "lts_to_port_sha256": "472cd81077a92adc776074ca30f28eca3a907782586c17a83d3844ef1e3a71b9"
+        },
+        "drivers/staging/android/ashmem_rust.rs": {
+          "ack_blob": null,
+          "port_blob": null,
+          "lts_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "drivers/staging/android/ashmem_rust_exports.c": {
+          "ack_blob": null,
+          "port_blob": null,
+          "lts_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "mm/shmem.c": {
+          "ack_blob": "c83f7f79f64cc7dd4ab7dcfa9ae245ce1d01a3e6",
+          "port_blob": "82f8b5e6b7d87b959763e105c8f17c6a04f4ae1d",
+          "lts_to_port_sha256": "448e42cdd5e7625b9c91871f13046c915a3c3f381f88b4739c5615a5443b4473"
+        },
+        "rust/bindings/bindings_helper.h": {
+          "ack_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "port_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "lts_to_port_sha256": "219f093804081c8c8f7117e4b73acb1c4f423fcea4392f92079e0a21d9b299ed"
+        }
+      }
+    },
+    {
+      "commit": "ebdb82c03e6adc63d7eaf683c5e5555b49d6a3bc",
+      "disposition": "adapted",
+      "rationale": "Retain final removal of the duplicate C ashmem and C memfd-shim implementations and their obsolete config selectors. The required ashmem device and memfd compatibility APIs remain in the selected, fully reviewed Rust driver; this is implementation replacement, not removal of the legacy userspace API. Native memfd seal checks, CAP_SYS_ADMIN purge behavior, shmem memfd gate and live file references remain. Local libcutils tests exercise names, sizes, seals, pin compatibility and file IDs. The x86 SDK selects ASHMEM and RUST and builds without the legacy C files; no separate ARM64 fallback is needed for this target.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-ashmem-history-cfi-review.json",
+        "SECURITY.md: Rust integration history and ashmem selection"
+      ],
+      "subject": "ANDROID: Remove C ashmem and memfd-ashmem-shim drivers",
+      "patch_sha256": "c0bd4918e13e9d6a63f438f970c8fe0d6919125218ec59c5770e12d21fe4a949",
+      "paths": {
+        "arch/arm64/configs/gki_defconfig": {
+          "ack_blob": "a3e1c0d60d5220b6be8b306157a331fc1696afb0",
+          "port_blob": null,
+          "lts_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "arch/x86/configs/gki_defconfig": {
+          "ack_blob": "180b3166b2cce53f484b656cd70bd9dbe4a5b487",
+          "port_blob": "0a3476699adc33a60f0c42ffb1ca8731b47a31de",
+          "lts_to_port_sha256": "9500eb36607b584eab2c0e00df24a51e985cb3bab5918ea6e70e1ed7f9db77a4"
+        },
+        "drivers/staging/android/Kconfig": {
+          "ack_blob": "b432280beeb4b16c70c8294999ff1848033331e7",
+          "port_blob": "b432280beeb4b16c70c8294999ff1848033331e7",
+          "lts_to_port_sha256": "4e84450f9da65dc86ff601e054e3780222f8641c9831cbfeed0428c7c865c840"
+        },
+        "drivers/staging/android/Makefile": {
+          "ack_blob": "0732228e3aabeec157f5aa6b01318581ff3a8d6a",
+          "port_blob": "0732228e3aabeec157f5aa6b01318581ff3a8d6a",
+          "lts_to_port_sha256": "9bc423cfdfda3bb27b8e596b2dcfd35d6d90d4c59c8ded5ef0a1febf8bb5e9d5"
+        },
+        "drivers/staging/android/ashmem-legacy.c": {
+          "ack_blob": null,
+          "port_blob": null,
+          "lts_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "mm/Kconfig": {
+          "ack_blob": "69fd6fc840a7290d294a65eacf9220af39111359",
+          "port_blob": "69fd6fc840a7290d294a65eacf9220af39111359",
+          "lts_to_port_sha256": "0915b8a41537207ef38d629429478f28b29316963df637688ad64bf93e27d928"
+        },
+        "mm/memfd-ashmem-shim.c": {
+          "ack_blob": null,
+          "port_blob": null,
+          "lts_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "rust/bindings/bindings_helper.h": {
+          "ack_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "port_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "lts_to_port_sha256": "219f093804081c8c8f7117e4b73acb1c4f423fcea4392f92079e0a21d9b299ed"
+        }
+      }
+    },
+    {
+      "commit": "d8ebfa28662f94b45b81beaad2333599df256777",
+      "disposition": "adapted",
+      "rationale": "Retain the separate 32-bit ASHMEM_GET_FILE_ID ioctl encoding, compat_ptr conversion and exactly-u32 output for both real ashmem and memfd compatibility, plus ENOTTY for unknown memfd ioctls. The bionic UAPI uses unsigned long, whose ioctl size differs across 32/64-bit applications; local libcutils AshmemCompatFileIDTest compares its unsigned-long result with fstat. SDK enables IA32/COMPAT. Truncating the inode to the compat width follows this existing ABI; it does not promise globally unique 64-bit IDs to 32-bit clients. UserSliceWriter retains bounded usercopy/fault behavior; per-file locking protects real-ashmem backing lookup. No actual 32-bit userspace program was executed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-ashmem-history-cfi-review.json",
+        "SECURITY.md: Rust integration history and ashmem selection"
+      ],
+      "subject": "ANDROID: ashmem: Handle ASHMEM_GET_FILE_ID from 32-bit userspace programs",
+      "patch_sha256": "286a1b7138f3f0e09ae9a58633de7f828f6c0a651c87044aceb5863f9973a4db",
+      "paths": {
+        "drivers/staging/android/ashmem.h": {
+          "ack_blob": "ca4e82b02e6bceb69883cb36ab72963c21aed5bb",
+          "port_blob": "ca4e82b02e6bceb69883cb36ab72963c21aed5bb",
+          "lts_to_port_sha256": "2ba8f011ace5a2c1dac85b3a791d6a3580318d75372057788e88ecd6e2e8e533"
+        },
+        "drivers/staging/android/ashmem.rs": {
+          "ack_blob": "8d4e156d40e541da5a33230eaeb2a098f54ee511",
+          "port_blob": "0c6af979bcf00ffab0efe0a472dd109690b5d4b4",
+          "lts_to_port_sha256": "3da758331c637aa54535277fbd98c3878b4306ae7283b0c584436470ca1898c6"
+        },
+        "rust/bindings/bindings_helper.h": {
+          "ack_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "port_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "lts_to_port_sha256": "219f093804081c8c8f7117e4b73acb1c4f423fcea4392f92079e0a21d9b299ed"
+        },
+        "rust/helpers/compat.c": {
+          "ack_blob": "d6e8a3143c83bc9f65dae1f28ff80b90e59fd537",
+          "port_blob": "d6e8a3143c83bc9f65dae1f28ff80b90e59fd537",
+          "lts_to_port_sha256": "641f5f52f93b2259d38cbfbb625a21e72fd5404d926b42859ec9a680fd7fddc8"
+        },
+        "rust/helpers/helpers.c": {
+          "ack_blob": "3b33dca096e6c5abb9f8e8f55945afdc92d32866",
+          "port_blob": "3b33dca096e6c5abb9f8e8f55945afdc92d32866",
+          "lts_to_port_sha256": "b734371a8b2100e5b3d47c5abcef00e21cf0fc787b89842f0916c0d5b9a6e1ca"
+        }
+      }
+    },
+    {
+      "commit": "751d06ec7120b66307b05409e2b446876bf41629",
+      "disposition": "adapted",
+      "rationale": "Retain one final Rust ashmem implementation for positive local libcutils/ART legacy-application consumers, including real ashmem, memfd compatibility, range/purge tracking, shrinker lifetime, source exports and administrator controls. The two base-import patches have identical stable patch IDs and new-file contents. Reconcile their original ASHMEM_RUST selection and filenames through the later final ASHMEM configuration. The complete selected drivers/staging/android subtree is byte-identical to reviewed checkpoint 3ea7a304b5dc, whose scoped generic-source-review records cover mutex/reference ownership, monotonic protection, bounded names/pin ranges, native sealing, backing mmap prohibition and shrinker teardown. Retain security adaptations 9c710998db9a (legacy GET_PIN_STATUS payload and toggle-read counts) and 3ea7a304b5dc (CAP_SYS_ADMIN for global toggle writes). Required generic Rust dependencies have separate final reviews. The independent shared EOF/page-emulation compatibility question remains unresolved and is not certified here. Historical KMI or inactive C fallbacks are not reintroduced.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "9c710998db9abbd219b66df0014232cbe21d5a66",
+        "3ea7a304b5dc436d878053200c03609b692c6006"
+      ],
+      "evidence": [
+        "evidence/rust-ashmem-history-cfi-review.json",
+        "SECURITY.md: Rust integration history and ashmem selection"
+      ],
+      "subject": "ANDROID: ashmem_rust: Port rust ashmem driver from android16-6.12",
+      "patch_sha256": "6af0e9c376e8bc7f707e38d66f11a3407eddc2d30009493206ad751dec9ba18f",
+      "paths": {
+        "drivers/staging/android/Kconfig": {
+          "ack_blob": "b432280beeb4b16c70c8294999ff1848033331e7",
+          "port_blob": "b432280beeb4b16c70c8294999ff1848033331e7",
+          "lts_to_port_sha256": "4e84450f9da65dc86ff601e054e3780222f8641c9831cbfeed0428c7c865c840"
+        },
+        "drivers/staging/android/Makefile": {
+          "ack_blob": "0732228e3aabeec157f5aa6b01318581ff3a8d6a",
+          "port_blob": "0732228e3aabeec157f5aa6b01318581ff3a8d6a",
+          "lts_to_port_sha256": "9bc423cfdfda3bb27b8e596b2dcfd35d6d90d4c59c8ded5ef0a1febf8bb5e9d5"
+        },
+        "drivers/staging/android/ashmem.h": {
+          "ack_blob": "ca4e82b02e6bceb69883cb36ab72963c21aed5bb",
+          "port_blob": "ca4e82b02e6bceb69883cb36ab72963c21aed5bb",
+          "lts_to_port_sha256": "2ba8f011ace5a2c1dac85b3a791d6a3580318d75372057788e88ecd6e2e8e533"
+        },
+        "drivers/staging/android/ashmem_range.rs": {
+          "ack_blob": "63dc215019969c54cf8dcada7ab27f4eb3676069",
+          "port_blob": "63dc215019969c54cf8dcada7ab27f4eb3676069",
+          "lts_to_port_sha256": "ddc6acc796d4515ddf7a37a22b8e66aa0dd72c3ccc04a7b2932b20bd1091998d"
+        },
+        "drivers/staging/android/ashmem_rust.rs": {
+          "ack_blob": null,
+          "port_blob": null,
+          "lts_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "drivers/staging/android/ashmem_rust_exports.c": {
+          "ack_blob": null,
+          "port_blob": null,
+          "lts_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "drivers/staging/android/ashmem_shrinker.rs": {
+          "ack_blob": "11584a051b6e36820c9dae9146cfa2c8bd91bd7a",
+          "port_blob": "11584a051b6e36820c9dae9146cfa2c8bd91bd7a",
+          "lts_to_port_sha256": "f11b9f990dae339322ca43d831d5a16137d10917bc6add73be0d74e8f3e464c6"
+        },
+        "drivers/staging/android/ashmem_toggle.rs": {
+          "ack_blob": "42b13c119f80db6d1ab7a5492b8b59ac427c9c38",
+          "port_blob": "94e2c5251b4c315ea9bf1f7772f58ca5af91de38",
+          "lts_to_port_sha256": "c7a099ea2850299c901d587bbca1b3cdddfcdce0f59edb99d825b3b65c78f38d"
+        },
+        "drivers/staging/android/shmem.rs": {
+          "ack_blob": "7d7b27f31dbfb077ded09f4f981dfe0d50c59462",
+          "port_blob": "7d7b27f31dbfb077ded09f4f981dfe0d50c59462",
+          "lts_to_port_sha256": "c6fe0552593e6e9e07ad80942aa0144561d24250db89d82dbebfdf890af266c4"
+        },
+        "rust/bindings/bindings_helper.h": {
+          "ack_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "port_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "lts_to_port_sha256": "219f093804081c8c8f7117e4b73acb1c4f423fcea4392f92079e0a21d9b299ed"
+        }
+      }
+    },
+    {
+      "commit": "f0233386601b19245f0203d870286d0e39dfc8d5",
+      "disposition": "adapted",
+      "rationale": "Retain one final Rust ashmem implementation for positive local libcutils/ART legacy-application consumers, including real ashmem, memfd compatibility, range/purge tracking, shrinker lifetime, source exports and administrator controls. The two base-import patches have identical stable patch IDs and new-file contents. Reconcile their original ASHMEM_RUST selection and filenames through the later final ASHMEM configuration. The complete selected drivers/staging/android subtree is byte-identical to reviewed checkpoint 3ea7a304b5dc, whose scoped generic-source-review records cover mutex/reference ownership, monotonic protection, bounded names/pin ranges, native sealing, backing mmap prohibition and shrinker teardown. Retain security adaptations 9c710998db9a (legacy GET_PIN_STATUS payload and toggle-read counts) and 3ea7a304b5dc (CAP_SYS_ADMIN for global toggle writes). Required generic Rust dependencies have separate final reviews. The independent shared EOF/page-emulation compatibility question remains unresolved and is not certified here. Historical KMI or inactive C fallbacks are not reintroduced.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "9c710998db9abbd219b66df0014232cbe21d5a66",
+        "3ea7a304b5dc436d878053200c03609b692c6006"
+      ],
+      "evidence": [
+        "evidence/rust-ashmem-history-cfi-review.json",
+        "SECURITY.md: Rust integration history and ashmem selection"
+      ],
+      "subject": "ANDROID: ashmem_rust: Port rust ashmem driver from android16-6.12",
+      "patch_sha256": "584173eebbcf0f724e113e0bdc16061ca5195d72794fdf0becfbc533f26d5295",
+      "paths": {
+        "drivers/staging/android/Kconfig": {
+          "ack_blob": "b432280beeb4b16c70c8294999ff1848033331e7",
+          "port_blob": "b432280beeb4b16c70c8294999ff1848033331e7",
+          "lts_to_port_sha256": "4e84450f9da65dc86ff601e054e3780222f8641c9831cbfeed0428c7c865c840"
+        },
+        "drivers/staging/android/Makefile": {
+          "ack_blob": "0732228e3aabeec157f5aa6b01318581ff3a8d6a",
+          "port_blob": "0732228e3aabeec157f5aa6b01318581ff3a8d6a",
+          "lts_to_port_sha256": "9bc423cfdfda3bb27b8e596b2dcfd35d6d90d4c59c8ded5ef0a1febf8bb5e9d5"
+        },
+        "drivers/staging/android/ashmem.h": {
+          "ack_blob": "ca4e82b02e6bceb69883cb36ab72963c21aed5bb",
+          "port_blob": "ca4e82b02e6bceb69883cb36ab72963c21aed5bb",
+          "lts_to_port_sha256": "2ba8f011ace5a2c1dac85b3a791d6a3580318d75372057788e88ecd6e2e8e533"
+        },
+        "drivers/staging/android/ashmem_range.rs": {
+          "ack_blob": "63dc215019969c54cf8dcada7ab27f4eb3676069",
+          "port_blob": "63dc215019969c54cf8dcada7ab27f4eb3676069",
+          "lts_to_port_sha256": "ddc6acc796d4515ddf7a37a22b8e66aa0dd72c3ccc04a7b2932b20bd1091998d"
+        },
+        "drivers/staging/android/ashmem_rust.rs": {
+          "ack_blob": null,
+          "port_blob": null,
+          "lts_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "drivers/staging/android/ashmem_rust_exports.c": {
+          "ack_blob": null,
+          "port_blob": null,
+          "lts_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "drivers/staging/android/ashmem_shrinker.rs": {
+          "ack_blob": "11584a051b6e36820c9dae9146cfa2c8bd91bd7a",
+          "port_blob": "11584a051b6e36820c9dae9146cfa2c8bd91bd7a",
+          "lts_to_port_sha256": "f11b9f990dae339322ca43d831d5a16137d10917bc6add73be0d74e8f3e464c6"
+        },
+        "drivers/staging/android/ashmem_toggle.rs": {
+          "ack_blob": "42b13c119f80db6d1ab7a5492b8b59ac427c9c38",
+          "port_blob": "94e2c5251b4c315ea9bf1f7772f58ca5af91de38",
+          "lts_to_port_sha256": "c7a099ea2850299c901d587bbca1b3cdddfcdce0f59edb99d825b3b65c78f38d"
+        },
+        "drivers/staging/android/shmem.rs": {
+          "ack_blob": "7d7b27f31dbfb077ded09f4f981dfe0d50c59462",
+          "port_blob": "7d7b27f31dbfb077ded09f4f981dfe0d50c59462",
+          "lts_to_port_sha256": "c6fe0552593e6e9e07ad80942aa0144561d24250db89d82dbebfdf890af266c4"
+        },
+        "rust/bindings/bindings_helper.h": {
+          "ack_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "port_blob": "7e8f762443b474a784e868f90d6d428f3c4952d8",
+          "lts_to_port_sha256": "219f093804081c8c8f7117e4b73acb1c4f423fcea4392f92079e0a21d9b299ed"
+        }
+      }
+    }
+  ],
+  "duplicate_import_patch_ids": {
+    "751d06ec7120": "67bdbafb662999efcc9f56028319dbf8b8188725",
+    "f0233386601b": "67bdbafb662999efcc9f56028319dbf8b8188725"
+  },
+  "prior_full_ashmem_review": "3ea7a304b5dc436d878053200c03609b692c6006",
+  "ashmem_subtree_changed_since_prior_review": false,
+  "scope": "Small integration/compatibility/history patches read in full. Base ashmem decisions reuse the prior complete source review with exact unchanged-subtree verification and separately finalized dependencies. C removal was examined as whole-implementation replacement, including the removed memfd shim and selected legacy device operations; no claim of bytewise equivalence between languages.",
+  "checks": [
+    "evidence/rust-lru-cfi-check.json",
+    "evidence/ashmem-io-check.json"
+  ],
+  "local_evidence": [
+    "init/Kconfig and rust/exports.c: native Rust module versioning/export behavior",
+    "common_dist/kernel_x86_64_dot_config from build 97: RUST,CFI,CFI_ICALL_NORMALIZE_INTEGERS,MODVERSIONS,EXTENDED_MODVERSIONS,ASHMEM,IA32/COMPAT",
+    "include/linux/list_lru.h and drivers/android/binder/page_range.rs: exact callback type",
+    "include/linux/reset.h: disabled-controller optional/error stubs",
+    "grapheneos-17/bionic/libc/kernel/uapi/linux/ashmem.h",
+    "grapheneos-17/system/core/libcutils/ashmem_test.cpp: AshmemCompatFileIDTest and memfd seal tests",
+    "evidence/generic-source-review.json: complete ashmem subtree source review at 3ea7a304b5dc"
+  ],
+  "validation": "Build 97 passed both images, 100 common and 45 virtual-device modules, all 145 signature verifications with tampered control, and protected export/flag/CRC table checks. CFI tag comparison is offline; no runtime ashmem, 32-bit ioctl, shrinker callback or CFI failure path execution.",
+  "remote_sources_used": [],
+  "native_modversions_commit": "ac61506bf2d1a6766d98b7d94b0c7b2134a0806a"
+}

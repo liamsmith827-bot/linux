@@ -3810,3 +3810,100 @@ key. Only the organizational MAINTAINERS addition is omitted. Native lockdep and
 rate-limit C files remain exactly LTS. The required shared initializer retains
 its existing cfg branches, without adding drivers for future platforms. Existing
 documentation examples are not treated as compiled doctests.
+
+## Rust module parameter compatibility
+
+Retain integer module parameters, radix parsing, module! generation and read-only
+sysfs output for WrapFD's max_nr_load_reqs and min_bytes_per_req. The selected
+driver declares usize defaults of 32 and 0x100000 and uses these values when
+partitioning load requests. Build 96 contains both parm/parmtype metadata records.
+Native kernel parameter ingress/locking and lib/kstrtox.c remain exactly LTS.
+Whole WrapFD I/O arithmetic is still reviewed separately; accepting an arbitrary
+usize parameter does not by itself validate all downstream calculations.
+
+`aa0a73a857cc` fixes the setter's layout assumption: the macro passes a pointer to
+ModuleParamAccess, but ACK casts it directly to SetOnce, assuming the value field
+is first in memory. Rust makes no such guarantee. Access the actual container
+field instead. Randomized-layout checks exercise nonzero offsets without invoking
+the invalid ACK cast. Values remain immutable after the first successful
+assignment; invalid inputs do not populate the container, duplicates return
+EEXIST, and references previously returned to the default remain valid.
+
+The same adaptation handles one leading sign before selecting radix and accepts
+one trailing newline, restoring native interpretations of +010 and +0x10 while
+rejecting extra signs such as -+1 and 0x+1. Bounds are checked for all ten integer
+types before negating. Binary/explicit-octal syntax and unsigned negative zero
+remain ACK extensions; invalid/overflow input still returns EINVAL, so this is not
+a claim of identical native parser errno behavior. No native parser is replaced.
+
+Sysfs permissions remain 0444, and native add_sysfs_param installs a store method
+only when write bits exist. Reads emit decimal plus newline. Use bounded
+Formatter and return an error before NUL termination on formatting failure.
+ACK's RawFormatter counts attempted bytes beyond the buffer, so its position was
+not guaranteed bounded as the old safety comment claimed. Generated operations
+currently support only short primitive integer outputs; no existing long-output
+userspace exploit is asserted. The generic boundary check uses an oversized
+Display and extra guard storage to observe ACK's behavior without a host
+out-of-allocation write.
+
+The module macro retains static parameter records, type checking and its existing
+built-in/loadable metadata conventions. Supported generated values are Copy
+integers. No writable runtime parameter or vendor binary layout is introduced.
+The macro's stale documentation accessor is not counted as a compiled example.
+The extracted checks pass 5,602 assertions under each of the normal layout and
+three randomized layouts. They copy the parser, callbacks, container, SetOnce and
+formatters, with host string/atomic/native-struct shims. They do not execute kernel
+parameter ingress, sysfs, module loading or concurrent callers. Build 97 passed
+the integrated adaptation with both images and all 145 signed modules. No additional remote resources were used.
+
+## Rust integration history and ashmem selection
+
+Finalize the obsolete Rust/MODVERSIONS workaround and its revert against native
+LTS support: use EXTENDED_MODVERSIONS plus GENDWARFKSYMS and real GPL exports,
+without the old blanket export suppression or !MODVERSIONS gate. The selected
+SDK builds Rust Binder as a module with Rust, MODVERSIONS and extended symbol
+versions enabled. Conditional helper exports belong to the separately reviewed
+inline-helper strategy. No old vendor binary layout is preserved.
+
+Retain lru_status's explicit Rust CFI encoding and direct shrinker callback,
+removing the old C trampoline. Build 97 enables CFI and integer normalization,
+without permissive mode. Its rust_shrink_free_page tag is 0xb01d9dea, matching a
+C fixture using the enum and callback typedef extracted from native list_lru.h.
+An unsigned-integer return control has tag 0xa0498a8a. This verifies the compiled
+type identity offline; it neither executes the indirect call nor exercises a
+CFI trap. The native list-LRU implementation and CFI enforcement remain intact.
+
+Retain reset.h's bindgen inclusion as a generic source interface for vendor
+modules, without enabling or adding a reset-controller driver. SDK disables
+RESET_CONTROLLER; its native header supplies optional/error stubs. The local
+common-modules Rust search did not establish a consumer. Concrete SDK runtime
+necessity is unconfirmed and recorded in unresolved-feature-questions.json.
+Keeping these declarations is a conservative source-compatibility decision, not
+a claim of demonstrated device use or justification for adding a future platform.
+
+The two base Rust ashmem imports have identical stable patch IDs and new-file
+contents; retain their effect once. The complete selected drivers/staging/android
+subtree is unchanged from the full review at 3ea7a304b5dc. That review and its
+per-file evidence cover range/LRU ownership, shrinker destruction, monotonic
+protection, usercopy bounds, referenced backing files, native memfd sealing and
+administrator controls. The earlier GET_PIN_STATUS/toggle-read and CAP_SYS_ADMIN
+corrections remain. This reuses established source review rather than treating
+successful compilation as proof of those semantics.
+
+Temporary ASHMEM_RUST selector/filename cleanup and its revert are superseded by
+the final single Rust implementation. Preserve final ASHMEM depending on SHMEM
+and RUST, ashmem.rs/ashmem_exports.c filenames and ashmem_rust module metadata.
+The removed duplicate C ashmem and memfd shim are not restored: their required
+legacy device/memfd APIs remain in the selected Rust implementation. This target
+has Rust enabled and does not require the historical ARM64 KASAN_SW_TAGS fallback.
+No native LTS memfd seal or shmem security check is removed.
+
+Retain 32-bit GET_FILE_ID's separate command number and u32 output, including the
+compat_ptr conversion in both real-ashmem and memfd paths. Bionic encodes this
+command with unsigned long; local libcutils compares its unsigned-long result
+with fstat. Native-width and compat-width outputs consequently differ. Truncating
+to the 32-bit ABI does not promise a globally unique 64-bit identifier. Bounded
+usercopy/error handling and the memfd-only shmem gate remain; unknown memfd ioctls
+return ENOTTY. The SDK builds IA32/COMPAT, but no actual 32-bit client was run.
+The independent shared EOF/page-emulation question remains open and is not
+certified by these ashmem decisions. No remote resource was accessed.

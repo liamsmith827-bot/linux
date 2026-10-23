@@ -1,0 +1,28 @@
+{
+  "scope": "Compare a compiled Rust Binder callback CFI tag with the native C enum signature.",
+  "source_head": "aa0a73a857cc1347ef6d29e09629b496bf76140f",
+  "built_source": "aa0a73a857cc1347ef6d29e09629b496bf76140f",
+  "built_run": "sdk-build-attempt-97",
+  "module_sha256": "1061155547623a9f3ef11de1cf813c9fddc786c10a42c4d000378f5c0c9ea6b0",
+  "clang_version": "Android (15323222, +pgo, +bolt, +lto, +mlgo, based on r584948c) clang version 22.0.1 (https://android.googlesource.com/toolchain/llvm-project 2d65e4108033380e6fe8e08b1f1826cd2bfb0c99)\nTarget: x86_64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /home/liamsmith/src/kernel/kernel_manifest-6.18/prebuilts/clang/host/linux-x86/clang-r584948c/bin",
+  "clang_flags": [
+    "-target",
+    "x86_64-linux-gnu",
+    "-O2",
+    "-fsanitize=kcfi",
+    "-fsanitize-cfi-icall-experimental-normalize-integers"
+  ],
+  "c_fixture": "struct list_head; struct list_lru_one;\nenum lru_status {\n\tLRU_REMOVED,\t\t/* item removed from list */\n\tLRU_REMOVED_RETRY,\t/* item removed, but lock has been\n\t\t\t\t   dropped and reacquired */\n\tLRU_ROTATE,\t\t/* item referenced, give another pass */\n\tLRU_SKIP,\t\t/* item cannot be locked, skip */\n\tLRU_RETRY,\t\t/* item not freeable. May drop the lock\n\t\t\t\t   internally, but has to return locked. */\n\tLRU_STOP,\t\t/* stop lru list walking. May drop the lock\n\t\t\t\t   internally, but has to return locked. */\n};\ntypedef enum lru_status (*list_lru_walk_cb)(struct list_head *item,\n\t\tstruct list_lru_one *list, void *cb_arg);\n\nenum lru_status expected_callback(struct list_head *item, struct list_lru_one *list, void *cb_arg)\n{ return LRU_SKIP; }\nlist_lru_walk_cb verify_signature = expected_callback;\nunsigned int incorrect_integer_callback(struct list_head *item, struct list_lru_one *list, void *cb_arg)\n{ return LRU_SKIP; }\n",
+  "c_fixture_sha256": "9a9c2d80ae588f542e74275fa5033464a2a03a1cfcae210811082cd373d09159",
+  "cfi_tags": {
+    "built_rust": "0xb01d9dea",
+    "native_enum": "0xb01d9dea",
+    "wrong_integer_control": "0xa0498a8a"
+  },
+  "disassembly": {
+    "built_rust": "\n/home/liamsmith/src/kernel/kernel_manifest-6.18/common_dist/rust_binder.ko:\tfile format elf64-x86-64\n\nDisassembly of section .text:\n\n0000000000000950 <__cfi_rust_shrink_free_page>:\n     950: b8 ea 9d 1d b0               \tmovl\t$0xb01d9dea, %eax       # imm = 0xB01D9DEA\n",
+    "native_enum": "\n/tmp/rust-lru-cfi-4frcbufg/signature.o:\tfile format elf64-x86-64\n\nDisassembly of section .text:\n\n0000000000000000 <__cfi_expected_callback>:\n       0: 90                           \tnop\n       1: 90                           \tnop\n       2: 90                           \tnop\n       3: 90                           \tnop\n       4: 90                           \tnop\n       5: 90                           \tnop\n       6: 90                           \tnop\n       7: 90                           \tnop\n       8: 90                           \tnop\n       9: 90                           \tnop\n       a: 90                           \tnop\n       b: b8 ea 9d 1d b0               \tmovl\t$0xb01d9dea, %eax       # imm = 0xB01D9DEA\n",
+    "wrong_integer_control": "\n/tmp/rust-lru-cfi-4frcbufg/signature.o:\tfile format elf64-x86-64\n\nDisassembly of section .text:\n\n0000000000000020 <__cfi_incorrect_integer_callback>:\n      20: 90                           \tnop\n      21: 90                           \tnop\n      22: 90                           \tnop\n      23: 90                           \tnop\n      24: 90                           \tnop\n      25: 90                           \tnop\n      26: 90                           \tnop\n      27: 90                           \tnop\n      28: 90                           \tnop\n      29: 90                           \tnop\n      2a: 90                           \tnop\n      2b: b8 8a 8a 49 a0               \tmovl\t$0xa0498a8a, %eax       # imm = 0xA0498A8A\n"
+  },
+  "limitations": "Offline comparison of the exact module callback tag and a C signature fixture extracted from the native header. Does not execute the indirect call, shrinker, or CFI failure path. Fixture uses forward-declared pointer types, not a second kernel build."
+}

@@ -1,0 +1,137 @@
+{
+  "source_head": "aa0a73a857cc1347ef6d29e09629b496bf76140f",
+  "records": [
+    {
+      "commit": "4f25dd829c562a2ca0ae64762bffebaa7f987cbe",
+      "disposition": "adapted",
+      "rationale": "Retain typed integer module parameters and immutable default/SetOnce access for WrapFD max_nr_load_reqs and min_bytes_per_req. Adapt the setter to cast kernel_param.arg back to ModuleParamAccess<T> and then access .value; ACK incorrectly cast the complete container to its first declared field, whose offset Rust does not guarantee. Invalid strings leave state untouched, the first successful assignment is published, and duplicates return EEXIST as in ACK. Earlier default references remain valid because the default is not mutated. Native module parameter locking, parsing entrypoints and ownership remain LTS. Supported generated operations are Copy primitive integers; no mutable sysfs values or historical layout guarantees are introduced.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "aa0a73a857cc1347ef6d29e09629b496bf76140f"
+      ],
+      "evidence": [
+        "evidence/rust-module-parameter-review.json",
+        "SECURITY.md: Rust module parameter compatibility"
+      ],
+      "subject": "UPSTREAM: rust: introduce module_param module",
+      "patch_sha256": "559588e8c952e96649ff0f9a8ddfb164d940dcfd22780643bff2f19656257193",
+      "paths": {
+        "rust/kernel/lib.rs": {
+          "ack_blob": "c19c5ecbaf6eb1f399d9e4f731817c90abaa9073",
+          "port_blob": "c19c5ecbaf6eb1f399d9e4f731817c90abaa9073",
+          "lts_to_port_sha256": "cab23f5bc8f04cd78304720af4ae1ed4284a8eb6c9607e2b534eda903749fc99"
+        },
+        "rust/kernel/module_param.rs": {
+          "ack_blob": "7bc1fc0f1d9d1ba7e91ce032abac57319ab02f77",
+          "port_blob": "8795891d2944a806c74a19768368736b4dd4d90f",
+          "lts_to_port_sha256": "4d175fe5c2f1f6d780d60d6532489f941477202bd35bb39221b1093d59f58fb2"
+        }
+      }
+    },
+    {
+      "commit": "37ad4d634b224b19f4f98c748adc87c02eca278a",
+      "disposition": "adapted",
+      "rationale": "Retain checked radix parsing required by Rust integer module parameters, adapted to consume one leading sign before radix selection and a single trailing newline. This preserves native meanings such as +010=8 and +0x10=16 and accepts native newline-terminated input, while rejecting extra signs including -+1 and 0x+1. Retain ACK binary/explicit-octal extensions and unsigned negative zero; native unsigned C parsing is stricter on the latter. Bounds checks precede the unchecked conversion when negating; min/max and overflow cases across all ten types pass extracted tests. Invalid/overflow input continues to return EINVAL rather than claiming identical native errno behavior. Native lib/kstrtox.c is byte-identical to LTS.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "aa0a73a857cc1347ef6d29e09629b496bf76140f"
+      ],
+      "evidence": [
+        "evidence/rust-module-parameter-review.json",
+        "SECURITY.md: Rust module parameter compatibility"
+      ],
+      "subject": "UPSTREAM: rust: str: add radix prefixed integer parsing functions",
+      "patch_sha256": "23f05335efe1b653cd96e81577c69c26d2240acd45cb716e2f2f82b670f9067d",
+      "paths": {
+        "rust/kernel/str.rs": {
+          "ack_blob": "228c1faed4dbf099255a69846a2702d3d0277030",
+          "port_blob": "b62e3350decd2d50ca69a228484abe859a58cf06",
+          "lts_to_port_sha256": "30faeee5f1cd2e5aa052c201696b9aa99572b6ddbc07ae210c85991132a8bed4"
+        },
+        "rust/kernel/str/parse_int.rs": {
+          "ack_blob": "48eb4c202984c387125352053302efa0fd85928f",
+          "port_blob": "e2e104019ee3b94d51edf7e43309b516727c8052",
+          "lts_to_port_sha256": "e78a4ee8ea769ca6473886976da00c43ffa058b09a5f761bbf65c0db488d0374"
+        }
+      }
+    },
+    {
+      "commit": "2699f85e5e689ad1c6462d6081dd4b1a9ab2d195",
+      "disposition": "adapted",
+      "rationale": "Retain module! parameter declarations, type-to-ops mapping, __param records and built-in/loadable parm/parmtype metadata. The selected WrapFD declares two usize tuning parameters; the successful build contains both metadata records and compiles the actual generated declarations. Parsing validates group delimiters, required field order, supported primitive types and trailing tokens; default literals are typechecked by Rust. Static records pass the complete ModuleParamAccess pointer, matching the corrected setter/getter. The subsequent ACK read-only sysfs change supersedes the original zero permissions. Existing Module init/exit machinery remains; this review does not certify unsupported macro syntaxes or documentation examples (which contain a stale read() accessor).",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/rust-module-parameter-review.json",
+        "SECURITY.md: Rust module parameter compatibility"
+      ],
+      "subject": "BACKPORT: rust: module: update the module macro with module parameter support",
+      "patch_sha256": "8c35f49b8fd5b4414f915e91a929a00b7edddce59481059110d7a2e3409d841d",
+      "paths": {
+        "rust/macros/helpers.rs": {
+          "ack_blob": "365d7eb499c0859590a45c5d8eb4af7e875f4711",
+          "port_blob": "365d7eb499c0859590a45c5d8eb4af7e875f4711",
+          "lts_to_port_sha256": "8c1cd23f0f9341b0e719d8a5fb2814e92c247ed31057bf2e375712eeae6cf0d6"
+        },
+        "rust/macros/lib.rs": {
+          "ack_blob": "2fb520dc930af439de5586d25de16caf421c2940",
+          "port_blob": "2fb520dc930af439de5586d25de16caf421c2940",
+          "lts_to_port_sha256": "71bc7769e974fa55f4de299aa17bfd6aa82a4a21eeed42ac3e912b525907a1e8"
+        },
+        "rust/macros/module.rs": {
+          "ack_blob": "a5aa1f449829cd4472862d3c2df267fc80e66bf7",
+          "port_blob": "a5aa1f449829cd4472862d3c2df267fc80e66bf7",
+          "lts_to_port_sha256": "bb1c71037f6555949b6f4527735d1c8bf3bee689762854c9c0c0caa1436a6bd1"
+        }
+      }
+    },
+    {
+      "commit": "48ef7b6577ae7f1eaa95f9de4dd657ca1763954e",
+      "disposition": "adapted",
+      "rationale": "Retain read-only sysfs parameter output (0444) and getter operations for WrapFD tuning inspection. Native add_sysfs_param installs no store method when write bits are absent. Adapt get_param to the bounded Formatter and return EINVAL on formatting failure before writing a NUL; RawFormatter tracks the attempted size beyond the buffer, so its position is not inherently bounded as ACK claimed. The current generated integer types have short output, so no reachable existing long-Display exploit is asserted. The extracted generic callback control demonstrates the boundary with guarded host storage. Format remains decimal plus newline with a trailing NUL outside the returned count. No writable runtime knob is added.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "aa0a73a857cc1347ef6d29e09629b496bf76140f"
+      ],
+      "evidence": [
+        "evidence/rust-module-parameter-review.json",
+        "SECURITY.md: Rust module parameter compatibility"
+      ],
+      "subject": "ANDROID: rust: Read-only sysfs support for module-parameters.",
+      "patch_sha256": "ddcc98f8668812d24f274fc09c9a2342a807ea6efafc5c2b4c0fa45cbd00f333",
+      "paths": {
+        "rust/kernel/module_param.rs": {
+          "ack_blob": "7bc1fc0f1d9d1ba7e91ce032abac57319ab02f77",
+          "port_blob": "8795891d2944a806c74a19768368736b4dd4d90f",
+          "lts_to_port_sha256": "4d175fe5c2f1f6d780d60d6532489f941477202bd35bb39221b1093d59f58fb2"
+        },
+        "rust/macros/module.rs": {
+          "ack_blob": "a5aa1f449829cd4472862d3c2df267fc80e66bf7",
+          "port_blob": "a5aa1f449829cd4472862d3c2df267fc80e66bf7",
+          "lts_to_port_sha256": "bb1c71037f6555949b6f4527735d1c8bf3bee689762854c9c0c0caa1436a6bd1"
+        }
+      }
+    }
+  ],
+  "scope": "Full four candidate patches and final parser/module-param implementations read, plus complete parameter emitter/parser additions, native C ingress/sysfs handling and actual WrapFD parameter consumers. Whole WrapFD arithmetic and I/O remain separately provisional.",
+  "local_evidence": [
+    "drivers/android/wrapfd/rust_wrapfd.rs: two usize params with defaults 32 and 0x100000",
+    "drivers/android/wrapfd/io_context.rs: per-load request and byte partitioning",
+    "rust/kernel/str.rs: RawFormatter attempted position and bounded Formatter",
+    "rust/kernel/sync/set_once.rs: publication and immutable access",
+    "kernel/params.c: parse_one, param_attr_show, add_sysfs_param permission checks",
+    "lib/kstrtox.c: sign/radix/newline and overflow handling"
+  ],
+  "builtin_parameter_metadata": [
+    "wrapfd.parmtype=max_nr_load_reqs:usize",
+    "wrapfd.parm=max_nr_load_reqs:",
+    "wrapfd.parmtype=min_bytes_per_req:usize",
+    "wrapfd.parm=min_bytes_per_req:"
+  ],
+  "checks": [
+    "evidence/rust-module-parameter-check.json"
+  ],
+  "validation": "Build 97 passed source aa0a73a857cc with both images, 100 common and 45 virtual-device modules, all 145 signatures verified and tampered control rejected, plus 659 protected exports and 145 matching flag/CRC tables. Extracted checks pass 5602 assertions per layout, including three randomized layouts. No boot command line, native sysfs operation or module load performed. Generic long-Display check exceeds existing primitive-integer output and is documented as such.",
+  "remote_sources_used": []
+}
