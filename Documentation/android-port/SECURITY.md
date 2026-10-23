@@ -5404,7 +5404,8 @@ runtime scheduling, contention, hotplug or external-probe tests were executed.
 `evidence/fair-scheduler-history-review.json` records historical capacity,
 balancing, latency and utilization-clamp decisions. Preserve complete native
 scale_rt_capacity, need_active_balance, calculate_imbalance, update_sd_lb_stats
-and sched_balance_rq implementations. Historical heuristics were reverted or
+and sched_balance_rq implementations (the latter additionally publishes rq flags
+for proxy detach). Historical heuristics were reverted or
 superseded by native balancing redesigns; old conflict-marker blocks and obsolete
 count/scale helpers are not restored.
 
@@ -5490,3 +5491,34 @@ SDK SCHED_CORE is disabled, so that shared API companion has no runtime evidence
 No scheduler latency, fairness, exhaustive race or deadlock guarantee follows from
 source review or compilation. No source change beyond the recorded trace padding
 was needed for this review, and no LTS fix was weakened.
+
+# Scheduler dispatch and deadline servers
+
+`evidence/dispatch-server-review.json` reviews 16 class-picker, SCX context and
+DL server candidates. Keep the rq-flags/retry protocol for lock-dropping pickers,
+class-change mask and SCX balancing at pick time. Preserve the native balance
+helper's lock pinning/deferred callbacks, CFS donor reload after newidle balancing,
+and core-pick in-flight protection. Exact SDK BPF policy use is unconfirmed;
+SCHED_CLASS_EXT is enabled and generic Android/vendor source behavior is retained.
+
+Commit 6ca282d8ee2c addresses cached donors across DSQ lock drops. If the donor
+changes, stop using the old pointer and retry selection, including forced SCX
+server picks. DL must return that marker before invoking task hooks or assigning
+a server. The retained sibling helper uses the scheduling donor. The host checker
+runs four actual extracted functions with simulated replacement points and marks
+old donor storage inaccessible: 323 cases pass, while 191 pre-fix controls fail.
+These are control-flow checks, not live locking, BPF or scheduler validation;
+same-pointer ABA and arbitrary interleavings are not exhaustively modeled.
+
+Retain the ext DL server and common accounting fixes. A second default reservation
+of 50 ms per 1000 ms adds nominally 5% to admission accounting, including when the
+server is initialized but not actively serving tasks. Both servers participate in
+root-domain/hotplug bandwidth handling. Native admission checks and the newer
+running-server revised wakeup rule remain. Idle stopping requires no runnable or
+pending work. This does not establish any measured starvation or latency bound.
+
+Fair/ext debug parameters retain 0644 files, runtime/period bounds, native offline
+CPU rejection under rq lock, and bandwidth checks under the DL lock. Failed writes
+retain old parameters and do not advance ppos. Zero runtime deliberately disables
+the server and is logged; no safety against starvation is claimed for that setting.
+All work uses supplied local histories; no additional remote resources were used.

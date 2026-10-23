@@ -92,7 +92,7 @@
     {
       "commit": "65b8ddef4ef06f78b29207ef5ec508fb58ad807f",
       "disposition": "superseded",
-      "rationale": "All three hunks of reapplication reviewed. 76e19fdf8e83 removes field/store and guard. Full current sched_balance_rq and update_sd_lb_stats match LTS, including newer migration-type rules.",
+      "rationale": "All three hunks of reapplication reviewed. 76e19fdf8e83 removes field/store and guard. Full current update_sd_lb_stats matches LTS. sched_balance_rq matches LTS except env.src_rq_rf = &rf for proxy detach; newer migration-type rules remain native.",
       "result_commits": [],
       "evidence": [
         "evidence/fair-scheduler-history-review.json",
@@ -431,8 +431,8 @@
     {
       "path": "kernel/sched/fair.c",
       "function": "sched_balance_rq",
-      "sha256": "e1410a2855908331346eaac4bfad646591e9496349744972da93e8471c258029",
-      "relationship": "whole function exactly LTS"
+      "sha256": "5fb9c566662c906a58248bf613b807fb03b1dcf136e100b9d4f3ff299ac43e9d",
+      "relationship": "Full LTS function plus env.src_rq_rf = &rf, publishing held source-rq flags to proxy-aware detach; historical balancing algorithms remain native."
     },
     {
       "path": "kernel/sched/fair.c",
@@ -489,5 +489,6 @@
   "uncertainty": "Exact vendor consumer of latency flag is unconfirmed, but pinned task profiles/init write the interface. Preserve API without claiming actual scheduling effect. EAS-only ACK sync selection is unnecessary under present positive SDK config/gate evidence and requires reconsideration if a future target enables EAS.",
   "validation": "Source identity comparisons, restored native FEEC/caller diff and existing affinity-fix full-patch reverse checks passed; build 122 pending. No new host-only scheduler tests.",
   "revalidated_existing_final_patch": "0c1fa03054f1c9119411ca7df40d3af485b742b9",
-  "remote_sources_used": []
+  "remote_sources_used": [],
+  "witness_extraction_correction": "Earlier simple extractor selected a leading called-from comment instead of sched_balance_rq definition. Re-extracted full definition, compared every line to LTS, and corrected witness and rationale for the sole rq-flags publication difference. Final historical disposition unchanged."
 }

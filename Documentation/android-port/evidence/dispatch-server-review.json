@@ -1,0 +1,460 @@
+{
+  "source_head": "6ca282d8ee2cfa209f8fea97e0402419bdffcf56",
+  "records": [
+    {
+      "commit": "c5c86c524cdc66dfa5514855826d380b85ce7abd",
+      "disposition": "partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "6ca282d8ee2cfa209f8fea97e0402419bdffcf56"
+      ],
+      "rationale": "All eight paths read. Much of prev_balance and RT/DL/idle/stop signature work is independently native in fef4b8f17e1c. Retain current rq-flags class interface and CFS donor reload at loop start, plus native reload after newidle balancing (absent in final ACK). SCX keeps native balance helper/deferred callbacks and adds explicit donor-identity retry around lock drops. Never reuse pre-lock-drop donor merely because original commit removed a prev argument.",
+      "evidence": [
+        "evidence/dispatch-server-review.json",
+        "evidence/scx-donor-retry-check.json",
+        "SECURITY.md: Scheduler dispatch and deadline servers"
+      ],
+      "patch_sha256": "adf14ebae339e2021109878874d851d7153f822908ba896b3706ccd4aaf68e63"
+    },
+    {
+      "commit": "5d43a4306e8f4e04ecc4111ab6df8107f6947a5f",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "6ca282d8ee2cfa209f8fea97e0402419bdffcf56"
+      ],
+      "rationale": "All nine paths read, including callback typedef, class declarations, DL server picker, idle/stop/RT/fair/SCX implementations and core retry consumers. Retain rq_flags propagation and RETRY_TASK handling for lock-dropping pickers. Final core retry correctness fix 82c81e5d138b and LTS core_pick_in_flight protection remain. Adapt DL wrapper to propagate RETRY_TASK before task hooks/server assignment; vendor source callers must handle retry and supply valid rq flags. No historical binary API compatibility promised.",
+      "evidence": [
+        "evidence/dispatch-server-review.json",
+        "evidence/scx-donor-retry-check.json",
+        "SECURITY.md: Scheduler dispatch and deadline servers"
+      ],
+      "patch_sha256": "16181010a32e9bfdbe4d744c8c56eb98b4fe31a4eb7761c022c994a066bfcac6"
+    },
+    {
+      "commit": "6f0220ea6e08de8a96ccbb873e907f232bbb686d",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All eight paths read. Retain per-class queue_mask, marks on enqueue/dequeue, ordered class bits 0/1/2/4/8/16 and reset/check helpers around pick-time rq lock breaks. Newidle balance retries for higher-priority class modifications rather than old all-nonfair runnable count. Mask is transient serialized state, not KMI layout preservation; callbacks altering queue semantics must preserve this contract. Native newidle accounting/locking remains with existing optional vendor override.",
+      "evidence": [
+        "evidence/dispatch-server-review.json",
+        "evidence/scx-donor-retry-check.json",
+        "SECURITY.md: Scheduler dispatch and deadline servers"
+      ],
+      "patch_sha256": "ee4be95aee72a4c47111848935ad779fded441ca916e45c3d53261619335e3ad"
+    },
+    {
+      "commit": "7d01a562454b86768d2228773baaa2d0668726f0",
+      "disposition": "partially-adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "6ca282d8ee2cfa209f8fea97e0402419bdffcf56"
+      ],
+      "rationale": "All three paths read. Retain balancing driven by SCX picker and remove BAL_PENDING/old prev_balance SCX prepass. Preserve native balance_scx helper internally (fresh rq donor, lock pinning, sibling balance, deferred callback queue) rather than replay whole ACK deletion. New checks reject donor replacement after lock drops and avoid stale donor callback/dereference. Native per-task dispatch sequence and wakeup-flag fixes remain in surrounding SCX code.",
+      "evidence": [
+        "evidence/dispatch-server-review.json",
+        "evidence/scx-donor-retry-check.json",
+        "SECURITY.md: Scheduler dispatch and deadline servers"
+      ],
+      "patch_sha256": "bd9208f1c8966f152295698cad21bfa9dc8d6e52d8bc2e87117044a209ea7507"
+    },
+    {
+      "commit": "124918db00f024fe9cc7cac6eeaef9bc711bb0a6",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "6ca282d8ee2cfa209f8fea97e0402419bdffcf56"
+      ],
+      "rationale": "Complete picker refactoring reviewed. force_scx bypasses higher-class queue-mask retry only when servicing a DL reservation; ordinary SCX picks still yield to higher-class changes. Force mode must not bypass donor-identity retry. DL wrapper now handles that marker before vendor task hooks; 323 extracted-function host cases include forced/ordinary and DL paths, with 191 failing pre-fix controls.",
+      "evidence": [
+        "evidence/dispatch-server-review.json",
+        "evidence/scx-donor-retry-check.json",
+        "SECURITY.md: Scheduler dispatch and deadline servers"
+      ],
+      "patch_sha256": "07279c6ef882336cc8f383698199cb8945c231b1201b6515a7e4e65294d7b8c4"
+    },
+    {
+      "commit": "b19e31647336cdf1851ee570f81be8218de1457c",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Both full paths read. idle_rq helper combines current==idle, zero nr_running and no ttwu_pending, equivalent to native idle_cpu conditions; idle_cpu delegates. DL idle-stop logic reuses all three conditions, avoiding false idle classification while runnable/pending work exists.",
+      "evidence": [
+        "evidence/dispatch-server-review.json",
+        "evidence/scx-donor-retry-check.json",
+        "SECURITY.md: Scheduler dispatch and deadline servers"
+      ],
+      "patch_sha256": "05fb3d8c45ae2cee3ae77ca7e7446cd4d7bee35b124ff95a87e906e7b1d7e2bb"
+    },
+    {
+      "commit": "bb11d51471a5aeaefaec8d4e8ab325e30da08107",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All four paths read. Retain current runtime propagation before server timer/start decisions, active/runtime guards, common idle-update helper and idle task exec_start advancement/tick/put accounting. Native early zero-runtime/throttled timer guard still exists, so removal of the later duplicate does not enable zero-budget timers. Corrects stale server budget accounting; no measured runtime guarantee claimed.",
+      "evidence": [
+        "evidence/dispatch-server-review.json",
+        "evidence/scx-donor-retry-check.json",
+        "SECURITY.md: Scheduler dispatch and deadline servers"
+      ],
+      "patch_sha256": "6f3a56c935692fa80d5cfd4510b522aceaf422f0cb7756b451c60a7d711a51ee"
+    },
+    {
+      "commit": "4dd0b3026231d989ddd466bf4f95ea54cd87c4b4",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Both paths read including semantic dl_defer_idle bit. Retain idle-wait stop state, clearing on activity/start/stop, zero runtime clamp while awaiting stop and timer stopping idle server. Follow-up cdd249da53aa uses full idle_rq predicate and resets idle state even for active server starts. Bit is live state, not ABI padding. Native throttling/replenishment and revised-running-server wakeup rule preserved.",
+      "evidence": [
+        "evidence/dispatch-server-review.json",
+        "evidence/scx-donor-retry-check.json",
+        "SECURITY.md: Scheduler dispatch and deadline servers"
+      ],
+      "patch_sha256": "9efa0e8a8ab8b5a5a4f40281c869f0c6b1f5b9c2840a7b9d4667fff7077e49bb"
+    },
+    {
+      "commit": "cdd249da53aa219e2bd83ffde69dadc997de4509",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Complete code/comment patch read. Use idle_rq (including runnable count and pending wakeups), clear dl_defer_idle before early return from active dl_server_start and retain documented idle-wait-to-active transitions. Prevents stopping a server while work already exists. Later zero-runtime guard remains.",
+      "evidence": [
+        "evidence/dispatch-server-review.json",
+        "evidence/scx-donor-retry-check.json",
+        "SECURITY.md: Scheduler dispatch and deadline servers"
+      ],
+      "patch_sha256": "0c1640bb5bc85b870fa95c792b97ee4a4fa5522156568400b159fc59abeb063a"
+    },
+    {
+      "commit": "798d53b84344e53a64cbdecb19e813a0cdb7ebb8",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "Complete old is_active-based debug write patch read. Final bc366f9422c0 removes that gate and uses unconditional stop/apply/start with start itself rejecting zero runtime, allowing disabled servers to be re-enabled. Do not restore old activation test. Native offline-CPU rejection and error/ppos handling survive in final common writer.",
+      "evidence": [
+        "evidence/dispatch-server-review.json",
+        "evidence/scx-donor-retry-check.json",
+        "SECURITY.md: Scheduler dispatch and deadline servers"
+      ],
+      "patch_sha256": "5594afdf148ad7ab5ce4ec1af2bccdc5e09638276e5ae395040981b4b46778fc"
+    },
+    {
+      "commit": "edbeb1ee82a9cc48339c08e0356eaf9117b0fae1",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Complete debug.c patch read. Retain common fair/ext server parameter helpers, per-CPU ext_server/runtime and period files with mode 0644, wrappers and release operations. Bounds runtime<=period and 100us<=period<=~4.19s remain; native offline CPU rejection runs under rq lock, and native admission check runs under DL bandwidth lock. Zero runtime intentionally disables starvation protection and is logged. Exact SDK tuning consumer unconfirmed; preserve configured scheduler source/runtime interface conservatively.",
+      "evidence": [
+        "evidence/dispatch-server-review.json",
+        "evidence/scx-donor-retry-check.json",
+        "SECURITY.md: Scheduler dispatch and deadline servers"
+      ],
+      "patch_sha256": "5b6d38b058ce1eda29170b8f6da7c3c1fbd14ba0b52c88ba6ccac791cabde338"
+    },
+    {
+      "commit": "bc366f9422c0de68bc565e42c6add298b5c65046",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Both paths read. Keep zero-runtime start rejection, common writer stop/apply/start and transition logging, redundant retval cleanup. Failed admission leaves old params; start restarts valid old configuration before returning error without advancing ppos. Native offline-CPU reject and bounds remain. No claim disabling server is safe against starvation.",
+      "evidence": [
+        "evidence/dispatch-server-review.json",
+        "evidence/scx-donor-retry-check.json",
+        "SECURITY.md: Scheduler dispatch and deadline servers"
+      ],
+      "patch_sha256": "d15976a637d470207d491c0079fed5ebb2ca83b53f790cf26ceae1eab2bc3afc"
+    },
+    {
+      "commit": "28fd0cd4314e2b8db9701768a0bd4b2e124c1ad9",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "6ca282d8ee2cfa209f8fea97e0402419bdffcf56"
+      ],
+      "rationale": "All six paths read: core init/dying, DL runtime/init/root-domain/bandwidth management, SCX enqueue/runtime/picker/init, idle accounting, rq storage/declaration and topology attachment. Preserve configured SCHED_CLASS_EXT compatibility with ext DL reservation, counting both fair/ext bandwidth and releasing per-CPU reservations for hotplug checks. Adds second nominal 50ms/1000ms (5%) reservation, affecting admission headroom even when not actively serving SCX. Forced SCX picks remain subject to donor-identity retry, propagated safely through DL. Exact SDK BPF policy consumer unconfirmed; feature retained for enabled generic Android scheduler behavior, not future hardware.",
+      "evidence": [
+        "evidence/dispatch-server-review.json",
+        "evidence/scx-donor-retry-check.json",
+        "SECURITY.md: Scheduler dispatch and deadline servers"
+      ],
+      "patch_sha256": "65dc9d445cfcc9321ef953a64b0dfdb39c7aeb60e498aa67efa06f8bf3357d32"
+    },
+    {
+      "commit": "854eaabf6daaa61452607ca54b0d48af1e25c4fd",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "6ca282d8ee2cfa209f8fea97e0402419bdffcf56"
+      ],
+      "rationale": "Complete SCX patch read. Retain donor-based runtime slice/preemption/tick control, cross-rq scheduling-class comparison, picking and diagnostic donor line. Native newer local_dsq_post_enq factoring, per-task qseq and core enqueue wake flags remain. Current execution context still represented separately. New identity checks bound reuse of donor across DSQ lock drops; no full atomic metadata or race-freedom claim.",
+      "evidence": [
+        "evidence/dispatch-server-review.json",
+        "evidence/scx-donor-retry-check.json",
+        "SECURITY.md: Scheduler dispatch and deadline servers"
+      ],
+      "patch_sha256": "494abdd101dc82eda7b6c47d0ce81563c5ef29326ef4d890bbcb353081676134"
+    },
+    {
+      "commit": "a3b4919255109d746906a1c6a0f9bdb2c236efcc",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Complete migration restrictions retained: reject on_cpu and blocked_on tasks before remote SCX migration, alongside native migration-disabled, online-rq and allowed-CPU checks. Proxy chain migration remains responsible for blocked scheduling contexts; normal BPF dispatch cannot independently move them. No relaxation of native CPU affinity controls.",
+      "evidence": [
+        "evidence/dispatch-server-review.json",
+        "evidence/scx-donor-retry-check.json",
+        "SECURITY.md: Scheduler dispatch and deadline servers"
+      ],
+      "patch_sha256": "28e55a568b9d65ea558996bdddfa4a5022206e4336fc9d7098023a62d499f984"
+    },
+    {
+      "commit": "a5b11ef61a265602d717578728cec63cfba140c9",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "6ca282d8ee2cfa209f8fea97e0402419bdffcf56"
+      ],
+      "rationale": "Both full paths read. Current native sched_change_begin already uses task_current_donor after helper redesign. Restore donor rather than execution-current for sibling balance in retained native balance_scx helper; new source commit records it. SCHED_CORE is disabled on SDK, but keeping the shared helper consistent avoids losing ACK semantic context conversion during LTS adaptation. No new platform feature or core runtime claim.",
+      "evidence": [
+        "evidence/dispatch-server-review.json",
+        "evidence/scx-donor-retry-check.json",
+        "SECURITY.md: Scheduler dispatch and deadline servers"
+      ],
+      "patch_sha256": "ec59dc82eb89d21b97b394ab830aaa930ca3ffbae1d1b463f8b4d816b6842e55"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "update_dl_entity",
+      "sha256": "423dbca67ea8c228117cfdc9b0edc4a23080ee2dffd57e6524e49ec8bd3a6beb",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "__dl_server_attach_root",
+      "sha256": "a94d20024c3df0c9d700e86907b19488bd7a5dde0ba6f650128923f74fdbf608",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "sched_change_begin",
+      "sha256": "a03fef988093d9a2fe7cc5e36bdf8246c5dc757375b7b4e91842c9a274a4a468",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "dl_server_timer",
+      "sha256": "f60d8f675232c4e3020397e48757f8dfa0fe69a6348cf23f03d26d49d0363714",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "update_curr_dl_se",
+      "sha256": "e3e4b18fa0e1b2b6ca59796fa1f270666ff0bc3eae53126d8af6799b5d6c3635",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "dl_server_update",
+      "sha256": "359d3c7dc8597cbf94e45f642382d9848cd96084fdc568cf2f406ad9a31d4e4a",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "dl_server_update_idle",
+      "sha256": "66984750b91daef7bfb7d5f5ace820f5a768c03e422744e4085c46c7429f54a6",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "dl_server_start",
+      "sha256": "76728d0c2ccce2c807c4cfc0aefb0cc15b08d595a100d932471dde13891b0244",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "dl_server_stop",
+      "sha256": "14a8c113ef7e627f20b28b91ad8e64e5fa0895964efa685f75785710fbd4a3e1",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "dl_server_init",
+      "sha256": "eb91827830120893fb512ad4670181f742036c5000510f34cfbce051b9ef9fbb",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "sched_init_dl_servers",
+      "sha256": "a20a46c9a71a3adaadb555f5c4acfbee4c49d39e4f1b5f519841f9ef56e96914",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "dl_server_apply_params",
+      "sha256": "1a4cbb80e92fb496bcc10d05bd41b5f20383599011a49d66207db85e4d9812c5",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "dl_server_add_bw",
+      "sha256": "b70c4d0dee668ae250a0c44f087ec6bf99b9d07888d9d3092a2000d2cd8bb163",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "dl_server_read_bw",
+      "sha256": "69fc86bc06a9451fb9b90f270c7acdc8dd03277d38c572344ab147059fa5b7a3",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "dl_clear_root_domain",
+      "sha256": "e8b249f4a0963c30f67139506990e6d6b4bc63fdafd000c1c4f4f4cbee3a63f2",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "dl_bw_manage",
+      "sha256": "d6ba51dfcd1e1b9959d0fad07b2dfea23e6238298c2d9d0110e070b22bc35518",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/idle.c",
+      "function": "update_curr_idle",
+      "sha256": "c4bdf319037e9e233b04dda515e434f16e3bf8b011dbf978cd94ac851bee12d1",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/idle.c",
+      "function": "put_prev_task_idle",
+      "sha256": "7fb93750b5d316f84b7ac2a071661c0073ed23433788ca1603f5af17bb94733d",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/idle.c",
+      "function": "task_tick_idle",
+      "sha256": "a5c4ecd123a382694791f29f9b647b28a6e9cb39d4e1332ca3d76efefcafac85",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/idle.c",
+      "function": "pick_task_idle",
+      "sha256": "bc4b5051285392760362a709ad9ef142ca80b4a8e642b6061ec8457176920dc2",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/stop_task.c",
+      "function": "balance_stop",
+      "sha256": "26e607969e53f350e3112365e7458a3d45d392d9a96661f8cd942ad78abcfc8c",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/sched.h",
+      "function": "idle_rq",
+      "sha256": "0044364055287346d6800f367ef811714ecefe2b8cf042b9a1f58079c9084e9e",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/sched.h",
+      "function": "rq_modified_clear",
+      "sha256": "e5bf42e187993c687f46c66c1f69c2e8916af8eb2c1ae09e9597c087f880a282",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/sched.h",
+      "function": "rq_modified_above",
+      "sha256": "18e7de15b3b047ec051bc4617f63d49fdfda2633ae600da3a1b0b0a1096ad0a4",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "idle_cpu",
+      "sha256": "dd883e0a71053d8465cff537f625161e5061da6bf712d9806bb4c0433f3591f9",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "task_can_run_on_remote_rq",
+      "sha256": "49849115ff1fb551ab41dfe51b6aff42368d0401298fd422b8dabf378a90a58c",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "ext_server_pick_task",
+      "sha256": "31730c866b89b8befa5ec147030fa345eec994e240f859d80dac3f2d1d1ebe2d",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "ext_server_init",
+      "sha256": "4f28f77b5d74d126f7e775d8d4a931baa5554de9cacb7ac2a35441586be9af2c",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "pick_next_task_fair",
+      "sha256": "064fed13c11ab61c9ff495fa276954c7adfa9ce655d56f60e8852cd7ce62ccfa",
+      "relationship": "ACK picker plus native LTS donor reload after newidle lock drop."
+    },
+    {
+      "path": "kernel/sched/debug.c",
+      "function": "sched_server_write_common",
+      "sha256": "098996ae6ff951ba192a0a856e6fbfbcdd311aa68eb3b6a1e68cb5502add6f2f",
+      "relationship": "ACK common writer plus native 6d536a910717 offline-CPU guard; db702ef6d914 error/ppos ordering preserved."
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "balance_scx",
+      "sha256": "7af51f96fd47637f06ac394f8cfc266a7323909dda9d6d94780777db901852bc",
+      "relationship": "Native LTS helper plus ACK sibling donor correction; lock pinning and deferred callbacks retained."
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "balance_one",
+      "sha256": "35553cf339c5dda42edb6525cf925431dd81a242db9880c4b8d8a67a92e662fc",
+      "relationship": "ACK/LTS integration plus donor/retry handling in 6ca282d8ee2c; executable extracted-function checks."
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "do_pick_task_scx",
+      "sha256": "838d842577f4c078152e73b749fc209cc12cbb0d389cc394ddb83f16030e8d21",
+      "relationship": "ACK/LTS integration plus donor/retry handling in 6ca282d8ee2c; executable extracted-function checks."
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "__pick_task_dl",
+      "sha256": "e1ef1bb67d11bc9a20c8cf45359af8b8a9140cf2e9675ba673461bcb8589ecd4",
+      "relationship": "ACK/LTS integration plus donor/retry handling in 6ca282d8ee2c; executable extracted-function checks."
+    }
+  ],
+  "implementation": "6ca282d8ee2c checks donor identity before SCX dispatch after a DSQ operation, after dispatch flush, and before using balance result. DL propagates RETRY_TASK before task hooks/server assignment. Native balance helper kept with scheduling donor for siblings; native LTS CFS donor reload/core-pick flip protections remain.",
+  "lts_fixes_preserved": [
+    "fef4b8f17e1c fresh donor across balance/newidle",
+    "9d69422ddaa1 in-flight core selection protection",
+    "6d536a910717 offline debug server writes",
+    "db702ef6d914 failed write does not advance ppos",
+    "36370892e311 clear deferred-running state before replenishment",
+    "caeaaf23f7c3 revised wakeup rule only for running DL server",
+    "3142648c952d per-task qseq and 6c401ae426e2 core enqueue wake-flag semantics remain in surrounding code"
+  ],
+  "security": "Retaining SCX/deadline server behavior adds scheduling/accounting complexity and a second nominal 5% default reservation. Native admission limits, rq/DL bandwidth locks, debugfs permissions, parameter bounds and offline checks remain. Forced SCX selection spends a server reservation rather than bypassing general priority indefinitely. New retry avoids stale donor selection/callbacks and treating retry sentinel as task; extra retries can cost scheduling time. No measured latency, fairness or resource-exhaustion bound, no runtime kernel/BPF execution, no exhaustive ABA/interleaving proof.",
+  "uncertainty": "Exact SDK loaded BPF scheduling policy and ext_server debug parameter consumers unconfirmed. Retained for CONFIG_SCHED_CLASS_EXT=y generic Android/vendor source/runtime compatibility. Host controls simulate donor pointer replacement at specific DSQ/flush/re-pin points; they do not model CPU hotplug, same-pointer ABA or actual locking/BPF verifier behavior.",
+  "validation": "323 extracted host cases passed; 191 pre-fix controls failed. Source/native identity assertions and targeted deltas checked. Build 124 passed from clean common 6ca282d8ee2c: matching bzImages, 100 common + 45 virtual modules, all 145 signatures verified and tampered control rejected; 659 protected exports and 145 flag/CRC tables verified.",
+  "local_resources": {
+    "include/linux/sched.h": "b2d15bf85247f55e747122b50b044a426074eee2d4a361287409ec7114466414",
+    "kernel/sched/sched.h": "c8f8330e009e72afee40e1de0e864257ee946cdef607ce957a5e5034a8380464",
+    "kernel/sched/topology.c": "f37ed4eb20377d2a8598df41f341ea6f22081ffa339cc84197948d99714080cc",
+    "kernel/sched/debug.c": "a5bdbe67ab5d682a8da396d67fbdfe1a25c2c8bfb5d42f5c985e535b4a83b634"
+  },
+  "remote_sources_used": []
+}

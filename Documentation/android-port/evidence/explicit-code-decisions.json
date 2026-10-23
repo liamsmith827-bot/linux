@@ -11947,7 +11947,7 @@
   {
     "commit": "65b8ddef4ef06f78b29207ef5ec508fb58ad807f",
     "disposition": "superseded",
-    "rationale": "All three hunks of reapplication reviewed. 76e19fdf8e83 removes field/store and guard. Full current sched_balance_rq and update_sd_lb_stats match LTS, including newer migration-type rules.",
+    "rationale": "All three hunks of reapplication reviewed. 76e19fdf8e83 removes field/store and guard. Full current update_sd_lb_stats matches LTS. sched_balance_rq matches LTS except env.src_rq_rf = &rf for proxy detach; newer migration-type rules remain native.",
     "result_commits": [],
     "evidence": [
       "evidence/fair-scheduler-history-review.json",
@@ -12727,6 +12727,219 @@
     "evidence": [
       "evidence/proxy-wake-history-review.json",
       "SECURITY.md: Proxy wakeup and migration history"
+    ]
+  },
+  {
+    "commit": "c5c86c524cdc66dfa5514855826d380b85ce7abd",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6ca282d8ee2cfa209f8fea97e0402419bdffcf56"
+    ],
+    "rationale": "All eight paths read. Much of prev_balance and RT/DL/idle/stop signature work is independently native in fef4b8f17e1c. Retain current rq-flags class interface and CFS donor reload at loop start, plus native reload after newidle balancing (absent in final ACK). SCX keeps native balance helper/deferred callbacks and adds explicit donor-identity retry around lock drops. Never reuse pre-lock-drop donor merely because original commit removed a prev argument.",
+    "evidence": [
+      "evidence/dispatch-server-review.json",
+      "evidence/scx-donor-retry-check.json",
+      "SECURITY.md: Scheduler dispatch and deadline servers"
+    ]
+  },
+  {
+    "commit": "5d43a4306e8f4e04ecc4111ab6df8107f6947a5f",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6ca282d8ee2cfa209f8fea97e0402419bdffcf56"
+    ],
+    "rationale": "All nine paths read, including callback typedef, class declarations, DL server picker, idle/stop/RT/fair/SCX implementations and core retry consumers. Retain rq_flags propagation and RETRY_TASK handling for lock-dropping pickers. Final core retry correctness fix 82c81e5d138b and LTS core_pick_in_flight protection remain. Adapt DL wrapper to propagate RETRY_TASK before task hooks/server assignment; vendor source callers must handle retry and supply valid rq flags. No historical binary API compatibility promised.",
+    "evidence": [
+      "evidence/dispatch-server-review.json",
+      "evidence/scx-donor-retry-check.json",
+      "SECURITY.md: Scheduler dispatch and deadline servers"
+    ]
+  },
+  {
+    "commit": "6f0220ea6e08de8a96ccbb873e907f232bbb686d",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All eight paths read. Retain per-class queue_mask, marks on enqueue/dequeue, ordered class bits 0/1/2/4/8/16 and reset/check helpers around pick-time rq lock breaks. Newidle balance retries for higher-priority class modifications rather than old all-nonfair runnable count. Mask is transient serialized state, not KMI layout preservation; callbacks altering queue semantics must preserve this contract. Native newidle accounting/locking remains with existing optional vendor override.",
+    "evidence": [
+      "evidence/dispatch-server-review.json",
+      "evidence/scx-donor-retry-check.json",
+      "SECURITY.md: Scheduler dispatch and deadline servers"
+    ]
+  },
+  {
+    "commit": "7d01a562454b86768d2228773baaa2d0668726f0",
+    "disposition": "partially-adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6ca282d8ee2cfa209f8fea97e0402419bdffcf56"
+    ],
+    "rationale": "All three paths read. Retain balancing driven by SCX picker and remove BAL_PENDING/old prev_balance SCX prepass. Preserve native balance_scx helper internally (fresh rq donor, lock pinning, sibling balance, deferred callback queue) rather than replay whole ACK deletion. New checks reject donor replacement after lock drops and avoid stale donor callback/dereference. Native per-task dispatch sequence and wakeup-flag fixes remain in surrounding SCX code.",
+    "evidence": [
+      "evidence/dispatch-server-review.json",
+      "evidence/scx-donor-retry-check.json",
+      "SECURITY.md: Scheduler dispatch and deadline servers"
+    ]
+  },
+  {
+    "commit": "124918db00f024fe9cc7cac6eeaef9bc711bb0a6",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6ca282d8ee2cfa209f8fea97e0402419bdffcf56"
+    ],
+    "rationale": "Complete picker refactoring reviewed. force_scx bypasses higher-class queue-mask retry only when servicing a DL reservation; ordinary SCX picks still yield to higher-class changes. Force mode must not bypass donor-identity retry. DL wrapper now handles that marker before vendor task hooks; 323 extracted-function host cases include forced/ordinary and DL paths, with 191 failing pre-fix controls.",
+    "evidence": [
+      "evidence/dispatch-server-review.json",
+      "evidence/scx-donor-retry-check.json",
+      "SECURITY.md: Scheduler dispatch and deadline servers"
+    ]
+  },
+  {
+    "commit": "b19e31647336cdf1851ee570f81be8218de1457c",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Both full paths read. idle_rq helper combines current==idle, zero nr_running and no ttwu_pending, equivalent to native idle_cpu conditions; idle_cpu delegates. DL idle-stop logic reuses all three conditions, avoiding false idle classification while runnable/pending work exists.",
+    "evidence": [
+      "evidence/dispatch-server-review.json",
+      "evidence/scx-donor-retry-check.json",
+      "SECURITY.md: Scheduler dispatch and deadline servers"
+    ]
+  },
+  {
+    "commit": "bb11d51471a5aeaefaec8d4e8ab325e30da08107",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All four paths read. Retain current runtime propagation before server timer/start decisions, active/runtime guards, common idle-update helper and idle task exec_start advancement/tick/put accounting. Native early zero-runtime/throttled timer guard still exists, so removal of the later duplicate does not enable zero-budget timers. Corrects stale server budget accounting; no measured runtime guarantee claimed.",
+    "evidence": [
+      "evidence/dispatch-server-review.json",
+      "evidence/scx-donor-retry-check.json",
+      "SECURITY.md: Scheduler dispatch and deadline servers"
+    ]
+  },
+  {
+    "commit": "4dd0b3026231d989ddd466bf4f95ea54cd87c4b4",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Both paths read including semantic dl_defer_idle bit. Retain idle-wait stop state, clearing on activity/start/stop, zero runtime clamp while awaiting stop and timer stopping idle server. Follow-up cdd249da53aa uses full idle_rq predicate and resets idle state even for active server starts. Bit is live state, not ABI padding. Native throttling/replenishment and revised-running-server wakeup rule preserved.",
+    "evidence": [
+      "evidence/dispatch-server-review.json",
+      "evidence/scx-donor-retry-check.json",
+      "SECURITY.md: Scheduler dispatch and deadline servers"
+    ]
+  },
+  {
+    "commit": "cdd249da53aa219e2bd83ffde69dadc997de4509",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Complete code/comment patch read. Use idle_rq (including runnable count and pending wakeups), clear dl_defer_idle before early return from active dl_server_start and retain documented idle-wait-to-active transitions. Prevents stopping a server while work already exists. Later zero-runtime guard remains.",
+    "evidence": [
+      "evidence/dispatch-server-review.json",
+      "evidence/scx-donor-retry-check.json",
+      "SECURITY.md: Scheduler dispatch and deadline servers"
+    ]
+  },
+  {
+    "commit": "798d53b84344e53a64cbdecb19e813a0cdb7ebb8",
+    "disposition": "superseded",
+    "result_commits": [],
+    "rationale": "Complete old is_active-based debug write patch read. Final bc366f9422c0 removes that gate and uses unconditional stop/apply/start with start itself rejecting zero runtime, allowing disabled servers to be re-enabled. Do not restore old activation test. Native offline-CPU rejection and error/ppos handling survive in final common writer.",
+    "evidence": [
+      "evidence/dispatch-server-review.json",
+      "evidence/scx-donor-retry-check.json",
+      "SECURITY.md: Scheduler dispatch and deadline servers"
+    ]
+  },
+  {
+    "commit": "edbeb1ee82a9cc48339c08e0356eaf9117b0fae1",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Complete debug.c patch read. Retain common fair/ext server parameter helpers, per-CPU ext_server/runtime and period files with mode 0644, wrappers and release operations. Bounds runtime<=period and 100us<=period<=~4.19s remain; native offline CPU rejection runs under rq lock, and native admission check runs under DL bandwidth lock. Zero runtime intentionally disables starvation protection and is logged. Exact SDK tuning consumer unconfirmed; preserve configured scheduler source/runtime interface conservatively.",
+    "evidence": [
+      "evidence/dispatch-server-review.json",
+      "evidence/scx-donor-retry-check.json",
+      "SECURITY.md: Scheduler dispatch and deadline servers"
+    ]
+  },
+  {
+    "commit": "bc366f9422c0de68bc565e42c6add298b5c65046",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Both paths read. Keep zero-runtime start rejection, common writer stop/apply/start and transition logging, redundant retval cleanup. Failed admission leaves old params; start restarts valid old configuration before returning error without advancing ppos. Native offline-CPU reject and bounds remain. No claim disabling server is safe against starvation.",
+    "evidence": [
+      "evidence/dispatch-server-review.json",
+      "evidence/scx-donor-retry-check.json",
+      "SECURITY.md: Scheduler dispatch and deadline servers"
+    ]
+  },
+  {
+    "commit": "28fd0cd4314e2b8db9701768a0bd4b2e124c1ad9",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6ca282d8ee2cfa209f8fea97e0402419bdffcf56"
+    ],
+    "rationale": "All six paths read: core init/dying, DL runtime/init/root-domain/bandwidth management, SCX enqueue/runtime/picker/init, idle accounting, rq storage/declaration and topology attachment. Preserve configured SCHED_CLASS_EXT compatibility with ext DL reservation, counting both fair/ext bandwidth and releasing per-CPU reservations for hotplug checks. Adds second nominal 50ms/1000ms (5%) reservation, affecting admission headroom even when not actively serving SCX. Forced SCX picks remain subject to donor-identity retry, propagated safely through DL. Exact SDK BPF policy consumer unconfirmed; feature retained for enabled generic Android scheduler behavior, not future hardware.",
+    "evidence": [
+      "evidence/dispatch-server-review.json",
+      "evidence/scx-donor-retry-check.json",
+      "SECURITY.md: Scheduler dispatch and deadline servers"
+    ]
+  },
+  {
+    "commit": "854eaabf6daaa61452607ca54b0d48af1e25c4fd",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6ca282d8ee2cfa209f8fea97e0402419bdffcf56"
+    ],
+    "rationale": "Complete SCX patch read. Retain donor-based runtime slice/preemption/tick control, cross-rq scheduling-class comparison, picking and diagnostic donor line. Native newer local_dsq_post_enq factoring, per-task qseq and core enqueue wake flags remain. Current execution context still represented separately. New identity checks bound reuse of donor across DSQ lock drops; no full atomic metadata or race-freedom claim.",
+    "evidence": [
+      "evidence/dispatch-server-review.json",
+      "evidence/scx-donor-retry-check.json",
+      "SECURITY.md: Scheduler dispatch and deadline servers"
+    ]
+  },
+  {
+    "commit": "a3b4919255109d746906a1c6a0f9bdb2c236efcc",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Complete migration restrictions retained: reject on_cpu and blocked_on tasks before remote SCX migration, alongside native migration-disabled, online-rq and allowed-CPU checks. Proxy chain migration remains responsible for blocked scheduling contexts; normal BPF dispatch cannot independently move them. No relaxation of native CPU affinity controls.",
+    "evidence": [
+      "evidence/dispatch-server-review.json",
+      "evidence/scx-donor-retry-check.json",
+      "SECURITY.md: Scheduler dispatch and deadline servers"
+    ]
+  },
+  {
+    "commit": "a5b11ef61a265602d717578728cec63cfba140c9",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6ca282d8ee2cfa209f8fea97e0402419bdffcf56"
+    ],
+    "rationale": "Both full paths read. Current native sched_change_begin already uses task_current_donor after helper redesign. Restore donor rather than execution-current for sibling balance in retained native balance_scx helper; new source commit records it. SCHED_CORE is disabled on SDK, but keeping the shared helper consistent avoids losing ACK semantic context conversion during LTS adaptation. No new platform feature or core runtime claim.",
+    "evidence": [
+      "evidence/dispatch-server-review.json",
+      "evidence/scx-donor-retry-check.json",
+      "SECURITY.md: Scheduler dispatch and deadline servers"
     ]
   }
 ]
