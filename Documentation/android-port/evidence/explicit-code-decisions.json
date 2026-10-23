@@ -10722,5 +10722,199 @@
       "evidence/locking-hooks-history-review.json",
       "SECURITY.md: Locking observation and policy hooks"
     ]
+  },
+  {
+    "commit": "4458b0abb32f0dd98f3292c2d34286e6d13e85b6",
+    "disposition": "adapted-net-state",
+    "rationale": "All eight paths reviewed. Retain per-task blocked_lock, init-task/fork initialization and mutex wait-lock then blocked-lock nesting. Debug readers acquire the task lock; ww callbacks use locking wrappers. Slowpath releases blocked_lock before signal/ww checks and releases both locks before potentially scheduling optimistic spin. Success/error clear blocked state and retain native waiter removal. Current post-spin state restoration incorporates 9bb516eaee64. This serializes blocked state for Android proxy migration; it does not itself establish donor pointer lifetime.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/proxy-locking-state-review.json",
+      "evidence/proxy-lock-state-check.json",
+      "SECURITY.md: Proxy lock state and donor lifetime"
+    ]
+  },
+  {
+    "commit": "7400814612981f17339cbfd74342efa03197ca38",
+    "disposition": "partially-adapted-net-state",
+    "rationale": "All four paths reviewed. Keep PROXY_WAKING sentinel, lock-protected helpers and ww/mutex wake transitions to distinguish wake intent from an executable task. Disabled proxy clears normally; a NULL relationship is not made waking. Preserve current return-migration handling rather than the historical unconditional try_to_wake_up exit clear or original resched-idle-only handling, superseded by later is_blocked/ttwu changes still separately under review. Avoid dereferencing the sentinel as a lock.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/proxy-locking-state-review.json",
+      "evidence/proxy-lock-state-check.json",
+      "SECURITY.md: Proxy lock state and donor lifetime"
+    ]
+  },
+  {
+    "commit": "42d241724467d9d4614097757e0ca02de521f945",
+    "disposition": "adapted-net-state",
+    "rationale": "All five paths reviewed. Retain typed blocked_on {lock,type}, helper updates and fork NULL initialization, plus owner/wait-lock dispatch in the selected proxy scheduler. Later BO_T_RWSEM extends the same dispatch; BO_T_NONE and PROXY_WAKING have no owner. find_proxy_task snapshots the pair under blocked_lock, locks the primitive wait_lock then rechecks under blocked_lock. This supports Android rwsem proxy execution, not a frozen layout. The abstraction does not independently prove lifetime of an arbitrary previously recorded task link.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/proxy-locking-state-review.json",
+      "evidence/proxy-lock-state-check.json",
+      "SECURITY.md: Proxy lock state and donor lifetime"
+    ]
+  },
+  {
+    "commit": "d81eb58121eef94680b47420dff677c8f0509f01",
+    "disposition": "superseded",
+    "rationale": "Complete four-path original rwsem-writer support reviewed. Its blocked_on_set lifetime and blocked_lock held through the old retry loop were removed by a8651686a0c8. Current d2d77eaf8be4 reapplication sets state only before scheduling and clears after returning. Keep final implementation and writer-owner dispatch, not the older lock/state ordering.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/proxy-locking-state-review.json",
+      "evidence/proxy-lock-state-check.json",
+      "SECURITY.md: Proxy lock state and donor lifetime"
+    ]
+  },
+  {
+    "commit": "c77ba3f615a099ca630d951318d0ae4b3cdd553d",
+    "disposition": "superseded",
+    "rationale": "Complete original reader tracking reviewed. Later revert 5df23430b271 and reapplication 029a1e36cf69 replace the early-loop set/late-clear pattern with per-sleep state, followed by 978a5c9c4e1a moving wake metadata before waiter publication. Preserve the corrected final source, not this historical wake-after-publication ordering.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/proxy-locking-state-review.json",
+      "evidence/proxy-lock-state-check.json",
+      "SECURITY.md: Proxy lock state and donor lifetime"
+    ]
+  },
+  {
+    "commit": "84d95f460ea562bca5871e0ecbf7d94a47f4b08e",
+    "disposition": "superseded",
+    "rationale": "Full donor-first rwsem patch and explicit d8c3b5318be4 revert reviewed. Later 8f585b1490b3 adds a distinct handoff bypass absent here. Its current implementation has explicit initializer and waiter-membership defenses; the replacement donor policy remains a provisional separate candidate pending scheduler chain-lifetime review. No claim that the original policy is unnecessary or equivalent to native FIFO fairness.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/proxy-locking-state-review.json",
+      "evidence/proxy-lock-state-check.json",
+      "SECURITY.md: Proxy lock state and donor lifetime"
+    ]
+  },
+  {
+    "commit": "2e5216c17557b03384d3c383d52695ee90c76c09",
+    "disposition": "superseded",
+    "rationale": "Both static-key declaration/definition changes reviewed. a2beed739cdb explicitly reverses the temporary false default. Current ACK and pinned LTS both define/declare a true static key; preserve that final default and the native boot argument parser. SDK config selects SCHED_PROXY_EXEC. No observed boot or runtime enablement is inferred from compilation.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/proxy-locking-state-review.json",
+      "evidence/proxy-lock-state-check.json",
+      "SECURITY.md: Proxy lock state and donor lifetime"
+    ]
+  },
+  {
+    "commit": "d8c3b5318be477c9a7ab0ea2ad41cf2da15027eb",
+    "disposition": "superseded",
+    "rationale": "Full donor-first removal reviewed. Superseded by the later 8f585b1490b3 reapplication with handoff handling. Do not apply this old revert to silently remove selected Android behavior. The replacement remains provisional for donor lifetime, with local defenses already committed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/proxy-locking-state-review.json",
+      "evidence/proxy-lock-state-check.json",
+      "SECURITY.md: Proxy lock state and donor lifetime"
+    ]
+  },
+  {
+    "commit": "5df23430b271d080b193012c7c13072628ae11a5",
+    "disposition": "superseded",
+    "rationale": "Complete reader tracking revert reviewed, including reader wake metadata and signal/success cleanup removal. Later reapplication and publication-order fix replace it. Do not remove current per-sleep tracking or revive the old post-publication metadata update.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/proxy-locking-state-review.json",
+      "evidence/proxy-lock-state-check.json",
+      "SECURITY.md: Proxy lock state and donor lifetime"
+    ]
+  },
+  {
+    "commit": "a8651686a0c81422fd7d80d4268815e58b5e79aa",
+    "disposition": "superseded",
+    "rationale": "All three revert paths reviewed: rwsem owner accessor declaration/body, writer blocked state and scheduler type dispatch removal. Current reapplication restores a coherent accessor/dispatch pair and revised per-sleep bookkeeping. Old BO_T_RWSEM enum survives this revert but is not an isolated reason to restore the old slowpath.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/proxy-locking-state-review.json",
+      "evidence/proxy-lock-state-check.json",
+      "SECURITY.md: Proxy lock state and donor lifetime"
+    ]
+  },
+  {
+    "commit": "d2d77eaf8be4c416e5f507c2feb522382ebee5c8",
+    "disposition": "adapted-net-state",
+    "rationale": "All three paths reviewed. Keep writer-owner accessor and scheduler rwsem wait-lock dispatch; track writer blockers only when a writer is observed, before schedule_preempt_disabled, and clear after each return. Native try-lock acquisition, count/handoff arithmetic, signal exit removal and ownership barriers remain. Accessor rejects reader-owned/nonspinnable states and is a snapshot, not a task reference. Tracking permits Android proxy scheduling; donor selection and whole scheduler lifetime are separate provisional decisions.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/proxy-locking-state-review.json",
+      "evidence/proxy-lock-state-check.json",
+      "SECURITY.md: Proxy lock state and donor lifetime"
+    ]
+  },
+  {
+    "commit": "029a1e36cf6935bb9b1aadd5272d385e9145ce29",
+    "disposition": "adapted-net-state",
+    "rationale": "Complete reader reapplication reviewed. Keep per-sleep blocked state only when writer-held, native acquire load of waiter.task, signal checks under wait_lock, native reader-count grant and wake-queue task-reference ownership. Later 978a5c9c4e1a must precede release publication with metadata; 192c98a4c13d removes unreachable cleanup. Reader-held rwsems have no single proxy writer owner. This adds runtime behavior to configured generic locks, not platform-specific hardware.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/proxy-locking-state-review.json",
+      "evidence/proxy-lock-state-check.json",
+      "SECURITY.md: Proxy lock state and donor lifetime"
+    ]
+  },
+  {
+    "commit": "9bb516eaee64753cbad37c4579d12fcf655e6972",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain set_current_state(state) after optimistic spin and blocked_on reinstallation. Optimistic spin can schedule in TASK_RUNNING; leaving that state while proxy dequeueing a blocked waiter can suppress future matching wakeups. Extracted post-spin code restores four modeled sleeping states; exact pre-fix control fails four assertions. This is a deterministic source check, not the external reproducer or kernel scheduling test.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/proxy-locking-state-review.json",
+      "evidence/proxy-lock-state-check.json",
+      "SECURITY.md: Proxy lock state and donor lifetime"
+    ]
+  },
+  {
+    "commit": "192c98a4c13d6e51c47f88504b749fa1e0b8208a",
+    "disposition": "adapted-net-state",
+    "rationale": "Complete two-line removal reviewed. Current reader loop initializes blocked_on_set=false, sets it only immediately before schedule and clears/resets it before retrying the loop. The signal/error branch occurs before a new set and after prior cleanup; therefore its conditional clear is unreachable in this final flow. Preserve native error waiter removal and return -EINTR; do not reinsert redundant cleanup based on the older loop.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/proxy-locking-state-review.json",
+      "evidence/proxy-lock-state-check.json",
+      "SECURITY.md: Proxy lock state and donor lifetime"
+    ]
+  },
+  {
+    "commit": "1ec2e1f7ef32fb551a8b1b76bcf8003d95f96e34",
+    "disposition": "adapted-net-state",
+    "rationale": "Complete mutex unlock lock-pair relocation reviewed. Retain unconditional current blocked_lock acquisition under wait_lock, matched by unconditional release, including proxy-disabled operation. Nested donor/next task locks remain under wait_lock and are released before wake_up_q. New bb6c4caa1ee2 adds waiter lifetime validation without changing this balanced lock order. No claim of PREEMPT_RT coverage; SDK is non-RT.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/proxy-locking-state-review.json",
+      "evidence/proxy-lock-state-check.json",
+      "SECURITY.md: Proxy lock state and donor lifetime"
+    ]
+  },
+  {
+    "commit": "978a5c9c4e1a7fc999e3220b3706afc1fec68861",
+    "disposition": "adapted-net-state",
+    "rationale": "Keep all reader blocked metadata and donor detachment before get_task_struct and smp_store_release(waiter.task,NULL); keep native get-before-publish and wake_q_add_safe afterward. A reader can finish on a spurious wake once NULL is published, then block on another lock. Extracted reader publication check forces that interleaving; final code preserves the new relationship while the exact pre-fix control fails nine assertions. Embedded reproducer URL was read as commit text only and not accessed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/proxy-locking-state-review.json",
+      "evidence/proxy-lock-state-check.json",
+      "SECURITY.md: Proxy lock state and donor lifetime"
+    ]
   }
 ]

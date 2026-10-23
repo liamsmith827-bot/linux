@@ -5272,3 +5272,32 @@ explicitly cleared, while mutex/per-CPU OEM initialization is callback-owned.
 No guarantee of universal zeroed vendor storage is made. Separate proxy handoff,
 blocked-state and scheduler reviews remain open; these decisions do not certify
 them. No kernel lock contention or callback runtime test was performed.
+
+# Proxy lock state and donor lifetime
+
+`evidence/proxy-locking-state-review.json` finalizes 16 state/helper/history
+candidates. Keep per-task blocked-lock serialization, typed mutex/rwsem state,
+PROXY_WAKING transitions and corrected per-sleep rwsem state. Preserve native
+mutex acquisition/release ownership operations and waiter cleanup, rwsem count
+accounting, acquire/release publication and task references before waking readers.
+The mutex post-spin sleeping state and rwsem metadata-before-publication fixes
+are retained; deterministic extracted checks fail with their actual old code.
+No claim of kernel contention, affinity, fairness or race validation is made.
+
+The donor pointer alone is not a task reference. A remote wakeup can detach a
+scheduling donor; the wider scheduler link lifetime is still under review.
+Commit bb6c4caa1ee2 validates donor membership in the wait-lock-protected queue
+before dereferencing its task in mutex/rwsem selection. This local defense keeps
+intentional handoff to live donors and native fallback for missing donors. A
+reused address could still bias priority toward a live unrelated waiter; it does
+not become a memory access to an unqueued freed task in these selection blocks.
+The extra mutex list walk can lengthen IRQ-disabled lock hold time. No runtime
+cost, starvation bound or actual kernel stale-pointer exploit is established.
+
+The original donor-selection candidates da0eae57da46 and 8f585b1490b3 remain
+provisional pending scheduler chain analysis, including proxy_migrate_task and
+remote wakeup/reset paths. The 256 simulated membership cases and 773 prior
+initializer/handoff cases establish local properties only. The selected default
+remains enabled as in final ACK and native LTS, superseding the temporary false
+default. Scoped local userspace searches did not establish a boot override;
+compilation does not establish runtime enablement. No remote source was used.

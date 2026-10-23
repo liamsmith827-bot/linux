@@ -490,15 +490,17 @@
   },
   {
     "topic": "Proxy rwsem donor handoff and waiter initialization",
-    "status": "initialization defect fixed; broader proxy necessity/concurrency review remains provisional",
+    "status": "local initializer and waiter lifetime defenses implemented; scheduler donor chain lifetime remains provisional",
     "candidates": [
+      "da0eae57da46a43303613f71db90363a41d9291a",
       "8f585b1490b3ffb4dfedd448b3c770807cd96a7b"
     ],
-    "evidence": "Full original 84d95f460ea5, revert d8c3b5318be4 and reapplication 8f585b1490b3 patches reviewed. The reapplication adds donor_wakeup and a handoff bypass but never initializes it in either waiter constructor. SDK CONFIG_INIT_STACK_ALL_ZERO masks the defect; source initialization is now explicit. Differential extracted-code checks compare ordinary waiters against LTS and retain deliberate donor override: 773 cases pass, original ACK initializer yields 138 failed checks. Full donor lifetime, blocked-lock ordering and proxy state review is still required before finalizing the reapplication.",
+    "evidence": "bb6c4caa1ee2 validates the donor against a protected waiter list before any task dereference in mutex/rwsem selection. Expired pointers that are not queued fall back to ordinary selection. An address reused by a live waiter is safe to dereference but could receive unintended priority; this local defense does not prove global donor identity/lifetime. O(n) queue search may increase mutex unlock spinlock hold time; no bound or runtime cost measured. Remote ttwu proxy_needs_return/proxy_reset_donor can detach an old scheduling donor without explicitly clearing all owner->blocked_donor links. Scheduler proxy_migrate_task and other chain consumers require further lifetime analysis. No actual UAF, exploit, race, affinity migration or starvation has been reproduced. Do not finalize da0eae57da46 or 8f585b1490b3 on the strength of these local checks. See proxy-locking-state-review.json and extracted checks. Earlier state/ordering review has now been completed; full scheduler chain analysis remains.",
     "result_commits": [
-      "2c9eca0230277a60a7d164ff7cc1cd28dbb803e6"
+      "2c9eca0230277a60a7d164ff7cc1cd28dbb803e6",
+      "bb6c4caa1ee2b50faa21130ff8272ae776f9aa47"
     ],
-    "review": "evidence/rwsem-waiter-init-check.json"
+    "review": "evidence/proxy-locking-state-review.json"
   },
   {
     "topic": "SDK locking hook callbacks and replacement-locking contracts",
