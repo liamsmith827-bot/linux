@@ -1163,6 +1163,7 @@ queue:
 	waiter.type = RWSEM_WAITING_FOR_READ;
 	waiter.timeout = jiffies + RWSEM_WAIT_TIMEOUT;
 	waiter.handoff_set = false;
+	waiter.donor_wakeup = false;
 
 	raw_spin_lock_irq(&sem->wait_lock);
 	if (list_empty(&sem->wait_list)) {
@@ -1280,6 +1281,7 @@ rwsem_down_write_slowpath(struct rw_semaphore *sem, int state)
 	waiter.type = RWSEM_WAITING_FOR_WRITE;
 	waiter.timeout = jiffies + RWSEM_WAIT_TIMEOUT;
 	waiter.handoff_set = false;
+	waiter.donor_wakeup = false;
 
 	raw_spin_lock_irq(&sem->wait_lock);
 	trace_android_vh_alter_rwsem_list_add(
