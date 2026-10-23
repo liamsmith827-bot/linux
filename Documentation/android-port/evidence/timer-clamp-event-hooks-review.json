@@ -1,0 +1,273 @@
+{
+  "source_head": "17b34e01a3e39a596b18936d98f4f2b23157b83f",
+  "records": [
+    {
+      "commit": "6fb5714d19ede9bc999a508e9d9a37ddcf453def",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "c65061c360d35647f1d29dbbcf6f9e9258ea39bb"
+      ],
+      "rationale": "Full three-path patch read. Keep timer target source hook to support vendor placement/pause policy. Native hrtimer get_target_base immediately indexes per-CPU bases using this result; even done=false leaves cpu as the seed for domain lookup. Adapt both paths to reject out-of-range/offline CPU and restore actual-current seed with done=false. Accept completed override only in current native HK_TYPE_KERNEL_NOISE housekeeping policy; a valid non-housekeeping seed falls through native search. Preserve valid done=false seed changes and accepted idle/busy policy overrides. Full unhooked selector and both timer consumer functions remain native LTS. No specific SDK callback or CPU-pause implementation is established; retain generic capability.",
+      "evidence": [
+        "evidence/timer-clamp-event-hooks-review.json",
+        "evidence/timer-target-hook-check.json",
+        "evidence/effective-clamp-hook-check.json",
+        "SECURITY.md: Timer placement and effective clamp safety"
+      ],
+      "patch_sha256": "90f7346d26fc36c61980cc3407ba68dda7fa55d3a851de741b14ee8eb0ea8e10"
+    },
+    {
+      "commit": "fcded6eef8ae04af7e54fc221f668d1b903e8bb9",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "17b34e01a3e39a596b18936d98f4f2b23157b83f"
+      ],
+      "rationale": "Full three-path effective-clamp addition read; title/body discussion of removing a different hook is not an actual deletion in this patch. Preserve override ret!=0 bypassing native task-group/system maximum policy and mutable uc_max affecting normal return. Initialize uc_eff explicitly to zero, matching selected SDK automatic stack zeroing, then derive every callback-returned bucket index from its value. Native documented value-to-bucket relation and uclamp_rq_inc_id indexed writes require this invariant; values, including representable values above capacity, remain unbounded by this adaptation to preserve policy customization. Partial value-only callbacks and malformed bucket fields no longer yield stale/invalid indices. Native permission/LSM authorization is outside this calculation and not weakened.",
+      "evidence": [
+        "evidence/timer-clamp-event-hooks-review.json",
+        "evidence/timer-target-hook-check.json",
+        "evidence/effective-clamp-hook-check.json",
+        "SECURITY.md: Timer placement and effective clamp safety"
+      ],
+      "patch_sha256": "63cb8b9793ac5fd01052ec3f81c0ea1cf94e118fc653d15c1e232531635ce080"
+    },
+    {
+      "commit": "e1061a93713b0363a786881151dda7fbab8951d6",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full three-path estimator hook read. Preserve early callback before UTIL_EST and task_sleep gates; any nonzero ret skips native estimate update, and callback can maintain alternative estimate. Keep current native unsigned EWMA, activation/unchanged checks, fast ramp-up, runnable-underestimate check, averaging and final flag/trace; entire function equals LTS after callback block removal. Called on fair dequeue before dequeue_entities and after optional util_est_dequeue; delayed-task handling remains native. Override can intentionally leave stale estimates or change frequency decisions; trusted callback must keep accounting consistent, no measured SDK benefit or known installed implementation asserted.",
+      "evidence": [
+        "evidence/timer-clamp-event-hooks-review.json",
+        "evidence/timer-target-hook-check.json",
+        "evidence/effective-clamp-hook-check.json",
+        "SECURITY.md: Timer placement and effective clamp safety"
+      ],
+      "patch_sha256": "fd358caeaea836c45a00e1073510a1ba996f918a1bd2877d321030fddf6be907"
+    },
+    {
+      "commit": "09e27d4f36d2a775e2bc8e665c75328b3d81b2c3",
+      "disposition": "partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "9e5ff622cd6e617658a3f0cad6fbd307643f2c6d"
+      ],
+      "rationale": "Full five-path patch read. Keep six-word task OEM storage as functional source-extension state, final four-argument placement notification and scheduler-domain-built notification after successful attach/static-key updates. Preserve current three-argument task replacement hook and donor-change retry guards, not old task/entity/repick/simple outputs. Historical wakeup-ignore interface was explicitly removed by 5d1a9a9aa581 (full deletion read); current evolved preempt/nopreempt hook is separately preserved. Historical check_preempt_tick has retained declaration/export but no current call site; do not resurrect obsolete CFS slice algorithm into LTS EEVDF. Place callback receives pointer to local vruntime after native entity store; writing only that local does not change already stored vruntime. Domain callback reports success before allocation cleanup, no failure event.",
+      "evidence": [
+        "evidence/timer-clamp-event-hooks-review.json",
+        "evidence/timer-target-hook-check.json",
+        "evidence/effective-clamp-hook-check.json",
+        "SECURITY.md: Timer placement and effective clamp safety"
+      ],
+      "patch_sha256": "dbb3d113de6a517794c8e433a0a3247b1b06aac6a75c56c369097f2ae016f8b7"
+    },
+    {
+      "commit": "bc70904edc771b92911229428b9a3538fa6af3a3",
+      "disposition": "partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "9e5ff622cd6e617658a3f0cad6fbd307643f2c6d"
+      ],
+      "rationale": "Full five-path patch read. Preserve task-free, post-class enqueue/dequeue, entity-tree, entity-tick and fair hierarchy events using final signatures. Free callback occurs after cpufreq-state, affinity-mask and shadow-stack release but before task-object release: cannot use released resources or retain task without valid lifetime protocol. Entity callbacks run before native augmented-tree/weighted-vruntime changes, and must not independently corrupt membership. Tick event is after accounting and skipped by queued-HRTICK early return. Fair events occur between hierarchy loops with transformed flags, not guaranteed original flags; dequeue event moved to dequeue_entities, can see p=NULL for group entities, and is skipped by some delayed/early paths. Current post-dequeue callback receives writable bool result, so callback must keep actual queue/delay state consistent. Final task-replacement and wakeup-preemption protocols supersede six-argument/obsolete buddy/granularity extensions. Retained check_preempt_tick declaration/export currently emits no event. No historical layout preservation required.",
+      "evidence": [
+        "evidence/timer-clamp-event-hooks-review.json",
+        "evidence/timer-target-hook-check.json",
+        "evidence/effective-clamp-hook-check.json",
+        "SECURITY.md: Timer placement and effective clamp safety"
+      ],
+      "patch_sha256": "7b4828107be93129baeceda932eb4f3a5b74021269e5b4671ad4d93e1b0a6087"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/sched/core.c",
+      "function": "get_nohz_timer_target",
+      "sha256": "61400ba5a5c8b8fde44b1c0c506231bc8430f3bfad1c65c862fcae95929ecd32",
+      "relationship": "Complete native function after listed differences",
+      "changes": [
+        [
+          "\tbool done = false;\n\n\ttrace_android_rvh_get_nohz_timer_target(&cpu, &done);\n\tif (unlikely((unsigned int)cpu >= nr_cpu_ids || !cpu_online(cpu))) {\n\t\tcpu = smp_processor_id();\n\t\tdone = false;\n\t}\n\tif (done && housekeeping_cpu(cpu, HK_TYPE_KERNEL_NOISE))\n\t\treturn cpu;\n",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "uclamp_eff_get",
+      "sha256": "e60e09a5acf7decaaaf6e0a574f9d470673ee10d9c432b018ab1e0c3cac795b8",
+      "relationship": "Complete native function after listed differences",
+      "changes": [
+        [
+          "\tstruct uclamp_se uc_eff = {};\n\tint ret = 0;\n\n\ttrace_android_rvh_uclamp_eff_get(p, clamp_id, &uc_max, &uc_eff, &ret);\n\tif (ret) {\n\t\tuc_eff.bucket_id = uclamp_bucket_id(uc_eff.value);\n\t\treturn uc_eff;\n\t}\n",
+          ""
+        ],
+        [
+          "if (unlikely(uc_req.value > uc_max.value)) {\n\t\tuc_max.bucket_id = uclamp_bucket_id(uc_max.value);\n\t\treturn uc_max;\n\t}",
+          "if (unlikely(uc_req.value > uc_max.value))\n\t\treturn uc_max;"
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "util_est_update",
+      "sha256": "8338d44cda554bc13c959b579f85dd5c8590dad02e2468f1a2cfbdc1a35003b7",
+      "relationship": "Complete native function after listed differences",
+      "changes": [
+        [
+          "\tint ret = 0;\n\n\ttrace_android_rvh_util_est_update(cfs_rq, p, task_sleep, &ret);\n\tif (ret)\n\t\treturn;\n",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/fork.c",
+      "function": "free_task",
+      "sha256": "15b5bf17ba5f0b8a7f6707c6c4cee4a1dbe85683387b0296fd36711be599c113",
+      "relationship": "Complete native function after listed differences",
+      "changes": [
+        [
+          "\tcpufreq_task_times_exit(tsk);\n",
+          ""
+        ],
+        [
+          "\ttrace_android_vh_free_task(tsk);\n",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/topology.c",
+      "function": "build_sched_domains",
+      "sha256": "c26d715095dcd4a3da6de2a90a0f81d5aa6b72e08289a42db9eaecc62ec64d88",
+      "relationship": "Complete native function after listed differences",
+      "changes": [
+        [
+          "\ttrace_android_vh_build_sched_domains(has_asym);\n",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "__enqueue_entity",
+      "sha256": "bf6e7d8e757a25a8ac52d773d0dd98c05320fb7797766a0a99fd977adb135b85",
+      "relationship": "Complete native function after listed differences",
+      "changes": [
+        [
+          "\ttrace_android_rvh_enqueue_entity(cfs_rq, se);\n",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "__dequeue_entity",
+      "sha256": "a041ed227692dc3fbb5fa96393d28e34157bfddbb03081467221aadd994a80d8",
+      "relationship": "Complete native function after listed differences",
+      "changes": [
+        [
+          "\ttrace_android_rvh_dequeue_entity(cfs_rq, se);\n",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "entity_tick",
+      "sha256": "ba893f4d4f0e1148f9cfcda470807a0fc86048c10d8d9643e29af00948cb5b77",
+      "relationship": "Complete native function after listed differences",
+      "changes": [
+        [
+          "\ttrace_android_rvh_entity_tick(cfs_rq, curr);\n",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/time/hrtimer.c",
+      "function": "get_target_base",
+      "sha256": "409797c57a6d3be8f2cac8ff513953269c8eee74f2627cd3bb76a8a2aa441677",
+      "relationship": "Complete native function after listed differences",
+      "changes": []
+    },
+    {
+      "path": "kernel/time/hrtimer.c",
+      "function": "switch_hrtimer_base",
+      "sha256": "93b6fe401fb0346d3b08f4dded0adad80ae3fe3b5702af6fd4a047e016fb438d",
+      "relationship": "Complete native function after listed differences",
+      "changes": []
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "uclamp_rq_inc_id",
+      "sha256": "7365fb10e9ca7a6ffce5439c5106e620e250cff8528a704b375bb21fcd74d72f",
+      "relationship": "Complete native function after listed differences",
+      "changes": []
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "uclamp_rq_dec_id",
+      "sha256": "ab0ef395346adbad34d2bfd19a229a9f72a8b3a745eb56973f3b5856fdba6f62",
+      "relationship": "Complete native function after listed differences",
+      "changes": []
+    },
+    {
+      "path": "kernel/sched/sched.h",
+      "function": "uclamp_bucket_id",
+      "sha256": "0314763e34555254037e142fbd86ded7203ea9a593c3660bf60ac0e1d4b6c828",
+      "relationship": "Complete native function after listed differences",
+      "changes": []
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "dequeue_entities",
+      "sha256": "cf6678f9dad93d642b98bf12fd7b7b94efc5e6444ea4164181a8f412dc335b8c",
+      "relationship": "Current event ordering and context read, not a claim of full native equality"
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "enqueue_task_fair",
+      "sha256": "48b42d8cf7a8645732e64b3972f3ba7f3287811649f35e63739ac4636d3d5c39",
+      "relationship": "Current event ordering and context read, not a claim of full native equality"
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "pick_next_task_fair",
+      "sha256": "25ec62410551b89020c81723f90f5591182909eba549ed410a845cbb7b02f289",
+      "relationship": "Current event ordering and context read, not a claim of full native equality"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "enqueue_task",
+      "sha256": "83731f43e73c99310745a066725320f1aaaac0913fd5c8e24460197e2c202b40",
+      "relationship": "Current event ordering and context read, not a claim of full native equality"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "dequeue_task",
+      "sha256": "6b9a1c9bb9eb407dab1cbc7e29bf63460adea3a5e207cd2867b9f6ed7cb0e5af",
+      "relationship": "Current event ordering and context read, not a claim of full native equality"
+    }
+  ],
+  "related_evidence": [
+    "evidence/fair-selection-hooks-review.json",
+    "evidence/fair-hook-guards-check.json",
+    "evidence/scheduler-event-history-review.json",
+    "evidence/task-vendor-storage-review.json"
+  ],
+  "configuration": "Prior verified build 140 common_dist/kernel_x86_64_dot_config: NO_HZ_COMMON, CPU_ISOLATION, UCLAMP_TASK/GROUP and INIT_STACK_ALL_ZERO enabled; UCLAMP_BUCKETS_COUNT=20. First clamp harness covered upstream default 5 only; expanded before final review to SDK 20 as well.",
+  "validation": "Timer host cases 413696, including 103424 native default and 223488 valid callback behavior comparisons; old control 155136 modeled invalid accesses. Clamp 268800 cases with 5/20 buckets pass; old control has 7932/31920 modeled invalid bucket accesses. No actual kernel crash, hotplug race, runtime latency or frequency result. Build 141 succeeded; all 145 module signatures and flag/CRC tables verified.",
+  "security": "Preserve policy override values while checking CPU storage eligibility and restoring documented bucket representation. ret-only clamp callback explicitly returns zero as in selected zero-stack SDK build; other configurations gain deterministic initialization. Arbitrary callback pointer or state corruption remains outside these guards. No native stable fix reversed.",
+  "uncertainty": "Exact installed SDK implementations of these generic callbacks are unconfirmed. Retain source customization capability, not omit based on missing consumers. Timer online check is a snapshot, not a hotplug synchronization proof. Historical absent event sites are evidenced against both final ACK and port, not assumptions about modules.",
+  "remote_sources_used": [],
+  "subsequent_build_verification": {
+    "run": "sdk-build-attempt-141",
+    "evidence": [
+      "evidence/build-results.json",
+      "evidence/module-tables-build-141.json"
+    ]
+  }
+}

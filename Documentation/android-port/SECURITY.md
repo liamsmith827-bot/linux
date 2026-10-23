@@ -6376,3 +6376,66 @@ produces 4224 modeled invalid accesses and also violates queue/affinity policy.
 No real IPI, stopper, SCX callback, hotplug race or kernel fault was executed.
 Build 140 succeeded; all 145 module signatures and flag/CRC tables verified.
 No remote source was accessed.
+
+# Timer placement and effective clamp safety
+
+Five hook-history decisions are recorded in `evidence/timer-clamp-event-hooks-review.json`.
+`c65061c360d3` validates callback CPU range and online status before timer-base
+selection or topology lookup, including callbacks leaving done=false. Invalid
+outputs restore the current CPU and native selection. Completed overrides must
+follow the native housekeeping policy. Valid search-seed changes and busy/idle
+preferences remain available. Native timer consumers are unchanged; online is a
+snapshot, not a proof against asynchronous hotplug.
+
+`17b34e01a3e3` initializes the effective clamp result and derives callback bucket
+indices from their values, including mutable maximum values on the normal path.
+It preserves the callback's authority to bypass group/system clamps and to supply
+representable values above capacity. An index no longer independently selects an
+unrelated or out-of-bounds bucket. Explicit zero initialization matches the SDK's
+selected automatic stack initialization; no SDK stack disclosure was demonstrated.
+The SDK selects 20 buckets; host checks also cover upstream's default 5.
+
+Keep estimator suppression, task-free and scheduling events with their current
+contracts. Fair dequeue can report a NULL task for a group entity and transformed
+flags. Post-dequeue output remains writable and requires matching actual state.
+Free callbacks cannot use already-released affinity/SCS/cpufreq resources. Do not
+restore removed wakeup-ignore or obsolete CFS picker behavior; check_preempt_tick
+still has source registration/export but no current event site. Functional OEM
+storage and evolved task replacement are retained with prior donor retry guards.
+
+413696 timer and 268800 clamp host cases pass. Old controls exercise modeled
+invalid accesses; no real kernel fault, timer operation, race or power claim is
+made. Build 141 passed; all 145 module signatures and flag/CRC tables verified.
+No remote source was accessed.
+
+# Scheduler merge continuity
+
+Nine merges in `evidence/scheduler-merge-continuity-review.json` have all unique
+resolution hunks reviewed, including the non-conflict restricted-tracepoint API
+adaptation. Preserve current native governor limits handling, tracepoint call
+update API, task lifetime cleanup and authorization while keeping current hooks.
+Whole native function/file witnesses cover governor, IRQ work, FEEC/energy,
+tracepoint update and the prctl header. Old latency-sensitive EAS logic, obsolete
+uclamp helper, stub header and 96-word runqueue array are absent in final ACK and
+are not revived. Current functional OEM state remains; no historical KMI offsets
+are preserved. ARM64 Qualcomm display/RPMH material is outside the SDK target;
+those files remain entirely native LTS. No new source change or remote resource
+was needed for these nine decisions. Runtime callback behavior remains unverified.
+
+# Mixed scheduler, storage and build resolutions
+
+Three complete merge resolutions in `evidence/scheduler-mixed-merges-review.json`
+retain the native active-balance flag alongside vendor locking context, one
+namespaced dma_heap_get_name definition, current block-crypto headers and CMA
+IRQ/GFP safeguards. Review includes non-conflict corrective hunks. Historical
+smaps Name text is absent in final ACK; native current anon-name documentation
+and interfaces remain. Physical Qualcomm PHY, PWM and UFS hook-only changes
+are outside SDK virtual devices. UFS drivers are enabled in SDK configuration;
+this exclusion does not rely on falsely claiming those drivers are disabled.
+
+Current pinned Kleaf restores base artifacts into OUT_DIR/KBUILD_MIXED_TREE and
+runs depmod with the mixed System.map. Keep the native script's one-argument API
+rather than obsolete positional prefix. Build 141 passed this existing workflow
+and all 145 module signatures/tables verified. CMA pool provisioning remains
+unconfirmed and the retained runtime code is not claimed boot-tested. No remote
+source was accessed.

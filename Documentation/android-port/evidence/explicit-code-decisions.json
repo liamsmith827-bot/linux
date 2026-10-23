@@ -15940,5 +15940,225 @@
       "evidence/wakeup-exec-hooks-check.json",
       "SECURITY.md: Wake-list eligibility and exec selection"
     ]
+  },
+  {
+    "commit": "6fb5714d19ede9bc999a508e9d9a37ddcf453def",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "c65061c360d35647f1d29dbbcf6f9e9258ea39bb"
+    ],
+    "rationale": "Full three-path patch read. Keep timer target source hook to support vendor placement/pause policy. Native hrtimer get_target_base immediately indexes per-CPU bases using this result; even done=false leaves cpu as the seed for domain lookup. Adapt both paths to reject out-of-range/offline CPU and restore actual-current seed with done=false. Accept completed override only in current native HK_TYPE_KERNEL_NOISE housekeeping policy; a valid non-housekeeping seed falls through native search. Preserve valid done=false seed changes and accepted idle/busy policy overrides. Full unhooked selector and both timer consumer functions remain native LTS. No specific SDK callback or CPU-pause implementation is established; retain generic capability.",
+    "evidence": [
+      "evidence/timer-clamp-event-hooks-review.json",
+      "evidence/timer-target-hook-check.json",
+      "evidence/effective-clamp-hook-check.json",
+      "SECURITY.md: Timer placement and effective clamp safety"
+    ]
+  },
+  {
+    "commit": "fcded6eef8ae04af7e54fc221f668d1b903e8bb9",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "17b34e01a3e39a596b18936d98f4f2b23157b83f"
+    ],
+    "rationale": "Full three-path effective-clamp addition read; title/body discussion of removing a different hook is not an actual deletion in this patch. Preserve override ret!=0 bypassing native task-group/system maximum policy and mutable uc_max affecting normal return. Initialize uc_eff explicitly to zero, matching selected SDK automatic stack zeroing, then derive every callback-returned bucket index from its value. Native documented value-to-bucket relation and uclamp_rq_inc_id indexed writes require this invariant; values, including representable values above capacity, remain unbounded by this adaptation to preserve policy customization. Partial value-only callbacks and malformed bucket fields no longer yield stale/invalid indices. Native permission/LSM authorization is outside this calculation and not weakened.",
+    "evidence": [
+      "evidence/timer-clamp-event-hooks-review.json",
+      "evidence/timer-target-hook-check.json",
+      "evidence/effective-clamp-hook-check.json",
+      "SECURITY.md: Timer placement and effective clamp safety"
+    ]
+  },
+  {
+    "commit": "e1061a93713b0363a786881151dda7fbab8951d6",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Full three-path estimator hook read. Preserve early callback before UTIL_EST and task_sleep gates; any nonzero ret skips native estimate update, and callback can maintain alternative estimate. Keep current native unsigned EWMA, activation/unchanged checks, fast ramp-up, runnable-underestimate check, averaging and final flag/trace; entire function equals LTS after callback block removal. Called on fair dequeue before dequeue_entities and after optional util_est_dequeue; delayed-task handling remains native. Override can intentionally leave stale estimates or change frequency decisions; trusted callback must keep accounting consistent, no measured SDK benefit or known installed implementation asserted.",
+    "evidence": [
+      "evidence/timer-clamp-event-hooks-review.json",
+      "evidence/timer-target-hook-check.json",
+      "evidence/effective-clamp-hook-check.json",
+      "SECURITY.md: Timer placement and effective clamp safety"
+    ]
+  },
+  {
+    "commit": "09e27d4f36d2a775e2bc8e665c75328b3d81b2c3",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "9e5ff622cd6e617658a3f0cad6fbd307643f2c6d"
+    ],
+    "rationale": "Full five-path patch read. Keep six-word task OEM storage as functional source-extension state, final four-argument placement notification and scheduler-domain-built notification after successful attach/static-key updates. Preserve current three-argument task replacement hook and donor-change retry guards, not old task/entity/repick/simple outputs. Historical wakeup-ignore interface was explicitly removed by 5d1a9a9aa581 (full deletion read); current evolved preempt/nopreempt hook is separately preserved. Historical check_preempt_tick has retained declaration/export but no current call site; do not resurrect obsolete CFS slice algorithm into LTS EEVDF. Place callback receives pointer to local vruntime after native entity store; writing only that local does not change already stored vruntime. Domain callback reports success before allocation cleanup, no failure event.",
+    "evidence": [
+      "evidence/timer-clamp-event-hooks-review.json",
+      "evidence/timer-target-hook-check.json",
+      "evidence/effective-clamp-hook-check.json",
+      "SECURITY.md: Timer placement and effective clamp safety"
+    ]
+  },
+  {
+    "commit": "bc70904edc771b92911229428b9a3538fa6af3a3",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "9e5ff622cd6e617658a3f0cad6fbd307643f2c6d"
+    ],
+    "rationale": "Full five-path patch read. Preserve task-free, post-class enqueue/dequeue, entity-tree, entity-tick and fair hierarchy events using final signatures. Free callback occurs after cpufreq-state, affinity-mask and shadow-stack release but before task-object release: cannot use released resources or retain task without valid lifetime protocol. Entity callbacks run before native augmented-tree/weighted-vruntime changes, and must not independently corrupt membership. Tick event is after accounting and skipped by queued-HRTICK early return. Fair events occur between hierarchy loops with transformed flags, not guaranteed original flags; dequeue event moved to dequeue_entities, can see p=NULL for group entities, and is skipped by some delayed/early paths. Current post-dequeue callback receives writable bool result, so callback must keep actual queue/delay state consistent. Final task-replacement and wakeup-preemption protocols supersede six-argument/obsolete buddy/granularity extensions. Retained check_preempt_tick declaration/export currently emits no event. No historical layout preservation required.",
+    "evidence": [
+      "evidence/timer-clamp-event-hooks-review.json",
+      "evidence/timer-target-hook-check.json",
+      "evidence/effective-clamp-hook-check.json",
+      "SECURITY.md: Timer placement and effective clamp safety"
+    ]
+  },
+  {
+    "commit": "00d6a8a7ee1e677ffd1f091f2dfa3ac49f419aba",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Every unique remerge hunk read, including changes outside conflict markers. kernel/sched/core.c: Keep vendor header with current native CREATE_TRACE_POINTS/event definitions, not the historical header-removal placement. Native event definitions remain singular and builds verify linkage. kernel/sched/fair.c: Keep sched hook header alongside current scheduler headers. kernel/sched/sched.h: Retain native uclamp_is_used implementations. Historical uclamp_boosted helper is absent in both final ACK and port, so do not restore its old EAS policy. Preserve current activation helper separately reviewed.",
+    "evidence": [
+      "evidence/scheduler-merge-continuity-review.json",
+      "SECURITY.md: Scheduler merge continuity"
+    ]
+  },
+  {
+    "commit": "075d0ec13d0bb712280f8fd78ff52f2bc852cbc4",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Every unique remerge hunk read, including changes outside conflict markers. arch/arm64/boot/dts/qcom/sdm845-db845c.dts: Unique resolution drops disabled #if 0 dual-DSI blocks from physical ARM64 Qualcomm board; SDK selects x86 and entire file remains native LTS. drivers/soc/qcom/Kconfig: Keep entire native tristate RPMH definition/dependencies. ARM64/ARCH_QCOM hardware path is not selected by x86 SDK; COMPILE_TEST is disabled. No generic vendor interface removed. kernel/sched/cpufreq_schedutil.c: Final macro cpufreq_governor_init matches native registration; obsolete direct initcall and old sched_energy_mutex/rebuild work/governor-change function are absent from final ACK/current. Native sugov_is_governor API retained; ENERGY_MODEL disabled for SDK. Do not restore obsolete lifecycle or locking.",
+    "evidence": [
+      "evidence/scheduler-merge-continuity-review.json",
+      "SECURITY.md: Scheduler merge continuity"
+    ]
+  },
+  {
+    "commit": "bcf67c66f71e4f9bfda2976497de09713952c746",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Every unique remerge hunk read, including changes outside conflict markers. kernel/sched/cpufreq_schedutil.c: Whole current sugov_update_next_freq is exactly LTS, preserving current need_freq_update reset and driver CPUFREQ_NEED_UPDATE_LIMITS semantics. Historical should_update veto variable/hook was removed later; do not revive historical update-limits logic. Other retained map/update hooks are independently reviewed.",
+    "evidence": [
+      "evidence/scheduler-merge-continuity-review.json",
+      "SECURITY.md: Scheduler merge continuity"
+    ]
+  },
+  {
+    "commit": "04a7de0108d6f0f640951f6c27290dca42c79765",
+    "disposition": "merge-resolution-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Every unique remerge hunk read, including changes outside conflict markers. kernel/sched/core.c: Do not restore removed __setscheduler implementation. Evolved trace_android_rvh_setscheduler executes in syscalls.c inside native sched_change after params/class/priority/DL-PI setup when params change; permissions and native cleanup remain. kernel/tracepoint.c: Unique non-conflict hunk changes restricted hook registration to native two-argument tracepoint_update_call. Current helper equals LTS; restricted registration retains evolved ext regfunc/unregfunc rollback and static_branch_enable. Full two-path remerge examined, including this non-conflict change.",
+    "evidence": [
+      "evidence/scheduler-merge-continuity-review.json",
+      "SECURITY.md: Scheduler merge continuity"
+    ]
+  },
+  {
+    "commit": "506f6a3567ce3076fc22ce1eec2aecd2698933df",
+    "disposition": "merge-resolution-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "5ef031bd0c535c61b84f5d00a453f0fb7819e87e"
+    ],
+    "rationale": "Every unique remerge hunk read, including changes outside conflict markers. kernel/fork.c: Both cpufreq_task_times_exit and native release_user_cpus_ptr/SCS cleanup retained; full free_task native body differs only Android cpufreq cleanup and free notification, as verified in timer/clamp/event report. kernel/sched/core.c: Historical inline affinity routine replaced by native helper. Current syscalls.c uses affinity_context/user-mask ownership and native __sched_setaffinity, followed by writable-result callback and user-mask cleanup. Preserve native authorization and the earlier adapted LSM-before-early-skip rule; do not restore old mask allocation/cpuset retry implementation.",
+    "evidence": [
+      "evidence/scheduler-merge-continuity-review.json",
+      "SECURITY.md: Scheduler merge continuity"
+    ]
+  },
+  {
+    "commit": "12283eb030b046654e55b97dfadf0ac03f7f5c77",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Every unique remerge hunk read, including changes outside conflict markers. kernel/sched/core.c: Retain sched hook include within current native local-header organization; textual old removals do not remove current pelt/smp dependencies. kernel/sched/cputime.c: Retain cpufreq_times accounting header alongside current native cputime/tsacct/sched dependencies and event header. kernel/sched/sched.h: Retain functional android_vendor storage header and current native headers. Do not restore obsolete android.h stub wrapper: absent in final ACK/current, and independently reviewed full inverse history in scheduler-hook-cycles-review.json.",
+    "evidence": [
+      "evidence/scheduler-merge-continuity-review.json",
+      "SECURITY.md: Scheduler merge continuity"
+    ]
+  },
+  {
+    "commit": "89c0d89828e2a56d34dc399ada29e7cdc3827d61",
+    "disposition": "merge-resolution-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Every unique remerge hunk read, including changes outside conflict markers. include/linux/sched.h: Keep functional Android vendor header; current native livepatch dependency moved into core.c, not blindly re-add historical include location. kernel/fork.c: Keep native user_events/iommu includes and Android cpufreq_times include; all current dependencies compile. kernel/sched/core.c: Retain sched/cgroup hook headers plus both native GPL IPI tracepoint exports, with current tracepoint-definition ownership.",
+    "evidence": [
+      "evidence/scheduler-merge-continuity-review.json",
+      "SECURITY.md: Scheduler merge continuity"
+    ]
+  },
+  {
+    "commit": "732e4b98eb58b6172da5d84b4cdab5fa9ce811c0",
+    "disposition": "merge-resolution-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Every unique remerge hunk read, including changes outside conflict markers. kernel/irq_work.c: Retain GPL irq_work_queue_on export; entire native function body is preserved, not historical IRQ/thread-work implementation. kernel/sched/core.c: Keep sched_fork event before __sched_fork and flush_task after class task_dead/before stack release. Historical kprobe_flush_task placement not restored: current native cleanup is in kernel/exit.c; no duplicate flush. kernel/sched/fair.c: Retain newidle override at entry with initialized pulled_task/done and single native curr_cost declaration. Current function renamed sched_balance_newidle, preserves newer native donor/queue retry integration and existing hook contract; done can suppress full balance path, trusted policy bears availability risk.",
+    "evidence": [
+      "evidence/scheduler-merge-continuity-review.json",
+      "SECURITY.md: Scheduler merge continuity"
+    ]
+  },
+  {
+    "commit": "7889eed9171e6988176a877d677d5f291185d186",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "b2b392919cf98379740362c5aa97708f9e21f2a8",
+      "e496198e4e74d421def83a3890ddd19a8f975ffb"
+    ],
+    "rationale": "Every unique remerge hunk read, including changes outside conflict markers. include/uapi/linux/prctl.h: Entire header is native LTS and contains both PR_SCHED_CORE and PR_SET_VMA/ANON_NAME constants; no obsolete Android-private ABI required. kernel/sched/core.c: Preserve migration callback detached protocol with native lockdep_assert_rq_held; callback restoring lock/performing detach remains contract. kernel/sched/cpufreq_schedutil.c: Preserve evolved six-argument map_util_freq callback with native get_capacity_ref_freq/resolve logic; do not duplicate historical map_util_perf stage. Prior sugov review documents override of need_freq_update and trust/power implications. kernel/sched/fair.c: All unique FEEC/energy hunks read. Historical latency_sensitive branches and em_cpu_energy callback absent in final ACK and port; both current functions exactly LTS. Preserve current fair-selection callback and native pi_lock contract with e496 range/affinity guard at common selector. Keep detach_task callback with native rq lock abstraction. No revival of obsolete energy baseline/thermal arithmetic. kernel/sched/sched.h: Retain current native sched-core fields and functional OEM16-word state; historical 96-word rq vendor array absent from final ACK/current and not reinstated for binary layout. Prior storage review records source-state evolution.",
+    "evidence": [
+      "evidence/scheduler-merge-continuity-review.json",
+      "SECURITY.md: Scheduler merge continuity"
+    ]
+  },
+  {
+    "commit": "5826bb3260971d5cc674e411ccfc34693d0d2dd1",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "result_commits": [
+      "2ed111267d9e5725b076fe4566ee2fed53b4b754"
+    ],
+    "rationale": "All unique remerge hunks read, including corrections outside conflict markers. Documentation/filesystems/proc.rst: Keep native current mapping-name documentation, including private anon and shared anon_shmem forms. Historical extra smaps Name line is absent even from final ACK; no legacy doc-only line restored. Entire doc native LTS. block/bio.c: Native includes already retain blk-crypto alongside evolved scheduler/block dependencies. Original include-order resolution does not require historical code. Current non-include default-key initialization is independently retained. drivers/md/dm.c: Native includes retain part_stat and blk-crypto with modern blk-crypto-profile replacing historical keyslot-manager API. Do not reinstall obsolete header; independently retained device-mapper source exports/default-key path unaffected. drivers/of/property.c: Whole native file retained. Removed old of_devlink core_param is not reintroduced alongside current native fw_devlink framework; this merge deleted the old option rather than adding a required new ABI. drivers/phy/qualcomm/phy-qcom-qmp.c: Read complete raw-register-to-QMP_PHY_INIT_CFG resolution, including serdes/tx/pcs tables. Physical Qualcomm SDM845 PCIe PHY is outside x86 SDK virtual devices; current split Qualcomm PHY files all native LTS, old monolithic path absent. No generic PCI/virtio interface removed. include/linux/arch_topology.h: Whole native header restored by prior topology-scope adaptation 2ed111267d9e. Old max_freq_scale/sched_domain helper is superseded by current native topology/frequency/pressure APIs; GENERIC_ARCH_TOPOLOGY not selected by x86. Shared generic scheduler hooks retained separately. kernel/sched/fair.c: Historical wake_cap helper deletion preserved; absent in final ACK/current. Current native capacity/EEVDF/energy policy is not replaced by old asymmetric wake-affine shortcut.",
+    "evidence": [
+      "evidence/scheduler-mixed-merges-review.json",
+      "SECURITY.md: Mixed scheduler, storage and build resolutions"
+    ]
+  },
+  {
+    "commit": "4797acfb9cac5821b9d898ad9afb9c23f13514d3",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "All unique remerge hunks read, including corrections outside conflict markers. drivers/dma-buf/dma-heap.c: Unique non-conflict hunk deletes duplicate dma_heap_get_name. Current has exactly one native body and native GPL DMA_BUF_HEAP namespace export; keep this source interface without duplicate definition. include/linux/dma-heap.h: Keep dma_heap_get_dev declaration, implementation and GPL export alongside native get_name interface. Callback/device consumers must respect heap-device lifetime; no permission or allocation logic added by this header resolution. kernel/sched/fair.c: Keep src_rq_rf callback locking context together with native LBF_ACTIVE_LB. This merge accidentally lost active flag; 85adc860fdf3 restores it. Do not replicate that intermediate bug or obsolete LBF_DST_PINNED workaround; current active balancing retains native special handling. kernel/sched/sched.h: Native extern wait and PREEMPT_DYNAMIC declarations remain. Historical task_may_not_preempt stub is absent from final ACK/current; actual current RT softirq-aware policy separately retained. Do not restore unused stub as apparent runtime support.",
+    "evidence": [
+      "evidence/scheduler-mixed-merges-review.json",
+      "SECURITY.md: Mixed scheduler, storage and build resolutions"
+    ]
+  },
+  {
+    "commit": "85adc860fdf3661b99b5ddb5ff330152d88ba6ee",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "f439c53a21100d9c311939ea9c6564e71aa231df",
+      "f23192f165e4ff5ec1bd01030f571bcae7450e30",
+      "57131aee4cb9d81124e5fc74570e38b1c3aec656"
+    ],
+    "rationale": "All unique remerge hunks read, including corrections outside conflict markers. Makefile: Unique non-conflict hunk restores historical depmod mixed-tree argument. Adapted current native one-argument depmod script is retained: pinned Kleaf copies base outputs into OUT_DIR and sets KBUILD_MIXED_TREE=OUT_DIR, and modules_install invokes depmod explicitly using mixed System.map. Existing full emulator workflow succeeds without restoring obsolete argument count. Keep mixed-tree validation, symvers import and current build conditional fixes. drivers/pwm/core.c: Keep whole native PWM core, not old PWM_OUTPUT_FIXED extension or obsolete initial polarity assignment. SDK CONFIG_PWM is off; implementation is physical PWM output support, not a current emulator interface. drivers/scsi/ufs/ufs-sysfs.c: Current relocated drivers/ufs/core/ufs-sysfs.c is entirely native, including correctly spelled helper. Historical UFS-specific hook include is part of documented physical-device hook exclusion; generic UFS drivers remain available. SDK actually enables UFS drivers, so exclusion is not justified by claiming CONFIG_SCSI_UFSHCD=n; the added UFS hardware customization is outside ordinary SDK virtual storage. No future physical-device hook implementation added. kernel/.gitignore: Whole native ignore file retained, with current anchored generated artifacts. Historical timeconst/hz locations need not be reintroduced; this is metadata, no runtime permission effect. kernel/sched/fair.c: Restore native LBF_ACTIVE_LB while preserving src_rq_rf for vendor migration callback, fixing preceding merge omission. Both fields verified in current active-load-balance initializer. mm/cma.c: Keep module export support and current multi-range allocation retry in cma_range_alloc. Native spin_lock_irqsave/irqrestore preserves caller IRQ state; sleeping retry occurs after unlock and only when blocking GFP is permitted, no fatal signal and no NORETRY. Prior 57131aee4cb9 adaptation keeps native GFP/compound/range/zone contracts instead of historical mutex or unconditional IRQ enable. CMA enabled with size zero; exact runtime reservation remains unconfirmed, not an omission rationale.",
+    "evidence": [
+      "evidence/scheduler-mixed-merges-review.json",
+      "SECURITY.md: Mixed scheduler, storage and build resolutions"
+    ]
   }
 ]
