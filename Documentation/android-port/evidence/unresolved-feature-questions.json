@@ -250,5 +250,16 @@
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
       "761834a35e498f2473977946d9ce8e4a928535cc"
     ]
+  },
+  {
+    "topic": "Legacy Android wrapped-key activation on the SDK",
+    "status": "resolved conservative source retention; SDK activation and necessity unconfirmed",
+    "candidates": [
+      "df5cdcc556fb99fb7a6ba58b8faa81426a527c76"
+    ],
+    "evidence": "Retain the small final Android legacy wrapped-key UAPI/KDF adapter already integrated at 2fbc2da4ade3. Pinned vold KeyUtil.cpp explicitly emits __flags for kHwWrappedV0 because upstream and legacy identifiers/on-disk policies differ; libfscrypt parses wrappedkey_v0 separately. This is active userspace format compatibility, not historical vendor binary KMI. Native size, flags, v2-only, provisioning-key, capability, wiping and hardware-secret-provider checks remain. Exception: legacy keys deliberately use the raw-key identifier KDF context, weakening native raw/wrapped identifier domain separation; someone possessing the derived software secret can obtain the same identifier by adding it as raw, potentially affecting key claims/removal/re-add semantics. No claim that this reveals the hardware contents key. Modern wrapped-key requests retain native separation. SDK fstab selects raw AES-XTS/CTS without inlinecrypt or wrappedkey_v0, and native derive_sw_secret requires inlinecrypt plus a supporting hardware profile; current SDK activation is unverified and not asserted. Conservatively retain this generic current Android API, record unresolved necessity, and add no platform-specific support. See SECURITY.md for the explicit security tradeoff.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
   }
 ]

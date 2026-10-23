@@ -1,0 +1,309 @@
+{
+  "source_head": "53110df6cfd6e0f6022fac650411128fdefdce21",
+  "records": [
+    {
+      "commit": "98261f39e992543a404353ba2d8f36cb739f329f",
+      "disposition": "reverted-no-residual-code",
+      "rationale": "Original key-removal notifier and 6883a1e06ba8 removal both examined. The notifier was explicitly removed from final ACK with sdcardfs retirement; no residual notifier interface remains in ACK or port. Keep native key eviction, per-user claims and cleanup, not an obsolete notification chain. Current FUSE canonical notification is separately retained.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fscrypt-history-compat-review.json",
+        "SECURITY.md: Fscrypt history and legacy wrapped-key compatibility"
+      ],
+      "subject": "ANDROID: fscrypt: add key removal notifier chain",
+      "patch_sha256": "fcc44560a83430f945c150bd5c5c7d9de870230d069cdd160147879f91052af8"
+    },
+    {
+      "commit": "6883a1e06ba8720b828e229b795aa9280fa2fb70",
+      "disposition": "reconciled-to-lts",
+      "rationale": "Full explicit removal of the historical fscrypt key-removal notifier examined. Native LTS and final ACK have no such notifier; the port retains native key removal/claim logic, including later stable fixes. This follows the explicit revert, not a missing-consumer inference.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fscrypt-history-compat-review.json",
+        "SECURITY.md: Fscrypt history and legacy wrapped-key compatibility"
+      ],
+      "subject": "Revert \"ANDROID: fscrypt: add key removal notifier chain\"",
+      "patch_sha256": "46eb55de15f0558e959fd589b654c26e26adebdc6e73263e65590ea306482171"
+    },
+    {
+      "commit": "0208947ce8da91ac728b07b0611ddc8c16b0478e",
+      "disposition": "already-represented-upstream",
+      "rationale": "Complete ESSIV conversion examined. Native keysetup.c uses essiv(cbc(aes),sha256), and native crypto.c/keysetup_v1.c no longer carry the old manually allocated ESSIV cipher or extra IV encryption. All three files equal pinned LTS; retain the current crypto API and its cleanup rather than reintroducing historical per-inode state.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fscrypt-history-compat-review.json",
+        "SECURITY.md: Fscrypt history and legacy wrapped-key compatibility"
+      ],
+      "subject": "FROMLIST: fscrypt: invoke crypto API for ESSIV handling",
+      "patch_sha256": "e01d67595f48cd088fa52c5e0803491f5962937fd80fc0e387d13c9c3b43b5e0"
+    },
+    {
+      "commit": "bd07f40b0d49f0e320914aa933036350600f4b9f",
+      "disposition": "already-represented-upstream",
+      "rationale": "Complete removal of fscrypt_ctx examined. Current native folio-based fscrypt_decrypt_bio and crypto.c preserve the filesystem-owned post-read workflow and explicit decryption error propagation; no historical fscrypt_ctx workqueue ownership is reintroduced. The separate zeroout delta was reviewed independently and does not alter decryption.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fscrypt-history-compat-review.json",
+        "SECURITY.md: Fscrypt history and legacy wrapped-key compatibility"
+      ],
+      "subject": "FROMLIST: fscrypt: remove struct fscrypt_ctx",
+      "patch_sha256": "4409f03be9daf2769d15a1f278549eae067b6387a0d26d3772b22a4a4254d85f"
+    },
+    {
+      "commit": "afca03cbbbce7345010e7661a704b89a47ed7a23",
+      "disposition": "already-represented-upstream",
+      "rationale": "Complete IV_INO_LBLK_64 series patch examined. Native policy.c/crypto.c/keysetup.c retain the policy flag, per-mode key derivation, filesystem UUID separation and inode/block IV packing, with stable-inode and 32-bit geometry restrictions. Current native keyed-list lifetime and data-unit handling supersede old fixed arrays. Preserve this existing native capability; do not select it as the SDK default.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fscrypt-history-compat-review.json",
+        "SECURITY.md: Fscrypt history and legacy wrapped-key compatibility"
+      ],
+      "subject": "FROMLIST: fscrypt: add support for IV_INO_LBLK_64 policies",
+      "patch_sha256": "f82364b80a9816cad2852a4d8fdcfcfb78e5ec80f206dd06d81a2d00847f2a79"
+    },
+    {
+      "commit": "54eb3718d7668ead009cdd3031e83dddae53c8cb",
+      "disposition": "already-represented-upstream",
+      "rationale": "Complete nonce ioctl patch examined. Native policy.c validates the on-disk context and copies exactly FSCRYPT_FILE_NONCE_SIZE bytes, with EFAULT propagation; native ext4 and F2FS ioctl dispatch remain. This exposes the public per-file nonce used for encryption-format testing, not key material. No additional ioctl behavior is introduced.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fscrypt-history-compat-review.json",
+        "SECURITY.md: Fscrypt history and legacy wrapped-key compatibility"
+      ],
+      "subject": "FROMLIST: fscrypt: add FS_IOC_GET_ENCRYPTION_NONCE ioctl",
+      "patch_sha256": "85eb8ab2e5255d390d3d9138dda7472945b9cbd7e28f9ca0d0598047600d020f"
+    },
+    {
+      "commit": "06a813d6df5848148953d110326c099ebe2205fc",
+      "disposition": "already-represented-upstream",
+      "rationale": "Complete IV_INO_LBLK_32 patch examined. Native policy, keysetup and IV generation retain keyed SipHash inode hashing, v2 mode/geometry/flag restrictions and wrapping arithmetic. Native DUN limiting prevents a bio crossing wrap. Keep native warning that this format permits some IV reuse and is only for hardware limitations; the raw SDK AES-XTS/CTS policy does not select it. No weaker default or old sub-block behavior is restored.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fscrypt-history-compat-review.json",
+        "SECURITY.md: Fscrypt history and legacy wrapped-key compatibility"
+      ],
+      "subject": "BACKPORT: FROMLIST: fscrypt: add support for IV_INO_LBLK_32 policies",
+      "patch_sha256": "85da42d17f72f687183bc81d7091378d7a86d46011da0d47829bceaf6e868505"
+    },
+    {
+      "commit": "8d6c90c9d68b985fa809626d12f8c9aff3c9dcb1",
+      "disposition": "superseded",
+      "rationale": "Complete old page-based direct-I/O wrap-limit patch examined with its explicit removal 4151252cb01e. The historical generic direct-io implementation was incompatible with multipage bvecs. Current native fscrypt_limit_io_blocks handles 32-bit DUN wrap in block units, and native ext4/F2FS iomap callers constrain mappings before current iomap crypto-context setup. Do not restore the broken page-count helper.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fscrypt-history-compat-review.json",
+        "SECURITY.md: Fscrypt history and legacy wrapped-key compatibility"
+      ],
+      "subject": "ANDROID: fscrypt: handle direct I/O with IV_INO_LBLK_32",
+      "patch_sha256": "8f3529c2d39da19bafe41275a5775c963ccc8be6c0ec175f0aa13372e35dc9ca"
+    },
+    {
+      "commit": "4151252cb01ebf6cbcee7d3cc2127f9b88e92f75",
+      "disposition": "superseded",
+      "rationale": "Full encrypted direct-I/O removal examined. It removed the broken historical direct-io API, not the modern native implementation. Keep current fscrypt_dio_supported key/inline-crypto checks, block-unit wrap limit and iomap integration instead of removing functioning native support or reviving obsolete direct-io crypt state.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fscrypt-history-compat-review.json",
+        "SECURITY.md: Fscrypt history and legacy wrapped-key compatibility"
+      ],
+      "subject": "ANDROID: revert fscrypt direct I/O support",
+      "patch_sha256": "ced7056ccb8171131461e8a9153e7b82ebec576ff7a457f8b86b6e31e0491151"
+    },
+    {
+      "commit": "bc2933702daa2d3df55c9c856377ea097bcc3181",
+      "disposition": "already-represented-upstream",
+      "rationale": "Full modern direct-I/O helper patch examined. fscrypt_dio_supported and fscrypt_limit_io_blocks exactly match pinned LTS, including key availability, inline-crypto requirement, nr_blocks <= 1 and 2^32-DUN wrap boundary. Current ext4 and F2FS map limiting and iomap crypto-context setup retain the effect; unrelated Android statistics hooks do not replace that native logic.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fscrypt-history-compat-review.json",
+        "SECURITY.md: Fscrypt history and legacy wrapped-key compatibility"
+      ],
+      "subject": "FROMLIST: fscrypt: Add functions for direct I/O support",
+      "patch_sha256": "0a7a0520ef6f96eae728c74abcaa72c263a46b111a15617fa0315b4f8dd6cc46"
+    },
+    {
+      "commit": "fcb61432913c56f266ec2016f1d0641a292843f3",
+      "disposition": "already-represented-upstream",
+      "rationale": "Full bio-splitting patch examined. Pinned stable commit 196a8f954ae6 already introduces native source-iterator consumption and ciphertext bioset allocation instead of plaintext cloning plus bio_kmalloc. Preserve native source remaining references and first-error completion, with separately reviewed skip-dm-default-key cloning and e2fc28947c38 rescue adaptation. No ACK rollback of stable splitting is needed.",
+      "result_commits": [
+        "e2fc28947c380543e5375eb9919ba13b31d63c09"
+      ],
+      "evidence": [
+        "evidence/fscrypt-history-compat-review.json",
+        "SECURITY.md: Fscrypt history and legacy wrapped-key compatibility"
+      ],
+      "subject": "BACKPORT: blk-crypto: optimize bio splitting in blk_crypto_fallback_encrypt_bio",
+      "patch_sha256": "a9b78e46fb5876c250e16c300bba9fa3c5bb335e3537966ee9856f4ee8a0d68f"
+    },
+    {
+      "commit": "98b4591103364e18241ccc43a65d2b23b820991a",
+      "disposition": "adapted",
+      "rationale": "Full bulk-encrypted-page allocation patch examined. Its deadlock concern applies; the bulk allocation/refill representation is not required to meet it. Retain e2fc28947c38 adaptation of the memory-pressure forward-progress requirement on native per-page allocation: no blocking page allocation while holding an unsubmitted partial bio or recursive submit context; submit partial bios with a remaining reference, queue empty allocation failures to WQ_MEM_RECLAIM, and save matching residual iterator/DUN. Preserve native bioset allocation, first-error completion and synchronous cipher. No bulk API or enlarged pool is required for this selected implementation; memory-pressure runtime behavior has not been tested.",
+      "result_commits": [
+        "e2fc28947c380543e5375eb9919ba13b31d63c09"
+      ],
+      "evidence": [
+        "evidence/fscrypt-history-compat-review.json",
+        "SECURITY.md: Fscrypt history and legacy wrapped-key compatibility"
+      ],
+      "subject": "BACKPORT: blk-crypto: use mempool_alloc_bulk for encrypted bio page allocation",
+      "patch_sha256": "cb7f7c7a911eb452cc70b351f117e86fc3b69c68f40cb3ce38e820082c8f6bf0"
+    },
+    {
+      "commit": "713d6ed7a3c1fa9618b4c577c39629af682e51b8",
+      "disposition": "reconciled-to-lts",
+      "rationale": "Full alignment optimization examined. Keep native bio_crypt_check_alignment at submission before fallback or native inline hardware, rather than moving checks into split loops and relying on subsequent queue processing. Native blk-crypto.c differs only by three GPL exports. This keeps early rejection of invalid encrypted data-unit alignment, including bio-based submission paths; the historical relocation is an internal optimization, not an Android userspace format/API requirement.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fscrypt-history-compat-review.json",
+        "SECURITY.md: Fscrypt history and legacy wrapped-key compatibility"
+      ],
+      "subject": "BACKPORT: blk-crypto: optimize data unit alignment checking",
+      "patch_sha256": "c1302136f641ee66fb53b28ce7b39584fac3be158aa39c02a78563a5b21356ba"
+    },
+    {
+      "commit": "d0f1d0d94ad6599d437cf6376e1a7257a72cdb97",
+      "disposition": "reconciled-to-lts",
+      "rationale": "Full bulk API simplification examined. The selected implementation uses native per-page mempool APIs with e2fc28947c38 forward-progress handling; mm/mempool.c and include/linux/mempool.h exactly match LTS. Consequently there is no introduced bulk API to simplify or NULL-hole/allocated argument contract to preserve. This decision depends on the chosen source implementation, not an unsupported claim about all potential module consumers. Retain e2fc28947c38 adaptation of the memory-pressure forward-progress requirement on native per-page allocation: no blocking page allocation while holding an unsubmitted partial bio or recursive submit context; submit partial bios with a remaining reference, queue empty allocation failures to WQ_MEM_RECLAIM, and save matching residual iterator/DUN. Preserve native bioset allocation, first-error completion and synchronous cipher. No bulk API or enlarged pool is required for this selected implementation; memory-pressure runtime behavior has not been tested.",
+      "result_commits": [
+        "e2fc28947c380543e5375eb9919ba13b31d63c09"
+      ],
+      "evidence": [
+        "evidence/fscrypt-history-compat-review.json",
+        "SECURITY.md: Fscrypt history and legacy wrapped-key compatibility"
+      ],
+      "subject": "UPSTREAM: mm: simplify the mempool_alloc_bulk API",
+      "patch_sha256": "1e3650b8fdb5432df255370b5e4ea2a406262668e2085bfde7321910335464a6"
+    },
+    {
+      "commit": "df5cdcc556fb99fb7a6ba58b8faa81426a527c76",
+      "disposition": "adapted",
+      "rationale": "Retain the small final Android legacy wrapped-key UAPI/KDF adapter already integrated at 2fbc2da4ade3. Pinned vold KeyUtil.cpp explicitly emits __flags for kHwWrappedV0 because upstream and legacy identifiers/on-disk policies differ; libfscrypt parses wrappedkey_v0 separately. This is active userspace format compatibility, not historical vendor binary KMI. Native size, flags, v2-only, provisioning-key, capability, wiping and hardware-secret-provider checks remain. Exception: legacy keys deliberately use the raw-key identifier KDF context, weakening native raw/wrapped identifier domain separation; someone possessing the derived software secret can obtain the same identifier by adding it as raw, potentially affecting key claims/removal/re-add semantics. No claim that this reveals the hardware contents key. Modern wrapped-key requests retain native separation. SDK fstab selects raw AES-XTS/CTS without inlinecrypt or wrappedkey_v0, and native derive_sw_secret requires inlinecrypt plus a supporting hardware profile; current SDK activation is unverified and not asserted. Conservatively retain this generic current Android API, record unresolved necessity, and add no platform-specific support. See SECURITY.md for the explicit security tradeoff.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/fscrypt-history-compat-review.json",
+        "SECURITY.md: Fscrypt history and legacy wrapped-key compatibility"
+      ],
+      "subject": "ANDROID: fscrypt: restore compatibility with old Android HW-wrapped keys",
+      "patch_sha256": "c69ec9f1bf71ce5215b96ad8c3f4152c87e64e402fb23b8fed41d987f936fd76"
+    }
+  ],
+  "native_source_witnesses": [
+    {
+      "path": "fs/crypto/keysetup.c",
+      "scope": "whole file",
+      "identical_to_pinned_lts": true,
+      "sha256": "951573e308e1b2e9bef75f14f1363b4caddb55ad23c23a1f0898441a4273a1be"
+    },
+    {
+      "path": "fs/crypto/keysetup_v1.c",
+      "scope": "whole file",
+      "identical_to_pinned_lts": true,
+      "sha256": "bf8a66cd505adf8610c73f54f081a358af3610d4f1462ffe9f69ffb029648d8c"
+    },
+    {
+      "path": "fs/crypto/crypto.c",
+      "scope": "whole file",
+      "identical_to_pinned_lts": true,
+      "sha256": "18197e5124352a2263a00b342cdda1e86983ee6d8ee4095d529bb27497e529eb"
+    },
+    {
+      "path": "fs/crypto/policy.c",
+      "scope": "whole file",
+      "identical_to_pinned_lts": true,
+      "sha256": "970aac680e12a2e0c5e544a67865dcae0a76c0c7d6742583d673b8d65bda32eb"
+    },
+    {
+      "path": "mm/mempool.c",
+      "scope": "whole file",
+      "identical_to_pinned_lts": true,
+      "sha256": "073cfbc7b40f2e3bfe9bb01fdbdd5329c9cd47030728908bcc89afa13f0b2105"
+    },
+    {
+      "path": "include/linux/mempool.h",
+      "scope": "whole file",
+      "identical_to_pinned_lts": true,
+      "sha256": "f314bbd9fb12b40d27dfe12f5c4c7a68ca149f6a294028311117fbe334d6034b"
+    },
+    {
+      "path": "fs/crypto/bio.c",
+      "function": "fscrypt_decrypt_bio",
+      "identical_to_pinned_lts": true,
+      "sha256": "6ef46e49b5840e50422230c4f382b3744a79387755231e1c2b6cdc1109c4b924"
+    },
+    {
+      "path": "fs/crypto/inline_crypt.c",
+      "function": "fscrypt_dio_supported",
+      "identical_to_pinned_lts": true,
+      "sha256": "be9efdb544c938688d0d28e525589682a7a1807007c19129b3cb6947c9bf76c8"
+    },
+    {
+      "path": "fs/crypto/inline_crypt.c",
+      "function": "fscrypt_limit_io_blocks",
+      "identical_to_pinned_lts": true,
+      "sha256": "ca440e63bdabd52e97a182b0ed8e50ef89763cd8a50a658a6f99561da73c5f87"
+    },
+    {
+      "path": "fs/crypto/inline_crypt.c",
+      "function": "fscrypt_derive_sw_secret",
+      "identical_to_pinned_lts": true,
+      "sha256": "8c244bc652abb5942d8ae41a104b3ba611656d82b3a6d20a24f2454d8172a9a2"
+    },
+    {
+      "path": "block/blk-crypto.c",
+      "function": "bio_crypt_check_alignment",
+      "identical_to_pinned_lts": true,
+      "sha256": "6e2b5a51ba48f9ba6a602310db9ccadbbe0f6020b11b3facf7c9361aaaa93270"
+    },
+    {
+      "path": "block/blk-crypto-profile.c",
+      "function": "blk_crypto_derive_sw_secret",
+      "identical_to_pinned_lts": true,
+      "sha256": "d7363832213ad5ecc1fe23ec95987b3364b1c723cd30edb62f715b11e58182ad"
+    }
+  ],
+  "source_blobs": {
+    "fs/crypto/keysetup.c": "f27997ef9a08c567c7e7be3622de84e552fd22b9",
+    "fs/crypto/keysetup_v1.c": "7b2ee3c14d31c66607b6ef9b4b6fb5e2b2031e61",
+    "fs/crypto/crypto.c": "07f9cbfe3ea4115b8fcc881ae5154b3c3e898c04",
+    "fs/crypto/policy.c": "254a251f94bcd9f47741ed8fe002634aaca04384",
+    "mm/mempool.c": "d7bbf1189db9f05d0e7d8eb0cc7bcc87b655d2a7",
+    "include/linux/mempool.h": "e440b5d60b8d9f5aadea90b3ebccc5986e965260",
+    "fs/crypto/bio.c": "c2b3ca100f8d02019e63586cf7c096972fe4da70",
+    "fs/crypto/inline_crypt.c": "20db6e55b8a01df761332d4142dca5386520c11f",
+    "fs/crypto/keyring.c": "37ed356c5602f99ffd5d1eab84c7800e2ee00040",
+    "fs/crypto/fscrypt_private.h": "414fe95c76defd6a63bf921e957db754d68d17dc",
+    "include/uapi/linux/fscrypt.h": "37fedfd1d33451bbf4c43a99c04c71c53dcdb172",
+    "block/blk-crypto.c": "a48ee2633df0439c14b3028e543ea5bf0d21d598",
+    "block/blk-crypto-profile.c": "81918f6e0caea2b22d946448cba27ec61d2e34cf",
+    "block/blk-crypto-fallback.c": "86f2c3fbf9173b48b566c7c333aee353ddc6de2b",
+    "fs/direct-io.c": "4ab29b6c626f9ef1a9e27c7e616489ff3aa378b8",
+    "fs/iomap/direct-io.c": "790b372c78ba0226c1c9faaabd07d5ca23d58c4d",
+    "fs/ext4/inode.c": "65eb8b5fccbce8788c46dbc427e2309be55ca0ad",
+    "fs/ext4/ioctl.c": "9aec4ee780a7e3c515ff9e566400dc5b2f6881ec",
+    "fs/f2fs/data.c": "d81ab9e7a8200dd89b449c830b29e8c84bd764cd",
+    "fs/f2fs/file.c": "1b06fd799646b058bc12ffbce17d91282b51a4f4",
+    "Documentation/filesystems/fscrypt.rst": "480252ec8c7810537370afd5ac26960b1ecb7dec"
+  },
+  "local_android_sources": {
+    "system/vold": "a47ab7c0d4be9e89459a268eab314cd3c758ec77",
+    "system/extras": "5b8e9ee4f15faa60218b08bb09abae41e1f6bd0e",
+    "device/generic/goldfish": "5281db702f36e0e8c0af9e33d70b63d3ba4916ae"
+  },
+  "consumer_paths": [
+    "system/vold/KeyUtil.cpp: kHwWrappedV0 / kHwWrapped key installation",
+    "system/extras/libfscrypt/fscrypt.cpp: wrappedkey_v0 and wrappedkey option parsing",
+    "device/generic/goldfish/board/fstab/x86: /data raw AES-XTS/CTS policy"
+  ],
+  "security_exception": "Retain the small final Android legacy wrapped-key UAPI/KDF adapter already integrated at 2fbc2da4ade3. Pinned vold KeyUtil.cpp explicitly emits __flags for kHwWrappedV0 because upstream and legacy identifiers/on-disk policies differ; libfscrypt parses wrappedkey_v0 separately. This is active userspace format compatibility, not historical vendor binary KMI. Native size, flags, v2-only, provisioning-key, capability, wiping and hardware-secret-provider checks remain. Exception: legacy keys deliberately use the raw-key identifier KDF context, weakening native raw/wrapped identifier domain separation; someone possessing the derived software secret can obtain the same identifier by adding it as raw, potentially affecting key claims/removal/re-add semantics. No claim that this reveals the hardware contents key. Modern wrapped-key requests retain native separation. SDK fstab selects raw AES-XTS/CTS without inlinecrypt or wrappedkey_v0, and native derive_sw_secret requires inlinecrypt plus a supporting hardware profile; current SDK activation is unverified and not asserted. Conservatively retain this generic current Android API, record unresolved necessity, and add no platform-specific support. See SECURITY.md for the explicit security tradeoff.",
+  "review_scope": "Full fifteen candidate patches, current native-to-port encryption deltas, native DIO callers, key add/claim/derivation gates and pinned Android producers. No merge commits in this group.",
+  "validation": "Source comparison and prior build 105 at source 0d3cecaef139; no new source changes. Existing fscrypt-zeroout check covers only the separate zeroout adaptation.",
+  "limits": [
+    "No mounted encrypted filesystem, crypto/hardware operation, memory-pressure injection or runtime direct-I/O verification.",
+    "SDK activation of legacy wrapped keys is unverified and not selected by the pinned fstab; generic Android UAPI retained conservatively with the domain-separation exception recorded.",
+    "Embedded source/commit URLs were not opened."
+  ],
+  "remote_sources_used": []
+}

@@ -4456,3 +4456,56 @@ checks remain separate. A callback receives a borrowed file pointer and must
 respect its lifetime. No historical dentry binary layout is preserved. All
 sources used for these decisions are local pinned checkouts; embedded links in
 commit messages and CTS comments were not accessed.
+# Fscrypt history and legacy wrapped-key compatibility
+
+The fifteen decisions in `evidence/fscrypt-history-compat-review.json` retain
+native ESSIV handling, filesystem-owned post-read decryption, nonce retrieval,
+IV_INO_LBLK policies and modern direct I/O. Six complete files and six functions
+are byte-identical to pinned LTS. The old page-count direct-I/O implementation
+was explicitly removed because it did not handle multipage bvecs correctly;
+native block-count limits and ext4/F2FS iomap callers preserve DUN wrap boundaries.
+The native IV_INO_LBLK_32 warning about IV reuse remains. Neither optimized IV
+policy is selected by the SDK's pinned raw AES-XTS/CTS data configuration.
+The sdcardfs key-removal notifier follows its explicit historical removal;
+this does not remove current FUSE canonical notifications.
+
+Native stable commit `196a8f954ae6` already supplies ciphertext bioset splitting.
+The selected memory-pressure adaptation remains `e2fc28947c38`: avoid blocking
+allocations while holding unsubmitted bounce pages or in recursive submission,
+submit partially filled bios with a remaining reference, and retry empty
+allocation failures on the reclaim-capable worker. Residual source position and
+DUN travel together. The native per-page mempool implementation is retained;
+the ACK bulk API/refill optimization is not required by this implementation.
+Native early encryption alignment checks remain before hardware or fallback
+submission. These are source-level findings, not fault-injection results.
+
+The retained `df5cdcc556fb` legacy wrapped-key adapter is a deliberate security
+exception to native key-identifier domain separation. Pinned
+`system/vold/KeyUtil.cpp` emits `__FSCRYPT_ADD_KEY_FLAG_HW_WRAPPED` for
+`kHwWrappedV0`, while `kHwWrapped` uses the upstream flag. Its source explicitly
+distinguishes their on-disk formats. Pinned `system/extras/libfscrypt/fscrypt.cpp`
+parses both options. Preserving this current Android userspace/on-disk interface
+is the reason for retaining the small adapter; it is not binary vendor KMI.
+Its UAPI consumes the last reserved word without changing the structure size.
+
+For legacy requests only, the derived hardware software-secret uses the raw-key
+identifier KDF context. Consequently, someone who obtains that software-secret
+can add it as a raw key and obtain the same identifier. Native existing-key
+lookup is identifier-based, so this can affect user claims and key removal or
+re-addition semantics. This review does not claim that it exposes the separate
+hardware contents-encryption key. Modern wrapped-key requests retain native
+identifier separation. Unknown/conflicting flags, non-v2 wrapped-key requests,
+key-size and provisioning-payload mismatches remain rejected. Native capability
+checks, secret wiping and the newer stable per-user claim implementation remain.
+
+The selected goldfish `/data` fstab uses raw AES-XTS/CTS on virtio storage, without
+`inlinecrypt` or a wrapped-key option. Native secret derivation requires an
+inline-crypto mount and a block profile supporting hardware-wrapped keys and
+secret derivation; the software fallback supports raw keys only. Thus the
+checked configuration does not activate the legacy path. Its SDK necessity and
+runtime operation are not established. The generic Android interface is retained
+conservatively, with this uncertainty recorded in
+`evidence/unresolved-feature-questions.json`; no future-platform driver is added.
+The report pins all three local Android projects. No additional remote resource
+was accessed. Build 105 compiled this source, but no encrypted filesystem,
+hardware-key operation, direct I/O or memory-pressure runtime test was executed.
