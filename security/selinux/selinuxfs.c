@@ -257,9 +257,10 @@ static int sel_mmap_handle_status(struct file *filp,
 	/* disallow mprotect() turns it into writable */
 	vm_flags_clear(vma, VM_MAYWRITE);
 
+	/* Only one native page backs the status, even with a larger user page. */
 	return remap_pfn_range(vma, vma->vm_start,
 			       page_to_pfn(status),
-			       size, vma->vm_page_prot);
+			       PAGE_SIZE, vma->vm_page_prot);
 }
 
 static const struct file_operations sel_handle_status_ops = {
