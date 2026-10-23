@@ -9946,5 +9946,461 @@
       "evidence/irq-interfaces-history-review.json",
       "SECURITY.md: IRQ source exports and history"
     ]
+  },
+  {
+    "commit": "3610236c1e4bd10e70b924c74c316c42b84dec22",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit removal of the standalone per-CPU NMI flow handler as an unneeded cleanup accompanying the ARM IRQ partition migration. Keep the exact LTS handler and declaration. This does not activate it or import a legacy implementation over newer LTS; retaining this native helper is not a historical binary-KMI requirement.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/irq-affinity-history-review.json",
+      "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+    ]
+  },
+  {
+    "commit": "c9cdd81492688ab4f8b5c7eeda0834c9fb80683f",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the anonymous-union storage optimization for irqaction cookies. The change saves one pointer to make room for affinity in the later series; it adds no SDK source API or Android behavior. Keep both native cookie fields, not a padded historical ABI. This is an optional optimization, not a KMI-only patch.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/irq-affinity-history-review.json",
+      "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+    ]
+  },
+  {
+    "commit": "927c66b0f7090533c426108305a63e2e458b1238",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit allocation-factory refactoring used by the affinity series. Native request functions already allocate and free their action with the same flags and PM-reference unwind. The accompanying no-autoenable comment correction is useful documentation but does not change behavior; native setup remains IRQ_NOAUTOEN for per-CPU-devid IRQs. No new factory or affinity allocation is required by the SDK transport.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/irq-affinity-history-review.json",
+      "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+    ]
+  },
+  {
+    "commit": "ffa4e3e392bc20bbbe97d06470efb4d202799969",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit adding affinity to irqaction and __request_percpu_irq as part of the ARM partition-sharing migration. The final converted callers obtain hardware-specific masks in ARM PMU/SPE/TRBE; those Kconfig dependencies exclude x86_64. Keep the complete LTS request/teardown implementation and ordinary request_percpu_irq source wrapper used by the pinned Trusty module. Unknown custom modules using the newer affinity signature are not proven absent; the explicit target-boundary limitation is recorded, rather than claiming complete cross-platform source equivalence.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/irq-affinity-history-review.json",
+      "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+    ]
+  },
+  {
+    "commit": "69a3c064026ab44e450cc3b1930f26450405675c",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the request_percpu_nmi signature and shared-NMI eligibility change together with the ARM IPI/PMU conversions. Final in-tree callers are ARM64 IPI (NULL mask) and ARM PMU (supported CPU mask). The SDK uses x86/ACPI/virtio interrupt paths. Preserve native NMI rejection, setup, flags and unwind rather than partly importing sharing semantics without its consumers.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/irq-affinity-history-review.json",
+      "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+    ]
+  },
+  {
+    "commit": "9ba3b1573d05a8f9b0d3a5d6acc3d712b5692bfc",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the coordinated per-CPU sharing state-machine change: action mask validation, CPU-specific dispatch, list-based freeing and last-action NMI demotion. The positively identified use is ARM hardware partitions; keeping the entire native setup/handler/free path avoids a mixed state machine. Native ordinary shared interrupts, descriptor locking and enabled-CPU checks remain exact LTS. This is a target exclusion, not evidence that non-overlapping IRQ sharing is globally unnecessary.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/irq-affinity-history-review.json",
+      "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+    ]
+  },
+  {
+    "commit": "e2f14641d13e92d5d74712f8a71486d3efe75ade",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the new request_percpu_irq_affinity wrapper with its underlying affinity series. The final ACK converted consumers are ARM PMU, SPE and TRBE, whose architecture dependencies exclude the SDK. Preserve the ordinary source API used by Trusty. No claim is made that arbitrary external x86 modules never use the new API; importing support solely for such unestablished future use is outside the target decision.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/irq-affinity-history-review.json",
+      "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+    ]
+  },
+  {
+    "commit": "02480e4cf2c7f465f8f71e3c0be8576e6bc420f3",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the ARM PMU affinity-aware request/free conversion in all four paths. ARM_PMU depends on ARM or ARM64; final code uses the hardware PMU supported_cpus set and ACPI probing fallback. Keep the native driver implementation and callers. be986f481f69 restores its matching native header declarations, removing an ACK-only signature accidentally left beside the LTS implementation. The entire four files now equal LTS; no SDK IRQ path changes.",
+    "result_commits": [
+      "be986f481f694b564147533c26ccff9dab97b06e"
+    ],
+    "evidence": [
+      "evidence/irq-affinity-history-review.json",
+      "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+    ]
+  },
+  {
+    "commit": "5ef8396f761e4892483a78b947ad460e42f9aa3c",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit changing ARM SPE PPI requests to the affinity wrapper. This driver requires ARM64 and the CPU Statistical Profiling Extension; it is excluded by the x86_64 SDK configuration. Keep the whole native file and its matching native API. This does not disable the SDK x86 performance-monitoring implementation.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/irq-affinity-history-review.json",
+      "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+    ]
+  },
+  {
+    "commit": "e71c4e6075e253fbbac9784abff6823e267b0873",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit changing the ARM TRBE per-CPU IRQ request to the affinity wrapper. Its Kconfig requires ARM64 and Coresight ETM4X, and its implementation programs ARM CPU tracing registers. Keep the whole LTS driver; the feature is outside the SDK hardware target, not an unlocated generic Android consumer.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/irq-affinity-history-review.json",
+      "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+    ]
+  },
+  {
+    "commit": "b29f86207b4281348792fd6e71e90abc84ee45f4",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit deleting GICv3 custom PPI partition domains and replacing them with common affinity sharing. Both changed paths were reviewed: retain native GICv3 source and PARTITION_PERCPU selection, consistent with the native generic APIs. GICv3 is not enabled in the SDK configuration. Removing only its old partition backend would break a coherent native architecture implementation and offers no SDK compatibility benefit.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/irq-affinity-history-review.json",
+      "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+    ]
+  },
+  {
+    "commit": "3978a8b7c3af121134b2113b6090d37dcf8516fd",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit merging Apple AIC performance/efficiency-core PMU interrupt partitions. APPLE_AIC requires ARM64 and ARCH_APPLE or COMPILE_TEST; the SDK uses x86_64. Preserve the whole native AIC file, including CPU-specific PMU routing and partition setup. No Apple platform support is claimed by this build.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/irq-affinity-history-review.json",
+      "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+    ]
+  },
+  {
+    "commit": "22f349041232ff3c50961eb45ef4bde7c7c4f54f",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit deleting irq-partition-percpu source/header/Kconfig/Makefile wiring. The proposed deletion depends on replacing the GIC and AIC consumers; those conversions are omitted coherently. The whole native partition source/header remain, and CONFIG_PARTITION_PERCPU is not enabled in the SDK. Keeping unselected native LTS code is not adding a future-platform feature.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/irq-affinity-history-review.json",
+      "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+    ]
+  },
+  {
+    "commit": "fa175c11983a216662689381b195db92a4fd531e",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit deleting descriptor percpu_affinity and partition get/set APIs. The native GIC/AIC backend remains and requires those APIs; all three current partition functions and irq.h are exact LTS. irq_desc differs only by previously reviewed Android vendor storage. No historical layout reservation is introduced or preserved by this decision.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/irq-affinity-history-review.json",
+      "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+    ]
+  },
+  {
+    "commit": "68bb2392b2a118cbfc9c7d43bd67257a66cc28e0",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the ARM PMU cpu_armpmu deletion and BRBE scheduler conversion, which follow the omitted interrupt-cookie migration. The native drivers still use cpu_armpmu. be986f481f69 restores its header declaration alongside the native request/free signatures, so all three affected files now match LTS. ARM PMU/BRBE are excluded by the SDK architecture dependency.",
+    "result_commits": [
+      "be986f481f694b564147533c26ccff9dab97b06e"
+    ],
+    "evidence": [
+      "evidence/irq-affinity-history-review.json",
+      "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+    ]
+  },
+  {
+    "commit": "2996c260f980c2e889ecaf4ac3cad5f541daa4f7",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit documentation for the excluded irqaction affinity member and firmware-info reporting structure. Both structures remain native: irqaction has no new affinity field, and irq_fwspec_info is not introduced. The earlier reporting-interface decision 59b468b45061 retains native irqdomain.c/.h. Adding these comments without the corresponding members would misdocument the implemented API.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/irq-affinity-history-review.json",
+      "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+    ]
+  },
+  {
+    "commit": "c433c249e0e7db6e14312a563f77320881526e2c",
+    "disposition": "omitted-current-target",
+    "rationale": "Do not import the NULL-affinity repair independently: the offending affinity-sharing prerequisite is omitted. Whole current setup_percpu_irq and __setup_irq are exact LTS and never dereference the absent irqaction.affinity field. This positively excludes the bug mechanism; it is not an assertion based on failing to find a caller. Native legacy setup remains unchanged.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/irq-affinity-history-review.json",
+      "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+    ]
+  },
+  {
+    "commit": "8d19443b0b9b966b38327bfac69200a1ca9ed4f5",
+    "disposition": "superseded",
+    "rationale": "All three paths reviewed. Old RT_SOFTINT_OPTIMIZATION/task_may_not_preempt sampling was removed and replaced by configured RT_SOFTIRQ_AWARE_SCHED, generic __cpu_softirq_pending, active mask and cpu_busy_with_softirqs. Preserve current policy via 01603b541139/245d2e574467, not old preempt_count or architecture-specific IRQ-stat access.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "0578248bedae9a6b7bd4325f06101332c29af962",
+    "disposition": "superseded",
+    "rationale": "All three paths reviewed. Its cpupri_check_rt macro implementation and config-conditional wakeup were explicitly removed, then replaced by current pointer-based deferral and 0dfff3baea14 local queued-RT check. cpupri_check_rt is absent in final ACK/port. Keep current always-considered pending-or-deferred wakeup, not the historical non-config branch omission.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "ea05d25c786ec5883f05616c4243e6abf41c8947",
+    "disposition": "superseded",
+    "rationale": "The complete synchronous-mask revert was reviewed. Current ACK/LTS both lack ksoftirqd_running/SOFTIRQ_NOW_MASK following native d15121be7485, an ancestor of both. Keep native do_softirq/invoke_softirq bodies and assess configured long-work RT deferral separately; no old partial revert is replayed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "1bcefd388369ad819aa9175b8fb6ad583594b9d1",
+    "disposition": "already-represented-upstream",
+    "rationale": "The complete ksoftirqd_running removal is represented by native d15121be7485, which also removes its synchronous-mask/parking workarounds atomically. Current invocation functions are complete LTS. Do not import an older intermediate state.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "9889f08de4a1c81f8ba50e26b6d94bed921b3daf",
+    "disposition": "superseded",
+    "rationale": "Both paths reviewed. Native f4bf3ca2e5cb provides tasklet entry/exit with tasklet pointer plus callback, and cuts the old unused tasklet_hi tracepoints. Current entire trace header and tasklet_action_common are exact LTS and ACK. Preserve native source signatures and trace behavior, not obsolete one-argument events.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "5a920a65038995a33f72bd930917c5f8b5e4fb47",
+    "disposition": "partially-adapted-net-state",
+    "rationale": "All eight one-line export paths reviewed. Retain GPL css_next_child, tasklist_lock, irq_work_queue_on, kthread_bind_mask, __task_rq_lock, root_task_group/task_groups, cpu_irqtime and ksoftirqd for rebuilt vendor policy/diagnostic modules. Exported function bodies and data declarations remain native LTS at the reviewed sites. Historical freq_scale is now arch_freq_scale, already GPL-exported natively in topology and x86 APERF/MPERF code; do not recreate its old symbol. Raw scheduler/cgroup objects require native locking, RCU, lifetime and CPU-hotplug contracts; export visibility supplies none of those. Exact external SDK consumers unconfirmed, so retention is conservative.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "cd1208a52af70c4fc139afe0d4733a006aaec3e4",
+    "disposition": "adapted-net-state",
+    "rationale": "Keep the sole GPL export of native irq_handler_entry. Native tracepoint definition and firing context are unchanged. A trusted source module can observe IRQ entry; callbacks must be nonblocking and preserve IRQ context/lifetimes. No exact SDK callback found in scoped common-modules search; retain generic observation compatibility conservatively.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "2cadcbac1a4167978a1caa98d990025f1a46eba6",
+    "disposition": "superseded",
+    "rationale": "Both paths of the tracepoint revert reviewed. It removed an obsolete one-argument implementation; native f4bf3ca2e5cb later supplies the complete two-argument tasklet trace interface. Current header and action function are exact native; do not remove current tracing to reproduce a historical revert.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "c646ea5a5fd9f1dad83111fbb5362418b36899a4",
+    "disposition": "superseded",
+    "rationale": "Complete historical re-addition of ksoftirqd_running reviewed. Native d15121be7485 later deliberately removes this gating to address latency. Final ACK also lacks it. Preserve the complete native invocation paths, not the old task-state gate.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "d6592588edada6ae0430d320c8e129e5389d1aaa",
+    "disposition": "superseded",
+    "rationale": "Complete re-addition of SOFTIRQ_NOW_MASK and its ksoftirqd_running argument reviewed. Both were subsequently removed natively by d15121be7485 and are absent in ACK/port; preserve current native invocation, not a synchronous-mask exception to a removed gate.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "28768780d4c486e546201ac2c30051fe412a3be9",
+    "disposition": "superseded",
+    "rationale": "All three paths of the old deferral revert reviewed. Final ACK reintroduces the behavior with new config/helper/current-and-queued RT detection. Do not use the historical revert to remove current configured Android latency policy; old cpupri_check_rt is positively absent.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "4196c1dafc4f7575d0940b257721125193df7aaa",
+    "disposition": "superseded",
+    "rationale": "All three paths reviewed. Temporary removal of active-softirq sampling was reversed and the feature then replaced by RT_SOFTIRQ_AWARE_SCHED. Preserve current guarded active recording and generic pending lookup; neither old task_thread_info access nor unconditional old declarations are restored.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "027f8bd863fe4bc259bd6e05095bbc94232e5c74",
+    "disposition": "superseded",
+    "rationale": "All three paths reviewed. This reintroduction mixes remote active data with local_softirq_pending in task_may_not_preempt. Current implementation instead reads the requested CPU through __cpu_softirq_pending and uses cpu_busy_with_softirqs; retain that current code and configured declarations, not this older sampling implementation.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "f5b90ccf9cd19bf3f7cb4418bd6324d9ec7abda3",
+    "disposition": "superseded",
+    "rationale": "All three paths reviewed. Reintroduced cpupri_check_rt and pointer-based deferral are superseded by 0312436e3fdd plus 0dfff3baea14. Native/current handle_softirqs keeps current PF_MEMALLOC, accounting, RCU and restart handling; only the identified long-work policy is carried.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "bdfce9c8c534c020794a4764d26fd9f0db2dd2e6",
+    "disposition": "superseded",
+    "rationale": "Complete re-revert reviewed, including its malformed historical comment line. Current ACK/LTS have no ksoftirqd_running at all after native d15121be7485. Native __local_bh_enable/invoke/do_softirq routing is retained rather than reproducing this obsolete signature/comment state.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "07ecea7cb88a6c8a640086eba7bfdc33c23f5abe",
+    "disposition": "superseded",
+    "rationale": "Both paths reviewed. Reintroduced one-argument tasklet tracing is superseded by native two-argument tracing; current complete header and tasklet action are exact LTS. No old unused tasklet_hi events or callback signatures are needed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "a8bd3167d2438ca2d41125b4ecd4bef4ce14801b",
+    "disposition": "superseded",
+    "rationale": "All six paths reviewed, including unique details of the broad revert: active/pending policy removal, cpupri helper deletion, old ksoftirqd gate restoration and tasklet trace removal. Final native invocation lacks that restored gate, native tasklet tracing exists, and current ACK reintroduces RT-aware deferral under a new config. Preserve these final components, not the historical reverted snapshot.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "de8f7188626f9137be14142abd650ba1a50581bb",
+    "disposition": "partially-adapted-net-state",
+    "rationale": "Retain generic __cpu_softirq_pending for configured x86 RT task placement. Omit only the s390 zero-valued stub, an excluded architecture path kept native. The accessor deliberately samples remote per-CPU data without locking, so it is a placement hint and does not establish that a CPU remains available. No ownership or security decision may rely on its snapshot.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "01603b5411396eb795ff8609b524c167cfe835b2",
+    "disposition": "adapted-net-state",
+    "rationale": "All four paths reviewed. Retain CONFIG_RT_SOFTIRQ_AWARE_SCHED (SMP and !PREEMPT_RT), active-softirq bookkeeping, long-work mask and RT placement fitness checks. SDK config enables it, and GrapheneOS SurfaceFlinger/audio sources request real-time scheduling. Complete softirq core is native except explicitly scoped policy/exports; scheduler selection sites retain current ACK proxy/hook context, whose separate changes are not certified by this row. The optimization is approximate and may choose a different CPU; native allowed-CPU/priority search is still used, not an unconditional migration command.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "0312436e3fdd24216b08e8c2b3bfd45948fed4c7",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain configured long-softirq deferral, with subsequent queued-RT repair 0dfff3baea14. Deferred bits remain pending before IRQs are enabled; initial and restart samples both apply the policy, and any pending/deferred work wakes ksoftirqd. Native restart/time budgets, PF_MEMALLOC save/restore, accounting, RCU and softirq action processing remain. This intentionally favors RT latency over network/block/tasklet processing while RT work is runnable; no bounded latency or fairness guarantee was measured.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "245d2e574467d577e23f5e6bc26ab4d06fcfbc3b",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain TASKLET_SOFTIRQ in the long-work mask alongside NET_TX, NET_RX, BLOCK and IRQ_POLL. This restores current Android placement/deferral behavior for potentially long tasklets; it is not limited to physical firmware drivers because the mechanism is generic and configured for SDK. HI/TIMER/SCHED/HRTIMER/RCU remain outside this long mask. Latency/throughput tradeoff is explicit and not runtime benchmarked.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "b68cddb455684dd92a6f86a1dc93f9395fc1adc0",
+    "disposition": "adapted-net-state",
+    "rationale": "Keep GPL cpu_busy_with_softirqs and its internal-header declaration/config-disabled false stub. Complete helper is current ACK, reading active plus pending softirq hints; no locking or reservation semantics are promised by the export. Vendor scheduler customization is a stated requirement; exact external SDK callback consumer remains unconfirmed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "069b9e4f219fa0f2857c03af6fa5dc4b9a712059",
+    "disposition": "adapted-net-state",
+    "rationale": "Keep the one-line GPL raise_softirq export. Whole implementation is exact LTS, including local IRQ save/restore and raise_softirq_irqoff call. Trusted source modules must pass a valid softirq index and obey interrupt context contracts; no new userspace invocation or permission bypass is introduced.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "9ed7136495e1888d785332802da3d0d8b333c149",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain the one-line GPL native irq_handler_exit tracepoint export paired with entry. Native IRQ tracing definitions and placement remain; callbacks run synchronously in the native context. Exact SDK external registration unconfirmed; generic source tracing capability is conservatively retained.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "4c1e7cf816d359029f8de3b4203dd64020e80ef7",
+    "disposition": "adapted-net-state",
+    "rationale": "Keep all four GPL native softirq/tasklet entry/exit tracepoint exports. Complete trace header and tasklet dispatch remain LTS, including the modern tasklet pointer argument. This expands trusted module observation visibility without adding a userspace control path; callback blocking/recursion can still harm latency and must obey native context.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
+  },
+  {
+    "commit": "0dfff3baea140820d229726eecec7c534f00cb6e",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain all three paths of the recent queued-RT fix: local_rt_runnable declaration, sched_rt_runnable(this_rq()) helper and the current-or-queued check at both deferral samples. This is already in the initial port and final ACK. Positive code evidence shows rt_task uses current priority, while sched_rt_runnable checks rt_queued; the latter covers enqueued work not yet switched to current. Calls occur with local IRQs disabled. The snapshot does not prove real-time latency or synchronize arbitrary remote state, and does not claim special SCHED_DEADLINE handling.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/softirq-history-review.json",
+      "SECURITY.md: Softirq RT policy and source exports"
+    ]
   }
 ]

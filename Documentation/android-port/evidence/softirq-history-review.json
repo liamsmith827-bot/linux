@@ -1,0 +1,483 @@
+{
+  "source_head": "be986f481f694b564147533c26ccff9dab97b06e",
+  "records": [
+    {
+      "commit": "8d19443b0b9b966b38327bfac69200a1ca9ed4f5",
+      "disposition": "superseded",
+      "rationale": "All three paths reviewed. Old RT_SOFTINT_OPTIMIZATION/task_may_not_preempt sampling was removed and replaced by configured RT_SOFTIRQ_AWARE_SCHED, generic __cpu_softirq_pending, active mask and cpu_busy_with_softirqs. Preserve current policy via 01603b541139/245d2e574467, not old preempt_count or architecture-specific IRQ-stat access.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "f59dbf371a6d4b253871960fd4c9674aa7fb858bf6284cca189b698e0dce9136"
+    },
+    {
+      "commit": "0578248bedae9a6b7bd4325f06101332c29af962",
+      "disposition": "superseded",
+      "rationale": "All three paths reviewed. Its cpupri_check_rt macro implementation and config-conditional wakeup were explicitly removed, then replaced by current pointer-based deferral and 0dfff3baea14 local queued-RT check. cpupri_check_rt is absent in final ACK/port. Keep current always-considered pending-or-deferred wakeup, not the historical non-config branch omission.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "2867e50d53740da4ffebc555e6baca30dc73299d95ae803ef0c42ab1174ca07e"
+    },
+    {
+      "commit": "ea05d25c786ec5883f05616c4243e6abf41c8947",
+      "disposition": "superseded",
+      "rationale": "The complete synchronous-mask revert was reviewed. Current ACK/LTS both lack ksoftirqd_running/SOFTIRQ_NOW_MASK following native d15121be7485, an ancestor of both. Keep native do_softirq/invoke_softirq bodies and assess configured long-work RT deferral separately; no old partial revert is replayed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "6caffcf2b2a1677b0ba8b0ba1370aec08caf9d534c16cc8e3876099c319abdca"
+    },
+    {
+      "commit": "1bcefd388369ad819aa9175b8fb6ad583594b9d1",
+      "disposition": "already-represented-upstream",
+      "rationale": "The complete ksoftirqd_running removal is represented by native d15121be7485, which also removes its synchronous-mask/parking workarounds atomically. Current invocation functions are complete LTS. Do not import an older intermediate state.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "92ae482544abb05c448f330c95390a95a1fdbd54e6ac2620e88c8e797b55524b"
+    },
+    {
+      "commit": "9889f08de4a1c81f8ba50e26b6d94bed921b3daf",
+      "disposition": "superseded",
+      "rationale": "Both paths reviewed. Native f4bf3ca2e5cb provides tasklet entry/exit with tasklet pointer plus callback, and cuts the old unused tasklet_hi tracepoints. Current entire trace header and tasklet_action_common are exact LTS and ACK. Preserve native source signatures and trace behavior, not obsolete one-argument events.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "537528c50cd48004dfe7570c431cda0be8ca90ba92068d7481deff4e712ed577"
+    },
+    {
+      "commit": "5a920a65038995a33f72bd930917c5f8b5e4fb47",
+      "disposition": "partially-adapted-net-state",
+      "rationale": "All eight one-line export paths reviewed. Retain GPL css_next_child, tasklist_lock, irq_work_queue_on, kthread_bind_mask, __task_rq_lock, root_task_group/task_groups, cpu_irqtime and ksoftirqd for rebuilt vendor policy/diagnostic modules. Exported function bodies and data declarations remain native LTS at the reviewed sites. Historical freq_scale is now arch_freq_scale, already GPL-exported natively in topology and x86 APERF/MPERF code; do not recreate its old symbol. Raw scheduler/cgroup objects require native locking, RCU, lifetime and CPU-hotplug contracts; export visibility supplies none of those. Exact external SDK consumers unconfirmed, so retention is conservative.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "426ecc5fcd21ebbc1e7229467858c21c20653c73907e11af9fa03eaae3a7cdb2"
+    },
+    {
+      "commit": "cd1208a52af70c4fc139afe0d4733a006aaec3e4",
+      "disposition": "adapted-net-state",
+      "rationale": "Keep the sole GPL export of native irq_handler_entry. Native tracepoint definition and firing context are unchanged. A trusted source module can observe IRQ entry; callbacks must be nonblocking and preserve IRQ context/lifetimes. No exact SDK callback found in scoped common-modules search; retain generic observation compatibility conservatively.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "c6ddf6e1a7afa74d76d9cd13fceedf3561e7007f18533883e28f0b64c9a6668d"
+    },
+    {
+      "commit": "2cadcbac1a4167978a1caa98d990025f1a46eba6",
+      "disposition": "superseded",
+      "rationale": "Both paths of the tracepoint revert reviewed. It removed an obsolete one-argument implementation; native f4bf3ca2e5cb later supplies the complete two-argument tasklet trace interface. Current header and action function are exact native; do not remove current tracing to reproduce a historical revert.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "e44d4988b6290e220c276d0a19f3b6798e99d817c18dc8ad912597526f2c655b"
+    },
+    {
+      "commit": "c646ea5a5fd9f1dad83111fbb5362418b36899a4",
+      "disposition": "superseded",
+      "rationale": "Complete historical re-addition of ksoftirqd_running reviewed. Native d15121be7485 later deliberately removes this gating to address latency. Final ACK also lacks it. Preserve the complete native invocation paths, not the old task-state gate.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "f6a902c5472239e72fc4f95616e5e0ad15f7330f84342aa6b1c4deb9ae55ffb5"
+    },
+    {
+      "commit": "d6592588edada6ae0430d320c8e129e5389d1aaa",
+      "disposition": "superseded",
+      "rationale": "Complete re-addition of SOFTIRQ_NOW_MASK and its ksoftirqd_running argument reviewed. Both were subsequently removed natively by d15121be7485 and are absent in ACK/port; preserve current native invocation, not a synchronous-mask exception to a removed gate.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "98bb6b32b199b8f8baff5c6c6a953c975e313e3f4a8230adaf01fe6c1fc76d51"
+    },
+    {
+      "commit": "28768780d4c486e546201ac2c30051fe412a3be9",
+      "disposition": "superseded",
+      "rationale": "All three paths of the old deferral revert reviewed. Final ACK reintroduces the behavior with new config/helper/current-and-queued RT detection. Do not use the historical revert to remove current configured Android latency policy; old cpupri_check_rt is positively absent.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "c36fb38bf6e5bb26394d3d9105c9d81e858bd32f8aae09e2aa7911b5e15c62bb"
+    },
+    {
+      "commit": "4196c1dafc4f7575d0940b257721125193df7aaa",
+      "disposition": "superseded",
+      "rationale": "All three paths reviewed. Temporary removal of active-softirq sampling was reversed and the feature then replaced by RT_SOFTIRQ_AWARE_SCHED. Preserve current guarded active recording and generic pending lookup; neither old task_thread_info access nor unconditional old declarations are restored.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "c4d022b4812f88fe121f2e3faee43b2362640abf080c86de14c5740f1aa40f64"
+    },
+    {
+      "commit": "027f8bd863fe4bc259bd6e05095bbc94232e5c74",
+      "disposition": "superseded",
+      "rationale": "All three paths reviewed. This reintroduction mixes remote active data with local_softirq_pending in task_may_not_preempt. Current implementation instead reads the requested CPU through __cpu_softirq_pending and uses cpu_busy_with_softirqs; retain that current code and configured declarations, not this older sampling implementation.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "eb85e559ae144743aed5e3805a829440d2e23b8440275b13cc5220624135e8db"
+    },
+    {
+      "commit": "f5b90ccf9cd19bf3f7cb4418bd6324d9ec7abda3",
+      "disposition": "superseded",
+      "rationale": "All three paths reviewed. Reintroduced cpupri_check_rt and pointer-based deferral are superseded by 0312436e3fdd plus 0dfff3baea14. Native/current handle_softirqs keeps current PF_MEMALLOC, accounting, RCU and restart handling; only the identified long-work policy is carried.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "3b1a3ad52a54798cc20082ed49f135241db7980d83645497e10ea3ea3ee0e0be"
+    },
+    {
+      "commit": "bdfce9c8c534c020794a4764d26fd9f0db2dd2e6",
+      "disposition": "superseded",
+      "rationale": "Complete re-revert reviewed, including its malformed historical comment line. Current ACK/LTS have no ksoftirqd_running at all after native d15121be7485. Native __local_bh_enable/invoke/do_softirq routing is retained rather than reproducing this obsolete signature/comment state.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "9638de354660dcf359cac7f480f568f8226ce70e1d807746389a74bfbff74b09"
+    },
+    {
+      "commit": "07ecea7cb88a6c8a640086eba7bfdc33c23f5abe",
+      "disposition": "superseded",
+      "rationale": "Both paths reviewed. Reintroduced one-argument tasklet tracing is superseded by native two-argument tracing; current complete header and tasklet action are exact LTS. No old unused tasklet_hi events or callback signatures are needed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "56152bfed9722cb3d03186ddf907680408da4a25f6d00f0cbb3481d9e7a64b42"
+    },
+    {
+      "commit": "a8bd3167d2438ca2d41125b4ecd4bef4ce14801b",
+      "disposition": "superseded",
+      "rationale": "All six paths reviewed, including unique details of the broad revert: active/pending policy removal, cpupri helper deletion, old ksoftirqd gate restoration and tasklet trace removal. Final native invocation lacks that restored gate, native tasklet tracing exists, and current ACK reintroduces RT-aware deferral under a new config. Preserve these final components, not the historical reverted snapshot.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "aceea388facb8592b424569d35620fe4cd0f9b4a114c8a16df0c4d0d421105b1"
+    },
+    {
+      "commit": "de8f7188626f9137be14142abd650ba1a50581bb",
+      "disposition": "partially-adapted-net-state",
+      "rationale": "Retain generic __cpu_softirq_pending for configured x86 RT task placement. Omit only the s390 zero-valued stub, an excluded architecture path kept native. The accessor deliberately samples remote per-CPU data without locking, so it is a placement hint and does not establish that a CPU remains available. No ownership or security decision may rely on its snapshot.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "e8468a72ec56c14774cf6181b21785cf3601e7e9a2b7b8e9516d00674a199d48"
+    },
+    {
+      "commit": "01603b5411396eb795ff8609b524c167cfe835b2",
+      "disposition": "adapted-net-state",
+      "rationale": "All four paths reviewed. Retain CONFIG_RT_SOFTIRQ_AWARE_SCHED (SMP and !PREEMPT_RT), active-softirq bookkeeping, long-work mask and RT placement fitness checks. SDK config enables it, and GrapheneOS SurfaceFlinger/audio sources request real-time scheduling. Complete softirq core is native except explicitly scoped policy/exports; scheduler selection sites retain current ACK proxy/hook context, whose separate changes are not certified by this row. The optimization is approximate and may choose a different CPU; native allowed-CPU/priority search is still used, not an unconditional migration command.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "19d6bfee2d2e8dc6c60f05958d3ceef983a6da9354be6bb2e18fe3640ecceb6e"
+    },
+    {
+      "commit": "0312436e3fdd24216b08e8c2b3bfd45948fed4c7",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain configured long-softirq deferral, with subsequent queued-RT repair 0dfff3baea14. Deferred bits remain pending before IRQs are enabled; initial and restart samples both apply the policy, and any pending/deferred work wakes ksoftirqd. Native restart/time budgets, PF_MEMALLOC save/restore, accounting, RCU and softirq action processing remain. This intentionally favors RT latency over network/block/tasklet processing while RT work is runnable; no bounded latency or fairness guarantee was measured.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "08cc759d359c1342e00ed3604b7fb89f963707f926014adb6c424879789a3b06"
+    },
+    {
+      "commit": "245d2e574467d577e23f5e6bc26ab4d06fcfbc3b",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain TASKLET_SOFTIRQ in the long-work mask alongside NET_TX, NET_RX, BLOCK and IRQ_POLL. This restores current Android placement/deferral behavior for potentially long tasklets; it is not limited to physical firmware drivers because the mechanism is generic and configured for SDK. HI/TIMER/SCHED/HRTIMER/RCU remain outside this long mask. Latency/throughput tradeoff is explicit and not runtime benchmarked.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "5d3c241f4cd5e30c3ae9e9fd54f56385853f8773fe0fbcba906ff38b45ba2072"
+    },
+    {
+      "commit": "b68cddb455684dd92a6f86a1dc93f9395fc1adc0",
+      "disposition": "adapted-net-state",
+      "rationale": "Keep GPL cpu_busy_with_softirqs and its internal-header declaration/config-disabled false stub. Complete helper is current ACK, reading active plus pending softirq hints; no locking or reservation semantics are promised by the export. Vendor scheduler customization is a stated requirement; exact external SDK callback consumer remains unconfirmed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "03c175d0389b68046786ab25706d25363912d095d3dfb39a800deeb9d7ca0706"
+    },
+    {
+      "commit": "069b9e4f219fa0f2857c03af6fa5dc4b9a712059",
+      "disposition": "adapted-net-state",
+      "rationale": "Keep the one-line GPL raise_softirq export. Whole implementation is exact LTS, including local IRQ save/restore and raise_softirq_irqoff call. Trusted source modules must pass a valid softirq index and obey interrupt context contracts; no new userspace invocation or permission bypass is introduced.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "89c808d4d526ba02c5260d387ca9e8cf594b15b2d792408aa5b13299b0625ba7"
+    },
+    {
+      "commit": "9ed7136495e1888d785332802da3d0d8b333c149",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain the one-line GPL native irq_handler_exit tracepoint export paired with entry. Native IRQ tracing definitions and placement remain; callbacks run synchronously in the native context. Exact SDK external registration unconfirmed; generic source tracing capability is conservatively retained.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "7ce991f4483eb6e1eaa7e446f210bcbd322ec7eba1058041b92ce43f0bad2ca5"
+    },
+    {
+      "commit": "4c1e7cf816d359029f8de3b4203dd64020e80ef7",
+      "disposition": "adapted-net-state",
+      "rationale": "Keep all four GPL native softirq/tasklet entry/exit tracepoint exports. Complete trace header and tasklet dispatch remain LTS, including the modern tasklet pointer argument. This expands trusted module observation visibility without adding a userspace control path; callback blocking/recursion can still harm latency and must obey native context.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "1f68d5aec5a641201a4f37d82c50e3ad718a5076b86ffe7432ce7e54a1a2502a"
+    },
+    {
+      "commit": "0dfff3baea140820d229726eecec7c534f00cb6e",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain all three paths of the recent queued-RT fix: local_rt_runnable declaration, sched_rt_runnable(this_rq()) helper and the current-or-queued check at both deferral samples. This is already in the initial port and final ACK. Positive code evidence shows rt_task uses current priority, while sched_rt_runnable checks rt_queued; the latter covers enqueued work not yet switched to current. Calls occur with local IRQs disabled. The snapshot does not prove real-time latency or synchronize arbitrary remote state, and does not claim special SCHED_DEADLINE handling.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Softirq RT policy and source exports"
+      ],
+      "patch_sha256": "25b30ed5ec43f35abba1aea5a49240955ca1f0d75039c463939a6b8524dc80fb"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/softirq.c",
+      "whole_file_identical_to_ack": true,
+      "sha256": "32e842f9db35fc7efe74e6bc56989c1d2042847389de521257e6c7954ce1f1fc",
+      "lts_comparison": "Entire file matches LTS after removing only six tracepoint exports, ksoftirqd/raise_softirq exports, active-softirq recording, deferral helper and its two calls/mask/wakeup adjustments; ignore five extra blank lines."
+    },
+    {
+      "path": "kernel/softirq.c",
+      "function": "tasklet_action_common",
+      "identical_to": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "6f8a88b9720cc263168639b4a69c0e6c233cce137ae86b8a86521466ff76367e"
+    },
+    {
+      "path": "kernel/softirq.c",
+      "function": "invoke_softirq",
+      "identical_to": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "c0961ca50833fe058465173bd2e7d5f52193d9e82c05ea59b2c30e89e1e3eb75"
+    },
+    {
+      "path": "kernel/softirq.c",
+      "function": "do_softirq",
+      "identical_to": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "63f40bc2523bd7256c22141a82b3a95b87e0127cf8e1a95b280ec777e3e4aff2"
+    },
+    {
+      "path": "kernel/softirq.c",
+      "function": "raise_softirq",
+      "identical_to": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "a1adf6fba2aa5dacc1bed8c7bf1388c99f376432d38016746bda52130ee93866"
+    },
+    {
+      "path": "kernel/cgroup/cgroup.c",
+      "function": "css_next_child",
+      "identical_to": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "99a34c8d0aae7f7ea6f5436b6098bfed47ab46b26fc5ffcd121e3129506fb9b3"
+    },
+    {
+      "path": "kernel/irq_work.c",
+      "function": "irq_work_queue_on",
+      "identical_to": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "a73413eb7d2512203f60e41852dce5d35d74047d72977d932c6876bd83cecdd5"
+    },
+    {
+      "path": "kernel/kthread.c",
+      "function": "kthread_bind_mask",
+      "identical_to": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "88735a36ee36320af7273bcbf5a4f50e66c6b26d69627efff972ee75c688b45d"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "__task_rq_lock",
+      "identical_to": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "b372c078f86faf51f48678d86096d79819fbb10a40387e6cd1fb49b5349d68de"
+    },
+    {
+      "path": "kernel/sched/rt.c",
+      "function": "cpu_busy_with_softirqs",
+      "identical_to": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "sha256": "a691496b05672097c0c672e0436e5b6371fe14da0dd6a05233973d6e40d2e1c5"
+    },
+    {
+      "path": "kernel/sched/rt.c",
+      "function": "local_rt_runnable",
+      "identical_to": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "sha256": "20b0c6ff30056fa101f30669bf31af5ff2235a955937349959511681170da632"
+    },
+    {
+      "path": "kernel/sched/rt.c",
+      "function": "rt_task_fits_cpu",
+      "identical_to": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "sha256": "db9cbc7c057c198038d308d2701262559ae165f24ee5d298f18903daa8eb4515"
+    },
+    {
+      "path": "kernel/sched/sched.h",
+      "function": "sched_rt_runnable",
+      "identical_to": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "sha256": "4980dfff3213e56af73867f3a9e777a5a8effccf20836da21663d493a46f7d22"
+    },
+    {
+      "path": "include/trace/events/irq.h",
+      "whole_file_identical_to_lts_and_ack": true,
+      "sha256": "4a20524a7be37c89183409611c3e50a3618f1fbb404c3586049cc8c07c72e865"
+    }
+  ],
+  "exports": [
+    {
+      "path": "drivers/base/arch_topology.c",
+      "symbol": "arch_freq_scale",
+      "native_export": true
+    },
+    {
+      "path": "arch/x86/kernel/cpu/aperfmperf.c",
+      "symbol": "arch_freq_scale",
+      "native_export": true
+    },
+    {
+      "path": "kernel/cgroup/cgroup.c",
+      "symbol": "css_next_child",
+      "native_export": false
+    },
+    {
+      "path": "kernel/fork.c",
+      "symbol": "tasklist_lock",
+      "native_export": false
+    },
+    {
+      "path": "kernel/irq_work.c",
+      "symbol": "irq_work_queue_on",
+      "native_export": false
+    },
+    {
+      "path": "kernel/kthread.c",
+      "symbol": "kthread_bind_mask",
+      "native_export": false
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "symbol": "__task_rq_lock",
+      "native_export": false
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "symbol": "root_task_group",
+      "native_export": false
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "symbol": "task_groups",
+      "native_export": false
+    },
+    {
+      "path": "kernel/sched/cputime.c",
+      "symbol": "cpu_irqtime",
+      "native_export": false
+    },
+    {
+      "path": "kernel/softirq.c",
+      "symbol": "ksoftirqd",
+      "native_export": false
+    }
+  ],
+  "userspace_evidence": [
+    {
+      "project": "frameworks/native",
+      "pin": "0aaefdd08d6b19d8c32799a6ae9b2e164f70de64",
+      "path": "services/surfaceflinger/Scheduler/EventThread.cpp",
+      "sha256": "1a99e2b0bcececcdf55867211ee56399ea430ff7718e33c763a7f656e63c84e0",
+      "evidence": "Local source requests SCHED_FIFO or audio requestPriority; presence supports RT-workload policy but does not prove this optimization is required for every execution."
+    },
+    {
+      "project": "frameworks/native",
+      "pin": "0aaefdd08d6b19d8c32799a6ae9b2e164f70de64",
+      "path": "services/surfaceflinger/Scheduler/src/Timer.cpp",
+      "sha256": "28f49fa363886679a50f8af07bd5e28cc3e830129cf5decdf29ef5e76ff4624b",
+      "evidence": "Local source requests SCHED_FIFO or audio requestPriority; presence supports RT-workload policy but does not prove this optimization is required for every execution."
+    },
+    {
+      "project": "frameworks/av",
+      "pin": "7a46fb37eae0e57496e4242007449ca56c957ce7",
+      "path": "services/audioflinger/Threads.cpp",
+      "sha256": "a5416ff05a3683712075ca1a383a73ebfb9331b18e88bfadfbc6aba2b62a13bc",
+      "evidence": "Local source requests SCHED_FIFO or audio requestPriority; presence supports RT-workload policy but does not prove this optimization is required for every execution."
+    }
+  ],
+  "config_sha256": "48f19810fd5e10021d64b96e82cdb2b0b587f7cb24b3b4b5660b6732ae05cd09",
+  "security": "The configured Android long-softirq deferral/placement policy is intentionally retained. It can delay network/block/IRQ-poll/tasklet service while RT tasks are runnable; callbacks and scheduler APIs remain trusted-kernel interfaces. Whole softirq.c equals LTS after the enumerated policy and export removal, preserving native accounting, PF_MEMALLOC, RCU and restart mechanics. Old ksoftirqd gating is positively removed upstream. Approximate remote masks are not synchronization. This review does not validate the entire separate proxy scheduler or its other hooks.",
+  "uncertainty": "No external module registration for these tracepoint exports or cpu_busy_with_softirqs found in scoped manifest common-modules C/header search. Retain source interfaces conservatively. Android RT requests and configured feature are positive evidence, not a measured SDK latency requirement. No RT workload, IRQ/softirq runtime, starvation, CPU hotplug or scheduler concurrency test was run.",
+  "validation": "Full patch review and recorded whole-file/complete-function comparisons. Build 116 succeeded at be986f481f69, producing both kernel images, 100 common and 45 virtual-device modules; all 145 signatures verified and tampered control rejected. 659 protected exports and all 145 module flag/CRC tables checked. No runtime/boot test.",
+  "remote_sources_used": []
+}

@@ -5179,3 +5179,51 @@ and housekeeping/online-CPU behavior. Broader module visibility is intentional
 source compatibility, and does not pin a descriptor lifetime or validate an
 arbitrary callback's locking/CPU arguments. No exact SDK external caller was
 established, so retention is conservative. No IRQ or affinity operation was run.
+
+# Per-CPU IRQ affinity migration target boundary
+
+`evidence/irq-affinity-history-review.json` records 17 dispositions after full
+patch review. Keep the coherent LTS per-CPU IRQ setup, dispatch, teardown and
+partition APIs. The ACK series moves ARM PMU/SPE/TRBE and GIC/AIC hardware
+partition handling into generic affinity-based sharing. Their architecture and
+controller dependencies exclude the x86_64 SDK target. Its virtio PCI transport
+uses ordinary IRQ requests. The pinned Trusty source is a positive consumer of
+the ordinary per-CPU request wrapper, whose source signature remains supported;
+Trusty is not enabled in this SDK build.
+
+The native setup/free/handler functions remain byte-for-byte LTS, preserving
+its locking, enabled-CPU and NMI checks. The follow-up NULL-affinity bug does not
+exist without the omitted affinity field/state machine. The union-storage
+cleanup is optional optimization, not historical KMI preservation. Header fix
+`be986f481f69` restores native ARM PMU declarations to match the retained driver;
+all affected ARM PMU files now equal LTS. No selected SDK runtime path changes.
+
+This evidence does not prove that unspecified external x86 modules cannot use
+the newer low-level affinity API. That uncertainty is recorded as a target-boundary
+limitation, not presented as a complete vendor source compatibility result.
+No interrupts, NMI delivery or performance-monitor operation were runtime-tested.
+
+# Softirq RT policy and source exports
+
+`evidence/softirq-history-review.json` records 26 dispositions, including the
+old revert/reintroduction sequence. Native tasklet tracing supersedes the old
+one-argument events; native removal of ksoftirqd_running supersedes the old
+synchronous-mask workarounds. Their complete current invocation/trace functions
+remain LTS. The whole softirq source equals LTS after removing only the recorded
+exports and Android active-mask/deferral logic, ignoring five blank lines.
+
+Retain the SDK-enabled RT_SOFTIRQ_AWARE_SCHED policy and queued-RT repair
+`0dfff3baea14`. SurfaceFlinger and AudioFlinger sources provide positive RT-use
+evidence. Long NET_TX/NET_RX/BLOCK/IRQ_POLL/TASKLET work can be deferred while RT
+work is current or queued; shorter classes remain eligible. Deferred work stays
+pending and ksoftirqd is awakened. This favors RT latency at a possible cost to
+network/storage/tasklet service. Native accounting, restart bounds, RCU and
+PF_MEMALLOC restoration remain. No workload latency, throughput or starvation
+bound has been measured. Approximate CPU sampling grants no ownership or lock.
+
+Generic GPL scheduler, IRQ and softirq exports support trusted source modules;
+raw locks, lists, task groups and CPU-local data still require native locking,
+lifetime and hotplug discipline. The renamed frequency-scale variable is already
+exported upstream. Exact SDK module consumers of these interfaces are unresolved,
+so source retention is conservative. This scoped review does not certify the
+separate proxy-scheduler/hook changes. No kernel scheduler runtime was executed.

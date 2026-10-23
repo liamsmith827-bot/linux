@@ -1,0 +1,368 @@
+{
+  "source_head": "be986f481f694b564147533c26ccff9dab97b06e",
+  "records": [
+    {
+      "commit": "3610236c1e4bd10e70b924c74c316c42b84dec22",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit removal of the standalone per-CPU NMI flow handler as an unneeded cleanup accompanying the ARM IRQ partition migration. Keep the exact LTS handler and declaration. This does not activate it or import a legacy implementation over newer LTS; retaining this native helper is not a historical binary-KMI requirement.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/irq-affinity-history-review.json",
+        "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+      ],
+      "patch_sha256": "c180a69da482ac7a2542ae7a1b1eb38ba1bdeb66918b865a776d82b0ab15f7b4"
+    },
+    {
+      "commit": "c9cdd81492688ab4f8b5c7eeda0834c9fb80683f",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the anonymous-union storage optimization for irqaction cookies. The change saves one pointer to make room for affinity in the later series; it adds no SDK source API or Android behavior. Keep both native cookie fields, not a padded historical ABI. This is an optional optimization, not a KMI-only patch.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/irq-affinity-history-review.json",
+        "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+      ],
+      "patch_sha256": "52eeeac0f08ea812d7785a07eb612f285249748441bc88bb96029e7951ab62df"
+    },
+    {
+      "commit": "927c66b0f7090533c426108305a63e2e458b1238",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit allocation-factory refactoring used by the affinity series. Native request functions already allocate and free their action with the same flags and PM-reference unwind. The accompanying no-autoenable comment correction is useful documentation but does not change behavior; native setup remains IRQ_NOAUTOEN for per-CPU-devid IRQs. No new factory or affinity allocation is required by the SDK transport.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/irq-affinity-history-review.json",
+        "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+      ],
+      "patch_sha256": "0316d56ebeacb3105880e0f54cf54ab2141eef1a958db102e1d8bb65186c0e4e"
+    },
+    {
+      "commit": "ffa4e3e392bc20bbbe97d06470efb4d202799969",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit adding affinity to irqaction and __request_percpu_irq as part of the ARM partition-sharing migration. The final converted callers obtain hardware-specific masks in ARM PMU/SPE/TRBE; those Kconfig dependencies exclude x86_64. Keep the complete LTS request/teardown implementation and ordinary request_percpu_irq source wrapper used by the pinned Trusty module. Unknown custom modules using the newer affinity signature are not proven absent; the explicit target-boundary limitation is recorded, rather than claiming complete cross-platform source equivalence.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/irq-affinity-history-review.json",
+        "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+      ],
+      "patch_sha256": "bd975438a66da8ba56a72307c05c5697e610c404e16975092d27e303a948ab94"
+    },
+    {
+      "commit": "69a3c064026ab44e450cc3b1930f26450405675c",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the request_percpu_nmi signature and shared-NMI eligibility change together with the ARM IPI/PMU conversions. Final in-tree callers are ARM64 IPI (NULL mask) and ARM PMU (supported CPU mask). The SDK uses x86/ACPI/virtio interrupt paths. Preserve native NMI rejection, setup, flags and unwind rather than partly importing sharing semantics without its consumers.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/irq-affinity-history-review.json",
+        "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+      ],
+      "patch_sha256": "5c95d3a2d20eaaa42432b33f31167f6e114dcf4527355644990be8ec9b52d840"
+    },
+    {
+      "commit": "9ba3b1573d05a8f9b0d3a5d6acc3d712b5692bfc",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the coordinated per-CPU sharing state-machine change: action mask validation, CPU-specific dispatch, list-based freeing and last-action NMI demotion. The positively identified use is ARM hardware partitions; keeping the entire native setup/handler/free path avoids a mixed state machine. Native ordinary shared interrupts, descriptor locking and enabled-CPU checks remain exact LTS. This is a target exclusion, not evidence that non-overlapping IRQ sharing is globally unnecessary.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/irq-affinity-history-review.json",
+        "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+      ],
+      "patch_sha256": "b058730b7a50e03e267c3d39c71264b57f43447cfce933ca26b22bf08b26dbf6"
+    },
+    {
+      "commit": "e2f14641d13e92d5d74712f8a71486d3efe75ade",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the new request_percpu_irq_affinity wrapper with its underlying affinity series. The final ACK converted consumers are ARM PMU, SPE and TRBE, whose architecture dependencies exclude the SDK. Preserve the ordinary source API used by Trusty. No claim is made that arbitrary external x86 modules never use the new API; importing support solely for such unestablished future use is outside the target decision.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/irq-affinity-history-review.json",
+        "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+      ],
+      "patch_sha256": "fdf848771693e1aea12d3c5b1b6af6de1ffadf7b2d2cdcafbaeacdbcc8d53c03"
+    },
+    {
+      "commit": "02480e4cf2c7f465f8f71e3c0be8576e6bc420f3",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the ARM PMU affinity-aware request/free conversion in all four paths. ARM_PMU depends on ARM or ARM64; final code uses the hardware PMU supported_cpus set and ACPI probing fallback. Keep the native driver implementation and callers. be986f481f69 restores its matching native header declarations, removing an ACK-only signature accidentally left beside the LTS implementation. The entire four files now equal LTS; no SDK IRQ path changes.",
+      "result_commits": [
+        "be986f481f694b564147533c26ccff9dab97b06e"
+      ],
+      "evidence": [
+        "evidence/irq-affinity-history-review.json",
+        "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+      ],
+      "patch_sha256": "8249ae6528418d2cae5d3155d4f6a17a99abb1500866dea24f4fe4f6876fcd8d"
+    },
+    {
+      "commit": "5ef8396f761e4892483a78b947ad460e42f9aa3c",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit changing ARM SPE PPI requests to the affinity wrapper. This driver requires ARM64 and the CPU Statistical Profiling Extension; it is excluded by the x86_64 SDK configuration. Keep the whole native file and its matching native API. This does not disable the SDK x86 performance-monitoring implementation.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/irq-affinity-history-review.json",
+        "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+      ],
+      "patch_sha256": "e00d99b242d4e59704198c3260451dfacd5fb9b942598a1cccf2d7c658e1623e"
+    },
+    {
+      "commit": "e71c4e6075e253fbbac9784abff6823e267b0873",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit changing the ARM TRBE per-CPU IRQ request to the affinity wrapper. Its Kconfig requires ARM64 and Coresight ETM4X, and its implementation programs ARM CPU tracing registers. Keep the whole LTS driver; the feature is outside the SDK hardware target, not an unlocated generic Android consumer.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/irq-affinity-history-review.json",
+        "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+      ],
+      "patch_sha256": "0518d0396f685994d4c7f4c70c717a2677e592d69ae9f9564feebbc5ccbe86a1"
+    },
+    {
+      "commit": "b29f86207b4281348792fd6e71e90abc84ee45f4",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit deleting GICv3 custom PPI partition domains and replacing them with common affinity sharing. Both changed paths were reviewed: retain native GICv3 source and PARTITION_PERCPU selection, consistent with the native generic APIs. GICv3 is not enabled in the SDK configuration. Removing only its old partition backend would break a coherent native architecture implementation and offers no SDK compatibility benefit.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/irq-affinity-history-review.json",
+        "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+      ],
+      "patch_sha256": "69efa2f199a75120dff5d98230f0c9ff269f6e693efa3b30fbd47a47d817da3e"
+    },
+    {
+      "commit": "3978a8b7c3af121134b2113b6090d37dcf8516fd",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit merging Apple AIC performance/efficiency-core PMU interrupt partitions. APPLE_AIC requires ARM64 and ARCH_APPLE or COMPILE_TEST; the SDK uses x86_64. Preserve the whole native AIC file, including CPU-specific PMU routing and partition setup. No Apple platform support is claimed by this build.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/irq-affinity-history-review.json",
+        "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+      ],
+      "patch_sha256": "1f069711a6cfc3dbfbdf2700e0045e2315249c21158ec134a7970073ff861c6c"
+    },
+    {
+      "commit": "22f349041232ff3c50961eb45ef4bde7c7c4f54f",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit deleting irq-partition-percpu source/header/Kconfig/Makefile wiring. The proposed deletion depends on replacing the GIC and AIC consumers; those conversions are omitted coherently. The whole native partition source/header remain, and CONFIG_PARTITION_PERCPU is not enabled in the SDK. Keeping unselected native LTS code is not adding a future-platform feature.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/irq-affinity-history-review.json",
+        "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+      ],
+      "patch_sha256": "5154adac811ebd54973a89d6dc4f9cc0f09bd236f31b49574b542911a64f6376"
+    },
+    {
+      "commit": "fa175c11983a216662689381b195db92a4fd531e",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit deleting descriptor percpu_affinity and partition get/set APIs. The native GIC/AIC backend remains and requires those APIs; all three current partition functions and irq.h are exact LTS. irq_desc differs only by previously reviewed Android vendor storage. No historical layout reservation is introduced or preserved by this decision.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/irq-affinity-history-review.json",
+        "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+      ],
+      "patch_sha256": "0231590f225bc85b6f4a3490b67a9b8e8595fabfb4e03fafcc4418e4e5b5cdd2"
+    },
+    {
+      "commit": "68bb2392b2a118cbfc9c7d43bd67257a66cc28e0",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the ARM PMU cpu_armpmu deletion and BRBE scheduler conversion, which follow the omitted interrupt-cookie migration. The native drivers still use cpu_armpmu. be986f481f69 restores its header declaration alongside the native request/free signatures, so all three affected files now match LTS. ARM PMU/BRBE are excluded by the SDK architecture dependency.",
+      "result_commits": [
+        "be986f481f694b564147533c26ccff9dab97b06e"
+      ],
+      "evidence": [
+        "evidence/irq-affinity-history-review.json",
+        "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+      ],
+      "patch_sha256": "deabf806153ad412effed84475a21209cb44c1b50e3e409210da57321f718622"
+    },
+    {
+      "commit": "2996c260f980c2e889ecaf4ac3cad5f541daa4f7",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit documentation for the excluded irqaction affinity member and firmware-info reporting structure. Both structures remain native: irqaction has no new affinity field, and irq_fwspec_info is not introduced. The earlier reporting-interface decision 59b468b45061 retains native irqdomain.c/.h. Adding these comments without the corresponding members would misdocument the implemented API.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/irq-affinity-history-review.json",
+        "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+      ],
+      "patch_sha256": "01bf965c2033cfcc9392453a68d06aca01f83410c0b9b4df42a663282f11b016"
+    },
+    {
+      "commit": "c433c249e0e7db6e14312a563f77320881526e2c",
+      "disposition": "omitted-current-target",
+      "rationale": "Do not import the NULL-affinity repair independently: the offending affinity-sharing prerequisite is omitted. Whole current setup_percpu_irq and __setup_irq are exact LTS and never dereference the absent irqaction.affinity field. This positively excludes the bug mechanism; it is not an assertion based on failing to find a caller. Native legacy setup remains unchanged.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/irq-affinity-history-review.json",
+        "SECURITY.md: Per-CPU IRQ affinity migration target boundary"
+      ],
+      "patch_sha256": "fbf842cf7667e5eaac759ddc08fde0967d155c865da9334c748f0c489326653d"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "drivers/perf/arm_pmu.c",
+      "whole_file_identical_to_lts": true,
+      "sha256": "ae234eb98a21df1f070dea4e8fa05aad8b4994381be2bd76603a759cf0c0d546"
+    },
+    {
+      "path": "drivers/perf/arm_pmu_acpi.c",
+      "whole_file_identical_to_lts": true,
+      "sha256": "1e9d7af3380eeddc23d1e3bc4b2d757cb2e9ca0a8350038a2cbd8e3e0cc787d1"
+    },
+    {
+      "path": "drivers/perf/arm_pmu_platform.c",
+      "whole_file_identical_to_lts": true,
+      "sha256": "474bc9b70e604cba946e51d8543845be45685a2fe3b79e02c3643b6214312e6e"
+    },
+    {
+      "path": "drivers/perf/arm_pmuv3.c",
+      "whole_file_identical_to_lts": true,
+      "sha256": "61728c9a6b24ede5d561a0f3357723f3609c1e7daf2a4cb821e57b12e05a5d0c"
+    },
+    {
+      "path": "include/linux/perf/arm_pmu.h",
+      "whole_file_identical_to_lts": true,
+      "sha256": "18d6dcf6b39188f09d104095d5878af4b17b5be01f79695f26fa586da5b119e8"
+    },
+    {
+      "path": "drivers/perf/arm_spe_pmu.c",
+      "whole_file_identical_to_lts": true,
+      "sha256": "d843c5624990e188a0d0ce4e3637ffe83e0dfacec71e8835a5d6535b63674f2d"
+    },
+    {
+      "path": "drivers/hwtracing/coresight/coresight-trbe.c",
+      "whole_file_identical_to_lts": true,
+      "sha256": "f5d7413005742ab0cece56d1b08e9af2569273132e00f54e717ad883e3e1e8cb"
+    },
+    {
+      "path": "drivers/irqchip/irq-gic-v3.c",
+      "whole_file_identical_to_lts": true,
+      "sha256": "d33e823766f386380608fe985dac9a2eacb9178435f200c03f8ac87fe5fd0db3"
+    },
+    {
+      "path": "drivers/irqchip/irq-apple-aic.c",
+      "whole_file_identical_to_lts": true,
+      "sha256": "3adaa8053c14ac2cbdba011e2707aff80d4a857d9df363c47e6efb2292c8f062"
+    },
+    {
+      "path": "drivers/irqchip/irq-partition-percpu.c",
+      "whole_file_identical_to_lts": true,
+      "sha256": "ce90fd20fa6152b6e342806aa1a7ee333cd187b2e839e482d1ecc51cd63e3fbe"
+    },
+    {
+      "path": "include/linux/irqchip/irq-partition-percpu.h",
+      "whole_file_identical_to_lts": true,
+      "sha256": "8a6ceb567e6e6889d8fbdf01df9571fcce53d3a4ea44296aeeb05ca93a32726c"
+    },
+    {
+      "path": "include/linux/irq.h",
+      "whole_file_identical_to_lts": true,
+      "sha256": "891bcb4b0f13e9ae3efc1042ccb0fc57a0a532f11308fe90367dc2e5386167e6"
+    },
+    {
+      "path": "include/linux/irqdomain.h",
+      "whole_file_identical_to_lts": true,
+      "sha256": "827bbed95dd4e9d4a29f927990e666f448c2a123bc8ead967c907cf9081cf90e"
+    },
+    {
+      "path": "kernel/irq/irqdomain.c",
+      "whole_file_identical_to_lts": true,
+      "sha256": "431efc8a673a27af2dcec2ce2a5eb9c61ce73d311e5fe365386875097c4a3fbe"
+    },
+    {
+      "path": "kernel/irq/manage.c",
+      "function": "setup_percpu_irq",
+      "whole_function_identical_to_lts": true,
+      "sha256": "62b43cd31c46ac706fe1fd4d6d6688a9fe62a8b7fa92cb1921424c4dd9b65908"
+    },
+    {
+      "path": "kernel/irq/manage.c",
+      "function": "__request_percpu_irq",
+      "whole_function_identical_to_lts": true,
+      "sha256": "d754e19c44e5e35289d7eab4c0daea55332b6c8ef76ff7974dd31a7d0e9f00a2"
+    },
+    {
+      "path": "kernel/irq/manage.c",
+      "function": "request_percpu_nmi",
+      "whole_function_identical_to_lts": true,
+      "sha256": "ca398167c423c5ed225616efa9633167a0eb72b7e7e8f18022999cc0359900d7"
+    },
+    {
+      "path": "kernel/irq/manage.c",
+      "function": "__setup_irq",
+      "whole_function_identical_to_lts": true,
+      "sha256": "92123c888b82513ca4726ffb2fe697e9a7d75dc83bdd642731b3ecaf0f177b1d"
+    },
+    {
+      "path": "kernel/irq/manage.c",
+      "function": "__free_percpu_irq",
+      "whole_function_identical_to_lts": true,
+      "sha256": "d0fd56b6188da6cef54ff2bd444c75b846aee66a2a36cd8908e26b61ff46729c"
+    },
+    {
+      "path": "kernel/irq/chip.c",
+      "function": "handle_percpu_devid_irq",
+      "whole_function_identical_to_lts": true,
+      "sha256": "ec4bc563fb68b90e58575eb66d5ea4ca744449195a694e6380ccad1dbe3ae1a4"
+    },
+    {
+      "path": "kernel/irq/chip.c",
+      "function": "handle_percpu_devid_fasteoi_nmi",
+      "whole_function_identical_to_lts": true,
+      "sha256": "30e2a9dfb79ed9e7c3b4efc9eaa3b6f92e0954cfc217ba7049a10277504d0db4"
+    },
+    {
+      "path": "kernel/irq/irqdesc.c",
+      "function": "irq_set_percpu_devid_partition",
+      "whole_function_identical_to_lts": true,
+      "sha256": "8961529c1f34ad368508e6e91ddf1e84d90e7e1bc652d9a923f9d0da24069f1d"
+    },
+    {
+      "path": "kernel/irq/irqdesc.c",
+      "function": "irq_set_percpu_devid",
+      "whole_function_identical_to_lts": true,
+      "sha256": "c3ccb3b4a564689d08281514bc96a36b382f3e964845b8cda8a38e0cb389b017"
+    },
+    {
+      "path": "kernel/irq/irqdesc.c",
+      "function": "irq_get_percpu_devid_partition",
+      "whole_function_identical_to_lts": true,
+      "sha256": "d4bb63dbdc337ba7e178304af7d23cd8daf6d7ce045451abe0c38648172625bd"
+    },
+    {
+      "path": "include/linux/irqdesc.h",
+      "identical_to_lts_except": "previously reviewed Android vendor include and one storage slot",
+      "sha256": "4912e11f0d77faec81635069c1cd6a1002b927efb4f60d57906844c34fd2d742"
+    },
+    {
+      "path": "include/linux/interrupt.h",
+      "scope": "entire file prefix through IRQ declarations, before force_irqthreads_key",
+      "identical_to_lts": true,
+      "sha256": "aa6bc2c07dfa65c2a98020e9a00dd422273694946e96fafba1c065325e32fa28"
+    }
+  ],
+  "consumer_evidence": {
+    "final_ack_affinity_callers": [
+      "23112ce1886ea26b19be03207c0227a06a6ca009:arch/arm64/kernel/smp.c:1104:\t\terr = request_percpu_nmi(irq, ipi_handler, \"IPI\", NULL, &irq_stat);",
+      "23112ce1886ea26b19be03207c0227a06a6ca009:drivers/hwtracing/coresight/coresight-trbe.c:1497:\tret = request_percpu_irq_affinity(drvdata->irq, arm_trbe_irq_handler, DRVNAME,",
+      "23112ce1886ea26b19be03207c0227a06a6ca009:drivers/perf/arm_pmu.c:669:\t\terr = request_percpu_nmi(irq, handler, \"arm-pmu\", affinity, pcpu_armpmu);",
+      "23112ce1886ea26b19be03207c0227a06a6ca009:drivers/perf/arm_pmu.c:673:\t\t\terr = request_percpu_irq_affinity(irq, handler, \"arm-pmu\",",
+      "23112ce1886ea26b19be03207c0227a06a6ca009:drivers/perf/arm_spe_pmu.c:1268:\tret = request_percpu_irq_affinity(spe_pmu->irq, arm_spe_pmu_irq_handler,",
+      "23112ce1886ea26b19be03207c0227a06a6ca009:include/linux/interrupt.h:201:request_percpu_irq_affinity(unsigned int irq, irq_handler_t handler,",
+      "23112ce1886ea26b19be03207c0227a06a6ca009:include/linux/interrupt.h:210:request_percpu_nmi(unsigned int irq, irq_handler_t handler, const char *name,"
+    ],
+    "trusty": {
+      "pin": "753a37b7fde455153b4ea95b7e13da4fc7b5ea55",
+      "path": "drivers/trusty/trusty-irq.c",
+      "sha256": "a7e4f9c311dfd213782ab7e8fe4a229a7f3124fd3844b470849d59bdc19deccb",
+      "interface": "ordinary request_percpu_irq; existing signature retained",
+      "scope": "Positive source consumer, not selected in SDK config"
+    },
+    "sdk": "CONFIG_X86_64=y, ACPI=y, VIRTIO_PCI=m; virtio_pci_common.c requests ordinary PCI/MSI/INTx IRQs. ARM_PMU/ARM_SPE_PMU/TRBE/APPLE_AIC have ARM architecture dependencies; none selected. No ARCH/x86 per-CPU-devid caller found in scoped search, but that absence is not the proof of target exclusion.",
+    "config_sha256": "48f19810fd5e10021d64b96e82cdb2b0b587f7cb24b3b4b5660b6732ae05cd09"
+  },
+  "security": "Preserve the native complete IRQ action setup/free/dispatch state machine, NMI checks and descriptor lifetime. Do not graft affinity-list assumptions onto single-action native paths. Native ARM drivers and APIs remain mutually consistent; the header repair changes no selected SDK executable path. Generic GPL diagnostic exports and Android IRQ vendor storage remain as separately reviewed. This series is a physical ARM interrupt-partition migration and preparatory cleanup, not an ABI-preservation series.",
+  "uncertainty": "Unknown external x86 modules could use newer low-level affinity request interfaces. This audit establishes the configured SDK path and positive native Trusty source-wrapper compatibility, not universal vendor source equivalence across unspecified modules or future hardware. The target boundary excludes ARM consumers and their coordinated core migration. No IRQ/NMI/perf runtime execution.",
+  "validation": "Full patch review and recorded whole-file/complete-function comparisons. Build 116 succeeded at be986f481f69, producing both kernel images, 100 common and 45 virtual-device modules; all 145 signatures verified and tampered control rejected. 659 protected exports and all 145 module flag/CRC tables checked. No runtime/boot test.",
+  "local_resources": [
+    "Pinned ACK/LTS and existing irqdomain review",
+    "Pinned manifest Trusty module and SDK config",
+    "Native virtio PCI source and ARM driver Kconfig dependencies"
+  ],
+  "remote_sources_used": []
+}
