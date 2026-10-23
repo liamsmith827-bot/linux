@@ -5446,3 +5446,47 @@ Native online-CPU balance interval and hotplug update locations remain. Historic
 active-mask removal is not replayed over current native concrete-task filtering;
 proxy NULL-context CPU-priority semantics retain their separate audit. Removed
 historical async drain and preempt-count sampling helpers are not resurrected.
+
+# Proxy scheduler trace records
+
+`evidence/proxy-trace-review.json` reviews all ten events and final call sites
+from 5562881341cf. Preserve Android diagnostics despite an unconfirmed exact SDK
+consumer. Commit 697505edff4d zero-pads sixteen task-name arrays; ordinary strscpy
+left bytes after a short name unwritten in raw event records. Native strscpy_pad
+initializes those tails while retaining fields and printed strings. This does not
+claim that every structure-padding byte or arbitrary probe is sanitized.
+
+Sleeping-owner activation holds an owner reference. The detached waiter remains
+live because both activation callers keep preemption or interrupts disabled, and
+native task release defers the rcu_users reference drop through call_rcu. Other
+sites retain rq, task pi_lock, or the actual blocked mutex/rwsem wait_lock as
+appropriate. No new locks or scheduling decisions are introduced. Task metadata
+may still be sampled during concurrent legitimate updates; no atomic snapshot,
+runtime tracing, or scheduler-performance validation is claimed. Native trace
+access controls and all LTS scheduling fixes remain.
+
+# Proxy wakeup and migration history
+
+`evidence/proxy-wake-history-review.json` resolves 27 wake/selection/migration
+and yield candidates. Retain sleeping-owner list/reference management and later
+race fixes: locked owner recheck before enqueue, pi_lock/blocked_lock revalidation
+before delayed activation, references spanning unlock, and IO accounting before
+changing task CPU. Finite list snapshots do not establish a bound on adversarial
+chain work. Task lifetime details are in the separate proxy trace review.
+
+Keep final strict native wake-state matching and the native on_cpu acquire wait,
+CPU-selection path, and block release-store. Reverted speculative preemption-time
+TASK_RUNNING mutation and removed manual force-return helper stay absent. Donor
+placement can differ from its affinity while it cannot execute; real wakeup uses
+native allowed-CPU selection. TASK_WAKING counts as special so return blocking
+cannot become a delayed CFS dequeue. is_blocked prevents a running task whose lock
+hint was published from being selected as a sleeping proxy donor.
+
+Callbacks are reset when picks become invalid, preserving the hotplug callback.
+Native hrtick is adapted to pass the donor to its donor-class tick callback, and
+NULL yield callbacks are guarded. Native donor-based yield implementations are
+already upstream. Core-picker RETRY_TASK resets clocks and cookie-selection state;
+SDK SCHED_CORE is disabled, so that shared API companion has no runtime evidence.
+No scheduler latency, fairness, exhaustive race or deadlock guarantee follows from
+source review or compilation. No source change beyond the recorded trace padding
+was needed for this review, and no LTS fix was weakened.

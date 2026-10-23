@@ -1,0 +1,111 @@
+{
+  "source_head": "697505edff4d7d95372c862de4c94d1089274825",
+  "records": [
+    {
+      "commit": "5562881341cf5ac8b07d709b97757de42ef3c27c",
+      "disposition": "adapted",
+      "rationale": "Both complete patch paths reviewed. Retain ten proxy scheduler trace events and their current wake/selection/migration call sites for Android diagnostics; exact SDK consumer is unconfirmed, so absence is not used to omit the interface. Original proxy_force_return site was removed by later helper rewrite. Whole final event header equals ACK except sixteen strscpy-to-strscpy_pad substitutions: initialize comm-array tails in raw records without changing event fields/printed strings. Read-side task lifetime traced through rq/blocked-lock ownership, caller pi_lock, activation references and preempt/IRQ-disabled RCU protection. No scheduler algorithm or LTS fix is changed by this adaptation. Tracing can expose task activity and incurs enabled-probe overhead; native trace permissions remain, no runtime/concurrency validation claimed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "697505edff4d7d95372c862de4c94d1089274825"
+      ],
+      "evidence": [
+        "evidence/proxy-trace-review.json",
+        "SECURITY.md: Proxy scheduler trace records"
+      ],
+      "patch_sha256": "ea69f9599aa89b6bdcec7f749f75cc6bbe392dc77405cb5c8c89be7f7a232760"
+    }
+  ],
+  "header_sha256": "6a1a4b9252602e65b0a391647d26dfdd3afc4982b18e50926c77526325f0e1a4",
+  "header_relationship": "Entire header equals final ACK after reverting only sixteen comm-copy padding substitutions.",
+  "witnesses": [
+    {
+      "path": "kernel/sched/core.c",
+      "function": "activate_blocked_waiters",
+      "sha256": "a3a6a9192aade0422fab10745ef10aace133fcc760e666197e81557ba58a92c1"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "do_activate_blocked_waiter",
+      "sha256": "a8c6d9f4815e48236fa1c80afa1bf078887063e67a59717a537541928d076282"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "sched_ttwu_pending",
+      "sha256": "dd2b4eb7e46addcaf6361725b1b3495a01ab3b3e8dc4fc5c5e56f85862d6fca1"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "try_to_wake_up",
+      "sha256": "a1eee54674556c320f7be369d065ea5246b0142085a220614a82dbb067b765d3"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "ttwu_runnable",
+      "sha256": "d212e13ec3bbc2423ddf0231f7abb3872107c1c219391cc4abd259eea7d9bb1c"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "proxy_enqueue_on_owner",
+      "sha256": "290a32859fa6a6facc06529dc01b7c8341523eb26a92233fafd2fa8dd53bdc14"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "find_proxy_task",
+      "sha256": "5b9b3dcbb487425a3628b820b7990094254d809915ecc9c22fe6fb83dd918361"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "__schedule",
+      "sha256": "7b715791877117159fb737691ac6c1874b4e47a6a88c242e59dbfb5b588ff998"
+    },
+    {
+      "path": "kernel/exit.c",
+      "function": "delayed_put_task_struct",
+      "sha256": "5eb4edd2bbe5d54c268229e7d16b5ea5b28be7e92780a0b7fb4c9f14aa900415",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/exit.c",
+      "function": "put_task_struct_rcu_user",
+      "sha256": "cfad36e91f053f0ca0236368af441ae2348f1918f80ae54d83c2c87bc8284521",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/trace/trace.c",
+      "function": "__trace_buffer_lock_reserve",
+      "sha256": "f9d34b78075a8d3347325f63709cc9e241cac94288aac719c408afd98dca86e0"
+    },
+    {
+      "path": "kernel/trace/trace_events.c",
+      "function": "trace_event_buffer_reserve",
+      "sha256": "6609dfff7e946b7a48a304dacd2ef1f6ec869a9841a6b6bb0c933543f39773a1"
+    },
+    {
+      "path": "kernel/trace/ring_buffer.c",
+      "function": "ring_buffer_lock_reserve",
+      "sha256": "dc87ae30934f8e96ff30e7c9da07e3b7eb5665d7f78583c31bee701b049792bf"
+    },
+    {
+      "path": "kernel/trace/ring_buffer.c",
+      "function": "rb_reserve_next_event",
+      "sha256": "5e42007d2093e2990de242276ae67eb70b21ee322bdc27bf23e21066a32337c1"
+    }
+  ],
+  "lifetime": {
+    "activation": "Only callers are try_to_wake_up (whole-function guard(preempt)) and sched_ttwu_pending (rq_unlock retains IRQ-disabled state until final rq_unlock_irqrestore). Owner is explicitly referenced while on bal_head. blocked_node is removed under owner blocked_lock; p may wake/exit after detachment, but native task rcu_users reference is released by call_rcu(delayed_put_task_struct), which waits for these preempt/IRQ-disabled regions. Thus p allocation remains live through trace and get_task_struct(p) for next bal_head entry. No new get/put or lock needed for observational trace.",
+    "owner_migration": "find_proxy_task takes actual blocked lock wait_lock and rechecks p blocked_on under p blocked_lock before reading owner; guard remains across owner/migration trace calls. Sleeping-owner enqueue also holds owner blocked_lock and rq lock. Task cannot finish its lock unlock path and be freed while wait_lock held.",
+    "selection": "__schedule holds rq lock when tracing prev/donor/next. Migration/deactivation resets rq donor before dropping rq lock; retries reload donor. Events run before context switch. Original force-return trace site is absent in final helper and is not reintroduced.",
+    "return": "ttwu_runnable called with waking task pi_lock, additionally acquires rq lock; trace occurs after proxy_needs_return while those guards remain."
+  },
+  "padding": "strscpy guarantees termination but not zero-filled remainder. Native trace reservation initializes trace_entry metadata, not the complete event payload; generic event expansion runs only TP_fast_assign. Sixteen strscpy_pad calls use native sized_strscpy_pad to zero bytes after terminator. Scope is comm arrays, not a claim all C-structure padding or arbitrary trace probes are sanitized. Native access controls remain; no unprivileged leak exploit demonstrated.",
+  "resources": {
+    "include/linux/string.h": "6dad7c9cb1d6adf132da850f32fc7c3fbb263086925393db7fe1ef02d4f18881",
+    "include/linux/rcupdate.h": "3162164dd021f8f3880de7c188cb5cde34908b1fcfeaebe9554b91b2622849a5",
+    "include/linux/sched/task.h": "8c505a6141e389beb68c16232e412794ed8329d8fd7d9e107dc502e08c8859ae",
+    "include/trace/trace_events.h": "ec085f4217a6c9b67b63463bde4426b6fa98a17a2b057e05cfbdfc8bcb01067a"
+  },
+  "uncertainty": "Exact proxy debug event consumer unconfirmed. Retained generic Android diagnostics conservatively. Comm/prio/CPU values can race with legitimate updates; lifetime safety does not imply an atomic diagnostic snapshot. No runtime tracing, scheduler performance, or arbitrary callback behavior was tested.",
+  "validation": "Full header identity after bounded substitution and native task release-function identity checked. Build 123 passed from clean common 697505edff4d: matching bzImages, 100 common + 45 virtual modules, all 145 signatures verified and tampered control rejected; 659 protected exports and 145 flag/CRC tables verified. Existing native string padding implementation inspected; no bespoke simulation test for this small helper substitution.",
+  "remote_sources_used": []
+}

@@ -1,0 +1,552 @@
+{
+  "source_head": "697505edff4d7d95372c862de4c94d1089274825",
+  "records": [
+    {
+      "commit": "58809b07c64892b5f21177604be0ae4cdf04e0a7",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full patch retained: pass activating owner, take waiter pi_lock, reject TASK_WAKING/on_rq/on_cpu, then verify task_blocked_on_owner under blocked_lock before CPU/accounting changes. This prevents delayed activation of a task now blocked on a different owner; it does not promise exhaustive race freedom. Whole final helper equals ACK; RCU/reference evidence is in proxy-trace-review.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "b7e13cda2795d8c8de708b4cf42b9f2fe4988e4ac7dd5503c3d3048c40f4fe6e"
+    },
+    {
+      "commit": "82f58939fb2605c64dcd1a1b5826138646c7685d",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Both full hunks retained. Explicit owner reference spans blocked_lock acquisition/removal/unlock, and local activation-list owner put occurs after unlocking. Relationship owner reference may be dropped by list removal; do not free its embedded lock while held. Current native task release also defers final free through RCU; reference discipline remains valuable. No new allocation or KMI layout preservation.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "51d8510fa32dc2ca61d008e288e5d4d1537e0885a9e485b36d241f0e398aa973"
+    },
+    {
+      "commit": "1167608bcacbad17ba117b545f8754dd0d44e4bb",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Complete patch retained. Empty blocked_head test under owner blocked_lock returns before get_task_struct/local-list initialization. Existing blocked_activation_node duplicate-work check remains. Locked enqueue/activation handshake prevents treating an unlocked absence as stable.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "4e50891449ea5ba9aa7a08dbbee2212ef057a5ce672c97cf0aaf70383c3e0fc0"
+    },
+    {
+      "commit": "8919cace7bed405c6209497b899ecc23df1dc034",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Complete patch retained: repeat !owner->on_rq || sched_delayed under owner blocked_lock while actual blocked primitive wait_lock is held; move proxy_resched_idle into actual enqueue path. This pairs with activate_task holding the same owner blocked_lock around native enqueue, avoiding a waiter lost behind an already activated owner.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "42f43d05dd30f1a668fea7a51ca566a4de58664fe9b848038cd118ef48db9709"
+    },
+    {
+      "commit": "3b63df63d5150f242c9862eb1e36a2c67eba09cf",
+      "disposition": "partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Complete accounting patch reviewed. Keep nr_uninterruptible reversal under destination rq lock; per-CPU uninterruptible accounting is intentionally aggregated like native ttwu. Keep IO wait decrement/delayacct_end in corrected position before proxy_set_task_cpu from a4cd57b26ced (already audited), so the source CPU accounting is decremented. Do not restore original wrong destination IO counter order.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "087bb94fe8071a79f9c00055a0f5e2a44dd3ee4b5509cddc2dd56dcfe851cec9"
+    },
+    {
+      "commit": "8abe2647c5327b4dbe45fbbb920dcc8e87208119",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full flattening patch retained in whole final ttwu_runnable: early goto out when not queued, single unlock path, unchanged ordered delayed-dequeue handling, return migration, preempt check and wake state. No new state transition from this stylistic history.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "141a0480e7446c63d97f3dcccf5d5e0a653a829385e982a85ff93b2569d3275f"
+    },
+    {
+      "commit": "708d7f69a7b2a491b519838c545c89260bd7e4df",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Full speculative SM_PREEMPT/TASK_NORMAL rewrite reviewed with inverse 6ace5f47127f. Final __schedule has no such forced TASK_RUNNING branch. New is_blocked bookkeeping and selection condition supersede the workaround; do not restore an unconditional preemption-time task-state mutation.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "63a75e7a2b88fdd3737bd58cd09ce42b5254a69396610fcc8e974839f3df7d2f"
+    },
+    {
+      "commit": "6ace5f47127f788c4e166dfd30b06f4c166101d5",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Full inverse reviewed. Removed SM_PREEMPT workqueue workaround absent in both native LTS and final port; current proxy blocked-state rules are retained independently. This does not assert every historical workqueue race has been runtime reproduced or fixed.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "125a4d9662ee4a63a7a160b84bc6f2752e5059e97553afdbb9bfe66d295a4e4e"
+    },
+    {
+      "commit": "e9ce1181f0486c0d3ee1983d507a499d53057041",
+      "disposition": "partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three hunks read. Current proxy_needs_return handles any live blocked_on through task_is_blocked and clears it under blocked_lock. Later eba00fc7e482 removes eager PROXY_WAKING marking before state-match, restores strict native match, and replaces signal-path mark with clearing. Keep final wake protocol, not historical unconditional blocked marking.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "3464167777704c778caeff780ecd49d11d651ad97f4fcfa31ee6a96c95dea35c"
+    },
+    {
+      "commit": "67e5958e74cd9cf47109bc9e79281ebcfb8d052b",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "Whole force-return rewrite read. Entire proxy_force_return helper and its references removed by eba00fc7e482; deactivation and normal try_to_wake_up now handle return migration. Do not resurrect old rq-drop/manual detach/attach path or its old task-reference scheme.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "4f6c8ce8310d082cd0c560af27ff2b111394c493412ae7460ebe26f99a1d2a69"
+    },
+    {
+      "commit": "68d5e617f6017355da49d2e156a7883c76e33039",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Complete comment/lock annotation patch retained on migration and proxy search. Current migration drops donor/class references before unlocking, traverses current blocked_donor chain under original rq lock and uses se.group_node after deactivation. Annotation/comment introduces no new algorithm; chain lifetime separately audited.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "9e107ea51c35775baeb32f9d4d86b28803ae7c57a6b07f8e88ea86fcb01c1356"
+    },
+    {
+      "commit": "cd76223e10882628a7e2d2f4b2c9ce1e0cbdfdae",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full refactoring retained: move native load-contribution/special-state/ordering block from try_to_block_task into block_task, passing actual task_state. Signal and should_block decisions stay in caller; native __block_task release-store and bookkeeping remain exact LTS. Required for direct proxy block calls to get the same accounting and delayed-dequeue rules.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "962919d07f506f6a928c4a8d666c27681a872aed428f713c0519831b99309fcc"
+    },
+    {
+      "commit": "94801dadffe9cb33f0d0f643fa532b8b580365ab",
+      "disposition": "partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All hunks read. Retain rq release helper that zaps callbacks, unpins then unlocks, and reacquire helper that locks, repins and refreshes clock. Current chain migration uses both; removed force-return helper sites are superseded. balance_push_callback is preserved when other pending callbacks are discarded.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "82043ab123473568b2e7c14c92e061e45de975549bd7113323a99e7b7a987839"
+    },
+    {
+      "commit": "eba00fc7e482fe7a0652c66291152be145482a21",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Both full paths read. Keep TASK_WAKING in special-state set, donor reset before return blocking, strict native wake-state matching, off-rq blocked relation clearing, normal wake-return route, proxy_deactivate ordering and current-state relation cleanup. Original force-return helper and runnable-but-waking exception are absent. TASK_WAKING forces real dequeue rather than delayed CFS dequeue during return. Native pi_lock, state-match, acquire/release ordering, on_cpu wait and allowed-CPU selection remain. Direct proxy context placement can exceed donor affinity while donor cannot execute; wake returns execution context via normal selection.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "13fad03dd7eb3213dc0a2cde477e958c216053085b8226cdd06d887446c9502c"
+    },
+    {
+      "commit": "68f238ea8781142e645dea70f029421186ce6188",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Every core.c hunk retained: is_blocked set on actual blocking attempt, cleared on wake/signal/current-owner recovery, fork/current warnings, and proxy selection requires both is_blocked and blocked_on. This is semantic scheduler state, not KMI padding. A runnable task with a published lock hint must not immediately be treated as sleeping; native state/on_rq can diverge with delayed dequeue. Child copies runnable parent state with existing warning, no independent memset introduced.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "2a21e60afab95f30accbc0d8c25003174936ec70f43744b8b18d1a8c8569df09"
+    },
+    {
+      "commit": "ce626306dc0da1c6178efd23b5474eb4131c2a73",
+      "disposition": "partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All four paths read. Retain three per-task list heads and sleeping_owner, init-task/fork initialization, reference-counted owner linkage, locked native activation wrapper, finite detached waiter batches and local/remote wake call sites. Later fixes retain owner through unlock, recheck owner under lock, reject stale activation and correct load/IO accounting. Original removal of proxy_deactivate is superseded by final safe reintroduction; original migration_node context is omitted by 275786041b29 as unused. Generic proxy execution is enabled on SDK; no historical KMI-only storage is added.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "bb541e08b8d4e661b984624fe5aab5513f8edb86a5f2cb97db3db4f9d57cb792"
+    },
+    {
+      "commit": "0f12dd859b17f3a0a56ed6d0024dec23a573a052",
+      "disposition": "partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Whole migration patch read. Keep proxy_set_task_cpu saving wake_cpu, execution-context affinity distinction, current-in-chain exclusions and current-owner recovery. Single-task migration evolved into locked chain migration; manual force-return path removed by eba00fc7e482. Final return through normal wake selection preserves allowed-CPU fallback; donor placement is not permission to execute outside owner affinity.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "0775b189a4ebb0ae7f3cb9bab05a8a78ad2622ef0e52386820bcca0b9763e82a"
+    },
+    {
+      "commit": "444a747449ba90913a321b06de6227f30e6b12dc",
+      "disposition": "partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All hunks read. Retain current-task blocked relation clear, runnable return-migration check and stale wake_cpu repair when selected CPU already equals task_cpu. Later rewrite removes TASK_RUNNING/PROXY_WAKING state-match override and same-CPU return shortcut; special TASK_WAKING block replaces manually passed flags. Do not replay obsolete exception over strict native state-match.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "4a7f75d22b82bad100d55e9ef4d2d074df487ff32b3f53fca77bc20dcf3ae760"
+    },
+    {
+      "commit": "66bc7c83751c5e62f67ff47389521fae07c459bf",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full selection alignment retained. prev_donor sampled after picker returns, proxy search gated by static key, clear root blocked_donor, retry/idle paths zap callbacks, nonproxy path synchronizes donor, finish trace after picked/keep_resched labels. Later is_blocked condition prevents published-but-running hint confusion. Current code equals ACK and preserves native context-switch barriers.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "9ed632a6afbcad32e2228fc619d138eb811163df6fe279cf625f1935f7b57ba6"
+    },
+    {
+      "commit": "cac31698a4aab4295c52d1b3114d6ed40a0d1ccd",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "Complete old unlocked blocked_on fix and guard-scope relocation read. Old fallback direct-clear helper and enum action switch no longer exist. Current typed blocked_on uses locked clear helpers; migration/deactivation labels are outside loop guard scope. Do not reintroduce deleted fallback merely to replay the fix.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "d6668d9d782aededf9f01b417da891abba72b435033dfdae7121f49c9f20f9eb"
+    },
+    {
+      "commit": "1785d9ca50cf3447a4ee88bb299117bb9e49a523",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Complete callback-zap addition reviewed against actual function definition (not its forward declaration). Keep rq-held traversal clearing each next link, preserve balance_push_callback, and zap on retry/idle/rq-release paths. Newly picked class reestablishes callbacks; avoids executing callbacks for obsolete picks. Native do_balance_callbacks and hotplug callback semantics remain.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "36e9fb8bc4ccf090d5e8d700b7a5f019ba6aa037af50464f180fd26f20232317"
+    },
+    {
+      "commit": "a8c5da5a2ee2415ecf2b25d625311d8c806eccc8",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Complete missed-balance fix retained: if donor is unchanged while execution context changes, invoke donor class put_prev_task/set_next_task to reestablish RT/DL balancing opportunities. Final prev_donor capture moved inside proxy selection after pick returns by 66bc7c83751c, avoiding stale pre-pick value. No proof of runtime fairness/latency bounds.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "e79794aa81eb1a463cab7a1eb058b6a4d9226552bec85c25a778bf069a48a9a6"
+    },
+    {
+      "commit": "db6d273e141bbae2ebf9fee66e09344d7ea17f60",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full single-line fix retained. hrtick invokes donor class task_tick on donor, matching scheduling-context accounting; native function otherwise identical and retains rq locking/clock update. SDK SCHED_HRTICK=y and proxy donor may differ from execution task, so mismatched class/task cannot be left in place.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "8dd37274aff4c8d9b3577bc84fa01249382c8edbbd7e4783447fe80a4691a1fe"
+    },
+    {
+      "commit": "82c81e5d138b8bfa50829009eb704ff8e1ac93b8",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Complete retry fix retained in shared picker: initialize/accumulate need_sync, reset clocks after RETRY_TASK, restart before cookie/force-idle state reset and discard partial sibling selection. Avoid stale cached clock/cookie state after class picker temporarily drops rq lock. Final pick_next_task equals ACK plus retained LTS 9d69422ddaa1 core_pick_in_flight increment/decrement. Native core-flip wait, hotplug move/reset and initialization are preserved; do not drop those protections when retaining ACK retry code. Comparison to native LTS finds only rf/retry integration, max reset and this restart state. SDK SCHED_CORE=n, so guarded path is compiled out there; retained as correctness companion to the generic class picker API, not a new platform feature. No core scheduling runtime verification.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "1ea6e0255afbe50c2258f5da202fb1efbde88de3bdcbb676158a3ebfaaf617ab"
+    },
+    {
+      "commit": "a18faab7e7d04a637603ae34a4cc2376cd10b8eb",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Complete header guard removal retained. Proxy-disabled stubs for move_queued_task_locked/task_is_pushable remain available alongside find_exec_ctx without obsolete nested SMP guard. Shared interface has evolved; current SDK SMP=y and PROXY_EXEC=y. No UP build claim or architecture-specific feature addition.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "ee468061d2713333c1060784953936e21e3fedc6a1bda09344af5309d739b4b2"
+    },
+    {
+      "commit": "6c4183aad9c8c74742184858c5263227ce242b08",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "All five files/seven function changes read. Whole deadline/fair/RT/SCX yield and yield_to functions equal native LTS, already selecting rq->donor. do_sched_yield native also dispatches donor class; port adds separately reviewed NULL callback guard and generic hooks. Do not duplicate upstream scheduling-context conversion.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "66d807cb37794cf1a43fb5a9e2a69b6c578b6088ea279d0e4a8d958493157fce"
+    },
+    {
+      "commit": "94c7e5facd8519b025782bd892cb4d9e36705f85",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Complete NULL guard retained in do_sched_yield. Proxy donor may be idle with no yield_task callback; guard skips nonexistent callback and leaves stats, hooks, preemption handling and schedule path intact. Native LTS dispatch uses donor too but lacks this guard. No userspace privilege or scheduling policy bypass added.",
+      "evidence": [
+        "evidence/proxy-wake-history-review.json",
+        "SECURITY.md: Proxy wakeup and migration history"
+      ],
+      "patch_sha256": "184bee60ca6e45d83a11cc7fa6ef2c635c0d1fef6b83985bab20de91d8101774"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/sched/core.c",
+      "function": "proxy_set_task_cpu",
+      "sha256": "9d3a9769ddb2b3294d8f174cad9ddeab11aec0ae690f9a258400030187e80088",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "__proxy_remove_from_sleeping_owner",
+      "sha256": "ca33c7471077481cab4cdae7af18c271adf5e2088c02e9424bfbe625e1497c93",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "proxy_remove_from_sleeping_owner",
+      "sha256": "0678e8123690934f3a4549e0fc83dce5d3153e17140f9148fe88b8e20abfe69c",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "activate_blocked_waiters",
+      "sha256": "a3a6a9192aade0422fab10745ef10aace133fcc760e666197e81557ba58a92c1",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "do_activate_blocked_waiter",
+      "sha256": "a8c6d9f4815e48236fa1c80afa1bf078887063e67a59717a537541928d076282",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "proxy_reset_donor",
+      "sha256": "846c5ed838e089637c8b4ad0e5e44f0e4c81838b3fcaad8aaadc5fe433ffdad8",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "proxy_deactivate",
+      "sha256": "012381b4d595a27b6de84915753c432cad0167fd89456e8cd4c01a38609bbf12",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "block_task",
+      "sha256": "3b7504e5bde2e7edc0df0aaacf411ca79920d29120e8e4a7fe50d144a5ebceca",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "try_to_block_task",
+      "sha256": "e21e08c683e1efcac9f318756310e547cf1bd7098799b7fa6f673727d296883e",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "ttwu_do_wakeup",
+      "sha256": "ba33387d2da90477562e220556e265b03318ea3d7665c7cdaddbfee993939b00",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "ttwu_runnable",
+      "sha256": "d212e13ec3bbc2423ddf0231f7abb3872107c1c219391cc4abd259eea7d9bb1c",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "proxy_needs_return",
+      "sha256": "4c2b75d5b6cc10b9661451a4e4b805a7e2c55ecf8ba92afa67e30898a1d6ef49",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "proxy_release_rq_lock",
+      "sha256": "e043c2a79a585edfec753a41e39696fcc4012554094aa664c9237cf2634ef985",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "proxy_reacquire_rq_lock",
+      "sha256": "64b939296c7924325f5573a39f00ac4b1ed8184175982a39c22eb90bd525cb35",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "proxy_enqueue_on_owner",
+      "sha256": "290a32859fa6a6facc06529dc01b7c8341523eb26a92233fafd2fa8dd53bdc14",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "find_proxy_task",
+      "sha256": "5b9b3dcbb487425a3628b820b7990094254d809915ecc9c22fe6fb83dd918361",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "__schedule",
+      "sha256": "7b715791877117159fb737691ac6c1874b4e47a6a88c242e59dbfb5b588ff998",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "zap_balance_callbacks",
+      "sha256": "3d131655cebc472c154731b11e459376253c21e5e8be18dc83a8067e482ce408",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/sched.h",
+      "function": "__block_task",
+      "sha256": "264a6ed78a512535d3ddbd2677dd92cb917715b4e86d847bedc8e0e616bcef14",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "deactivate_task",
+      "sha256": "b45d10516d90983c99a26fb169f77d81d60c47339cd15485b20906d11f7c2bc8",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "do_balance_callbacks",
+      "sha256": "4f4589037df026271199c7830337ecf2a429ab7002b3958016daed2592bf5bda",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "function": "yield_task_dl",
+      "sha256": "46e20eeac7487980ba211754d50b7e6cef5c5047a9d9661d7d1dfa92ac1cc1e8",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "yield_task_scx",
+      "sha256": "f66e42c2839e3294b37c2cca45a2b9bdee7afdaee6f4b08782021884c7a2ccd0",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "yield_to_task_scx",
+      "sha256": "b1fdd1ac7da03982c4cd88f4886e1b59d33044f74ec88aec943984c8ff1cd5cc",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "yield_task_fair",
+      "sha256": "a1b70cdbb0b64f247d38dbdad1e6fcbd4496dc332b4e5bc452347466706bee2b",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/rt.c",
+      "function": "yield_task_rt",
+      "sha256": "2c58745bec2375c939838112da94e1aa60dbafbeee08badb73dd4826424d97df",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "yield_to",
+      "sha256": "b3e78b25c82123f8db0c758e63b109ab9f91360fbe8102d9af4d8ad5c96622de",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "pick_next_task",
+      "sha256": "5bc72ecd800d8719dca5cc0475e7fcd0f30bb1372dc8e9bf37300ce8d73ffc07",
+      "relationship": "ACK function plus native LTS core_pick_in_flight increment/decrement"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "__sched_core_flip",
+      "sha256": "329ff23445740d5f844045c7bd9c54ff7a36fcac6af89398f1a56bd328974fbf",
+      "relationship": "whole function equals LTS including 9d69422ddaa1 core-pick protection"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "sched_core_cpu_deactivate",
+      "sha256": "492372aac4efa8bc2b33a3b5ed97519db7330ce6697ea6928fe0bd3f16ecd94a",
+      "relationship": "whole function equals LTS including 9d69422ddaa1 core-pick protection"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "block_task",
+      "sha256": "3b7504e5bde2e7edc0df0aaacf411ca79920d29120e8e4a7fe50d144a5ebceca",
+      "relationship": "Native load/special-state/control-dependency block moved verbatim from try_to_block_task; native __block_task unchanged."
+    }
+  ],
+  "source_comparisons": {
+    "try_to_wake_up": "390b78eba559d0ee7c64de217867963de7d956dd07ca9cdbefc72e384eda03ed",
+    "try_to_block_task": "b76e6bdba2a9b11c7cf98d25a50d8825ed26e34161d6cf7c1c41f9038c8af206",
+    "ttwu_do_wakeup": "f112b6a932374a9f9158d192fe3d7d89d70c4ef4982ce370302ced5947fd089a",
+    "ttwu_do_activate": "b5af54c9b652847e0fabb756cd706b7d8cbff24cad17d978c69a6cbabff1eead",
+    "pick_next_task": "7b52851ff69395e9c0b5ac14f78d95d9db90420b9d316002f91765f821bc1297",
+    "hrtick": "e6038fcd9351517c2ee56558e69cd6cc621d0dc413fc70bb4565861131e70662"
+  },
+  "local_resources": {
+    "include/linux/sched.h": "b2d15bf85247f55e747122b50b044a426074eee2d4a361287409ec7114466414",
+    "init/init_task.c": "921a253e4882b88d64d38ead18fe0f7999fd6b140a1fbf8cea1d0f2ebecca37e",
+    "kernel/fork.c": "a15afd2d0ad48ed2429fde223fc0b9a28ef9fb4f05f870aaead1be148303fc62",
+    "kernel/sched/sched.h": "c8f8330e009e72afee40e1de0e864257ee946cdef607ce957a5e5034a8380464"
+  },
+  "security": "Native state matching, barriers, on_cpu acquire wait, allowed-CPU selection and __block_task release-store remain. Proxy donor placement may ignore donor affinity while only a compatible owner executes; real wake uses native selection. This feature changes runtime scheduling substantially; source review/build do not establish performance, starvation bounds, deadlock freedom or complete concurrency correctness. Accounted fixes prevent stale owner activation, wrong IO counter use, callback misuse, null yield, and mismatched hrtick class/task. No LTS fix weakened by this review; source unchanged.",
+  "lifetime": "References and preempt/IRQ-disabled RCU task lifetime explained in proxy-trace-review.json. Detached finite lists bound each snapshot, not total adversarial chain work; no constant-time or global fairness guarantee. Actual blocked primitive wait_lock pins owner in find_proxy_task; activation rechecks relation under waiter blocked_lock and pi_lock.",
+  "validation": "Whole native/ACK functions, native moved bookkeeping and hrtick bounded substitution asserted. SDK CONFIG_SCHED_HRTICK=y, CONFIG_SCHED_CORE=n. Build 123 passed from clean common 697505edff4d: matching bzImages, 100 common + 45 virtual modules, all 145 signatures verified and tampered control rejected; 659 protected exports and 145 flag/CRC tables verified; no additional source edit or scheduler runtime test from this review.",
+  "remote_sources_used": []
+}
