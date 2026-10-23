@@ -2202,12 +2202,19 @@ static int balance_one(struct rq *rq, struct task_struct *prev)
 	 * looping behavior to simplify its implementation.
 	 */
 	do {
+		/* A preceding DSQ operation may have dropped the rq lock. */
+		if (unlikely(prev != rq->donor))
+			goto out;
+
 		dspc->nr_tasks = 0;
 
 		SCX_CALL_OP(sch, SCX_KF_DISPATCH, dispatch, rq,
 			    cpu_of(rq), prev_on_scx ? prev : NULL);
 
 		flush_dispatch_buf(sch, rq);
+
+		if (unlikely(prev != rq->donor))
+			goto out;
 
 		if (prev_on_rq && prev->scx.slice) {
 			rq->scx.flags |= SCX_RQ_BAL_KEEP;
@@ -2244,6 +2251,7 @@ no_tasks:
 		__scx_add_event(sch, SCX_EV_DISPATCH_KEEP_LAST, 1);
 		goto has_tasks;
 	}
+out:
 	rq->scx.flags &= ~SCX_RQ_IN_BALANCE;
 	return false;
 
@@ -2272,7 +2280,7 @@ static int balance_scx(struct rq *rq, struct rq_flags *rf)
 
 		for_each_cpu_andnot(scpu, smt_mask, cpumask_of(cpu_of(rq))) {
 			struct rq *srq = cpu_rq(scpu);
-			struct task_struct *sprev = srq->curr;
+			struct task_struct *sprev = srq->donor;
 
 			WARN_ON_ONCE(__rq_lockp(rq) != __rq_lockp(srq));
 			update_rq_clock(srq);
@@ -2483,6 +2491,10 @@ do_pick_task_scx(struct rq *rq, struct rq_flags *rf, bool force_scx)
 
 	rq_modified_clear(rq);
 	balance_scx(rq, rf);
+
+	/* Proxy wakeup can replace the donor while balance drops the rq lock. */
+	if (unlikely(prev != rq->donor))
+		return RETRY_TASK;
 
 	/*
 	 * If any higher-priority sched class enqueued a runnable task on

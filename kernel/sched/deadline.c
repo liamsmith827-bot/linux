@@ -2647,6 +2647,8 @@ again:
 
 	if (dl_server(dl_se)) {
 		p = dl_se->server_pick_task(dl_se, rf);
+		if (unlikely(p == RETRY_TASK))
+			return p;
 		trace_android_rvh_dl_server_stop_skip(dl_se, rq, p, &skip);
 		if (!p || skip) {
 			dl_server_stop(dl_se);
