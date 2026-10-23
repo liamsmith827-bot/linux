@@ -25,14 +25,12 @@ impl DmaBufContent {
         (dmabuf.file().mode() & mode::FMODE_WRITE) != 0
     }
 
-    pub(crate) fn make_writable(&mut self, writable: bool) -> Result<()> {
+    pub(crate) fn make_writable(&mut self, writable: bool) -> Result<bool> {
         if writable && !Self::is_dmabuf_writable(&self.dmabuf) {
             return Err(EACCES);
         }
 
-        self.writable = writable;
-
-        Ok(())
+        Ok(core::mem::replace(&mut self.writable, writable))
     }
 
     pub(crate) fn is_writable(&self) -> bool {
@@ -90,14 +88,19 @@ impl DmaBufContent {
         let mut guard = inner_clone.lock();
         guard.content = Some(content);
 
-        let file =
-            create_wrap_file(c_str!("[wrapfd]"), context, flags).map_err(|(err, _context)| {
+        let file = match create_wrap_file(c_str!("[wrapfd]"), context, flags) {
+            Ok(file) => file,
+            Err((err, context)) => {
                 let content = guard
                     .content
                     .take()
                     .expect("We put a Some() in, we expect it still to be there");
-                (err, content)
-            })?;
+                // Wrap's destructor takes this same lock to clear vma_file.
+                drop(guard);
+                drop(context);
+                return Err((err, content));
+            }
+        };
 
         drop(guard);
 
@@ -214,6 +217,15 @@ impl DmaBufContent {
         let file_offs: usize = file_offs.try_into()?;
         let buf_offs: usize = buf_offs.try_into()?;
         let len: usize = len.try_into()?;
+
+        // Zero-length loads still validate the destination, but must not create
+        // an empty request list and wait for a completion that cannot arrive.
+        if buf_offs.checked_add(len).ok_or(EINVAL)? > dmabuf.size() {
+            return Err(EINVAL);
+        }
+        if len == 0 {
+            return Ok(0);
+        }
 
         let (map, mut io_context) = Self::load_prepare(dmabuf, &file, file_offs, buf_offs, len)?;
 

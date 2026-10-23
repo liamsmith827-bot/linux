@@ -121,6 +121,7 @@ struct IoRequest {
     iter: bindings::iov_iter,
     iov: [bindings::kvec; MAX_NR_KVECS],
     file_seg: DataSegment,
+    min_read: usize,
 
     #[pin]
     _pin: PhantomPinned,
@@ -132,6 +133,7 @@ impl IoRequest {
         file: &'a LocalFile,
         req_file_offs: usize,
         req_len: usize,
+        min_read: usize,
         nr_segs: usize,
         iov: [bindings::kvec; MAX_NR_KVECS],
     ) -> impl PinInit<Self> + use<'a> {
@@ -159,6 +161,7 @@ impl IoRequest {
             iter: bindings::iov_iter::default(),
             iov,
             file_seg: DataSegment::new(req_file_offs, req_len),
+            min_read,
             _pin: PhantomPinned,
         })
         .pin_chain(move |mut request: Pin<&mut Self>| {
@@ -191,7 +194,7 @@ impl IoRequest {
     /// - The enclosing `IoRequest` instance must remain valid and pinned in memory at least until
     ///   `Arc::clone` completes below.
     /// - Must only be invoked once per submitted `IoRequest` while `nr_reqs > 0`.
-    unsafe extern "C" fn async_io_complete(iocb: *mut bindings::kiocb, ret: ffi::c_long) {
+    unsafe extern "C" fn async_io_complete(iocb: *mut bindings::kiocb, mut ret: ffi::c_long) {
         if iocb.is_null() {
             return;
         }
@@ -211,6 +214,16 @@ impl IoRequest {
         // duration of this function, unlike holding a reference whose underlying memory could
         // disappear in the process of executing `complete()` below.
         let shared_context = Arc::clone(shared_context);
+
+        // SAFETY: The request remains live until this completion is accounted for.
+        // Capture its bounds before waking the waiter, which may free the request.
+        let (min_read, req_len) =
+            unsafe { ((*io_params_ptr).min_read, (*io_params_ptr).file_seg.len) };
+        if ret >= 0 && ((ret as usize) < min_read || (ret as usize) > req_len) {
+            // A short earlier request must not be hidden by trailing alignment
+            // bytes returned by a later request.
+            ret = EINVAL.to_errno() as ffi::c_long;
+        }
 
         shared_context.inner.lock_irq(|mut guard| {
             if ret < 0 && guard.io_ret == 0 {
@@ -253,8 +266,23 @@ pub(crate) struct IoContext {
     state: State,
 }
 
-fn dio_aligned_len(file_offs: usize, len: usize) -> usize {
-    page_align(file_offs + len) - page_align_down(file_offs)
+fn dio_aligned_len(file_offs: usize, len: usize) -> Result<usize> {
+    let end = file_offs.checked_add(len).ok_or(EINVAL)?;
+    let aligned_end = end.checked_add(PAGE_SIZE - 1).ok_or(EINVAL)? & PAGE_MASK;
+    if len == 0 || aligned_end > i64::MAX as usize {
+        return Err(EINVAL);
+    }
+    Ok(aligned_end - page_align_down(file_offs))
+}
+
+fn request_len(remaining_len: usize, max_nr_reqs: usize, min_bytes: usize) -> usize {
+    // Match native MAX_RW_COUNT (INT_MAX & PAGE_MASK), including on 64-bit.
+    const MAX_RW_COUNT: usize = (i32::MAX as usize) & PAGE_MASK;
+    page_align(
+        (remaining_len / max_nr_reqs.max(1))
+            .max(min_bytes)
+            .clamp(PAGE_SIZE, MAX_RW_COUNT),
+    )
 }
 
 impl IoContext {
@@ -269,6 +297,12 @@ impl IoContext {
         buf_offs: usize,
         len: usize,
     ) -> Result<Self> {
+        let file_read_len = dio_aligned_len(file_offs, len)?;
+        let buf_end = buf_offs.checked_add(len).ok_or(EINVAL)?;
+        if buf_end > isize::MAX as usize {
+            return Err(EINVAL);
+        }
+
         /*
          * If either the file or buffer offset are unaligned, then using direct I/O into the first
          * page of the buffer will overwrite some of the data that is already there. Allocate a
@@ -301,15 +335,11 @@ impl IoContext {
          * the range we're reading into, and since direct I/O is done in units of pages,
          * ensure that there is at least a page to read.
          */
-        let buf_end = buf_offs + len;
-
         let dio_buf_len = if buf_end >= PAGE_SIZE && dio_buf_offs <= (buf_end - PAGE_SIZE) {
             page_align_down(buf_end) - dio_buf_offs
         } else {
             0
         };
-
-        let file_read_len = dio_aligned_len(file_offs, len);
 
         /*
          * Bounce the remainder, which is capped at 2 pages, since we may have shifted the data
@@ -378,6 +408,7 @@ impl IoContext {
         if remaining_req_len != 0
             && self.dio_buf_seg.len != 0
             && global_dio_file_offset <= cur_file_offs
+            && cur_file_offs < global_dio_file_offset + self.dio_buf_seg.len
         {
             /*
              * The offset into the buffer for this request should be the base of where we start
@@ -419,7 +450,7 @@ impl IoContext {
              */
 
             let global_end_bounce_file_offs = global_file_offset
-                + dio_aligned_len(self.file_seg.offs, self.file_seg.len)
+                + dio_aligned_len(self.file_seg.offs, self.file_seg.len)?
                 - self.end_bounce_len;
 
             /*
@@ -453,7 +484,15 @@ impl IoContext {
         }
 
         let request = KBox::pin_init(
-            IoRequest::new(shared_context, file, req_file_offs, req_len, nr_segs, iov),
+            IoRequest::new(
+                shared_context,
+                file,
+                req_file_offs,
+                req_len,
+                req_len.min(self.file_seg.offs + self.file_seg.len - req_file_offs),
+                nr_segs,
+                iov,
+            ),
             GFP_KERNEL,
         )?;
 
@@ -472,14 +511,12 @@ impl IoContext {
          *
          * PAGE_ALIGN the length to ensure direct I/O requirements are upheld.
          */
-        let mut remaining_len = dio_aligned_len(self.file_seg.offs, self.file_seg.len);
+        let mut remaining_len = dio_aligned_len(self.file_seg.offs, self.file_seg.len)?;
 
-        const MAX_RW_COUNT: usize = (isize::MAX as usize) & PAGE_MASK;
-
-        let len_per_req = page_align(
-            (remaining_len / (*module_parameters::max_nr_load_reqs.value()).max(1))
-                .max(*module_parameters::min_bytes_per_req.value())
-                .min(MAX_RW_COUNT),
+        let len_per_req = request_len(
+            remaining_len,
+            *module_parameters::max_nr_load_reqs.value(),
+            *module_parameters::min_bytes_per_req.value(),
         );
 
         let nr_reqs = remaining_len.div_ceil(len_per_req);

@@ -21,6 +21,8 @@ bool is_wrapfd_vma(struct vm_area_struct *vma);
  * Get mappable object. Caller also gets buffer ownership.
  * Function does not take file references, therefore the caller should
  * ensure the file is stable until wrapfd_put_mappable() is called.
+ * Repeated successful gets by the owning device each require a matching put;
+ * ownership is released only after the final put.
  *
  * file: wrap file to get the mappable object.
  * dev: device requesting the operation.

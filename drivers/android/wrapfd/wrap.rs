@@ -38,15 +38,19 @@ pub(crate) fn create_wrap_file(
 
 enum WrapOwner {
     Task(ARef<Task>),
-    Device(ARef<device::Device>),
+    // Each successful get_mappable owns a dma-buf reference and must be
+    // matched by put_mappable before another owner can acquire the buffer.
+    Device(ARef<device::Device>, usize),
     None,
 }
 
 impl WrapOwner {
     fn get_valid_owner(&mut self) -> Option<&Task> {
         if let Self::Task(task) = self {
-            // SAFETY: `task.as_ptr()` returns a raw pointer to an initialized `task_struct`.
-            if unsafe { (*task.as_ptr()).mm }.is_null() {
+            // SAFETY: The task reference keeps the task alive. Its mm can be
+            // cleared concurrently at exit; use a READ_ONCE-style access and
+            // only test the pointer, without dereferencing it.
+            if unsafe { core::ptr::addr_of!((*task.as_ptr()).mm).read_volatile() }.is_null() {
                 *self = WrapOwner::None;
             }
         };
@@ -61,7 +65,7 @@ impl WrapOwner {
         match self {
             Self::None => false,
             Self::Task(_task) => self.get_valid_owner().is_some(),
-            Self::Device(_dev) => true,
+            Self::Device(_dev, _) => true,
         }
     }
 
@@ -78,7 +82,7 @@ impl WrapOwner {
     }
 
     fn owned_by_device(&self, dev: &device::Device) -> bool {
-        matches!(self, Self::Device(owning_dev) if *dev == **owning_dev)
+        matches!(self, Self::Device(owning_dev, _) if *dev == **owning_dev)
     }
 }
 
@@ -441,13 +445,14 @@ impl Wrap {
             return Err(ENOENT);
         };
 
-        match content.make_writable((rewrap_args.prot & bindings::PROT_WRITE) != 0) {
-            Ok(()) => {}
-            Err(err) => {
-                guard.content = Some(content);
-                return Err(err);
-            }
-        }
+        let was_writable =
+            match content.make_writable((rewrap_args.prot & bindings::PROT_WRITE) != 0) {
+                Ok(was_writable) => was_writable,
+                Err(err) => {
+                    guard.content = Some(content);
+                    return Err(err);
+                }
+            };
 
         let close_on_exec = self.close_on_exec;
 
@@ -457,8 +462,12 @@ impl Wrap {
         };
 
         match result {
-            Err((err, content)) => {
-                // Restore original wrap. XXX hasn't writeability potentially changed?
+            Err((err, mut content)) => {
+                // The dma-buf file mode is immutable; its previously permitted
+                // protection can always be restored if publication fails.
+                content
+                    .make_writable(was_writable)
+                    .expect("previous wrap protection was valid");
                 guard.content = Some(content);
 
                 Err(err)
@@ -663,7 +672,7 @@ impl AnonInodeFileInterface for Wrap {
     #[cfg(CONFIG_PROC_FS)]
     fn show_fdinfo(wrap: <Self::Ptr as ForeignOwnable>::Borrowed<'_>, m: &SeqFile, _file: &File) {
         let mut guard = wrap.inner.lock();
-        if matches!(&guard.owner, WrapOwner::Device(_dev)) {
+        if matches!(&guard.owner, WrapOwner::Device(_dev, _)) {
             seq_print!(m, "owner:\t<device>\n");
         } else if let Some(task) = guard.owner.get_valid_owner() {
             seq_print!(m, "owner:\t{}\n", task.pid());
@@ -865,6 +874,11 @@ unsafe extern "C" fn wrapfd_get_mappable(
             return Err(EINVAL);
         }
 
+        let refs = match &guard.owner {
+            WrapOwner::Device(_, refs) => refs.checked_add(1).ok_or(EOVERFLOW)?,
+            _ => 1,
+        };
+
         let Some(ref content) = guard.content else {
             return Err(ENOENT);
         };
@@ -879,7 +893,7 @@ unsafe extern "C" fn wrapfd_get_mappable(
             (*mappable).dmabuf = content.dmabuf.as_ptr();
         }
 
-        guard.owner = WrapOwner::Device(device);
+        guard.owner = WrapOwner::Device(device, refs);
 
         Ok(())
     });
@@ -939,7 +953,12 @@ unsafe extern "C" fn wrapfd_put_mappable(
             <DmaBuf as AlwaysRefCounted>::dec_ref(NonNull::from_ref(&content.dmabuf));
         }
 
-        guard.owner = WrapOwner::None;
+        if let WrapOwner::Device(_, refs) = &mut guard.owner {
+            *refs -= 1;
+            if *refs == 0 {
+                guard.owner = WrapOwner::None;
+            }
+        }
         Ok(())
     });
 
