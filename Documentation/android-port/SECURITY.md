@@ -4805,3 +4805,56 @@ Vendor code must initialize it before reading or sharing and manage shared
 lifetime. This review does not invent automatic initialization or certify
 unknown module implementations. Native LSM, RCU, dataref and fragment handling
 remain. Build 106 covers compilation only. No remote resource was accessed.
+
+# SELinux source interfaces and status mapping
+
+Five commits are resolved in `evidence/selinux-interface-review.json`. Native
+binder genfs labeling includes the corrected filesystem name and is used by
+pinned Android per-device policy. The old lockdown class-order cleanup is superseded by upstream removal of
+SELinux lockdown in `f5d0e5e9d72d`; native audit and current class definitions
+remain. This does not claim SELinux still implements the removed lockdown
+policy checks. Four restricted AVC lifecycle/lookup hooks retain their
+const borrowed node interfaces and GPL exports. Native locks, RCU lifetime,
+sequence checks and permission decisions are unchanged. Trusted callbacks
+must respect those contexts and lifetimes; exact SDK registrations remain
+unconfirmed, so generic compatibility is retained conservatively.
+
+`0951b28655b0` corrects status-page physical overmapping. ACK accepts a larger
+reported-page VMA and passes that full size to remap_pfn_range, but both ACK
+and LTS allocate only one native status page. In 16 KiB mode that can expose
+three adjacent unowned physical pages to a caller allowed to map status.
+Keep the reported-size acceptance while mapping only the owned native page.
+Offset rejection, write denial, removal of VM_MAYWRITE and remap error
+propagation remain. Padding stays unmapped and uses native SIGBUS handling;
+there is no new zero-page alias or additional physical allocation.
+
+The pinned SDK has a page_shift=14 command-line option. Pinned libselinux
+maps the sysconf page size and reads the five-u32 status structure at its
+start, which remains mapped. This is source compatibility evidence, not a
+live policy/reachability or emulator fault test. The extracted mmap check
+passes 6,912 combinations; original ACK fails 96 mapping-size checks. Build
+107 results are recorded separately. All evidence is local; no remote
+resource was accessed, including links embedded in historical messages.
+
+# Native SELinux netlink permissions
+
+Eighteen historical changes and unique merge resolutions are assessed in
+`evidence/selinux-netlink-history-review.json`. Current ACK and LTS have
+removed private Android GETLINK/GETNEIGH policy bits, fields and mutable
+permission-table setup. Native netlink_xperm checks each message type through
+the extended-permission AVC path. Pinned Android policy enables that
+capability; its ordinary netdomain message set excludes GETLINK, GETNEIGH
+and GETNEIGHTBL while explicitly retaining older-app neighbor exceptions.
+This is positive replacement-policy evidence, not an absence-of-consumer
+inference or a promise of compatibility with obsolete non-xperm policy.
+
+Native parsing, unsupported-message handling and unknown-extended-permission
+warning paths remain. Keep later NLMSG type validation and AVTAB_ENABLED
+masking; do not restore BUG on future permission types. Merge resolutions
+retain native policy bounds, load-state/hash-stat interfaces and netif
+capabilities plus the separately audited initialization hook. The obsolete
+XATTR_NOSECURITY argument stays removed; native xattr errors and genfs fallback
+remain. Upstream f5d0e5e9d72d removed SELinux lockdown due to incorrect calling
+credential assumptions, so old class-order merges do not justify restoring
+that implementation. No LTS control is reversed. Build 107 covers compilation,
+not policy compilation or live authorization. No remote resource was used.

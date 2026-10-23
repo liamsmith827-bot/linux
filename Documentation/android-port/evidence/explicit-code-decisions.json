@@ -8328,5 +8328,242 @@
     "evidence": [
       "evidence/kunit-main-witness-refresh.json"
     ]
+  },
+  {
+    "commit": "c3a6a67f86addf961a3e3239ae8185880066e78e",
+    "disposition": "superseded",
+    "rationale": "Original binderfs genfscon support had the wrong filesystem name. Later b43714710199 corrects it to binder, already native in current LTS. Keep the native per-file labeling with current mount policy checks; do not restore the obsolete binderfs string. Pinned Android genfs_contexts assigns separate binder/hwbinder/vndbinder labels.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-interface-review.json",
+      "SECURITY.md: SELinux source interfaces and status mapping"
+    ]
+  },
+  {
+    "commit": "b43714710199b6bdfd36d64c1231762f57522b15",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native selinux_set_mnt_opts recognizes the actual filesystem name binder for SE_SBGENFS; the complete function equals LTS. This retains per-device genfscon labels used by pinned Android policy, along with later native mount/security-label restrictions.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-interface-review.json",
+      "SECURITY.md: SELinux source interfaces and status mapping"
+    ]
+  },
+  {
+    "commit": "ccfa453e949b4186f7264e415ff36ddaa19b4c92",
+    "disposition": "superseded",
+    "rationale": "Complete two-file cleanup removes a blank line and orders the then-existing lockdown class before anon_inode. Upstream f5d0e5e9d72d subsequently removed the SELinux lockdown hook and class. The generic LSM audit case and reason descriptions remain native; retain them. Keep current native lsm_audit.c and the native class map (plus separately retained memfd extension); do not reintroduce obsolete class ordering or policy checks. This historical formatting cleanup has no residual behavior to port.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-interface-review.json",
+      "SECURITY.md: SELinux source interfaces and status mapping"
+    ]
+  },
+  {
+    "commit": "6605f296d3075b0830251ae3f04fb88591e1e863",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain the four restricted const-node AVC hooks and GPL exports in their final source interfaces. Insert/replace/delete run with native cache locking; lookup runs within native caller RCU read sections. No mutable permission/return argument is added and native sequence checks, permission decisions and call_rcu freeing remain byte-preserved after removing hook statements. Trusted callbacks must not sleep in locked contexts or retain borrowed node pointers after their protected lifetime. Exact SDK registration remains unconfirmed; retain generic source customization conservatively.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/selinux-interface-review.json",
+      "SECURITY.md: SELinux source interfaces and status mapping"
+    ]
+  },
+  {
+    "commit": "983c0ad4d20e28b5af6c9c41986b1b4cec95d025",
+    "disposition": "adapted",
+    "rationale": "Keep reported-page-size validation for the SDK page_shift=14 option, but correct PFN length in 0951b28655b0. The status buffer is one zeroed native page in both LTS and ACK; mapping the reported 8/16 KiB size maps adjacent unowned PFNs. Accept the larger VMA and map only PAGE_SIZE, retaining offset rejection, write denial, VM_MAYWRITE clearing and remap errors. Native padding faults remain unmapped/SIGBUS rather than exposing adjacent memory. Pinned libselinux maps sysconf page size but reads the status structure at the beginning. This preserves native one-page physical exposure and compatibility without changing status allocation or policy checks.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "0951b28655b02b49e9ffbe97d2234cad1367674a"
+    ],
+    "evidence": [
+      "evidence/selinux-interface-review.json",
+      "SECURITY.md: SELinux source interfaces and status mapping"
+    ]
+  },
+  {
+    "commit": "6ea234c74a606475a0a16e20c4e471dedab4f399",
+    "disposition": "superseded",
+    "rationale": "Initial GETLINK readpriv class/state/bit31 policy flag and mutable route-table patch is superseded by its removal and native netlink_xperm. Current pinned policy enables that capability and uses message-specific allowxperm/neverallowxperm; no need to restore old state flags or table mutation.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-netlink-history-review.json",
+      "SECURITY.md: Native SELinux netlink permissions"
+    ]
+  },
+  {
+    "commit": "fac07550bdac9adea0dbe3edbdbec7a9a690a178",
+    "disposition": "superseded",
+    "rationale": "Initial GETNEIGH/GETNEIGHTBL bit30 policy flag and nlmsg_getneigh mapping is superseded by native message-specific xperms. Pinned net.te grants the unprivileged message set excluding GETLINK/GETNEIGH/GETNEIGHTBL; legacy app versions receive explicit neighbor exceptions. Retain native enforcement rather than old mutable mappings.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-netlink-history-review.json",
+      "SECURITY.md: Native SELinux netlink permissions"
+    ]
+  },
+  {
+    "commit": "1f1d34c6f229769535171bd1fb471f1ccf5feb77",
+    "disposition": "superseded",
+    "rationale": "Exact inverse changed payload of fac07550bdac across six paths. Later reapplication and final removal leave current native netlink_xperm as the selected implementation; this intermediate revert contributes no separate final runtime logic.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-netlink-history-review.json",
+      "SECURITY.md: Native SELinux netlink permissions"
+    ]
+  },
+  {
+    "commit": "f188471271f4bcd453db775a13a49c5f0843e53a",
+    "disposition": "superseded",
+    "rationale": "Complete six-file revert examined. It removes old GETLINK state/policy flag/table mutation; compared with the original inverse payload, residual differences only reflect compact classmap formatting and table opening brace placement. Native extended-permission implementation now covers current policy.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-netlink-history-review.json",
+      "SECURITY.md: Native SELinux netlink permissions"
+    ]
+  },
+  {
+    "commit": "b4563881284bbf8c072018ac640fa992a23448a8",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "Second GETLINK implementation uses READ_ONCE/WRITE_ONCE and omits the old false-case reset but is exactly removed by 35a784571873. Do not reintroduce its custom bit31 flag, legacy permission or mutable table. Current native xperms and pinned policy retain the intended message restriction.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-netlink-history-review.json",
+      "SECURITY.md: Native SELinux netlink permissions"
+    ]
+  },
+  {
+    "commit": "5f409cbcf429cb20606ecb72bb648a9e7c4809bb",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "Second neighbor implementation is exactly removed by 5b51c9c5d5c2. Native xperms and pinned unprivileged/legacy-app message sets supersede custom bit30 state and nlmsg_getneigh table changes; no extra LTS permission is dropped.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-netlink-history-review.json",
+      "SECURITY.md: Native SELinux netlink permissions"
+    ]
+  },
+  {
+    "commit": "5b51c9c5d5c278a5a510f1aba0e5ccb12ce41548",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Six-path changed payload exactly reverses 5f409cbcf429. Keep current native policy parser, const legacy table and capability-driven xperm path; pinned Android policy explicitly uses the replacement API.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-netlink-history-review.json",
+      "SECURITY.md: Native SELinux netlink permissions"
+    ]
+  },
+  {
+    "commit": "35a7845718734ae638b85b420534cb859498dab6",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Six-path changed payload exactly reverses b4563881284b. Current ACK and LTS both omit the private GETLINK state/mapping implementation. Keep native per-message xperms and current Android rules; no promise to emulate obsolete policies lacking that capability.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-netlink-history-review.json",
+      "SECURITY.md: Native SELinux netlink permissions"
+    ]
+  },
+  {
+    "commit": "d3c9538cbbc5c361a0e649cdb4dfcde8c1746913",
+    "disposition": "superseded",
+    "rationale": "Complete two-line build repair switches removed Android netlink flags from state pointer to global selinux_state. Both flags and initialization calls are absent at final ACK and native LTS; current security_load_policycaps is native. No obsolete state access needs restoring.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-netlink-history-review.json",
+      "SECURITY.md: Native SELinux netlink permissions"
+    ]
+  },
+  {
+    "commit": "8853c7995c99c6899ce66f8a3be8c8d7317b3f28",
+    "disposition": "superseded",
+    "rationale": "Same complete patch as d3c9538cbbc5 on another history path, confirmed exact patch bytes. The obsolete flags are subsequently removed; native current policy-capability loading supersedes this compile repair.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-netlink-history-review.json",
+      "SECURITY.md: Native SELinux netlink permissions"
+    ]
+  },
+  {
+    "commit": "28a84473e87c815339e6fddddfa6391be479dfdc",
+    "disposition": "superseded",
+    "rationale": "Complete inverse two-line build-repair revert examined. Its temporary state-pointer restoration is removed with the entire legacy netlink flag mechanism; preserve current native global capability loading.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-netlink-history-review.json",
+      "SECURITY.md: Native SELinux netlink permissions"
+    ]
+  },
+  {
+    "commit": "2fa95508802050071b82c66c6690cb07cf98566c",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native services_compute_xperms_decision retains warning-and-return behavior for unknown xperm types and warns for unknown specified keys instead of BUG. Keep its later NLMSG type validation and AVTAB_ENABLED masking. Entire current function equals LTS; unknown entries do not gain permissions through this warning path.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-netlink-history-review.json",
+      "SECURITY.md: Native SELinux netlink permissions"
+    ]
+  },
+  {
+    "commit": "84645f0a336fb0bc7b11a5875815264357e182b8",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "rationale": "All unique hunks across two paths reviewed, including getxattr argument edit outside conflict markers. Current sb_check_xattr_support/sb_finish_set_opts equal LTS and keep native handler errors/genfs fallback. XATTR_NOSECURITY argument is superseded by removal of the old Android xattr plumbing. Current native anon-inode class remains; SELinux lockdown class/checks were removed upstream by f5d0e5e9d72d, so do not replay this intermediate class omission/addition.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-netlink-history-review.json",
+      "SECURITY.md: Native SELinux netlink permissions"
+    ]
+  },
+  {
+    "commit": "b9a74a307699d5ae20c172ee06c09ce6dc061221",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "rationale": "Unique header resolution kept the legacy GETLINK accessor alongside selinux_load_state. Legacy accessor is superseded by native xperms; current policy load-state/convert-data declarations match LTS. No conflicting declaration is restored.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-netlink-history-review.json",
+      "SECURITY.md: Native SELinux netlink permissions"
+    ]
+  },
+  {
+    "commit": "2ad8aa9b5d93d3f0b79bd8d3f9ceb3defb15c93c",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "rationale": "Unique header resolution uses renamed __POLICYDB_CAP_MAX while keeping then-active Android netlink fields. Current native array uses that maximum; removed private fields are superseded by xperms. Keep current bounds and native capability definitions.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-netlink-history-review.json",
+      "SECURITY.md: Native SELinux netlink permissions"
+    ]
+  },
+  {
+    "commit": "d040a12177973b9be0588aa036cc65fd859bb639",
+    "disposition": "merge-resolution-adapted-net-state",
+    "rationale": "Unique resolution retains the Android SELinux hook include and removes duplicate local convert_context_args definition. Current include/hook remain; the struct is defined in native ss/services.h. Native conversion/lifetime code is preserved and the previously audited initialization callback remains after selinux_complete_init.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/selinux-netlink-history-review.json",
+      "SECURITY.md: Native SELinux netlink permissions"
+    ]
+  },
+  {
+    "commit": "c2a10220866f903beb57858ee26e9d1096c79c9a",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "rationale": "Unique declaration resolution adopts security_sidtab_hash_stats(char *page) and kept the old selinux_nlmsg_init prototype. Current native hash-stats declaration remains; obsolete netlink initializer and private state are removed at final ACK and superseded by native capabilities.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-netlink-history-review.json",
+      "SECURITY.md: Native SELinux netlink permissions"
+    ]
+  },
+  {
+    "commit": "c269e0d05ad40ec5ca43f10c9d23dc7d10c447a2",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "rationale": "Unique header resolution joins legacy GETLINK/GETNEIGH helpers with new netif_wildcard capability helper. The netlink_xperm READ_ONCE helper remains. Native a3d3043ef24a moves wildcard capability lookup to the active policy under RCU, and 5f9383bd4168 removes the unused cached helper. Keep that current security_netif_sid implementation, not the historical helper; old Android state/helpers are removed. No native capability is omitted.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/selinux-netlink-history-review.json",
+      "SECURITY.md: Native SELinux netlink permissions"
+    ]
   }
 ]

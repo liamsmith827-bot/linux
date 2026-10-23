@@ -1,0 +1,337 @@
+{
+  "source_head": "0951b28655b02b49e9ffbe97d2234cad1367674a",
+  "records": [
+    {
+      "commit": "6ea234c74a606475a0a16e20c4e471dedab4f399",
+      "disposition": "superseded",
+      "rationale": "Initial GETLINK readpriv class/state/bit31 policy flag and mutable route-table patch is superseded by its removal and native netlink_xperm. Current pinned policy enables that capability and uses message-specific allowxperm/neverallowxperm; no need to restore old state flags or table mutation.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/selinux-netlink-history-review.json",
+        "SECURITY.md: Native SELinux netlink permissions"
+      ],
+      "patch_sha256": "5ddea68b0d799ff21c17bc439256b4eee6da73bdb636c2eedbac5e52e101b654",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "fac07550bdac9adea0dbe3edbdbec7a9a690a178",
+      "disposition": "superseded",
+      "rationale": "Initial GETNEIGH/GETNEIGHTBL bit30 policy flag and nlmsg_getneigh mapping is superseded by native message-specific xperms. Pinned net.te grants the unprivileged message set excluding GETLINK/GETNEIGH/GETNEIGHTBL; legacy app versions receive explicit neighbor exceptions. Retain native enforcement rather than old mutable mappings.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/selinux-netlink-history-review.json",
+        "SECURITY.md: Native SELinux netlink permissions"
+      ],
+      "patch_sha256": "3e81437e4f48a62ef2c6b82e76152b87eca886ecabb85680ee0cc6b3876c2119",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "1f1d34c6f229769535171bd1fb471f1ccf5feb77",
+      "disposition": "superseded",
+      "rationale": "Exact inverse changed payload of fac07550bdac across six paths. Later reapplication and final removal leave current native netlink_xperm as the selected implementation; this intermediate revert contributes no separate final runtime logic.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/selinux-netlink-history-review.json",
+        "SECURITY.md: Native SELinux netlink permissions"
+      ],
+      "patch_sha256": "bd58b179b21cf4dca4786fc3b1600444165dbefab8ee5db37869256f96be46ba",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "f188471271f4bcd453db775a13a49c5f0843e53a",
+      "disposition": "superseded",
+      "rationale": "Complete six-file revert examined. It removes old GETLINK state/policy flag/table mutation; compared with the original inverse payload, residual differences only reflect compact classmap formatting and table opening brace placement. Native extended-permission implementation now covers current policy.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/selinux-netlink-history-review.json",
+        "SECURITY.md: Native SELinux netlink permissions"
+      ],
+      "patch_sha256": "16762add70a52efe8212aa55bb3d54df66d20c455d89eafd664afb9be13b0c90",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "b4563881284bbf8c072018ac640fa992a23448a8",
+      "disposition": "reverted-no-residual-code",
+      "rationale": "Second GETLINK implementation uses READ_ONCE/WRITE_ONCE and omits the old false-case reset but is exactly removed by 35a784571873. Do not reintroduce its custom bit31 flag, legacy permission or mutable table. Current native xperms and pinned policy retain the intended message restriction.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/selinux-netlink-history-review.json",
+        "SECURITY.md: Native SELinux netlink permissions"
+      ],
+      "patch_sha256": "136ca0e259193c02e48b4b14944ecc36645119e1ee14c90cf0943dbec270a89f",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "5f409cbcf429cb20606ecb72bb648a9e7c4809bb",
+      "disposition": "reverted-no-residual-code",
+      "rationale": "Second neighbor implementation is exactly removed by 5b51c9c5d5c2. Native xperms and pinned unprivileged/legacy-app message sets supersede custom bit30 state and nlmsg_getneigh table changes; no extra LTS permission is dropped.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/selinux-netlink-history-review.json",
+        "SECURITY.md: Native SELinux netlink permissions"
+      ],
+      "patch_sha256": "d8911a40716d35f0865ee8a48b546559331c854cf9c8a43287473304d4e31203",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "5b51c9c5d5c278a5a510f1aba0e5ccb12ce41548",
+      "disposition": "reconciled-to-lts",
+      "rationale": "Six-path changed payload exactly reverses 5f409cbcf429. Keep current native policy parser, const legacy table and capability-driven xperm path; pinned Android policy explicitly uses the replacement API.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/selinux-netlink-history-review.json",
+        "SECURITY.md: Native SELinux netlink permissions"
+      ],
+      "patch_sha256": "30d806d76da74cce74652ee9714f52f8df1e119e7609193645cde50c6e27bb71",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "35a7845718734ae638b85b420534cb859498dab6",
+      "disposition": "reconciled-to-lts",
+      "rationale": "Six-path changed payload exactly reverses b4563881284b. Current ACK and LTS both omit the private GETLINK state/mapping implementation. Keep native per-message xperms and current Android rules; no promise to emulate obsolete policies lacking that capability.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/selinux-netlink-history-review.json",
+        "SECURITY.md: Native SELinux netlink permissions"
+      ],
+      "patch_sha256": "92dfb56b04cc1d66d98d1e49206504c50b67c8323dcb703cb2f34d73e2718166",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "d3c9538cbbc5c361a0e649cdb4dfcde8c1746913",
+      "disposition": "superseded",
+      "rationale": "Complete two-line build repair switches removed Android netlink flags from state pointer to global selinux_state. Both flags and initialization calls are absent at final ACK and native LTS; current security_load_policycaps is native. No obsolete state access needs restoring.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/selinux-netlink-history-review.json",
+        "SECURITY.md: Native SELinux netlink permissions"
+      ],
+      "patch_sha256": "06316ddd33b2ddff377d5a2650125410ad7c0ee98c3e6d3f0d8beaf4eed7dac6",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "8853c7995c99c6899ce66f8a3be8c8d7317b3f28",
+      "disposition": "superseded",
+      "rationale": "Same complete patch as d3c9538cbbc5 on another history path, confirmed exact patch bytes. The obsolete flags are subsequently removed; native current policy-capability loading supersedes this compile repair.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/selinux-netlink-history-review.json",
+        "SECURITY.md: Native SELinux netlink permissions"
+      ],
+      "patch_sha256": "06316ddd33b2ddff377d5a2650125410ad7c0ee98c3e6d3f0d8beaf4eed7dac6",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "28a84473e87c815339e6fddddfa6391be479dfdc",
+      "disposition": "superseded",
+      "rationale": "Complete inverse two-line build-repair revert examined. Its temporary state-pointer restoration is removed with the entire legacy netlink flag mechanism; preserve current native global capability loading.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/selinux-netlink-history-review.json",
+        "SECURITY.md: Native SELinux netlink permissions"
+      ],
+      "patch_sha256": "34d67c4f85929644e1fe4b32d7bdd674d4067011f96c233966992223e028e012",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "2fa95508802050071b82c66c6690cb07cf98566c",
+      "disposition": "already-represented-upstream",
+      "rationale": "Native services_compute_xperms_decision retains warning-and-return behavior for unknown xperm types and warns for unknown specified keys instead of BUG. Keep its later NLMSG type validation and AVTAB_ENABLED masking. Entire current function equals LTS; unknown entries do not gain permissions through this warning path.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/selinux-netlink-history-review.json",
+        "SECURITY.md: Native SELinux netlink permissions"
+      ],
+      "patch_sha256": "791745822358b5f990cbe29369dde854ed0a5bdae4d65bc8003e573b7080321d",
+      "unique_remerge_review": false
+    },
+    {
+      "commit": "84645f0a336fb0bc7b11a5875815264357e182b8",
+      "disposition": "merge-resolution-reconciled-to-lts",
+      "rationale": "All unique hunks across two paths reviewed, including getxattr argument edit outside conflict markers. Current sb_check_xattr_support/sb_finish_set_opts equal LTS and keep native handler errors/genfs fallback. XATTR_NOSECURITY argument is superseded by removal of the old Android xattr plumbing. Current native anon-inode class remains; SELinux lockdown class/checks were removed upstream by f5d0e5e9d72d, so do not replay this intermediate class omission/addition.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/selinux-netlink-history-review.json",
+        "SECURITY.md: Native SELinux netlink permissions"
+      ],
+      "patch_sha256": "70edbc3fbe55db358ee671c30befae26f6136423db9863725e31dcbec04d5947",
+      "unique_remerge_review": true
+    },
+    {
+      "commit": "b9a74a307699d5ae20c172ee06c09ce6dc061221",
+      "disposition": "merge-resolution-reconciled-to-lts",
+      "rationale": "Unique header resolution kept the legacy GETLINK accessor alongside selinux_load_state. Legacy accessor is superseded by native xperms; current policy load-state/convert-data declarations match LTS. No conflicting declaration is restored.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/selinux-netlink-history-review.json",
+        "SECURITY.md: Native SELinux netlink permissions"
+      ],
+      "patch_sha256": "c9ba2c3be0213f251daf1dfe43e6877da48ce174f16c435abc89c43947d24d62",
+      "unique_remerge_review": true
+    },
+    {
+      "commit": "2ad8aa9b5d93d3f0b79bd8d3f9ceb3defb15c93c",
+      "disposition": "merge-resolution-reconciled-to-lts",
+      "rationale": "Unique header resolution uses renamed __POLICYDB_CAP_MAX while keeping then-active Android netlink fields. Current native array uses that maximum; removed private fields are superseded by xperms. Keep current bounds and native capability definitions.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/selinux-netlink-history-review.json",
+        "SECURITY.md: Native SELinux netlink permissions"
+      ],
+      "patch_sha256": "f4f871923171436378694bd30a90251549201ac9a6aae5bacda00c18d250c73c",
+      "unique_remerge_review": true
+    },
+    {
+      "commit": "d040a12177973b9be0588aa036cc65fd859bb639",
+      "disposition": "merge-resolution-adapted-net-state",
+      "rationale": "Unique resolution retains the Android SELinux hook include and removes duplicate local convert_context_args definition. Current include/hook remain; the struct is defined in native ss/services.h. Native conversion/lifetime code is preserved and the previously audited initialization callback remains after selinux_complete_init.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/selinux-netlink-history-review.json",
+        "SECURITY.md: Native SELinux netlink permissions"
+      ],
+      "patch_sha256": "d622a56360be1e6749422f424da9e23e56e5e6ecacd770b9499ce2273da4736e",
+      "unique_remerge_review": true
+    },
+    {
+      "commit": "c2a10220866f903beb57858ee26e9d1096c79c9a",
+      "disposition": "merge-resolution-reconciled-to-lts",
+      "rationale": "Unique declaration resolution adopts security_sidtab_hash_stats(char *page) and kept the old selinux_nlmsg_init prototype. Current native hash-stats declaration remains; obsolete netlink initializer and private state are removed at final ACK and superseded by native capabilities.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/selinux-netlink-history-review.json",
+        "SECURITY.md: Native SELinux netlink permissions"
+      ],
+      "patch_sha256": "0ab309eeeb8e9ad4ffa428ba60566df419a03494f0fa65922225cae174b8e8a7",
+      "unique_remerge_review": true
+    },
+    {
+      "commit": "c269e0d05ad40ec5ca43f10c9d23dc7d10c447a2",
+      "disposition": "merge-resolution-reconciled-to-lts",
+      "rationale": "Unique header resolution joins legacy GETLINK/GETNEIGH helpers with new netif_wildcard capability helper. The netlink_xperm READ_ONCE helper remains. Native a3d3043ef24a moves wildcard capability lookup to the active policy under RCU, and 5f9383bd4168 removes the unused cached helper. Keep that current security_netif_sid implementation, not the historical helper; old Android state/helpers are removed. No native capability is omitted.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/selinux-netlink-history-review.json",
+        "SECURITY.md: Native SELinux netlink permissions"
+      ],
+      "patch_sha256": "873ec7e1be37c674baf2de4e39c51b9c47817edd0624e665d32b0847a32773e8",
+      "unique_remerge_review": true
+    }
+  ],
+  "inverse_payload_proofs": [
+    {
+      "original": "fac07550bdac9adea0dbe3edbdbec7a9a690a178",
+      "revert": "1f1d34c6f229769535171bd1fb471f1ccf5feb77",
+      "proof": "All paths and exact added/deleted text invert; no mode or file creation/deletion changes. Surrounding context need not be identical."
+    },
+    {
+      "original": "b4563881284bbf8c072018ac640fa992a23448a8",
+      "revert": "35a7845718734ae638b85b420534cb859498dab6",
+      "proof": "All paths and exact added/deleted text invert; no mode or file creation/deletion changes. Surrounding context need not be identical."
+    },
+    {
+      "original": "5f409cbcf429cb20606ecb72bb648a9e7c4809bb",
+      "revert": "5b51c9c5d5c278a5a510f1aba0e5ccb12ce41548",
+      "proof": "All paths and exact added/deleted text invert; no mode or file creation/deletion changes. Surrounding context need not be identical."
+    }
+  ],
+  "native_witnesses": [
+    {
+      "path": "security/selinux/nlmsgtab.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "identical_to_ack": true,
+      "sha256": "d07e5547327d7e927aac79d5108784fdd2eae463eb272a85e3e2a63fdbf0152e"
+    },
+    {
+      "path": "security/selinux/ss/policydb.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "identical_to_ack": false,
+      "sha256": "72b5266af08ca503b1a9cda85fd2875656aa1bc29d0b6ea65495c9042a050e5a"
+    },
+    {
+      "path": "security/selinux/ss/policydb.h",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "identical_to_ack": false,
+      "sha256": "bddf45bf2e2bc65d35a230ddede9c3b6f13f981f35878f0111107d43d9c1a315"
+    },
+    {
+      "path": "security/selinux/ss/services.h",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "identical_to_ack": true,
+      "sha256": "75f18ba03c4f8878d22b811e0ce1dadeee32c235fb7f7a44c9d036f00f5e1a05"
+    },
+    {
+      "path": "security/selinux/hooks.c",
+      "function": "nlmsg_sock_has_extended_perms",
+      "identical_to_lts": true,
+      "sha256": "376165338d7757cb5901819eaee9c96de95406506ca2f0e7fc058398d2a7047c"
+    },
+    {
+      "path": "security/selinux/hooks.c",
+      "function": "selinux_netlink_send",
+      "identical_to_lts": true,
+      "sha256": "bbc80016ad85be32e9b574914bd0832e5034d09cd52a4b60d147ef5df5565575"
+    },
+    {
+      "path": "security/selinux/hooks.c",
+      "function": "sb_check_xattr_support",
+      "identical_to_lts": true,
+      "sha256": "138f8d19847b252c4efb4bab79914f9b1d91058d52454732cdd876308e81243b"
+    },
+    {
+      "path": "security/selinux/hooks.c",
+      "function": "sb_finish_set_opts",
+      "identical_to_lts": true,
+      "sha256": "39832f7c7d98425767060f5adf38fad66e1c540896563f365af7998657fa3197"
+    },
+    {
+      "path": "security/selinux/ss/services.c",
+      "function": "security_load_policycaps",
+      "identical_to_lts": true,
+      "sha256": "9fdf0780debe1864301fd63855fe46651770eae8172c571f8728c252f98f8b5c"
+    },
+    {
+      "path": "security/selinux/ss/services.c",
+      "function": "services_compute_xperms_decision",
+      "identical_to_lts": true,
+      "sha256": "ba1d7934a0bdf9ff189dc20fdfea10065c7af18070111bd3058cd21455700b00"
+    },
+    {
+      "path": "security/selinux/ss/services.c",
+      "function": "security_netif_sid",
+      "identical_to_lts": true,
+      "sha256": "0e278cd8a7af91933f4ab7b4c25a7e6cbf1a7d35a10753e5d8e249a598d0c016"
+    },
+    {
+      "path": "security/selinux/include/security.h",
+      "function": "selinux_policycap_netlink_xperm",
+      "identical_to_lts": true,
+      "sha256": "9d88a79eec4e38690cd3ee3ffc865b7497e72ca900ac2595c6a86cd3b71be386"
+    }
+  ],
+  "local_policy": {
+    "repository": "grapheneos-17/system/sepolicy",
+    "commit": "d0cc2f0daa28f3e8c89afb7f07f1b879581bb676",
+    "files": {
+      "private/policy_capabilities": "8f8d50b5113aeff78af1977ef2afed9258bf49261d60a1a760c61baea57b8a9e",
+      "private/net.te": "ddd15b25007af6139dea208fd4554c9d8267a26b11f89fb64b7da47845c5c51b",
+      "public/nlmsg_macros": "01caa4dbba70665a853fa5a25df74fa83fed848dcf3767e6d28a2ba00908f2de",
+      "private/app_neverallows.te": "b951924f7f4c359bd228d1367e3a3debc8fce38872bc406d8f1a7e89b143b952",
+      "private/untrusted_app_25.te": "685228a45b9fb87ca753f747b90a7b82b0dacb1ac6b97cd5c0681ec3baedc575",
+      "private/untrusted_app_27.te": "97a99b41838ccd0dc959fb146b15b4d3bd1bd8d2db34ef54a3d918492347b3b3",
+      "private/untrusted_app_29.te": "317b3269afab4765cad7ce297f2a128d87db691dfcceffe9f892ba1891847071",
+      "private/untrusted_app_30.te": "50e3977b9de0998e547d1bf1b45910639e1f9be10f5e588335c97ca87a15eed1"
+    },
+    "assessment": "Policy enables netlink_xperm; default netdomain allowxperm set excludes GETLINK/GETNEIGH/GETNEIGHTBL. Explicit older app neighbor exceptions remain. Neverallowxperm supports GETLINK/GETNEIGH restrictions. No OS policy compilation/runtime authorization test performed."
+  },
+  "security": "policydb.c and policydb.h equal pinned LTS rather than older ACK: retain later stricter class/permission/boolean/transition/alias parsing and u16 class definitions. Keep native per-message xperm selection and enforcement, parser bounds, unsupported-message handling and unknown-xperm warnings; do not restore old mutable permission tables or claim identical behavior for obsolete policy without netlink_xperm. SELinux lockdown was removed upstream in f5d0e5e9d72d; no removed SELinux policy checks are claimed present.",
+  "review_scope": "Four complete original netlink patches, complete differently formatted first GETLINK revert, three exact inverse-payload proofs, three full build-repair patches, full unknown-xperm patch and all unique diffs of six merges. Current native interfaces and local policy examined. No remote links followed.",
+  "validation": "Current source covered by successful emulator build 107; no live netlink permission/LSM or policy-load test.",
+  "remote_sources_used": []
+}

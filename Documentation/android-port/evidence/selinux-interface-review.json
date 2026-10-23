@@ -1,0 +1,130 @@
+{
+  "source_head": "0951b28655b02b49e9ffbe97d2234cad1367674a",
+  "records": [
+    {
+      "commit": "c3a6a67f86addf961a3e3239ae8185880066e78e",
+      "disposition": "superseded",
+      "rationale": "Original binderfs genfscon support had the wrong filesystem name. Later b43714710199 corrects it to binder, already native in current LTS. Keep the native per-file labeling with current mount policy checks; do not restore the obsolete binderfs string. Pinned Android genfs_contexts assigns separate binder/hwbinder/vndbinder labels.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/selinux-interface-review.json",
+        "SECURITY.md: SELinux source interfaces and status mapping"
+      ],
+      "patch_sha256": "a3507fcf7f5f61ea55f8a0e3c304dcf7cc4a3c24a2c2d12e7638db91edbacb25"
+    },
+    {
+      "commit": "b43714710199b6bdfd36d64c1231762f57522b15",
+      "disposition": "already-represented-upstream",
+      "rationale": "Native selinux_set_mnt_opts recognizes the actual filesystem name binder for SE_SBGENFS; the complete function equals LTS. This retains per-device genfscon labels used by pinned Android policy, along with later native mount/security-label restrictions.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/selinux-interface-review.json",
+        "SECURITY.md: SELinux source interfaces and status mapping"
+      ],
+      "patch_sha256": "e78c58d5bdab8fecb240b5bbebcd02f22b1462a4f3315a94e8a4bed5ec973e2d"
+    },
+    {
+      "commit": "ccfa453e949b4186f7264e415ff36ddaa19b4c92",
+      "disposition": "superseded",
+      "rationale": "Complete two-file cleanup removes a blank line and orders the then-existing lockdown class before anon_inode. Upstream f5d0e5e9d72d subsequently removed the SELinux lockdown hook and class. The generic LSM audit case and reason descriptions remain native; retain them. Keep current native lsm_audit.c and the native class map (plus separately retained memfd extension); do not reintroduce obsolete class ordering or policy checks. This historical formatting cleanup has no residual behavior to port.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/selinux-interface-review.json",
+        "SECURITY.md: SELinux source interfaces and status mapping"
+      ],
+      "patch_sha256": "d4886db30ee6c796596e080960bd1b3f287a1192ec1b8ccb522358b7476a4a5d"
+    },
+    {
+      "commit": "6605f296d3075b0830251ae3f04fb88591e1e863",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain the four restricted const-node AVC hooks and GPL exports in their final source interfaces. Insert/replace/delete run with native cache locking; lookup runs within native caller RCU read sections. No mutable permission/return argument is added and native sequence checks, permission decisions and call_rcu freeing remain byte-preserved after removing hook statements. Trusted callbacks must not sleep in locked contexts or retain borrowed node pointers after their protected lifetime. Exact SDK registration remains unconfirmed; retain generic source customization conservatively.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/selinux-interface-review.json",
+        "SECURITY.md: SELinux source interfaces and status mapping"
+      ],
+      "patch_sha256": "004a9056793dacd74e26603f19c9aa29271ae40977091c5a860cc5a5be91caac"
+    },
+    {
+      "commit": "983c0ad4d20e28b5af6c9c41986b1b4cec95d025",
+      "disposition": "adapted",
+      "rationale": "Keep reported-page-size validation for the SDK page_shift=14 option, but correct PFN length in 0951b28655b0. The status buffer is one zeroed native page in both LTS and ACK; mapping the reported 8/16 KiB size maps adjacent unowned PFNs. Accept the larger VMA and map only PAGE_SIZE, retaining offset rejection, write denial, VM_MAYWRITE clearing and remap errors. Native padding faults remain unmapped/SIGBUS rather than exposing adjacent memory. Pinned libselinux maps sysconf page size but reads the status structure at the beginning. This preserves native one-page physical exposure and compatibility without changing status allocation or policy checks.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "0951b28655b02b49e9ffbe97d2234cad1367674a"
+      ],
+      "evidence": [
+        "evidence/selinux-interface-review.json",
+        "SECURITY.md: SELinux source interfaces and status mapping"
+      ],
+      "patch_sha256": "7e680b46d4436a110bf49f3fe936f9fccba72525c41c4ba0477c9c4b2d034dde"
+    }
+  ],
+  "native_witnesses": [
+    {
+      "path": "security/selinux/status.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "sha256": "900d3c231fbe0f03d749bda56af0f281ddeb320b1a75d5c6534aa23434c3951c"
+    },
+    {
+      "path": "security/lsm_audit.c",
+      "scope": "whole file",
+      "identical_to_lts": true,
+      "sha256": "30ef1d9186582a5d9537a763d7fe28391e730a4f5df1e386d38f03a17964437f"
+    },
+    {
+      "path": "security/selinux/hooks.c",
+      "function": "selinux_set_mnt_opts",
+      "identical_to_lts": true,
+      "sha256": "b38c8346d077d00b3e10ca0318d3a62229db7f3fab268cedcdfc99e92c339a00"
+    },
+    {
+      "path": "security/selinux/include/classmap.h",
+      "scope": "native class order/permissions excluding separately reviewed memfd_file extension",
+      "sha256": "05f4bb4b1f8b69c2141945234a69bb9c2b4338131479d735a17cf1f40d676ff3"
+    },
+    {
+      "path": "security/selinux/avc.c",
+      "scope": "complete file equals LTS after removing only four callbacks/include and corresponding lookup braces",
+      "sha256": "0b7df24a622c12d580a57faba06941c8417ddda0f710149a8411e48898667277"
+    }
+  ],
+  "local_sources": [
+    {
+      "repository": "grapheneos-17/external/selinux",
+      "commit": "89cbe3f778261556d1ac4f5ee219745d2aa0a219",
+      "path": "libselinux/src/sestatus.c",
+      "evidence": "selinux_status_open uses sysconf(_SC_PAGESIZE), PROT_READ/MAP_SHARED; readers access the five-u32 status structure at the beginning.",
+      "file_sha256": "fdb7af8c91773b3ede3bc6ed73b22b7d268a1b2e4645ff5d3cde1699272c311c"
+    },
+    {
+      "repository": "grapheneos-17/device/generic/goldfish",
+      "commit": "5281db702f36e0e8c0af9e33d70b63d3ba4916ae",
+      "path": "board/kernel/x86_64_16k_cmdline.txt",
+      "evidence": "page_shift=14 is a current SDK option.",
+      "file_sha256": "a8df23ba1cec47cf4d8de94467b50a95b8d87e2e9d131e93ead446df8347e1d1"
+    },
+    {
+      "repository": "grapheneos-17/system/sepolicy",
+      "commit": "d0cc2f0daa28f3e8c89afb7f07f1b879581bb676",
+      "path": "private/genfs_contexts",
+      "evidence": "Separate binder/hwbinder/vndbinder device and binderfs log/feature labels.",
+      "file_sha256": "68f4e3a4e80d7916ee54ffe34e97d055b6e29db2aaf08b77874cc92ae5cac2a9"
+    }
+  ],
+  "source_blobs": {
+    "security/selinux/avc.c": "bad048e44659f595278956b983f85c51d2cc3b32",
+    "security/selinux/hooks.c": "4cb9cdffb8967047e8d0b9673c82cbc14c3755bb",
+    "security/selinux/selinuxfs.c": "05d7772678107c813352c22c7509db5f49d0f215",
+    "security/selinux/status.c": "dffca22ce6f747429c48cf84b3ccf4f810e1f61c",
+    "include/trace/hooks/avc.h": "5100dde72c9d322449f8a5461e463434ac7ee2e8",
+    "drivers/android/vendor_hooks.c": "c5c8da29b4f3f9c3083b1d4507ae076689693e24",
+    "mm/memory.c": "739cda09ec26726176f841a2d8f4a0ff2d02ad0c"
+  },
+  "security": "0951b28655b0 corrects physical overmapping in ACK 16K status adaptation: status backing remains one native page. Exposure requires access to the status mmap interface and enabled larger-page compatibility; no live exploit or Android policy reachability is claimed. Native read-only controls and fault behavior remain. AVC callbacks are trusted borrowed-pointer instrumentation, not an authorization bypass interface or pointer-ownership transfer.",
+  "validation": "6912 extracted mmap cases pass; original ACK control fails 96. Host checks observe PFN count/flags/errors only. Emulator build 107 passed at 0951b28655b0: both images, 100 common and 45 virtual-device modules; all 145 signatures verified with tampered-payload rejection and all module CRC/export tables checked. No live mmap/fault or policy test.",
+  "remote_sources_used": []
+}
