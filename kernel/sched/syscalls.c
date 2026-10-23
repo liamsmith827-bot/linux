@@ -84,7 +84,8 @@ void set_user_nice(struct task_struct *p, long nice)
 	update_rq_clock(rq);
 
 	trace_android_rvh_set_user_nice_locked(p, &nice, &allowed);
-	if (!allowed)
+	/* The locked hook may have changed the previously validated value. */
+	if (!allowed || nice < MIN_NICE || nice > MAX_NICE)
 		return;
 
 	/*
