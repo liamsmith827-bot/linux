@@ -4617,3 +4617,38 @@ blob IDs and hunk locations. This proof avoids replaying a temporary removal
 of upstream fixes; parent candidates still have independent dispositions.
 Fourteen native file/function witnesses support this group. Build 105 covers
 the unchanged code; no runtime crypto/filesystem test or remote source was used.
+
+# Encryption merge history
+
+Four historical merges in `evidence/crypto-merge-history-review.json` are reviewed
+across all unique resolution hunks, including changes outside conflict markers.
+Native block submission, merge accounting and request-clone failure cleanup
+remain. Android metadata-encryption skip state follows cloned bios and raw
+F2FS GC I/O, and mismatched skip states cannot merge. Native wrapped-key checks
+and the separately documented fscrypt legacy identifier exception remain.
+
+Native per-mode keys now publish initialized nodes through an RCU list, with
+master-key lifetime and setup serialization; the older pointer publication
+scheme is not reinstated. Native current mount-option parsing and dummy-policy
+checks remain, and the final-ACK removal of key-removal notifiers is honored.
+The previously assessed asynchronous zeroout implementation retains sector/DUN
+geometry, completion ownership and error aggregation. Sixteen native witnesses
+and unchanged earlier fscrypt blobs support this group. Build 105 covers the
+unchanged source. No new runtime verification or remote source was used.
+
+# Initial inline-encryption integration
+
+Two decisions in `evidence/fscrypt-initial-refresh-review.json` account for the
+original fscrypt inline-encryption implementation and a later fscrypt/UFS
+refresh. Native configuration, all-device capability checks, DUN generation,
+key eviction and per-data-unit geometry remain. Old raw-key arrays and fixed
+eight-byte DUN limits are superseded; current async zeroout and Android skip
+flags retain their separate reviews. Native F2FS physical mergeability checks
+and crypto indices remain aligned with submitted data.
+
+Current UFS core/crypto headers and sources are identical to pinned LTS. The
+old variant program-key callback is superseded by native custom crypto profiles;
+no platform-specific addition is needed for this history. Twenty native file,
+function and fragment witnesses support the decisions. The tests mentioned in
+historical commit messages and documentation were not run. Build 105 covers
+the unchanged source; no remote source was accessed.
