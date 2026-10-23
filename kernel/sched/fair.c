@@ -1201,8 +1201,12 @@ static bool update_deadline(struct cfs_rq *cfs_rq, struct sched_entity *se)
 	bool skip_preempt = false;
 
 	trace_android_rvh_update_deadline(cfs_rq, se, &skip_preempt);
-	if (skip_preempt)
+	if (skip_preempt) {
+		/* Keep zero_vruntime tracking even when preemption is deferred. */
+		if (!vruntime_cmp(se->vruntime, "<", se->deadline))
+			avg_vruntime(cfs_rq);
 		return false;
+	}
 
 	if (vruntime_cmp(se->vruntime, "<", se->deadline))
 		return false;
