@@ -170,11 +170,13 @@ static ssize_t idletimer_tg_show(struct device *dev,
 	struct timespec64 ktimespec = {};
 	long time_diff = 0;
 	unsigned long now = jiffies;
+	bool send_nl_msg = false;
 
 	mutex_lock(&list_mutex);
 
 	timer =	__idletimer_tg_find_by_label(attr->attr.name);
 	if (timer) {
+		send_nl_msg = timer->send_nl_msg;
 		if (timer->timer_type & XT_IDLETIMER_ALARM) {
 			ktime_t expires_alarm = alarm_expires_remaining(&timer->alarm);
 			ktimespec = ktime_to_timespec64(expires_alarm);
@@ -190,7 +192,7 @@ static ssize_t idletimer_tg_show(struct device *dev,
 	if (time_after(expires, now) || ktimespec.tv_sec > 0)
 		return sysfs_emit(buf, "%ld\n", time_diff);
 
-	if (timer->send_nl_msg)
+	if (send_nl_msg)
 		return sysfs_emit(buf, "0 %d\n",
 				  jiffies_to_msecs(now - expires) / 1000);
 
