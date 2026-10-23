@@ -1767,16 +1767,20 @@ uclamp_eff_get(struct task_struct *p, enum uclamp_id clamp_id)
 {
 	struct uclamp_se uc_req = uclamp_tg_restrict(p, clamp_id);
 	struct uclamp_se uc_max = uclamp_default[clamp_id];
-	struct uclamp_se uc_eff;
+	struct uclamp_se uc_eff = {};
 	int ret = 0;
 
 	trace_android_rvh_uclamp_eff_get(p, clamp_id, &uc_max, &uc_eff, &ret);
-	if (ret)
+	if (ret) {
+		uc_eff.bucket_id = uclamp_bucket_id(uc_eff.value);
 		return uc_eff;
+	}
 
 	/* System default restrictions always apply */
-	if (unlikely(uc_req.value > uc_max.value))
+	if (unlikely(uc_req.value > uc_max.value)) {
+		uc_max.bucket_id = uclamp_bucket_id(uc_max.value);
 		return uc_max;
+	}
 
 	return uc_req;
 }
