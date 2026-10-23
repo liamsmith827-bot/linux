@@ -518,13 +518,16 @@ static ssize_t __cgroup1_procs_write(struct kernfs_open_file *of,
 	 * Even if we're attaching all tasks in the thread group, we only need
 	 * to check permissions on one of them. Check permissions using the
 	 * credentials from file open to protect against inherited fd attacks.
+	 * The capability exception requires both the opener and current writer
+	 * to be authorized in the target task's user namespace.
 	 */
 	cred = of->file->f_cred;
 	tcred = get_task_cred(task);
 	if (!uid_eq(cred->euid, GLOBAL_ROOT_UID) &&
 	    !uid_eq(cred->euid, tcred->uid) &&
 	    !uid_eq(cred->euid, tcred->suid) &&
-	    !ns_capable(tcred->user_ns, CAP_SYS_NICE))
+	    (!file_ns_capable(of->file, tcred->user_ns, CAP_SYS_NICE) ||
+	     !ns_capable(tcred->user_ns, CAP_SYS_NICE)))
 		ret = -EACCES;
 	put_cred(tcred);
 	if (ret)
