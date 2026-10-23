@@ -5301,3 +5301,32 @@ initializer/handoff cases establish local properties only. The selected default
 remains enabled as in final ACK and native LTS, superseding the temporary false
 default. Scoped local userspace searches did not establish a boot override;
 compilation does not establish runtime enablement. No remote source was used.
+
+# Proxy donor chain and task layout
+
+`evidence/proxy-donor-chain-review.json` follows up the prior provisional donor
+question and finalizes seven candidates. The complete local donor-reference scan
+separates freshly built migration chains from saved unlock hints. The scheduler
+clears the selected root, builds reverse links only for verified same-rq owners,
+and traverses them under the same rq lock. Migration marks tasks MIGRATING before
+dequeue, converts the chain to a list before unlocking, and uses target-rq-locked
+attachment. Native task-rq locking waits for migration completion. Saved unlock
+hints instead use the protected waiter-membership defense in bb6c4caa1ee2.
+This source argument resolves the scoped lifetime question; it is not an actual
+race test or a claim that the remaining scheduler audit is complete.
+
+Retain donor-first mutex/rwsem behavior for the configured Android proxy scheduler.
+The intentional rwsem donor handoff bypass changes native FIFO/fairness policy
+and can persist across retries. Initialization and native ownership/count/barrier
+operations remain, but no latency or starvation bound is claimed. Preserve LTS
+removal of proxy_tag_curr and native class-scheduler on-CPU protections.
+
+Commit 275786041b29 removes migration_node and its two initializers after the
+positive replacement with se.group_node. This is obsolete internal storage;
+its retention need not be attributed to a proven historical author intention.
+Keep is_blocked despite the introducing commit's KMI-freeze title because current
+scheduling/wakeup code actively uses it. Undo the KMI-only relocation of
+user_dumpable and restore the native bitfield placement. Its exit-time saved
+value and native ptrace credential/capability checks are retained. Existing vendor
+module binaries are intentionally not preserved; source modules rebuild against
+this layout. No remote resources or runtime tests were added.

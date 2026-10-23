@@ -490,17 +490,17 @@
   },
   {
     "topic": "Proxy rwsem donor handoff and waiter initialization",
-    "status": "local initializer and waiter lifetime defenses implemented; scheduler donor chain lifetime remains provisional",
+    "status": "resolved source adaptation and scoped chain-lifetime review; runtime concurrency and fairness unverified",
     "candidates": [
       "da0eae57da46a43303613f71db90363a41d9291a",
       "8f585b1490b3ffb4dfedd448b3c770807cd96a7b"
     ],
-    "evidence": "bb6c4caa1ee2 validates the donor against a protected waiter list before any task dereference in mutex/rwsem selection. Expired pointers that are not queued fall back to ordinary selection. An address reused by a live waiter is safe to dereference but could receive unintended priority; this local defense does not prove global donor identity/lifetime. O(n) queue search may increase mutex unlock spinlock hold time; no bound or runtime cost measured. Remote ttwu proxy_needs_return/proxy_reset_donor can detach an old scheduling donor without explicitly clearing all owner->blocked_donor links. Scheduler proxy_migrate_task and other chain consumers require further lifetime analysis. No actual UAF, exploit, race, affinity migration or starvation has been reproduced. Do not finalize da0eae57da46 or 8f585b1490b3 on the strength of these local checks. See proxy-locking-state-review.json and extracted checks. Earlier state/ordering review has now been completed; full scheduler chain analysis remains.",
+    "evidence": "See evidence/proxy-donor-chain-review.json: complete local donor-reference scan, fresh rq-locked migration-chain construction and MIGRATING/ttwu serialization reviewed. Saved unlock links instead require protected waiter membership before task access, supplied by bb6c4caa1ee2; explicit waiter initialization is supplied by 2c9eca023027. Deliberate donor priority can bypass native FIFO fairness; no bounded starvation or actual kernel race testing. This closes the specific selection/lifetime question without certifying the whole remaining scheduler audit.",
     "result_commits": [
       "2c9eca0230277a60a7d164ff7cc1cd28dbb803e6",
       "bb6c4caa1ee2b50faa21130ff8272ae776f9aa47"
     ],
-    "review": "evidence/proxy-locking-state-review.json"
+    "review": "evidence/proxy-donor-chain-review.json"
   },
   {
     "topic": "SDK locking hook callbacks and replacement-locking contracts",

@@ -1,0 +1,217 @@
+{
+  "source_head": "275786041b29119fa82d6d2b5787a4b9c6576947",
+  "records": [
+    {
+      "commit": "da0eae57da46a43303613f71db90363a41d9291a",
+      "disposition": "partially-adapted-net-state",
+      "rationale": "All five paths and all current blocked_donor C/header references reviewed. Retain donor link, initialization, scheduler assignment and live-donor mutex handoff for configured Android proxy behavior. Adapt unlock to establish waiter membership before dereferencing a saved link, since remote wakeup/reset may detach it. Preserve LTS removal of proxy_tag_curr and its corresponding class-scheduler protections; do not reintroduce the historical prev_not_proxied/tag path. Migration reads a fresh chain constructed under the same rq lock; detailed lifetime argument and limits are in the review. Deliberately changes FIFO selection in favor of the scheduling donor, without changing native ownership cmpxchg/acquire/release.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "bb6c4caa1ee2b50faa21130ff8272ae776f9aa47"
+      ],
+      "evidence": [
+        "evidence/proxy-donor-chain-review.json",
+        "SECURITY.md: Proxy donor chain and task layout"
+      ],
+      "patch_sha256": "31e0d210e518034a1f99e89693e22e115a25a442ccb1b31896c0f85b4a0dab77"
+    },
+    {
+      "commit": "8f585b1490b3ffb4dfedd448b3c770807cd96a7b",
+      "disposition": "adapted-net-state",
+      "rationale": "Complete reapplication, original and revert reviewed. Retain donor-first rwsem wake choice and explicit donor handoff bypass for Android proxy execution; otherwise a chosen non-head donor can be woken yet refused while the head is not woken. Initialize donor_wakeup=false in both constructors and validate protected waiter membership before dereferencing the saved task. Native reader/writer exclusion, acquire cmpxchg and reader grant/ref publication remain; native FIFO/starvation priority is intentionally relaxed for marked donors, not claimed equivalent. A marked donor may retain preference across retries; no starvation bound or performance claim. The local membership defense plus fresh scheduler-chain analysis resolves the source-selection question, not runtime verification.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "2c9eca0230277a60a7d164ff7cc1cd28dbb803e6",
+        "bb6c4caa1ee2b50faa21130ff8272ae776f9aa47"
+      ],
+      "evidence": [
+        "evidence/proxy-donor-chain-review.json",
+        "SECURITY.md: Proxy donor chain and task layout"
+      ],
+      "patch_sha256": "faebbb4f99b3cb39d93aa5dc08e555553d6ecb1babf00504cdb0d8f79d9f135c"
+    },
+    {
+      "commit": "1ee4d9c61dbebe53efa6b21873b384d6c801705a",
+      "disposition": "partially-adapted-net-state",
+      "rationale": "All four paths reviewed. Keep whole freshly constructed donor-chain migration under source rq lock with TASK_ON_RQ_MIGRATING until target enqueue. Preserve wake_cpu and avoid moving the executing current chain. Later 15dd0824de4d/85491ce21e7a replace private migration_node with existing se.group_node and shared attach helpers. Remove now-obsolete field and initializers in 275786041b29; this is positively superseded internal storage, not failure to locate a consumer or a new vendor slot. No historical task layout is retained.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "275786041b29119fa82d6d2b5787a4b9c6576947"
+      ],
+      "evidence": [
+        "evidence/proxy-donor-chain-review.json",
+        "SECURITY.md: Proxy donor chain and task layout"
+      ],
+      "patch_sha256": "f2de47c688d896d9bae732e9838475ae478332c01bed40bcacf29080a3d295d4"
+    },
+    {
+      "commit": "15dd0824de4d7e42951a5613e9d5cb31da17e10d",
+      "disposition": "adapted-net-state",
+      "rationale": "Full source replacement reviewed. Keep se.group_node for deactivated tasks during migration, matching existing load-balancer list ownership; dequeue removes fair tasks from the balancing list before reuse, and attach removes the temporary list entry before enqueue. Follow through by removing the abandoned migration_node and both initializers. Do not require an otherwise-unused per-task field for historical binary layout.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "275786041b29119fa82d6d2b5787a4b9c6576947"
+      ],
+      "evidence": [
+        "evidence/proxy-donor-chain-review.json",
+        "SECURITY.md: Proxy donor chain and task layout"
+      ],
+      "patch_sha256": "226129bf7870949b26b0e14640f564bc3bd20ec4061ea320385a34b09a874a29"
+    },
+    {
+      "commit": "85491ce21e7a8139f7c98db42afa4d34e783d63e",
+      "disposition": "adapted-net-state",
+      "rationale": "All three paths reviewed. Keep shared attach_task/attach_one_task/__attach_tasks helpers and fair/proxy callers. They update target rq clock under rq lock and remove each se.group_node before activate/wakeup; preserve ENQUEUE_NOCLOCK with the explicit clock update and native ENQUEUE_MIGRATED handling. Scoped helpers are identical to final ACK; old fair helpers have the same attach sequence before extraction. No additional enqueue or premature source-rq donor reference remains in the migration path.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/proxy-donor-chain-review.json",
+        "SECURITY.md: Proxy donor chain and task layout"
+      ],
+      "patch_sha256": "d9a535c940098740a45cf4f1272df4405a16d49031379afa04c86fc22ec2541a"
+    },
+    {
+      "commit": "c70559f3cca606a37a53bcd24ce30fc007f9727d",
+      "disposition": "adapted-net-state",
+      "rationale": "Despite the KMI-freeze wording, the one added is_blocked field now has functional consumers in final ACK: try_to_block_task sets it, wakeup/signal/current-proxy paths clear it, and __schedule checks it before following blocked_on. Retain this active scheduler state for Android behavior. Its placement is not a promise of vendor binary layout; classify by final code, not the historical commit title.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/proxy-donor-chain-review.json",
+        "SECURITY.md: Proxy donor chain and task layout"
+      ],
+      "patch_sha256": "ff817bb19e00069055263b3d217dc69c17e3c881f23f5d680f6cd2b28f30af1c"
+    },
+    {
+      "commit": "cc1395990cfe87ef869ad7b25d8b9b83626679e4",
+      "disposition": "omitted-kmi-only",
+      "rationale": "All five paths reviewed. ABI snapshots/allowed-break metadata and relocation of user_dumpable into an ANDROID_KABI_USE reserve solely preserve old task layout. Omit these and restore the field to the exact native LTS bitfield group in 275786041b29. Keep the security function: exit_mm saves dumpability before clearing mm; native task_still_dumpable and __ptrace_may_access retain capability/credential checks. Removing KMI relocation does not remove user_dumpable or weaken ptrace authorization.",
+      "result_commits": [
+        "275786041b29119fa82d6d2b5787a4b9c6576947"
+      ],
+      "evidence": [
+        "evidence/proxy-donor-chain-review.json",
+        "SECURITY.md: Proxy donor chain and task layout"
+      ],
+      "patch_sha256": "ceb848160940fe82cd7545265874669d192f619aeac2d7b30c9545fb63e817d4"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/sched/core.c",
+      "function": "proxy_migrate_task",
+      "identical_to_ack": true,
+      "sha256": "511f0c2f419eea238c6a025eb82564f152eaae7295f74fc4944c546546be8e10"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "find_proxy_task",
+      "identical_to_ack": true,
+      "sha256": "5b9b3dcbb487425a3628b820b7990094254d809915ecc9c22fe6fb83dd918361"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "proxy_set_task_cpu",
+      "identical_to_ack": true,
+      "sha256": "9d3a9769ddb2b3294d8f174cad9ddeab11aec0ae690f9a258400030187e80088"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "proxy_release_rq_lock",
+      "identical_to_ack": true,
+      "sha256": "e043c2a79a585edfec753a41e39696fcc4012554094aa664c9237cf2634ef985"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "proxy_reacquire_rq_lock",
+      "identical_to_ack": true,
+      "sha256": "64b939296c7924325f5573a39f00ac4b1ed8184175982a39c22eb90bd525cb35"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "proxy_reset_donor",
+      "identical_to_ack": true,
+      "sha256": "846c5ed838e089637c8b4ad0e5e44f0e4c81838b3fcaad8aaadc5fe433ffdad8"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "proxy_needs_return",
+      "identical_to_ack": true,
+      "sha256": "4c2b75d5b6cc10b9661451a4e4b805a7e2c55ecf8ba92afa67e30898a1d6ef49"
+    },
+    {
+      "path": "kernel/sched/sched.h",
+      "function": "attach_task",
+      "identical_to_ack": true,
+      "sha256": "709cf78b0d0b87b278e9b4d26957e39028c5ea194a8afe7b218434e8e608cdce"
+    },
+    {
+      "path": "kernel/sched/sched.h",
+      "function": "attach_one_task",
+      "identical_to_ack": true,
+      "sha256": "95daf15a3d547bf7a65eb0fa7db2de113eb224f6386f6a001cf8a7179af4f760"
+    },
+    {
+      "path": "kernel/sched/sched.h",
+      "function": "__attach_tasks",
+      "identical_to_ack": true,
+      "sha256": "e82a2d86c18dd6bb18f9a1ae23483027b8b54dd8d3f6d4dc7a010b3cdf50c4d2"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "__task_rq_lock",
+      "identical_to_lts": true,
+      "sha256": "b372c078f86faf51f48678d86096d79819fbb10a40387e6cd1fb49b5349d68de"
+    },
+    {
+      "path": "kernel/ptrace.c",
+      "function": "task_still_dumpable",
+      "identical_to_lts": true,
+      "sha256": "af959fbe1bde8565fa5a75e92c21b3cc252dddf6f0e997eed8fd2ecb9be975b1"
+    },
+    {
+      "path": "kernel/ptrace.c",
+      "function": "__ptrace_may_access",
+      "identical_to_lts": true,
+      "sha256": "5fec1eb61fd3b4fbff1ea32f6e575a187090b4f6d87dcad1c5a1dcfc50032245"
+    }
+  ],
+  "all_blocked_donor_source_references": [
+    "275786041b29119fa82d6d2b5787a4b9c6576947:include/linux/sched.h:1266:\tstruct task_struct\t\t*blocked_donor;\t/* task that is boosting this task */",
+    "275786041b29119fa82d6d2b5787a4b9c6576947:init/init_task.c:180:\t.blocked_donor = NULL,",
+    "275786041b29119fa82d6d2b5787a4b9c6576947:kernel/fork.c:2207:\tp->blocked_donor = NULL; /* nobody is boosting p yet */",
+    "275786041b29119fa82d6d2b5787a4b9c6576947:kernel/locking/mutex.c:976:\t\tif (sched_proxy_exec() && current->blocked_donor) {",
+    "275786041b29119fa82d6d2b5787a4b9c6576947:kernel/locking/mutex.c:977:\t\t\t/* force handoff if we have a blocked_donor */",
+    "275786041b29119fa82d6d2b5787a4b9c6576947:kernel/locking/mutex.c:1003:\t\tdonor = current->blocked_donor;",
+    "275786041b29119fa82d6d2b5787a4b9c6576947:kernel/locking/mutex.c:1022:\t\t\t\t\tcurrent->blocked_donor = NULL;",
+    "275786041b29119fa82d6d2b5787a4b9c6576947:kernel/locking/rwsem.c:464:\t\tdonor = current->blocked_donor;",
+    "275786041b29119fa82d6d2b5787a4b9c6576947:kernel/locking/rwsem.c:512:\t\t\tif (waiter->task == current->blocked_donor)",
+    "275786041b29119fa82d6d2b5787a4b9c6576947:kernel/locking/rwsem.c:513:\t\t\t\tcurrent->blocked_donor = NULL;",
+    "275786041b29119fa82d6d2b5787a4b9c6576947:kernel/locking/rwsem.c:649:\t\tif (tsk == current->blocked_donor)",
+    "275786041b29119fa82d6d2b5787a4b9c6576947:kernel/locking/rwsem.c:650:\t\t\tcurrent->blocked_donor = NULL;",
+    "275786041b29119fa82d6d2b5787a4b9c6576947:kernel/sched/core.c:7404:\tfor (; p; p = p->blocked_donor) {",
+    "275786041b29119fa82d6d2b5787a4b9c6576947:kernel/sched/core.c:7480: *  blocked_donor |   mutex",
+    "275786041b29119fa82d6d2b5787a4b9c6576947:kernel/sched/core.c:7485: * and set the blocked_donor relation, this latter is used by the mutex",
+    "275786041b29119fa82d6d2b5787a4b9c6576947:kernel/sched/core.c:7645:\t\t\t *   donor(owner) = current->blocked_donor;",
+    "275786041b29119fa82d6d2b5787a4b9c6576947:kernel/sched/core.c:7667:\t\towner->blocked_donor = p;",
+    "275786041b29119fa82d6d2b5787a4b9c6576947:kernel/sched/core.c:7829:\t\tnext->blocked_donor = NULL;"
+  ],
+  "chain_lifetime": [
+    "__schedule clears the selected root donor link immediately before find_proxy_task while rq lock is held. Each further owner link is assigned only after on_rq/CPU/migration checks verify a queued owner on that same rq; the link points back into the chain just walked, not an arbitrary previous scheduling chain.",
+    "proxy_migrate_task has one call site, the remote-owner branch of that walk. Current-in-chain returns resched-idle before migration. Goto exits the primitive/task lock guards but keeps rq lock. The reverse chain terminates at the cleared root and is read under the uninterrupted source rq lock.",
+    "deactivate_task writes TASK_ON_RQ_MIGRATING before dequeue (not on_rq=0). Native __task_rq_lock spins/retries while that state is set, serializing remote ttwu. The chain is converted to a local se.group_node list before source rq unlock. Target attach holds target rq lock and sets queued only through activate_task. Thus the direct migration traversal has a source-state lifetime argument distinct from saved unlock hints.",
+    "Current task unlock paths may retain links after remote wakeup/reset, so they cannot use the migration argument. bb6c4caa1ee2 uses pointer identity only until finding a live waiter under wait_lock; cancellation cannot unlink/free that waiter under the same lock. Remaining rwsem link comparisons/clears do not dereference the saved pointer.",
+    "No other direct blocked_donor consumers were found in the complete local kernel C/header scan. This bounds this source audit; it is not proof about arbitrary external modules, all schedulers, callback misconduct, lock bugs or hardware interleavings."
+  ],
+  "native_fixes": "Reviewed full 6a1a15d86ba6: removal of proxy_tag_curr is retained. Existing stable-overlap audit separately covers current-aware RT/DL push checks and migration-disabled checks. This review does not replace that audit or restore old dequeue/enqueue tagging.",
+  "security": "Retain Android donor preference with explicit FIFO/starvation tradeoff, correct waiter initialization and queue-based lifetime defense. Address reuse can favor a live unrelated waiter but the selection blocks do not dereference an unqueued expired task. No guarantee of latency/fairness; increased mutex queue-scan time remains. Restore native user_dumpable placement while retaining the native exit/ptrace security check; ABI layouts intentionally change.",
+  "validation": "Build 119 passed at 275786041b29, with matching images, 100 common and 45 virtual-device modules. All 145 signatures verified, tampered control rejected, and module tables/protected exports checked. Existing build 118 verified the unchanged lock selection code and 145 signed modules; existing 256 membership, 14 ordering and 773 handoff/init extracted checks remain applicable to those unchanged functions. No kernel concurrency/boot execution.",
+  "local_resources": [
+    "Pinned ACK/LTS histories, full seven patches and full stable 6a1a15d86ba6",
+    "Complete local C/header blocked_donor search and current scheduler/lock/init/fork/ptrace/exit source",
+    "SDK build config and prior extracted-code evidence"
+  ],
+  "remote_sources_used": []
+}
