@@ -10288,12 +10288,13 @@ static void cpu_cgroup_css_free(struct cgroup_subsys_state *css)
 {
 	struct task_group *tg = css_tg(css);
 
+	/* Notify before unregistering queues the final RCU free of tg. */
+	trace_android_vh_cpu_cgroup_css_free(css);
+
 	/*
 	 * Relies on the RCU grace period between css_released() and this.
 	 */
 	sched_unregister_group(tg);
-
-	trace_android_vh_cpu_cgroup_css_free(css);
 }
 
 static int cpu_cgroup_can_attach(struct cgroup_taskset *tset)
