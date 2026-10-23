@@ -427,7 +427,7 @@ use core::mem::offset_of;
 use kernel::bindings::rb_process_layout;
 pub(crate) const PROCESS_LAYOUT: rb_process_layout = rb_process_layout {
     arc_offset: Arc::<Process>::DATA_OFFSET,
-    task: offset_of!(Process, task),
+    task: offset_of!(Process, task) + ARef::<Task>::PTR_OFFSET,
 };
 
 /// A process using binder.

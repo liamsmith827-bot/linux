@@ -84,6 +84,11 @@ unsafe impl<T: AlwaysRefCounted + Sync + Send> Send for ARef<T> {}
 unsafe impl<T: AlwaysRefCounted + Sync + Send> Sync for ARef<T> {}
 
 impl<T: AlwaysRefCounted> ARef<T> {
+    /// Offset of the owned pointer, for describing this build's layout to C.
+    ///
+    /// Reading the pointer does not transfer ownership or extend its lifetime.
+    pub const PTR_OFFSET: usize = core::mem::offset_of!(Self, ptr);
+
     /// Creates a new instance of [`ARef`].
     ///
     /// It takes over an increment of the reference count on the underlying object.

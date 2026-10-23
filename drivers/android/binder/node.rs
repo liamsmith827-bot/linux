@@ -182,7 +182,7 @@ struct NodeInner {
 use kernel::bindings::rb_node_layout;
 use mem::offset_of;
 pub(crate) const NODE_LAYOUT: rb_node_layout = rb_node_layout {
-    arc_offset: Arc::<Node>::DATA_OFFSET + offset_of!(DTRWrap<Node>, wrapped),
+    arc_offset: DArc::<Node>::DATA_OFFSET + offset_of!(DTRWrap<Node>, wrapped),
     debug_id: offset_of!(Node, debug_id),
     ptr: offset_of!(Node, ptr),
 };
