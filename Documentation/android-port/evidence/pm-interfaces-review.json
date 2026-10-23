@@ -1,0 +1,251 @@
+{
+  "source_head": "14fa69019d3223ebfc013cd9c210f68580598fc7",
+  "records": [
+    {
+      "commit": "1cc299629b2271efe623df89b646bc46374eba7d",
+      "disposition": "partially-adapted-net-state",
+      "rationale": "All five paths of the relocation revert reviewed. Keep the visible suspend_stats object/header because retained late/noirq abort reports read its last failed device; keep equivalent success/errno/step accounting and unchanged native hardware-sleep reporting bodies. Do not retain its unlocked inline dpm_save_failed_dev: 76fb9cfd8c64 restores the exact LTS out-of-line function and suspend_stats_lock, preserving upstream a6d38e991dc4 against concurrent failing callbacks. Only device-record writers are serialized, as in native LTS; do not claim atomic snapshots of all statistics. No historical layout/KMI requirement motivates the exposed structure.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "76fb9cfd8c64262c0f282ea77ab1ca68cc266288"
+      ],
+      "evidence": [
+        "evidence/pm-interfaces-review.json",
+        "SECURITY.md: PM statistics and source interfaces"
+      ],
+      "patch_sha256": "cadc1ef595e8b0c4368df8325a3265035e2e6183b9665f189f0723592dcd1cc9"
+    },
+    {
+      "commit": "45609b7910fa69c050a2428089a8a59775dd8436",
+      "disposition": "adapted-net-state",
+      "rationale": "All three paths reviewed: retain restricted probe-wait observation hook, declaration and GPL tracepoint export. The flag values 0/1 bracket the native wait_for_device_probe without bypassing it. The full dpm_prepare native reference/unlock flow was separately compared in pm-suspend-history-review.json. This is configured generic source customization, not a physical-controller implementation. No definite SDK registration established; retain conservatively and require trusted callbacks to obey the call-site context.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-interfaces-review.json",
+        "SECURITY.md: PM statistics and source interfaces"
+      ],
+      "patch_sha256": "0fa37325271e9cb93537ea8c3ef7961ad52582e7cfd265d08d3a497f5e50595b"
+    },
+    {
+      "commit": "52335947a18e264691e60db685ed1f1db2b9303c",
+      "disposition": "adapted-net-state",
+      "rationale": "All five paths reviewed: retain eight paired DPM, threaded-IRQ, workqueue and work-item wait hooks, complete declarations and GPL exports. Whole native wait functions match after removing the observation calls/braces. In particular dpm_wait retains the LTS no_pm guard, IRQ hard-handler synchronization still precedes the thread wait, and workqueue completion/cleanup remains native. No new skip flag is introduced. Pointers passed to trusted callbacks are live during the synchronous call; arbitrary callback mutation or blocking is not declared safe. SDK registration is unconfirmed; retain the configured generic diagnostic source interfaces conservatively.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-interfaces-review.json",
+        "SECURITY.md: PM statistics and source interfaces"
+      ],
+      "patch_sha256": "3ba6b11d0c23d0848bae6a6af88f8e710368a4e3304b1981a8e88d7a0ab25800"
+    },
+    {
+      "commit": "c75faebcafba89554fbde6e86b82a63c38b4c01d",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain the single GPL export of pm_wakeup_irq for generic module source compatibility. The entire function is identical to LTS and returns its existing first IRQ slot; no new interrupt or wake decision is introduced. No exact SDK external-module consumer established; this is conservative current-interface retention, not proof of required runtime use.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-interfaces-review.json",
+        "SECURITY.md: PM statistics and source interfaces"
+      ],
+      "patch_sha256": "c7eaa6d2f855af8ed4965af32b7e4d5fb2b96a9df9710e164d9ae997a8dd358f"
+    },
+    {
+      "commit": "ec03c6ff7f9de8b981579dc179b0158bbfd219e2",
+      "disposition": "adapted-net-state",
+      "rationale": "Both paths reviewed: make wakeup_sources_stats_open non-static, export it GPL and declare it publicly. Its native seq_open_private body and all start/next/stop/show/stat-print functions remain, including private SRCU index and lock pairing. Kernel module callers must use matching seq_read/seq_lseek/seq_release_private operations and establish their own appropriate file permissions; the export does not itself create an unprivileged endpoint. Existing debugfs permissions stay 0444. No definite SDK caller established; retain generic source interface conservatively.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-interfaces-review.json",
+        "SECURITY.md: PM statistics and source interfaces"
+      ],
+      "patch_sha256": "9e12917402a345cde967ba22b30d615f94c42bf2fa6e8ab26e0fe68969ce0547"
+    },
+    {
+      "commit": "8d91f071ee163f09aa62b03432def45b87c311c1",
+      "disposition": "omitted-current-target",
+      "rationale": "Remove the full three-path out-of-band power-domain extension in 14fa69019d32. Its ACK reader is solely the companion genpd_finish_suspend/resume power-off exception (13d0c0647b78), already omitted; the generated SDK configuration does not enable PM_GENERIC_DOMAINS, whose drivers/Makefile gate excludes that subsystem. It uses ACPI/virtio PM instead. Pinned local mainline positively shows setters in TI OMAP and i.MX USB controllers with separate always-on wake logic; no such topology is added for this target. Keep exact native device_prepare and generic power-domain code, avoiding unsupported power-off semantics. Searches not finding an SDK setter are corroboration, not the sole omission rationale. This does not assert no future Android platform or unknown external module can use the API.",
+      "result_commits": [
+        "14fa69019d3223ebfc013cd9c210f68580598fc7"
+      ],
+      "evidence": [
+        "evidence/pm-interfaces-review.json",
+        "SECURITY.md: PM statistics and source interfaces"
+      ],
+      "patch_sha256": "335f742fc7f1f41eb44c802a134389bbf69dfc219e0c2acaf2d5a10eb42ac0ed"
+    },
+    {
+      "commit": "86bb35e011f9ca0d4ce8350c9d6954732a3e562f",
+      "disposition": "adapted-net-state",
+      "rationale": "Both paths fully reviewed: keep the opaque SRCU token, three BPF kfuncs, SYSCALL-only registration and init call as configured generic Android BPF introspection. SDK BPF_SYSCALL/BTF are enabled, but no definite SDK program consumer was established. Local verifier review shows KF_ACQUIRE/RELEASE tracking, type/offset checks and reference-leak rejection; sleepable syscall programs are required. The get_head void pointer becomes a scalar, so it grants an address rather than verifier-authorized direct memory access. It does not require a lock token: callers must acquire SRCU for meaningful traversal, and verifier pairing alone does not prove traversal lifetime. Kernel probe reads remain nofault, with existing CAP_PERFMON/token and security_locked_down checks; program load requires CAP_BPF/token. Exposing the list address and adding privileged traversal are acknowledged surface increases. No verifier relaxation or LTS lifetime fix is removed; no running BPF verification performed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-interfaces-review.json",
+        "SECURITY.md: PM statistics and source interfaces"
+      ],
+      "patch_sha256": "8e025d61bfb9a87eb6e48adfaae5c4bb17e89dbfbc069f51710467126c3ce360"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "drivers/base/power/main.c",
+      "function": "device_prepare",
+      "whole_function_identical_to_lts": true,
+      "sha256": "ae52797d7003e781e88170694a9a38bd54257c529c654b11fea1425a962e291d"
+    },
+    {
+      "path": "kernel/power/main.c",
+      "function": "dpm_save_failed_dev",
+      "whole_function_identical_to_lts": true,
+      "sha256": "139660eb6b5e80883b5824fe1a46cebb3460660d33ecbed11dd625fc2330b734"
+    },
+    {
+      "path": "kernel/power/main.c",
+      "function": "pm_report_hw_sleep_time",
+      "whole_function_identical_to_lts": true,
+      "sha256": "6345bef2d145eea4cfab69b032a951ca09da32867eef3b3ab9ba28eccc16a6d0"
+    },
+    {
+      "path": "kernel/power/main.c",
+      "function": "pm_report_max_hw_sleep",
+      "whole_function_identical_to_lts": true,
+      "sha256": "54b1bd8149db4f0f40e570c4e785282369fea166e62014f0858a213cf881b8b1"
+    },
+    {
+      "path": "drivers/base/power/wakeup.c",
+      "function": "pm_wakeup_irq",
+      "whole_function_identical_to_lts": true,
+      "sha256": "29dc243120df0259f5d337bec650ad4aeed81bf4a2ab0bad8a4d7e5f82e1323c"
+    },
+    {
+      "path": "drivers/base/power/wakeup.c",
+      "function": "wakeup_sources_stats_seq_start",
+      "whole_function_identical_to_lts": true,
+      "sha256": "267b1bac34c6390700c1a5db163b848549d4eb4802728d0caee8cadaaa9ea5c9"
+    },
+    {
+      "path": "drivers/base/power/wakeup.c",
+      "function": "wakeup_sources_stats_seq_next",
+      "whole_function_identical_to_lts": true,
+      "sha256": "f98431cfce700e91b661a7d1b55a6244c44e4d99fc03a63874a17b96ad3700ea"
+    },
+    {
+      "path": "drivers/base/power/wakeup.c",
+      "function": "wakeup_sources_stats_seq_stop",
+      "whole_function_identical_to_lts": true,
+      "sha256": "3c504d3369fc89e350f2194ca622c8e7981e8594444018f2474c2096c959eeac"
+    },
+    {
+      "path": "drivers/base/power/wakeup.c",
+      "function": "wakeup_sources_stats_seq_show",
+      "whole_function_identical_to_lts": true,
+      "sha256": "d15b46b8db213febe4e04c5bd9af7efcedeb5fae58c65a95e1f11bdd4a8cc332"
+    },
+    {
+      "path": "drivers/base/power/wakeup.c",
+      "function": "print_wakeup_source_stats",
+      "whole_function_identical_to_lts": true,
+      "sha256": "63094d1770c713d416cd5eee76e2fad4f4efe71dea3ec52fa3d080940c774729"
+    },
+    {
+      "path": "kernel/irq/manage.c",
+      "function": "__synchronize_irq",
+      "identical_to_lts_except": "paired wait observation hooks",
+      "sha256": "0b26f64618cf2c63f96eabc3670f99b7e6a8d6ad2c17a2d5fd5364448cf3a8df"
+    },
+    {
+      "path": "kernel/workqueue.c",
+      "function": "__flush_workqueue",
+      "identical_to_lts_except": "paired wait observation hooks",
+      "sha256": "e7e1ad05ae908219c87cec8a8d47cf1e459f8bc74315b536b5e5b4cf6e9d99c5"
+    },
+    {
+      "path": "kernel/workqueue.c",
+      "function": "__flush_work",
+      "identical_to_lts_except": "paired wait observation hooks",
+      "sha256": "678aae6c4473a90f62014d42679299f0a15998e9f0f955c5ed50d84a1eb235ab"
+    },
+    {
+      "path": "drivers/base/power/main.c",
+      "function": "dpm_wait",
+      "identical_to_lts_except": "paired wait hooks, braces and comment wording; native no_pm early exit retained",
+      "sha256": "4b548068f9add98e66b1d62c3748928944fa9fb53c12231a54e884bea3eaa41f"
+    },
+    {
+      "path": "include/trace/hooks/dtask.h",
+      "whole_file_identical_to_ack": true,
+      "sha256": "1439634612bfdc38a26eec0ee8059e9745b6ba99b9fa415818d7c71aeb30d12f"
+    },
+    {
+      "path": "drivers/base/power/wakeup.c",
+      "scope": "complete BPF definition/registration and wakeup_sources_init suffix",
+      "identical_to_ack": true,
+      "sha256": "a0c7fca1dc19c764a1528b51bf552b921a25cca04a16caf25da8a8774e5fb5a7"
+    },
+    {
+      "path": "drivers/base/power/power.h",
+      "whole_file_identical_to_ack": true,
+      "sha256": "2e13d4cc434e2eed11a107343c570d1eab4b2042da0573947b745ca9e10e8bd5"
+    },
+    {
+      "path": "include/linux/pm_wakeup.h",
+      "identical_to_lts_except": "wakeup_sources_stats_open declaration",
+      "sha256": "a461b0acd6efe9568b63dc36ac3a7c9643caad30b26316ba0c473712cf28903e"
+    },
+    {
+      "path": "include/linux/suspend.h",
+      "function": "dpm_save_failed_step",
+      "token_identical_to_lts_except": "static inline location",
+      "sha256": "3779868d03a85ad135cdee794f72da07c76a9076a0d3bc1353c1b8750cc2aff9"
+    },
+    {
+      "path": "drivers/pmdomain/core.c",
+      "whole_file_identical_to_lts": true,
+      "sha256": "9c29c7ee4b45ceda7daabff3b86d42b71dab5d493e8e489ebb74b177411e3127"
+    }
+  ],
+  "security": "The ACK prerequisite-locking and data-relocation revert sequence removes a pre-v6.18 native locking fix. Restore exact locked device-name recording while retaining the Android reporting interface. Post-v6.18 stable textual scans do not cover such older fixes and are not semantic proof. Generic wait hooks and exports preserve native control flow but execute/enable trusted module code. BPF kfuncs introduce a privileged address/traversal surface, preserve existing verifier/ref and helper checks, and do not make a coherent statistics snapshot or enforce that get_head is called with SRCU held. Physical always-on-domain support is omitted together with its excluded genpd consumer; native PM safety decisions remain.",
+  "sdk_config": {
+    "PM_GENERIC_DOMAINS": "not enabled in generated SDK config",
+    "PM_SLEEP": "y",
+    "ACPI": "y",
+    "ACPI_SLEEP": "y",
+    "BPF_SYSCALL": "y",
+    "DEBUG_INFO_BTF": "y",
+    "ANDROID_VENDOR_HOOKS": "y"
+  },
+  "consumer_search": {
+    "scopes": [
+      "grapheneos-17/system",
+      "grapheneos-17/frameworks",
+      "grapheneos-17/packages",
+      "grapheneos-17/device/generic",
+      "kernel_manifest-6.18/common-modules"
+    ],
+    "terms": [
+      "bpf_wakeup_sources",
+      "bpf_ws_lock",
+      "device_set_out_band_wakeup",
+      "device_out_band_wakeup",
+      "wakeup_sources_stats_open",
+      "paired wait/probe hook registrations"
+    ],
+    "result": "No definite source consumer or hook registration found in these scopes; generated old System.map matches in a broader device search are not consumers. Generic exports/hooks/BPF API retained conservatively. Out-of-band omission additionally has positive topology/configuration/caller evidence."
+  },
+  "local_resources": [
+    "Pinned ACK and LTS",
+    "Already-pinned local mainline 9e947d96915af63e28896caae85a81b74855621b for out-of-band setters",
+    "Current local kernel BPF verifier/syscall/helper and PM source",
+    "Already-pinned GrapheneOS and manifest projects"
+  ],
+  "remote_sources_used": [],
+  "validation": "Source equality and scope checks recorded above. Existing emulator builds 113 (76fb9cfd8c64) and 114 (14fa69019d32) passed. Each produced both kernel images, 100 common and 45 virtual-device modules, with all 145 signatures and flag/CRC tables verified and a tampered payload rejected. No PM execution, live BPF programs, swap/hibernation or emulator boot."
+}

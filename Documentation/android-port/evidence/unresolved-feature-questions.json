@@ -387,5 +387,40 @@
     "result_commits": [
       "1cea64c5f402352151c75e6cab68b648fb758b21"
     ]
+  },
+  {
+    "topic": "SDK PM diagnostic hooks, exports and BPF traversal consumers",
+    "status": "final conservative source-retention decision; exact SDK consumers and runtime behavior unconfirmed",
+    "candidates": [
+      "45609b7910fa69c050a2428089a8a59775dd8436",
+      "52335947a18e264691e60db685ed1f1db2b9303c",
+      "c75faebcafba89554fbde6e86b82a63c38b4c01d",
+      "ec03c6ff7f9de8b981579dc179b0158bbfd219e2",
+      "86bb35e011f9ca0d4ce8350c9d6954732a3e562f"
+    ],
+    "evidence": "No definite source consumer or hook registration found in these scopes; generated old System.map matches in a broader device search are not consumers. Generic exports/hooks/BPF API retained conservatively. Out-of-band omission additionally has positive topology/configuration/caller evidence. The ACK suspend-statistics relocation revert accidentally reverses a pre-v6.18 native locking fix. Restore exact locked device-name recording while retaining the Android reporting interface. Post-v6.18 stable textual scans do not cover such older fixes and are not semantic proof. Generic wait hooks and exports preserve native control flow but execute/enable trusted module code. BPF kfuncs introduce a privileged address/traversal surface, preserve existing verifier/ref and helper checks, and do not make a coherent statistics snapshot or enforce that get_head is called with SRCU held. Physical always-on-domain support is omitted together with its excluded genpd consumer; native PM safety decisions remain.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "76fb9cfd8c64262c0f282ea77ab1ca68cc266288"
+    ]
+  },
+  {
+    "topic": "SDK freezer/QoS/resume and snapshot callback consumers",
+    "status": "final conservative source-retention decisions; exact SDK registrations and bootloader integration unconfirmed",
+    "candidates": [
+      "29ab26ab0b310a71ef1e9b39e2c06b442c035662",
+      "5e06e2da18248aac8d7f95a36c674f65e2f43403",
+      "965301889ae788e9942b8038208a4bde8f3a185b",
+      "b1d0182cb662ab4da04dc22b0e5552aecb1e5d5c",
+      "51b8e255ccd1313c4b9197a9b05d68861b9049e2",
+      "ae9dae9d484af0b9808c22a37650f556177b8633",
+      "47490190cdcd68dcd92de0692439009c64049b60",
+      "a83a22a2e56813c7cfa31054f1cc4aa3751477cd"
+    ],
+    "evidence": "Scoped source searches in device/generic, system and manifest common-modules did not establish these optional callback registrations. Generic interfaces in configured PM/hibernation/swap cores are retained for source compatibility; no physical bootloader, ARM64 resume adaptation or disabled generic-domain feature is included. Do not retain ACK removal of native suspend-statistics locking. Native control flow and permission/lock guards remain in the reviewed PM adaptations. Filesystem-sync wait may abort while background sync continues; this improves responsiveness but is not proof of durable storage on an aborted attempt. Resume callback failures become retryable. QoS skip/rewrite hooks deliberately delegate constraint policy to trusted modules and may weaken thermal/power constraints when used. Snapshot transformation hooks supply no implemented crypto/error protocol and cover only uncompressed data, so no hibernation confidentiality/integrity claim is justified. ARM64 bootloader and disabled physical genpd integration are excluded; generic source interfaces in configured SDK subsystems are retained conservatively.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "d7f2fd2bd53e0bb1e72d0bc1923372996615a411"
+    ]
   }
 ]

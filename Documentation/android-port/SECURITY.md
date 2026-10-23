@@ -5059,3 +5059,76 @@ four-path merge keeps DM_USER configuration alongside native dm-vdo inclusion;
 historical ownership entries do not control runtime or module compatibility.
 Build 112 and the module/signature checks pass. This is compilation and source
 review evidence, not suspend execution or emulator runtime verification.
+
+# PM statistics and source interfaces
+
+`evidence/pm-interfaces-review.json` records seven individual dispositions.
+The suspend_stats relocation revert removed native locking introduced by
+`a6d38e991dc4`, which predates v6.18. `76fb9cfd8c64` restores the exact native
+out-of-line device-name recorder and mutex while preserving the visible data
+needed by Android late/noirq abort reports. Concurrent writers otherwise race
+on both the ring index and name buffer. This restoration preserves the Linux
+fix; it does not promise coherent snapshots of all PM statistics. The newer
+stable textual-overlap scan cannot establish preservation of pre-v6.18 fixes.
+
+Retain the generic configured wait/probe hooks and wakeup-statistics GPL exports.
+The relevant complete wait functions retain native control flow and cleanup;
+trusted module callbacks remain responsible for context and pointer lifetime.
+The exported seq-file opener requires the corresponding release operations and
+appropriate permissions in any new endpoint. Exact SDK consumers were not
+established, and conservative retention does not claim runtime necessity.
+
+The BPF wakeup-source interface is retained with its configured SYSCALL-only
+registration. KF_ACQUIRE/RELEASE lets the verifier track opaque SRCU tokens and
+reject leaks or invalid releases. get_head returns a scalar address, not a
+directly dereferenceable verified pointer. It does not require the token, so
+pairing alone does not enforce traversal under SRCU. Kernel probe reads retain
+native nofault behavior and capability/token/LSM checks. Loading syscall programs
+requires CAP_BPF or the corresponding token authority; kernel probe reads
+require CAP_PERFMON/token and pass the existing lockdown hook. Address exposure
+and privileged traversal expand the surface. No runtime verifier test or
+coherent snapshot guarantee is claimed.
+
+`14fa69019d32` removes the physical out-of-band wake flag/helpers together with
+their already omitted generic-domain power-off consumer. The generated SDK
+does not enable PM_GENERIC_DOMAINS; the actual caller and pinned mainline TI/i.MX
+setters describe a separate always-on physical domain topology. Keep native
+ACPI/virtio-target PM behavior. Missing SDK search results alone are not the
+basis for omission; no claim is made about unknown future platform consumers.
+
+# PM runtime, freezer and snapshot customization
+
+`evidence/pm-runtime-history-review.json` records twenty dispositions, including
+five nonempty merge resolutions. The explicit prerequisite revert
+`768546c00842` removed the native statistics lock before the data relocation
+revert; the port rejects that removal and keeps the restored native lock.
+Historical OF copying and mpage tracing are superseded in their final trees.
+Native freezer diagnostics, s2idle checks, syscore cleanup and CPU-disable paths
+remain alongside identified Android reports/observations.
+
+The background filesystem-sync helper is serialized by the existing transition
+mutex at all three call sites. A wake event may abort the wait while queued sync
+continues; success waits for the pending count to reach zero. Suspend,
+hibernation and snapshot ioctl retain native permission and cleanup paths.
+This does not assert storage durability after an aborted attempt. ACK runtime
+PM retries failed resume callbacks, while persistent suspend failures retain
+runtime_error. Native status/locking, supplier references and NOIO protection
+remain. Repeated driver callbacks are a deliberate error-recovery difference.
+
+Generic freezer, resume and QoS hooks are retained conservatively with exact
+SDK registrations unconfirmed. Early-resume callbacks run with IRQs disabled;
+per-task freeze-failure callbacks run under tasklist_lock. QoS v2 skip and device
+maximum-frequency rewrite are policy overrides, not passive observations: a
+trusted vendor can alter thermal/power constraints and availability. No-hook
+behavior and native request validation remain. Disabled generic-domain hooks
+and non-target ARM64 CPU-resume integration are omitted with their consumers.
+
+Snapshot/swap exports and generic transformation hooks are retained as optional
+source interfaces in the SDK-configured hibernation subsystem. They do not
+implement secure hibernation. The encryption-named hook operates only on
+uncompressed data pages, excludes the header and compressed path, and has no
+error return; the post-save hook also runs on failure. Skipping map writes may
+invalidate native restoration. A trusted implementation would need a complete
+format, integrity/confidentiality and failure protocol; none is added or claimed
+here. Existing d7f2fd2bd53e keeps swap rotation accounting balanced across callback
+changes. No bootloader integration, suspend, swap, hibernation or emulator was run.

@@ -1,0 +1,423 @@
+{
+  "source_head": "14fa69019d3223ebfc013cd9c210f68580598fc7",
+  "records": [
+    {
+      "commit": "1226c72a32a8fecfd77370319d8f9d6ceeafdeac",
+      "disposition": "merge-resolution-partially-adapted-net-state",
+      "rationale": "All four unique paths reviewed. Keep Android syscore abort reporting using %pS with the current syscore->ops callback and native console report/unwind. Keep native suspend CPU-disable helper plus Android failure observation (later renamed pm_sleep_disable_secondary_cpus). OF command-line override/append resolution is superseded by final native fdt.c: whole file is exact LTS, not the old cast/copy logic. Historical mpage dataread trace is absent in final ACK; current split read/write end_io bodies are exact LTS with native iterator and completion. No old trace call or allocation/copy handling is resurrected.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-runtime-history-review.json",
+        "SECURITY.md: PM runtime, freezer and snapshot customization"
+      ],
+      "patch_sha256": "21cc1b21a3f14d8c1a8988dd02a0abb77f21fdb0ff34427afc668bb4b665f3bb"
+    },
+    {
+      "commit": "2f7599f2afb640f0b11142ee246c07b3da8dd18a",
+      "disposition": "merge-resolution-adapted-net-state",
+      "rationale": "The only unique resolution uses native pm_sleep_disable_secondary_cpus and retains the Android failure report. Current suspend_enter keeps that helper, error/test guard and Enable_cpus unwind; later native handling and Android reporting coexist. No old direct CPU-disable implementation imported.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-runtime-history-review.json",
+        "SECURITY.md: PM runtime, freezer and snapshot customization"
+      ],
+      "patch_sha256": "b4af87f9d1c9491d9030cba4014111c896c33956f889a653d310f1affaacc7e6"
+    },
+    {
+      "commit": "5e49ecd49eeadb5810626dffe45ddc8ef2c7bb3e",
+      "disposition": "merge-resolution-adapted-net-state",
+      "rationale": "The unique s2idle_loop resolution preserves both clear_wakeup_reasons and the native optional s2idle_ops->check call. Complete current loop is exact LTS apart from the clear operation (proved in pm-suspend-history-review.json); platform checks and native s2idle entry remain.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-runtime-history-review.json",
+        "SECURITY.md: PM runtime, freezer and snapshot customization"
+      ],
+      "patch_sha256": "30055f6489f800436cb9494c2c78f3c18aca51def6e01704145379ca24cdcd8f"
+    },
+    {
+      "commit": "6f1688fe03caa4746287ce721cb1115885825a11",
+      "disposition": "merge-resolution-superseded-no-residual-code",
+      "rationale": "The unique resolution retained separate Android aborted/failed freeze messages while adopting the native what field. Later 272d889f9452 explicitly restores native combined abort/failure diagnostics. Current whole process.c is native except separately reviewed observation hooks. Do not resurrect the superseded branch that suppressed task diagnostics.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pm-runtime-history-review.json",
+        "SECURITY.md: PM runtime, freezer and snapshot customization"
+      ],
+      "patch_sha256": "475c1888784f93dcf8379443fd1fd8ad998f995a7007f1b461d071ff0e297506"
+    },
+    {
+      "commit": "272d889f945254e061b48423043659d2c12e7163",
+      "disposition": "reconciled-to-lts",
+      "rationale": "Complete single-file patch reviewed. Its combined abort/failure message and !wakeup || pm_debug_messages_on task reporting are present in native LTS and current code. Subsequent Android observation hooks do not change those log conditions. Retain native freezer failure diagnostics and decisions.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pm-runtime-history-review.json",
+        "SECURITY.md: PM runtime, freezer and snapshot customization"
+      ],
+      "patch_sha256": "35ad491ece51d1e01b3e28f9d90a7500af04d8193a7b31b6f5a71e8d925d9eae"
+    },
+    {
+      "commit": "768546c00842e719099e3f4038d8c67fdf484483",
+      "disposition": "reconciled-to-lts",
+      "rationale": "Reject the entire locking revert. Its stated purpose is only to enable the following data-location revert; preserving Android suspend_stats visibility does not require dropping writer serialization. 76fb9cfd8c64 retains visible data and restores the complete native locked dpm_save_failed_dev plus mutex. This preserves upstream a6d38e991dc4 and prevents racing failing callbacks from corrupting ring indices/name records.",
+      "result_commits": [
+        "76fb9cfd8c64262c0f282ea77ab1ca68cc266288"
+      ],
+      "evidence": [
+        "evidence/pm-runtime-history-review.json",
+        "SECURITY.md: PM runtime, freezer and snapshot customization"
+      ],
+      "patch_sha256": "de3fbcee5ca72d1e5703169cebebb282701a444c29ea584f3a64c71497eab68f"
+    },
+    {
+      "commit": "9bc9ba0dfd40bfe16a229f22e0afecebf0609046",
+      "disposition": "merge-resolution-adapted-net-state",
+      "rationale": "Only unique include resolution reviewed: retain both native linux/fs.h and Android wakeup_reason.h. Native filesystem freeze/thaw and Android failure diagnostics need both declarations. No behavioral code is uniquely introduced by this merge.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-runtime-history-review.json",
+        "SECURITY.md: PM runtime, freezer and snapshot customization"
+      ],
+      "patch_sha256": "8a3b1971685011b1de61e49f7628ba94ceca79214b30a3b7289609f241bc5352"
+    },
+    {
+      "commit": "e1148714015118450923dd896a46d1a21a33b2d7",
+      "disposition": "omitted-current-target",
+      "rationale": "All three paths reviewed, including the renamed governor path. Omit the generic-domain idle-state veto hook, its header and registry export together: this is the physical domain state-selection subsystem gated by PM_GENERIC_DOMAINS, disabled in the generated SDK. Current drivers/pmdomain/governor.c is exact LTS. This is an established target/subsystem boundary, not an omission inferred only from missing vendor registrations.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pm-runtime-history-review.json",
+        "SECURITY.md: PM runtime, freezer and snapshot customization"
+      ],
+      "patch_sha256": "4866bba30349164492a61e5a66b8fa08169c2833ce7b4e6b246636aad245a931"
+    },
+    {
+      "commit": "29ab26ab0b310a71ef1e9b39e2c06b442c035662",
+      "disposition": "adapted-net-state",
+      "rationale": "All three paths reviewed. Keep two generic freezer-failure observation hooks, declarations and GPL exports. Per-task hook executes under native tasklist_lock with a live task and must not sleep; summary executes after unlocking. Native freezer selection, task dumping, error result and timeouts remain. Later fa5f7e131488 narrows hooks to real failures. No exact SDK callback found; retain current configured generic diagnostic customization conservatively.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-runtime-history-review.json",
+        "SECURITY.md: PM runtime, freezer and snapshot customization"
+      ],
+      "patch_sha256": "9c9b3c3d3e710531d870c689a8f5cc0ec03bf0177439a97634e4ceb2e4bb79aa"
+    },
+    {
+      "commit": "fa5f7e13148876a99f249df015321d7fc16f84b9",
+      "disposition": "adapted-net-state",
+      "rationale": "Keep both !wakeup conditions from the complete one-file fix. Wake-triggered aborts no longer invoke failure-only callbacks, while native console/task reporting remains governed by its own unchanged conditions. No timeout, task eligibility or freezer success result is changed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-runtime-history-review.json",
+        "SECURITY.md: PM runtime, freezer and snapshot customization"
+      ],
+      "patch_sha256": "24526bb23d612b6c624269ed6601e5ce2df5080a00d9c1c2c29fec9b778dafb6"
+    },
+    {
+      "commit": "5e06e2da18248aac8d7f95a36c674f65e2f43403",
+      "disposition": "adapted-net-state",
+      "rationale": "All three paths reviewed: retain add/update/remove frequency-QoS observation hooks, required enum include and GPL exports. Add hook reports native application result, update follows input/active-request checks, remove precedes native removal. Full source delta does not replace request validation or frequency aggregation. Trusted callbacks may inspect live request objects and must honor synchronization; exact SDK registration remains unconfirmed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-runtime-history-review.json",
+        "SECURITY.md: PM runtime, freezer and snapshot customization"
+      ],
+      "patch_sha256": "db5d1a4cd645a7e09b8e4c84dd1b097b5a48f29d4a91a88e83d0f4f1679efad8"
+    },
+    {
+      "commit": "965301889ae788e9942b8038208a4bde8f3a185b",
+      "disposition": "adapted-net-state",
+      "rationale": "All three paths reviewed. Keep restricted v2 callback with default skip=false after native value/active-request validation. A trusted registered callback can suppress an update and return zero while preserving the old constraint. This intentionally permits a vendor policy to override native min/max request aggregation, potentially affecting thermal/power limits and availability; it is not merely observational. No callback leaves native behavior. Retain current generic module policy interface conservatively; do not claim SDK use or arbitrary policy safety.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-runtime-history-review.json",
+        "SECURITY.md: PM runtime, freezer and snapshot customization"
+      ],
+      "patch_sha256": "ebc67caab8521cf0af971b4db2f4a02472040d2aeb24a3caa0d91146354de2c5"
+    },
+    {
+      "commit": "b1d0182cb662ab4da04dc22b0e5552aecb1e5d5c",
+      "disposition": "adapted-net-state",
+      "rationale": "All three paths reviewed. Retain the generic device-QoS hook only for changed MAX_FREQUENCY requests; it can rewrite new_value before native apply_constraint/frequency validation. Preserve native invalid-request, missing-QoS and type checks. Despite GPU naming the call site is generic device PM. Trusted policy may change effective frequency limits; user authorization is not bypassed by a new syscall. Exact SDK callback unknown, so source interface retained conservatively.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-runtime-history-review.json",
+        "SECURITY.md: PM runtime, freezer and snapshot customization"
+      ],
+      "patch_sha256": "8abdad0de8a04fa2a457017ab82fb0dd5180ddca8ca5ea13d8c99d545ce72d4f"
+    },
+    {
+      "commit": "51b8e255ccd1313c4b9197a9b05d68861b9049e2",
+      "disposition": "adapted-net-state",
+      "rationale": "All three paths reviewed: retain three resume timing observations, header and GPL exports. Early callback follows suspend_ops->enter in the IRQ-disabled region and must not sleep; it is not called by the earlier s2idle branch. Resume_begin and resume_end remain at native labeled cleanup boundaries; not all early failures emit a balanced pair. These are observations with NULL argument and cannot skip native cleanup by a return flag. Preserve source semantics without promising a complete timing interval for every error path.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-runtime-history-review.json",
+        "SECURITY.md: PM runtime, freezer and snapshot customization"
+      ],
+      "patch_sha256": "66f02cd072592b6e8e12f11db68c46de0db7e84e24162f7cd57163c4443e5bf7"
+    },
+    {
+      "commit": "c1b98555abbedcb7b14dedfe087fd7f7599dc8d1",
+      "disposition": "adapted-net-state",
+      "rationale": "Both paths and full helper/init code reviewed. Retain ordered background filesystem sync, atomic pending count and five-jiffy wakeup polling so wake events can abort waiting without waiting for sync completion. All callers serialize on the native system transition mutex, so the work_pending/queue count decision has one producer; worker may finish concurrently and a running item may be queued for one further sync. Background sync continues on EBUSY; successful return requires the count to reach zero. Existing native sync helper, configuration and allocation-failure cleanup remain. This is generic Android runtime responsiveness, not a future device feature.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-runtime-history-review.json",
+        "SECURITY.md: PM runtime, freezer and snapshot customization"
+      ],
+      "patch_sha256": "a94c7b4dedce60ae07f8d982deb8674ee78a0200db53716998eff22c9d915b3d"
+    },
+    {
+      "commit": "6ba9570e23fa133793d09ea79be2f38d7951f708",
+      "disposition": "adapted-net-state",
+      "rationale": "All three callers reviewed. Suspend returns through Unlock before freezing on sync EBUSY; hibernate goes through post-notifier/console cleanup without thawing filesystems not yet frozen; snapshot ioctl breaks before freeze. All calls hold the native transition mutex; snapshot retains CAP_SYS_ADMIN checks. On success the native freeze/snapshot sequence remains. Current SDK builds suspend and hibernation and leaves SUSPEND_SKIP_SYNC unset. No filesystem sync, suspension or hibernation was executed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-runtime-history-review.json",
+        "SECURITY.md: PM runtime, freezer and snapshot customization"
+      ],
+      "patch_sha256": "15da7fff1ebf63fccfe3e6cc24a059523d9bca63d0f215774fbc8763b97ddbee"
+    },
+    {
+      "commit": "7e9c80f5ff5330c6a1607580054b29693c3fe4be",
+      "disposition": "adapted-net-state",
+      "rationale": "Complete patch and LTS/current runtime.c delta reviewed: only the two runtime_error assignment changes differ. Keep ACK retryable resume failures by recording persistent callback errors in rpm_suspend fail rather than generic rpm_callback. Native runtime status/spinlocks, NOIO context, supplier references, wake-IRQ handling, EACCES-to-EAGAIN conversion and transient EAGAIN/EBUSY rules remain. Retry changes error recovery/availability and can invoke a driver again after a failed resume; it does not bypass the driver error return or authorize hardware access. Retain current generic Android runtime behavior; no device fault-injection/run validation.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-runtime-history-review.json",
+        "SECURITY.md: PM runtime, freezer and snapshot customization"
+      ],
+      "patch_sha256": "b86145adeff4ff9b46be193e3923a39a97d37525dd28a8f84130fb2b2a11c0cc"
+    },
+    {
+      "commit": "ae9dae9d484af0b9808c22a37650f556177b8633",
+      "disposition": "adapted-net-state",
+      "rationale": "All three paths reviewed: preserve two GPL source exports plus alloc_swapdev_block declaration. Both complete function bodies are native LTS. Retain generic snapshot/swap source customization in the SDK-configured hibernation subsystem; the named bootloader integration is not established on SDK. Exports alone add neither encryption nor a new userspace endpoint; do not claim image confidentiality.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-runtime-history-review.json",
+        "SECURITY.md: PM runtime, freezer and snapshot customization"
+      ],
+      "patch_sha256": "f66f2b77651089f1cc43776714ce981774f20a4c723281aabd2fcb709b6c09cb"
+    },
+    {
+      "commit": "47490190cdcd68dcd92de0692439009c64049b60",
+      "disposition": "partially-adapted-net-state",
+      "rationale": "All five paths reviewed. Omit ARM64 resume-header storage and CPU resume callback/header/export with the entire non-target architecture adaptation. Keep generic live-resume-file observation and swapon/swapoff hibernation classification source hooks in the SDK-enabled snapshot/swap core. d7f2fd2bd53e records SWP_SOLIDSTATE classification at activation, clears it on the rotational path and uses it at teardown, avoiding unbalanced nr_rotate_swap if a callback changes. Native capability checks, references and shutdown remain. No SDK bootloader integration established; generic source hooks retained conservatively, not as verified bootloader support.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "d7f2fd2bd53e0bb1e72d0bc1923372996615a411"
+      ],
+      "evidence": [
+        "evidence/pm-runtime-history-review.json",
+        "SECURITY.md: PM runtime, freezer and snapshot customization"
+      ],
+      "patch_sha256": "b0b6576d6792e374c16c39eeae1db64667fa09ee51d1d71ed64c73910e9052a7"
+    },
+    {
+      "commit": "a83a22a2e56813c7cfa31054f1cc4aa3751477cd",
+      "disposition": "adapted-net-state",
+      "rationale": "All three paths reviewed. Retain current generic snapshot transform/init/post-save and map-write-control source hooks. Default skip=false preserves native writes; error is initialized by the preceding data write even if the map callback skips. Encryption-named hook only handles the uncompressed save_image pages, not the header/compressed path, and returns no failure status; post-save also runs after an unsuccessful save. Therefore these hooks are not an implemented confidentiality/integrity guarantee. A trusted callback must supply a complete compatible format and failure policy; skipping map writes can make native restore impossible. No crypto implementation or SDK bootloader is added. Retain optional generic source customization with explicit unverified necessity.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/pm-runtime-history-review.json",
+        "SECURITY.md: PM runtime, freezer and snapshot customization"
+      ],
+      "patch_sha256": "09907a4c3e4411012bcd8059405dd9a3380f8d97a6f3f231cbc71572cf30c4d9"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "drivers/of/fdt.c",
+      "whole_file_identical_to_lts": true,
+      "sha256": "c5fb7adc129817b0a9c6b7dbbdad3b48638e6126ce7f2d2c418ec144fd2d4c3e"
+    },
+    {
+      "path": "drivers/pmdomain/governor.c",
+      "whole_file_identical_to_lts": true,
+      "sha256": "6bda9f3f36465a7f726358d9bbba8b041c375bdee18746013e59a95ac05b9e0b"
+    },
+    {
+      "path": "arch/arm64/kernel/hibernate.c",
+      "whole_file_identical_to_lts": true,
+      "sha256": "4754a51fe605863ed40152857eee3c1db02cff5681f5ea85a5998b7ab7c80133"
+    },
+    {
+      "path": "kernel/power/process.c",
+      "whole_file_identical_to_ack": true,
+      "sha256": "99fd2e68350da5d68d6ac487ef8b63e947d8f7afcc826924654f5cbcd04ca3ef",
+      "scope": "Candidate patches and full LTS-to-port deltas reviewed; equality alone is not proof of native-fix preservation"
+    },
+    {
+      "path": "kernel/power/hibernate.c",
+      "whole_file_identical_to_ack": true,
+      "sha256": "1557c4031780f8a1f51bfd5b1b861c427a1e3871651d9a2b659f2521ddf5ca0f",
+      "scope": "Candidate patches and full LTS-to-port deltas reviewed; equality alone is not proof of native-fix preservation"
+    },
+    {
+      "path": "kernel/power/user.c",
+      "whole_file_identical_to_ack": true,
+      "sha256": "c8b30513c6a0409b619680cbbf0f282abc0c0eb27a7b6969428c68bd8ff56cc2",
+      "scope": "Candidate patches and full LTS-to-port deltas reviewed; equality alone is not proof of native-fix preservation"
+    },
+    {
+      "path": "kernel/power/swap.c",
+      "whole_file_identical_to_ack": true,
+      "sha256": "ca7d267d9c46c14dd6e41d6d001415899296d48a7437cde98687a03af8774915",
+      "scope": "Candidate patches and full LTS-to-port deltas reviewed; equality alone is not proof of native-fix preservation"
+    },
+    {
+      "path": "kernel/power/qos.c",
+      "whole_file_identical_to_ack": true,
+      "sha256": "37430ec0fa54bb75e8ccff5cba948f84188035b8749ce5684c63795c2321d39b",
+      "scope": "Candidate patches and full LTS-to-port deltas reviewed; equality alone is not proof of native-fix preservation"
+    },
+    {
+      "path": "drivers/base/power/qos.c",
+      "whole_file_identical_to_ack": true,
+      "sha256": "d74f712b690c749624cb092227c0b55e08a0850c9ba4b6e2931d14e0052a6e17",
+      "scope": "Candidate patches and full LTS-to-port deltas reviewed; equality alone is not proof of native-fix preservation"
+    },
+    {
+      "path": "drivers/base/power/runtime.c",
+      "whole_file_identical_to_ack": true,
+      "sha256": "4798079a5aaee9ceaf83826c01502a0e6e784c564015850956cea9b36abd05fd",
+      "scope": "Candidate patches and full LTS-to-port deltas reviewed; equality alone is not proof of native-fix preservation"
+    },
+    {
+      "path": "include/trace/hooks/power.h",
+      "whole_file_identical_to_ack": true,
+      "sha256": "fcd3e4a7ab8fffd79c5e79a9463850abceace594f29f892431f3f62ec196c43e",
+      "scope": "Candidate patches and full LTS-to-port deltas reviewed; equality alone is not proof of native-fix preservation"
+    },
+    {
+      "path": "include/trace/hooks/suspend.h",
+      "whole_file_identical_to_ack": true,
+      "sha256": "17d90c437b3559ab2af2091ee9c1172fab76af7bf385b934eff9c39ae42f7fec",
+      "scope": "Candidate patches and full LTS-to-port deltas reviewed; equality alone is not proof of native-fix preservation"
+    },
+    {
+      "path": "fs/mpage.c",
+      "function": "mpage_read_end_io",
+      "whole_function_identical_to_lts": true,
+      "sha256": "46ca9b5b6ac74e5572f9d214e24127eff33fa966c6f2675b2036bd7efc451f24"
+    },
+    {
+      "path": "fs/mpage.c",
+      "function": "mpage_write_end_io",
+      "whole_function_identical_to_lts": true,
+      "sha256": "b0550ea0cc087772fe3c8346cb835f2e9f64bae2d7e36e138d0f767d994f1200"
+    },
+    {
+      "path": "kernel/power/snapshot.c",
+      "function": "snapshot_get_image_size",
+      "whole_function_identical_to_lts": true,
+      "sha256": "d356615314510276e14f00cafb15358132016f2dc5ce3aa41d2e855b2dced943"
+    },
+    {
+      "path": "kernel/power/swap.c",
+      "function": "alloc_swapdev_block",
+      "whole_function_identical_to_lts": true,
+      "sha256": "29cebca975871138b2c45f2472b7dbe91a7084ca5919c0e8e91191853c6711bf"
+    },
+    {
+      "path": "kernel/power/main.c",
+      "function": "dpm_save_failed_dev",
+      "whole_function_identical_to_lts": true,
+      "sha256": "139660eb6b5e80883b5824fe1a46cebb3460660d33ecbed11dd625fc2330b734"
+    },
+    {
+      "path": "drivers/base/syscore.c",
+      "function": "syscore_suspend",
+      "identical_to_lts_except": "\tlog_suspend_abort_reason(\"System core suspend callback %pS failed\",\n\t\tsyscore->ops->suspend);\n",
+      "sha256": "2881da4bb1b2bab7133ed73801783fd5e43bccb56f3cb561f35b8eb589850d15"
+    },
+    {
+      "path": "kernel/power/main.c",
+      "function": "pm_fs_sync_completed",
+      "identical_to_ack": true,
+      "sha256": "ef85db5586de541e1998e588f3e895290bb71dfb63dcbb837280621da998ebaa"
+    },
+    {
+      "path": "kernel/power/main.c",
+      "function": "pm_fs_sync_work_fn",
+      "identical_to_ack": true,
+      "sha256": "34651873d9277907671c3ef5cbf3e0dd78e276257befe95f7ad1ec0ee29c58a3"
+    },
+    {
+      "path": "kernel/power/main.c",
+      "function": "pm_sleep_fs_sync",
+      "identical_to_ack": true,
+      "sha256": "5c87104dd797f4f7c3ca219dcf5a698a9a3cd4e12ef286765649aa94cc35c6ab"
+    },
+    {
+      "path": "kernel/power/main.c",
+      "function": "pm_start_workqueues",
+      "identical_to_ack": true,
+      "sha256": "ef54e48e3e7c279db48b323afa7ae234c65ae124df834bcd7572a0e0aced35dd"
+    },
+    {
+      "path": "kernel/power/hibernate.c",
+      "function": "hibernate",
+      "scope": "serialized filesystem-sync call and abort unwind reviewed",
+      "sha256": "94213880799358eac5765805e116b4430fe84ea09bb0c472b828a25c3611842d"
+    },
+    {
+      "path": "kernel/power/suspend.c",
+      "function": "enter_state",
+      "scope": "serialized filesystem-sync call and abort unwind reviewed",
+      "sha256": "6f8e938fd5a9964cad857cb8fd3c5cb65d5143eedc8a690f5207fdce0185de4c"
+    },
+    {
+      "path": "kernel/power/user.c",
+      "function": "snapshot_ioctl",
+      "scope": "serialized filesystem-sync call and abort unwind reviewed",
+      "sha256": "12c0924e31a40dbcf8f4aa183251ed0bdc433915eb28c892ed6cd27e02058094"
+    },
+    {
+      "path": "include/trace/hooks/bl_hib.h",
+      "identical_to_ack_except": "ARM64 save_cpu_resume declaration omitted with call site/export",
+      "sha256": "f60c5f8388e1b8fd6b5a6af363e54e761b7df0b2d8c30827dde9366c923ef84d"
+    }
+  ],
+  "security": "Do not retain ACK removal of native suspend-statistics locking. Native control flow and permission/lock guards remain in the reviewed PM adaptations. Filesystem-sync wait may abort while background sync continues; this improves responsiveness but is not proof of durable storage on an aborted attempt. Resume callback failures become retryable. QoS skip/rewrite hooks deliberately delegate constraint policy to trusted modules and may weaken thermal/power constraints when used. Snapshot transformation hooks supply no implemented crypto/error protocol and cover only uncompressed data, so no hibernation confidentiality/integrity claim is justified. ARM64 bootloader and disabled physical genpd integration are excluded; generic source interfaces in configured SDK subsystems are retained conservatively.",
+  "local_resources": [
+    "Pinned ACK/LTS",
+    "Already-pinned local mainline 9e947d96915af63e28896caae85a81b74855621b PM history",
+    "Existing mm swap review and d7f2fd2bd53e extracted accounting checks",
+    "Previously pinned GrapheneOS SDK device/system and manifest common-modules source searches"
+  ],
+  "remote_sources_used": [],
+  "validation": "Source equality and scope checks recorded above. Existing emulator builds 113 (76fb9cfd8c64) and 114 (14fa69019d32) passed. Each produced both kernel images, 100 common and 45 virtual-device modules, with all 145 signatures and flag/CRC tables verified and a tampered payload rejected. No PM execution, live BPF programs, swap/hibernation or emulator boot."
+}
