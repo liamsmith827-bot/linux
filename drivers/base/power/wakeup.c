@@ -845,11 +845,16 @@ EXPORT_SYMBOL_GPL(pm_wakeup_dev_event);
 void pm_get_active_wakeup_sources(char *pending_wakeup_source, size_t max)
 {
 	struct wakeup_source *ws, *last_active_ws = NULL;
-	int len = 0;
+	size_t len = 0;
+	int srcuidx;
 	bool active = false;
 
-	rcu_read_lock();
-	list_for_each_entry_rcu(ws, &wakeup_sources, entry) {
+	if (!max)
+		return;
+	pending_wakeup_source[0] = '\0';
+
+	srcuidx = srcu_read_lock(&wakeup_srcu);
+	list_for_each_entry_rcu_locked(ws, &wakeup_sources, entry) {
 		if (ws->active && len < max) {
 			if (!active)
 				len += scnprintf(pending_wakeup_source, max,
@@ -869,7 +874,7 @@ void pm_get_active_wakeup_sources(char *pending_wakeup_source, size_t max)
 				"Last active Wakeup Source: %s",
 				last_active_ws->name);
 	}
-	rcu_read_unlock();
+	srcu_read_unlock(&wakeup_srcu, srcuidx);
 }
 EXPORT_SYMBOL_GPL(pm_get_active_wakeup_sources);
 
@@ -928,7 +933,7 @@ bool pm_wakeup_pending(void)
 		pm_print_active_wakeup_sources();
 		pm_get_active_wakeup_sources(suspend_abort,
 					     MAX_SUSPEND_ABORT_LEN);
-		log_suspend_abort_reason(suspend_abort);
+		log_suspend_abort_reason("%s", suspend_abort);
 		pr_info("PM: %s\n", suspend_abort);
 	}
 
