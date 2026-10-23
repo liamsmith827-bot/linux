@@ -1,0 +1,118 @@
+{
+  "source_head": "e496198e4e74d421def83a3890ddd19a8f975ffb",
+  "records": [
+    {
+      "commit": "a1fc1fba460be48dff2484b438888ede557930d4",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "e496198e4e74d421def83a3890ddd19a8f975ffb"
+      ],
+      "rationale": "All three original paths read, including new hook header and generic disabled stub. Retain final restricted fair-placement hook and GPL export with explicit SD low-nibble extraction/current wake flags and non-fork load synchronization. Nonnegative target bypasses native placement heuristic but now common select_task_rq checks CPU range BEFORE native affinity/online mask checks and native fallback. Preserve all LTS default fair selection, WF_CURRENT_CPU, energy placement and affinity logic. Fallback callback is also constrained to in-range is_cpu_allowed results so it cannot reintroduce invalid/outside-affinity choice. Invalid overrides resume native selection rather than accepting unsafe CPU IDs. This affects trusted module choices that violated native constraints; valid vendor selection stays supported.",
+      "evidence": [
+        "evidence/cpu-selection-hooks-review.json",
+        "evidence/cpu-selection-hooks-check.json",
+        "SECURITY.md: CPU selection callback validation"
+      ],
+      "patch_sha256": "484555d2cc57bdf2e4e1f7aca850e184eda10d5346f5d8705c418fc5e4fba58a"
+    },
+    {
+      "commit": "7f51114c2879c4730ce6b1a58b261e06ca22b1f7",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "e496198e4e74d421def83a3890ddd19a8f975ffb"
+      ],
+      "rationale": "All three paths read. Retain restricted idle-balancer selection with nr_cpu_ids default sentinel and negative suppression. Validate positive choices before per-CPU/mask access: range, not current CPU, membership in nohz idle and current native HK_TYPE_KERNEL_NOISE masks, and idle_cpu. Invalid positive overrides run native scan; negative means suppress (normalized -1). Native kick_ilb only checked negative before per-CPU access, so range guarding is necessary. Final native housekeeping type replaces historical HK_TYPE_MISC; CPU isolation and NO_HZ_IDLE are enabled in SDK. Callback cannot deliberately choose busy/non-housekeeping CPU; this is justified preservation of native placement/isolation conditions, not removal of the generic source interface. Mutable mask remains a trusted callback contract.",
+      "evidence": [
+        "evidence/cpu-selection-hooks-review.json",
+        "evidence/cpu-selection-hooks-check.json",
+        "SECURITY.md: CPU selection callback validation"
+      ],
+      "patch_sha256": "0dbca30b4440304295bb6fa05eb8683054b6601d53a032ff76572c294ecba992"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "select_task_rq_fair",
+      "sha256": "0559d4aee715258594b0faae20b93fbf1905d786fddb86d13f9ae56f0ad8de24",
+      "relationship": "Whole pinned LTS function after listed isolated adaptations",
+      "removed_or_replaced": [
+        [
+          "\tint target_cpu = -1;\n",
+          ""
+        ],
+        [
+          "\n\tif (trace_android_rvh_select_task_rq_fair_enabled() &&\n\t    !(sd_flag & SD_BALANCE_FORK))\n\t\tsync_entity_load_avg(&p->se);\n\ttrace_android_rvh_select_task_rq_fair(p, prev_cpu, sd_flag,\n\t\t\twake_flags, &target_cpu);\n\tif (target_cpu >= 0)\n\t\treturn target_cpu;\n",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "select_task_rq",
+      "sha256": "72c1c5e8574017a34cc1c746799af7200ad94b906e7966e402535d502e85675e",
+      "relationship": "Whole pinned LTS function after listed isolated adaptations",
+      "removed_or_replaced": [
+        [
+          "(unsigned int)cpu >= nr_cpu_ids || !is_cpu_allowed(p, cpu)",
+          "!is_cpu_allowed(p, cpu)"
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "select_fallback_rq",
+      "sha256": "7ebc3c8c72da9ec7a932b29f7cc1814ed7480dda5934cb918f75ba3393b45efb",
+      "relationship": "Whole pinned LTS function after listed isolated adaptations",
+      "removed_or_replaced": [
+        [
+          "int select_fallback_rq",
+          "static int select_fallback_rq"
+        ],
+        [
+          "\tint dest_cpu = -1;\n\n\ttrace_android_rvh_select_fallback_rq(cpu, p, &dest_cpu);\n\tif ((unsigned int)dest_cpu < nr_cpu_ids && is_cpu_allowed(p, dest_cpu))\n\t\treturn dest_cpu;",
+          "\tint dest_cpu;"
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "find_new_ilb",
+      "sha256": "cffb6a318692f9f9c0151fed2796e2af31062fcc708a0461a4d22a06e0f163ce",
+      "relationship": "Whole pinned LTS function after listed isolated adaptations",
+      "removed_or_replaced": [
+        [
+          "\tint new_ilb = nr_cpu_ids;\n\n\ttrace_android_rvh_find_new_ilb(nohz.idle_cpus_mask, &new_ilb);\n",
+          ""
+        ],
+        [
+          "\tif (new_ilb < 0)\n\t\treturn -1;\n\t/* Vendor selection must satisfy the native idle-balancer constraints. */\n\tif (new_ilb < nr_cpu_ids && new_ilb != smp_processor_id() &&\n\t    cpumask_test_cpu(new_ilb, nohz.idle_cpus_mask) &&\n\t    cpumask_test_cpu(new_ilb, hk_mask) && idle_cpu(new_ilb))\n\t\treturn new_ilb;\n",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "kick_ilb",
+      "sha256": "6808b6446c7222c9a1f136bdf68b656ab453ce147489029e6fa5e7e0795f6ec8",
+      "relationship": "Whole pinned LTS function after listed isolated adaptations",
+      "removed_or_replaced": []
+    }
+  ],
+  "related_partial_commit": {
+    "commit": "16330b35600f00c589cd1a621d132635aabc1816",
+    "status": "remains provisional as a whole",
+    "review": "Complete original five-path patch read. Fallback hook guard is included in this source change, but original also contains RT lowest-rq override; current find_lowest_rq returns nonnegative callback CPU directly and its multiple proxy-aware callers need further review. Tick/enqueue/dequeue/can-migrate events have separate completed reviews."
+  },
+  "security": "Range guards precede mask/per-CPU use. Fallback overrides now obey native is_cpu_allowed, including normal affinity/active versus kernel/migration-disabled exceptions. Native cpuset/possible recovery remains untouched. Idle overrides preserve native housekeeping/isolation and idle selection constraints. Trusted callbacks can still modify pointed-to state; this does not validate arbitrary callback behavior or all RT placement paths.",
+  "uncertainty": "Exact SDK vendor callbacks remain unconfirmed. Tests model valid eligibility bitmaps and stable masks, not actual concurrent CPU hotplug/RCU/locking. Generic interfaces retained, not omitted based on consumer search.",
+  "validation": "81000 task and 294912 idle model cases pass; old control makes 17820 modeled invalid mask accesses and violates selected contracts in 37746 task/108544 idle cases. Not every contract failure implies a memory fault (e.g. negative suppression normalization). Build 138 in progress.",
+  "remote_sources_used": [],
+  "subsequent_build_verification": {
+    "run": "sdk-build-attempt-139",
+    "source_head": "f579492cb1541690497941797ba83aabec491fe4",
+    "result": "Complete emulator workflow passed; kernel, 100 common modules, 45 virtual modules; all signatures and CRC/flag tables verified. No runtime verification."
+  }
+}

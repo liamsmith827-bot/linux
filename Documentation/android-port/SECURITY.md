@@ -6261,3 +6261,93 @@ Exact SDK callback consumers remain unconfirmed, not inferred absent. No hardwar
 vendor scheduler implementation or energy gain is claimed. Pending CPU-output
 range checks are recorded separately and are not finalized by this review.
 No remote source was accessed.
+
+# CPU selection callback validation
+
+`evidence/cpu-selection-hooks-review.json` resolves the fair-placement and idle
+balancer selection candidates. Commit e496198e4e74d421def83a3890ddd19a8f975ffb checks class-selected CPU range
+before native affinity/online mask access and checks fallback overrides with the
+same native is_cpu_allowed predicate. Invalid choices use native fallback; native
+cpuset/possible-mask recovery and kernel/migration-disabled exceptions remain.
+This deliberately rejects vendor choices outside native constraints.
+
+Idle-balancer override additionally respects native non-current, nohz idle mask,
+HK_TYPE_KERNEL_NOISE housekeeping and idle_cpu conditions. Invalid positive values
+use native scan; negative values still suppress the kick. This preserves SDK CPU
+isolation/tickless-idle behavior while preventing out-of-range per-CPU access in
+kick_ilb. The mutable mask and task arguments remain trusted module state; guards
+do not make arbitrary callbacks safe. No additional upper policy bound beyond
+native selection constraints is invented.
+
+Host extracted-function checks pass 81000 task and 294912 idle cases. Old control
+makes 17820 modeled invalid mask accesses; other reported contract failures also
+include policy/negative-result differences, not all memory faults. No actual
+kernel crash or hotplug race was reproduced. Build 139 passed, including all 145 module signatures and version tables. The related
+original multi-hook commit 16330b35600f was subsequently finalized, including its
+RT lowest-rq override, in the RT callback CPU eligibility section. Exact SDK consumers are
+unconfirmed; interfaces are retained. No remote source was accessed.
+
+# RT callback CPU eligibility
+
+`evidence/initial-scheduler-hooks-review.json` finishes the original seven-hook
+scheduler candidate and updates the prior two-context RT hook decision. Commit
+f579492cb1541690497941797ba83aabec491fe4 guards find_lowest_rq output before its callers use CPU-indexed rq or
+softirq state: CPU must be in range, active, and in the execution context's mask
+when that context exists. NULL execution context imposes no donor-affinity test,
+matching cpupri's proxy-aware behavior. This prevents the callback from undoing
+the preserved native active/affinity filtering. Invalid values resume native
+selection; valid vendor preferences, including overrides after no native result,
+remain available. Native caller priority checks, lock/retry and chain revalidation
+remain in place. No arbitrary callback pointer/mask safety is claimed.
+
+The focused selector check passes 57600 host cases; the earlier control returns
+7744 ineligible CPUs that callers could consume. The host does not execute those
+callers' per-CPU dereferences, real CPU-hotplug races or proxy-chain locking.
+Original RT selection, fallback, tick, enqueue/dequeue and migration veto hooks
+are all accounted for with final signatures and call ordering. Exact SDK vendor
+consumers remain unconfirmed, so generic source interfaces remain conservatively.
+Build 139 passed, including all 145 module signatures and version tables.
+No remote source was accessed.
+
+# Balance restoration and duplicate merge trace
+
+`evidence/balance-restoration-review.json` resolves eight candidates, including
+all unique hunks of a28ff6f883a6. Preserve restored new-task-util and idle-balancer
+interfaces with current contracts and guards, not their temporary removals. The
+merge's duplicate native capacity trace was explicitly fixed; each final tree
+contains one event. Do not restore old EAS sync shortcut, obsolete utility helper
+or capacity inversion block; the current energy picker remains entirely native.
+Current affinity-context and capacity callbacks retain later validation guards.
+
+The rebalance callback can skip the entire domain traversal, including cost
+decay and next-balance update, not merely migration. The overutilization callback
+runs before native energy gating and overrides the whole boolean result for any
+non-sentinel value. These deliberately broad trusted policies can affect latency,
+accounting and availability. No active SDK vendor policy, hardware-specific
+implementation or energy benefit is asserted. No source change was needed for
+this batch. No remote source was accessed.
+
+# Native shadow-call-stack history and review metadata
+
+`evidence/scs-owners-history-review.json` resolves three candidates. Keep current
+native SCS code/header and lifecycle hooks; do not replay an obsolete allocator
+or the temporary inverse that prepared adoption of upstream support. Original
+and inverse match in every nonblank changed line. Current architecture selection
+exists for ARM64/RISC-V, not x86, and SDK config does not enable SCS. This retains
+the native security feature without claiming it protects this x86 build.
+
+The fifteen historical Android OWNERS files contain reviewer routing only.
+They stay absent as in LTS; verified emulator workflows run without them. Bazel's
+broad source glob could include such files, so omission is not justified by a
+false glob-exclusion claim. No runtime/configuration interface or kernel security
+policy is removed. Embedded documentation and OWNERS URLs were not opened;
+no remote source was accessed.
+
+# Historical picker revert pair
+
+`evidence/picker-revert-pair-review.json` resolves the 2019 slow-path workaround
+and its inverse. All seven complete file blobs after the inverse exactly equal
+their state before the first candidate. No historical three-argument callback
+protocol or accounting move is replayed onto current EEVDF/donor/SCX selection.
+The reported old crash and boot tests are historical evidence only, not current
+runtime verification. No source change or remote access was required.

@@ -1,0 +1,93 @@
+{
+  "source_head": "f579492cb1541690497941797ba83aabec491fe4",
+  "records": [
+    {
+      "commit": "16330b35600f00c589cd1a621d132635aabc1816",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "e496198e4e74d421def83a3890ddd19a8f975ffb",
+        "f579492cb1541690497941797ba83aabec491fe4"
+      ],
+      "rationale": "Complete five-path/76-addition original patch read and all seven hook families traced to final sites/declarations/exports. Keep RT placement, fallback, ordinary renamed final tick, pre-class flagged enqueue/dequeue, migration veto and evolved proxy-aware lowest-rq callbacks. Old disabled stubs/CREATE_TRACE_POINTS placement are superseded by final common plumbing. CPU fallback and common class selector guarded in e496198e4e74. RT lowest-rq override now guarded in f579492cb154 for range, active CPU, and nullable execution-context cpus_mask, preserving native cpupri filtering rather than allowing callback to undo it. Keep valid alternative CPU preference, including when native priority search returned no result; caller priority checks and retry remain. Event-order/default-body details are in cross-linked completed reviews. No historical binary KMI, removed restricted tick name, platform-specific vendor scheduler or runtime performance claim is introduced.",
+      "evidence": [
+        "evidence/initial-scheduler-hooks-review.json",
+        "evidence/rt-selection-hook-check.json",
+        "evidence/cpu-selection-hooks-review.json",
+        "evidence/scheduler-event-history-review.json",
+        "SECURITY.md: RT callback CPU eligibility"
+      ],
+      "patch_sha256": "86ef0279db2308a37631529f71f989378c42b5bdf34a5be27eb996fc03512f99"
+    }
+  ],
+  "updated_prior_decision": {
+    "commit": "8f5c988d396a23232b5f976b7821f59ffd6464e5",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "f579492cb1541690497941797ba83aabec491fe4"
+    ],
+    "rationale": "Both original signature/call paths read in rt-dl-chain-review. Retain donor scheduling context and nullable execution context in restricted find_lowest_rq event, with initialized -1 output. Later adaptation f579492cb154 validates nonnegative callback output for range, active CPU, and execution-context cpus_mask before returning it. NULL execution context does not impose donor affinity, matching cpupri semantics. Callback still controls candidate preference and must respect borrowed mask/lifetime and caller locking; no arbitrary callback safety or exact SDK consumer is established.",
+    "evidence": [
+      "evidence/rt-dl-chain-review.json",
+      "evidence/cpupri-active-check.json",
+      "evidence/proxy-move-owner-check.json",
+      "SECURITY.md: RT and deadline chain balancing",
+      "evidence/initial-scheduler-hooks-review.json",
+      "evidence/rt-selection-hook-check.json"
+    ]
+  },
+  "witnesses": [
+    {
+      "path": "kernel/sched/rt.c",
+      "function": "find_lowest_rq",
+      "sha256": "037ab7d32d8d1b254016ce94413b62731c3e8c5165571c646bf41cf9ebfce441",
+      "relationship": "Previous integrated proxy-aware selector with only post-callback range/active/execution-affinity guard changed"
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "can_migrate_task",
+      "sha256": "0a53ee1c22be946a4c380e0248106fb06b4a8a45d7be463891632e15de71dceb",
+      "relationship": "Whole native function plus default-allow vendor veto after native sched_task_hot clear"
+    },
+    {
+      "path": "kernel/sched/rt.c",
+      "function": "select_task_rq_rt",
+      "sha256": "05f35b0f29e7471577256b9277fc7a6b3c3773c186236bc0ee621c1c5acfb28c",
+      "relationship": "Current caller read for CPU result consumption/priority revalidation; not claimed wholly native because independent proxy/softirq/donor changes remain"
+    },
+    {
+      "path": "kernel/sched/rt.c",
+      "function": "find_lock_lowest_rq",
+      "sha256": "1b8168947dbbf8b4d569ccaa22ff7b758b5e9a6b770793b8d0c0395d90b0eff3",
+      "relationship": "Current caller read for CPU result consumption/priority revalidation; not claimed wholly native because independent proxy/softirq/donor changes remain"
+    },
+    {
+      "path": "kernel/sched/rt.c",
+      "function": "push_rt_task",
+      "sha256": "bf54301dd188cf092b30fddb1e6b7ef709abdd5f60ce08911f54a82e634185ca",
+      "relationship": "Current caller read for CPU result consumption/priority revalidation; not claimed wholly native because independent proxy/softirq/donor changes remain"
+    },
+    {
+      "path": "kernel/sched/rt.c",
+      "function": "rt_revalidate_rq_state",
+      "sha256": "4b4cfd21b8394c351e784efcbade26d4f7076a9d86abb7174706777d848b666b",
+      "relationship": "Current caller read for CPU result consumption/priority revalidation; not claimed wholly native because independent proxy/softirq/donor changes remain"
+    }
+  ],
+  "caller_analysis": {
+    "select_task_rq_rt": "Uses target in fitness and cpu_rq(target) before common select_task_rq final guard, requiring range enforcement inside find_lowest_rq. Rechecks lower destination priority; common selector later enforces final task constraints.",
+    "find_lock_lowest_rq": "After -1/current rejection obtains cpu_rq(cpu), checks destination priority, locks rq pair, revalidates task/chain after lock drop and retries. Output must already be in range and meet active/execution-affinity requirement. Existing optimistic priority races remain handled by native/port retries.",
+    "push_rt_task": "Migration-disabled path asks whether rq donor/current has another suitable CPU, then obtains push task and schedules stopper. Does not grant callback ownership of rq/task references.",
+    "cpupri": "__cpupri_find masks candidates with execution context cpus_mask if non-NULL, then cpu_active_mask (earlier adaptation preserves this native active filter). NULL means no execution affinity restriction, not donor affinity; new guard matches that distinction."
+  },
+  "compatibility": "Valid vendor alternative CPU preferences remain, including an override after ret=0, because priority/fitness customization is intentional. Active/range/execution-affinity violations now fall back to native selector. Lowest-mask pointer stays mutable/trusted and there is no blanket validation of a callback corrupting it.",
+  "security": "Before this guard a nonnegative hook result could reach cpu_rq/per-CPU softirq helpers out of bounds and bypass an LTS-preserved active/affinity filter. Restore those constraints before consumption without replacing the proxy-aware implementation with old ACK code. No actual kernel crash, hotplug race, priority inversion bound or malicious-module protection is claimed.",
+  "validation": "57600 extracted-function host cases pass. Previous control returns ineligible CPU in 7744; selector itself does not dereference those results, but callers do. CPUpri eligibility, topology distribution, RCU and locking are modeled; no runtime verification. Build 139 pending after build 138 completes.",
+  "remote_sources_used": [],
+  "subsequent_build_verification": {
+    "run": "sdk-build-attempt-139",
+    "source_head": "f579492cb1541690497941797ba83aabec491fe4",
+    "result": "Complete emulator workflow passed; kernel, 100 common modules, 45 virtual modules; all signatures and CRC/flag tables verified. No runtime verification."
+  }
+}

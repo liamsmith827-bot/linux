@@ -1,0 +1,79 @@
+{
+  "source_head": "f579492cb1541690497941797ba83aabec491fe4",
+  "records": [
+    {
+      "commit": "9acb7c07b6b988ef42959e74d045656483b57486",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Full seven-file temporary slow-path revert read, including RT/DL pull/accounting moves, fair NULL-prev/rf handling, class callback contract and core retry loop. Full changed-code inverse compared to 8c36c8518c63; only deadline hunk grouping/assignment context differs. Every one of the seven entire files after the inverse equals its blob before this candidate. This historical workaround has no residual effect; do not restore old 2019 class ABI or duplicate accounting onto current native-derived donor/EEVDF/SCX scheduler. Commit-message historical crash is not a reproduced current defect.",
+      "evidence": [
+        "evidence/picker-revert-pair-review.json",
+        "SECURITY.md: Historical picker revert pair"
+      ],
+      "patch_sha256": "704eab0947d03ed220565185ec45ffeb6374ada37d0214cbc0649db1ffecfc05"
+    },
+    {
+      "commit": "8c36c8518c63b44c36307165e61aba8bfed2e9cf",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [],
+      "rationale": "Complete inverse code examined through original plus all normalized differences, with deadline full inverse separately read. All seven final historical file blobs exactly match the state before 9acb7c07b6b9, establishing a net-zero pair rather than inferring it from Revert title. Current class dispatch has evolved pick_task/pick_next_task/balance and separately reviewed donor/retry guards; no old nullable three-argument protocol is restored. No reliance on historical claimed boot tests as current validation.",
+      "evidence": [
+        "evidence/picker-revert-pair-review.json",
+        "SECURITY.md: Historical picker revert pair"
+      ],
+      "patch_sha256": "84d14251e025db2279735595625217869293563cea1edec47539c3139a37e559"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/sched/core.c",
+      "before_first_blob": "c05d05094e70d33153267cd3818b6b2bbc9ddb4b",
+      "after_second_blob": "c05d05094e70d33153267cd3818b6b2bbc9ddb4b",
+      "relationship": "Entire file identical across the completed revert/revert pair"
+    },
+    {
+      "path": "kernel/sched/deadline.c",
+      "before_first_blob": "2dc48720f18914a9f828f5cd653b751a045c4556",
+      "after_second_blob": "2dc48720f18914a9f828f5cd653b751a045c4556",
+      "relationship": "Entire file identical across the completed revert/revert pair"
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "before_first_blob": "8f8692baa6790134aa0e8edee7c0efeacb50f805",
+      "after_second_blob": "8f8692baa6790134aa0e8edee7c0efeacb50f805",
+      "relationship": "Entire file identical across the completed revert/revert pair"
+    },
+    {
+      "path": "kernel/sched/idle.c",
+      "before_first_blob": "8dad5aa600eacbff82480ef84eae684308e6da54",
+      "after_second_blob": "8dad5aa600eacbff82480ef84eae684308e6da54",
+      "relationship": "Entire file identical across the completed revert/revert pair"
+    },
+    {
+      "path": "kernel/sched/rt.c",
+      "before_first_blob": "ebaa4e619684112cc6c19bc6ba69fe15c3f2b52a",
+      "after_second_blob": "ebaa4e619684112cc6c19bc6ba69fe15c3f2b52a",
+      "relationship": "Entire file identical across the completed revert/revert pair"
+    },
+    {
+      "path": "kernel/sched/sched.h",
+      "before_first_blob": "4f0d1668c283b89555057d6b14b6158a19baaf7d",
+      "after_second_blob": "4f0d1668c283b89555057d6b14b6158a19baaf7d",
+      "relationship": "Entire file identical across the completed revert/revert pair"
+    },
+    {
+      "path": "kernel/sched/stop_task.c",
+      "before_first_blob": "7e1cee4e65b211ece98bd640bf691a29de329ed1",
+      "after_second_blob": "7e1cee4e65b211ece98bd640bf691a29de329ed1",
+      "relationship": "Entire file identical across the completed revert/revert pair"
+    }
+  ],
+  "security": "Do not back out evolved stable scheduler machinery based on a fixed 2019 crash. Exact pair cancellation is established for all affected files; separate current scheduler changes/retry guards retain their own reviews. No current runtime safety claim follows from pair cancellation.",
+  "validation": "Full first patch, full changed-code inverse comparison and complete deadline inverse; seven entire pre/post blobs identical. Current class signatures and RT/DL/stop pick_task wiring inspected. No new source or runtime test.",
+  "remote_sources_used": [],
+  "subsequent_build_verification": {
+    "run": "sdk-build-attempt-139",
+    "source_head": "f579492cb1541690497941797ba83aabec491fe4",
+    "result": "Complete emulator workflow passed; kernel, 100 common modules, 45 virtual modules; all signatures and CRC/flag tables verified. No runtime verification."
+  }
+}
