@@ -452,32 +452,36 @@ static void rwsem_mark_wake(struct rw_semaphore *sem,
 {
 	struct rwsem_waiter *w, *waiter, *tmp;
 	long oldcount, woken = 0, adjustment = 0;
-	struct task_struct *_donor, *donor;
+	struct task_struct *donor;
 	struct list_head wlist;
 
 	lockdep_assert_held(&sem->wait_lock);
 
 	waiter = NULL;
-	donor = NULL;
 	/* Try to wake up our donor */
 	if (sched_proxy_exec()) {
 		raw_spin_lock(&current->blocked_lock);
-		_donor = current->blocked_donor;
-		if (_donor) {
-			raw_spin_lock_nested(&_donor->blocked_lock,
-			    SINGLE_DEPTH_NESTING);
-			if (__get_task_blocked_on(_donor) == sem) {
-				list_for_each_entry(w, &sem->wait_list, list) {
-					if (w->task == _donor) {
-						donor = _donor;
-						waiter = w;
-						waiter->donor_wakeup = true;
-						break;
-					}
+		donor = current->blocked_donor;
+		if (donor) {
+			/*
+			 * The donor pointer does not pin a task detached by a
+			 * remote wakeup. Establish waiter lifetime under wait_lock
+			 * before accessing the task's blocked state.
+			 */
+			list_for_each_entry(w, &sem->wait_list, list) {
+				if (w->task != donor)
+					continue;
+
+				donor = w->task;
+				raw_spin_lock_nested(&donor->blocked_lock,
+				    SINGLE_DEPTH_NESTING);
+				if (__get_task_blocked_on(donor) == sem) {
+					waiter = w;
+					waiter->donor_wakeup = true;
 				}
-				WARN_ON_ONCE(waiter == NULL);
+				raw_spin_unlock(&donor->blocked_lock);
+				break;
 			}
-			raw_spin_unlock(&_donor->blocked_lock);
 		}
 		raw_spin_unlock(&current->blocked_lock);
 	}

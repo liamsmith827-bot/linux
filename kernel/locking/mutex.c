@@ -1002,17 +1002,28 @@ static noinline void __sched __mutex_unlock_slowpath(struct mutex *lock, unsigne
 		 */
 		donor = current->blocked_donor;
 		if (donor) {
-			void *next_lock;
+			struct mutex_waiter *waiter;
 
-			raw_spin_lock_nested(&donor->blocked_lock, SINGLE_DEPTH_NESTING);
-			next_lock = __get_task_blocked_on(donor);
-			if (next_lock == lock) {
-				next = donor;
-				__set_task_blocked_on_waking(donor, next_lock);
-				wake_q_add(&wake_q, donor);
-				current->blocked_donor = NULL;
+			/*
+			 * A remote wakeup may have detached the donor. Its pointer
+			 * alone does not pin the task. Find a live waiter before
+			 * dereferencing it; wait_lock prevents waiter removal.
+			 */
+			list_for_each_entry(waiter, &lock->wait_list, list) {
+				if (waiter->task != donor)
+					continue;
+
+				donor = waiter->task;
+				raw_spin_lock_nested(&donor->blocked_lock, SINGLE_DEPTH_NESTING);
+				if (__get_task_blocked_on(donor) == lock) {
+					next = donor;
+					__set_task_blocked_on_waking(donor, lock);
+					wake_q_add(&wake_q, donor);
+					current->blocked_donor = NULL;
+				}
+				raw_spin_unlock(&donor->blocked_lock);
+				break;
 			}
-			raw_spin_unlock(&donor->blocked_lock);
 		}
 	}
 
