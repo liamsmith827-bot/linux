@@ -1,0 +1,471 @@
+{
+  "source_head": "c4845b4763c40a9b04681d3fc89e006804595f0a",
+  "records": [
+    {
+      "commit": "d3a196a371971729a08d1cc5f9bd017d25dd7dd9",
+      "disposition": "merge-resolution-partially-adapted-net-state",
+      "rationale": "All unique resolutions across 32 paths examined, including edits outside conflict markers. Native fscrypt/UFS/ext4/F2FS interfaces replace historical key arrays and callbacks while preserving crypto, verification, DIO and ownership checks. Retain Android DMA attachment attributes and cpufreq includes. DRM, BPF header, perf gates, scheduler and hostless-audio intermediate versions are superseded by final ACK/native code; scheduler fallback disabled by this old merge is active in current LTS. Generic IOMMU ownership remains; physical Qualcomm/SMMU portions are not additions for the SDK target. Detailed per-path rationale, native/final-ACK witnesses, configuration evidence and unchanged prior reviews are recorded; no LTS fix is reversed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/linux-5.5-rc1-merge-review.json",
+        "evidence/inline-upstream-refresh-review.json",
+        "SECURITY.md: Linux 5.5-rc1 integration resolutions"
+      ],
+      "patch_sha256": "24000f88dcbd8596ce7e00ee853ba546940801984c677caca2b3b13d1d9e6f87",
+      "unique_remerge_review": true
+    }
+  ],
+  "path_assessments": [
+    {
+      "paths": [
+        "drivers/gpu/drm/drm_panel.c",
+        "drivers/gpu/drm/drm_property.c"
+      ],
+      "assessment": "Final ACK and current LTS files are identical: historical panel notifier initialization and MAX_BLOB_PROP_SIZE are superseded. Native panel initialization and INT_MAX subtraction overflow bound remain. DRM_PANEL=y; this conclusion uses final code, not a disabled-driver assumption."
+    },
+    {
+      "paths": [
+        "drivers/iommu/Makefile",
+        "drivers/iommu/of_iommu.c",
+        "include/linux/iommu.h"
+      ],
+      "assessment": "Native ARM SMMU composite-module Makefile moved under drivers/iommu/arm/arm-smmu and conditionally includes qcom implementation. Native of_iommu already reconciles include dependencies. Generic iommu_ops owner field and comment remain, preserving module ownership. ARM_SMMU cannot be enabled in this x86_64 SDK build without ARM/ARM64/COMPILE_TEST; no physical SMMU additions are required."
+    },
+    {
+      "paths": [
+        "drivers/irqchip/qcom-pdc.c",
+        "drivers/pinctrl/qcom/pinctrl-msm.c",
+        "drivers/pinctrl/qcom/pinctrl-msm.h",
+        "include/linux/soc/qcom/irq.h"
+      ],
+      "assessment": "PDC and IRQ helper files equal both final ACK and LTS. Pinctrl resolution corrects comments, retains skip-wake masking and parent wake propagation, reconciles wakeup-parent lookup/defer and declaration order. Current native pinctrl implementation is retained. These are Qualcomm physical interrupt/pin controllers gated by ARCH_QCOM or COMPILE_TEST, neither enabled on the SDK target; no new Qualcomm-specific controller changes are ported. Generic IRQ infrastructure is not omitted."
+    },
+    {
+      "paths": [
+        "drivers/of/property.c"
+      ],
+      "assessment": "Upstream e94f62b7140f removed redundant of_devlink after fw_devlink. Keep native fw_devlink RPM default and current of_fwnode_add_links, identical to final ACK, including its native X86 early return; do not recreate obsolete command-line state."
+    },
+    {
+      "paths": [
+        "drivers/scsi/ufs/Makefile",
+        "drivers/scsi/ufs/ufshcd.c",
+        "drivers/scsi/ufs/ufshcd.h"
+      ],
+      "assessment": "Native UFS files moved to drivers/ufs and include inline crypto in the composite module; native per-host profile registration replaces old keyslot-manager setup. Duplicate hba declaration and old crypto/runtime-PM bit collision are absent in the current native header/implementation. Retain LTS interfaces and capabilities, not old numeric layout. No physical UFS target support is newly added."
+    },
+    {
+      "paths": [
+        "fs/buffer.c",
+        "fs/crypto/fscrypt_private.h",
+        "fs/crypto/keyring.c",
+        "fs/crypto/keysetup.c",
+        "include/linux/fscrypt.h"
+      ],
+      "assessment": "Include union and inline crypto lifetime/selection resolutions are represented by current fscrypt prepared keys, mode-key list/RCU and native eviction/destruction. Keep later acquire/publication and mk_sem ownership fixes, current per-mode logging flags and current external fscrypt_modes. Old raw-key pointers, duplicate per-mode arrays and inline_crypt_enabled callbacks are superseded. Scoped crypto reports rechecked against unchanged blobs; separate Android skip/zeroout/wrapped-key compatibility analyses still apply."
+    },
+    {
+      "paths": [
+        "fs/ext4/inode.c",
+        "fs/ext4/page-io.c",
+        "fs/ext4/readpage.c",
+        "fs/ext4/super.c"
+      ],
+      "assessment": "Merge removes obsolete blockdev direct-I/O implementation and keeps iomap_report_ops; preserve current iomap DIO eligibility, DUN-boundary limits and native atomic-write checks. Native buffered write sets crypto context with GFP_NOIO; read setup uses GFP_KERNEL and post-read verification. SB_INLINECRYPT/fscontext replaces old callback; native ext4 crypto ops retain stable-inode eligibility. Existing ext4 crypto/verity witnesses remain unchanged except the separately justified namespace import."
+    },
+    {
+      "paths": [
+        "fs/f2fs/data.c",
+        "fs/f2fs/super.c"
+      ],
+      "assessment": "Native F2FS keeps both physical adjacency and crypto compatibility checks for IPU, with current helper placement and folio indices. Mount SB_INLINECRYPT replaces old private callback. Keep these native checks and earlier reviewed Android additions without restoring obsolete submit-bio ownership."
+    },
+    {
+      "paths": [
+        "include/linux/dma-buf.h",
+        "kernel/fork.c"
+      ],
+      "assessment": "These resolutions only reorder the attachment comment and merge includes. dma_map_attrs declaration/comment and scs/kasan/cpufreq_times includes remain in current source; no functional resolution is dropped."
+    },
+    {
+      "paths": [
+        "include/linux/filter.h"
+      ],
+      "assessment": "Native BPF image alignment and binary header equal final ACK. Old BPF_BINARY_HEADER_MAGIC is absent from both; do not restore obsolete header/CFI layout. Current native predictor-flush/atomic instruction helpers remain, avoiding reversal of later LTS code. This is a header-resolution audit, not certification of all BPF implementations."
+    },
+    {
+      "paths": [
+        "include/linux/perf_event.h",
+        "kernel/events/core.c"
+      ],
+      "assessment": "Final ACK has no perf_paranoid_any gate. Native perf_event_open prelude and perf_allow_kernel/cpu/tracepoint checks are retained (the LTS prelude adds text_poke and kernel-callchain permission checks absent from final ACK) with CAP_PERFMON-aware checks and LSM decisions; security check follows attribute copy. This supersedes the historical blanket paranoid>2 CAP_SYS_ADMIN gate, whose exact restriction is not claimed to remain. No LTS permission gate is weakened; GrapheneOS-specific hardening is outside this port stage."
+    },
+    {
+      "paths": [
+        "kernel/sched/fair.c"
+      ],
+      "assessment": "Both calculate_imbalance and need_active_balance are byte-identical to pinned LTS and final ACK. Keep current misfit-task, asym-packing, spare-capacity and active-balance logic. Historical #if 0 encloses conflict text and disables the idle/zero-imbalance fallback; do not reproduce it. Current native fallback explicitly migrates one task. Old fix_small_imbalance/check_asym_packing/voluntary_active_balance interfaces are superseded, with no remaining unique resolution to transplant."
+    },
+    {
+      "paths": [
+        "include/sound/pcm.h",
+        "sound/soc/soc-pcm.c"
+      ],
+      "assessment": "Final ACK no longer has hw_no_buffer or no_host_mode. Native __soc_pcm_hw_params retains symmetry validation before link/component setup and later TDM behavior; current body equals LTS. Keep managed buffers and current paths. SND_SOC=y; no disabled-subsystem assumption or restoration of the obsolete hostless page allocation is used."
+    }
+  ],
+  "native_witnesses": [
+    {
+      "path": "drivers/gpu/drm/drm_panel.c",
+      "scope": "whole file",
+      "identical_to_pinned_lts": true,
+      "identical_to_final_ack": true,
+      "sha256": "384d6629b2bca1c1e7667c51f3f153820d627d69029df61f794cdbf73d4381d9"
+    },
+    {
+      "path": "drivers/gpu/drm/drm_property.c",
+      "scope": "whole file",
+      "identical_to_pinned_lts": true,
+      "identical_to_final_ack": true,
+      "sha256": "00546353964d9b50435224fb3076e22c49df49ff391742e2a2d8708f721b2975"
+    },
+    {
+      "path": "drivers/iommu/of_iommu.c",
+      "scope": "whole file",
+      "identical_to_pinned_lts": true,
+      "identical_to_final_ack": true,
+      "sha256": "214cc78cf9962c14dcdadd16b82c4b7254c56e4371f932c56c8870971805d2c8"
+    },
+    {
+      "path": "drivers/iommu/arm/arm-smmu/Makefile",
+      "scope": "whole file",
+      "identical_to_pinned_lts": true,
+      "identical_to_final_ack": true,
+      "sha256": "daa2750d765270cc2b7c8861c6e6739c98019a22b957acc9ca01e302ad19400c"
+    },
+    {
+      "path": "drivers/irqchip/qcom-pdc.c",
+      "scope": "whole file",
+      "identical_to_pinned_lts": true,
+      "identical_to_final_ack": true,
+      "sha256": "491fc899794f58b057d476ffaccd90ecef884ff69c981909d3f04735e68f66d1"
+    },
+    {
+      "path": "drivers/pinctrl/qcom/pinctrl-msm.c",
+      "scope": "whole file",
+      "identical_to_pinned_lts": true,
+      "identical_to_final_ack": false,
+      "sha256": "69ed7cbb71cc523470c63e8283105f6e78207f941759801e80a98888773f65ff"
+    },
+    {
+      "path": "drivers/pinctrl/qcom/pinctrl-msm.h",
+      "scope": "whole file",
+      "identical_to_pinned_lts": true,
+      "identical_to_final_ack": false,
+      "sha256": "46887ad8bece8983eefe6de23a1c93c54dc03ac4e5769124de06ce97511ab8f0"
+    },
+    {
+      "path": "include/linux/soc/qcom/irq.h",
+      "scope": "whole file",
+      "identical_to_pinned_lts": true,
+      "identical_to_final_ack": true,
+      "sha256": "7888744f9f63c1d161956fbc54b109342ded3257bf0eb4f3b72a68873c723c38"
+    },
+    {
+      "path": "fs/ext4/page-io.c",
+      "scope": "whole file",
+      "identical_to_pinned_lts": true,
+      "identical_to_final_ack": true,
+      "sha256": "e97df891488a7fc8034cd05ab191f415a84f4d033d7134e7c697f4ae6aad309d"
+    },
+    {
+      "path": "drivers/ufs/core/Makefile",
+      "scope": "whole file",
+      "identical_to_pinned_lts": true,
+      "identical_to_final_ack": false,
+      "sha256": "1c06893a0fea6fba495e5cc3c2324b4be1dce1e4908de52736f2496a68506729"
+    },
+    {
+      "path": "drivers/ufs/core/ufshcd.c",
+      "scope": "whole file",
+      "identical_to_pinned_lts": true,
+      "identical_to_final_ack": false,
+      "sha256": "29ffd3ac6ec8b2f585578d43a877a736dea32212d130fa156bf81c8264a70293"
+    },
+    {
+      "path": "drivers/ufs/core/ufshcd-crypto.c",
+      "scope": "whole file",
+      "identical_to_pinned_lts": true,
+      "identical_to_final_ack": false,
+      "sha256": "90d14309511ae2b334f9e5ee901f25cb8eb4e9901997735e9cf140bb499cd966"
+    },
+    {
+      "path": "drivers/ufs/core/ufshcd-crypto.h",
+      "scope": "whole file",
+      "identical_to_pinned_lts": true,
+      "identical_to_final_ack": false,
+      "sha256": "f90179e9767406b7348fac1d26f76cc9ac5ac3633334d5f7c2c4a91d6a58e9a9"
+    },
+    {
+      "path": "include/ufs/ufshcd.h",
+      "scope": "whole file",
+      "identical_to_pinned_lts": true,
+      "identical_to_final_ack": false,
+      "sha256": "455da4baad4b23f7866808ccd89fa5ac3396ebf641775d76d0d7c8ea7d9cd2ee"
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "calculate_imbalance",
+      "identical_to_pinned_lts": true,
+      "identical_to_final_ack": true,
+      "sha256": "2b58cb081a0a56e50d57199bf758fcd9148452d25fe048934bb4528162c28bd1"
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "need_active_balance",
+      "identical_to_pinned_lts": true,
+      "identical_to_final_ack": true,
+      "sha256": "6c8c9e350fa023ea1251258c7d03b368ed268334760fd99daf64a903b8d1df97"
+    },
+    {
+      "path": "drivers/of/property.c",
+      "function": "of_fwnode_add_links",
+      "identical_to_pinned_lts": true,
+      "identical_to_final_ack": true,
+      "sha256": "5bfd64028cd6ba74cee005964486cf1c9c72244cff586908bdbb552bb720d4d2"
+    },
+    {
+      "path": "sound/soc/soc-pcm.c",
+      "function": "__soc_pcm_hw_params",
+      "identical_to_pinned_lts": true,
+      "identical_to_final_ack": false,
+      "sha256": "b437a18e6f242be3451b3a944751a939b717d1539b1b15db2cb24b7cd735b354"
+    },
+    {
+      "path": "include/linux/perf_event.h",
+      "function": "perf_allow_cpu",
+      "identical_to_pinned_lts": true,
+      "identical_to_final_ack": true,
+      "sha256": "6ada1db495ca1dd3de76148ecabd625baff98554d362f125c37b4b4476976522"
+    },
+    {
+      "path": "include/linux/perf_event.h",
+      "function": "perf_allow_tracepoint",
+      "identical_to_pinned_lts": true,
+      "identical_to_final_ack": true,
+      "sha256": "d994cb9f86e66e27983d5f564e7588e044b040059a4016b8ac662dada4ea06b8"
+    },
+    {
+      "path": "kernel/events/core.c",
+      "function": "perf_allow_kernel",
+      "identical_to_pinned_lts": true,
+      "identical_to_final_ack": true,
+      "sha256": "0e7ac689e1d1f721f186de63042e7d629dcefd65e43f406e9be6feb0de41a4f6"
+    },
+    {
+      "path": "include/linux/filter.h",
+      "scope": "source range",
+      "start": "/* Some arches need doubleword",
+      "end_exclusive": "struct bpf_prog",
+      "identical_to_pinned_lts": true,
+      "identical_to_final_ack": true,
+      "sha256": "6edb3d8f2c28afccba5513ae8f7e44d057394441459d44bf7141cfe9671c0b0e",
+      "ack_difference": null
+    },
+    {
+      "path": "kernel/events/core.c",
+      "scope": "source range",
+      "start": "SYSCALL_DEFINE5(perf_event_open,",
+      "end_exclusive": "\tif (attr.namespaces) {",
+      "identical_to_pinned_lts": true,
+      "identical_to_final_ack": false,
+      "sha256": "48c8149e037e0145c190b5edc453524b449820efdbd22667651eaaf0abb76e1e",
+      "ack_difference": "LTS additionally requires perf_allow_kernel for text_poke and kernel callchain sampling; preserve those stronger gates."
+    },
+    {
+      "path": "drivers/base/core.c",
+      "scope": "source fragment",
+      "snippet": "static u32 fw_devlink_flags = FW_DEVLINK_FLAGS_RPM;",
+      "identical_to_pinned_lts": true,
+      "sha256": "9b91ef3fa2d16c289aa65d3d401fe191954780c2b5b7c86e7131a2f774cb1683"
+    },
+    {
+      "path": "include/linux/iommu.h",
+      "scope": "source fragment",
+      "snippet": "struct module *owner;",
+      "identical_to_pinned_lts": true,
+      "sha256": "97955b951de46d7d15d3a7931c0df8b1a4ee3645dace22ce7b526741c61d0f48"
+    },
+    {
+      "path": "fs/ext4/inode.c",
+      "scope": "source fragment",
+      "snippet": "const struct iomap_ops ext4_iomap_report_ops = {\n\t.iomap_begin = ext4_iomap_begin_report,\n};",
+      "identical_to_pinned_lts": true,
+      "sha256": "ae8e7e2999ada6f551e9df991e04cacfcfbecfb325ada65150855e8086d8ae20"
+    },
+    {
+      "path": "kernel/fork.c",
+      "scope": "retained includes or attribute declaration/comment",
+      "snippets": [
+        "#include <linux/scs.h>",
+        "#include <linux/kasan.h>",
+        "#include <linux/cpufreq_times.h>"
+      ],
+      "source_blob": "130d241788556039eab235d41648e3f77f4e7aeb"
+    },
+    {
+      "path": "include/linux/dma-buf.h",
+      "scope": "retained includes or attribute declaration/comment",
+      "snippets": [
+        "unsigned long dma_map_attrs;",
+        "@dma_map_attrs: DMA attributes"
+      ],
+      "source_blob": "3e3897790227fdc4dc938b9de48e237139ad2d6f"
+    }
+  ],
+  "reused_reviews": [
+    {
+      "report": "evidence/inline-upstream-refresh-review.json",
+      "source_blobs_unchanged": {
+        "block/blk-mq.c": "21bc691ce502798473803f35d9de3e970d6a7f71",
+        "block/blk-crypto.c": "a48ee2633df0439c14b3028e543ea5bf0d21d598",
+        "block/blk-crypto-fallback.c": "86f2c3fbf9173b48b566c7c333aee353ddc6de2b",
+        "fs/f2fs/data.c": "d81ab9e7a8200dd89b449c830b29e8c84bd764cd",
+        "fs/f2fs/compress.c": "8b2a5a609334c5f0df0c4bd629eea641ad4f1175",
+        "fs/f2fs/super.c": "78aabdb9f8d50a4ff456859351c2ca6f0702f6b9",
+        "fs/ext4/super.c": "5c486cb271550fd564497b54d6bddca5b954a852",
+        "include/linux/blkdev.h": "96ca1b07b2a9f43e4699d069a369619040d37edc",
+        "include/linux/blk-mq.h": "acefef76e9706103da0fe8c58399052ed7cbecb3",
+        "include/linux/fscrypt.h": "598b48043268fb35ab6721da4e3fa3d0df5d67e1"
+      }
+    },
+    {
+      "report": "evidence/crypto-merge-history-review.json",
+      "source_blobs_unchanged": {
+        "fs/crypto/bio.c": "c2b3ca100f8d02019e63586cf7c096972fe4da70",
+        "fs/crypto/fscrypt_private.h": "414fe95c76defd6a63bf921e957db754d68d17dc",
+        "fs/crypto/keyring.c": "37ed356c5602f99ffd5d1eab84c7800e2ee00040",
+        "fs/crypto/inline_crypt.c": "20db6e55b8a01df761332d4142dca5386520c11f",
+        "fs/f2fs/data.c": "d81ab9e7a8200dd89b449c830b29e8c84bd764cd",
+        "fs/f2fs/super.c": "78aabdb9f8d50a4ff456859351c2ca6f0702f6b9",
+        "fs/f2fs/f2fs.h": "c9c5b5577766e092ff47bf769a654144c1fb8323",
+        "fs/ext4/super.c": "5c486cb271550fd564497b54d6bddca5b954a852",
+        "include/linux/fscrypt.h": "598b48043268fb35ab6721da4e3fa3d0df5d67e1",
+        "include/uapi/linux/fscrypt.h": "37fedfd1d33451bbf4c43a99c04c71c53dcdb172",
+        "include/linux/blk-crypto.h": "7620f43aedbbce917fc698b3ad29ccb93f466220",
+        "include/linux/blk_types.h": "5c58cad4dd6999166777598fee769072bd88d7e9",
+        "block/blk-crypto-fallback.c": "86f2c3fbf9173b48b566c7c333aee353ddc6de2b"
+      }
+    },
+    {
+      "report": "evidence/fscrypt-initial-refresh-review.json",
+      "source_blobs_unchanged": {
+        "fs/crypto/inline_crypt.c": "20db6e55b8a01df761332d4142dca5386520c11f",
+        "fs/crypto/bio.c": "c2b3ca100f8d02019e63586cf7c096972fe4da70",
+        "fs/crypto/fscrypt_private.h": "414fe95c76defd6a63bf921e957db754d68d17dc",
+        "fs/crypto/keyring.c": "37ed356c5602f99ffd5d1eab84c7800e2ee00040",
+        "include/linux/fscrypt.h": "598b48043268fb35ab6721da4e3fa3d0df5d67e1",
+        "fs/f2fs/data.c": "d81ab9e7a8200dd89b449c830b29e8c84bd764cd",
+        "fs/f2fs/super.c": "78aabdb9f8d50a4ff456859351c2ca6f0702f6b9",
+        "fs/ext4/super.c": "5c486cb271550fd564497b54d6bddca5b954a852",
+        "Documentation/filesystems/f2fs.rst": "49ac070f303b6c426cd2db68b9e223eae7d092c6"
+      }
+    },
+    {
+      "report": "evidence/ext4-verity-refactor-review.json",
+      "source_blobs_unchanged": {
+        "fs/ext4/readpage.c": "a4b211360daf56de999d9f70caecc3817a1dced5",
+        "fs/ext4/inode.c": "65eb8b5fccbce8788c46dbc427e2309be55ca0ad",
+        "fs/ext4/ext4.h": "da6428312c36b5c0591084a1d7805392f70e2433",
+        "include/linux/fsverity.h": "5fa6d3bb1fb6cf0757177ff8851a2043ca07cf78"
+      }
+    },
+    {
+      "report": "evidence/ext4-historical-review.json",
+      "source_blobs_unchanged": {
+        "fs/crypto/inline_crypt.c": "20db6e55b8a01df761332d4142dca5386520c11f",
+        "fs/crypto/policy.c": "254a251f94bcd9f47741ed8fe002634aaca04384",
+        "fs/ext4/crypto.c": "3971986de02897ace60d0f0034f9f340d78a0acf",
+        "fs/ext4/dir.c": "290a9aeac15f1f0ea7b05c12c4b02856b0a2d0ff",
+        "fs/ext4/ext4.h": "da6428312c36b5c0591084a1d7805392f70e2433",
+        "fs/ext4/file.c": "149a7fe5a0962949fcc5f5c204f2360cf2f2792a",
+        "fs/ext4/hash.c": "33cd5b6b02d59fb749844fe481022f5f44244bb6",
+        "fs/ext4/ialloc.c": "d8620dfd44ff922e002eec5efa59ccbc37d61cf7",
+        "fs/ext4/inline.c": "672085e4ec24f28892a6b9c6b6aa5bfa1a10cf19",
+        "fs/ext4/inode.c": "65eb8b5fccbce8788c46dbc427e2309be55ca0ad",
+        "fs/ext4/namei.c": "49bd70aab2255293552cb7252ae0c1fbc94f4cad",
+        "fs/ext4/readpage.c": "a4b211360daf56de999d9f70caecc3817a1dced5",
+        "fs/ext4/sysfs.c": "3ec79a33d246edbaeaa58b822aed241b57f4b870",
+        "fs/libfs.c": "8976d1623c05dcf2f82ed96d5652cfeed677ee1d"
+      },
+      "super_change": "Only retained VFS module namespace import; inlinecrypt/cryptops source unchanged.",
+      "super_delta_sha256": "5a19d46881c8e0ac885ae272fc54c446c7c684800beaff6f8d9d91c87d267bc1"
+    }
+  ],
+  "source_blobs": {
+    "drivers/gpu/drm/drm_panel.c": "d1e6598ea3bc02a8075428ce5825397d40f37c34",
+    "drivers/gpu/drm/drm_property.c": "3c88b5fbdf28c53310faa94c1b207440852f925e",
+    "drivers/iommu/Makefile": "355294fa9033f3c797c4ff7ad25ee81e083e5322",
+    "drivers/iommu/of_iommu.c": "6b989a62def20ecafd833f00a3a92ce8dca192e0",
+    "drivers/irqchip/qcom-pdc.c": "518f7f0f3dab573d7289f261eebd25c04b4fedac",
+    "drivers/of/property.c": "71322b5bda267d2735555eb04de9d512af8bfe56",
+    "drivers/pinctrl/qcom/pinctrl-msm.c": "424b14bc29e964d27349a86255e2420535bcb3b0",
+    "drivers/pinctrl/qcom/pinctrl-msm.h": "33d8b17f2e559c67078d6e2b715a92baf64aa954",
+    "fs/buffer.c": "9fde276268b2506eb564f37cad2db6aede8a0f01",
+    "fs/crypto/fscrypt_private.h": "414fe95c76defd6a63bf921e957db754d68d17dc",
+    "fs/crypto/keyring.c": "37ed356c5602f99ffd5d1eab84c7800e2ee00040",
+    "fs/crypto/keysetup.c": "f27997ef9a08c567c7e7be3622de84e552fd22b9",
+    "fs/ext4/inode.c": "65eb8b5fccbce8788c46dbc427e2309be55ca0ad",
+    "fs/ext4/page-io.c": "0a3ef9bd6803043c085d818534a11f1bf0d53863",
+    "fs/ext4/readpage.c": "a4b211360daf56de999d9f70caecc3817a1dced5",
+    "fs/ext4/super.c": "5c486cb271550fd564497b54d6bddca5b954a852",
+    "fs/f2fs/data.c": "d81ab9e7a8200dd89b449c830b29e8c84bd764cd",
+    "fs/f2fs/super.c": "78aabdb9f8d50a4ff456859351c2ca6f0702f6b9",
+    "include/linux/dma-buf.h": "3e3897790227fdc4dc938b9de48e237139ad2d6f",
+    "include/linux/filter.h": "260a190634055386741bca973dffe7bdb99b3b79",
+    "include/linux/fscrypt.h": "598b48043268fb35ab6721da4e3fa3d0df5d67e1",
+    "include/linux/iommu.h": "61ac1b861e4d2433cf1cef4116111db7b7938a1a",
+    "include/linux/perf_event.h": "a9e9723d27ea8d3b15d26c6da22af723b339bf89",
+    "include/linux/soc/qcom/irq.h": "72b9231e9fdde2fc4d2b7689243d5de2a57e1b00",
+    "include/sound/pcm.h": "a7860c047503a84ef035d7735ce2a90af7a2e720",
+    "kernel/events/core.c": "03a0e2734dacab752919fa66f229c181fc39005b",
+    "kernel/fork.c": "130d241788556039eab235d41648e3f77f4e7aeb",
+    "kernel/sched/fair.c": "b3cdd34e7c31189d508a97dc54593745440fc21a",
+    "sound/soc/soc-pcm.c": "b6e35cfe50b7c4b067884ac6fa03911f97a45bff"
+  },
+  "configuration": {
+    "build": "sdk-build-attempt-105",
+    "sha256": "48f19810fd5e10021d64b96e82cdb2b0b587f7cb24b3b4b5660b6732ae05cd09",
+    "active": [
+      "X86_64",
+      "DRM_PANEL",
+      "SND_SOC"
+    ],
+    "not_enabled": [
+      "COMPILE_TEST",
+      "ARCH_QCOM",
+      "ARM_SMMU",
+      "QCOM_PDC",
+      "PINCTRL_MSM"
+    ],
+    "kconfig_evidence": [
+      "drivers/iommu/arm/Kconfig",
+      "drivers/irqchip/Kconfig",
+      "drivers/pinctrl/qcom/Kconfig"
+    ]
+  },
+  "scope": "Complete unique remerge diff; native function comparisons reject declarations. Existing scoped reviews reused only with source checks. Build 105 covers unchanged code compilation, not runtime behavior.",
+  "remote_sources_used": [],
+  "preserved_lts_permission_fixes": [
+    {
+      "commit": "e506333d1b9f42f1e402acebf1283af3c44a3809",
+      "assessment": "text_poke sideband can reveal kernel instruction addresses despite exclude_kernel; retain mandatory perf_allow_kernel."
+    },
+    {
+      "commit": "2581b43e162cfc43e6f5d8dd8d2b38f3441550de",
+      "assessment": "Kernel callchain sampling requires kernel perf permission even with exclude_kernel; retain the native callchain gate."
+    }
+  ]
+}

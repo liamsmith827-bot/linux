@@ -4717,3 +4717,41 @@ crypto-vops. No new physical-platform support is introduced.
 Native equality and unchanged earlier-review witnesses are recorded. Build
 105 covers compilation, not the runtime tests reported in the old commit
 message. No remote source was accessed for this review.
+
+# Linux 5.5-rc1 integration resolutions
+
+All 32 paths of merge `d3a196a37197` are assessed in
+`evidence/linux-5.5-rc1-merge-review.json`, including unique changes outside
+conflict markers. Current fscrypt prepared-key ownership and native
+ext4/F2FS/UFS crypto paths replace the old interfaces. Native DIO/verity,
+allocation and lifetime checks remain. Generic IOMMU module ownership and
+Android attachment attributes are retained; Qualcomm physical controller
+additions are outside the current x86_64 SDK target.
+
+The old scheduler merge disabled the idle/zero-imbalance fallback along with
+unresolved text under `#if 0`. Current imbalance and active-balance functions
+equal both LTS and final ACK; their active fallback and newer misfit handling
+are preserved. DRM limits/initialization, BPF header layout and hostless-audio
+intermediate code are likewise superseded at the pinned ACK boundary.
+
+The historical blanket `perf_event_paranoid > 2` CAP_SYS_ADMIN restriction is
+absent from final ACK and is not claimed to remain. Native CAP_PERFMON-aware
+permissions and LSM checks are retained, including attribute copy before the
+open security check. The LTS text_poke and kernel-callchain permission checks
+absent from final ACK are also retained (`e506333d1b9f` and `2581b43e162c`).
+These prevent address exposure and unprivileged kernel callchain capture.
+This does not weaken an LTS check; separate
+GrapheneOS hardening is not included at this stage. DRM_PANEL and SND_SOC are
+enabled, so their conclusions use current source evidence, not an assumption
+that those subsystems are disabled. No remote resource was accessed.
+
+# Initial Android 6.18 padding sync
+
+`5e17f93a5c22` is historical KMI-only. Exhaustive changed-line classification
+across its 142 paths found only reserved members/capability numbers, the ABI
+header includes, whitespace and three Rust zero initializers for reserves.
+`evidence/initial-padding-sync-review.json` records every path and patch hash.
+The reserved-member macro and complete Rust hunks were inspected. Omit these
+unused layout placeholders under the no-historical-KMI requirement. Existing
+active OEM/vendor data in unchanged context is unaffected. No executable
+security check is omitted, and no remote resource was accessed.
