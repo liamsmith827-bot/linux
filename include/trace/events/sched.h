@@ -875,12 +875,12 @@ TRACE_EVENT(sched_pe_enqueue_sleeping_task,
 	),
 
 	TP_fast_assign(
-		strscpy(__entry->owner_comm, mutex_owner->comm, TASK_COMM_LEN);
+		strscpy_pad(__entry->owner_comm, mutex_owner->comm, TASK_COMM_LEN);
 		__entry->owner_pid	= mutex_owner->pid;
 		__entry->owner_prio	= mutex_owner->prio; /* XXX SCHED_DEADLINE */
 		__entry->owner_cpu	= task_cpu(mutex_owner);
 
-		strscpy(__entry->blocked_comm, blocked->comm, TASK_COMM_LEN);
+		strscpy_pad(__entry->blocked_comm, blocked->comm, TASK_COMM_LEN);
 		__entry->blocked_pid	= blocked->pid;
 		__entry->blocked_prio	= blocked->prio; /* XXX SCHED_DEADLINE */
 		__entry->blocked_cpu	= task_cpu(blocked);
@@ -917,12 +917,12 @@ TRACE_EVENT(sched_pe_activate_blocked_entity,
 	),
 
 	TP_fast_assign(
-		strscpy(__entry->owner_comm, owner->comm, TASK_COMM_LEN);
+		strscpy_pad(__entry->owner_comm, owner->comm, TASK_COMM_LEN);
 		__entry->owner_pid	= owner->pid;
 		__entry->owner_prio	= owner->prio; /* XXX SCHED_DEADLINE */
 		__entry->owner_cpu	= task_cpu(owner);
 
-		strscpy(__entry->blocked_comm, blocked->comm, TASK_COMM_LEN);
+		strscpy_pad(__entry->blocked_comm, blocked->comm, TASK_COMM_LEN);
 		__entry->blocked_pid	= blocked->pid;
 		__entry->blocked_prio	= blocked->prio; /* XXX SCHED_DEADLINE */
 		__entry->blocked_cpu	= task_cpu(blocked);
@@ -956,10 +956,10 @@ TRACE_EVENT(sched_pe_migration,
 	),
 
 	TP_fast_assign(
-		strscpy(__entry->next_comm, next->comm, TASK_COMM_LEN);
+		strscpy_pad(__entry->next_comm, next->comm, TASK_COMM_LEN);
 		__entry->next_pid	= next->pid;
 		__entry->next_prio	= next->prio; /* XXX SCHED_DEADLINE */
-		strscpy(__entry->owner_comm, owner->comm, TASK_COMM_LEN);
+		strscpy_pad(__entry->owner_comm, owner->comm, TASK_COMM_LEN);
 		__entry->owner_pid	= owner->pid;
 		__entry->owner_prio	= owner->prio; /* XXX SCHED_DEADLINE */
 		__entry->remote_cpu	= task_cpu(owner);
@@ -991,10 +991,10 @@ TRACE_EVENT(sched_pe_owner_is_migrating,
 	),
 
 	TP_fast_assign(
-		strscpy(__entry->owner_comm, owner->comm, TASK_COMM_LEN);
+		strscpy_pad(__entry->owner_comm, owner->comm, TASK_COMM_LEN);
 		__entry->owner_pid	= owner->pid;
 		__entry->owner_prio	= owner->prio; /* XXX SCHED_DEADLINE */
-		strscpy(__entry->waiter_comm, waiter->comm, TASK_COMM_LEN);
+		strscpy_pad(__entry->waiter_comm, waiter->comm, TASK_COMM_LEN);
 		__entry->waiter_pid	= waiter->pid;
 		__entry->waiter_prio	= waiter->prio; /* XXX SCHED_DEADLINE */
 	),
@@ -1023,7 +1023,7 @@ TRACE_EVENT(sched_pe_return_migration,
 	),
 
 	TP_fast_assign(
-		strscpy(__entry->comm, task->comm, TASK_COMM_LEN);
+		strscpy_pad(__entry->comm, task->comm, TASK_COMM_LEN);
 		__entry->pid	= task->pid;
 		__entry->prio	= task->prio; /* XXX SCHED_DEADLINE */
 		__entry->target_cpu	= target_cpu;
@@ -1048,7 +1048,7 @@ TRACE_EVENT(sched_start_task_selection,
 	),
 
 	TP_fast_assign(
-		strscpy(__entry->comm, prev->comm, TASK_COMM_LEN);
+		strscpy_pad(__entry->comm, prev->comm, TASK_COMM_LEN);
 		__entry->pid		= prev->pid;
 		__entry->prio		= prev->prio; /* XXX SCHED_DEADLINE */
 		__entry->is_blocked	= is_blocked;
@@ -1072,7 +1072,7 @@ TRACE_EVENT(sched_picking_again,
 	),
 
 	TP_fast_assign(
-		strscpy(__entry->comm, donor->comm, TASK_COMM_LEN);
+		strscpy_pad(__entry->comm, donor->comm, TASK_COMM_LEN);
 		__entry->pid		= donor->pid;
 		__entry->prio		= donor->prio; /* XXX SCHED_DEADLINE */
 		__entry->is_blocked	= is_blocked;
@@ -1096,7 +1096,7 @@ TRACE_EVENT(sched_proxy_resched_idle,
 	),
 
 	TP_fast_assign(
-		strscpy(__entry->comm, donor->comm, TASK_COMM_LEN);
+		strscpy_pad(__entry->comm, donor->comm, TASK_COMM_LEN);
 		__entry->pid		= donor->pid;
 		__entry->prio		= donor->prio; /* XXX SCHED_DEADLINE */
 		__entry->is_blocked	= is_blocked;
@@ -1123,10 +1123,10 @@ TRACE_EVENT(sched_found_proxy_task,
 	),
 
 	TP_fast_assign(
-		strscpy(__entry->donor_comm, donor->comm, TASK_COMM_LEN);
+		strscpy_pad(__entry->donor_comm, donor->comm, TASK_COMM_LEN);
 		__entry->donor_pid	= donor->pid;
 		__entry->donor_prio	= donor->prio; /* XXX SCHED_DEADLINE */
-		strscpy(__entry->next_comm, next->comm, TASK_COMM_LEN);
+		strscpy_pad(__entry->next_comm, next->comm, TASK_COMM_LEN);
 		__entry->next_pid	= next->pid;
 		__entry->next_prio	= next->prio; /* XXX SCHED_DEADLINE */
 		__entry->cpu = cpu;
@@ -1155,10 +1155,10 @@ TRACE_EVENT(sched_finish_task_selection,
 	),
 
 	TP_fast_assign(
-		strscpy(__entry->donor_comm, donor->comm, TASK_COMM_LEN);
+		strscpy_pad(__entry->donor_comm, donor->comm, TASK_COMM_LEN);
 		__entry->donor_pid	= donor->pid;
 		__entry->donor_prio	= donor->prio; /* XXX SCHED_DEADLINE */
-		strscpy(__entry->next_comm, next->comm, TASK_COMM_LEN);
+		strscpy_pad(__entry->next_comm, next->comm, TASK_COMM_LEN);
 		__entry->next_pid	= next->pid;
 		__entry->next_prio	= next->prio; /* XXX SCHED_DEADLINE */
 		__entry->cpu = cpu;
