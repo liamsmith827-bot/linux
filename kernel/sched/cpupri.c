@@ -102,12 +102,11 @@ static inline int __cpupri_find(struct cpupri *cp, struct task_struct *p,
 		return 0;
 
 	if (lowest_mask) {
-		if (p) {
+		if (p)
 			cpumask_and(lowest_mask, &p->cpus_mask, vec->mask);
-			cpumask_and(lowest_mask, lowest_mask, cpu_active_mask);
-		} else {
+		else
 			cpumask_copy(lowest_mask, vec->mask);
-		}
+		cpumask_and(lowest_mask, lowest_mask, cpu_active_mask);
 
 		/*
 		 * We have to ensure that we have at least one bit
