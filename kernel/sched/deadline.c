@@ -2636,7 +2636,6 @@ static struct task_struct *__pick_task_dl(struct rq *rq, struct rq_flags *rf)
 	struct sched_dl_entity *dl_se;
 	struct dl_rq *dl_rq = &rq->dl;
 	struct task_struct *p;
-	bool skip = false;
 
 again:
 	if (!sched_dl_runnable(rq))
@@ -2646,6 +2645,8 @@ again:
 	WARN_ON_ONCE(!dl_se);
 
 	if (dl_server(dl_se)) {
+		bool skip = false;
+
 		p = dl_se->server_pick_task(dl_se, rf);
 		if (unlikely(p == RETRY_TASK))
 			return p;
