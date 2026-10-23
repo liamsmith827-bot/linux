@@ -130,37 +130,23 @@ static inline int fsnotify_file(struct file *file, __u32 mask)
 		return 0;
 
 	path = &file->f_path;
-	/* Permission events require group prio >= FSNOTIFY_PRIO_CONTENT */
-	if (mask & ALL_FSNOTIFY_PERM_EVENTS &&
-	    !fsnotify_sb_has_priority_watchers(path->dentry->d_sb,
-					       FSNOTIFY_PRIO_CONTENT))
-		return 0;
-
 	/*
-	 * Open calls notify early on, so lower file system must be notified
+	 * Open calls notify early on, so notify the canonical lower path too.
+	 * This is a notification, not a permission check: a lookup failure
+	 * must not suppress the event on the file that was already opened.
 	 */
-	if (mask & FS_OPEN) {
-		if (path->dentry->d_op &&
-		    path->dentry->d_op->d_canonical_path) {
-			struct path lower_path;
-			int ret;
+	if ((mask & FS_OPEN) && path->dentry->d_op &&
+	    path->dentry->d_op->d_canonical_path) {
+		struct path lower_path;
 
-			ret = path->dentry->d_op->d_canonical_path(path,
-								   &lower_path);
-			if (ret != -ENOSYS) {
-				if (ret)
-					return ret;
-
-				ret = fsnotify_path(&lower_path, mask);
-				path_put(&lower_path);
-
-				if (ret)
-					return ret;
-			}
+		if (!path->dentry->d_op->d_canonical_path(path, &lower_path)) {
+			if (!path_equal(path, &lower_path))
+				fsnotify_path(&lower_path, mask);
+			path_put(&lower_path);
 		}
 	}
 
-	return fsnotify_path(&file->f_path, mask);;
+	return fsnotify_path(path, mask);
 }
 
 #ifdef CONFIG_FANOTIFY_ACCESS_PERMISSIONS
