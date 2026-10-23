@@ -6,7 +6,7 @@
 
 use crate::page::PAGE_SIZE;
 use crate::prelude::*;
-use crate::str::{BStr, RawFormatter};
+use crate::str::{BStr, Formatter};
 use bindings;
 use core::fmt::Write;
 use kernel::sync::SetOnce;
@@ -37,7 +37,7 @@ pub trait ModuleParam: Sized + Copy {
 /// Set the module parameter from a string.
 ///
 /// Used to set the parameter value at kernel initialization, when loading
-/// the module or when set through `sysfs`.
+/// the module. The generated sysfs attribute is read-only.
 ///
 /// See `struct kernel_param_ops.set`.
 ///
@@ -52,9 +52,8 @@ pub trait ModuleParam: Sized + Copy {
 ///
 /// - The safety requirements are satisfied by C API contract when this function is invoked by the
 ///   module subsystem C code.
-/// - Currently, we only support read-only parameters that are not readable from `sysfs`. Thus, this
-///   function is only called at kernel initialization time, or at module load time, and we have
-///   exclusive access to the parameter for the duration of the function.
+/// - Currently, parameters may be set once during kernel initialization or module loading.
+///   Their sysfs attributes allow reads only. SetOnce publishes the initialized value to readers.
 ///
 /// [`module!`]: macros::module
 unsafe extern "C" fn set_param<T>(val: *const c_char, param: *const bindings::kernel_param) -> c_int
@@ -76,10 +75,12 @@ where
     crate::error::from_result(|| {
         let new_value = T::try_from_param_arg(arg)?;
 
-        // SAFETY: By function safety requirements, this access is safe.
-        let container = unsafe { &*((*param).__bindgen_anon_1.arg.cast::<SetOnce<T>>()) };
+        // SAFETY: The module macro stores a pointer to the complete container.
+        // Its Rust layout does not guarantee that `value` is at offset zero.
+        let container = unsafe { &*((*param).__bindgen_anon_1.arg.cast::<ModuleParamAccess<T>>()) };
 
         container
+            .value
             .populate(new_value)
             .then_some(0)
             .ok_or(kernel::error::code::EEXIST)
@@ -125,16 +126,17 @@ where
     // SAFETY: By function safety contract, `buf` is a pointer to memory at least PAGE_SIZE in size,
     // it is safe to write to for the duration of this function. We leave room for a terminating
     // NUL byte at the end.
-    let mut writer = unsafe { RawFormatter::from_buffer(buf, PAGE_SIZE - 1) };
+    let mut writer = unsafe { Formatter::from_buffer(buf, PAGE_SIZE - 1) };
 
     // SAFETY: By function safety contract, `param` is valid and its `arg` field points to a
     // valid `ModuleParamAccess<T>` instance initialized by the `module!` macro.
     let container = unsafe { &*((*param).__bindgen_anon_1.arg.cast::<ModuleParamAccess<T>>()) };
 
-    let _ = writeln!(writer, "{}", container.value());
+    if writeln!(writer, "{}", container.value()).is_err() {
+        return EINVAL.to_errno();
+    }
 
-    // SAFETY: `writer.pos <= PAGE_SIZE - 1 < PAGE_SIZE` is guaranteed by our range specification
-    // to RawFormatter::from_buffer above.
+    // SAFETY: Successful bounded formatting keeps the position within PAGE_SIZE - 1.
     unsafe {
         *writer.pos() = 0;
     }
@@ -170,8 +172,7 @@ impl<T> ModuleParamAccess<T> {
     }
 
     /// Get a shared reference to the parameter value.
-    // Note: When sysfs access to parameters are enabled, we have to pass in a
-    // held lock guard here.
+    // Values are immutable after publication, including through sysfs.
     pub fn value(&self) -> &T {
         self.value.as_ref().unwrap_or(&self.default)
     }

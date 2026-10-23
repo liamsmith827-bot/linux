@@ -79,9 +79,22 @@ fn strip_radix(src: &BStr) -> (u32, &BStr) {
 pub trait ParseInt: private::FromStrRadix + TryFrom<u64> {
     /// Parse a string according to the description in [`Self`].
     fn from_str(src: &BStr) -> Result<Self> {
-        match src.deref() {
-            [b'-', rest @ ..] => {
-                let (radix, digits) = strip_radix(rest.as_ref());
+        // Match the native kstrto* handling of a single trailing newline and
+        // detect the radix after either sign, so +010 and +0x10 keep their bases.
+        let src = src.strip_suffix(b"\n").unwrap_or(src);
+        let (negative, digits) = match src {
+            [b'-', rest @ ..] => (true, rest),
+            [b'+', rest @ ..] => (false, rest),
+            _ => (false, src),
+        };
+        let (radix, digits) = strip_radix(digits.as_ref());
+        // Rust's primitive parser accepts another leading sign. It is invalid
+        // after an already consumed sign or radix prefix.
+        if matches!(digits.first(), Some(b'+' | b'-')) {
+            return Err(EINVAL);
+        }
+        match negative {
+            true => {
                 // 2's complement values range from -2^(b-1) to 2^(b-1)-1.
                 // So if we want to parse negative numbers as positive and
                 // later multiply by -1, we have to parse into a larger
@@ -94,10 +107,7 @@ pub trait ParseInt: private::FromStrRadix + TryFrom<u64> {
                         .map_err(|_| EINVAL)?;
                 Self::from_u64_negated(val)
             }
-            _ => {
-                let (radix, digits) = strip_radix(src);
-                Self::from_str_radix(digits, radix).map_err(|_| EINVAL)
-            }
+            false => Self::from_str_radix(digits, radix).map_err(|_| EINVAL),
         }
     }
 }
