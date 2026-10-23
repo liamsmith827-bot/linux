@@ -5373,3 +5373,76 @@ separate Android override hooks remain. Preserve native current pressure logic.
 Tegra/SCMI-specific additions are outside this x86 target; the native SCMI driver
 has no vendor done branch and therefore no instance of the fixed uninitialized
 variable. No physical driver fix is weakened by omitting that absent branch.
+
+# Scheduler source exports
+
+`evidence/scheduler-exports-review.json` records complete export-history reviews,
+scoped comparisons to native function bodies, and build-121 symbol presence.
+Exports allow rebuilt trusted vendor modules to use current scheduler interfaces;
+they do not freeze task/runqueue layout or provide old-signature shims. Preserve
+rq/pi lock order, task references, CPU-hotplug coordination, RCU and static-key
+lifecycle obligations. Checked scheduling APIs still enter permission/LSM checks;
+explicit nocheck APIs remain for trusted kernel callers and must not be exposed
+to unchecked userspace requests. Tracepoint probes run in scheduler contexts and
+must not sleep or retain unreferenced pointers.
+
+Keep native migrate_swap CPU/affinity rechecks and stop_two_cpus machinery while
+allowing its source API under SMP without NUMA. Preserve current pick_task rq_flags
+and RETRY_TASK contract and set_next_entity bool-first behavior. No LTS scheduling
+fix is replaced to reproduce an obsolete exported prototype. Current PELT/proxy/
+SCX policy changes are audited separately; export-only review does not certify
+all behavior of those implementations.
+
+Exact SDK vendor consumers of several exports remain unconfirmed. In particular,
+ACK's exported sysctl_sched_latency scalar has no internal EEVDF use in the
+examined source; retain the vendor source data interface conservatively without
+claiming it controls native scheduling latency or proving it is KMI-only. No
+runtime scheduling, contention, hotplug or external-probe tests were executed.
+
+# Fair scheduler histories and SDK scope
+
+`evidence/fair-scheduler-history-review.json` records historical capacity,
+balancing, latency and utilization-clamp decisions. Preserve complete native
+scale_rt_capacity, need_active_balance, calculate_imbalance, update_sd_lb_stats
+and sched_balance_rq implementations. Historical heuristics were reverted or
+superseded by native balancing redesigns; old conflict-marker blocks and obsolete
+count/scale helpers are not restored.
+
+Commit b2b392919cf9 restores the complete native find_energy_efficient_cpu and
+caller signature. The existing SDK disables CONFIG_ENERGY_MODEL, making the
+native sched_energy_enabled/is_rd_overutilized gate exclude that path. Therefore
+the ACK-only synchronous EAS shortcut and duplicate early PELT sync are omitted
+for this target. This does not remove a generic selection hook, a userspace API,
+or an LTS fix. Reassess EAS policy for a future target that enables it. Generic
+pre-hook task-load synchronization remains, skipping new forks as final ACK does.
+
+Keep cpu.uclamp.latency_sensitive metadata: pinned Android CpuPolicySpread/Pack
+profiles and NNAPI init configuration write it. Both cgroup versions retain the
+non-root 0/1 interface, native permissions and zero-initialized task-group storage.
+Its historical built-in EAS consumer was explicitly reverted by ACK; exact vendor
+placement use is unconfirmed, and a write is not claimed to change native latency.
+Keep Android CAP_SYS_NICE restriction for per-task utilization-clamp changes;
+this tightens native access rather than weakening checks. SurfaceFlinger's
+property-gated clamp caller is positively paired with SYS_NICE in its service
+configuration. Runtime activation, fairness and power effects remain unverified.
+
+# Scheduler diagnostics and hotplug history
+
+`evidence/scheduler-trace-hotplug-review.json` covers blocked-reason trace history,
+one-way proxy enable configuration and obsolete hotplug helper history. Keep the
+blocked-reason fields consumed by pinned Perfetto. Current wake site holds pi_lock
+and calls architecture __get_wchan directly, avoiding recursive get_wchan locking.
+Native x86 helper pins the stack and uses bounded ORC reads; a caller sampled during
+switch-out can still be zero/inexact. Caller addresses and process activity remain
+sensitive trace data subject to normal trace/perf permissions. No actual trace run.
+
+Preserve the 0664 one-way proxy-enable sysfs interface: any write enables, including
+text 0, and it cannot disable. Default SDK key is already enabled. Native static-key
+synchronization remains, but a boot-disabled runtime transition is untested. The
+original setup drops its kobject on group-create error yet returns 0; init success
+alone therefore does not prove attribute availability. Keep boot status logging.
+
+Native online-CPU balance interval and hotplug update locations remain. Historical
+active-mask removal is not replayed over current native concrete-task filtering;
+proxy NULL-context CPU-priority semantics retain their separate audit. Removed
+historical async drain and preempt-count sampling helpers are not resurrected.

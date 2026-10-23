@@ -1,0 +1,992 @@
+{
+  "source_head": "e34b8ccdee051d1baef8e2bbdff4cb5243b36fae",
+  "records": [
+    {
+      "commit": "a085424328b21565b3d3f865172790577a14c1f3",
+      "disposition": "adapted-net-state",
+      "rationale": "Both paths reviewed. Retain GPL activate_task/deactivate_task, renamed wakeup_preempt, SMP set_task_cpu and stop_one_cpu_nowait interfaces. Native activation body is in __activate_task under the separately audited proxy wrapper; deactivate/preempt/stop bodies remain LTS and set_task_cpu adds only an observer. Source callers must hold required rq/pi locks and preserve on_rq/migration state; exporting does not make arbitrary task movement safe.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "e58795487a6e2f1604fe38d69483da7cb4adc070c1052417b803046a1d650851"
+    },
+    {
+      "commit": "6b0a9dc6df8d8be21c8d178a01e0711b0fe6ce73",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain GPL runqueues data export for Android scheduler source customization. Native DEFINE_PER_CPU_SHARED_ALIGNED layout/initialization remains. Callers must use per-CPU access and actual rq locking; no binary layout or unchecked userspace access is promised.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "adb107861f15772f61943d0d9c766ae54c11346742dceb296fb1ea6504f0eaa2"
+    },
+    {
+      "commit": "9a81ce5c7163581153905c037693a7e17df4888b",
+      "disposition": "adapted-net-state",
+      "rationale": "All three exports retained at current kernel/sched/syscalls.c location after split/reapplications 7a8142aaf68c and 2efa0b6495ee. Bodies match LTS. Checked APIs retain user=true permission/LSM handling; explicitly named nocheck API passes false for trusted kernel callers, not a new unprivileged syscall bypass.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "6f066056bade300fbe7ef1912e190472cfbebc2bef8416c9f1cacb4f958cf4ba"
+    },
+    {
+      "commit": "dbdf52541af6b4d90163e9e27df88d624d5cfe70",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain GPL wake_up_if_idle with whole function identical to LTS, including RCU handling and idle wake logic. Source caller must supply a valid CPU and respect CPU lifetime; export adds no scheduling policy.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "82380117412253b4971f932ef9198c8281d08817fea7a6ec322d2df760e7bed8"
+    },
+    {
+      "commit": "2dd515921a1bebcf2438c1db3a7419fc9e1cea59",
+      "disposition": "adapted-net-state",
+      "rationale": "Keep sched_feat_keys GPL export under existing CONFIG_JUMP_LABEL branch. Array is initialized from native features.h; callers manipulating static keys must use jump-label/static-key synchronization rather than write key internals. No historical array size/layout is frozen.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "336f8ec2e031aecbd8879505ecb233fd1598707e90ef8109caf0d94afcf99cae"
+    },
+    {
+      "commit": "47a7c5b256ef3d37f6645e7873e969612d2a1b1e",
+      "disposition": "partially-adapted-net-state",
+      "rationale": "Retain uclamp_eff_value GPL export with native body. Historical idle_cpu export was explicitly replaced by available_idle_cpu in e750a0b5ec26 and reintroduced at its new syscalls.c location by 06f4268415ed. Keep that final interface, including vcpu_is_preempted check, without adding an obsolete idle_cpu export.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "6f28e1b36f214e643887565ba2845a10b337b3892bcad3fdf3fa32a11f8888d7"
+    },
+    {
+      "commit": "658c60b75aef6e5c587db528d9472aa8fac8f2e4",
+      "disposition": "partially-adapted-net-state",
+      "rationale": "Both paths reviewed. Keep GPL __update_load_avg_blocked_se in current PELT code, whose native body remains below a default -1 Android override. Historical schedutil_cpu_util no longer exists in final ACK or LTS; current schedutil uses effective_cpu_util. Do not restore an obsolete compatibility shim. PELT override policy is separately audited; this row concerns exports only.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "f42d628e934d3f255d59fe2a0fd8c96adbab5e5959dfcf7ad2898deee881c505"
+    },
+    {
+      "commit": "7923ce03f7b8d7787dee287d1fb57a314e680fc3",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain sched_uclamp_used GPL static-key export with native false initialization. External scheduler code must follow static-branch enable/disable synchronization and matching accounting assumptions; this does not add a userspace permission bypass.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "da38a8947b691d1539388b9875ad6213f32c395390b52a7a9766d282565d4746"
+    },
+    {
+      "commit": "1243c202aea2ba10284c98b21d9f435e06e9b68e",
+      "disposition": "adapted-net-state",
+      "rationale": "Keep GPL sched_setattr_nocheck at current syscalls.c location. Wrapper remains exactly LTS and explicitly passes user=false; privileged source modules must validate any untrusted request before calling it. Ordinary checked scheduling syscall path remains separate.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "642a27ac985c8be2ce419f22e8f1634d212d92b23d2547798735ec769f109ec4"
+    },
+    {
+      "commit": "d28d86c3fefacfeeeee0b01c77926150a1b0871b",
+      "disposition": "adapted-net-state",
+      "rationale": "Keep GPL sched_switch tracepoint export for vendor monitoring. No event payload or switch-site behavior is changed by this commit. Probes must honor scheduler atomic context and pointer lifetime; observations do not grant a task reference.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "79a88f9518d6bdd2a3e2c9843231a7bdfd6b2f396087a3aff646fe0346af0bb6"
+    },
+    {
+      "commit": "7587bc9dcf5a0710e7a3b662f763a1028687dfab",
+      "disposition": "adapted-net-state",
+      "rationale": "Both exports retained: cpufreq_this_cpu_can_update and tick_nohz_get_idle_calls_cpu. Complete function bodies match LTS, preserving CPU-policy/RCU readiness checks and native tick counter access. Export does not serialize remote observation or provide a lifetime reference.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "45a66840957fb4d19815499373dad6a1a47a6d4a9cc0074ad54a9bfdfbf9a568"
+    },
+    {
+      "commit": "f94f1b91143ed44a6c64a6d201cd3b41e3c90863",
+      "disposition": "superseded",
+      "rationale": "Full original visibility/export patch reviewed with explicit revert f6a7931247f0 and reapplication 662ee85cd13a. Final API includes bool first as fixed by 2bf32a8b1dd2; no obsolete two-argument shim is retained.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "33660206fe6248bdd38eee7cb1abe843ec3f8932d544e6b8f1c16684ce8c059f"
+    },
+    {
+      "commit": "b8042f5e293039ddfc5c1b605eb0aa7b56f3fba8",
+      "disposition": "adapted-net-state",
+      "rationale": "Keep GPL sysctl_sched_latency scalar present in pinned ACK. Full scoped source search finds only definition/export in delivered kernel/common-modules; EEVDF no longer uses it internally. This is explicitly an unconfirmed vendor source data interface, retained conservatively rather than inferred to be KMI-only from missing local consumers. Its value is not an operative native scheduler latency control; no former CFS scheduling calculations are restored.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "bc355f0f78411476a3e8f31f42e14b373f8e60b262b3fa6ab452f10e5625853e"
+    },
+    {
+      "commit": "4cdd5274cc08c70607cac3962e3983459ac43f8b",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain resched_curr GPL export; complete body remains native, including local/remote reschedule handling. Caller must hold the rq lock and satisfy interrupt/preemption context; no new synchronization is supplied by export.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "5f6d1f5bc47c052548840a90465cd82a6018f0bc50a0f24008b7ec97f6b60237"
+    },
+    {
+      "commit": "bb7f4f66cad4bc096136624586f57fabc4fc27e1",
+      "disposition": "adapted-net-state",
+      "rationale": "Both paths reviewed. Keep nonstatic max_load_balance_interval, GPL export and matching scheduler header declaration under SMP context. Native HZ/10 initializer and current native update/use logic remain; callers modifying it can affect balancing latency and must synchronize appropriately. No fixed historical offset or binary layout.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "527dd98dff3e1f7e55885f0fbae9a0f8b86bcb03c56d2aea69b052c19eca8cc9"
+    },
+    {
+      "commit": "fc6bf56229dbcdf9e0459d0e5640d94f67c3725a",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain raw_spin_rq_lock_nested/raw_spin_rq_unlock/double_rq_lock GPL exports. All bodies match LTS, preserving core-scheduling lock-pointer recheck, preemption handling, IRQ-disabled assertion and rq ordering. Source modules must pair locks/unlocks and satisfy caller context.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "d6158a4f4009f869465fe870cd1595351f676e75f48156d90a3a9c4c5531676e"
+    },
+    {
+      "commit": "4cd67c09b61cbe286b886676f04ccbc5842a8115",
+      "disposition": "adapted-net-state",
+      "rationale": "Keep balance_push_callback GPL export using current struct balance_callback and native callback initializer. Do not preserve historical callback_head layout/cast. Callback list is protected by rq lock and must not be detached across the native split-balance interval.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "96964d986ad62d55c6bd6f81c1dd66dc884d53b049751db09e98267bf5206aea"
+    },
+    {
+      "commit": "2d3c1ccc536c346aad3fe5e4f2871a75a12a9b43",
+      "disposition": "adapted-net-state",
+      "rationale": "Keep cpupri_find_fitness GPL export using current sched_ctx plus exec_ctx signature. Export patch adds no mask logic; current proxy-aware CPU-priority semantics are independently audited. Source callers must not use the historical single-task prototype or assume returned masks bypass subsequent affinity/hotplug validation.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "6dfe6c91ee0a3150a308272e237cffdcb897656adfdfdacb9378b8324bd099c8"
+    },
+    {
+      "commit": "d29d89c8144dfed856d33d57e2de3549ecd8196f",
+      "disposition": "superseded",
+      "rationale": "Historical task_may_not_preempt helper/export is absent in final ACK and port. Its old task_thread_info preempt_count heuristic is replaced by current cpu_busy_with_softirqs and CONFIG_RT_SOFTIRQ_AWARE_SCHED active/pending masks; see softirq history review. Do not resurrect a removed API. This is explicit final source replacement, not missing-consumer reasoning.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "7ee0897d12e6028b86e958c3fde0e1e945425e4fe79f6f19cdb68eb68066e7da"
+    },
+    {
+      "commit": "e750a0b5ec26b221bcbd7bfc0b3d634e89928fc1",
+      "disposition": "adapted-net-state",
+      "rationale": "Full remove/add patch reviewed. Remove old idle_cpu export and keep available_idle_cpu at final syscalls.c location. Native vcpu_is_preempted filter avoids reporting a preempted virtual CPU as available; no old-symbol compatibility shim.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "62e2d345ea9445a3585324a6634bbb500e762df417848c8eba7e3ff5adcd9fb4"
+    },
+    {
+      "commit": "54f48f7c5beb388d8c25d21ada3bfed55911d24d",
+      "disposition": "adapted-net-state",
+      "rationale": "Keep GPL task_rq_lock with complete body equal LTS. Both task pi_lock and current rq lock, migration state recheck and retry loops remain; callers must use matching task_rq_unlock and hold a live task reference.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "156adf641bc8bbfec803f3cdb5447d277e52154bb5bfd8ecbc7ac8b67c67ad5f"
+    },
+    {
+      "commit": "51ba045c81b3d00225cfe6866e5fd18a1faddf30",
+      "disposition": "superseded",
+      "rationale": "Original nonstatic __balance_callbacks export is superseded by revert 2a8e9ffe59d2 and final reapplication 385520262421 with scheduler header declaration. Retain current struct balance_callback implementation rather than callback_head ABI.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "0e504f12c654341f825c5c2c0de23efcb98193f7fc0a5b866e3560b1ee833410"
+    },
+    {
+      "commit": "64d0ed8425084b935ae60ee6a30ec61189a55d32",
+      "disposition": "adapted-net-state",
+      "rationale": "Keep CONFIG_LOCKDEP-guarded GPL sched_domains_mutex export. Native mutex and locking helpers remain; this enables source lockdep assertions and does not add mutex storage in configurations where it already exists. SDK lockdep is disabled; generic build/config compatibility is retained.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "0edcb9c288ff083c1afb992cb5b800bc392e993f7665ea3f1d9063129732076a"
+    },
+    {
+      "commit": "c5f9e2f558c25f6e4c6dddb920214b4cefd891c6",
+      "disposition": "adapted-net-state",
+      "rationale": "Keep external visibility and GPL update_misfit_status export. Current native body is preserved except independently retained default-true need_update hook. Function belongs to SMP scheduler code; callbacks/callers must protect rq state. This export review does not claim correctness of arbitrary hook override policy.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "6abbdbd66e8f694bc40641420ec31124c28c71274486cb87b36b8d6139c04c46"
+    },
+    {
+      "commit": "2a8e9ffe59d27c40df4a9514c47afaca8190d276",
+      "disposition": "superseded",
+      "rationale": "Full removal reviewed. Later 385520262421 explicitly restores nonstatic __balance_callbacks/export and declaration. Do not apply temporary revert to final vendor source interface.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "e1565516f17ad85a261a1596fce63707e2b63fe7127c00d752904aba0636bdef"
+    },
+    {
+      "commit": "f6a7931247f01a3049d8c0701fa61f229bc97bb4",
+      "disposition": "superseded",
+      "rationale": "Full export removal/static restoration reviewed. Later 662ee85cd13a and 2bf32a8b1dd2 supply current set_next_entity declaration/export with bool first. Do not apply temporary revert.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "db984583f5015a5d95ec2259e665fbc4b0011e43d5a924e907ffbf4e3793d481"
+    },
+    {
+      "commit": "b8617dbebe81f63541bcb92a8c9107b41d562dd7",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain GPL wakeup_preempt export after scheduler helper rename. Whole body is LTS, including class comparison and clock-skip update; caller must hold appropriate rq state. No older check_preempt_curr symbol shim.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "247646c6f95bda7b5067cbf6d41c0288d9ef1758078329ab68b212a1106f7720"
+    },
+    {
+      "commit": "7a8142aaf68c012858b8ce76bb0916478baeed89",
+      "disposition": "adapted-net-state",
+      "rationale": "Both reapplication exports retained in syscalls.c. Native checked sched_setscheduler and trusted-kernel sched_setscheduler_nocheck wrappers remain; no syscall behavior is changed by export.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "a0d5ec36cfa254dd5da68118067b5de13a6e2923958475c45534441199ed1a48"
+    },
+    {
+      "commit": "d5df17e4c3ebd15137903badc41c6a5584277daf",
+      "disposition": "adapted-net-state",
+      "rationale": "Both original helper relocation/export and header paths reviewed. Keep callable pick_task and matching current (rq, rf) declaration. Current class pick forwards rq_flags and can return RETRY_TASK as documented; callers must honor retry and rq-lock release semantics. Do not restore old one-argument wrapper or hide retry; current body otherwise follows native class iteration and idle-class guarantee. Related rq-lock-release fix is separately audited.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "dbeae51f8e0f2f7f2d4f00e60b02a5cf34362ca6f5ff365b45a1615e95334244"
+    },
+    {
+      "commit": "221ab1461ad87aa8534d10ede3ff60f24f074597",
+      "disposition": "superseded",
+      "rationale": "Both revert paths reviewed. Temporary NUMA-only restoration is superseded by later reapplications and final SMP-scoped 1d1d1e6f9558. Do not remove vendor source migrate_swap on this SMP non-NUMA SDK.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "b0220c546699f8fbcdc3a04e56f85df7d475fa3ae639793f49afdc248dbe5342"
+    },
+    {
+      "commit": "658dc70320d9c61652fc8b1bc761085e0641386c",
+      "disposition": "superseded",
+      "rationale": "Both reapplication paths reviewed with explicit 3e977a9bed4b inverse and final 1d1d1e6f9558. Keep final SMP guard and NUMA-only trace call, rather than this intermediate unguarded definition/declaration arrangement.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "6c396e4bfa898847cc33bd1596726fc1e0769012bec64490c6059323d6f7dc04"
+    },
+    {
+      "commit": "3e977a9bed4b72f5dfca97469fec585eaaf7fa3e",
+      "disposition": "superseded",
+      "rationale": "Both inverse paths reviewed. Final 1d1d1e6f9558 provides migrate_swap under SMP with trace guarded by NUMA_BALANCING. Temporary revert is not applied to the final vendor source API.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "af7977557199b0a2ae728a2c0e4ba3cf9363dbe70048900db3c6685e6b225873"
+    },
+    {
+      "commit": "d7458e83ee1477f1ba18f583c871565d6e39da16",
+      "disposition": "adapted-net-state",
+      "rationale": "Full declaration-only guard removal reviewed. Current internal __migrate_task declaration remains unconditional; no definition, exported symbol or UP execution path is added by this declaration. Actual x86 target is SMP; no assertion of a separate UP build.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "216f40c9d2e92388f723f88d022361b7964c21bdd3e9e754f9f5abca35c39057"
+    },
+    {
+      "commit": "37a69c0750906629fa6bca28202772e542861b13",
+      "disposition": "adapted-net-state",
+      "rationale": "Keep set_task_cpu export within enclosing CONFIG_SMP definition region. Final broader SMP block also encloses migrate_swap; export cannot reference an unavailable UP implementation. Verified current boundaries, without claiming UP build validation.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "8ca03164d446cb449b34dca61a61a4d75ca554b90bb04a97883b2a3752787df1"
+    },
+    {
+      "commit": "1d1d1e6f95589c34e04373d1016cd9f8aa3138d9",
+      "disposition": "adapted-net-state",
+      "rationale": "Both paths reviewed. Keep migrate_swap implementation/export under SMP and declaration in scheduler header; guard only NUMA trace call. All swap helper bodies are LTS apart from trace guard, preserving CPU-active checks, pi/rq locking, locked affinity/CPU rechecks and stop_two_cpus. This enables current non-NUMA SDK source customization; no affinity checks are dropped.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "bfecbedf5e4a3a29f9e8f896ed995daa55823d41bab038f52368b7822b48b06b"
+    },
+    {
+      "commit": "3855202624213ca9db359ab289ad9212e9c65922",
+      "disposition": "adapted-net-state",
+      "rationale": "Keep nonstatic GPL __balance_callbacks and header declaration. Current body matches LTS except linkage and uses native splice(false) semantics, not historical callback_head layout. Must run under required rq lock, retaining balance-push callback ordering.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "1956d01e9d7b857d35f63a3f0b2a222bd4df2872eecc82330ddb8c97c44eadba"
+    },
+    {
+      "commit": "662ee85cd13a8fceff40cb5b3d7863aa46394fca",
+      "disposition": "adapted-net-state",
+      "rationale": "Both reapplication paths retained with final three-argument declaration fixed by 2bf32a8b1dd2. set_next_entity body is exactly LTS, including only protecting the slice when first=true. No reversal of LTS fair scheduling fixes to satisfy old prototypes.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "d602061b611fcfb718b09bd1cff2f719122b304802e4abd8b63da1e528df87e5"
+    },
+    {
+      "commit": "06f4268415ed702f5a6e665f037a37bc72a51f37",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain available_idle_cpu GPL export in syscalls.c after source split. Complete body matches LTS, including vcpu_is_preempted filter. Kernel callers must provide a valid CPU; function is an instantaneous observation, not a reservation.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "ff6ea3fb06f7ad7831bbe1009271ccdb9b17bb8a0b9318363cb6119939a2acfc"
+    },
+    {
+      "commit": "8d2f62688906dc3f52b00ef17b2d2887127d54d0",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain sched_stat_runtime GPL tracepoint export; no payload or runtime accounting site changed by this patch. Trusted probes must not sleep in scheduler atomic context or retain unreferenced task pointers.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "5d70be11ac33cdec29827992cd3d8aa9e9330c8b6358c028f05aa430a1b9800e"
+    },
+    {
+      "commit": "b16612ae3e3de6407006c086385ef422bc5fd4de",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain __scx_enabled GPL static-key export. SDK SCHED_CLASS_EXT=y; this is generic scheduler source customization. Initialization remains false and export does not authorize unsynchronized toggling or bypass SCX enable/disable machinery.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "00aa261b0796fd88dfb232ff0d9a58ac3d1f5d92f5087fb18f377d71a6046097"
+    },
+    {
+      "commit": "6917109b2159cefd085f1390fe8ace51e8d26498",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain ext_sched_class GPL export at current DEFINE_SCHED_CLASS(ext) definition. No class callbacks/layout are pinned by this export; use current compiled interfaces and SCX lifecycle. Export-only review does not certify all separate SCX policy changes.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "21202e6b8ac47c73c1cb4e5d4b67fc6c6b1b54fb3973f16ef92a7850c3188ec6"
+    },
+    {
+      "commit": "2efa0b6495eedf41ec96824e7987e9bd802c4aac",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain sched_setattr GPL export at current syscalls.c wrapper, which remains LTS user=true/pi=true. Exported checked API preserves permission/LSM path; no historical binary symbol-version promise.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "f2e8cca765585ccf8c3339e6312fb5c520f1e9be6b912ee6e077af6d2d372d64"
+    },
+    {
+      "commit": "36816447242b89714c766d8e67d48622bfa90644",
+      "disposition": "adapted-net-state",
+      "rationale": "Keep get_wchan GPL export with whole body equal LTS, including live task/stack-state synchronization. Kernel callers still need valid task ownership; export does not create an unprivileged kernel-address disclosure interface.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "435aff7dbb476a3c8e8198eeb4a27768c27fff548fca4bd77f8216ec20b7b2f9"
+    },
+    {
+      "commit": "49fe74d3475c9aa23fe2ef6eefaa8f545d0451a5",
+      "disposition": "adapted-net-state",
+      "rationale": "Both sched_waking and CONFIG_SCHEDSTATS-guarded sched_stat_sleep exports retained. SDK SCHEDSTATS=y. No event payload changes; probes must obey scheduler context and task lifetime.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "f00128a25dd975fadef4a571115bdf34e3de62a3cd5871d81e664309890d4fce"
+    },
+    {
+      "commit": "064ee27f32b39a7bc0e34e57ee671d88008fd716",
+      "disposition": "adapted-net-state",
+      "rationale": "Keep GPL sched_stat_wait/sched_stat_blocked exports inside existing CONFIG_SCHEDSTATS guard. No event definitions or accounting logic modified; source probes remain responsible for atomic execution and lifetime.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "b739e382a32cebb245fa8419e4dcb735753fc4c658e9055c48c7bb5863ccfdb7"
+    },
+    {
+      "commit": "445ed2b4332b1de96fb1fdd79ac56fb54135a781",
+      "disposition": "adapted-net-state",
+      "rationale": "Keep GPL sched_stat_iowait export under CONFIG_SCHEDSTATS, configured for SDK. Export changes module visibility only; trusted probes must respect scheduler context.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "699ed74e589bf8f2044134615028463f5eba2213c393903efdd63b41f554866c"
+    },
+    {
+      "commit": "c8ec17d7360729abe31918ae87edaf88247afc32",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain sched_wakeup GPL tracepoint export, without changing wakeup event fields or wake scheduling code. No claim of a known SDK probe; preserve generic Android module source compatibility.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "9c41b7a242ba9b41c3e6926bcff71e916fcb25134469ad97af51306fe73cc251"
+    },
+    {
+      "commit": "6bdce6e28649f48ec03f808fca9346c197e3b21f",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain __sched_proxy_exec GPL static-key export inside CONFIG_SCHED_PROXY_EXEC branch. Current key starts true as in final ACK/LTS; no default-disable or new enable policy introduced by this export. Callers must use coordinated proxy lifecycle rather than raw key mutation.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "75fd73e08f19ed892ccc8c00cf9f69f16f6f0f6bb981b0ba1ce5dae74924622c"
+    },
+    {
+      "commit": "0c9bc2f5ba583898343ee5f18e59e636cfb636b0",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain task_sched_runtime GPL export. Whole function matches LTS with task_rq_lock, current-task accounting and clock update; export adds no unprivileged caller path or task lifetime reference.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "8e0073b83b0b00b389ed4f3931f244ca7cebea8f602fee4346e88929c6e2a40c"
+    },
+    {
+      "commit": "707e62b57fabbd2c4d33e24c8e965e220c7cd149",
+      "disposition": "adapted-net-state",
+      "rationale": "Keep raw_spin_rq_trylock GPL export. Body exactly LTS including core scheduling lock-pointer recheck and balanced preemption handling on failure/success. Caller must honor result and pair the current rq unlock primitive.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "c5e75aff9e14b01fb2433692dead8f2f4d68af8888c32aab61a7af0f7f57566e"
+    },
+    {
+      "commit": "2bf32a8b1dd244df96506683cc4704fd0a185f23",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain final bool first set_next_entity prototype matching native current body/export. This preserves LTS only-protect-on-pick behavior and correct call ABI for rebuilt modules; no obsolete two-argument binary compatibility.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "9a968b557b4277d3b45a3bcf29fae0b314e11f34d43911459ed18e261789f7a2"
+    },
+    {
+      "commit": "5695c1ea6568eaf8aa0833a025ee7fbdab1646d4",
+      "disposition": "partially-adapted-net-state",
+      "rationale": "All three paths reviewed. Keep update_rq_clock GPL export with native body and final SMP migrate_swap interface/guards after reverts/reapplications. Old cpu_scale per-CPU definition/export is absent from final ACK and native arch_topology implementation; do not resurrect obsolete storage to mimic historic API. Current capacity interfaces remain native with separately retained topology hooks.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-exports-review.json",
+        "SECURITY.md: Scheduler source exports"
+      ],
+      "patch_sha256": "95f69449ded13cecb27175bf136a9716c89301aec69f3ab6bad6e238e30f15c6"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/sched/core.c",
+      "function": "deactivate_task",
+      "sha256": "b45d10516d90983c99a26fb169f77d81d60c47339cd15485b20906d11f7c2bc8",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "wakeup_preempt",
+      "sha256": "0abc814caf7280a57df2288907097748b6d937eda269cf789dea5ba553fff3e7",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "wake_up_if_idle",
+      "sha256": "3cc6652acf3ef005696bb57dba729fcaadd76007cb52523134b6b1e7090fdc2e",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "uclamp_eff_value",
+      "sha256": "8c6e14fba928cf6b6c2794daaae93aceb7ea187b611c02999baddd58dfea5e13",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "resched_curr",
+      "sha256": "fc5469ee79f30988cc6c9d2fe44ce1e26166c7bf33037ac6fb21aad6836b1cd5",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "raw_spin_rq_lock_nested",
+      "sha256": "a48ec53eca670be68bb84475cb46e4c61ae719d18473f611c04419aed5f8c483",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "raw_spin_rq_unlock",
+      "sha256": "bc5cabd70fcdf213fbfc730f723985285ba489368ab65d84beead2dd42fc705e",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "double_rq_lock",
+      "sha256": "7b494f3b7d8d98a7ba475b9e5382d4b080c314f67b7746016479805b6a87cd6c",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "task_rq_lock",
+      "sha256": "4cffd16ac0f19ff6f5a9b95e3b775db83ca5efdeacd2c9ca87555a356d8e5726",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "__balance_callbacks",
+      "sha256": "2df44d4854e80ff19a37465416f5f268ccdad614998155092c36e5b678209af2",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "__migrate_swap_task",
+      "sha256": "f20d922fe6f3a822d0a08669f5217b31cf4581321567fa2543d66099f73a73da",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "migrate_swap_stop",
+      "sha256": "413ccaa53aaf3078d98cf5594c273dbb36b4367aa30aaa003d9aae83bbaf849d",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "get_wchan",
+      "sha256": "ae278fd5dbc51ea435a0f31cf68a69a2e586cd78659f3d625580f7d8db6cb4c6",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "task_sched_runtime",
+      "sha256": "9ac10c6a01aabff7c0043cea5b4c788f28b549e5a8e302273ea264b79fb458da",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "raw_spin_rq_trylock",
+      "sha256": "1bf535ad18ba6079aaf0507f6a3d2baa391e3dd88dd01b34b937c480be2e29cb",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "update_rq_clock",
+      "sha256": "c199f724c5d4e513635dad8408dce535e6719903caf740d3b239c65940091deb",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "set_next_entity",
+      "sha256": "88f6d3dfc174f2f303318a04919a9850e398c6cdb74d3491676ac0620cbd3fd3",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "sched_setscheduler",
+      "sha256": "a9984079bcdef0f6ec7522d8ce71c18d9053046ced77870762420316c2e166a9",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "sched_setattr",
+      "sha256": "9bb275d240cac1c3ede99d0bf5aee0ab769c43b29a177e39324fd206ca0c227f",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "sched_setattr_nocheck",
+      "sha256": "37603962ca95522127931fafdaffdea71d7e260044247d16326f3727e0191b6e",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "sched_setscheduler_nocheck",
+      "sha256": "2e4ed85d2f779a222e9c6c1588d7ebb6635d2634dee2401da52d61616e733463",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "available_idle_cpu",
+      "sha256": "7f44121c75310ec2587cbb013a5f6f9044c22eca0fa3a5273d230e85d7d52109",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/stop_machine.c",
+      "function": "stop_one_cpu_nowait",
+      "sha256": "46130cc3f8fddb6e4e568350bd912a4a6641dd0362bb3a319b6945b93ea286b9",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/sched/cpufreq.c",
+      "function": "cpufreq_this_cpu_can_update",
+      "sha256": "ef5cdc3b336605f24dd572d3167ed9210207389b604c8ce35365be0d2095173a",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/time/tick-sched.c",
+      "function": "tick_nohz_get_idle_calls_cpu",
+      "sha256": "c229518c08a9ea76dc0b4c4ceae21f35220fc9f928857a77c137cb6b88c44f44",
+      "relationship": "whole body equals LTS; linkage may differ"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "__activate_task",
+      "sha256": "cb7bad5a1e183aa0b9e29110146a41a3b4f49e7cb609fdc297c6b2dbf3552216",
+      "relationship": "native activation body moved beneath separately reviewed proxy wrapper"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "set_task_cpu",
+      "sha256": "0b3d0348770b697062355239320f3ec7fb970189d773b494732257a99c322a45",
+      "relationship": "native body except observer"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "migrate_swap",
+      "sha256": "1920dfbe0a65b3bb4cfb8256470fc478317181d86c7b5c5e0f18d91b1fe92307",
+      "relationship": "native body except NUMA trace guard"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "pick_task",
+      "sha256": "9282f6848e8646ebafdb8e6c2b08362d28ab015db72013242091a4e83b09b627",
+      "relationship": "native body except current rq_flags argument forwarded; RETRY_TASK documented"
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "update_misfit_status",
+      "sha256": "513ec82eb9f6587a91ecc92b812a7da57dfe95074610a6c52190a9ea82c5519e",
+      "relationship": "native except default-true observer/override"
+    },
+    {
+      "path": "kernel/sched/pelt.c",
+      "function": "__update_load_avg_blocked_se",
+      "sha256": "a60524ebff2cfba77d994737990659d61d28effad757e1caf2f46b863ed0209c",
+      "relationship": "native except default -1 override"
+    }
+  ],
+  "exports": {
+    "kernel/sched/core.c": [
+      "activate_task",
+      "deactivate_task",
+      "wakeup_preempt",
+      "set_task_cpu",
+      "runqueues",
+      "wake_up_if_idle",
+      "uclamp_eff_value",
+      "sched_uclamp_used",
+      "resched_curr",
+      "raw_spin_rq_lock_nested",
+      "raw_spin_rq_unlock",
+      "double_rq_lock",
+      "balance_push_callback",
+      "task_rq_lock",
+      "__balance_callbacks",
+      "pick_task",
+      "migrate_swap",
+      "get_wchan",
+      "__sched_proxy_exec",
+      "task_sched_runtime",
+      "raw_spin_rq_trylock",
+      "update_rq_clock"
+    ],
+    "kernel/sched/fair.c": [
+      "set_next_entity",
+      "sysctl_sched_latency",
+      "max_load_balance_interval",
+      "update_misfit_status"
+    ],
+    "kernel/sched/syscalls.c": [
+      "sched_setscheduler",
+      "sched_setattr",
+      "sched_setattr_nocheck",
+      "sched_setscheduler_nocheck",
+      "available_idle_cpu"
+    ],
+    "kernel/sched/ext.c": [
+      "__scx_enabled",
+      "ext_sched_class"
+    ],
+    "kernel/sched/cpupri.c": [
+      "cpupri_find_fitness"
+    ],
+    "kernel/sched/pelt.c": [
+      "__update_load_avg_blocked_se"
+    ],
+    "kernel/sched/debug.c": [
+      "sched_feat_keys"
+    ],
+    "kernel/sched/topology.c": [
+      "sched_domains_mutex"
+    ],
+    "kernel/sched/cpufreq.c": [
+      "cpufreq_this_cpu_can_update"
+    ],
+    "kernel/time/tick-sched.c": [
+      "tick_nohz_get_idle_calls_cpu"
+    ],
+    "kernel/stop_machine.c": [
+      "stop_one_cpu_nowait"
+    ]
+  },
+  "tracepoint_exports": {
+    "kernel/sched/core.c": [
+      "sched_switch",
+      "sched_waking",
+      "sched_wakeup",
+      "sched_stat_sleep",
+      "sched_stat_wait",
+      "sched_stat_blocked",
+      "sched_stat_iowait"
+    ],
+    "kernel/sched/fair.c": [
+      "sched_stat_runtime"
+    ]
+  },
+  "build_121_export_witness": {
+    "symvers_sha256": "0cc4a091c95c976a83bf976bd25691ae0b435ee96d8242d86c437028b3939544",
+    "present_symbols": [
+      "activate_task",
+      "deactivate_task",
+      "wakeup_preempt",
+      "set_task_cpu",
+      "runqueues",
+      "wake_up_if_idle",
+      "uclamp_eff_value",
+      "sched_uclamp_used",
+      "resched_curr",
+      "raw_spin_rq_lock_nested",
+      "raw_spin_rq_unlock",
+      "double_rq_lock",
+      "balance_push_callback",
+      "task_rq_lock",
+      "__balance_callbacks",
+      "pick_task",
+      "migrate_swap",
+      "get_wchan",
+      "__sched_proxy_exec",
+      "task_sched_runtime",
+      "raw_spin_rq_trylock",
+      "update_rq_clock",
+      "set_next_entity",
+      "sysctl_sched_latency",
+      "max_load_balance_interval",
+      "update_misfit_status",
+      "sched_setscheduler",
+      "sched_setattr",
+      "sched_setattr_nocheck",
+      "sched_setscheduler_nocheck",
+      "available_idle_cpu",
+      "__scx_enabled",
+      "ext_sched_class",
+      "cpupri_find_fitness",
+      "__update_load_avg_blocked_se",
+      "sched_feat_keys",
+      "cpufreq_this_cpu_can_update",
+      "tick_nohz_get_idle_calls_cpu",
+      "stop_one_cpu_nowait",
+      "__tracepoint_sched_switch",
+      "__tracepoint_sched_waking",
+      "__tracepoint_sched_wakeup",
+      "__tracepoint_sched_stat_sleep",
+      "__tracepoint_sched_stat_wait",
+      "__tracepoint_sched_stat_blocked",
+      "__tracepoint_sched_stat_iowait",
+      "__tracepoint_sched_stat_runtime"
+    ],
+    "excluded": "sched_domains_mutex is CONFIG_LOCKDEP guarded and not emitted by this SDK configuration"
+  },
+  "scope": "Full patches reviewed for all recorded candidates; scoped native body comparisons certify export-adjacent logic, not all scheduler policy in the touched files. Separate proxy/RT/SCX/PELT changes retain separate dispositions. No source changes or runtime scheduling tests in this group.",
+  "security": "Rebuilt trusted modules may access scheduler data/functions and must obey current signatures, rq/pi lock ordering, CPU/task lifetime, RCU and static-key lifecycle. Checked/nocheck APIs retain distinction; userspace does not receive a direct new call. Native swap CPU/affinity rechecks and stop_two_cpus retained. Trace probes must not sleep in scheduler atomic context or retain unreferenced pointers.",
+  "uncertainty": "Scoped C/header/Rust common-modules search did not find selected scheduler API consumers; absence is not a dispensability argument. Generic vendor source compatibility justifies conservative retention. sysctl_sched_latency remains as an ACK-exported scalar without internal EEVDF consumer, so actual vendor use remains unresolved; no native scheduling effect is claimed. No proof of historical-KMI-only purpose is available for that scalar.",
+  "remote_sources_used": [],
+  "subsequent_source_revalidation": {
+    "source_head": "b2b392919cf98379740362c5aa97708f9e21f2a8",
+    "method": "All recorded export-adjacent function SHA256 values rechecked after isolated EAS helper/call restoration; unchanged. Build-121 symbol witness remains provenance for that build."
+  }
+}

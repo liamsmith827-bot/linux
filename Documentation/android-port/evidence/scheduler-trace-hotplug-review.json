@@ -1,0 +1,271 @@
+{
+  "source_head": "b2b392919cf98379740362c5aa97708f9e21f2a8",
+  "records": [
+    {
+      "commit": "1f52bb8bfd30b5dfac47536f87d6b8a2f12bcdf9",
+      "disposition": "adapted-net-state",
+      "rationale": "Both paths reviewed. Keep sched_blocked_reason event with pid/caller/io_wait fields, moved from CFS sleeper accounting to generic try_to_wake_up by 6a878921fc8a. Current event calls native x86 __get_wchan while pi_lock is already held; do not call locking get_wchan recursively. Native x86 helper pins/unpins task stack and uses bounded ORC accesses. Positive pinned Perfetto predefined event and schema consume the exact fields. Caller is diagnostic and can be zero/stale during switch-out; no reliable crash-stack claim.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-trace-hotplug-review.json",
+        "SECURITY.md: Scheduler diagnostics and hotplug history"
+      ],
+      "patch_sha256": "ad3178ca1c38154fe9ff8c1d7125eb970238240843c305d537b20baa40ba1bf8"
+    },
+    {
+      "commit": "6a878921fc8a8821fb7fc490d4027b072e4f4905",
+      "disposition": "adapted-net-state",
+      "rationale": "Both relocation paths reviewed. Retain one blocked-reason event in generic wake path for matched uninterruptible tasks after runnable fast-path handling; remove old CFS-only site. Current pi_lock and preemption guard serialize wakeup; __get_wchan handles stack reference. Capturing before final on_cpu handoff may yield an inexact caller, but restores no obsolete scheduling operation.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-trace-hotplug-review.json",
+        "SECURITY.md: Scheduler diagnostics and hotplug history"
+      ],
+      "patch_sha256": "65e599de5a90c1c8fe4b0302447a36771be8d4100c980522bd073d726247d711"
+    },
+    {
+      "commit": "45072073741a05cd16f4c1f65c647c90c1ed4446",
+      "disposition": "reverted-no-residual-code",
+      "rationale": "Complete event-signature and schedule-site change reviewed with explicit inverse e2c721586d7c. No blocked_func parameter or stack_trace_save_tsk call remains at __schedule. Keep final generic wake-site event/Perfetto field interface; do not restore reverted schedule-time stack walking.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/scheduler-trace-hotplug-review.json",
+        "SECURITY.md: Scheduler diagnostics and hotplug history"
+      ],
+      "patch_sha256": "a61bec2b2f720eb55409b8d25bac6dba7fe7f00250088a2f2b4167e49b1bda24"
+    },
+    {
+      "commit": "ea96d0c9803a400e41a7d448eb63a90071436636",
+      "disposition": "reverted-no-residual-code",
+      "rationale": "Full CONFIG_STACKTRACE guard fix reviewed with inverse 7ffd6e313943 and removal of underlying stack_trace_save_tsk site by e2c721586d7c. Current event uses architecture __get_wchan; absence of reverted call eliminates this particular build dependency.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/scheduler-trace-hotplug-review.json",
+        "SECURITY.md: Scheduler diagnostics and hotplug history"
+      ],
+      "patch_sha256": "4c43a67687d3528dffc55600ff85ce4b2a813dc3d91156c49c115908779162e7"
+    },
+    {
+      "commit": "7ffd6e313943aef1ca7f8f05c4f86875636005c3",
+      "disposition": "superseded",
+      "rationale": "Full guard-removal inverse reviewed. Underlying schedule-time capture was removed by e2c721586d7c; no unguarded stack_trace_save_tsk site is retained. SDK STACKTRACE=y does not substitute for checking final source removal.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/scheduler-trace-hotplug-review.json",
+        "SECURITY.md: Scheduler diagnostics and hotplug history"
+      ],
+      "patch_sha256": "f8649525a177d24849156e61fd16e15425d03e8a161a2906a2c758f0fc28e3c6"
+    },
+    {
+      "commit": "e2c721586d7cc9ebeae7cabc4022438d9ce34ee8",
+      "disposition": "adapted-net-state",
+      "rationale": "Both inverse paths reviewed. Final single-argument trace and __get_wchan assignment match ACK; event returns to try_to_wake_up under pi_lock. Native x86 stack lifetime/bounds handling remains. This preserves Android tracing interface without claiming original caller-accuracy issue is solved for all races.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-trace-hotplug-review.json",
+        "SECURITY.md: Scheduler diagnostics and hotplug history"
+      ],
+      "patch_sha256": "e170ee14279bb469e7df61284098c9fc49134d37b2118d51fb6944277552c370"
+    },
+    {
+      "commit": "460c45f491a272d13528d95e567f1c550e9f3f73",
+      "disposition": "adapted-net-state",
+      "rationale": "Complete indentation fix reviewed; final uninterruptible condition/event are correctly nested in scoped pi_lock guard. No scheduling state or branch conditions altered by this formatting history.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-trace-hotplug-review.json",
+        "SECURITY.md: Scheduler diagnostics and hotplug history"
+      ],
+      "patch_sha256": "3fc3cc9747f736520a5f70a5126a2e58bc4bff6328991f7ba66ca169cfce8e63"
+    },
+    {
+      "commit": "2b6b669582cddb3f950b554cf0e63c9db46d3c85",
+      "disposition": "adapted-net-state",
+      "rationale": "Complete one-way sysfs interface/init reviewed. Keep CONFIG_SCHED_PROXY_EXEC-gated enable attribute mode 0664 and native sysfs permissions. Any accepted write enables (even text 0); there is no disable operation or Boolean parsing, matching ACK. static_branch_enable handles jump-label synchronization. Default current key is true, so normal SDK writes only report already enabled; boot-disabled enable transition is not runtime-verified. Init allocation failure returns ENOMEM; group-create failure drops kobject but original initializer returns 0, so successful init is not proof attribute exists. Exact Android consumer remains unconfirmed; preserve generic runtime configuration conservatively.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-trace-hotplug-review.json",
+        "SECURITY.md: Scheduler diagnostics and hotplug history"
+      ],
+      "patch_sha256": "24f908e665c593eafc0a9073b04445cc7453e2b0282bdcb8a991ca556f5b5fc4"
+    },
+    {
+      "commit": "ab57c5d354dad6e7eebcb10a7c831f4d36d658a8",
+      "disposition": "adapted-net-state",
+      "rationale": "Complete boot diagnostic addition reviewed. Retain current enabled/disabled log before sysfs-object setup, reflecting actual static key rather than assuming default. No toggle, permissions or scheduling behavior changed by this log.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/scheduler-trace-hotplug-review.json",
+        "SECURITY.md: Scheduler diagnostics and hotplug history"
+      ],
+      "patch_sha256": "d099ca3078391c89904cd2c0a8743559b3a324be828b6ba43cd561c4bf36aecc"
+    },
+    {
+      "commit": "fb2cb28d35f8cddf7fe0c44797c69cf4dee2721d",
+      "disposition": "superseded",
+      "rationale": "Full unsigned-to-unsigned-int declaration cleanup reviewed. Historical drop_nopreempt_cpus helper is gone from final ACK/port as softirq handling was replaced; do not restore obsolete unlocked task/preempt_count sampling merely to carry a type spelling fix.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/scheduler-trace-hotplug-review.json",
+        "SECURITY.md: Scheduler diagnostics and hotplug history"
+      ],
+      "patch_sha256": "75d574e8092d9447aa57264ea182cadfed37cd1b8d59d9d9991383bd8aa56d18"
+    },
+    {
+      "commit": "b05fe6b580b0aa6b9be16b80195f338ffc896b96",
+      "disposition": "superseded",
+      "rationale": "Full cpu_active_mask addition reviewed with explicit revert e560954645e9. Current LTS independently includes active-mask intersection. Port preserves it in non-NULL exec-context branch; proxy NULL-context extension is separately audited. Do not infer whole cpupri equivalence or remove native filter to replay historical revert.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/scheduler-trace-hotplug-review.json",
+        "SECURITY.md: Scheduler diagnostics and hotplug history"
+      ],
+      "patch_sha256": "be62b42eb4f31ac30e7b98dbe5094b710f8557241426ab113ccdf1ca629c4844"
+    },
+    {
+      "commit": "e560954645e9d02e09cb45323a9908ef70cd9c1d",
+      "disposition": "superseded",
+      "rationale": "Full historical active-mask removal reviewed. Newer LTS has active-mask filtering, preserved for concrete execution tasks in port. Replaying this revert would weaken current native hotplug filtering; keep native behavior rather than old commit effect.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/scheduler-trace-hotplug-review.json",
+        "SECURITY.md: Scheduler diagnostics and hotplug history"
+      ],
+      "patch_sha256": "9ec35a52bb8d3235c0cacc59b5524882fb900d53e5e5e0515a90a15b56fe1831"
+    },
+    {
+      "commit": "75d6951cf8cb7aec6b7a8cc4f595ca2e11082fd7",
+      "disposition": "reverted-no-residual-code",
+      "rationale": "Both active-count and hotplug-call relocation paths reviewed with explicit inverse 33f7ae250ca5. Current update_max_interval is LTS online-CPU formula; activation/deactivation/starting functions exactly LTS. Dying path retains native update site plus separately retained SCX stop and Android observation.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/scheduler-trace-hotplug-review.json",
+        "SECURITY.md: Scheduler diagnostics and hotplug history"
+      ],
+      "patch_sha256": "48df48981cddea69a6d2e03edd0945cb7c51d20fdc55f730085937ec239a6d1a"
+    },
+    {
+      "commit": "33f7ae250ca523ab6e039062dbde5ad1decd985b",
+      "disposition": "already-represented-upstream",
+      "rationale": "Both inverse paths reviewed. Native online-CPU formula and starting/dying update locations are retained. No active-mask count relocation survives; keep current LTS synchronization/hotplug flow.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/scheduler-trace-hotplug-review.json",
+        "SECURITY.md: Scheduler diagnostics and hotplug history"
+      ],
+      "patch_sha256": "625cd71d21a2426b144f8fa8e3ab7a0748c7ff1ea6c0b413d122346779403a33"
+    },
+    {
+      "commit": "6f58dc1f83f0dc6ce4ea4e3e1ed4c0a363977cb3",
+      "disposition": "superseded",
+      "rationale": "Complete movement of three drain helpers across CONFIG_HOTPLUG_CPU guard reviewed with inverse 3c252ab080ce. Final ACK/port have none of sched_cpu_drain_rq, sched_cpu_drain_rq_wait or drain_rq_cpu_stop; obsolete async drain plumbing is not restored.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/scheduler-trace-hotplug-review.json",
+        "SECURITY.md: Scheduler diagnostics and hotplug history"
+      ],
+      "patch_sha256": "a19f3e74bfb554cca130125695edd45c57b56644f184e78a9071aff570a110e0"
+    },
+    {
+      "commit": "3c252ab080ced0c58290b0a98124ba95ce4e76cf",
+      "disposition": "superseded",
+      "rationale": "Full inverse relocation reviewed. Underlying historical drain helpers were subsequently removed, so neither old declaration placement needs porting. Current native hotplug callbacks remain, with separate current SCX/vendor additions.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/scheduler-trace-hotplug-review.json",
+        "SECURITY.md: Scheduler diagnostics and hotplug history"
+      ],
+      "patch_sha256": "12f16f4aaecedd6e299c54cccf75ea0ba708e387bc608857ee09a374a637fe16"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "arch/x86/kernel/process.c",
+      "function": "__get_wchan",
+      "sha256": "a2e16f12b2776394e696dc28e94ec6ff0a8c633368c008ff00f20351aa461d7b",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "get_wchan",
+      "sha256": "ae278fd5dbc51ea435a0f31cf68a69a2e586cd78659f3d625580f7d8db6cb4c6",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "sched_cpu_activate",
+      "sha256": "235614926c0d2e4f08010bbebfc70919cb37eb67833515aba223d6be7a53db8b",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "sched_cpu_deactivate",
+      "sha256": "b5bc500befd8b4f849f25c4c128423b97e84a3a6e43ef9519eff02c51bae5fc1",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "sched_rq_cpu_starting",
+      "sha256": "35ea40e5d576c51c5d8faa317ab83fbaccdcd465b2e8e777d66422812fd52661",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "update_max_interval",
+      "sha256": "4ba3a95c7765379d7107e7a78258c9353231c5784557cc9111d4a51a7bd4cd5e",
+      "relationship": "whole function equals LTS"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "sched_proxy_exec_enable_show",
+      "sha256": "faf10b395cd4b7c8b3fc481c9263d905b8358981a0620b32864a9b4f07afda47",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "sched_proxy_exec_enable_store",
+      "sha256": "97157fd3edf02775f88bc8a13f38292eba3eb3804e95a79d8cb43efcba1a5ea5",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "setup_proxy_exec_toggle",
+      "sha256": "3b69e7213ab8321f023b2dce1bd38a8ccb9b58694173100f2a02a724b6f64b29",
+      "relationship": "whole function equals ACK"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "sched_cpu_dying",
+      "sha256": "a040f1bf0e4e90179b4468f9cba5626171f4e9f16ae428b0d1466904faf66cec",
+      "relationship": "native except SCX server stop and vendor observation"
+    },
+    {
+      "path": "include/trace/events/sched.h",
+      "event": "sched_blocked_reason",
+      "sha256": "45e070c2ccf5c8029670581d17e841f54946347a6ad40d91acf87d75de50491a",
+      "relationship": "whole event equals final ACK"
+    }
+  ],
+  "perfetto_pin": "ece66975738007dd0978b911d8a2077e49b8f31e",
+  "local_perfetto_resources": {
+    "protos/perfetto/trace/ftrace/sched.proto": "9c1e9e8cb75566b4e98079a7add6f91758d51c0c8bd43f1eeafb7b72f4b26326",
+    "src/traced/probes/ftrace/predefined_tracepoints.cc": "43221f49ad8b93ed89f123d4236a78a3cbeb3ad16eb688b405e91ef2dbe029e3",
+    "src/traced/probes/ftrace/event_info.cc": "7b7c32852e38df9f0031b16089e6cb49cf754250b001145964fa06f450bfd1da"
+  },
+  "security": "Trace exposes task pid, io_wait and kernel caller address/symbol to authorized trace consumers; preserve native trace/perf access controls. x86 stack reference and ORC bounds checks protect stack lifetime, but no accurate-caller guarantee during switch-out. One-way sysfs enabling retains native permissions/static-key update synchronization; boot-disabled transition and arbitrary probes were not executed. Native online CPU balancing intervals and concrete-task active-mask filtering retained.",
+  "uncertainty": "Exact one-way sysfs consumer unconfirmed; conservatively retain Android runtime configuration. Separate proxy debug event candidate 5562881341cf is not finalized here; complete patch read, remaining review concerns binary comm-array tail initialization and activation-task lifetime/RCU context.",
+  "validation": "Native/ACK function/event identity assertions passed. Build 122 passed from clean common b2b392919cf9: matching bzImages, 100 common + 45 virtual modules, all 145 signatures verified and tampered control rejected; 659 protected exports and 145 flag/CRC tables verified; no source changes from this review. SDK STACKTRACE=y, UNWINDER_ORC=y, SCHED_PROXY_EXEC=y. No scheduler/runtime tracing test.",
+  "remote_sources_used": []
+}
