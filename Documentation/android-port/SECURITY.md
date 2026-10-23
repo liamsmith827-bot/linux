@@ -4509,6 +4509,18 @@ conservatively, with this uncertainty recorded in
 The report pins all three local Android projects. No additional remote resource
 was accessed. Build 105 compiled this source, but no encrypted filesystem,
 hardware-key operation, direct I/O or memory-pressure runtime test was executed.
+
+`evidence/wrapped-key-version-review.json` traces the initial 2020 fscrypt
+implementation, its 2021 temporary removal and restoration, and the 2025
+refresh through five complete candidate patches. The temporary removals are
+superseded; replaying them would delete current native functionality. Current
+provisioning keys retain native type/flag binding, so a payload for one key type
+cannot be silently reused as another. Native key-size checks, per-mode lifetime,
+data-unit sizing and modern wrapped-key documentation remain. The refreshed
+patch is explicitly marked partially adapted because its identifier separation
+has the legacy exception described above; the ledger does not claim unconditional
+preservation of that fix. Seven additional native witnesses and unchanged
+earlier source blobs support this review. No runtime crypto claim is added.
 # Encryption interfaces and mempool prerequisites
 
 `evidence/crypto-mempool-interface-review.json` records nineteen further
@@ -4565,3 +4577,18 @@ this source review does not certify hardware implementations. UFS changes in
 this group are already native LTS, and no future-platform code is added.
 The SDK build verifies compilation only: encrypted I/O, PM transitions and key
 ioctls were not executed. No remote sources were accessed.
+
+# Block wrapped-key version history
+
+Four decisions in `evidence/block-wrapped-key-version-review.json` follow the
+temporary removals and replacements of generic wrapped-key support. Native LTS
+already contains the final explicit key types, size and capability checks,
+software-secret derivation and propagation through device mapper. Fifteen
+file/function/fragment comparisons support preservation of those behaviors.
+The native fallback accepts raw keys only and keeps its synchronous cipher and
+cryptographic blank-key initialization. Native MMC/UFS files are unchanged;
+this group adds no platform drivers. Historical temporary removals, obsolete
+profile comparisons and superseded signatures are not replayed. Existing GPL
+exports, fallback rescue and dm-default-key integration remain separately
+justified. Build 105 covers the unchanged code; no runtime crypto test or remote
+source was used.
