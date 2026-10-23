@@ -4509,3 +4509,32 @@ conservatively, with this uncertainty recorded in
 The report pins all three local Android projects. No additional remote resource
 was accessed. Build 105 compiled this source, but no encrypted filesystem,
 hardware-key operation, direct I/O or memory-pressure runtime test was executed.
+# Encryption interfaces and mempool prerequisites
+
+`evidence/crypto-mempool-interface-review.json` records nineteen further
+decisions, including all 22 unique hunks of six merges. Current block-device
+interfaces, hardware-secret derivation, raw-only fallback and fscrypt key-type
+selection retain native LTS behavior. Five GPL crypto exports are present in
+build 105's symbol table. Obsolete queue-based APIs are replaced by current
+source interfaces; old module binaries are not supported.
+
+The original encrypted/casefold dentry integration is represented by native
+mount-time `generic_set_sb_d_ops`, before root dentry creation in ext4, F2FS and
+UBIFS. Native no-key-name revalidation, RCU retry and flag handling remain;
+historical per-lookup dentry-operations installation is not restored.
+Twenty-three complete-file, function or call-site witnesses bind these findings
+to pinned LTS and the reviewed source.
+
+Mempool keeps native reserve locking, paired barriers, reclaim retry, wakeups,
+and zero-minimum-pool handling. Internal helper extractions and bulk-array APIs
+are unnecessary for the selected per-page crypto rescue implementation; their
+forward-progress purpose is addressed by `e2fc28947c38`, as described above.
+This is not a finding that all possible vendor sources lack bulk API consumers.
+The SDK disables fault injection, so the additional debugfs injection facility
+is omitted. Existing native kvmalloc-pool source helpers remain, avoiding an
+unnecessary source API removal. Comment-only patches do not require runtime
+changes. No fault injection or actual encrypted-filesystem test was executed.
+
+The legacy wrapped-key merge retains the previously documented KDF exception
+and current-target uncertainty. No new source changes or remote sources were
+needed for this group; build 105 still covers the resulting kernel source.

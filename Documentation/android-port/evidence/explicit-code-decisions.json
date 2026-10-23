@@ -7355,5 +7355,203 @@
       "evidence/fscrypt-history-compat-review.json",
       "SECURITY.md: Fscrypt history and legacy wrapped-key compatibility"
     ]
+  },
+  {
+    "commit": "a3e7db27ec1b0c14daf2ae00121560d1909328dd",
+    "disposition": "reconciled-to-lts",
+    "rationale": "All hunks only reword mempool kerneldoc. Retain pinned LTS documentation with its implementation; no runtime/API change is required for the SDK. The inaccurate process-context never-fails wording is not used as a proof: selected crypto rescue explicitly depends on GFP_NOWAIT being allowed to fail.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/crypto-mempool-interface-review.json",
+      "SECURITY.md: Encryption interfaces and mempool prerequisites"
+    ]
+  },
+  {
+    "commit": "d9fa1a053234bde0b8ae81f9456bf5d7a0df3b41",
+    "disposition": "omitted-current-target",
+    "rationale": "Full fault-injection addition examined. It adds fail_mempool_alloc debugfs controls and forced reserve use, not a production allocation correction. Build 105 has CONFIG_FAULT_INJECTION unset; retain native allocation behavior and omit this additional diagnostic facility for the selected build. No runtime fault injection is claimed as validation. This is a positive configuration/scope decision, not a missing-consumer inference.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/crypto-mempool-interface-review.json",
+      "SECURITY.md: Encryption interfaces and mempool prerequisites"
+    ]
+  },
+  {
+    "commit": "22e226303dd2824757768913d9f44a0c72e19516",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Full GFP-helper extraction examined. Native mempool_alloc_noprof already applies NOMEMALLOC/NORETRY/NOWARN and strips DIRECT_RECLAIM/IO on the first attempt. Retain those exact native statements in place; the helper is a prerequisite refactoring for the unselected bulk implementation, not an additional Android behavior.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/crypto-mempool-interface-review.json",
+      "SECURITY.md: Encryption interfaces and mempool prerequisites"
+    ]
+  },
+  {
+    "commit": "81720db15e840a2c087b6ce4a7d2cd1c66cbd603",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Full slowpath extraction examined, including the corrected first limited attempt and reclaim retry. Native mempool_alloc_noprof and preallocated allocator retain spinlock protection, paired write barrier, kmemleak trace, nonblocking failure and timed reclaim retry; free retains paired barrier, wakeups and the newer zero-minimum-pool case. No bulk helper is introduced, so moving this logic is unnecessary; do not lose native wait/wakeup fixes.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/crypto-mempool-interface-review.json",
+      "SECURITY.md: Encryption interfaces and mempool prerequisites"
+    ]
+  },
+  {
+    "commit": "98d6f95d8512d988696995f17d0f0e5013fea8d4",
+    "disposition": "adapted",
+    "rationale": "Full two-file bulk allocation/free API patch examined. Its forward-progress requirement for multiple simultaneous encrypted allocations is implemented by e2fc28947c38 on native per-page allocation: no waiting while retaining an unsubmitted partial bio; submit partial work or rescue recursive allocation to the reclaim-capable worker. Keep native mempool API and zero-minimum-pool wakeup rather than introducing the bulk-array/partial-fill interface and pool-size precondition. The historical ABI-compliance note does not constrain this port. This selects an alternative implementation for the identified current block-crypto dependency; it is not evidence that every possible vendor source lacks bulk calls. No runtime memory-pressure proof.",
+    "result_commits": [
+      "e2fc28947c380543e5375eb9919ba13b31d63c09"
+    ],
+    "evidence": [
+      "evidence/crypto-mempool-interface-review.json",
+      "SECURITY.md: Encryption interfaces and mempool prerequisites"
+    ]
+  },
+  {
+    "commit": "f57e000786779210153e321f46c08f665b9b8483",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Complete patch changes only the explanation of the five-second io_schedule_timeout. Native code retains the same periodic retry, so it can retry alloc_fn even without a returned reserve element. Keep native implementation and comments; no security or Android functional change is omitted.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/crypto-mempool-interface-review.json",
+      "SECURITY.md: Encryption interfaces and mempool prerequisites"
+    ]
+  },
+  {
+    "commit": "57085c6b12c997f3c629572703a46ce6ed51601b",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Full removal of kvmalloc-pool helpers examined. Keep the native LTS init/create/alloc/free helpers and their GPL exports; removing an existing source API merely because upstream later found its bcachefs consumer absent is not required for the SDK. This also avoids unnecessary vendor-source incompatibility. No new helper or historical binary layout is introduced.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/crypto-mempool-interface-review.json",
+      "SECURITY.md: Encryption interfaces and mempool prerequisites"
+    ]
+  },
+  {
+    "commit": "7212f3b31ce5e660b9bf1fd839c9073e3ced99c0",
+    "disposition": "already-represented-upstream",
+    "rationale": "Full five-file request_queue-to-block_device conversion examined. Current native public key/config/eviction APIs, fscrypt callers and dm_keyslot_evict_callback all use block_device and retrieve queue profiles internally. dm-table.c equals pinned LTS. Preserve these interfaces and native key checks rather than obsolete queue signatures; documentation already describes block devices.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/crypto-mempool-interface-review.json",
+      "SECURITY.md: Encryption interfaces and mempool prerequisites"
+    ]
+  },
+  {
+    "commit": "63eb4897e03c6af76ac030278db9afb502822b73",
+    "disposition": "already-represented-upstream",
+    "rationale": "Full native-support helper conversion examined. Native blk_crypto_config_supported_natively, config_supported, start_using_key and bio preparation retain the profile wrapper, raw-only fallback and errors; fscrypt uses the public helper. All relevant function bodies equal LTS. No extra implementation or old profile-header coupling is needed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/crypto-mempool-interface-review.json",
+      "SECURITY.md: Encryption interfaces and mempool prerequisites"
+    ]
+  },
+  {
+    "commit": "576c7b6bb3f091b794eb7379d7aa8e593d21a5b7",
+    "disposition": "already-represented-upstream",
+    "rationale": "Full removal of profile-pointer compatibility checks examined. Native fscrypt_derive_sw_secret derives from sb->s_bdev with the inlinecrypt mount requirement; native block helper checks wrapped-key capability and derive callback. Both functions and the whole profile file equal LTS. Do not resurrect the known-invalid equality test that rejected device-mapper stacks. This does not certify arbitrary mixed-hardware filesystem compatibility.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/crypto-mempool-interface-review.json",
+      "SECURITY.md: Encryption interfaces and mempool prerequisites"
+    ]
+  },
+  {
+    "commit": "9c9596e9803d5f512e6e7719069a783c2a261e8f",
+    "disposition": "already-represented-upstream",
+    "rationale": "Full wrapped-key fallback fix examined. Native config_supported permits fallback only for BLK_CRYPTO_KEY_TYPE_RAW, start_using_key rejects unsupported wrapped keys with EOPNOTSUPP, and fallback advertises only RAW. Preserve the stronger current key-type interface and initialization contract; hardware-wrapped bytes are never deliberately passed to a raw-key software implementation.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/crypto-mempool-interface-review.json",
+      "SECURITY.md: Encryption interfaces and mempool prerequisites"
+    ]
+  },
+  {
+    "commit": "3f52b6637b4e2db095e9fb733f633dbeb6193cba",
+    "disposition": "adapted",
+    "rationale": "Full four-export addition examined. Retain current GPL-exported bio_crypt_set_ctx, blk_crypto_init_key and blk_crypto_start_using_key from integration, plus native GPL blk_crypto_evict_key. Native APIs replace obsolete bio_crypt_alloc_ctx/start_using_mode signatures; no binary KMI retained. Build 105 symvers proves all four current exports. This preserves generic Android module source access with native key validation and explicitly rebuilt modules.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/crypto-mempool-interface-review.json",
+      "SECURITY.md: Encryption interfaces and mempool prerequisites"
+    ]
+  },
+  {
+    "commit": "82c4e09b2e0a8f9264e1531c064ec0592dccda68",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "rationale": "Both unique remerge hunks examined: duplicate config_supported_natively definition is absent, and current native config_supported permits software fallback only for RAW keys. Preserve those effects and current block_device interface; never restore unconditional fallback for hardware-wrapped keys.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/crypto-mempool-interface-review.json",
+      "SECURITY.md: Encryption interfaces and mempool prerequisites"
+    ]
+  },
+  {
+    "commit": "edd83389ddb0128a81d5fd952e2e6e3960146fdb",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "rationale": "Single unique fallback-init hunk examined. Native global blk_crypto_fallback_profile receives native ll_ops, maximum DUN size and RAW-only key_types_supported. Keep the newer native identifier spelling and setup, with separately reviewed rescue initialization.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/crypto-mempool-interface-review.json",
+      "SECURITY.md: Encryption interfaces and mempool prerequisites"
+    ]
+  },
+  {
+    "commit": "02de87682ca315481b4f7602a5fac3a7ab78796d",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "rationale": "Single unique RNG/blank-key hunk examined. Native fallback uses get_random_bytes(blank_key, sizeof(blank_key)), with blank_key sized to BLK_CRYPTO_MAX_RAW_KEY_SIZE. This preserves cryptographic RNG and exact buffer size without obsolete STANDARD naming or prandom_bytes.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/crypto-mempool-interface-review.json",
+      "SECURITY.md: Encryption interfaces and mempool prerequisites"
+    ]
+  },
+  {
+    "commit": "bc3c0786037493fd7edd132e0c2d73cef579ffa2",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "rationale": "All unique inline-crypto and ext4 remerge hunks examined. Retain Android skip-dm-default-key mergeability checks alongside native DUN limiting. Native fscrypt_dio_supported now takes inode and resolves key/inline eligibility; filesystem paths enforce alignment. Native limit_io_blocks initializes crypto info only after guards, and ext4 mapping length is limited before iomap use. Historical comments/signatures do not displace current native behavior.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/crypto-mempool-interface-review.json",
+      "SECURITY.md: Encryption interfaces and mempool prerequisites"
+    ]
+  },
+  {
+    "commit": "278d101d57034f19bb76b7efa5b2aaf535044c59",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "rationale": "All unique hunks across three paths examined: current native block profile exports derive_sw_secret GPL; native HKDF documentation covers software secrets; native fscrypt selection and key preparation carry correct RAW/HW_WRAPPED type, key size and per-data-unit bits. Relevant functions and hkdf/profile files equal LTS. No historical raw-only regression or old block-size arithmetic is restored.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/crypto-mempool-interface-review.json",
+      "SECURITY.md: Encryption interfaces and mempool prerequisites"
+    ]
+  },
+  {
+    "commit": "44fc666de47085d77e4ab8face61bea9ea7a1200",
+    "disposition": "merge-resolution-adapted-net-state",
+    "rationale": "All unique hunks across private header, keyring and UAPI examined. Retain the final legacy __flags/android_compat adapter together with modern wrapped-key support. The identifier KDF exception, current vold producer, SDK activation uncertainty and native validation/claim preservation are explicitly assessed in fscrypt-history-compat-review.json and SECURITY.md. This is userspace/on-disk compatibility, not KMI padding.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/crypto-mempool-interface-review.json",
+      "SECURITY.md: Encryption interfaces and mempool prerequisites"
+    ]
+  },
+  {
+    "commit": "a2a87df67e38b9a7a6f624aae836f42d1ebe9429",
+    "disposition": "already-represented-upstream",
+    "rationale": "Full fourteen-file dentry-operations patch examined. Current native generic_set_sb_d_ops chooses encryption/casefold operations at mount before root creation in ext4, F2FS and UBIFS. Native fscrypt_d_revalidate uses the current parent/name signature and DCACHE_NOKEY_NAME, returns ECHILD before blocking in RCU mode and rejects stale no-key names when a key appears. Native fscrypt_prepare_dentry controls revalidation flags without installing old per-lookup operations. Retain this current implementation, including GPL export, not the obsolete helper or old DCACHE_ENCRYPTED_NAME semantics.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/crypto-mempool-interface-review.json",
+      "SECURITY.md: Encryption interfaces and mempool prerequisites"
+    ]
   }
 ]
