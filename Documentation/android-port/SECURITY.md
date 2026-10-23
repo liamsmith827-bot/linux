@@ -4538,3 +4538,30 @@ changes. No fault injection or actual encrypted-filesystem test was executed.
 The legacy wrapped-key merge retains the previously documented KDF exception
 and current-target uncertainty. No new source changes or remote sources were
 needed for this group; build 105 still covers the resulting kernel source.
+# Encryption capability and DUN safety history
+
+Twelve further decisions in `evidence/crypto-safety-history-review.json` cover
+key-size validation, crypto-context merging, hardware capabilities, runtime-PM
+ordering, wrapped-key ioctls and all sixteen unique hunks of three historical
+merges. Twenty-one native file/function/table comparisons support the decisions.
+
+Native key objects are immutable and keyslots use their identity; the old
+content-hash/size comparison implementation is not restored. Native DUN merge
+checks compare every limb and reject whole-DUN wrap. Explicit key-type and DUN
+width checks, raw-only software fallback, missing-algorithm errors, capability
+intersection and native keyslot lifetime/error handling remain. Runtime PM
+resumes before taking the crypto-profile lock, preserving the deadlock fix.
+
+The functional DUN-width changes in `770581355179` are retained through native
+fields and APIs, while its historical hash-field KMI packing is omitted.
+Integrated dm-default-key uses the current APIs and the previously reviewed
+`2d4754f38b2b` checked IV range and nonzero DUN width. Old queue signatures and
+the rejected profile-pointer compatibility test are not reinstated.
+
+Native import/generate/prepare wrapped-key ioctls retain input bounds, reserved
+field checks, output-capacity checks, stack-secret wiping and provider gates.
+Provider callbacks remain trusted kernel code with native return-size contracts;
+this source review does not certify hardware implementations. UFS changes in
+this group are already native LTS, and no future-platform code is added.
+The SDK build verifies compilation only: encrypted I/O, PM transitions and key
+ioctls were not executed. No remote sources were accessed.
