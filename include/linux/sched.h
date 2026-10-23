@@ -1017,6 +1017,9 @@ struct task_struct {
 	unsigned			sched_rt_mutex:1;
 #endif
 
+	/* Save user-dumpable when mm goes away */
+	unsigned			user_dumpable:1;
+
 	/* Bit to tell TOMOYO we're in execve(): */
 	unsigned			in_execve:1;
 	unsigned			in_iowait:1;
@@ -1264,7 +1267,6 @@ struct task_struct {
 	struct blocked_on_lock		blocked_on;	/* lock we're blocked on */
 	raw_spinlock_t			blocked_lock;
 #ifdef CONFIG_SCHED_PROXY_EXEC
-	struct list_head		migration_node;
 	struct list_head		blocked_head;  /* tasks blocked on this task */
 	struct list_head		blocked_node;  /* our entry on someone elses blocked_head */
 	/* Node for list of tasks to process blocked_head list for blocked entitiy activations */
@@ -1684,9 +1686,6 @@ struct task_struct {
 	 */
 	struct callback_head		l1d_flush_kill;
 #endif
-	/* Save user-dumpable when mm goes away */
-	unsigned			user_dumpable:1;
-
 #ifdef CONFIG_RV
 	/*
 	 * Per-task RV monitor, fixed in CONFIG_RV_PER_TASK_MONITORS.
