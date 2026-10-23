@@ -5227,3 +5227,48 @@ lifetime and hotplug discipline. The renamed frequency-scale variable is already
 exported upstream. Exact SDK module consumers of these interfaces are unresolved,
 so source retention is conservative. This scoped review does not certify the
 separate proxy-scheduler/hook changes. No kernel scheduler runtime was executed.
+
+# Proxy rwsem waiter initialization
+
+`2c9eca023027` initializes `donor_wakeup` to false for both queued waiter types.
+ACK reapplication `8f585b1490b3` adds the field and uses it to bypass a first
+waiter's handoff priority, but leaves it uninitialized until a donor is selected.
+The verified SDK configuration zeroes stack variables; explicit initialization
+removes that dependency and prevents unintended handoff bypass in other build
+configurations. Deliberate donor selection still sets the field to true.
+
+`check_rwsem_waiter_init.py` compares the complete extracted writer try-lock
+function against native LTS for ordinary waiters, using the actual initializer
+blocks after valid nonzero poisoning. All 773 checks pass; ACK's original
+initializer causes 138 failures. Explicit donor success/busy cases also pass.
+Atomic and list operations are single-threaded stubs; this does not test real
+lock concurrency, proxy scheduling, starvation, or IRQ behavior. The wider proxy
+handoff series remains provisional pending its lifetime/state-machine review.
+
+# Locking observation and policy hooks
+
+`evidence/locking-hooks-history-review.json` records 28 dispositions and both
+unique resolutions of merge b1065ab8198b. Preserve native mutex error waiter
+removal and workqueue watchdog sampled-time calculation alongside observations.
+Current rtmutex.c is LTS plus wait observations; rtmutex_api.c adds acquisition/
+release observations; the OSQ implementation is native plus GPL exports. Other
+scoped complete-function comparisons separate hook policy from proxy changes.
+
+Vendor locking interfaces are retained conservatively despite unconfirmed SDK
+registrations. Several are policy replacements: list-placement callbacks must
+link exactly one live waiter with native bookkeeping; successful read overrides
+must establish reader ownership/count/order; a per-CPU writer completion override
+must actually drain readers and provide the native ordering. Incorrect callbacks
+can break mutual exclusion, memory safety or fairness. Defaults retain native
+behavior. These trusted module interfaces are required source customization
+surfaces, not unprivileged userspace controls or passive diagnostics.
+
+Callbacks must respect exact call-site context. RT-mutex release notification
+precedes unlock; other release observations may occur after ownership is lost.
+Wait finish can report failure. Pointer/list arguments do not pin lifetime or
+permit sleeping under native spinlocks/IRQ-disabled/preempt-disabled contexts.
+Static aggregate fields are zeroed; regular rwsem dynamic vendor/OEM data is
+explicitly cleared, while mutex/per-CPU OEM initialization is callback-owned.
+No guarantee of universal zeroed vendor storage is made. Separate proxy handoff,
+blocked-state and scheduler reviews remain open; these decisions do not certify
+them. No kernel lock contention or callback runtime test was performed.

@@ -10402,5 +10402,325 @@
       "evidence/softirq-history-review.json",
       "SECURITY.md: Softirq RT policy and source exports"
     ]
+  },
+  {
+    "commit": "df18d99dab5eb16fca087ba31ff3d7dfa1ea6ba8",
+    "disposition": "superseded",
+    "rationale": "All four paths reviewed. Initial rwsem vendor slot and init/wake/finished/list-placement hooks were reverted by 396a501b1743 and later reintroduced as c3ff554da49e on native current rwsem internals. Preserve the current reapplication and data initialization, not the historical count/list implementation or layout.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "9ad8ff902e39f37baf15904c6627ca03e8f60c27",
+    "disposition": "partially-adapted-net-state",
+    "rationale": "All six paths reviewed. Retain current mutex/rwsem wait and sched_show_task observation interfaces, with later native rt-mutex/type placement corrections. Original two-word task storage is superseded by current six-word vendor/OEM storage already reviewed in task-vendor-storage-review.json; no historical task layout is maintained. Current sched_show_task remains native after its observation. Waiting hooks carry pointers, not references or permission grants; callback lifetime and atomic-context discipline remain required.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "e289faa9f12811d3546def3083bac0cc35c54ba8",
+    "disposition": "superseded",
+    "rationale": "All three paths reviewed. Old rt_mutex-pointer slowlock hooks were explicitly reverted then reintroduced with rt_mutex_base through d497887b00ac and 5ba878e6b018. Current entire rtmutex.c is LTS plus the paired observations; do not revive the old type/signature or lock algorithm.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "b1065ab8198b40252b961615259859a777b7f895",
+    "disposition": "merge-resolution-adapted-net-state",
+    "rationale": "Both unique remerge resolutions reviewed. Preserve mutex wait-finish followed by native __mutex_remove_waiter on the error path. Preserve native sampled now minus pool_ts in workqueue diagnostics and the Android lockup observation. Complete current watchdog function is LTS after removing only that hook and blank lines, including guest-paused handling and stall checks. No wholesale merge-parent implementation is selected.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "bf2290a48ae24748ddfc7f34fe0cc8bec9cd6019",
+    "disposition": "superseded",
+    "rationale": "Complete three-path removal of old rt-mutex hooks reviewed. Current typed observations were reintroduced by later commits; whole native rt-mutex locking remains underneath. Do not apply this historical revert to remove current source instrumentation.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "31c9ccb1389d10c7d5b0d6c74b953b301e7e23ec",
+    "disposition": "superseded",
+    "rationale": "All three paths reviewed. Besides removing mutex observations, this revert accidentally deleted __mutex_remove_waiter in the error path. e5e5f587d915 repairs it. Current error path retains wait-finish and waiter removal; do not reproduce the accidental omission, which could leave a dead stack waiter linked.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "e5e5f587d915f68aab7b339b373c70efc830bd38",
+    "disposition": "already-represented-upstream",
+    "rationale": "The one-line repair restores __mutex_remove_waiter after an accidental Android revert deletion. Current and native LTS error paths both remove their waiter. This is positive source representation, not patch-identity equivalence; current Android observation and proxy cleanup precede the native removal.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "396a501b17436dfe9acfb952214f6f85d14daf90",
+    "disposition": "superseded",
+    "rationale": "All five paths reviewed, including rwsem vendor field removal, hooks and wait-observation deletions. Current source deliberately reintroduces these through c3ff554da49e/5ba878e6b018 on LTS internals. Do not apply the broad old revert to current source or preserve its historical rwsem control flow.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "c23da05eac0d35441695caff0b7d0220f92ca8a0",
+    "disposition": "superseded",
+    "rationale": "All four paths reviewed. This earlier reapplication of wait observations is superseded by the later native-base reapplication 5ba878e6b018 after another revert. Keep final declarations/exports and current error cleanup, not duplicate wait events or older slowpath algorithms.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "d497887b00ac3e5e380123cac4a303d009b570ee",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain paired rt_mutex_base wait-start/finish hooks, declarations and GPL exports in their final locations. Complete rtmutex.c otherwise matches LTS, preserving timeout/signal/ww checks, PI spinning and unlock/wake/lock sequence. Both observations occur under native wait_lock with IRQs disabled; callbacks cannot sleep or assume a successful acquisition from finish alone.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "66330b896cdab304397811fb0f31f3f5776790e1",
+    "disposition": "superseded",
+    "rationale": "All six paths reviewed. Temporary removal of mutex/rtmutex/rwsem waiting and sched_show_task observations is superseded by current reapplications. Preserve current tracing interfaces and native sched_show_task stack pin/unpin; do not erase the final dtask header or native error cleanup to match this historical snapshot.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "c8bd076c6be7e26b1dccadb849bca62f0f7d37b4",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain mutex list-placement and unlock-slowpath hooks, header and exports. Default already_on_list=false preserves native tail insertion; a callback asserting true must have inserted exactly the stack waiter under wait_lock and preserved flags/list integrity. It may alter fairness, not merely observe. Unlock callback runs in the current native/proxy lock context; this scoped hook decision does not validate the separate proxy handoff algorithm.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "5ba878e6b0187011b5635a5cecf46580b0e22263",
+    "disposition": "adapted-net-state",
+    "rationale": "All five paths reviewed. Preserve current mutex, rt-mutex and rwsem wait observations and exports on their native-based paths. Finish can indicate interrupted/timed-out acquisition as well as success; early unqueued exits need not produce a start/finish pair. Native rt-mutex algorithm remains exact apart from observations. Mutex/rwsem proxy state changes remain separately provisional and are not accepted implicitly by this instrumentation decision.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "c3ff554da49e08741f409edde9381e9967d0d22b",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain all four paths of current rwsem init/wake/write-finished/list-placement hooks and functional vendor storage. Default list insertion is native; an override must implement correct current rwsem_add_waiter-equivalent bookkeeping while wait_lock is held. Hooks can change fairness and require live stack waiter ownership. Storage is runtime module data, not historical ABI padding; zero initialization is separately retained.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "ddfebc5ba5f08b1e0c9f89b0bf0c12028191ac0b",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain downgrade wake-finish observation/declaration/export. Whole current rwsem_downgrade_wake matches LTS after this call and blank-line removal. The event runs before releasing wait_lock and before wake_up_q, so finish does not mean awakened tasks have executed; callback must obey atomic context.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "6e6d83d43449d7a16a5f2e1e5ef2bf157e41159f",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain ordinary rwsem wake-finish observation/declaration/export. Complete current rwsem_wake is native except this call. It occurs under wait_lock after marking waiters and before actual queued wakeups; no sleeping or retention of temporary waiter pointers is permitted by this interface.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "e3576a20e2730bc8935ce4f102f1b28e74650a9b",
+    "disposition": "adapted-net-state",
+    "rationale": "Keep mutex initialization hook, declaration and export. Complete __mutex_init is native except this synchronous callback before debug initialization. It enables initialization of functional OEM state; dynamic mutex OEM bytes are not automatically zeroed by this patch, so callback owners must initialize their state before reading it. No zeroing guarantee or historical layout is inferred.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "6f7b9cbb7f9fb3d7c564c9ad2815d28c6eda6875",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain rwsem failed-read-trylock policy hook at both blocking and nonblocking entry points, with current successful-acquisition observation repair. ret starts at zero; callbacks returning success must actually acquire a reader reference with proper exclusion/order. cntp is NULL in the nonblocking path and the blocking path already has a tentative reader count; callback code must distinguish these contracts. Falsely claiming success could violate mutual exclusion; this trusted policy surface is retained for source compatibility, not described as a harmless diagnostic.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "5c9a72f8becc07261457f1241426aed42c199250",
+    "disposition": "adapted-net-state",
+    "rationale": "All four paths reviewed. Keep native osq_lock/osq_unlock GPL exports and default-true reader stealing/default-false reader-spin hooks. Core direct stealing still checks native writer/handoff bits. A callback asserting rspin must have established correct reader ownership/count/acquire ordering before jumping to wake_readers; it owns adjustment consistency and starvation policy. Whole OSQ implementation is exact LTS except exports, preserving its native per-CPU/preemption contracts.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "959806f0e25f5671fca4619b1db7190cd2d821ab",
+    "disposition": "adapted-net-state",
+    "rationale": "All four paths reviewed. Keep mutex/rwsem spinning eligibility, timeout and finish hooks with zero counter/false timeout defaults. Complete current affected spin functions reduce exactly to native after removing these explicit branches/calls. Callbacks may stop spinning or override eligibility, affecting latency and fairness; native ownership rechecks/barriers remain in the loops. Finish events are path observations, not universally paired with one start, and must not sleep.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "acca23bc6dbd090f0190d1f77aef49910ea5d8b1",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain per-CPU rwsem wait-queue-add observation, declaration and export. Whole percpu_rwsem_wait remains LTS after this call; event fires only when the stack wait entry is actually queued, under waiters.lock with IRQs disabled. Callback must not retain ephemeral waiter state or violate queue/count ownership.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "db0c6ba68970ee298c9452d1eee121369b498d45",
+    "disposition": "adapted-net-state",
+    "rationale": "All seven paths reviewed. Keep acquisition/release observations for mutex, rt-mutex, rwsem and per-CPU rwsem, plus GPL wrappers avoiding trace-header inclusion in inline per-CPU functions. Hooks describe their exact sites: rt-mutex release precedes actual unlock, ordinary mutex and rwsem releases follow their unlock operations, and per-CPU read sites have differing preemption contexts. No universal lock-held guarantee or exact event pairing follows. Native atomics, lockdep and error checks remain in reviewed sites; callbacks must preserve object lifetime and must not infer protected data access merely from an event name.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "fa88f1e5d190a7d90793bc51c6e0c2d1f9c96227",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain four rwsem owner-record/clear hooks and GPL exports. Native owner atomic updates remain; complete small owner functions are LTS after observation removal. Bulk reader notification receives a temporary wlist under wait_lock before individual wake publication, while direct-reader notification gets NULL. Consumers must not retain stack-list pointers, assume exact reader enumeration, or dereference an unpinned historical owner.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "34956894339c3924957cc2ed9c2de22e99b14f33",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain per-CPU read policy override, writer-release observation and restricted writer wait-complete hook with false defaults. Complete affected functions normalize to native. Callback read success must establish reader count/acquire ordering; complete=true replaces rcuwait_wait_event and must guarantee all readers have drained with required memory ordering. A false completion assertion can permit concurrent reader/writer access. This explicit transfer of a locking obligation to a trusted module is retained for vendor source customization; no local callback was established or tested.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "4f4af7af85dca361eea730c973987e635a2b2af7",
+    "disposition": "adapted-net-state",
+    "rationale": "Keep explicit zero initialization of rwsem vendor and OEM storage before the init hook. The macro uses sizeof of the current member, so both words of the current OEM array are cleared without fixing a historical layout. Native count/owner/wait-list initialization remains unchanged.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "1615510160bbb9f512f4e4e2125b1a80e78f84a3",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain the two acquired-observation calls when the failed-read hook reports success. Despite the subject referring to time recording, this patch itself adds notifications and does not store a timestamp. It does not validate the callback assertion of ownership; that obligation remains as documented for 6f7b9cbb7f9f.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "3c75bc674264f5d7426d6c3a9b8ed4b693713cdf",
+    "disposition": "adapted-net-state",
+    "rationale": "All five paths reviewed. Retain explicit static per-CPU OEM and rwsem vendor initialization plus dynamic per-CPU init hook/export/declaration. The static aggregate already zero-initializes omitted members; explicit initializers document current functional fields. Dynamic per-CPU OEM bytes are owned by the init callback and are not automatically zeroed by this hook. Do not promise all vendor storage is universally initialized or preserve fixed ABI offsets.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
+  },
+  {
+    "commit": "20cd9fcfe39ae6a0311defc94472cde6ee491480",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain one u64 per-CPU rwsem OEM slot for module state, with subsequent static initializer and dynamic initialization hook. This is functional vendor customization storage under configured ANDROID_VENDOR_OEM_DATA, not a frozen-KMI reservation. Exact SDK state consumer is unconfirmed; retain conservatively with initialization/lifetime obligations.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/locking-hooks-history-review.json",
+      "SECURITY.md: Locking observation and policy hooks"
+    ]
   }
 ]

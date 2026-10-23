@@ -487,5 +487,47 @@
     "result_commits": [
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ]
+  },
+  {
+    "topic": "Proxy rwsem donor handoff and waiter initialization",
+    "status": "initialization defect fixed; broader proxy necessity/concurrency review remains provisional",
+    "candidates": [
+      "8f585b1490b3ffb4dfedd448b3c770807cd96a7b"
+    ],
+    "evidence": "Full original 84d95f460ea5, revert d8c3b5318be4 and reapplication 8f585b1490b3 patches reviewed. The reapplication adds donor_wakeup and a handoff bypass but never initializes it in either waiter constructor. SDK CONFIG_INIT_STACK_ALL_ZERO masks the defect; source initialization is now explicit. Differential extracted-code checks compare ordinary waiters against LTS and retain deliberate donor override: 773 cases pass, original ACK initializer yields 138 failed checks. Full donor lifetime, blocked-lock ordering and proxy state review is still required before finalizing the reapplication.",
+    "result_commits": [
+      "2c9eca0230277a60a7d164ff7cc1cd28dbb803e6"
+    ],
+    "review": "evidence/rwsem-waiter-init-check.json"
+  },
+  {
+    "topic": "SDK locking hook callbacks and replacement-locking contracts",
+    "status": "final conservative source-interface retention; exact consumers and callback behavior unconfirmed",
+    "candidates": [
+      "9ad8ff902e39f37baf15904c6627ca03e8f60c27",
+      "b1065ab8198b40252b961615259859a777b7f895",
+      "d497887b00ac3e5e380123cac4a303d009b570ee",
+      "c8bd076c6be7e26b1dccadb849bca62f0f7d37b4",
+      "5ba878e6b0187011b5635a5cecf46580b0e22263",
+      "c3ff554da49e08741f409edde9381e9967d0d22b",
+      "ddfebc5ba5f08b1e0c9f89b0bf0c12028191ac0b",
+      "6e6d83d43449d7a16a5f2e1e5ef2bf157e41159f",
+      "e3576a20e2730bc8935ce4f102f1b28e74650a9b",
+      "6f7b9cbb7f9fb3d7c564c9ad2815d28c6eda6875",
+      "5c9a72f8becc07261457f1241426aed42c199250",
+      "959806f0e25f5671fca4619b1db7190cd2d821ab",
+      "acca23bc6dbd090f0190d1f77aef49910ea5d8b1",
+      "db0c6ba68970ee298c9452d1eee121369b498d45",
+      "fa88f1e5d190a7d90793bc51c6e0c2d1f9c96227",
+      "34956894339c3924957cc2ed9c2de22e99b14f33",
+      "4f4af7af85dca361eea730c973987e635a2b2af7",
+      "1615510160bbb9f512f4e4e2125b1a80e78f84a3",
+      "3c75bc674264f5d7426d6c3a9b8ed4b693713cdf",
+      "20cd9fcfe39ae6a0311defc94472cde6ee491480"
+    ],
+    "evidence": "No registrations for the scoped mutex/rwsem/rtmutex/per-CPU rwsem hooks were found in manifest common-modules C/header source. Retain generic source customization conservatively; absence of a located consumer is not proof of dispensability. No locking/IRQ/scheduling runtime or callback correctness test was executed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ]
   }
 ]
