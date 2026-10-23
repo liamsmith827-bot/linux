@@ -1,0 +1,181 @@
+{
+  "source_head": "85c809fbcecdaafca55ed4d5dce0d969c1ee2ff9",
+  "records": [
+    {
+      "commit": "b862f642f1b63662698d9b011798719686d2ab30",
+      "disposition": "superseded",
+      "rationale": "Initial one-u64 IRQ descriptor vendor storage was exactly reverted by 263a4f8d5a2c, then restored in the evolved header by 95ef65f506f6. Retain that final source interface; no historical layout or duplicate field is required.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/irq-network-vendor-storage-review.json",
+        "SECURITY.md: IRQ and network vendor storage"
+      ],
+      "code_paths": [
+        "include/linux/irqdesc.h"
+      ],
+      "code_patch_sha256": "9066f4434a236e5b6f0546b94bd490b63215fc0ff539cff475ccab2dc5f75b89",
+      "omitted_generated_abi": []
+    },
+    {
+      "commit": "263a4f8d5a2c3fda42cdd3fcc1fb622ba3ae2a84",
+      "disposition": "superseded",
+      "rationale": "Exact header revert of b862f642f1b6 was temporary merge preparation. Later 95ef65f506f6 restores the vendor field after newer descriptor fields. Do not preserve the temporary removal when final ACK retains the generic vendor source API.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/irq-network-vendor-storage-review.json",
+        "SECURITY.md: IRQ and network vendor storage"
+      ],
+      "code_paths": [
+        "include/linux/irqdesc.h"
+      ],
+      "code_patch_sha256": "7991f75758f73783f442c2e7ec3202c452b0cb0f69bcc80fee22331bbee645a9",
+      "omitted_generated_abi": []
+    },
+    {
+      "commit": "95ef65f506f616ea8ad1522376f38fda45554e6a",
+      "disposition": "partially-adapted-net-state",
+      "rationale": "Retain android_vendor_data1 in irq_desc and its vendor macro include. SDK selects SPARSE_IRQ; native alloc_desc uses kzalloc_node and normal native lifetime remains. Omit both generated architecture ABI descriptions under the no-historical-KMI requirement. Field restoration is runtime vendor state, not an unused ABI reserve; no specific SDK callback consumer was established, so generic source compatibility is retained conservatively.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/irq-network-vendor-storage-review.json",
+        "SECURITY.md: IRQ and network vendor storage"
+      ],
+      "code_paths": [
+        "include/linux/irqdesc.h"
+      ],
+      "code_patch_sha256": "5af82e5a61b6a5bedfef610d34e92ba231b46dd78dcb7f0f7d3387cd14aaa227",
+      "omitted_generated_abi": [
+        {
+          "path": "gki/aarch64/abi.stg",
+          "patch_sha256": "74a121ac9a821017a6fe3053d677239d77e1bdca50862e8dedc0bdc5d1709410",
+          "classification": "Generated ABI type/symbol description; omitted by role, not a claim of semantic review of every CRC entry."
+        },
+        {
+          "path": "gki/x86_64/abi.stg",
+          "patch_sha256": "677107d9e35b43c4801abcd647a3830e30933969cf43ccf0e64fbb9c3fb0d8d7",
+          "classification": "Generated ABI type/symbol description; omitted by role, not a claim of semantic review of every CRC entry."
+        }
+      ]
+    },
+    {
+      "commit": "65dec890c155305f920749b3a18fa36fb6913692",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain the nf_conn OEM u64 source extension. It lies after __nfct_init_offset and is initialized by native memset_after in __nf_conntrack_alloc; preserve SLAB_TYPESAFE_BY_RCU allocation/reference protocol instead of changing to whole-object zalloc. Pointer ownership and cleanup for any module-defined state remain that trusted module responsibility; the field alone adds no userspace interface.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/irq-network-vendor-storage-review.json",
+        "SECURITY.md: IRQ and network vendor storage"
+      ],
+      "code_paths": [
+        "include/net/netfilter/nf_conntrack.h"
+      ],
+      "code_patch_sha256": "b966e3266bb0b128f3c887d77b2998f24d1a787bae673c0e3498afa285d175e5",
+      "omitted_generated_abi": []
+    },
+    {
+      "commit": "238c47b23d2c9c0ce0e23862a869e44e3dad7f7c",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain the sock OEM u64. Normal sk_alloc requests zero initialization; native sock_copy copies it during cloning, and the retained allocation/clone/free vendor callbacks can manage module-specific state. Preserve native LSM allocation and security_sk_clone handling, RCU exclusion range and module references. Do not assume a copied pointer acquires ownership automatically; that is the trusted callback contract.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/irq-network-vendor-storage-review.json",
+        "SECURITY.md: IRQ and network vendor storage"
+      ],
+      "code_paths": [
+        "include/net/sock.h"
+      ],
+      "code_patch_sha256": "edff533f50168ab057a88ec6a9f7fa049fa7300cae9d83760f183f87fb222a90",
+      "omitted_generated_abi": []
+    },
+    {
+      "commit": "8c3598556016b2f751ecbbb105a45d7dd5184e6e",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain three OEM u64 values in skb_shared_info before the required last frags member; omit adjacent historical KABI reserves. Native allocation uses sizeof/offsetof so its shared-info and fragment bounds include the real field. The generic initializer clears only fields before dataref, so this later OEM array is NOT guaranteed zero; vendor users must initialize it before reading or sharing and manage shared-info lifetime. No exact SDK consumer was established, and no automatic zeroing/ownership guarantee is invented. This retains final ACK source semantics without changing native dataref or fragment handling.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/irq-network-vendor-storage-review.json",
+        "SECURITY.md: IRQ and network vendor storage"
+      ],
+      "code_paths": [
+        "include/linux/skbuff.h"
+      ],
+      "code_patch_sha256": "3829d7ab5bad9319688547f34a3f520c2fada64f4c4ac2fcd9b90e436a5d9ab2",
+      "omitted_generated_abi": []
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "include/linux/irqdesc.h",
+      "retained_fragment": "ANDROID_VENDOR_DATA(1);",
+      "source_blob": "116bd4a39ae9caf1e8fabadced64f4878d061be2"
+    },
+    {
+      "path": "include/net/netfilter/nf_conntrack.h",
+      "retained_fragment": "ANDROID_OEM_DATA(1);",
+      "source_blob": "e20e441c2d516d975edc4b422ac243a40464239a"
+    },
+    {
+      "path": "include/net/sock.h",
+      "retained_fragment": "ANDROID_OEM_DATA(1);",
+      "source_blob": "f1444307e64c1dac00aa8e09ede7e1b2dd332853"
+    },
+    {
+      "path": "include/linux/skbuff.h",
+      "retained_fragment": "ANDROID_OEM_DATA_ARRAY(1, 3);",
+      "source_blob": "0b897d77615caa83ed698c75e462b6e273690f1e"
+    },
+    {
+      "path": "kernel/irq/irqdesc.c",
+      "function": "alloc_desc",
+      "identical_to_lts": true,
+      "sha256": "5d45f2edde2b246db2b690e71777f8d3a05b055c68df31a5b6099be1479c21ac"
+    },
+    {
+      "path": "net/netfilter/nf_conntrack_core.c",
+      "function": "__nf_conntrack_alloc",
+      "identical_to_lts": true,
+      "sha256": "e0ac8195df28285fb2c368aa5aea3acb0bb868828d31c92077dfee9b1ac4088a"
+    },
+    {
+      "path": "net/core/sock.c",
+      "function": "sock_copy",
+      "identical_to_lts": true,
+      "sha256": "24de46beb410da0fe3f684c70d1a8a2a90227f74f511b372b8d8413d280eee78"
+    },
+    {
+      "path": "net/core/sock.c",
+      "function": "sk_prot_alloc",
+      "identical_to_lts": true,
+      "sha256": "7417e2a7b92a95ab3ddd5ece7bc4d762e0881cdb46b00e59feefaa837d769fb8"
+    },
+    {
+      "path": "net/core/skbuff.c",
+      "function": "__finalize_skb_around",
+      "identical_to_lts": true,
+      "sha256": "069de9623c257c95d698b1585d6cc7331fd83b88bc372b4e7c9ef4c5adfe3a66"
+    }
+  ],
+  "source_blobs": {
+    "include/linux/irqdesc.h": "116bd4a39ae9caf1e8fabadced64f4878d061be2",
+    "include/net/netfilter/nf_conntrack.h": "e20e441c2d516d975edc4b422ac243a40464239a",
+    "include/net/sock.h": "f1444307e64c1dac00aa8e09ede7e1b2dd332853",
+    "include/linux/skbuff.h": "0b897d77615caa83ed698c75e462b6e273690f1e",
+    "kernel/irq/irqdesc.c": "4b81291aba1a7c440cb8fc8c7ca1c71ed501e7d2",
+    "net/netfilter/nf_conntrack_core.c": "201d2ef8a6f02dd8348cc1b7ff9bed7acb2dfe7c",
+    "net/core/sock.c": "b1d027a13620ac3bbafced202e0fc1877096dbbe",
+    "net/core/skbuff.c": "e66a3bf632e8a315adad64ac346bbaedcc6eb8fe"
+  },
+  "scope": "All non-ABI hunks read; generated ABI additions are excluded by role with complete patch hashes, not claimed as reviewed symbol-by-symbol. Final field declarations, native allocation and clone helpers examined.",
+  "necessity": "Exact named-field consumers were not located in scoped net/, kernel/irq/ and manifest common-modules/virtual-device C/header searches. Retain small generic runtime source customization fields conservatively rather than infer irrelevance. No platform-specific vendor implementation added.",
+  "security": "Trusted modules own initialization, synchronization, clone sharing and cleanup of their opaque state. Native socket LSM, conntrack RCU and skb dataref/fragment checks remain. skb OEM array lies beyond dataref and lacks generic zero initialization; do not claim zeroed storage or safe pointer ownership in arbitrary external modules.",
+  "validation": "Current header/source state compiled by successful emulator build 106; no IRQ/network runtime or external vendor callback verification.",
+  "remote_sources_used": []
+}

@@ -4755,3 +4755,53 @@ The reserved-member macro and complete Rust hunks were inspected. Omit these
 unused layout placeholders under the no-historical-KMI requirement. Existing
 active OEM/vendor data in unchanged context is unaffected. No executable
 security check is omitted, and no remote resource was accessed.
+
+# Task vendor storage and native x86 state
+
+Eleven task/scheduler storage commits are resolved in
+`evidence/task-vendor-storage-review.json`. Runtime vendor/OEM fields are
+retained in their final source form; obsolete intermediate WALT arrays and
+sizes are superseded. These fields differ from unused historical KABI
+reserves. Exact SDK custom callback use remains unconfirmed after the scoped
+local searches recorded in the report; compatibility-first retention does
+not treat a missing consumer as proof of irrelevance.
+
+`85c809fbcecd` corrects the dynamic task extension for native x86 allocation.
+The old `p + 1` accessor points at x86 FPU state, and allocation size minus
+`sizeof(task_struct)` counts native architecture state as vendor bytes.
+Record the requested vendor count separately, finish native architecture
+sizing and usercopy whitelist calculation, then append aligned vendor bytes
+before creating the task cache. Preserve native FPU layout, cloning and
+usercopy limits. Initialize only vendor bytes before the vendor callback.
+Size and offset exports become read-only after init; overflow rejects the
+extra allocation. The initial task uses its separate GPL-exported buffer,
+rounded up for nonmultiple configured maxima. No LTS fix is reversed.
+
+Default zero request leaves native allocation size unchanged. SDK config
+enables the interface with a 512-byte maximum; this is compile evidence,
+not an assertion of a measured boot option. The existing memparse syntax
+and permissiveness remain; malicious boot-option parsing was not certified.
+The focused host check executes extracted layout/access/init functions over
+14,378 cases, including native-tail canaries, alignment, integer limits and
+initial-task bounds. Three regression controls fail as expected. It does
+not execute a kernel fork, FPU switch or emulator boot. Build 106 passed at
+this source commit with both images and all 145 common/virtual modules; all
+module signatures and flag/CRC tables passed their separate checks. No remote resource was accessed.
+
+# IRQ and network vendor storage
+
+Six declaration/history commits are resolved in
+`evidence/irq-network-vendor-storage-review.json`. Retain final IRQ, conntrack,
+socket and skb shared-info runtime fields; omit generated ABI descriptions
+and unused KABI reserves. Exact SDK custom consumers remain unconfirmed, so
+small generic source interfaces are retained conservatively. IRQ descriptors
+and normal sockets are zero-initialized; native conntrack tail initialization
+includes its OEM field without disturbing the typesafe-by-RCU protocol.
+
+Socket cloning copies opaque state; retained allocation/clone/free callbacks
+remain responsible for any pointer ownership. The skb shared-info OEM array
+lies after dataref and is not guaranteed zero by the generic initializer.
+Vendor code must initialize it before reading or sharing and manage shared
+lifetime. This review does not invent automatic initialization or certify
+unknown module implementations. Native LSM, RCU, dataref and fragment handling
+remain. Build 106 covers compilation only. No remote resource was accessed.

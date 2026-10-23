@@ -1,0 +1,322 @@
+{
+  "source_head": "85c809fbcecdaafca55ed4d5dce0d969c1ee2ff9",
+  "records": [
+    {
+      "commit": "7a2a316228bcd80821a15fed6cd70c80a5daa182",
+      "disposition": "partially-adapted-net-state",
+      "rationale": "Original six-structure WALT storage patch reviewed. Final ACK removes cpu_topology/sched_domain_shared/rq vendor arrays, restores task_group four-u64 storage via 4dfac8f44e32, reduces task vendor storage to six u64 via a7abc7bea75f, and later adds a distinct one-u64 root_domain field via 8072e2514a87. Retain those final active source extension fields and current OEM arrays, not obsolete sizes/layout. This is runtime vendor state rather than historical KABI padding.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/task-vendor-storage-review.json",
+        "evidence/task-vendor-storage-check.json",
+        "SECURITY.md: Task vendor storage and native x86 state"
+      ],
+      "patch_sha256": "d4d47a3008730f1063d4bc360fac61532c29680ca7ca39f24c54d35848140ebc"
+    },
+    {
+      "commit": "ffaeda21f89886bce03fecb3a3a48cedbd048253",
+      "disposition": "superseded",
+      "rationale": "Full three-file partial revert examined: cpu_topology/sched_domain_shared/rq old vendor arrays remain absent from final ACK and port. Subsequent task_group four-u64 restoration and distinct root_domain one-u64 addition are retained. The original task array was not reverted here; its later reduction is handled separately. No claim that this completely reverses every original WALT field.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/task-vendor-storage-review.json",
+        "evidence/task-vendor-storage-check.json",
+        "SECURITY.md: Task vendor storage and native x86 state"
+      ],
+      "patch_sha256": "1399819b7f867aa8d26518f9375de458181d0a2d37a338621e1b156bb0585a84"
+    },
+    {
+      "commit": "4dfac8f44e3293fea96ccc7ae46a7eba92d48968",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain final four-u64 task_group vendor array under UCLAMP_TASK_GROUP, matching ACK. It supplies runtime source-module state, not a frozen-layout reserve. Native root group is static-zeroed and child groups use __GFP_ZERO; no scheduler algorithm or permission check is changed by this storage declaration.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/task-vendor-storage-review.json",
+        "evidence/task-vendor-storage-check.json",
+        "SECURITY.md: Task vendor storage and native x86 state"
+      ],
+      "patch_sha256": "1df292c1482c06ff9f79ba39910f60295e0619190b0144e786617ea94d9cd8c6"
+    },
+    {
+      "commit": "8072e2514a872d436ede4ef987c0b8f7cd5e335b",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain final one-u64 root_domain vendor field for scheduler tick/newidle customization. Native default domain is static-zeroed and dynamic domains use kzalloc. Current SDK vendor callback necessity is unconfirmed, so retain this small generic source interface conservatively; do not add the physical vendor implementation.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/task-vendor-storage-review.json",
+        "evidence/task-vendor-storage-check.json",
+        "SECURITY.md: Task vendor storage and native x86 state"
+      ],
+      "patch_sha256": "1571828733e90be564ef2213726c52bba1a0fec8d186bd8df70ed16a6bf33f9c"
+    },
+    {
+      "commit": "db56ca3b78284f0916eba24043d655464cf8cc9e",
+      "disposition": "adapted",
+      "rationale": "Keep GKI_DYNAMIC_TASK_STRUCT_SIZE and configured maximum, initial default task size and guarded initialization. Adapt final allocation sizing at fork_init after native architecture sizing. SDK enables this generic extension with maximum 512; default requested size remains zero. Do not let early Android setup overwrite native x86 FPU storage requirements.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "85c809fbcecdaafca55ed4d5dce0d969c1ee2ff9"
+      ],
+      "evidence": [
+        "evidence/task-vendor-storage-review.json",
+        "evidence/task-vendor-storage-check.json",
+        "SECURITY.md: Task vendor storage and native x86 state"
+      ],
+      "patch_sha256": "c3c5e592ccc01c9c211483f382c9e42966c720ba7653c1723bf15eec6dd65361"
+    },
+    {
+      "commit": "1827ee5e5a2de323359c04153e268a7288061eda",
+      "disposition": "adapted",
+      "rationale": "Keep GPL vendor_data_pad and its declaration for the statically allocated initial task. This is backing runtime data, not unused ABI padding. Preserve the subsequent config guard and round the u64 array up so nonmultiple maximum sizes cannot undersize the buffer. The accessor selects this separate buffer for init_task.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "85c809fbcecdaafca55ed4d5dce0d969c1ee2ff9"
+      ],
+      "evidence": [
+        "evidence/task-vendor-storage-review.json",
+        "evidence/task-vendor-storage-check.json",
+        "SECURITY.md: Task vendor storage and native x86 state"
+      ],
+      "patch_sha256": "9e77e7feca79dc29bc711e574c8c4010959abdf9b506587b9d4616cbb221402d"
+    },
+    {
+      "commit": "5e9a8cb7144f7dfe4e2eac71f767c6327e4af8b2",
+      "disposition": "adapted",
+      "rationale": "Retain the current Android task-size request and vendor-data accessor through evolved interfaces. Final ACK renames the early option to android_arch_task_struct_size. Native x86 FPU sizing overwrites the old early allocation size and places FPU state at p+1, so adapt: store requested byte count separately and append aligned vendor storage after native allocation at fork_init. Keep native FPU code and usercopy bounds; omit obsolete overwrite warning because this adaptation preserves both regions.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "85c809fbcecdaafca55ed4d5dce0d969c1ee2ff9"
+      ],
+      "evidence": [
+        "evidence/task-vendor-storage-review.json",
+        "evidence/task-vendor-storage-check.json",
+        "SECURITY.md: Task vendor storage and native x86 state"
+      ],
+      "patch_sha256": "577eb3c5ce7481514ddc6e2850dd806e3f5ddd546d945af5b99fc8475532483a"
+    },
+    {
+      "commit": "2282ad09eeb92f2dd89ab98e413b0b16aff8ff35",
+      "disposition": "adapted",
+      "rationale": "Keep GKI_DYNAMIC_TASK_STRUCT_SIZE guards around initial-task storage and accessor, including the later disabled initialization stub. Preserve declarations/definitions with the rounded initial-task buffer and safe current offset. Disabled builds do not reference optional storage.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "85c809fbcecdaafca55ed4d5dce0d969c1ee2ff9"
+      ],
+      "evidence": [
+        "evidence/task-vendor-storage-review.json",
+        "evidence/task-vendor-storage-check.json",
+        "SECURITY.md: Task vendor storage and native x86 state"
+      ],
+      "patch_sha256": "dc99f449ef47e689a575a0a4b2eba19f9379b50ebfa0052ef6eee2ebc815e380"
+    },
+    {
+      "commit": "de863f65b8875a8877f45ad03f73bbb5567de823",
+      "disposition": "adapted",
+      "rationale": "Keep config guard, init/main.c option placement and final android_arch_task_struct_size name. Parser retains its maximum and memparse syntax but now records a requested size instead of replacing architecture allocation size. Native sizing and usercopy range are determined first; append vendor bytes with signed allocation-size overflow rejection. No new command-line name or historical binary contract is introduced.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "85c809fbcecdaafca55ed4d5dce0d969c1ee2ff9"
+      ],
+      "evidence": [
+        "evidence/task-vendor-storage-review.json",
+        "evidence/task-vendor-storage-check.json",
+        "SECURITY.md: Task vendor storage and native x86 state"
+      ],
+      "patch_sha256": "46339bac61099999b79a27de9a7f44c706a1dfb425aa00dff1e1b2ef31e69f9f"
+    },
+    {
+      "commit": "a7abc7bea75f5ea1fcf82706086a3a7fe6e41a42",
+      "disposition": "adapted-net-state",
+      "rationale": "Retain the final six-u64 task vendor field and existing six-u64 OEM field. Separate optional dynamic storage is safely appended after architecture state; static arrays retain zero initialization before the dup_task_struct callback. Restore neither the old 64-u64 static overhead nor obsolete ABI offsets.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/task-vendor-storage-review.json",
+        "evidence/task-vendor-storage-check.json",
+        "SECURITY.md: Task vendor storage and native x86 state"
+      ],
+      "patch_sha256": "1da254b4e6e0d2b8cf7e4a834de517aee814c0df23897d2056f43dda780ec0c3"
+    },
+    {
+      "commit": "7b5ef0648a054f834c1e29cedd7b3f154cbae8e7",
+      "disposition": "adapted",
+      "rationale": "Keep dynamic storage initialization before trace_android_vh_dup_task_struct and the public header helper. Replace p+1 and allocation-size-minus-task-size assumptions with the actual vendor offset and requested byte count; those old expressions alias/clear x86 FPU state. Zero only vendor bytes, leave zero-request behavior native, and bound initial-task writes to the rounded pad. Read-only-after-init size/offset exports preserve source module access without runtime mutation.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "85c809fbcecdaafca55ed4d5dce0d969c1ee2ff9"
+      ],
+      "evidence": [
+        "evidence/task-vendor-storage-review.json",
+        "evidence/task-vendor-storage-check.json",
+        "SECURITY.md: Task vendor storage and native x86 state"
+      ],
+      "patch_sha256": "2c9e6503b9973bdffdad79c9472a37c55e7a5332e7b63c488e104724539a2cdf"
+    }
+  ],
+  "source_blobs": {
+    "include/linux/sched.h": "066220cecf2d3f8d30b695b6a47078cfc6e18991",
+    "include/linux/sched/task.h": "dd7480feaa0a2e071398adca36a75bdc0903af18",
+    "init/Kconfig.gki": "3b32575a64b2142e619bbcf8c3b4c643ac1cea3f",
+    "init/main.c": "854ff5e23701ef8834d6c09039bf5a955581196c",
+    "init/init_task.c": "8a1c5c7a3656ba274e94f8c7d18b87ea4c461b60",
+    "kernel/fork.c": "fc7093e6ec4b22b262a185c2c21f5b9662245bde",
+    "kernel/sched/sched.h": "481ae348ef5633a55277470b6c4b2e69c050b791",
+    "kernel/sched/core.c": "cff6269efe5eb16d151d0c17b47deee56215c517",
+    "kernel/sched/topology.c": "b2414f396a662fb5447e0fbcdac88b5e25b3fe0d",
+    "arch/x86/include/asm/processor.h": "a24c7805acdb5c25051af30f305449f7f808834a",
+    "arch/x86/kernel/fpu/init.c": "ff988b9ea39f0daddab94535d2b7d4052cc1ea34",
+    "arch/x86/kernel/fpu/core.c": "9badb21e5a5bce5431cb3c7957f05cf79c515af2",
+    "arch/x86/kernel/process.c": "4111d520edcf963d155b9509d6e0a3af6e7f0ffa"
+  },
+  "retained_storage_fragments": {
+    "include/linux/sched.h": [
+      "ANDROID_VENDOR_DATA_ARRAY(1, 6);",
+      "ANDROID_OEM_DATA_ARRAY(1, 6);"
+    ],
+    "kernel/sched/sched.h": [
+      "ANDROID_VENDOR_DATA_ARRAY(1, 4);",
+      "ANDROID_VENDOR_DATA(1);",
+      "ANDROID_OEM_DATA_ARRAY(1, 16);"
+    ]
+  },
+  "native_preservation": "x86 FPU init and processor header equal LTS; arch_dup_task_struct and fpu_thread_struct_whitelist inspected. fork lifecycle is exactly unchanged after removing the reviewed setup insertion; initial usercopy whitelist is computed before vendor append.",
+  "refreshed_final_net_witnesses": [
+    {
+      "commit": "e24a525c0d9d074b8facc7acaf98b5ffc134749c",
+      "paths": [
+        "kernel/fork.c"
+      ]
+    },
+    {
+      "commit": "92f282f338c5ae9e0c75a633cccf96e985cf052b",
+      "paths": [
+        "kernel/fork.c"
+      ]
+    },
+    {
+      "commit": "ed0a0cc047ee661f10a45ffb9d6cda81b3aab4ae",
+      "paths": [
+        "kernel/fork.c"
+      ]
+    },
+    {
+      "commit": "dd3b78e3c81267834c8b4410e6792a1d9a9440f7",
+      "paths": [
+        "kernel/fork.c"
+      ]
+    },
+    {
+      "commit": "bebbb786caeae02ca544d4987392bf8782cc7b3d",
+      "paths": [
+        "kernel/fork.c"
+      ]
+    },
+    {
+      "commit": "ac4eeebb57ba74f6e78aa0a64115ed68b60ac853",
+      "paths": [
+        "kernel/fork.c"
+      ]
+    },
+    {
+      "commit": "3f014522ebf52968b8b6037a98c6ae2a534723ba",
+      "paths": [
+        "kernel/fork.c"
+      ]
+    },
+    {
+      "commit": "de499c5e70375e2646fecd695f9be3d807b57b74",
+      "paths": [
+        "kernel/fork.c"
+      ]
+    },
+    {
+      "commit": "30d31ef51a678dcc4ac7e6ae6b57f49e33fbc36c",
+      "paths": [
+        "kernel/fork.c"
+      ]
+    },
+    {
+      "commit": "d1b89fc517fd89019fc4ac26a4c5c969ead9ec9a",
+      "paths": [
+        "kernel/fork.c"
+      ]
+    },
+    {
+      "commit": "f90ae1bfebc35a91c0da4d0d25258855f930d4b8",
+      "paths": [
+        "kernel/fork.c"
+      ]
+    },
+    {
+      "commit": "16151a687e7e346d3991fc411f8f8dc3b9347caa",
+      "paths": [
+        "kernel/fork.c"
+      ]
+    },
+    {
+      "commit": "7fc0276001fd854cc39d5738e35e42a09061ae9e",
+      "paths": [
+        "kernel/fork.c"
+      ]
+    },
+    {
+      "commit": "5d5f8836b37bc4cc96d356c11dff22e599803946",
+      "paths": [
+        "kernel/fork.c"
+      ]
+    },
+    {
+      "commit": "ffbc3ff5dba502d82c715db47f8da17ffe04ff5f",
+      "paths": [
+        "kernel/fork.c"
+      ]
+    },
+    {
+      "commit": "230fddf0eefffe6fe770d968ea7aa2f639449362",
+      "paths": [
+        "kernel/fork.c"
+      ]
+    },
+    {
+      "commit": "2d8e5eb61eae0fc9a486f5710b078c30efd0364f",
+      "paths": [
+        "kernel/fork.c"
+      ]
+    },
+    {
+      "commit": "44c42c57141aa9bbb33d4ab3204bcb9ed660c744",
+      "paths": [
+        "kernel/fork.c"
+      ]
+    },
+    {
+      "commit": "d169319e30af4592a412febf9b7593364b5ef88f",
+      "paths": [
+        "kernel/fork.c"
+      ]
+    },
+    {
+      "commit": "47502bf3eebba8de20ad7f469cae3dd1a0c6b36c",
+      "paths": [
+        "kernel/fork.c"
+      ]
+    }
+  ],
+  "local_evidence": [
+    "Final ACK storage declarations and macro definitions",
+    "Native fork_init, arch_dup_task_struct, fpu_thread_struct_whitelist and x86_task_fpu placement",
+    "Static root task/group/domain initialization, child __GFP_ZERO and dynamic root-domain kzalloc",
+    "Scoped SDK source searches in device/generic/goldfish, system/core and manifest common-modules/virtual-device found no android_task_vendor_data consumer or android_arch_task_struct_size request; absence is not used to omit the generic API"
+  ],
+  "necessity": "Runtime vendor extension conservatively retained under compatibility-first scope. Exact SDK custom callback use remains unconfirmed. Default zero vendor request and compiled maximum 512 are source/config evidence, not a measured boot configuration.",
+  "security": "Old p+1 accessor aliases x86 FPU state; old memset length conflates all architecture tail with vendor storage. New bounded region preserves native FPU initialization/layout, avoids native-tail clobbering, retains usercopy exclusions, and rejects allocation-size overflow. Only trusted boot/module code selects/accesses this storage. Existing memparse syntax/overflow behavior is unchanged; this review does not certify arbitrary malicious boot-option parsing.",
+  "validation": "14378 extracted-helper host cases pass across maxima 512 and 513; all three regression controls fail. Emulator workflow build 106 passed at 85c809fbcecd with manifest 7dc1aee: both images, 100 common and 45 virtual-device modules, 145 verified signatures plus tampered control, and all 659 protected exports/145 module flag-CRC tables. New size/offset GPL exports appear in Module.symvers. No boot, live fork or FPU switching verification.",
+  "remote_sources_used": []
+}

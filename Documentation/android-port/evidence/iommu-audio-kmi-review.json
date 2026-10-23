@@ -1,0 +1,38 @@
+{
+  "source_head": "85c809fbcecdaafca55ed4d5dce0d969c1ee2ff9",
+  "records": [
+    {
+      "commit": "d7fd5bd56be7ce176ad1e047e494bc5ee20a57c0",
+      "disposition": "omitted-kmi-only",
+      "rationale": "Complete five-file patch adds only 32 unused u64 KABI reserves, three reserve-header includes and whitespace to IOMMU interfaces. Macro expands to __kabi_reserved members, without a callback or executable logic change. Omit historical layout space as requested, including the arm64 hypervisor interface reserves; this does not decide whether any IOMMU or pKVM implementation is needed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/iommu-audio-kmi-review.json"
+      ],
+      "patch_sha256": "b192ebdbf7b4b8ec78c2a289b912c349dcf743996244599474471bf483128243"
+    },
+    {
+      "commit": "7922a8385c72f81a25c482981cdcd661bc8baac9",
+      "disposition": "omitted-kmi-only",
+      "rationale": "Complete single-hunk patch appends three empty entries after the existing zero sentinel in the Panther Lake SoundWire machine array solely to preserve ABI array size. Native array retains real entries and one terminator; SOF selection walks alt_machines only while link_mask is nonzero, so extra trailing zeros do not add a machine match. Keep the native LTS file and omit historical exported-array size padding.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/iommu-audio-kmi-review.json"
+      ],
+      "patch_sha256": "705b29f6974bbccbb0be271d6c5c15ccc5e6807479e5aee611d37b3bee0cbdc7"
+    }
+  ],
+  "iommu_changed_lines": {
+    "reserves": 32,
+    "header_includes": 3,
+    "nonblank_deletions": 0
+  },
+  "audio_witness": {
+    "path": "sound/soc/intel/common/soc-acpi-intel-ptl-match.c",
+    "port_equals_lts": true,
+    "source_blob": "55505625b3609534d616e05f6f8b3b3b1ab15b14",
+    "consumer": "sound/soc/sof/intel/hda.c: alt_machines loop stops on zero link_mask; pci-ptl.c provides this array"
+  },
+  "scope": "Full original patches plus reserve macro and sentinel traversal inspected; no runtime test needed for omitted layout-only changes.",
+  "remote_sources_used": []
+}

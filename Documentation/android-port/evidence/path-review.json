@@ -6873,7 +6873,7 @@
     "result_commits": [],
     "normalized_ack_blob": "880e451a904a75c25e563348c8c74134fb0ff682",
     "common_ancestor_blob": "ff988b9ea39f0daddab94535d2b7d4052cc1ea34",
-    "specific_evidence": "Only a warning about android_arch_task_struct_size padding is added. This accompanies excluded historical task-layout reservation, not a runtime FPU feature. Retain native LTS task/FPU sizing.",
+    "specific_evidence": "Final ACK differs only by a warning that early Android allocation sizing is overwritten. Keep native LTS FPU sizing exactly. Runtime vendor storage is retained and adapted in 85c809fbcecd by appending requested bytes after native sizing at fork_init, so this warning is obsolete; it is not a reason to classify the runtime extension as historical KMI. See evidence/task-vendor-storage-review.json.",
     "review_record": "evidence/generic-source-review.json"
   },
   "arch/x86/kernel/fpu/xstate.c": {
@@ -28235,10 +28235,11 @@
   "include/linux/sched/task.h": {
     "ack_blob": "2bd42ed3fb0e5af274238127161a7945687e53e2",
     "lts_blob": "525aa2a632b2f37c2f96a2acff78553ac9ba6412",
-    "port_blob": "2bd42ed3fb0e5af274238127161a7945687e53e2",
+    "port_blob": "dd7480feaa0a2e071398adca36a75bdc0903af18",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "85c809fbcecdaafca55ed4d5dce0d969c1ee2ff9",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "2bd42ed3fb0e5af274238127161a7945687e53e2",
@@ -31664,10 +31665,11 @@
   "init/init_task.c": {
     "ack_blob": "42bdf3d9e826e9d33318ce360a8d884f28c9d266",
     "lts_blob": "a55e2189206fa4d6ae2345461e38533b38b76afa",
-    "port_blob": "42bdf3d9e826e9d33318ce360a8d884f28c9d266",
+    "port_blob": "8a1c5c7a3656ba274e94f8c7d18b87ea4c461b60",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "85c809fbcecdaafca55ed4d5dce0d969c1ee2ff9",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "42bdf3d9e826e9d33318ce360a8d884f28c9d266",
@@ -31676,10 +31678,11 @@
   "init/main.c": {
     "ack_blob": "3e5287361cea441ee69b331ffda4cae775856fd7",
     "lts_blob": "269b30038b9fac1071fee04d9a86ba72820905be",
-    "port_blob": "046c5fc33381b9e80ae9c87184f00c8540a00e89",
+    "port_blob": "854ff5e23701ef8834d6c09039bf5a955581196c",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "85c809fbcecdaafca55ed4d5dce0d969c1ee2ff9",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "3516a71825e2969ae348267ee3990a5baf9cd7ff",
@@ -32265,16 +32268,17 @@
   "kernel/fork.c": {
     "ack_blob": "3cbccd9dcb4eeeca1c8e463860f1c9894b0580ad",
     "lts_blob": "7be5736d44c7f303c19df138be5e3de2810b1e12",
-    "port_blob": "130d241788556039eab235d41648e3f77f4e7aeb",
+    "port_blob": "fc7093e6ec4b22b262a185c2c21f5b9662245bde",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "85c809fbcecdaafca55ed4d5dce0d969c1ee2ff9",
       "0553783af7f74cea06cd514fe2483a90ff531c68",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "c1bf48702beb85cf041f18917b887f44db588e3d",
     "common_ancestor_blob": "1215d3f52c6d21d7c3d5a10a916c9be4f73c6858",
-    "specific_evidence": "Reviewed complete LTS and normalized-ACK deltas plus dup_task_struct, delayed_free_task and failed-fork teardown. Retain task/MM/files DMA accounting initialization and owned references; partial sharing clears task reporting while existing objects retain cleanup ownership. After successful copy_dmabuf_info, later failures release the task reference, then MM/files teardown drops their separate references; delayed_free_task calls free_task, not __put_task_struct, so no second task-info put. Keep cpufreq time allocation/init/free, actual vendor/OEM runtime data initialization, task/MM hooks and source exports. Proxy scheduling fields/locks/lists are initialized for the retained implementation; its scheduling algorithms are assessed separately. Integrity-hook failure uses bad_fork_core_free, preserving both locks and scheduler cleanup. Preserve native LTS early BPF initialization, CLONE_VM futex-hash sharing including vfork, PF_BLOCK_TS clearing and namespace API. Accounting OOM can fail fork; no runtime fork/race certification.",
+    "specific_evidence": "Reviewed complete LTS and normalized-ACK deltas plus dup_task_struct, delayed_free_task and failed-fork teardown. Retain task/MM/files DMA accounting initialization and owned references; partial sharing clears task reporting while existing objects retain cleanup ownership. After successful copy_dmabuf_info, later failures release the task reference, then MM/files teardown drops their separate references; delayed_free_task calls free_task, not __put_task_struct, so no second task-info put. Keep cpufreq time allocation/init/free, actual vendor/OEM runtime data initialization, task/MM hooks and source exports. Proxy scheduling fields/locks/lists are initialized for the retained implementation; its scheduling algorithms are assessed separately. Integrity-hook failure uses bad_fork_core_free, preserving both locks and scheduler cleanup. Preserve native LTS early BPF initialization, CLONE_VM futex-hash sharing including vfork, PF_BLOCK_TS clearing and namespace API. Accounting OOM can fail fork; no runtime fork/race certification. 85c809fbcecd only adds task vendor allocation setup before cache creation; the previously reviewed fork/teardown code is otherwise byte-preserved. Append aligned vendor bytes after native architecture allocation and compute the native usercopy whitelist first. Default zero-request allocation is unchanged; offset/size become read-only after init. See evidence/task-vendor-storage-review.json and focused host checks.",
     "review_record": "evidence/generic-source-review.json"
   },
   "kernel/futex.c": {
