@@ -1,0 +1,214 @@
+{
+  "source_head": "4c34ac46ceef6ca53cf61110b6e7d6e7fde32feb",
+  "records": [
+    {
+      "commit": "683010f555d804c2b9b01d327767755fa78a3ce5",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "All four paths read with paired c7f998a0cd01. Pause/resume batch APIs and alternate scheduler activation/deactivation paths were explicitly removed, not merely unlocated. Final ACK and port have none of their named entry points. Current kernel/cpu.c, cpu.h and sched/hotplug.h equal LTS; sched_cpu_activate/deactivate are whole native LTS functions. Do not reinstate old hotplug state manipulation or rearrange RCU synchronization.",
+      "evidence": [
+        "evidence/scheduler-removed-history-review.json",
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Removed scheduler implementations and surviving source exports"
+      ],
+      "patch_sha256": "f567d1292373b1a8ac2794d8aa553c9782eecaad6101f802347230a9ad161447"
+    },
+    {
+      "commit": "e19b8ce907a4ccc2f9dbeba218c50d1ff07fd321",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "All five paths read with paired 6a772b98a8c5. Lazy/two-phase pause draining, stopper helpers, per-task percpu_kthread_node and per-rq drain state were explicitly removed. Those entry points/fields are absent in final ACK and port. Native hotplug migration/synchronization remains; no consumer-absence argument is needed for a reverted implementation.",
+      "evidence": [
+        "evidence/scheduler-removed-history-review.json",
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Removed scheduler implementations and surviving source exports"
+      ],
+      "patch_sha256": "1a06cb0b1ad8fb9c6a1735f1f5065abb214e49c14cf6626b3db9fe8ec938a4fb"
+    },
+    {
+      "commit": "6a772b98a8c5d697e00bf760a29ffe893cdb93dd",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Entire five-path revert read, including force parameter removal, task/rq fields and CPU drain phases. Preserve final absence of the old pause-drain implementation already native in LTS. Do not replay old-context migrate_tasks code over the newer balance-push/proxy scheduler.",
+      "evidence": [
+        "evidence/scheduler-removed-history-review.json",
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Removed scheduler implementations and surviving source exports"
+      ],
+      "patch_sha256": "407a3e13c5e5e238a9bd6507a9136fa4d760729fa94297aae91fb8e386db3274"
+    },
+    {
+      "commit": "c7f998a0cd01d5f8652d5ee2c754df910f52c3dd",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Entire four-path revert read. Final absence of batch pause/resume and alternate deactivate helpers is already represented in LTS/port. Keep whole native sched_cpu_activate/deactivate with current synchronization instead of applying historical-context hunks.",
+      "evidence": [
+        "evidence/scheduler-removed-history-review.json",
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Removed scheduler implementations and surviving source exports"
+      ],
+      "patch_sha256": "5434fd888b4d7d86b7f58e852b5d029946f96d4f3ab7296b5f877af3a72f0f04"
+    },
+    {
+      "commit": "bd8c099034eb1c05324d839bd6cf1dfb7daba8c1",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Both paths read. The restored pick_migrate_task cross-class loop/export is explicitly removed by 83f1e81c7fd5 and absent in final ACK, LTS and port. Do not resurrect the obsolete pick_next_task calling convention or pretend the removed export is required for present ACK source compatibility.",
+      "evidence": [
+        "evidence/scheduler-removed-history-review.json",
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Removed scheduler implementations and surviving source exports"
+      ],
+      "patch_sha256": "1ab20021e0bd7dea4b6712313accc4afe2bf3033f413594fd0a127074439a598"
+    },
+    {
+      "commit": "83f1e81c7fd5115921c12bc12af1082364d8e744",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Both full deletion paths read. The removed pick_migrate_task implementation/declaration/export is absent in final ACK, LTS and port. Current class picker signatures/retry rules have materially changed; keep native absence rather than historical function body.",
+      "evidence": [
+        "evidence/scheduler-removed-history-review.json",
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Removed scheduler implementations and surviving source exports"
+      ],
+      "patch_sha256": "35b4ee2d951fb72769ffd3d2d0f4e08bfff88bdd3dfbc57d27f043fe70b45223"
+    },
+    {
+      "commit": "60d27463094b8f75b1613025b7ad89f6502315c4",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All four paths read. Retain GPL exports/source declarations for __migrate_task, select_fallback_rq and stop_one_cpu, even though the old common pause implementation is gone. __migrate_task body and stop_one_cpu are native LTS; select_fallback_rq retains native search/cpuset fallback plus its separately retained Android override. Trusted callers must hold required task/rq locks, respect stopping context and allowed CPUs; exports do not expose a userspace API. Exact SDK module users unconfirmed; preserve generic vendor source customization conservatively.",
+      "evidence": [
+        "evidence/scheduler-removed-history-review.json",
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Removed scheduler implementations and surviving source exports"
+      ],
+      "patch_sha256": "7d5849ac794fd2ce1cfacf76efed2302b7d19514ae9f5c328c48729665a30167"
+    },
+    {
+      "commit": "09e5f051063ee2046bf1323335b9ca350fae7196",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Complete one-line include fix read. Native LTS and current internal scheduler header both include linux/mmu_context.h for task_cpu_possible. No duplicate insertion or remote patch fetch needed.",
+      "evidence": [
+        "evidence/scheduler-removed-history-review.json",
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Removed scheduler implementations and surviving source exports"
+      ],
+      "patch_sha256": "72b974aa5a5f46817825f1c73b188ee5193be5b3c3c917cfcea93984c2432a9d"
+    },
+    {
+      "commit": "3adfd8e344ac32845eb3c15743f90a7e3b49dcf3",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "All four original paths read and compared with full 65c99af98ba6 deletion. Old ARM64-only RT_SOFTINT_OPTIMIZATION, task/preempt_count sampling and drop_nopreempt_cpus retry loop are gone in final ACK/port. Current configured RT_SOFTIRQ_AWARE_SCHED uses active/pending long-softirq masks, as separately reviewed in softirq-history-review.json; do not restore obsolete unlocked task sampling. The Android RT compatibility objective is retained through that replacement, not dismissed as hardware-only.",
+      "evidence": [
+        "evidence/scheduler-removed-history-review.json",
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Removed scheduler implementations and surviving source exports"
+      ],
+      "patch_sha256": "68429f2558eaaf328fc4649d27e24c1034c6b3c6b30582cb298d1b58a5594b97"
+    },
+    {
+      "commit": "65c99af98ba6f6beb07e6c90c66629e14a9da2e1",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "All five paths read, including old ARM64 defconfig removal and previously added helper export deletion. Old RT_SOFTINT_OPTIMIZATION/task_may_not_preempt/drop_nopreempt_cpus are absent in native LTS and port. Keep their removal without suppressing the later configured RT_SOFTIRQ_AWARE_SCHED replacement; its policy/security costs are documented separately.",
+      "evidence": [
+        "evidence/scheduler-removed-history-review.json",
+        "evidence/softirq-history-review.json",
+        "SECURITY.md: Removed scheduler implementations and surviving source exports"
+      ],
+      "patch_sha256": "b3f859c5dfeb479415f4e57bb4adf9919584433fcf81ca60d202215364636564"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/cpu.c",
+      "sha256": "cac54a2f11e99796c55e3003699d0acf66985dfa9ddd7498e21da4aa122f8394",
+      "relationship": "whole file equals native LTS"
+    },
+    {
+      "path": "include/linux/cpu.h",
+      "sha256": "dc43b3f7401abc5d1b46f43ea1e82104e710adcb97a835dd2fb74f0743d67410",
+      "relationship": "whole file equals native LTS"
+    },
+    {
+      "path": "include/linux/sched/hotplug.h",
+      "sha256": "9497a7a22a64d26b4bd5e78939b4156295b81d95ccbc306e69d27d4ae7c63fec",
+      "relationship": "whole file equals native LTS"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "sched_cpu_activate",
+      "sha256": "235614926c0d2e4f08010bbebfc70919cb37eb67833515aba223d6be7a53db8b",
+      "relationship": "whole function equals native LTS"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "sched_cpu_deactivate",
+      "sha256": "b5bc500befd8b4f849f25c4c128423b97e84a3a6e43ef9519eff02c51bae5fc1",
+      "relationship": "whole function equals native LTS"
+    },
+    {
+      "path": "kernel/stop_machine.c",
+      "function": "stop_one_cpu",
+      "sha256": "fa068b964463e3ff29c2e61d21a0896dfce61a669b27ad46b581cffbeaf68647",
+      "relationship": "whole function equals native LTS"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "__migrate_task",
+      "sha256": "2a1334b2e30ac75096121f72e35449b83c9d7559b4b3679da957067ef3eb0d93",
+      "relationship": "native body with public source visibility/GPL export"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "select_fallback_rq",
+      "sha256": "bff1bb4d6fd92881cd73cc08233e850d8a17c1725f1f6f87249c7774038ef71c",
+      "relationship": "native LTS function plus public visibility and separate Android override hook"
+    }
+  ],
+  "absence": {
+    "refs": [
+      "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "4c34ac46ceef6ca53cf61110b6e7d6e7fde32feb"
+    ],
+    "paths": [
+      "kernel/cpu.c",
+      "include/linux/cpu.h",
+      "include/linux/sched/hotplug.h",
+      "include/linux/sched.h",
+      "kernel/sched/core.c",
+      "kernel/sched/sched.h",
+      "kernel/sched/rt.c",
+      "kernel/sched/cpupri.c",
+      "init/Kconfig"
+    ],
+    "identifiers": [
+      "pause_cpus",
+      "resume_cpus",
+      "sched_cpus_activate",
+      "sched_cpus_deactivate_nosync",
+      "_sched_cpu_deactivate",
+      "__pause_drain_rq",
+      "__wait_drain_rq",
+      "sched_cpu_drain_rq",
+      "sched_cpu_drain_rq_wait",
+      "percpu_kthread_node",
+      "drain_rq_cpu_stop",
+      "drain_done",
+      "pick_migrate_task",
+      "task_may_not_preempt",
+      "drop_nopreempt_cpus",
+      "RT_SOFTINT_OPTIMIZATION"
+    ],
+    "method": "Exact word search of every named path after reading complete original and revert patches; establishes removed implementation state, not lack of consumers."
+  },
+  "security": "No old batch hotplug state mutation, unsynchronized pause drain, obsolete cross-class picker or task preempt_count heuristic is restored. Surviving source exports permit trusted modules to migrate/stop CPUs and carry existing locking, context and availability obligations. select_fallback_rq override is separately retained and must return a valid CPU; absence of an exact SDK module user is not treated as proof of dispensability. Native whole hotplug source and activation/deactivation functions remain.",
+  "uncertainty": "No runtime hotplug, affinity, RT latency or CPU pause module test. Exact external SDK users of surviving exports unconfirmed. The newer softirq policy review does not certify all RT/proxy scheduler changes.",
+  "remote_sources_used": []
+}

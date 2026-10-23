@@ -1,0 +1,253 @@
+{
+  "source_head": "4c34ac46ceef6ca53cf61110b6e7d6e7fde32feb",
+  "records": [
+    {
+      "commit": "5e2f1d9167f9d8c1fd3af5902a52bcd1b9c31ddc",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "Both complete paths reviewed. Old CONFIG_PSI_PER_CGROUP_ACCT compile-time switch was explicitly removed by 91d9e57009f5 and replaced by native cgroup_disable=pressure command-line feature selection. Do not restore the default-off compile-time fork; keep native system-wide and optional cgroup accounting. Actual emulator boot command line is not verified by compilation.",
+      "evidence": [
+        "evidence/psi-compatibility-review.json",
+        "SECURITY.md: PSI userspace compatibility and permission tradeoff"
+      ],
+      "patch_sha256": "adf4fe8e8203badbdc4a27652f6e85abd3062cee2eaebaa5a5a26ce8ef289b40"
+    },
+    {
+      "commit": "91d9e57009f585845901ffcc9ce86f100f6d9691",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Both complete reverse hunks reviewed. The obsolete PSI_PER_CGROUP_ACCT symbol/conditional is absent in LTS/ACK/port. Native runtime/boot configuration replaces it; retain removal without disabling later cgroup PSI support.",
+      "evidence": [
+        "evidence/psi-compatibility-review.json",
+        "SECURITY.md: PSI userspace compatibility and permission tradeoff"
+      ],
+      "patch_sha256": "a1719caaf6d76d33fb72ca85a3743d241977162fb8da3fb6bb72dc0eee285bea"
+    },
+    {
+      "commit": "5d26d5b063b382e1cfe12a563bd48efbb91b645b",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "All five paths read. Original upstream 3958e2d0c34e is an ancestor of pinned LTS. Keep native cgroup optional pressure feature, kernel parameter documentation and psi_cgroups_enabled behavior. Later native code groups pressure files separately instead of CFTYPE_PRESSURE per-file flags; current relevant cgroup functions/header declarations and PSI feature logic match LTS. Do not resurrect superseded flag/layout or force a boot parameter.",
+      "evidence": [
+        "evidence/psi-compatibility-review.json",
+        "SECURITY.md: PSI userspace compatibility and permission tradeoff"
+      ],
+      "patch_sha256": "af387381a46ae0d842fd515daba27b50faec4063f44f84a62349f5d246b8b2ec"
+    },
+    {
+      "commit": "78da742577be199481d8f820e06248137df1523e",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "All three paths read. Retain GPL psi_event/psi_group hooks and declarations. Event hook runs after threshold/window checks but before event cmpxchg, so callback is not proof of a newly delivered wakeup; group hook runs after each update_triggers pass. Both run under the corresponding averages/rtpoll mutex with borrowed pointers: callbacks must not retain pointers, destroy/reenter the same list or block progress indefinitely. No callback changes native notifications by default. Exact SDK module registration unconfirmed; preserve vendor source observation interface conservatively.",
+      "evidence": [
+        "evidence/psi-compatibility-review.json",
+        "SECURITY.md: PSI userspace compatibility and permission tradeoff"
+      ],
+      "patch_sha256": "fd5555ca0f2d7e6ccd804c856b1b208d23823ba3459bd123030f4661d14472e6"
+    },
+    {
+      "commit": "2b1e783da51729581e55b676bf7a28ed2b381d02",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Complete permission/proc-mode patch read against positive GrapheneOS consumer evidence. ActivityManagerService constructs LowMemDetector; JNI requests 1,000,000-us memory windows, libpsi opens/writes the proc node, Zygote system_server capability list lacks SYS_RESOURCE and policy expressly forbids it while allowing proc_pressure_mem writes. Native unprivileged 2-second-only policy would reject these monitors. Retain ACK compile-time SELinux-default relaxation and proc default mode 0444 (mode 0 expands in proc_create_reg); Android init changes memory node ownership/mode to system:system 0666. This intentionally removes CAP_SYS_RESOURCE gating for all otherwise permitted proc/cgroup PSI writers when the config is enabled, regardless of runtime SELinux enforcement. Native size/range/one-trigger-per-fd and lifetime protections remain. Security cost is access to short-window SCHED_FIFO-low polling and extra work; rely on actual file/LSM policy, not an assumed runtime check. No global sandbox-access proof or resource-exhaustion bound claimed.",
+      "evidence": [
+        "evidence/psi-compatibility-review.json",
+        "SECURITY.md: PSI userspace compatibility and permission tradeoff"
+      ],
+      "patch_sha256": "c5b4dbba420330d6896e026978176a776c3c6b52ab5a7ac621787a452e7a2564"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/sched/psi.c",
+      "function": "psi_init",
+      "sha256": "7974bd53f19d0990d2d637ee76d49cb614c36a94068f83b5f6b1429ea88310d6",
+      "relationship": "whole function equals native LTS"
+    },
+    {
+      "path": "kernel/sched/psi.c",
+      "function": "psi_cgroup_free",
+      "sha256": "4f53bfdae015b1a79e99df4fb5eb60d6f0a8d35a7ccc94fc8a93b440e31db3d2",
+      "relationship": "whole function equals native LTS"
+    },
+    {
+      "path": "kernel/sched/psi.c",
+      "function": "psi_trigger_create_rtpoll_worker",
+      "sha256": "a3eae9aae25886d8852183bfd767169d0079100a01d8fe4c51fd12b195a5db17",
+      "relationship": "whole function equals native LTS"
+    },
+    {
+      "path": "kernel/sched/psi.c",
+      "function": "psi_trigger_destroy",
+      "sha256": "4f70fb224565b5476cc2c9e60bf1f152e27c7a1aa20e4820c691bb60913b8da2",
+      "relationship": "whole function equals native LTS"
+    },
+    {
+      "path": "kernel/sched/psi.c",
+      "function": "psi_write",
+      "sha256": "6df4fb44367444788b368daabfb905383855812dc95f5ec3116979ecab94fea6",
+      "relationship": "whole function equals native LTS"
+    },
+    {
+      "path": "kernel/sched/psi.c",
+      "function": "psi_rtpoll_worker",
+      "sha256": "016d4687a08c4b335f7611d14380a3fcfcd8386c8c4c9a174550c0acb2e7cb14",
+      "relationship": "whole function equals native LTS"
+    },
+    {
+      "path": "kernel/sched/psi.c",
+      "function": "psi_avgs_work",
+      "sha256": "b36dce9bcbc092f4fec65a3a142755bf5834c5ef1c4804f21470914646dd4d59",
+      "relationship": "whole function equals native LTS"
+    },
+    {
+      "path": "kernel/sched/psi.c",
+      "function": "psi_rtpoll_work",
+      "sha256": "af0e0b1b4b7e9358c6487d4c3a154179b31a976756c697937b13d8bebea7ae36",
+      "relationship": "whole function equals native LTS"
+    },
+    {
+      "path": "kernel/cgroup/cgroup.c",
+      "function": "cgroup_disable",
+      "sha256": "15603a52e67e2063f0e0b2d8f46734e6d7ba29da8c2fbd839f2dceec299a5fa4",
+      "relationship": "whole function equals native LTS"
+    },
+    {
+      "path": "kernel/cgroup/cgroup.c",
+      "function": "cgroup_psi_enabled",
+      "sha256": "c90ce2ba15c6eff2d3b9da775ad1d815c95e94af220a1dfd8d6795f778667d9c",
+      "relationship": "whole function equals native LTS"
+    },
+    {
+      "path": "kernel/cgroup/cgroup.c",
+      "function": "delegate_show",
+      "sha256": "4663aadb47e09bd06458ccafe03a564984c029af87ed2a6bcf49d82c3f242565",
+      "relationship": "whole function equals native LTS"
+    },
+    {
+      "path": "kernel/cgroup/cgroup.c",
+      "function": "cgroup_pressure_write",
+      "sha256": "766e11725ff4b1adec8e023f0674f7b3667f140496961bdbf107625b9c1273cd",
+      "relationship": "whole function equals native LTS"
+    },
+    {
+      "path": "include/linux/cgroup.h",
+      "sha256": "aa82862ee29e5d95467cb142249394e9b831a812b68802807017cfa995a633ad",
+      "relationship": "whole header equals native LTS"
+    },
+    {
+      "path": "include/linux/cgroup-defs.h",
+      "sha256": "dc68ccf2106ce591ed668671a7128b685f9852d07c5ea4c0c126015b12d63de7",
+      "relationship": "whole header equals native LTS"
+    },
+    {
+      "path": "include/linux/psi.h",
+      "sha256": "cd80982f753aa56eb3b9e16212056d1ac3e9c905f6fd10ce5be1509c0e93b649",
+      "relationship": "whole header equals native LTS"
+    },
+    {
+      "path": "include/linux/psi_types.h",
+      "sha256": "483269b27c82b438450632555aba2ba8a9c47b608243f78a029c4300b3618ccc",
+      "relationship": "whole header equals native LTS"
+    }
+  ],
+  "whole_psi_witness": {
+    "path": "kernel/sched/psi.c",
+    "sha256": "9e2711f721c9521fcdb3b233e7a1d8b85debf389180b3f166c5956ca615ea6aa",
+    "relationship": "Entire file equals pinned LTS after removing precisely hook include/two calls, compile-time privilege alternative with comment, and four proc permission changes."
+  },
+  "lts_fixes_preserved": [
+    "03dc070fa0fc file-release/pressure-write serialization",
+    "8037c5b2b2a4 timer shutdown during cgroup free",
+    "102fb2dacf45 psimon creation outside cgroup_mutex, with loser cleanup"
+  ],
+  "security": "Compatibility requires one-second polling without SYS_RESOURCE for system_server. ACK relaxation affects all permitted writers, including cgroup nodes, and selects PSI_POLL instead of PSI_AVGS. It is a compile-time DEFAULT_SECURITY_SELINUX test, not proof that SELinux is active/enforcing; permissive/disabled policy broadens exposure. A user able to write a node can request short-window polling and consume kernel/RT worker resources. Native parameter bounds and lifetime fixes remain; no measured overhead, runtime policy compilation or exhaustive app-domain access proof. Default proc mode becomes 0444, but Android init explicitly chmods memory to 0666, leaving LSM enforcement material.",
+  "consumers": "Positive supplied source evidence: ActivityManagerService -> LowMemDetector -> JNI -> libpsi write of 1s windows. Zygote capability list lacks SYS_RESOURCE; system_server policy neverallows it and allows memory-pressure rw. lmkd also uses PSI but its service already has SYS_RESOURCE, so it does not itself establish necessity of the bypass.",
+  "uncertainty": "Exact PSI vendor hook consumers unconfirmed. Actual SDK boot command line, SELinux enforcement and memory-pressure notification behavior are not runtime verified. The old compile-time per-cgroup switch is superseded by native configuration, not evidence that cgroup pressure is unused.",
+  "validation": "Whole-file transformation and native-function/header identity checks; final emulator compilation/artifacts recorded separately. No OS build, policy build, boot or pressure workload.",
+  "local_resources": [
+    {
+      "repository": "frameworks/base",
+      "pin": "8304f868f2114c6a35c76e21691f3f54c3ee1c4f",
+      "path": "services/core/jni/com_android_server_am_LowMemDetector.cpp",
+      "sha256": "c365d1ddd57401f3059146b46e9ca87759e61c2f09d60e06e2b57540c3983b98"
+    },
+    {
+      "repository": "frameworks/base",
+      "pin": "8304f868f2114c6a35c76e21691f3f54c3ee1c4f",
+      "path": "services/core/java/com/android/server/am/LowMemDetector.java",
+      "sha256": "f09ffeae202f6cb476c871f581aa44ec3df8c31f978f3f8837240332dcdf4c5d"
+    },
+    {
+      "repository": "frameworks/base",
+      "pin": "8304f868f2114c6a35c76e21691f3f54c3ee1c4f",
+      "path": "services/core/java/com/android/server/am/ActivityManagerService.java",
+      "sha256": "3851765b11595887e6b044af93646b3b859363195ce4a5ec19d50b7dc55a8dee"
+    },
+    {
+      "repository": "frameworks/base",
+      "pin": "8304f868f2114c6a35c76e21691f3f54c3ee1c4f",
+      "path": "services/core/java/com/android/server/am/AppProfiler.java",
+      "sha256": "a58e8d011ae44d6745644a30e5d99e70fc1f7be0cd7c24e5e78815f877ccbbfc"
+    },
+    {
+      "repository": "frameworks/base",
+      "pin": "8304f868f2114c6a35c76e21691f3f54c3ee1c4f",
+      "path": "core/java/com/android/internal/os/ZygoteInit.java",
+      "sha256": "a373f6283865b1593c0d7878d06c2542f3cfe29ae4c69b805232f15c809a02ba"
+    },
+    {
+      "repository": "system/core",
+      "pin": "322ff5129d865a5e8d958667e6c63ac943449493",
+      "path": "rootdir/init.rc",
+      "sha256": "71bcc80b5c70f87f1b0c5dcf23be86c15c90c5237e83bce1319b7a35c331b334"
+    },
+    {
+      "repository": "system/sepolicy",
+      "pin": "d0cc2f0daa28f3e8c89afb7f07f1b879581bb676",
+      "path": "private/system_server.te",
+      "sha256": "b941fc1f6f8bbe18ace17989092614f43f921303ff44a16f5b72f781079a513c"
+    },
+    {
+      "repository": "system/sepolicy",
+      "pin": "d0cc2f0daa28f3e8c89afb7f07f1b879581bb676",
+      "path": "private/lmkd.te",
+      "sha256": "74b8889f65cf1ab54cada04503ba7d4ec70fd21bef0c1a13f635944b93565510"
+    },
+    {
+      "repository": "system/sepolicy",
+      "pin": "d0cc2f0daa28f3e8c89afb7f07f1b879581bb676",
+      "path": "private/genfs_contexts",
+      "sha256": "68f4e3a4e80d7916ee54ffe34e97d055b6e29db2aaf08b77874cc92ae5cac2a9"
+    },
+    {
+      "repository": "system/sepolicy",
+      "pin": "d0cc2f0daa28f3e8c89afb7f07f1b879581bb676",
+      "path": "private/virtualizationmanager.te",
+      "sha256": "76cc101f145c6f7aeb8232f8a80a52303e5893f256b7451e6813f4289f6892c2"
+    },
+    {
+      "repository": "system/memory/lmkd",
+      "pin": "c3601e823bd07c9c190f67e2f9bc7486e4978328",
+      "path": "lmkd.cpp",
+      "sha256": "63b6821d591e11536148ab71fd905665575c7679bfbde61b0bacb674cfa20678"
+    },
+    {
+      "repository": "system/memory/lmkd",
+      "pin": "c3601e823bd07c9c190f67e2f9bc7486e4978328",
+      "path": "lmkd.rc",
+      "sha256": "85aa14d9d568e14025c38d7dbd905aaa247b186b56ce7bbbc54d34aad4c3af8b"
+    },
+    {
+      "repository": "system/memory/lmkd",
+      "pin": "c3601e823bd07c9c190f67e2f9bc7486e4978328",
+      "path": "libpsi/psi.cpp",
+      "sha256": "9551c13659dfbc5dff59f1d2d00f4f369eabbf49f0de6989a590d1ccb4cd7e69"
+    }
+  ],
+  "remote_sources_used": []
+}

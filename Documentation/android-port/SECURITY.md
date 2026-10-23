@@ -5522,3 +5522,97 @@ CPU rejection under rq lock, and bandwidth checks under the DL lock. Failed writ
 retain old parameters and do not advance ppos. Zero runtime deliberately disables
 the server and is logged; no safety against starvation is claimed for that setting.
 All work uses supplied local histories; no additional remote resources were used.
+
+# Fair scheduler arithmetic and deferral
+
+`evidence/fair-eevdf-review.json` resolves 16 candidates, including four unique
+merge resolutions and the temporary ABI-driven removal of scheduler fixes. Keep
+the native LTS accumulator naming, wrapped comparisons, slice-protection `first`
+argument, average-invariant reweighting, separate `vlag`/`vprot` fields, and newer
+three-field augmented-tree initialization/copy/rotate corrections. ACK's union
+workaround is unnecessary with the actual LTS field separation; the underlying
+correctness requirement is preserved. All reviewed native helper identities and
+Android integration deltas are recorded individually.
+
+Keep ACK's wider eligibility multiplication. The configured x86_64 uses int128;
+both 64-bit variants pass 4,772 host arithmetic cases against a Python integer
+oracle, while the native LTS control fails 732. Accumulator/current sums are
+constrained to fit s64; synthetic boundary cases are not all established reachable
+scheduler states. This is not proof that every scheduler arithmetic operation is
+bounded, or any runtime fairness/latency result.
+
+Keep ACK's leftmost fallback and NULL guard around the newer native picker. A
+fallback can select an ineligible task; it cannot repair arbitrary queue state
+or establish fairness. If the tree stays empty despite nonempty accounting,
+the caller's retry can still spin. Commit 4f317b026e17 uses the existing
+`printk_deferred_once` helper to suppress sustained diagnostic flooding. Concurrent
+first callers can duplicate the message; this is not an atomic once guarantee.
+The exact SDK failure reproducer is unconfirmed, so no absence-of-need claim is
+made from the newer fixes alone.
+
+Commit 4c34ac46ceef adapts the deadline hook so an expired deadline still advances
+`zero_vruntime` when a callback requests deferred preemption. The original ACK
+early return bypassed the newer LTS 87573883c30f bookkeeping. Preserve the callback's
+false return and unchanged deadline while retaining that fix. Extracted helper
+tests cover 360 twelve-step sequences, including wraparound, a queued competitor,
+custom/default slices and ending deferral: all pass; 208 pre-fix controls fail.
+They model arithmetic/control flow, not kernel scheduling, locks or PELT.
+
+The reweight hook retains its writable weight before native rescaling. Callbacks
+must supply valid positive weights; zero or oversized values can break arithmetic
+and accounting. The restricted deadline hook can still defer indefinitely. These
+are kernel-trusted customization APIs with unconfirmed exact SDK consumers, not
+validated userspace inputs. No latency guarantee or arbitrary-callback safety is
+claimed. All evidence is local; no additional remote resource was used.
+
+# Removed scheduler implementations and surviving source exports
+
+`evidence/scheduler-removed-history-review.json` covers ten historical candidates.
+The batch pause/resume API, two-stage runqueue drain and restored `pick_migrate_task`
+were explicitly reverted in ACK. Full original/revert patches and final ACK/LTS/port
+definitions establish removal; this decision does not rely on an unsuccessful
+consumer search. Keep the native hotplug code and synchronization. The old
+ARM64/preempt-count softirq heuristic is also gone, while the newer configured
+RT_SOFTIRQ_AWARE_SCHED policy remains as documented in the softirq review.
+
+Retain surviving GPL exports for `__migrate_task`, `select_fallback_rq` and
+`stop_one_cpu` for vendor source customization. Their exact SDK module consumers
+remain unconfirmed. Native migration/stop implementations and fallback CPU search
+are preserved; the existing fallback hook is a trusted override. Callers must
+obey task/runqueue locking, CPU validity and stopping-context requirements. No
+userspace permission interface, runtime hotplug result or latency guarantee is
+introduced or claimed. All resources examined were local.
+
+# PSI userspace compatibility and permission tradeoff
+
+`evidence/psi-compatibility-review.json` resolves five candidates. Native
+`cgroup_disable=pressure` and later pressure-file grouping replace the old
+compile-time per-cgroup switch. Keep the current LTS accounting/configuration;
+the actual emulator boot command line is not verified by a kernel build.
+
+There is positive supplied GrapheneOS evidence for one-second PSI windows:
+ActivityManagerService constructs LowMemDetector, whose JNI registers three
+memory-pressure triggers through libpsi. The Zygote capability list omits
+CAP_SYS_RESOURCE, system_server policy expressly forbids that capability, and
+the same policy permits memory-pressure writes. Native unprivileged polling
+accepts only multiples of two seconds, so it would reject these registrations.
+lmkd is another PSI consumer, but already has SYS_RESOURCE and is not evidence
+that the bypass is required. Source repositories/files and pins are in the report.
+
+Retain ACK's DEFAULT_SECURITY_SELINUX alternative to CAP_SYS_RESOURCE. This is
+an intentional permission relaxation for every otherwise permitted proc/cgroup
+PSI writer, not a runtime SELinux-enforcement check. It permits short-window
+polling using the low-priority SCHED_FIFO psimon worker, with added CPU/worker
+resource exposure. Proc mode 0 becomes 0444 in proc_create_reg; Android init
+changes the memory node to system:system 0666, so LSM policy remains material.
+Permissive or disabled enforcement changes the exposure. No exhaustive app-domain
+policy proof, measured resource bound or runtime notification result is claimed.
+
+The complete psi.c is LTS apart from the precisely enumerated permission/mode
+changes and two vendor hook calls/include. Preserve native release/write
+serialization, timer shutdown and kthread creation outside cgroup_mutex. Hook
+arguments are borrowed under the relevant averages/rtpoll mutex; callbacks must
+not retain them or destroy/reenter their list. The event hook precedes cmpxchg
+and does not certify a new wakeup; the group hook runs on each update pass. Exact
+SDK hook consumers remain unconfirmed, so generic source compatibility is kept.
+All examined resources are supplied local sources; no new remote access occurred.
