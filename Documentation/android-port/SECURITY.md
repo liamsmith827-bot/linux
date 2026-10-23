@@ -4377,3 +4377,42 @@ copy is not reintroduced. Old DT include overrides and historical mixed-prefix
 syntax are not required by the selected SDK build. Native DT rules and external
 module documentation remain. Build 103 verifies the actual common/virtual-device
 workflow, not every historical standalone make or out-of-tree DT build mode.
+
+### OverlayFS history and native permission model
+
+`evidence/overlay-history-review.json` records 26 candidate decisions, including
+32 unique resolution hunks from four merges. The five versions of the old
+`override_creds=off` credential bypass were repeatedly removed and restored,
+then finally removed by ACK `8e21ce25c1f9`. Retain the native LTS permission
+model. This decision has positive local userspace evidence: fs_mgr uses
+`mount(2)` and adds `userxattr`; init executes `overlay_remounter`, which remounts
+overlays under a domain with explicit permissions for the underlying partitions
+on debuggable builds. The native `override_creds` flag has a different purpose:
+it records credentials through the new mount API. No Android OS build, remount,
+SELinux policy execution or emulator boot was performed.
+
+The eight xattr-history commits add/remove an extra get-handler flags argument
+and a security-check bypass. The final ACK no longer has that interface. Keep
+native checked overlay xattr calls with mount idmaps, ACL handling and the LTS
+escaped-xattr prefix fix. The review covers all affected callback paths; it does
+not treat unrelated retained changes in those files as part of the removed
+interface. Historical audit-log issues were not reproduced. Embedded bug and
+report links in commit messages were not opened.
+
+LTS overlay source is retained exactly, except for the separately audited VFS
+namespace import in `super.c`. This preserves source-mounter read permission
+checks for cross-superblock copies, linked-dentry tracking after copy-up, the
+casefold error-path reference fix, native backing-file LSM state, and corrected
+lock-order documentation. `d74c6ea9965e` restores the native verity lazy-load guard:
+ACK's guard fix compensates for its hashtable implementation, but this port
+retains native inode-info offsets and `fsverity_active() ==
+(fsverity_get_info() != NULL)`. The original native expression is equivalent
+under those retained semantics and preserves acquire publication.
+
+Merge review also checks the mixed power/LSM/IPsec resolution: native battery
+health values already represent those additions, LOCKDOWN audit data is kept,
+and ESP selects SEQIV through the native central XFRM option. The struct-fd merge
+preserves canonical-path inotify routing alongside the native fd accessor;
+FUSE is a concrete provider. That merge decision does not certify all provider
+runtime behavior. No security callback or permission check is removed by these
+resolutions.
