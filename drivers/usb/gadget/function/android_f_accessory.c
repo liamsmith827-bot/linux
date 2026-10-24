@@ -51,8 +51,15 @@
 /* Maximum number of concurrent AOA‑HID devices*/
 #define MAX_HID_DEVICES 32
 
+/* Include devices awaiting control completion or deferred destruction. */
+#define MAX_HID_ALLOCATIONS (2 * MAX_HID_DEVICES)
+
 struct acc_hid_dev {
 	struct list_head list;
+	struct kref kref;
+	struct work_struct release_work;
+	bool dead;
+	bool initializing;
 	struct hid_device *hid;
 	struct acc_dev *dev;
 	/* accessory defined ID */
@@ -71,6 +78,9 @@ struct acc_dev {
 	spinlock_t lock;
 	struct kref kref;
 	struct work_struct release_work;
+	struct device *device;
+	bool closing;
+	unsigned int hid_count;
 
 	struct usb_ep *ep_in;
 	struct usb_ep *ep_out;
@@ -94,9 +104,6 @@ struct acc_dev {
 	char version[ACC_STRING_SIZE];
 	char uri[ACC_STRING_SIZE];
 	char serial[ACC_STRING_SIZE];
-
-	/* for acc_complete_set_string */
-	int string_index;
 
 	/* set to 1 if we have a pending start request */
 	int start_requested;
@@ -130,6 +137,14 @@ struct acc_dev {
 
 	/* list of dead HID devices to unregister */
 	struct list_head dead_hid_list;
+};
+
+struct acc_control_request {
+	struct acc_dev *dev;
+	struct acc_hid_dev *hid;
+	void (*complete)(struct usb_ep *, struct usb_request *);
+	u16 index;
+	u16 length;
 };
 
 static struct usb_interface_descriptor acc_interface_desc = {
@@ -285,7 +300,8 @@ static struct acc_dev *get_acc_dev(void)
 
 	spin_lock_irqsave(&acc_dev_instance_lock, flags);
 	dev = acc_dev_instance;
-	if (dev && !kref_get_unless_zero(&dev->kref))
+	if (dev && (READ_ONCE(dev->closing) ||
+		    !kref_get_unless_zero(&dev->kref)))
 		dev = NULL;
 	spin_unlock_irqrestore(&acc_dev_instance_lock, flags);
 
@@ -302,6 +318,7 @@ static void acc_dev_release_work(struct work_struct *work)
 	cancel_work_sync(&dev->getprotocol_work);
 	cancel_work_sync(&dev->sendstring_work);
 	cancel_work_sync(&dev->hid_work);
+	put_device(dev->device);
 
 	/* Keep the singleton reserved until its old workers have stopped. */
 	spin_lock_irqsave(&acc_dev_instance_lock, flags);
@@ -320,6 +337,51 @@ static void __acc_dev_instance_release(struct kref *kref)
 static void put_acc_dev(struct acc_dev *dev)
 {
 	kref_put(&dev->kref, __acc_dev_instance_release);
+}
+
+static void acc_hid_release_work(struct work_struct *work)
+{
+	struct acc_hid_dev *hid = container_of(work, struct acc_hid_dev, release_work);
+	struct acc_dev *dev = hid->dev;
+	unsigned long flags;
+
+	if (hid->hid)
+		hid_destroy_device(hid->hid);
+	kfree(hid->report_desc);
+	kfree(hid);
+	spin_lock_irqsave(&dev->lock, flags);
+	dev->hid_count--;
+	spin_unlock_irqrestore(&dev->lock, flags);
+	put_acc_dev(dev);
+}
+
+static void acc_hid_release(struct kref *kref)
+{
+	struct acc_hid_dev *hid = container_of(kref, struct acc_hid_dev, kref);
+
+	schedule_work(&hid->release_work);
+}
+
+static void acc_hid_put(struct acc_hid_dev *hid)
+{
+	kref_put(&hid->kref, acc_hid_release);
+}
+
+static void acc_control_put(struct acc_control_request *control)
+{
+	if (control->hid)
+		acc_hid_put(control->hid);
+	put_acc_dev(control->dev);
+	kfree(control);
+}
+
+static void acc_complete_control(struct usb_ep *ep, struct usb_request *req)
+{
+	struct acc_control_request *control = req->context;
+
+	control->complete(ep, req);
+	req->context = NULL;
+	acc_control_put(control);
 }
 
 static inline struct acc_dev *func_to_dev(struct usb_function *f)
@@ -430,7 +492,8 @@ static void acc_complete_out(struct usb_ep *ep, struct usb_request *req)
 
 static void acc_complete_set_string(struct usb_ep *ep, struct usb_request *req)
 {
-	struct acc_dev *dev = ep->driver_data;
+	struct acc_control_request *control = req->context;
+	struct acc_dev *dev = control->dev;
 	char *string_dest = NULL;
 	int length = req->actual;
 
@@ -439,7 +502,7 @@ static void acc_complete_set_string(struct usb_ep *ep, struct usb_request *req)
 		return;
 	}
 
-	switch (dev->string_index) {
+	switch (control->index) {
 	case ACCESSORY_STRING_MANUFACTURER:
 		string_dest = dev->manufacturer;
 		break;
@@ -466,48 +529,59 @@ static void acc_complete_set_string(struct usb_ep *ep, struct usb_request *req)
 			length = ACC_STRING_SIZE - 1;
 
 		spin_lock_irqsave(&dev->lock, flags);
+		if (dev->closing) {
+			spin_unlock_irqrestore(&dev->lock, flags);
+			return;
+		}
 		memcpy(string_dest, req->buf, length);
 		/* ensure zero termination */
 		string_dest[length] = 0;
 		spin_unlock_irqrestore(&dev->lock, flags);
 	} else {
 		pr_err("unknown accessory string index %d\n",
-			dev->string_index);
+			control->index);
 	}
 }
 
 static void acc_complete_set_hid_report_desc(struct usb_ep *ep,
 		struct usb_request *req)
 {
-	struct acc_hid_dev *hid = req->context;
-	struct acc_dev *dev = hid->dev;
-	int length = req->actual;
+	struct acc_control_request *control = req->context;
+	struct acc_hid_dev *hid = control->hid;
+	struct acc_dev *dev = control->dev;
+	unsigned long flags;
 
-	if (req->status != 0) {
-		pr_err("err %d\n", req->status);
+	if (req->status)
 		return;
-	}
 
-	memcpy(hid->report_desc + hid->report_desc_offset, req->buf, length);
-	hid->report_desc_offset += length;
-	if (hid->report_desc_offset == hid->report_desc_len) {
-		/* After we have received the entire report descriptor
-		 * we schedule work to initialize the HID device
-		 */
-		schedule_work(&dev->hid_work);
+	spin_lock_irqsave(&dev->lock, flags);
+	if (!dev->closing && !hid->dead && !hid->initializing &&
+	    control->index == hid->report_desc_offset &&
+	    req->actual <= control->length &&
+	    req->actual <= hid->report_desc_len - hid->report_desc_offset) {
+		memcpy(hid->report_desc + hid->report_desc_offset,
+		       req->buf, req->actual);
+		hid->report_desc_offset += req->actual;
+		if (hid->report_desc_offset == hid->report_desc_len)
+			schedule_work(&dev->hid_work);
 	}
+	spin_unlock_irqrestore(&dev->lock, flags);
 }
 
 static void acc_complete_send_hid_event(struct usb_ep *ep,
 		struct usb_request *req)
 {
-	struct acc_hid_dev *hid = req->context;
+	struct acc_control_request *control = req->context;
+	struct acc_hid_dev *hid = control->hid;
 	int length = req->actual;
 
 	if (req->status != 0) {
 		pr_err("err %d\n", req->status);
 		return;
 	}
+	if (READ_ONCE(control->dev->closing) || READ_ONCE(hid->dead) ||
+	    req->actual > control->length)
+		return;
 
 	/* Serialize delivery with native HID probe/remove and input quiescing. */
 	hid_safe_input_report(hid->hid, HID_INPUT_REPORT, req->buf, length, length, 1);
@@ -517,8 +591,7 @@ static int acc_hid_parse(struct hid_device *hid)
 {
 	struct acc_hid_dev *hdev = hid->driver_data;
 
-	hid_parse_report(hid, hdev->report_desc, hdev->report_desc_len);
-	return 0;
+	return hid_parse_report(hid, hdev->report_desc, hdev->report_desc_len);
 }
 
 // Required by the hid_ll_driver, so do nothing.
@@ -572,6 +645,10 @@ static struct acc_hid_dev *acc_hid_new(struct acc_dev *dev,
 		kfree(hdev);
 		return NULL;
 	}
+	kref_init(&hdev->kref);
+	INIT_WORK(&hdev->release_work, acc_hid_release_work);
+	kref_get(&dev->kref);
+	dev->hid_count++;
 	hdev->dev = dev;
 	hdev->id = id;
 	hdev->report_desc_len = desc_len;
@@ -603,58 +680,46 @@ static struct acc_hid_dev *acc_hid_get_locked(struct list_head *list, int id)
 	return NULL;
 }
 
+/* Caller holds dev->lock. */
 static int acc_register_hid(struct acc_dev *dev, int id, int desc_length)
 {
-	struct acc_hid_dev *hid;
-	unsigned long flags;
+	struct acc_hid_dev *hid, *old;
 
-	/*
-	 * Report descriptor length must be > 0 and not exceed the maximum size.
-	 * Device ID must be > 0 and within the allowed range.
-	 */
 	if (desc_length <= 0 || desc_length > MAX_HID_DESC_SIZE ||
-			id <= 0 || id > MAX_HID_DEVICES)
+	    id <= 0 || id > MAX_HID_DEVICES)
 		return -EINVAL;
+	if (dev->hid_count >= MAX_HID_ALLOCATIONS)
+		return -EBUSY;
 
-	spin_lock_irqsave(&dev->lock, flags);
-	/* replace HID if one already exists with this ID */
-	hid = acc_hid_get_locked(&dev->hid_list, id);
-	if (!hid)
-		hid = acc_hid_get_locked(&dev->new_hid_list, id);
-	if (hid)
-		list_move(&hid->list, &dev->dead_hid_list);
-
+	/* Do not retire a working device if replacement allocation fails. */
 	hid = acc_hid_new(dev, id, desc_length);
-	if (!hid) {
-		spin_unlock_irqrestore(&dev->lock, flags);
+	if (!hid)
 		return -ENOMEM;
+	old = acc_hid_get_locked(&dev->hid_list, id);
+	if (!old)
+		old = acc_hid_get_locked(&dev->new_hid_list, id);
+	if (old) {
+		WRITE_ONCE(old->dead, true);
+		list_move(&old->list, &dev->dead_hid_list);
 	}
-
 	list_add(&hid->list, &dev->new_hid_list);
-	spin_unlock_irqrestore(&dev->lock, flags);
-
-	/* schedule work to register the HID device */
 	schedule_work(&dev->hid_work);
 	return 0;
 }
 
+/* Caller holds dev->lock. */
 static int acc_unregister_hid(struct acc_dev *dev, int id)
 {
 	struct acc_hid_dev *hid;
-	unsigned long flags;
 
-	spin_lock_irqsave(&dev->lock, flags);
 	hid = acc_hid_get_locked(&dev->hid_list, id);
 	if (!hid)
 		hid = acc_hid_get_locked(&dev->new_hid_list, id);
-	if (!hid) {
-		spin_unlock_irqrestore(&dev->lock, flags);
+	if (!hid)
 		return -EINVAL;
-	}
 
+	WRITE_ONCE(hid->dead, true);
 	list_move(&hid->list, &dev->dead_hid_list);
-	spin_unlock_irqrestore(&dev->lock, flags);
-
 	schedule_work(&dev->hid_work);
 	return 0;
 }
@@ -1068,11 +1133,13 @@ static void kill_all_hid_devices(struct acc_dev *dev)
 	spin_lock_irqsave(&dev->lock, flags);
 	list_for_each_safe(entry, temp, &dev->hid_list) {
 		hid = list_entry(entry, struct acc_hid_dev, list);
+		WRITE_ONCE(hid->dead, true);
 		list_del(&hid->list);
 		list_add(&hid->list, &dev->dead_hid_list);
 	}
 	list_for_each_safe(entry, temp, &dev->new_hid_list) {
 		hid = list_entry(entry, struct acc_hid_dev, list);
+		WRITE_ONCE(hid->dead, true);
 		list_del(&hid->list);
 		list_add(&hid->list, &dev->dead_hid_list);
 	}
@@ -1103,23 +1170,26 @@ static void acc_function_unbind(struct usb_configuration *c,
 
 static void acc_getprotocol_work(struct work_struct *data)
 {
+	struct acc_dev *dev = container_of(data, struct acc_dev, getprotocol_work);
 	char *envp[2] = { "ACCESSORY=GETPROTOCOL", NULL };
 
-	kobject_uevent_env(&acc_device.this_device->kobj, KOBJ_CHANGE, envp);
+	kobject_uevent_env(&dev->device->kobj, KOBJ_CHANGE, envp);
 }
 
 static void acc_sendstring_work(struct work_struct *data)
 {
+	struct acc_dev *dev = container_of(data, struct acc_dev, sendstring_work);
 	char *envp[2] = { "ACCESSORY=SENDSTRING", NULL };
 
-	kobject_uevent_env(&acc_device.this_device->kobj, KOBJ_CHANGE, envp);
+	kobject_uevent_env(&dev->device->kobj, KOBJ_CHANGE, envp);
 }
 
 static void acc_start_work(struct work_struct *data)
 {
+	struct acc_dev *dev = container_of(data, struct acc_dev, start_work.work);
 	char *envp[2] = { "ACCESSORY=START", NULL };
 
-	kobject_uevent_env(&acc_device.this_device->kobj, KOBJ_CHANGE, envp);
+	kobject_uevent_env(&dev->device->kobj, KOBJ_CHANGE, envp);
 }
 
 static int acc_hid_init(struct acc_hid_dev *hdev)
@@ -1132,7 +1202,7 @@ static int acc_hid_init(struct acc_hid_dev *hdev)
 		return PTR_ERR(hid);
 
 	hid->ll_driver = &acc_hid_ll_driver;
-	hid->dev.parent = acc_device.this_device;
+	hid->dev.parent = hdev->dev->device;
 
 	hid->bus = BUS_USB;
 	hid->vendor = HID_ANY_ID;
@@ -1149,70 +1219,55 @@ static int acc_hid_init(struct acc_hid_dev *hdev)
 	return 0;
 }
 
-static void acc_hid_delete(struct acc_hid_dev *hid)
-{
-	kfree(hid->report_desc);
-	kfree(hid);
-}
-
 static void acc_hid_work(struct work_struct *data)
 {
-	struct acc_dev *dev = get_acc_dev();
-	struct list_head *entry, *temp;
-	struct acc_hid_dev *hid;
-	struct list_head new_list, dead_list;
+	struct acc_dev *dev = container_of(data, struct acc_dev, hid_work);
+	struct acc_hid_dev *hid, *next;
 	unsigned long flags;
+	int ret;
 
-	if (!dev)
-		return;
-
-	INIT_LIST_HEAD(&new_list);
-
-	spin_lock_irqsave(&dev->lock, flags);
-
-	/* copy hids that are ready for initialization to new_list */
-	list_for_each_safe(entry, temp, &dev->new_hid_list) {
-		hid = list_entry(entry, struct acc_hid_dev, list);
-		if (hid->report_desc_offset == hid->report_desc_len)
-			list_move(&hid->list, &new_list);
-	}
-
-	if (list_empty(&dev->dead_hid_list)) {
-		INIT_LIST_HEAD(&dead_list);
-	} else {
-		/* move all of dev->dead_hid_list to dead_list */
-		dead_list.prev = dev->dead_hid_list.prev;
-		dead_list.next = dev->dead_hid_list.next;
-		dead_list.next->prev = &dead_list;
-		dead_list.prev->next = &dead_list;
-		INIT_LIST_HEAD(&dev->dead_hid_list);
-	}
-
-	spin_unlock_irqrestore(&dev->lock, flags);
-
-	/* register new HID devices */
-	list_for_each_safe(entry, temp, &new_list) {
-		hid = list_entry(entry, struct acc_hid_dev, list);
-		if (acc_hid_init(hid)) {
-			pr_err("can't add HID device %p\n", hid);
-			acc_hid_delete(hid);
-		} else {
-			spin_lock_irqsave(&dev->lock, flags);
-			list_move(&hid->list, &dev->hid_list);
+	for (;;) {
+		spin_lock_irqsave(&dev->lock, flags);
+		if (!list_empty(&dev->dead_hid_list)) {
+			hid = list_first_entry(&dev->dead_hid_list,
+					       struct acc_hid_dev, list);
+			list_del_init(&hid->list);
 			spin_unlock_irqrestore(&dev->lock, flags);
+			acc_hid_put(hid);
+			continue;
 		}
-	}
 
-	/* remove dead HID devices */
-	list_for_each_safe(entry, temp, &dead_list) {
-		hid = list_entry(entry, struct acc_hid_dev, list);
-		list_del(&hid->list);
-		if (hid->hid)
-			hid_destroy_device(hid->hid);
-		acc_hid_delete(hid);
-	}
+		hid = NULL;
+		list_for_each_entry(next, &dev->new_hid_list, list) {
+			if (next->report_desc_offset == next->report_desc_len) {
+				hid = next;
+				break;
+			}
+		}
+		if (!hid) {
+			spin_unlock_irqrestore(&dev->lock, flags);
+			break;
+		}
+		/* Stay visible to disconnect and ID replacement during init. */
+		hid->initializing = true;
+		kref_get(&hid->kref);
+		spin_unlock_irqrestore(&dev->lock, flags);
 
-	put_acc_dev(dev);
+		ret = acc_hid_init(hid);
+
+		spin_lock_irqsave(&dev->lock, flags);
+		hid->initializing = false;
+		if (!hid->dead) {
+			if (ret) {
+				WRITE_ONCE(hid->dead, true);
+				list_move(&hid->list, &dev->dead_hid_list);
+			} else {
+				list_move(&hid->list, &dev->hid_list);
+			}
+		}
+		spin_unlock_irqrestore(&dev->lock, flags);
+		acc_hid_put(hid);
+	}
 }
 
 static int acc_function_set_alt(struct usb_function *f,
@@ -1305,6 +1360,8 @@ static int acc_init(void)
 	if (ret)
 		goto err_free_dev;
 
+	dev->device = get_device(acc_device.this_device);
+
 	/* A failed registration must never expose an object to get_acc_dev(). */
 	spin_lock_irqsave(&acc_dev_instance_lock, flags);
 	acc_dev_instance = dev;
@@ -1337,7 +1394,18 @@ void android_acc_disconnect(void)
 static void acc_cleanup(void)
 {
 	struct acc_dev *dev = get_acc_dev();
+	unsigned long flags;
 
+	spin_lock_irqsave(&dev->lock, flags);
+	WRITE_ONCE(dev->closing, true);
+	spin_unlock_irqrestore(&dev->lock, flags);
+
+	/* Every control producer checks closing under dev->lock. */
+	cancel_delayed_work_sync(&dev->start_work);
+	cancel_work_sync(&dev->getprotocol_work);
+	cancel_work_sync(&dev->sendstring_work);
+	kill_all_hid_devices(dev);
+	flush_work(&dev->hid_work);
 	misc_deregister(&acc_device);
 	put_acc_dev(dev);
 	put_acc_dev(dev); /* Pairs with kref_init() in acc_init() */
@@ -1396,6 +1464,7 @@ static void acc_free_inst(struct usb_function_instance *fi)
 	fi_acc = to_fi_acc(fi);
 	kfree(fi_acc->name);
 	acc_cleanup();
+	kfree(fi_acc);
 }
 
 static struct usb_function_instance *acc_alloc_inst(void)
@@ -1481,7 +1550,7 @@ static int __acc_setup(struct usb_composite_dev *cdev,
 	struct acc_dev *dev = get_acc_dev();
 	int value = -EOPNOTSUPP;
 	struct acc_hid_dev *hid;
-	int offset;
+	struct acc_control_request *control;
 	u8 bRequestType = ctrl->bRequestType;
 	u8 bRequest = ctrl->bRequest;
 	u16 wIndex = le16_to_cpu(ctrl->wIndex);
@@ -1496,6 +1565,25 @@ static int __acc_setup(struct usb_composite_dev *cdev,
 	if (!dev)
 		return -ENODEV;
 
+	control = kzalloc(sizeof(*control), GFP_ATOMIC);
+	if (!control) {
+		put_acc_dev(dev);
+		return -ENOMEM;
+	}
+	control->dev = dev;
+	control->index = wIndex;
+	control->length = wLength;
+	/* Separate setup and queued-completion ownership. */
+	kref_get(&dev->kref);
+	cdev->req->context = control;
+	cdev->req->complete = acc_complete_setup_noop;
+
+	spin_lock_irqsave(&dev->lock, flags);
+	if (dev->closing) {
+		value = -ENODEV;
+		goto unlock;
+	}
+
 	if (bRequestType == (USB_DIR_OUT | USB_TYPE_VENDOR)) {
 		if (bRequest == ACCESSORY_START) {
 			dev->start_requested = 1;
@@ -1505,8 +1593,6 @@ static int __acc_setup(struct usb_composite_dev *cdev,
 			cdev->req->complete = acc_complete_setup_noop;
 		} else if (bRequest == ACCESSORY_SEND_STRING) {
 			schedule_work(&dev->sendstring_work);
-			dev->string_index = wIndex;
-			cdev->gadget->ep0->driver_data = dev;
 			cdev->req->complete = acc_complete_set_string;
 			value = wLength;
 		} else if (bRequest == ACCESSORY_SET_AUDIO_MODE &&
@@ -1521,31 +1607,28 @@ static int __acc_setup(struct usb_composite_dev *cdev,
 			cdev->req->complete = acc_complete_setup_noop;
 			value = acc_unregister_hid(dev, wValue);
 		} else if (bRequest == ACCESSORY_SET_HID_REPORT_DESC) {
-			spin_lock_irqsave(&dev->lock, flags);
 			hid = acc_hid_get_locked(&dev->new_hid_list, wValue);
-			spin_unlock_irqrestore(&dev->lock, flags);
 			if (!hid) {
 				value = -EINVAL;
-				goto err;
+				goto unlock;
 			}
-			offset = wIndex;
-			if (offset != hid->report_desc_offset
-				|| offset + wLength > hid->report_desc_len) {
+			if (hid->initializing || wIndex != hid->report_desc_offset ||
+			    wIndex + wLength > hid->report_desc_len) {
 				value = -EINVAL;
-				goto err;
+				goto unlock;
 			}
-			cdev->req->context = hid;
+			kref_get(&hid->kref);
+			control->hid = hid;
 			cdev->req->complete = acc_complete_set_hid_report_desc;
 			value = wLength;
 		} else if (bRequest == ACCESSORY_SEND_HID_EVENT) {
-			spin_lock_irqsave(&dev->lock, flags);
 			hid = acc_hid_get_locked(&dev->hid_list, wValue);
-			spin_unlock_irqrestore(&dev->lock, flags);
 			if (!hid) {
 				value = -EINVAL;
-				goto err;
+				goto unlock;
 			}
-			cdev->req->context = hid;
+			kref_get(&hid->kref);
+			control->hid = hid;
 			cdev->req->complete = acc_complete_send_hid_event;
 			value = wLength;
 		}
@@ -1568,7 +1651,11 @@ static int __acc_setup(struct usb_composite_dev *cdev,
 		}
 	}
 
+unlock:
+	spin_unlock_irqrestore(&dev->lock, flags);
 	if (value >= 0) {
+		control->complete = cdev->req->complete;
+		cdev->req->complete = acc_complete_control;
 		cdev->req->zero = 0;
 		cdev->req->length = value;
 		value = usb_ep_queue(cdev->gadget->ep0, cdev->req, GFP_ATOMIC);
@@ -1576,7 +1663,11 @@ static int __acc_setup(struct usb_composite_dev *cdev,
 			ERROR(cdev, "setup response queue error\n");
 	}
 
-err:
+	if (value < 0) {
+		cdev->req->context = NULL;
+		cdev->req->complete = acc_complete_setup_noop;
+		acc_control_put(control);
+	}
 	if (value == -EOPNOTSUPP)
 		DBG(cdev,
 		"unknown class-specific ctrl req %02x.%02x v%04x i%04x l%u\n",
