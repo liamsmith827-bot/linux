@@ -7672,3 +7672,47 @@ The separate DWC3 SUSPHY revert/reapply pair is resolved by positive native
 history: 9cfb31e4c89d guards register access when already runtime suspended and
 moves it before core exit. Complete DWC3 core source/header remain native, with
 that correction and later fixes; neither historical intermediate state is used.
+
+## Release generation and compiler configuration history
+
+The 32 decisions in `evidence/build-config-history-review.json` account for
+historical release-script arguments, eight nonempty merge resolutions, and
+compiler/configuration changes. Final ACK explicitly retired the script-side
+Android/KMI arguments and BUILD_NUMBER suffix. The current script equals final
+ACK and retains native release-tag ancestry checks and read-only Git inspection;
+its sole difference from LTS is the three object-tree configuration lookups in
+6cb31ee26a30. Existing Kleaf generates localversion metadata. Build164's
+`6.18.57-maybe-dirty` is its non-stamped release format, not evidence of an
+uncommitted source change or a historical vendor KMI guarantee.
+
+Keep native linker detection, user-program compiler/linker flags, and symbol
+whitelist processing. Symbol trimming remains disabled for the SDK's separately
+built modules. Module export protection does not force automatic signing, but
+the SDK configuration explicitly enables it and all 145 generated module
+signatures were verified. WERROR remains enabled by default and in build164.
+UAPI_HEADER_TEST was explicitly dropped later in ACK because of Bionic/NDK
+header-test incompatibility; it is disabled in the generated SDK configuration.
+Header installation remains enabled. The native CC_CAN_LINK prerequisite is
+retained and evaluates true; no successful UAPI header compile test is claimed.
+
+The Rust Kconfig stanza and CFI integer-normalization gates match pinned LTS,
+including the corrected LLVM 19.1.3 floor, Rust architecture gate, RETHUNK/KASAN
+minimum, and KASAN-requires-Clang check. The SDK uses final ACK's Rust 1.91.1.p3.
+The software-tag KASAN relaxation enables an ARM64-only mode and is omitted for
+this x86_64 target; native sanitizer flags remain intact. Removing two obsolete
+Makefile comments in the imported state has no executable effect.
+
+Retain the generic GKI hidden-dependency framework and unconditional inclusion;
+individual selections remain subject to the separate SDK dependency review.
+Proxy execution and sched_ext coexistence remain selectable with PREEMPT_RT
+excluded. The earlier donor-chain, locking and scx lifecycle/callback reviews
+cover the supporting implementation; a Kconfig relaxation alone would not
+establish correctness. Build164 enables both, without runtime stress validation.
+
+Retain command-line log wrapping with the added helper/macros identical to ACK.
+Only log formatting changes: saved_command_line and native parameter parsing
+remain intact. Splitting ignores quotes, can compress separating spaces, and
+cannot prevent truncation of an individual unsplittable long token. It is not a
+redaction mechanism. No emulator boot or log-consumer runtime test was performed.
+All evidence in this review comes from the pinned local histories and completed
+build; commit-message links were not opened and no remote source was added.
