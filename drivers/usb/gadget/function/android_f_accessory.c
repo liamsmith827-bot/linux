@@ -22,6 +22,7 @@
 #include <linux/file.h>
 #include <linux/device.h>
 #include <linux/miscdevice.h>
+#include <linux/mutex.h>
 
 #include <linux/hid.h>
 #include <linux/hiddev.h>
@@ -76,6 +77,12 @@ struct acc_dev {
 	struct usb_function function;
 	struct usb_composite_dev *cdev;
 	spinlock_t lock;
+	/* Endpoint operations use a separate lock: completions take lock. */
+	spinlock_t io_lock;
+	struct mutex read_mutex;
+	struct mutex write_mutex;
+	bool unbinding;
+	bool function_allocated;
 	struct kref kref;
 	struct work_struct release_work;
 	struct device *device;
@@ -116,6 +123,8 @@ struct acc_dev {
 	wait_queue_head_t write_wq;
 	struct usb_request *rx_req[RX_REQ_MAX];
 	int rx_done;
+	/* Protected by read_mutex, including across interrupted reads. */
+	bool rx_pending;
 
 	/* delayed work for handling ACCESSORY_START */
 	struct delayed_work start_work;
@@ -457,37 +466,31 @@ static void acc_free_all_requests(struct acc_dev *dev)
 
 static void acc_complete_in(struct usb_ep *ep, struct usb_request *req)
 {
-	struct acc_dev *dev = get_acc_dev();
-
-	if (!dev)
-		return;
+	struct acc_dev *dev = req->context;
 
 	if (req->status == -ESHUTDOWN) {
 		pr_debug("set disconnected\n");
-		dev->disconnected = true;
+		WRITE_ONCE(dev->disconnected, true);
+		wake_up(&dev->read_wq);
 	}
 
 	req_put(dev, &dev->tx_idle, req);
 
 	wake_up(&dev->write_wq);
-	put_acc_dev(dev);
 }
 
 static void acc_complete_out(struct usb_ep *ep, struct usb_request *req)
 {
-	struct acc_dev *dev = get_acc_dev();
+	struct acc_dev *dev = req->context;
 
-	if (!dev)
-		return;
-
-	dev->rx_done = 1;
 	if (req->status == -ESHUTDOWN) {
 		pr_debug("set disconnected\n");
-		dev->disconnected = true;
+		WRITE_ONCE(dev->disconnected, true);
+		wake_up(&dev->write_wq);
 	}
 
+	smp_store_release(&dev->rx_done, 1);
 	wake_up(&dev->read_wq);
-	put_acc_dev(dev);
 }
 
 static void acc_complete_set_string(struct usb_ep *ep, struct usb_request *req)
@@ -758,6 +761,7 @@ static int create_bulk_endpoints(struct acc_dev *dev,
 		req = acc_request_new(dev->ep_in, BULK_BUFFER_SIZE);
 		if (!req)
 			goto fail;
+		req->context = dev;
 		req->complete = acc_complete_in;
 		req_put(dev, &dev->tx_idle, req);
 	}
@@ -765,6 +769,7 @@ static int create_bulk_endpoints(struct acc_dev *dev,
 		req = acc_request_new(dev->ep_out, BULK_BUFFER_SIZE);
 		if (!req)
 			goto fail;
+		req->context = dev;
 		req->complete = acc_complete_out;
 		dev->rx_req[i] = req;
 	}
@@ -783,92 +788,82 @@ static ssize_t acc_read(struct file *fp, char __user *buf,
 {
 	struct acc_dev *dev = fp->private_data;
 	struct usb_request *req;
-	ssize_t r = count;
-	ssize_t data_length;
-	unsigned int xfer;
-	int ret = 0;
+	unsigned long flags;
+	ssize_t ret;
+	unsigned int xfer, data_length;
 
-	if (dev->disconnected) {
-		pr_debug("disconnected\n");
-		return -ENODEV;
-	}
-
+	if (!count)
+		return 0;
 	if (count > BULK_BUFFER_SIZE)
 		count = BULK_BUFFER_SIZE;
+	ret = mutex_lock_interruptible(&dev->read_mutex);
+	if (ret)
+		return ret;
 
-	/* we will block until we're online */
-	pr_debug("waiting for online\n");
-	ret = wait_event_interruptible(dev->read_wq, dev->online);
-	if (ret < 0) {
-		r = ret;
+	ret = wait_event_interruptible(dev->read_wq,
+		READ_ONCE(dev->online) || READ_ONCE(dev->disconnected) ||
+		READ_ONCE(dev->unbinding) || READ_ONCE(dev->closing));
+	if (ret)
 		goto done;
+
+retry:
+	spin_lock_irqsave(&dev->io_lock, flags);
+	if (!dev->online || READ_ONCE(dev->disconnected) ||
+	    READ_ONCE(dev->unbinding) || READ_ONCE(dev->closing)) {
+		ret = -ENODEV;
+		goto unlock;
 	}
-
-	if (!dev->rx_req[0]) {
-		pr_debug("USB request already handled/freed\n");
-		r = -EINVAL;
-		goto done;
-	}
-
-	/*
-	 * Calculate the data length by considering termination character.
-	 * Then compansite the difference of rounding up to
-	 * integer multiple of maxpacket size.
-	 */
-	data_length = count;
-	data_length += dev->ep_out->maxpacket - 1;
-	data_length -= data_length % dev->ep_out->maxpacket;
-
-	if (dev->rx_done) {
-		// last req cancelled. try to get it.
-		req = dev->rx_req[0];
-		goto copy_data;
-	}
-
-requeue_req:
-	/* queue a request */
 	req = dev->rx_req[0];
-	req->length = data_length;
-	dev->rx_done = 0;
-	ret = usb_ep_queue(dev->ep_out, req, GFP_KERNEL);
-	if (ret < 0) {
-		r = -EIO;
-		goto done;
-	} else {
-		pr_debug("rx %p queue\n", req);
+	if (!req) {
+		ret = -ENODEV;
+		goto unlock;
 	}
-
-	/* wait for a request to complete */
-	ret = wait_event_interruptible(dev->read_wq, dev->rx_done);
-	if (ret < 0) {
-		r = ret;
-		ret = usb_ep_dequeue(dev->ep_out, req);
-		if (ret != 0) {
-			// cancel failed. There can be a data already received.
-			// it will be retrieved in the next read.
-			pr_debug("cancelling failed %d\n", ret);
+	if (!dev->rx_pending) {
+		data_length = round_up(count, dev->ep_out->maxpacket);
+		if (data_length > BULK_BUFFER_SIZE) {
+			ret = -EINVAL;
+			goto unlock;
 		}
+		req->length = data_length;
+		WRITE_ONCE(dev->rx_done, 0);
+		ret = usb_ep_queue(dev->ep_out, req, GFP_ATOMIC);
+		if (ret)
+			goto unlock;
+		dev->rx_pending = true;
+	}
+	spin_unlock_irqrestore(&dev->io_lock, flags);
+
+	ret = wait_event_interruptible(dev->read_wq,
+		smp_load_acquire(&dev->rx_done) || !READ_ONCE(dev->online) ||
+		READ_ONCE(dev->disconnected) || READ_ONCE(dev->unbinding) ||
+		READ_ONCE(dev->closing));
+	if (ret || !smp_load_acquire(&dev->rx_done)) {
+		/* Dequeue is asynchronous: retain pending ownership for next read. */
+		spin_lock_irqsave(&dev->io_lock, flags);
+		if (!smp_load_acquire(&dev->rx_done))
+			usb_ep_dequeue(dev->ep_out, req);
+		spin_unlock_irqrestore(&dev->io_lock, flags);
+		if (!ret)
+			ret = -ENODEV;
 		goto done;
 	}
-
-copy_data:
-	dev->rx_done = 0;
-	if (dev->online) {
-		/* If we got a 0-len packet, throw it back and try again. */
-		if (req->actual == 0)
-			goto requeue_req;
-
-		pr_debug("rx %p %u\n", req, req->actual);
-		xfer = (req->actual < count) ? req->actual : count;
-		r = xfer;
-		if (copy_to_user(buf, req->buf, xfer))
-			r = -EFAULT;
-	} else
-		r = -EIO;
-
+	dev->rx_pending = false;
+	if (req->status) {
+		ret = req->status;
+		goto done;
+	}
+	if (!req->actual)
+		goto retry;
+	xfer = min_t(size_t, req->actual, count);
+	ret = xfer;
+	if (copy_to_user(buf, req->buf, xfer))
+		ret = -EFAULT;
+	goto done;
+unlock:
+	spin_unlock_irqrestore(&dev->io_lock, flags);
 done:
-	pr_debug("returning %zd\n", r);
-	return r;
+	mutex_unlock(&dev->read_mutex);
+	return ret;
 }
 
 static ssize_t acc_write(struct file *fp, const char __user *buf,
@@ -879,18 +874,30 @@ static ssize_t acc_write(struct file *fp, const char __user *buf,
 	ssize_t r = count;
 	unsigned int xfer;
 	int ret;
+	unsigned long flags;
 
-	if (!dev->online || dev->disconnected) {
+	if (!count)
+		return 0;
+	ret = mutex_lock_interruptible(&dev->write_mutex);
+	if (ret)
+		return ret;
+
+	if (!READ_ONCE(dev->online) || READ_ONCE(dev->disconnected) ||
+	    READ_ONCE(dev->unbinding) || READ_ONCE(dev->closing)) {
 		pr_debug("disconnected or not online\n");
-		return -ENODEV;
+		r = -ENODEV;
+		goto done;
 	}
 
 	while (count > 0) {
 		/* get an idle tx request to use */
 		req = 0;
 		ret = wait_event_interruptible(dev->write_wq,
-			((req = req_get(dev, &dev->tx_idle)) || !dev->online));
-		if (!dev->online || dev->disconnected) {
+			(!READ_ONCE(dev->online) || READ_ONCE(dev->disconnected) ||
+			 READ_ONCE(dev->unbinding) || READ_ONCE(dev->closing) ||
+			 (req = req_get(dev, &dev->tx_idle))));
+		if (!READ_ONCE(dev->online) || READ_ONCE(dev->disconnected) ||
+		    READ_ONCE(dev->unbinding) || READ_ONCE(dev->closing)) {
 			pr_debug("dev->error\n");
 			r = -EIO;
 			break;
@@ -910,7 +917,7 @@ static ssize_t acc_write(struct file *fp, const char __user *buf,
 			/* If the data length is a multiple of the
 			 * maxpacket size then send a zero length packet(ZLP).
 			 */
-			req->zero = ((xfer % dev->ep_in->maxpacket) == 0);
+			req->zero = 1;
 		}
 		if (copy_from_user(req->buf, buf, xfer)) {
 			r = -EFAULT;
@@ -918,7 +925,15 @@ static ssize_t acc_write(struct file *fp, const char __user *buf,
 		}
 
 		req->length = xfer;
-		ret = usb_ep_queue(dev->ep_in, req, GFP_KERNEL);
+		spin_lock_irqsave(&dev->io_lock, flags);
+		if (!dev->online || READ_ONCE(dev->disconnected) ||
+		    READ_ONCE(dev->unbinding) || READ_ONCE(dev->closing))
+			ret = -ENODEV;
+		else {
+			req->zero = req->zero && !(xfer % dev->ep_in->maxpacket);
+			ret = usb_ep_queue(dev->ep_in, req, GFP_ATOMIC);
+		}
+		spin_unlock_irqrestore(&dev->io_lock, flags);
 		if (ret < 0) {
 			pr_debug("xfer error %d\n", ret);
 			r = -EIO;
@@ -935,6 +950,8 @@ static ssize_t acc_write(struct file *fp, const char __user *buf,
 	if (req)
 		req_put(dev, &dev->tx_idle, req);
 
+done:
+	mutex_unlock(&dev->write_mutex);
 	pr_debug("returning %zd\n", r);
 	return r;
 }
@@ -943,6 +960,8 @@ static long acc_ioctl(struct file *fp, unsigned int code, unsigned long value)
 {
 	struct acc_dev *dev = fp->private_data;
 	char *src = NULL;
+	char value_buf[ACC_STRING_SIZE];
+	unsigned long flags;
 	int ret;
 
 	switch (code) {
@@ -965,15 +984,19 @@ static long acc_ioctl(struct file *fp, unsigned int code, unsigned long value)
 		src = dev->serial;
 		break;
 	case ACCESSORY_IS_START_REQUESTED:
-		return dev->start_requested;
+		return READ_ONCE(dev->start_requested);
 	case ACCESSORY_GET_AUDIO_MODE:
-		return dev->audio_mode;
+		return READ_ONCE(dev->audio_mode);
 	}
 	if (!src)
 		return -ENOTTY;
 
-	ret = strlen(src) + 1;
-	if (copy_to_user((void __user *)value, src, ret))
+	spin_lock_irqsave(&dev->lock, flags);
+	memcpy(value_buf, src, sizeof(value_buf));
+	spin_unlock_irqrestore(&dev->lock, flags);
+	ret = strnlen(value_buf, sizeof(value_buf) - 1) + 1;
+	value_buf[ret - 1] = '\0';
+	if (copy_to_user((void __user *)value, value_buf, ret))
 		ret = -EFAULT;
 	return ret;
 }
@@ -985,7 +1008,7 @@ static int acc_open(struct inode *ip, struct file *fp)
 	if (!dev)
 		return -ENODEV;
 
-	dev->disconnected = false;
+	WRITE_ONCE(dev->disconnected, false);
 	fp->private_data = dev;
 	return 0;
 }
@@ -1000,7 +1023,9 @@ static int acc_release(struct inode *ip, struct file *fp)
 	/* indicate that we are disconnected
 	 * still could be online so don't touch online flag
 	 */
-	dev->disconnected = true;
+	WRITE_ONCE(dev->disconnected, true);
+	wake_up(&dev->read_wq);
+	wake_up(&dev->write_wq);
 
 	fp->private_data = NULL;
 	put_acc_dev(dev);
@@ -1072,6 +1097,7 @@ static int __acc_function_bind(struct usb_configuration *c,
 		acc_interface_desc.iInterface = ret;
 		dev->cdev = c->cdev;
 	}
+	WRITE_ONCE(dev->unbinding, false);
 	dev->start_requested = 0;
 
 	/* allocate interface ID(s) */
@@ -1154,17 +1180,35 @@ static void acc_hid_unbind(struct acc_dev *dev)
 	kill_all_hid_devices(dev);
 }
 
+static void acc_function_disable(struct usb_function *f)
+{
+	struct acc_dev *dev = func_to_dev(f);
+	unsigned long flags;
+
+	spin_lock_irqsave(&dev->io_lock, flags);
+	WRITE_ONCE(dev->disconnected, true);
+	WRITE_ONCE(dev->online, false);
+	usb_ep_disable(dev->ep_in);
+	usb_ep_disable(dev->ep_out);
+	spin_unlock_irqrestore(&dev->io_lock, flags);
+	wake_up(&dev->read_wq);
+	wake_up(&dev->write_wq);
+}
+
 static void acc_function_unbind(struct usb_configuration *c,
 		struct usb_function *f)
 {
 	struct acc_dev *dev = func_to_dev(f);
 
-	dev->online = false;		/* clear online flag */
-	wake_up(&dev->read_wq);		/* unblock reads on closure */
-	wake_up(&dev->write_wq);	/* likewise for writes */
-
+	WRITE_ONCE(dev->unbinding, true);
+	acc_function_disable(f);
+	/* Disable completes queued requests; wait for users of their buffers. */
+	mutex_lock(&dev->read_mutex);
+	mutex_lock(&dev->write_mutex);
 	acc_free_all_requests(dev);
-
+	dev->rx_pending = false;
+	mutex_unlock(&dev->write_mutex);
+	mutex_unlock(&dev->read_mutex);
 	acc_hid_unbind(dev);
 }
 
@@ -1275,51 +1319,36 @@ static int acc_function_set_alt(struct usb_function *f,
 {
 	struct acc_dev *dev = func_to_dev(f);
 	struct usb_composite_dev *cdev = f->config->cdev;
+	unsigned long flags;
 	int ret;
 
-	DBG(cdev, "intf: %d alt: %d\n", intf, alt);
-
+	acc_function_disable(f);
+	spin_lock_irqsave(&dev->io_lock, flags);
 	ret = config_ep_by_speed(cdev->gadget, f, dev->ep_in);
 	if (ret)
-		return ret;
-
+		goto out;
 	ret = usb_ep_enable(dev->ep_in);
 	if (ret)
-		return ret;
-
+		goto out;
 	ret = config_ep_by_speed(cdev->gadget, f, dev->ep_out);
 	if (ret)
-		return ret;
-
+		goto disable_in;
 	ret = usb_ep_enable(dev->ep_out);
-	if (ret) {
-		usb_ep_disable(dev->ep_in);
-		return ret;
-	}
+	if (ret)
+		goto disable_in;
 
-	dev->online = true;
-	dev->disconnected = false; /* if online then not disconnected */
-
-	/* readers may be blocked waiting for us to go online */
-	wake_up(&dev->read_wq);
-	return 0;
-}
-
-static void acc_function_disable(struct usb_function *f)
-{
-	struct acc_dev *dev = func_to_dev(f);
-	struct usb_composite_dev *cdev = dev->cdev;
-
-	dev->disconnected = true;
-	dev->online = false; /* so now need to clear online flag here too */
+	WRITE_ONCE(dev->online, true);
+	WRITE_ONCE(dev->disconnected, false);
+	goto out;
+disable_in:
 	usb_ep_disable(dev->ep_in);
-	usb_ep_disable(dev->ep_out);
-
-	/* readers may be blocked waiting for us to go online */
+out:
+	spin_unlock_irqrestore(&dev->io_lock, flags);
 	wake_up(&dev->read_wq);
-
-	DBG(cdev, "%s disabled\n", dev->function.name);
+	wake_up(&dev->write_wq);
+	return ret;
 }
+
 
 static int acc_init(void)
 {
@@ -1342,6 +1371,9 @@ static int acc_init(void)
 	}
 
 	spin_lock_init(&dev->lock);
+	spin_lock_init(&dev->io_lock);
+	mutex_init(&dev->read_mutex);
+	mutex_init(&dev->write_mutex);
 	init_waitqueue_head(&dev->read_wq);
 	init_waitqueue_head(&dev->write_wq);
 	INIT_LIST_HEAD(&dev->tx_idle);
@@ -1398,7 +1430,11 @@ static void acc_cleanup(void)
 
 	spin_lock_irqsave(&dev->lock, flags);
 	WRITE_ONCE(dev->closing, true);
+	WRITE_ONCE(dev->disconnected, true);
 	spin_unlock_irqrestore(&dev->lock, flags);
+
+	wake_up(&dev->read_wq);
+	wake_up(&dev->write_wq);
 
 	/* Every control producer checks closing under dev->lock. */
 	cancel_delayed_work_sync(&dev->start_work);
@@ -1493,6 +1529,11 @@ static void acc_free(struct usb_function *f)
 {
 	struct acc_dev *dev = func_to_dev(f);
 
+	unsigned long flags;
+
+	spin_lock_irqsave(&dev->lock, flags);
+	dev->function_allocated = false;
+	spin_unlock_irqrestore(&dev->lock, flags);
 	put_acc_dev(dev);
 }
 
@@ -1711,6 +1752,19 @@ static int acc_setup(struct usb_function *f,
 static struct usb_function *acc_alloc(struct usb_function_instance *fi)
 {
 	struct acc_dev *dev = get_acc_dev();
+
+	unsigned long flags;
+
+	if (!dev)
+		return ERR_PTR(-ENODEV);
+	spin_lock_irqsave(&dev->lock, flags);
+	if (dev->function_allocated) {
+		spin_unlock_irqrestore(&dev->lock, flags);
+		put_acc_dev(dev);
+		return ERR_PTR(-EBUSY);
+	}
+	dev->function_allocated = true;
+	spin_unlock_irqrestore(&dev->lock, flags);
 
 	dev->function.name = "accessory";
 	dev->function.strings = acc_strings;
