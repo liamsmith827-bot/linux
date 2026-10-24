@@ -7494,6 +7494,31 @@ source ownership change is checked against the local call graph and the full
 emulator compilation; no hardware reproduction or runtime teardown test is
 claimed.
 
+## ARM IOMMU and SMCCC declarations
+
+The SDK selects x86_64 and disables COMPILE_TEST. ARM LPAE page tables require
+ARM, ARM64 or COMPILE_TEST; SMMUv3 and ACK's PKVM_PVIOMMU guest driver require
+ARM64. The latter binds a `pkvm,pviommu` device-tree node and issues ARM HVCs.
+These are positive architecture and protocol boundaries, not a failed consumer
+search. Native ARM IOMMU drivers and their existing modularity remain untouched.
+
+Remove the initial import's orphan IDMAP quirk and put_pages callback from
+io-pgtable.h, keeping the complete native header. The ACK implementation belongs
+to ARM LPAE page tables and protected SMMUv3 DMA reference accounting; adding
+only the declaration provided no functioning callback contract on the SDK.
+Native Intel/AMD DMA ownership is unchanged. Preserve native ARM walkers rather
+than introduce the alternate reference-counted implementation or its historical
+wrong-pointer, double-accounting and split-invalidation defects.
+
+Restore the complete native arm-smccc.h. Its removed additions encode ARM
+protected-guest MMIO guards, relinquish/range operations, device power/MMIO/DMA
+requests, pvIOMMU operations, CCA function bounds and a C1-Pro SME erratum call.
+They provide no x86 hypercall ABI. The native ARM MMIO_GUARD spelling and reserved
+function numbers remain consistent with the unchanged native ARM implementation.
+This does not claim those protected-guest interfaces or the erratum mitigation
+are unnecessary on ARM; those platforms are outside this delivery. The complete
+header deltas and local architecture gates are recorded in the review evidence.
+
 ## DMA synchronization batching and the SDK architecture
 
 ACK f880f0340afa and 5bef17dd8878 split cache maintenance from completion
