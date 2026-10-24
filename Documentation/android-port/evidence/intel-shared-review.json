@@ -1,0 +1,449 @@
+{
+  "source_head": "590c2aec04b94c2e76c9942b40a4b6060ffb9fcf",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "fcb3f4455248945da1ec50fc8d58a34ec22e77b2",
+      "disposition": "adapted",
+      "result_commits": [
+        "667a74f8499e86603f270b9ad7fdbeb824ed9496"
+      ],
+      "rationale": "Adapt private PASID lookup ERR_PTR/IS_ERR/PTR_ERR handling to current LTS setup APIs, retaining native consolidated replacement implementation. Invalid table/ID remains ENODEV; allocation failure is now ENOMEM, matching ACK source-interface semantics. Whole-file normalization proves only error representation/propagation differs, including preservation of pre-publication cache flushing and native teardown ordering.",
+      "evidence": [
+        "evidence/intel-shared-review.json",
+        "evidence/intel-iommu-walk-check.json",
+        "SECURITY.md: Intel shared page-table walk defenses"
+      ],
+      "patch_sha256": "a9ca4d88697ee57381c0b10d0df1dbe126ba82e308eb415e7435151decb18f1e",
+      "changed_paths": [
+        "drivers/iommu/intel/pasid.c"
+      ],
+      "merge_resolution_examined": false
+    },
+    {
+      "commit": "d74e32c4ba5355c1e3a8f9edd9720acbc6d6a6cb",
+      "disposition": "partially-adapted",
+      "result_commits": [
+        "667a74f8499e86603f270b9ad7fdbeb824ed9496"
+      ],
+      "rationale": "Pass caller precomputed PTE into superpage conversion, removing the redundant unchecked second walk while adapting walker error pointers. Keep dce043c07ca1 rounded range and PTE-page bound. Omit optional flush batching: native per-entry invalidation timing is preserved; source/helper tests verify identical flush ranges and order for bounded valid conversions. No protected backend is introduced.",
+      "evidence": [
+        "evidence/intel-shared-review.json",
+        "evidence/intel-iommu-walk-check.json",
+        "SECURITY.md: Intel shared page-table walk defenses"
+      ],
+      "patch_sha256": "d67816f2b564d2bf34f8e68048cfd223a50c8a21d0a433206c1b438b0c4d09c9",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c"
+      ],
+      "merge_resolution_examined": false
+    },
+    {
+      "commit": "e55de9a5a0a8e0d150d3c9247ea25bc772ac56d0",
+      "disposition": "adapted",
+      "result_commits": [
+        "667a74f8499e86603f270b9ad7fdbeb824ed9496"
+      ],
+      "rationale": "Retain native shared superpage collision guard, ENOMEM/EINVAL/EEXIST distinction and all native caller conversions. Guard also follows failed compare/exchange publication, so a winning leaf cannot bypass the check as it could with ACK else-if placement. Dirty tracking propagates lookup error before level_size(0). Extracted pre-fix controls demonstrate invalid payload-as-table traversal. Partial mapping rollback/progress remains an explicitly documented native limitation; no pKVM isolation claim.",
+      "evidence": [
+        "evidence/intel-shared-review.json",
+        "evidence/intel-iommu-walk-check.json",
+        "SECURITY.md: Intel shared page-table walk defenses"
+      ],
+      "patch_sha256": "29f1f8829e057fc0bcb8e67523eb9b75699658a3a468423a04aa100aedba2dda",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c"
+      ],
+      "merge_resolution_examined": false
+    },
+    {
+      "commit": "46cbf93c3172dc5e2c7b0ee0a977107150e776f2",
+      "disposition": "partially-adapted",
+      "result_commits": [
+        "667a74f8499e86603f270b9ad7fdbeb824ed9496"
+      ],
+      "rationale": "Retain guard in native dma_pte_clear_level while preserving void recursion, deferred-free list and LTS gather ordering. Omit second dma_unuse_range hunk because it is specifically the excluded hypervisor DMA pin accounting walk. Native APIs prohibit partial prior-map subdivision; IOMMUFD and VFIO enforce whole-area boundaries. Guard prevents payload traversal but does not make invalid kernel partial unmaps safe: a skipped leaf may remain despite the reported byte count. That limitation is recorded rather than claiming full partial-unmap support.",
+      "evidence": [
+        "evidence/intel-shared-review.json",
+        "evidence/intel-iommu-walk-check.json",
+        "SECURITY.md: Intel shared page-table walk defenses"
+      ],
+      "patch_sha256": "2ef3ca2b7ec0f472dc3d7b1c644bf548468e645caf3badfb6f806fbcc25937cd",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c"
+      ],
+      "merge_resolution_examined": false
+    },
+    {
+      "commit": "975cf29244d223491278cb45c8a460a4765dd483",
+      "disposition": "applied",
+      "result_commits": [
+        "590c2aec04b94c2e76c9942b40a4b6060ffb9fcf"
+      ],
+      "rationale": "Carry shared iommu_context_addr NULL-root check verbatim. Native init_dmars allocates the root and handles allocation failure before iommu_device_register; this defense handles invalid call ordering without claiming ordinary SDK userspace reaches the pKVM attack. Extracted context helper tests cover valid/copy/allocation/error cases and a pre-fix UBSan NULL-root control. Native registration and allocation order are preserved.",
+      "evidence": [
+        "evidence/intel-shared-review.json",
+        "evidence/intel-iommu-walk-check.json",
+        "SECURITY.md: Intel shared page-table walk defenses"
+      ],
+      "patch_sha256": "4ec4a5363e9976c8f384ed7773c623965ac2c3575a1a81af2d819b58413959f3",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c"
+      ],
+      "merge_resolution_examined": false
+    },
+    {
+      "commit": "09adf7ee0e2de80c661d209bc71bb88198e80d63",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Present-PASID table scan and rejection are entirely in __PKVM_HYP__ context teardown. They constrain untrusted host-issued clear-CE hypercalls before donating protected tables. Ordinary SDK mode has native device-domain lifecycle rather than this donation interface. Keep native present-clear/invalidation ordering; no claim is made that the native driver scans every PASID as this separate hypervisor policy does.",
+      "evidence": [
+        "evidence/intel-shared-review.json",
+        "evidence/intel-iommu-walk-check.json",
+        "SECURITY.md: Intel shared page-table walk defenses"
+      ],
+      "patch_sha256": "bf0e280982f98dabff1b7dc111c72a3ab61ce52d7f3cd462a89afdc626d3c4ce",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c"
+      ],
+      "merge_resolution_examined": false
+    },
+    {
+      "commit": "49b456f7b0b8edc0a6bbeea85aed63dc1ad44543",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "All changed pointer initialization/extraction and donation-back conditionals are under __PKVM_HYP__. They prevent donation of physical zero from a non-present context in that protected allocation model. Native domain_context_clear_one never extracts PASID/PGD pointers for donation, and retains LTS context teardown. Shared NULL-root defense is separately carried from 975cf29244d2.",
+      "evidence": [
+        "evidence/intel-shared-review.json",
+        "evidence/intel-iommu-walk-check.json",
+        "SECURITY.md: Intel shared page-table walk defenses"
+      ],
+      "patch_sha256": "c7287c12fed841bf94e0dfc67f749dc80d9d8634a353a0e19295e04d2c7e1d24",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c"
+      ],
+      "merge_resolution_examined": false
+    },
+    {
+      "commit": "721f0e0bfc5c93520251eba9865fe63d875c4a7d",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Makes the hypervisor PASID clear/flush/clear transaction atomic to stop racing host hypercalls from donating its directory and replacing pointers. Host branch deliberately retains its existing lock release and native device lifetime serialization; the patch gates the continuous lock/direct-clear path on __PKVM_HYP__. Preserve native lock ordering, present-bit flush and PRQ draining without adding an unused protected donation path.",
+      "evidence": [
+        "evidence/intel-shared-review.json",
+        "evidence/intel-iommu-walk-check.json",
+        "SECURITY.md: Intel shared page-table walk defenses"
+      ],
+      "patch_sha256": "130bd8b7e9dc4bc4dd46257003f75f964c35c939188144e7547689f111d385e4",
+      "changed_paths": [
+        "drivers/iommu/intel/pasid.c"
+      ],
+      "merge_resolution_examined": false
+    },
+    {
+      "commit": "7304ce1faacea84d92b609c116b013516676c207",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Continuous iommu->lock coverage is explicitly conditional on __PKVM_HYP__, whose context hypercalls lack host group-mutex serialization. Native host branch is unchanged by this patch. Preserve its LTS context present-clear, SID-correct invalidation and final zeroing sequence. No adversarial host/hypervisor entry point is exposed by the SDK native backend.",
+      "evidence": [
+        "evidence/intel-shared-review.json",
+        "evidence/intel-iommu-walk-check.json",
+        "SECURITY.md: Intel shared page-table walk defenses"
+      ],
+      "patch_sha256": "c8f83e66e38674c6924554d8a4415c7e0586806ab6b7654b131f89631e341eaf",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c"
+      ],
+      "merge_resolution_examined": false
+    },
+    {
+      "commit": "60cef39bfa19afe5d7c88e81e79505bff34c774a",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Removes transient stack PASID table pointers in protected hypercall handlers and adds hypervisor-only live context lookup under iommu->lock plus _pasid_table storage in the hyp structure variant. Native intel_pasid_get_table uses persistent device_domain_info->pasid_table and does not construct this transient table or donate it. Native helper lifetime is retained; host error-pointer adaptation is separately recorded for fcb3f4455248.",
+      "evidence": [
+        "evidence/intel-shared-review.json",
+        "evidence/intel-iommu-walk-check.json",
+        "SECURITY.md: Intel shared page-table walk defenses"
+      ],
+      "patch_sha256": "7a3ee0584f890d03c86b03cc201cd40e2f92941507aaa0e7f9ed5c0b43501a8e",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/pasid.c",
+        "drivers/iommu/intel/pkvm/iommu_hc.c"
+      ],
+      "merge_resolution_examined": false
+    },
+    {
+      "commit": "0cad1d088fcc7833c6869bdb276e329696aaa58a",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Derives ATS state from context entries in hypervisor-only helper/teardown/PASID lookup and removes untrusted host payload flags from four protected handlers. Native driver retains its persistent device ATS state from PCI setup, not freshly fabricated hypercall device records. Preserve native cache tags and ATS invalidation, including inaccessible-device handling; no protected DMA guarantee is claimed.",
+      "evidence": [
+        "evidence/intel-shared-review.json",
+        "evidence/intel-iommu-walk-check.json",
+        "SECURITY.md: Intel shared page-table walk defenses"
+      ],
+      "patch_sha256": "1169b81d0db63c9c437dcace1c205e6f8ed79dad00f4f57a3909464941cce673",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c",
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/pasid.c",
+        "drivers/iommu/intel/pkvm/iommu_hc.c"
+      ],
+      "merge_resolution_examined": false
+    },
+    {
+      "commit": "d7e620ec1c1c8a0a6b324cdf57555ee1d4a15a76",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Comment-only documentation of potential unbounded retries in protected mode where host device-presence checks were removed. Native qi_check_fault still tests device_rbtree_find, dev_is_pci and pci_device_is_present and returns ETIMEDOUT for vanished devices. Do not add a misleading protected-mode limitation to native code or remove native checks. This is not proof that every malfunctioning-hardware retry is bounded.",
+      "evidence": [
+        "evidence/intel-shared-review.json",
+        "evidence/intel-iommu-walk-check.json",
+        "SECURITY.md: Intel shared page-table walk defenses"
+      ],
+      "patch_sha256": "ebec4f0d85693083437479d8584e69f03c4dbfdac0a9f5fa7bfba74cb87ce42b",
+      "changed_paths": [
+        "drivers/iommu/intel/dmar.c"
+      ],
+      "merge_resolution_examined": false
+    },
+    {
+      "commit": "784fb98008ea742f57e663735842cf1fb0dc6d58",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds IOMMU identity only to __PKVM_HYP__ DEVTLB tag key, whose device identity consists of host-supplied bus/devfn values. Native key uses struct device identity, while IOTLB keys already compare iommu. Native full cache.c is unchanged, avoiding the vulnerable alternate BDF-only representation rather than copying its repair into an unrelated key.",
+      "evidence": [
+        "evidence/intel-shared-review.json",
+        "evidence/intel-iommu-walk-check.json",
+        "SECURITY.md: Intel shared page-table walk defenses"
+      ],
+      "patch_sha256": "ad220695d102ad11bd164fac7c5fd16645e35a21ca8f6247fde8f44b0b5e0ce5",
+      "changed_paths": [
+        "drivers/iommu/intel/cache.c"
+      ],
+      "merge_resolution_examined": false
+    },
+    {
+      "commit": "2f69ccc3db7283c11b697964cbd1c008ed5ce9e1",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Only hypervisor CE setup returns EEXIST to unwind a newly donated PASID directory, then translates it back to host success. Native repeated-context path returns success and makes no donation to leak. Preserve native idempotent return/lifetime semantics; this is a protected allocation repair, not a KMI-only change.",
+      "evidence": [
+        "evidence/intel-shared-review.json",
+        "evidence/intel-iommu-walk-check.json",
+        "SECURITY.md: Intel shared page-table walk defenses"
+      ],
+      "patch_sha256": "20b8990740b16fae4cda3be2532284ac56a14741f0dc53dd1559c57dd9704e30",
+      "changed_paths": [
+        "drivers/iommu/intel/pasid.c",
+        "drivers/iommu/intel/pkvm/iommu_hc.c"
+      ],
+      "merge_resolution_examined": false
+    },
+    {
+      "commit": "a0e91455513e7df2241df1dc67521b226354f2f0",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Deletes the protected no-timeout IOMMU_WAIT_OP variant and changes protected GCMD handler to reuse the timed normal wrapper. Native IOMMU_WAIT_OP already has get_cycles timeout/panic and no hyp variant. Keep native header and host register access intact; do not introduce the unbounded predecessor or claim recoverable timeout semantics where native panics.",
+      "evidence": [
+        "evidence/intel-shared-review.json",
+        "evidence/intel-iommu-walk-check.json",
+        "SECURITY.md: Intel shared page-table walk defenses"
+      ],
+      "patch_sha256": "9b0aa1f405b9c1c21b8d5256b9686544c23d88d41907e3e55d83d74a4e6b594d",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/pkvm/iommu.c"
+      ],
+      "merge_resolution_examined": false
+    },
+    {
+      "commit": "1f58917aee051cfb11f2db1f363ea013bf5cdba8",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "All executable additions are under __PKVM_HYP__: unpin the newly prepared DMA range on any failed PTE compare/exchange using actual large-page size. Native mapping has no pkvm_host_use_dma pin/reference to balance and uses its ordinary host mapping ownership. Preserve the native cmpxchg diagnostics; this omission does not assert that arbitrary overlapping kernel map calls are supported.",
+      "evidence": [
+        "evidence/intel-shared-review.json",
+        "evidence/intel-iommu-walk-check.json",
+        "SECURITY.md: Intel shared page-table walk defenses"
+      ],
+      "patch_sha256": "ed10ecaf4b3ab89aaac5d805f9d21e903cf9a0f32b62f30a242022ad60d1df92",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c"
+      ],
+      "merge_resolution_examined": false
+    },
+    {
+      "commit": "6917c73d158c5b82afe19eb22a55008718169274",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds protected-MMIO hypercall wrappers selected by CONFIG_PKVM_INTEL, each falling back to raw register access when pkvm_enabled is false. The positive SDK boot gate is disabled; native register access already supplies that ordinary behavior. Do not introduce hypercall result/output-buffer dependencies for a backend outside current target.",
+      "evidence": [
+        "evidence/intel-shared-review.json",
+        "evidence/intel-iommu-walk-check.json",
+        "SECURITY.md: Intel shared page-table walk defenses"
+      ],
+      "patch_sha256": "c4c595330431551272b8b96c769a0e167312cf6e18048488c7496d6f23142929",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ],
+      "merge_resolution_examined": false
+    },
+    {
+      "commit": "17b96d85cf0e673219dda015661626866939cea9",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds iommu_flush callbacks to the hypervisor intel_iommu variant and assigns QI helpers during protected initialization. Native host struct/initialization already chooses QI or register invalidation and remains intact. Omit this protected-state duplicate, retaining host invalidation availability and ordering.",
+      "evidence": [
+        "evidence/intel-shared-review.json",
+        "evidence/intel-iommu-walk-check.json",
+        "SECURITY.md: Intel shared page-table walk defenses"
+      ],
+      "patch_sha256": "d48ddde4a1ce89e834765b7cc94f282813e91d9a16a45490edaf9e1a3786b706",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/pkvm/iommu.c"
+      ],
+      "merge_resolution_examined": false
+    },
+    {
+      "commit": "16f4b9355ce9a776976960fde607c966620136ba",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Moves private domain-size/coherency/superpage helpers to headers, makes a static flag global and copies it into hyp state for IOMMU hypercalls. No EXPORT_SYMBOL is introduced; these are private link-time prerequisites for the excluded backend, not module source exports. Keep equivalent native helpers and flag semantics in their original scope without future-platform hypervisor wiring.",
+      "evidence": [
+        "evidence/intel-shared-review.json",
+        "evidence/intel-iommu-walk-check.json",
+        "SECURITY.md: Intel shared page-table walk defenses"
+      ],
+      "patch_sha256": "1a2f3349dc8e087fc4d12d688825453d5b520289f9bba1774c3979a9f768057b",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c",
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/pkvm_iommu.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ],
+      "merge_resolution_examined": false
+    },
+    {
+      "commit": "b76698302d53f01ee2a04647f466396b225658f2",
+      "disposition": "merge-resolution-reconciled-to-lts",
+      "result_commits": [
+        "821807c167b7b48a41b95b6607c6b9f97600f7d9",
+        "667a74f8499e86603f270b9ad7fdbeb824ed9496"
+      ],
+      "rationale": "Examine both unique PASID remerge hunks: preserve protected PGD extraction around native Present clearing, and place final entry clear/cache flush before host PRQ-drain conditional. Native 821807c167b7 already supplies security-critical Present-clear/invalidate/final-clear ordering; later LTS fixes remain, with only the separately tested error-pointer adaptation. Omit protected extraction/conditional scaffolding.",
+      "evidence": [
+        "evidence/intel-shared-review.json",
+        "evidence/intel-iommu-walk-check.json",
+        "SECURITY.md: Intel shared page-table walk defenses"
+      ],
+      "patch_sha256": "5028797e356b5d0249a2ca526415405f6f54ca8eeee06caf4b84e1aff2d1738d",
+      "changed_paths": [
+        "drivers/iommu/intel/pasid.c"
+      ],
+      "merge_resolution_examined": true
+    },
+    {
+      "commit": "0cddf61a54913143ad304cdc269639b96207817e",
+      "disposition": "merge-resolution-reconciled-to-lts",
+      "result_commits": [
+        "d2138abc8f0a7fce4101b7229b43b06811ed083d"
+      ],
+      "rationale": "Unique context remerge places final context zero/cache flush before hypervisor donation cleanup. Retain native d2138abc8f0a ordering plus later SID/alias fixes; omit protected donation cleanup. No unique resolution is lost by treating this as an ordinary merge without inspection: the hunk is hashed separately in this review.",
+      "evidence": [
+        "evidence/intel-shared-review.json",
+        "evidence/intel-iommu-walk-check.json",
+        "SECURITY.md: Intel shared page-table walk defenses"
+      ],
+      "patch_sha256": "c2f9840cdc1b7e2f08a0c45e3f70f2b7e2c8d6eec53860efaec1b6b8d9a7942e",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c"
+      ],
+      "merge_resolution_examined": true
+    },
+    {
+      "commit": "713e6425a13e5f550d9d3612a90513a48465275c",
+      "disposition": "merge-resolution-reconciled-to-lts",
+      "result_commits": [
+        "9deaacc8dcaddb6ddc5b52e1e63b457450ec0f94"
+      ],
+      "rationale": "Single unique PASID remerge retains __PKVM_HYP__ guard around changing disconnected-only predicate to pci_device_is_present. Native scalable-mode dev-TLB invalidation already uses the stronger presence check from 9deaacc8dcad. Retain it unconditionally in host code; no hypervisor build workaround is needed.",
+      "evidence": [
+        "evidence/intel-shared-review.json",
+        "evidence/intel-iommu-walk-check.json",
+        "SECURITY.md: Intel shared page-table walk defenses"
+      ],
+      "patch_sha256": "14a3695de11c1cd9d5b9709f8993d99b9c90f4ddb93ec1d0b41c05c79bff1864",
+      "changed_paths": [
+        "drivers/iommu/intel/pasid.c"
+      ],
+      "merge_resolution_examined": true
+    },
+    {
+      "commit": "db33f303ff367b47b06d7f9f4b6cababef83b913",
+      "disposition": "merge-resolution-reconciled-to-lts",
+      "result_commits": [
+        "300e7cfdc92bbfb6fec00efe322555763ba88600"
+      ],
+      "rationale": "Single unique dmar.c remerge removes head |= 1 while retaining protected-capable dmar_readl for queue tail. Native 300e7cfdc92b already removes the forced odd head index, avoiding skipped descriptors/hardlockup; native raw readl expresses ordinary SDK behavior. Whole native dmar.c is preserved, including retry/presence handling.",
+      "evidence": [
+        "evidence/intel-shared-review.json",
+        "evidence/intel-iommu-walk-check.json",
+        "SECURITY.md: Intel shared page-table walk defenses"
+      ],
+      "patch_sha256": "fe30a3e8ca9809ccd8c232926478fe7654058253546f9849aa4db993750f5b8b",
+      "changed_paths": [
+        "drivers/iommu/intel/dmar.c"
+      ],
+      "merge_resolution_examined": true
+    }
+  ],
+  "witnesses": {
+    "drivers/iommu/intel/iommu.c": {
+      "blob": "194fea21caf4056375f51a18b24d5549545f88be",
+      "native_sha256": "20fa002a674d9f6378f87b1f64fd6eae999cc24a57ccc7dc4bd2d98d6cda31fe",
+      "only_changed_functions": [
+        "iommu_context_addr",
+        "pfn_to_dma_pte",
+        "dma_pte_clear_level",
+        "switch_to_super_page",
+        "__domain_mapping",
+        "intel_iommu_unmap",
+        "intel_iommu_iova_to_phys",
+        "intel_iommu_read_and_clear_dirty"
+      ]
+    },
+    "drivers/iommu/intel/cache.c": {
+      "blob": "385ae5cfb30d4af1afd8354dfb86702720cf3da5",
+      "native_equal": true
+    },
+    "drivers/iommu/intel/dmar.c": {
+      "blob": "f4bdc5ffa9d9bf078c93869149e41ec3f4fe7408",
+      "native_equal": true
+    },
+    "drivers/iommu/intel/iommu.h": {
+      "blob": "e696e019e969798713d3458b63c80738bf029ac5",
+      "native_equal": true
+    },
+    "drivers/iommu/intel/pasid.h": {
+      "blob": "0296ca55ea5e62998e30e625e2d679c6e2e36379",
+      "native_equal": true
+    }
+  },
+  "caller_contract_evidence": {
+    "drivers/iommu/iommu.c": "34c06fb26bf5ca44ffbdfca324e1351435ee90f4",
+    "drivers/iommu/iommufd/io_pagetable.c": "a4d7a9d43560324820e521d469f139196b6ee3e4",
+    "drivers/vfio/vfio_iommu_type1.c": "5167bec14e363bff1f76af11c1a4b6ec90561dcd"
+  },
+  "scope_gate": "evidence/intel-iommu-gates-review.json: pinned SDK command lines and ACK enable_pkvm early-option initialization",
+  "limitations": [
+    "No kernel boot, real DMA/IOMMU, runtime OOM or concurrency verification.",
+    "Partial map progress/rollback and invalid partial kernel unmap byte-count limitations are documented in SECURITY.md; guards do not certify all callers."
+  ],
+  "remote_sources_used": []
+}

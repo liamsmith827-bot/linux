@@ -20948,5 +20948,1407 @@
       "evidence/intel-iommu-gates-review.json",
       "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
     ]
+  },
+  {
+    "commit": "fcb3f4455248945da1ec50fc8d58a34ec22e77b2",
+    "disposition": "adapted",
+    "result_commits": [
+      "667a74f8499e86603f270b9ad7fdbeb824ed9496"
+    ],
+    "rationale": "Adapt private PASID lookup ERR_PTR/IS_ERR/PTR_ERR handling to current LTS setup APIs, retaining native consolidated replacement implementation. Invalid table/ID remains ENODEV; allocation failure is now ENOMEM, matching ACK source-interface semantics. Whole-file normalization proves only error representation/propagation differs, including preservation of pre-publication cache flushing and native teardown ordering.",
+    "evidence": [
+      "evidence/intel-shared-review.json",
+      "evidence/intel-iommu-walk-check.json",
+      "SECURITY.md: Intel shared page-table walk defenses"
+    ]
+  },
+  {
+    "commit": "d74e32c4ba5355c1e3a8f9edd9720acbc6d6a6cb",
+    "disposition": "partially-adapted",
+    "result_commits": [
+      "667a74f8499e86603f270b9ad7fdbeb824ed9496"
+    ],
+    "rationale": "Pass caller precomputed PTE into superpage conversion, removing the redundant unchecked second walk while adapting walker error pointers. Keep dce043c07ca1 rounded range and PTE-page bound. Omit optional flush batching: native per-entry invalidation timing is preserved; source/helper tests verify identical flush ranges and order for bounded valid conversions. No protected backend is introduced.",
+    "evidence": [
+      "evidence/intel-shared-review.json",
+      "evidence/intel-iommu-walk-check.json",
+      "SECURITY.md: Intel shared page-table walk defenses"
+    ]
+  },
+  {
+    "commit": "e55de9a5a0a8e0d150d3c9247ea25bc772ac56d0",
+    "disposition": "adapted",
+    "result_commits": [
+      "667a74f8499e86603f270b9ad7fdbeb824ed9496"
+    ],
+    "rationale": "Retain native shared superpage collision guard, ENOMEM/EINVAL/EEXIST distinction and all native caller conversions. Guard also follows failed compare/exchange publication, so a winning leaf cannot bypass the check as it could with ACK else-if placement. Dirty tracking propagates lookup error before level_size(0). Extracted pre-fix controls demonstrate invalid payload-as-table traversal. Partial mapping rollback/progress remains an explicitly documented native limitation; no pKVM isolation claim.",
+    "evidence": [
+      "evidence/intel-shared-review.json",
+      "evidence/intel-iommu-walk-check.json",
+      "SECURITY.md: Intel shared page-table walk defenses"
+    ]
+  },
+  {
+    "commit": "46cbf93c3172dc5e2c7b0ee0a977107150e776f2",
+    "disposition": "partially-adapted",
+    "result_commits": [
+      "667a74f8499e86603f270b9ad7fdbeb824ed9496"
+    ],
+    "rationale": "Retain guard in native dma_pte_clear_level while preserving void recursion, deferred-free list and LTS gather ordering. Omit second dma_unuse_range hunk because it is specifically the excluded hypervisor DMA pin accounting walk. Native APIs prohibit partial prior-map subdivision; IOMMUFD and VFIO enforce whole-area boundaries. Guard prevents payload traversal but does not make invalid kernel partial unmaps safe: a skipped leaf may remain despite the reported byte count. That limitation is recorded rather than claiming full partial-unmap support.",
+    "evidence": [
+      "evidence/intel-shared-review.json",
+      "evidence/intel-iommu-walk-check.json",
+      "SECURITY.md: Intel shared page-table walk defenses"
+    ]
+  },
+  {
+    "commit": "975cf29244d223491278cb45c8a460a4765dd483",
+    "disposition": "applied",
+    "result_commits": [
+      "590c2aec04b94c2e76c9942b40a4b6060ffb9fcf"
+    ],
+    "rationale": "Carry shared iommu_context_addr NULL-root check verbatim. Native init_dmars allocates the root and handles allocation failure before iommu_device_register; this defense handles invalid call ordering without claiming ordinary SDK userspace reaches the pKVM attack. Extracted context helper tests cover valid/copy/allocation/error cases and a pre-fix UBSan NULL-root control. Native registration and allocation order are preserved.",
+    "evidence": [
+      "evidence/intel-shared-review.json",
+      "evidence/intel-iommu-walk-check.json",
+      "SECURITY.md: Intel shared page-table walk defenses"
+    ]
+  },
+  {
+    "commit": "09adf7ee0e2de80c661d209bc71bb88198e80d63",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Present-PASID table scan and rejection are entirely in __PKVM_HYP__ context teardown. They constrain untrusted host-issued clear-CE hypercalls before donating protected tables. Ordinary SDK mode has native device-domain lifecycle rather than this donation interface. Keep native present-clear/invalidation ordering; no claim is made that the native driver scans every PASID as this separate hypervisor policy does.",
+    "evidence": [
+      "evidence/intel-shared-review.json",
+      "evidence/intel-iommu-walk-check.json",
+      "SECURITY.md: Intel shared page-table walk defenses"
+    ]
+  },
+  {
+    "commit": "49b456f7b0b8edc0a6bbeea85aed63dc1ad44543",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "All changed pointer initialization/extraction and donation-back conditionals are under __PKVM_HYP__. They prevent donation of physical zero from a non-present context in that protected allocation model. Native domain_context_clear_one never extracts PASID/PGD pointers for donation, and retains LTS context teardown. Shared NULL-root defense is separately carried from 975cf29244d2.",
+    "evidence": [
+      "evidence/intel-shared-review.json",
+      "evidence/intel-iommu-walk-check.json",
+      "SECURITY.md: Intel shared page-table walk defenses"
+    ]
+  },
+  {
+    "commit": "721f0e0bfc5c93520251eba9865fe63d875c4a7d",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Makes the hypervisor PASID clear/flush/clear transaction atomic to stop racing host hypercalls from donating its directory and replacing pointers. Host branch deliberately retains its existing lock release and native device lifetime serialization; the patch gates the continuous lock/direct-clear path on __PKVM_HYP__. Preserve native lock ordering, present-bit flush and PRQ draining without adding an unused protected donation path.",
+    "evidence": [
+      "evidence/intel-shared-review.json",
+      "evidence/intel-iommu-walk-check.json",
+      "SECURITY.md: Intel shared page-table walk defenses"
+    ]
+  },
+  {
+    "commit": "7304ce1faacea84d92b609c116b013516676c207",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Continuous iommu->lock coverage is explicitly conditional on __PKVM_HYP__, whose context hypercalls lack host group-mutex serialization. Native host branch is unchanged by this patch. Preserve its LTS context present-clear, SID-correct invalidation and final zeroing sequence. No adversarial host/hypervisor entry point is exposed by the SDK native backend.",
+    "evidence": [
+      "evidence/intel-shared-review.json",
+      "evidence/intel-iommu-walk-check.json",
+      "SECURITY.md: Intel shared page-table walk defenses"
+    ]
+  },
+  {
+    "commit": "60cef39bfa19afe5d7c88e81e79505bff34c774a",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Removes transient stack PASID table pointers in protected hypercall handlers and adds hypervisor-only live context lookup under iommu->lock plus _pasid_table storage in the hyp structure variant. Native intel_pasid_get_table uses persistent device_domain_info->pasid_table and does not construct this transient table or donate it. Native helper lifetime is retained; host error-pointer adaptation is separately recorded for fcb3f4455248.",
+    "evidence": [
+      "evidence/intel-shared-review.json",
+      "evidence/intel-iommu-walk-check.json",
+      "SECURITY.md: Intel shared page-table walk defenses"
+    ]
+  },
+  {
+    "commit": "0cad1d088fcc7833c6869bdb276e329696aaa58a",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Derives ATS state from context entries in hypervisor-only helper/teardown/PASID lookup and removes untrusted host payload flags from four protected handlers. Native driver retains its persistent device ATS state from PCI setup, not freshly fabricated hypercall device records. Preserve native cache tags and ATS invalidation, including inaccessible-device handling; no protected DMA guarantee is claimed.",
+    "evidence": [
+      "evidence/intel-shared-review.json",
+      "evidence/intel-iommu-walk-check.json",
+      "SECURITY.md: Intel shared page-table walk defenses"
+    ]
+  },
+  {
+    "commit": "d7e620ec1c1c8a0a6b324cdf57555ee1d4a15a76",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Comment-only documentation of potential unbounded retries in protected mode where host device-presence checks were removed. Native qi_check_fault still tests device_rbtree_find, dev_is_pci and pci_device_is_present and returns ETIMEDOUT for vanished devices. Do not add a misleading protected-mode limitation to native code or remove native checks. This is not proof that every malfunctioning-hardware retry is bounded.",
+    "evidence": [
+      "evidence/intel-shared-review.json",
+      "evidence/intel-iommu-walk-check.json",
+      "SECURITY.md: Intel shared page-table walk defenses"
+    ]
+  },
+  {
+    "commit": "784fb98008ea742f57e663735842cf1fb0dc6d58",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds IOMMU identity only to __PKVM_HYP__ DEVTLB tag key, whose device identity consists of host-supplied bus/devfn values. Native key uses struct device identity, while IOTLB keys already compare iommu. Native full cache.c is unchanged, avoiding the vulnerable alternate BDF-only representation rather than copying its repair into an unrelated key.",
+    "evidence": [
+      "evidence/intel-shared-review.json",
+      "evidence/intel-iommu-walk-check.json",
+      "SECURITY.md: Intel shared page-table walk defenses"
+    ]
+  },
+  {
+    "commit": "2f69ccc3db7283c11b697964cbd1c008ed5ce9e1",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Only hypervisor CE setup returns EEXIST to unwind a newly donated PASID directory, then translates it back to host success. Native repeated-context path returns success and makes no donation to leak. Preserve native idempotent return/lifetime semantics; this is a protected allocation repair, not a KMI-only change.",
+    "evidence": [
+      "evidence/intel-shared-review.json",
+      "evidence/intel-iommu-walk-check.json",
+      "SECURITY.md: Intel shared page-table walk defenses"
+    ]
+  },
+  {
+    "commit": "a0e91455513e7df2241df1dc67521b226354f2f0",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Deletes the protected no-timeout IOMMU_WAIT_OP variant and changes protected GCMD handler to reuse the timed normal wrapper. Native IOMMU_WAIT_OP already has get_cycles timeout/panic and no hyp variant. Keep native header and host register access intact; do not introduce the unbounded predecessor or claim recoverable timeout semantics where native panics.",
+    "evidence": [
+      "evidence/intel-shared-review.json",
+      "evidence/intel-iommu-walk-check.json",
+      "SECURITY.md: Intel shared page-table walk defenses"
+    ]
+  },
+  {
+    "commit": "1f58917aee051cfb11f2db1f363ea013bf5cdba8",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "All executable additions are under __PKVM_HYP__: unpin the newly prepared DMA range on any failed PTE compare/exchange using actual large-page size. Native mapping has no pkvm_host_use_dma pin/reference to balance and uses its ordinary host mapping ownership. Preserve the native cmpxchg diagnostics; this omission does not assert that arbitrary overlapping kernel map calls are supported.",
+    "evidence": [
+      "evidence/intel-shared-review.json",
+      "evidence/intel-iommu-walk-check.json",
+      "SECURITY.md: Intel shared page-table walk defenses"
+    ]
+  },
+  {
+    "commit": "6917c73d158c5b82afe19eb22a55008718169274",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds protected-MMIO hypercall wrappers selected by CONFIG_PKVM_INTEL, each falling back to raw register access when pkvm_enabled is false. The positive SDK boot gate is disabled; native register access already supplies that ordinary behavior. Do not introduce hypercall result/output-buffer dependencies for a backend outside current target.",
+    "evidence": [
+      "evidence/intel-shared-review.json",
+      "evidence/intel-iommu-walk-check.json",
+      "SECURITY.md: Intel shared page-table walk defenses"
+    ]
+  },
+  {
+    "commit": "17b96d85cf0e673219dda015661626866939cea9",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds iommu_flush callbacks to the hypervisor intel_iommu variant and assigns QI helpers during protected initialization. Native host struct/initialization already chooses QI or register invalidation and remains intact. Omit this protected-state duplicate, retaining host invalidation availability and ordering.",
+    "evidence": [
+      "evidence/intel-shared-review.json",
+      "evidence/intel-iommu-walk-check.json",
+      "SECURITY.md: Intel shared page-table walk defenses"
+    ]
+  },
+  {
+    "commit": "16f4b9355ce9a776976960fde607c966620136ba",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Moves private domain-size/coherency/superpage helpers to headers, makes a static flag global and copies it into hyp state for IOMMU hypercalls. No EXPORT_SYMBOL is introduced; these are private link-time prerequisites for the excluded backend, not module source exports. Keep equivalent native helpers and flag semantics in their original scope without future-platform hypervisor wiring.",
+    "evidence": [
+      "evidence/intel-shared-review.json",
+      "evidence/intel-iommu-walk-check.json",
+      "SECURITY.md: Intel shared page-table walk defenses"
+    ]
+  },
+  {
+    "commit": "b76698302d53f01ee2a04647f466396b225658f2",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [
+      "821807c167b7b48a41b95b6607c6b9f97600f7d9",
+      "667a74f8499e86603f270b9ad7fdbeb824ed9496"
+    ],
+    "rationale": "Examine both unique PASID remerge hunks: preserve protected PGD extraction around native Present clearing, and place final entry clear/cache flush before host PRQ-drain conditional. Native 821807c167b7 already supplies security-critical Present-clear/invalidate/final-clear ordering; later LTS fixes remain, with only the separately tested error-pointer adaptation. Omit protected extraction/conditional scaffolding.",
+    "evidence": [
+      "evidence/intel-shared-review.json",
+      "evidence/intel-iommu-walk-check.json",
+      "SECURITY.md: Intel shared page-table walk defenses"
+    ]
+  },
+  {
+    "commit": "0cddf61a54913143ad304cdc269639b96207817e",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [
+      "d2138abc8f0a7fce4101b7229b43b06811ed083d"
+    ],
+    "rationale": "Unique context remerge places final context zero/cache flush before hypervisor donation cleanup. Retain native d2138abc8f0a ordering plus later SID/alias fixes; omit protected donation cleanup. No unique resolution is lost by treating this as an ordinary merge without inspection: the hunk is hashed separately in this review.",
+    "evidence": [
+      "evidence/intel-shared-review.json",
+      "evidence/intel-iommu-walk-check.json",
+      "SECURITY.md: Intel shared page-table walk defenses"
+    ]
+  },
+  {
+    "commit": "713e6425a13e5f550d9d3612a90513a48465275c",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [
+      "9deaacc8dcaddb6ddc5b52e1e63b457450ec0f94"
+    ],
+    "rationale": "Single unique PASID remerge retains __PKVM_HYP__ guard around changing disconnected-only predicate to pci_device_is_present. Native scalable-mode dev-TLB invalidation already uses the stronger presence check from 9deaacc8dcad. Retain it unconditionally in host code; no hypervisor build workaround is needed.",
+    "evidence": [
+      "evidence/intel-shared-review.json",
+      "evidence/intel-iommu-walk-check.json",
+      "SECURITY.md: Intel shared page-table walk defenses"
+    ]
+  },
+  {
+    "commit": "db33f303ff367b47b06d7f9f4b6cababef83b913",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [
+      "300e7cfdc92bbfb6fec00efe322555763ba88600"
+    ],
+    "rationale": "Single unique dmar.c remerge removes head |= 1 while retaining protected-capable dmar_readl for queue tail. Native 300e7cfdc92b already removes the forced odd head index, avoiding skipped descriptors/hardlockup; native raw readl expresses ordinary SDK behavior. Whole native dmar.c is preserved, including retry/presence handling.",
+    "evidence": [
+      "evidence/intel-shared-review.json",
+      "evidence/intel-iommu-walk-check.json",
+      "SECURITY.md: Intel shared page-table walk defenses"
+    ]
+  },
+  {
+    "commit": "58b8ae48cc7e292e89208e5329613643ab32649f",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Builds a second iommu.o for protected mode, defines hyp-specific IOMMU/domain/device structures and initializes protected MMIO/state from host-prepared data. Native driver, root allocation and firmware probing remain; omit protected initialization and its QI/RWBF/boot-state restrictions because the pinned SDK early-option gate leaves this backend inactive. The dual structs are functional protected-state definitions, not historical KMI padding.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "evidence/intel-shared-review.json"
+    ]
+  },
+  {
+    "commit": "5d52a807e5124e1315b7010f4eae0284d7867910",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Converts raw address MMIO calls to (iommu,offset) wrappers and PMU address-relative wrappers in seven files, preparing hypercall interception. With protected mode disabled the wrappers reduce to the same native read/write operations. The earlier iommu_pmu->iommu assignment only supports the new PMU wrappers; native raw register accesses do not need it. Retain current native register functions, current syscore callbacks and later driver fixes; these private wrappers are not exported module interfaces.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "evidence/intel-shared-review.json"
+    ]
+  },
+  {
+    "commit": "3afef6db295fefe6738dc53a27018b2473455fc2",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds hypervisor GCMD dispatch, virtual-status tracking and an unbounded hyp-only wait macro. Native timed IOMMU_WAIT_OP is retained. The protected register interface is outside the current SDK boot contract, and its unsafe no-timeout predecessor is not introduced; the later a0e91455513e repair is independently resolved.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "evidence/intel-shared-review.json"
+    ]
+  },
+  {
+    "commit": "a36609eec8ba62839a131bef5983ec8e089c1438",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds protected QI initialization/state and reinitializes/requires QI only for pkvm_enabled. Its initial int-return conversion also erroneously propagates a failed QI enable after installing native register fallback; 4df943df176a later repairs that. Keep native void init_qi with working QI/register fallback, not this transient regression or protected-only strict-QI policy.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "evidence/intel-shared-review.json"
+    ]
+  },
+  {
+    "commit": "2188ead28b3053af22a1e5664008e4e28351398e",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Compiles dmar.c inside the hypervisor with alternate spinlocks/physical conversion, no tracing/latency accounting, virtual GSTS and removal of host device-presence checks. Ordinary SDK retains native full dmar.c including presence checks, normal locks, tracing, register fallback and the later descriptor-index retry fix. No protected duplicate is needed; omitted mode is not claimed secure or supported.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "evidence/intel-shared-review.json"
+    ]
+  },
+  {
+    "commit": "1bfc7d5816da3afe98c85a880cddffbd44fd1203",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds protected SRTP emulation/root table tracking and skips native post-SRTP invalidation only when pkvm_enabled because hyp performs it. Keep all native context/PASID/IOTLB invalidations and direct root setup in current SDK mode. Do not install the host early return without its protected replacement.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "evidence/intel-shared-review.json"
+    ]
+  },
+  {
+    "commit": "4f3685cfe7820ce6aa59324435e65dce502650a7",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds CONFIG_PKVM_INTEL SATC scanning into a fixed protected-device array and copies it during protected preparation to enforce that backend ATS policy. Native SATC parsing and ATS behavior stay intact; omit the duplicate array, its 16-device capacity restriction and hyp-only consumer. The gate is evidenced by actual build/early-option wiring, not a failed text search for consumers.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "evidence/intel-shared-review.json"
+    ]
+  },
+  {
+    "commit": "3ad9eeaa7a642d5ca539f3315a58b30ef8557274",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Ports legacy context helpers to hyp using donated pages, hyp address conversion/spinlocks and variants of private mapping helpers. Native host path remains equivalent apart from private static visibility. Retain native allocation/locks and QAT extra-device-TLB flushing instead of the protected omission of that quirk; no EXPORT_SYMBOL module interface was added by this candidate.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "evidence/intel-shared-review.json"
+    ]
+  },
+  {
+    "commit": "bbcdf2982de79d1d412069fb4c5bd968f943ece4",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds scalable context helper signatures and compact pkvm_device wrapper for hyp stack usage, plus a pkvm_enabled-only BUG for copied contexts in host code. Native SDK uses real struct device and normal copied-context handling. Keep native private helper scope and omit protected type/signature/BUG prerequisites; current shared error/root defenses are covered separately.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "evidence/intel-shared-review.json"
+    ]
+  },
+  {
+    "commit": "ae2b248e0b4eaad1b35b0c188058eb9044d51848",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds protected variants of PASID setup/teardown and donation-page allocation, excluding PCI presence checks, PRQ drain and lockdep assertions only in hyp. The remaining host-visible change is diagnostic name-to-seq_id formatting for the compact hyp structure. Retain native diagnostics, real device lifetime, checks and PRQ behavior; carry fcb3f4455248 error semantics separately without reverting later native replacement API consolidation.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "evidence/intel-shared-review.json"
+    ]
+  },
+  {
+    "commit": "43ac393ee9f5ba6a4a7b01f5424004c55187e269",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds fixed protected-domain array/hash/refcounts and per-domain locks under the CONFIG_PKVM_INTEL hyp build with matching alternate struct fields. Native paging-domain allocations use the existing host domain infrastructure; no protected host donation/hypercall lifecycle is activated by SDK. Omit this separate domain manager rather than constrain native domains to its fixed capacity.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "evidence/intel-shared-review.json"
+    ]
+  },
+  {
+    "commit": "728414d551d989f9fdf8510ab5ccb5403ec1ae5a",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds protected fixed cache-tag pool, compact BDF identity, hyp locks/types and embedded QI batch. Host branch behavior is preserved by keeping complete native cache.c, including dynamic allocation, device identity, tracing, register fallback, translation checks and extra device flush quirks. The alternative BDF matching subsequently needed 784fb98008ea; neither vulnerable variant nor unused backend is imported.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "evidence/intel-shared-review.json"
+    ]
+  },
+  {
+    "commit": "4bb9e1915ed6122abe40ed7e7cefbdc6ded9d819",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Moves protected tag assignment/reference acquisition into legacy/PASID context operations and releases it during hyp teardown. New inline FL/SL pointer readers feed those protected paths; host-visible ret declarations merely move scope. Keep native host tag lifetime and setup/teardown code. Later protected lifetime repair 3b857a15e6bb is separately accounted for, not used as justification to import its prerequisite.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "evidence/intel-shared-review.json"
+    ]
+  },
+  {
+    "commit": "243f4ddf38f5bfcc2085f5740121e2b882ec3195",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds hyp memcache allocation/free, immediate protected invalidation and exposed private domain_map/domain_unmap names to compile shared walkers in hyp. Native SDK keeps ordinary allocation/deferred-free ownership, nested-parent erratum check, mapping diagnostics and LTS native APIs. No exported module API is introduced by these private name changes. Shared e55de9a5a0a8/46cbf93c3172 traversal defenses are independently adapted, so this is not blanket rejection of shared code.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "evidence/intel-shared-review.json"
+    ]
+  },
+  {
+    "commit": "f622e76011cd34d39d98f1c44b56a6aeeb204cfd",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds protected domain flag and cache-tag negative-translation flush after map, selected by hardware caching mode during hyp domain creation. Native intel_iommu_iotlb_sync_map and IOMMU core synchronization remain. Omit duplicate protected flush accounting; do not remove or weaken the native host synchronization path.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "evidence/intel-shared-review.json"
+    ]
+  },
+  {
+    "commit": "019c99390aba092e5e9be673e096a2aaf5d07bf6",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Pins host DMA pages against donation to protected VMs and uses a hyp-only second pass to unpin after invalidation. Shared boolean return/goto plumbing serves that protected accounting; native void recursion and gather freelist derive invalidation hints without this accumulator. Preserve ordinary mapping ownership and LTS gather-before-splice fix. The native shared leaf guard is carried separately; no guarantee against donation to pVMs is claimed without the backend.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "evidence/intel-shared-review.json"
+    ]
+  },
+  {
+    "commit": "31f6838c24e24deef8f345525241dcf82655a8d5",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Uses hardware-ignored PTE bit 63 for hyp two-pass pin accounting, including physical address zero, and masks it under CONFIG_PKVM_INTEL. Native host never sets this protected metadata and has no donation unpin pass; its native address helper/representation is retained. Omit the extra state format with the excluded accounting implementation, not physical-zero DMA support generally.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "evidence/intel-shared-review.json"
+    ]
+  },
+  {
+    "commit": "449ea50d868c19f4ce755f5ba983eeb6aa474255",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Protects interrupt-remapping table through host-to-hyp read-only donation, emulated IRTA and hypercalls selected only by pkvm_enabled in host modify/clear helpers. Native SDK retains ordinary interrupt remapping, atomic updates and invalidation. This host-compromise isolation feature requires protected ownership and is outside the pinned SDK mode; native IRQ remapping is not treated as absent.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "evidence/intel-shared-review.json"
+    ]
+  },
+  {
+    "commit": "a03e002906af96790710a09181fdecc5c1d4eaa8",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds a protected PMU MMIO classifier with window bounds, exact access widths, counter-capability limits and allowed write masks. New object is in pkvm-hyp-$(CONFIG_PKVM_INTEL); new state is in the hyp IOMMU struct. Shared PMU constant visibility only enables that build. Native host PMU programming remains unchanged, without claiming it provides a hypervisor trust boundary against malicious kernel register requests.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "evidence/intel-shared-review.json"
+    ]
+  },
+  {
+    "commit": "61feb6ee6997529d7d57e80a12be354b47158734",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds protected fault-record MMIO classifier with range/width checks and only fault-bit acknowledgement writes, built as a protected-only object. Native dmar_fault accesses known fault-register offsets and remains native. Omit the additional hypervisor access-control boundary because SDK does not expose it, not because fault recording is unnecessary.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "evidence/intel-shared-review.json"
+    ]
+  },
+  {
+    "commit": "d33405bebb1ba3e358655265900a2de9bbca3dd2",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Changes protected read dispatch to explicit allowed fixed registers and PMU/fault validators, denying unknown offsets, with debugfs-specific extra entries. Three shared register constants serve this protected dispatcher; host access routines remain native. Do not introduce a permissive protected MMIO handler or claim native driver accesses enforce isolation from a compromised host.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "evidence/intel-shared-review.json"
+    ]
+  },
+  {
+    "commit": "3b857a15e6bb010ba24e362068c2c6fe5d5dbd62",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Repairs protected domain lifetime by acquiring references in legacy/PASID hypercall handlers, retaining them while entries are active and releasing after teardown; shared function signature/return variants are hyp-only. Keep native host device-domain ownership and APIs, which do not use the vulnerable transient stack domains or protected refcount manager. This is a functional security repair for an omitted backend, not an ABI omission.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "evidence/intel-shared-review.json"
+    ]
+  },
+  {
+    "commit": "2d643b72fd309e9cf3836d5b15dccd6bd6a7f469",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Prevents protected host from disabling TE/QIE and rejects protected S3 IRQ remapping transitions; all host changes require pkvm_enabled. Native SDK retains ordinary translation/IRQ suspend and resume semantics and error handling. The protected virtual-status consistency BUGs and refusal paths require hyp ownership and are omitted with that mode.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "evidence/intel-shared-review.json"
+    ]
+  },
+  {
+    "commit": "f5b0a52e535db5e99f2b8a0080e7bdac15c9093b",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Replaces hyp-only early returns with BUG_ON for device-TLB flushes while protected translation is off, relying on 2d643b72fd30 prohibition. Native host intentionally permits disabling translation and preserves its normal return checks. Importing the protected invariant unconditionally would create native crashes; no hyp variant is built for current target.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "evidence/intel-shared-review.json"
+    ]
+  },
+  {
+    "commit": "460bb3531af775a2de69c79280b0aee07ad47b4c",
+    "disposition": "already-represented-upstream",
+    "result_commits": [
+      "36244dfd3853f7bf89d03b8e90d56b23ce7fbc16",
+      "667a74f8499e86603f270b9ad7fdbeb824ed9496"
+    ],
+    "rationale": "ACK removes an accidentally duplicated PASID-table cache flush. Native 36244dfd3853 supplies exactly one pre-publication flush, and current error-pointer adaptation preserves that entire lookup after only error normalization. Reassessed explicitly because pasid.c blob changed; archive the old text witness instead of silently refreshing it.",
+    "evidence": [
+      "evidence/intel-framework-review.json",
+      "evidence/intel-iommu-walk-check.json"
+    ]
+  },
+  {
+    "commit": "a8434d7d887eea1ac9654aceb95d1f0290a6121b",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds private pkvm_init_ops hyp_iommu_init callback, VMX initializer and a separate CONFIG_PKVM_INTEL hyp object. The subject calls these vendor hooks, but they are protected-hypervisor initialization callbacks, not Android trace/vendor module hooks or exported symbols. The SDK ordinary guest boot gate does not enable this alternate hypervisor. Preserve native IOMMU initialization and independently carried Android module infrastructure.",
+    "evidence": [
+      "evidence/intel-hypercalls-dma-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md"
+    ]
+  },
+  {
+    "commit": "88879d86c75c502c36634bb0f94f4a9f224f2c8e",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Defers x86_init.iommu.iommu_init only when enable_pkvm is true and invokes it from protected initialization; retains ordinary init/shutdown in the false branch. Adds protected host glue build dependency. SDK command-line evidence establishes the false branch, so retain native direct initialization/shutdown rather than its unused protected deferral.",
+    "evidence": [
+      "evidence/intel-hypercalls-dma-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md"
+    ]
+  },
+  {
+    "commit": "eba799add8871c946c2b68761dfa35ae56467aad",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Routes qi_submit_sync to a protected descriptor-submission hypercall only when pkvm_enabled; adds its private handlers/payload plumbing. Later 510c8cbcbb95 removes this general submission hypercall in favor of narrowly scoped IEC invalidation. Native direct QI submission and LTS descriptor/presence fixes remain, without either excluded protected entry point.",
+    "evidence": [
+      "evidence/intel-hypercalls-dma-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md"
+    ]
+  },
+  {
+    "commit": "3cf82cef8d7fb9703e4865a9d1dd64ed0d24843d",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Legacy context setup/clear and passthrough obtain protected hypercall early-return branches, with donation payloads and private level_to_agaw helper. Ordinary SDK uses native direct context tables, not protected EPT-backed passthrough. Keep native ATS setup, invalidation and root guard; do not introduce the protected donation protocol or ATS policy for a future host platform.",
+    "evidence": [
+      "evidence/intel-hypercalls-dma-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md"
+    ]
+  },
+  {
+    "commit": "12c1f7f2f18f06a9dcf087b658560330d6688c75",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Scalable context setup/teardown gains pkvm_enabled branches and hypervisor-only PASID-directory donation/freeing. Native device_pasid_table_setup/teardown retain their direct allocation and context invalidation ownership. Positive protected backend gate, not failure to find a consumer, excludes the payload, dispatch and donated-table model.",
+    "evidence": [
+      "evidence/intel-hypercalls-dma-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md"
+    ]
+  },
+  {
+    "commit": "3dbd753022e4d909a1d12bbe0088faf5d4f5668b",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds first-level PASID setup/replacement hypercalls selected only by pkvm_enabled plus their handlers/payloads. Retain native setup and current teardown-before-replacement fix instead of reviving the older duplicate replace helper. Shared PASID ERR_PTR propagation is separately adapted in 667a74f8499e.",
+    "evidence": [
+      "evidence/intel-hypercalls-dma-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md"
+    ]
+  },
+  {
+    "commit": "e0b5603a1d24518c3965beb6027a99bc2438605c",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds protected second-level and protected EPT-backed passthrough PASID hypercalls, all native entry branches conditional on pkvm_enabled. The SDK native driver retains native second-level/passthrough translation and newer replacement ordering. No host-donated PGD or protected domain-ID contract is exposed.",
+    "evidence": [
+      "evidence/intel-hypercalls-dma-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md"
+    ]
+  },
+  {
+    "commit": "0d618d5eddcbbde626b00c6669e1e30d87d7797c",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds protected PASID teardown early-return branch, payload and hypercall implementation. Native teardown remains local, with Present-clear, invalidation, final clear and native PRQ draining preserved. The protected alternative is unnecessary for the pinned ordinary SDK boot mode, not a historical KMI-only change.",
+    "evidence": [
+      "evidence/intel-hypercalls-dma-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md"
+    ]
+  },
+  {
+    "commit": "a62cc27b7e0b05117e61cfa460eda1c729aa7708",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds protected domain allocation/free handoff and moves unchanged private domain_flush_cache into a header for that backend. Native allocation still flushes its PGD before use and native free owns the whole tree. No exported API is added; retain native helper scope and lifecycle rather than protected donation rollback and host/hyp domain copies.",
+    "evidence": [
+      "evidence/intel-hypercalls-dma-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md"
+    ]
+  },
+  {
+    "commit": "00793043dadc63f1089b9886fd2d0444f8ba3e01",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Repairs protected domain teardown by returning donated table pages in an output memcache and restricting native domain_unmap/free to the !pkvm_enabled branch. Native target already performs exactly that ordinary unmap and deferred-free sequence. It has no donated-page memcache to recover; native full root teardown remains intact, distinct from the conversion-helper cleanup in a9ad95721fc4.",
+    "evidence": [
+      "evidence/intel-hypercalls-dma-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md"
+    ]
+  },
+  {
+    "commit": "8b8d3297e39418f542b6e947ffddafab5698dbc1",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds pkvm_enabled map/unmap early-return branches and protected map payload/memcache plumbing. Native map/unmap remains direct and receives separately reviewed superpage traversal guards. Do not copy the protected unmap branch that reports the requested size after logging a hypercall failure; native invalid partial-unmap limitation is explicitly documented separately.",
+    "evidence": [
+      "evidence/intel-hypercalls-dma-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md"
+    ]
+  },
+  {
+    "commit": "510c8cbcbb9558123d62c525d41928dce271836b",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Removes general protected QI submission and adds only protected IEC invalidation. Moves qi_flush_iec from irq_remapping.c to dmar.c so the hyp build can reuse it; descriptor construction in the native fallback is unchanged and no module export appears. Keep native private helper and direct QI path with LTS fixes; neither protected interface is required by SDK boot mode.",
+    "evidence": [
+      "evidence/intel-hypercalls-dma-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md"
+    ]
+  },
+  {
+    "commit": "3963302892e770800d6ae3216d96a65e0632d3fb",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds protected IRTE-management payload/hypercall and ir_table to the __PKVM_HYP__ intel_iommu variant. Native interrupt remapping keeps its existing table and locking, not the donated hypervisor-protected copy. The separate protected Makefile/boot gates exclude this backend; normal IRQ remapping remains available.",
+    "evidence": [
+      "evidence/intel-hypercalls-dma-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md"
+    ]
+  },
+  {
+    "commit": "70a02d7773901ebb189423066e548ff60ee85d10",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds validation and hypercall dispatch for protected DMAR MSI writes. Native dmar_msi_write changes only by a pkvm_enabled branch; its false branch performs the same three locked register writes. Keep native behavior and native interrupt handling without the excluded protected register-emulation layer.",
+    "evidence": [
+      "evidence/intel-hypercalls-dma-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md"
+    ]
+  },
+  {
+    "commit": "9e52737a4829ec6736735ed054b022aa67bcec11",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Removes untrusted ATS flags from protected payloads and derives protected pfsid from context/SATC state; shared-header additions are inside the __PKVM_HYP__ variant. Native PCI device identity/ATS state is unchanged and retained. Omit the protected payload cleanup without introducing its optimistic SATC physical-function assumption into the native driver.",
+    "evidence": [
+      "evidence/intel-hypercalls-dma-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md"
+    ]
+  },
+  {
+    "commit": "3be13f85015cfe863eae0838464dbf0e2c742e90",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [
+      "4718007870547e1efebbdd6745d9fce58f008fef",
+      "667a74f8499e86603f270b9ad7fdbeb824ed9496"
+    ],
+    "rationale": "Retain native 471800787054 replacement race fix: tear down the old PASID before setup for first-level, second-level, passthrough and nested domains, with duplicate overwrite helpers removed. Native nested.c/pasid.h are exact LTS and iommu.c replacement helpers unchanged; whole pasid.c differs only by separately carried error-pointer propagation. Omit protected payload old_did removal and hypercall-specific cleanup because that alternate backend is excluded. Never restore whole ACK pasid.c over later native fixes.",
+    "evidence": [
+      "evidence/intel-hypercalls-dma-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md"
+    ]
+  },
+  {
+    "commit": "a9ad95721fc4c700263b99f9cc106da1babb0c6c",
+    "disposition": "applied",
+    "result_commits": [
+      "48dc11713c50b9c5738888ac35ee49e2b1212681"
+    ],
+    "rationale": "Apply the six-line removal of top-level PGD freeing from dma_pte_free_pagetable. Its only caller is superpage conversion, which retains domain root ownership; native domain_unmap/full domain teardown still releases the root. This does not assert the full-range condition is impossible on every hardware width. Existing extracted conversion test mocks this helper, so evidence for this change is call-graph/source review and the emulator compilation, not runtime teardown testing.",
+    "evidence": [
+      "evidence/intel-hypercalls-dma-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md"
+    ]
+  },
+  {
+    "commit": "f880f0340afab5fee0a01b056f4e5852fe11cbb2",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [
+      "eb47f4db3c60e29ac75591323eccc13a5d6b752d"
+    ],
+    "rationale": "Remove the partial generic batching import while retaining native synchronous DMA helpers. Only ACK ARM64 selects ARCH_HAS_BATCHED_DMA_SYNC and replaces cache operations with _nosync plus dsb completion; x86 uses the empty completion stub. Native x86 DMA semantics and public interfaces are unchanged. ARM64, IOMMU DMA and Xen retain native synchronous implementations rather than mixing deferred cache operations with absent completion. Preserve unrelated Android export/allocation checks and native LTS scatterlist fixes.",
+    "evidence": [
+      "evidence/intel-hypercalls-dma-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md"
+    ]
+  },
+  {
+    "commit": "5bef17dd887876877144f6acfcc72ada0afa9d26",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [
+      "eb47f4db3c60e29ac75591323eccc13a5d6b752d"
+    ],
+    "rationale": "Restore native internal direct-DMA helper signatures and SG map/unmap loops, removing bool flush batching whose completion is a no-op on x86. These private kernel/dma/direct.h helpers are not public module API. Preserve public mapping API and native 4ee4d628c4d9 THRU_HOST_BRIDGE fallthrough and d0d08f4bd7f6 bus-address SG length assignment. This omits an ARM64 performance optimization, not required SDK DMA functionality; no device runtime test is claimed.",
+    "evidence": [
+      "evidence/intel-hypercalls-dma-review.json",
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md"
+    ]
+  },
+  {
+    "commit": "fc0c4f99212f9c3f1936b9db5503a0d804559532",
+    "disposition": "already-represented-upstream",
+    "result_commits": [
+      "2852ad05e3e9c97bfd14f1f480ee45128424c143"
+    ],
+    "rationale": "Native LTS already makes SMMUv3 tristate, supplies module ownership and uses modern IOMMU registration/ACS handling. Entire current SMMUv3 tree equals LTS. Do not replay its older bus_set_iommu code or enable ARM64 hardware for SDK.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "1ab0dd5f3de48397e29b619d79d014981b477e2f",
+    "disposition": "already-represented-upstream",
+    "result_commits": [
+      "cd221bd24ff5567bbcc11ec0c303141a7c2b71bf"
+    ],
+    "rationale": "Native LTS already provides the SMMU module, owner, guarded legacy DT binding and modern registration. Whole native ARM SMMU tree is preserved, including later module naming fixes; no historical implementation replacement.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "6a1652effdb83c2f566c17ea2ad65d43652871ae",
+    "disposition": "already-represented-upstream",
+    "result_commits": [
+      "b42000e4b8741bf6591fcbbbefff6aa745f8eb29"
+    ],
+    "rationale": "Native b42000e4b874 provides SCM modularity, module metadata and IOMMU dependency integration. Current native firmware/qcom and ARM Kconfig retain the subsequently evolved hidden SCM symbol and explicit QCOM selection. Keep native permanent module support and later firmware fixes, not the older layout.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "c6b23bcb44d97561bad36c485cc92f788a3cf33d",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [
+      "b42000e4b8741bf6591fcbbbefff6aa745f8eb29",
+      "2ff600d29ee478d0a8d46ef8a58afb5e038fe692"
+    ],
+    "rationale": "The original SCM modular-linkage constraint entered native history in b42000e4b874; current ARM_SMMU_QCOM is a separate tristate conditioned on ARCH_QCOM and selects QCOM_SCM. Keep that newer native dependency design rather than restore an obsolete global dependency on unrelated ARM SMMU builds.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "d32577e3c46fc1a1e825ed5e908371b8e4dcafc6",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Removes detailed debug dumping only from ARM LPAE selftests. Retain native allocator/selftests; this test-output simplification supplies no SDK runtime or module API.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "93a899a7a5c5a5467631ba0a698d6557d5d553cf",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Moves ARM LPAE selftests into a separate object and changes their Makefile selection. Keep native selftest placement with the excluded ARM-format allocator; no generic x86 IOMMU tests are removed.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "3e7b99ebefb17aee5e81bfaceec0f25e61eaac78",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Makes the separate ARM LPAE selftest loadable and removes init annotations. Its LPAE dependency is false on this SDK, so do not add a future-platform test module; ordinary Android module support is retained separately.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "7bb16fb93c9f652d975c94096b25f4ea5395736a",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Converts only ARM LPAE selftests to KUnit and replaces their Kconfig/Makefile target. Native test coverage remains in native source; this does not assert the tests were executed.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "5a4387f1e0591acdd001bdbfb46d2362eaf0a6e6",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Splits ARM LPAE allocation/cache-maintenance/address conversion into kernel wrappers to support alternate hyp compilation. Preserve the complete native allocator including DMA translation/alignment checks, rather than introducing private wrapper symbols without that backend.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "6466dca3ec14eecb145ba6a3f486465e33edc279",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds ARM nVHE io-pgtable implementation and hyp object wiring, exposing the stage-2 allocator and substituting hyp address translation. Native ARM implementation remains whole; there is no x86 build path through nVHE or ARM stage-2 formats.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "6056d88e71d977020974d7b4af860cbc0ecc6276",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds ARM EL2 module Kbuild and module-ops wrappers, disables LSE alternatives for that hyp module and supplies a BUG stub for unsupported dirty tracking. These are ARM protected backend module mechanics, not SDK native module-loader requirements. Keep the independent generic Android module infrastructure.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "90dd924b9fc5161c690f414037f957bd93a96558",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds stage-1 allocation/free to the ARM hyp wrapper and makes native-private LPAE functions visible to it. No exported symbol is added here; retain native static scope and ordinary allocator lifetime.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "3835afcb8e759c445a05d88d1d2b22662181e3d2",
+    "disposition": "omitted-current-target",
+    "result_commits": [
+      "af2563ef3dd38669f57187da2dc7839eec57a555"
+    ],
+    "rationale": "Adds ARM stage-2 IDMAP-only tables and protected donation-pool selection. Remove the orphan generic-header quirk in af2563ef3dd3 because its only implementation is the excluded ARM format. Native Intel/AMD translation contracts and native ARM map validation remain unchanged.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "3749042ef113c6957c54d4a0d74acce95b9237ba",
+    "disposition": "omitted-current-target",
+    "result_commits": [
+      "af2563ef3dd38669f57187da2dc7839eec57a555"
+    ],
+    "rationale": "Adds physical-page release callback and ARM walker traversal for protected SMMUv3 DMA reference accounting. Remove the orphan generic-header callback in af2563ef3dd3 and retain the native walker instead of carrying an unimplemented SDK contract. Later ACK wrong-pointer/double-accounting fixes apply to this alternate ARM lifecycle.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "34925b225aa0296d04331dd6dae3dfb1dd4ba902",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds domain allocation/free for ARM SMMUv3 protected PV host glue and exports arm_lpae_restrict_pgsizes. The exported helper is explicitly ARM-format functionality gated off by LPAE on this SDK; this omission is not a blanket rejection of vendor module exports.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "11bb90da75fa742279fe61533a15c4def38a0671",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Reintroduces partial block splitting only for the new ARM IDMAP quirk. Native ARM unmap rejects partial large IOPTEs, with no alternate protected identity-map ownership. Keep that native contract and avoid adding unsupported split paths.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "a72de5d589b7255cb9927462db8d107b4b0a43cf",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds ARM hyp pvIOMMU driver registration, driver-ID init callback and matching ARM EL2 module-ops entry, including temporary protected driver signature. All executable paths are ARM nVHE/SMMUv3 protected objects; no generic x86 registration API is changed.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "b4e318f3eab2097f706ab7602cff1f7d8d7f6aac",
+    "disposition": "omitted-current-target",
+    "result_commits": [
+      "af2563ef3dd38669f57187da2dc7839eec57a555"
+    ],
+    "rationale": "Adds ARM guest request_dma HVC, virtual route-to-token translation and protected SMMUv3 callback. The shared SMCCC header contains only its ARM function number/encoding; restore native header in af2563ef3dd3. No x86 hypercall ABI or native IOMMU capability is removed.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "f03395a90863df045b95481bfbc4c319e48959f1",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Introduces ARM64-only PKVM_PVIOMMU, its Makefile object and pkvm,pviommu DT binding. Probe uses ARM HVC transport. This positive architecture/protocol gate excludes this separate guest device on the x86 SDK; ordinary native/virtio IOMMU support is unchanged.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "9e78513d19139cf08ba1212c5974bda629328e11",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Implements allocation/free via ARM pvIOMMU HVC IDs and private SMCCC-to-errno translation inside the excluded guest driver. Native x86 domain allocation does not use this transport or domain-ID namespace.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "a66105c85cc622340115f40de07bbe7a430e85e2",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds ARM pvIOMMU guest attach/detach/release HVC sequences and private master ownership. Preserve native x86 attachment lifecycle without importing an unavailable ARM HVC backend.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "5a617f5a32a3d0e0e90a2a9b0aa861ac327ae685",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds ARM pvIOMMU HVC map/unmap loops and protection-bit encoding inside that ARM64-only guest driver. Native x86 map/unmap remains implemented by its existing drivers; no claim is made that these historical HVC loops are a validated SDK mapping implementation.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "746ab2e94229c89866e12be2dde78583bccfffb6",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds a private Maple Tree IOVA-to-IPA shadow to ARM pvIOMMU. This is bookkeeping for that HVC protocol, not generic Maple Tree or IOMMU translation behavior. Keep native x86 translation ownership and its fixes.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "5cb3fa390dafe6cd58ece62f1474adf4a24372b9",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds PASID-specific ARM guest HVC attach/detach and updates private device/domain ownership. Native x86 PASID operations remain present, including the separately reviewed LTS replacement race fix.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "516414ca0874bc4991edcb512b861d53d5018357",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds optional second DT IOMMU cell/group ID and a driver-private group xarray to ARM pvIOMMU. SDK uses its native platform device topology and not this ARM64-only DT/HVC device. No generic IOMMU group API is removed.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "6b32241a4e67177fd8ae76dfca33a9f8ec71a122",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds built-in-only selftests for ARM pvIOMMU private Maple Tree mapping, gated by PKVM_PVIOMMU_SELFTEST and its ARM64 driver. This does not test the hypervisor transport and is not part of SDK build verification; retain native generic tests.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "bbdedf16a35eb28ec4c7c1e8df3a7195901e68bd",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Calls the ARM put_pages callback during full table teardown and drains protected deferred DMA unuse, including NULL-gather handling. The SDK does not adopt that ARM DMA-reference lifecycle; native table free behavior remains intact.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "999109a15dc5e8c4053746b801e3f6e1130a83f6",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Sets a hardcoded maximum of 256 PASIDs for ARM pvIOMMU guest driver probing. Keep native x86 driver capability probing; no generic PASID limit is reduced.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "bd3575c5cc34f933a0739a5936c353011d82c9d0",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Propagates protected ARM host-stage2 identity-unmap errors through hyp callbacks and adjusts SMMUv3/temp implementations. Native x86 is not using this host/hyp ownership transition. Do not claim ARM protected donation/error rollback support from this omission.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "54b6d3eff5d540411ea384a4abc62bc2aa8054ab",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Threads flags through ARM protected set_identity hypercall, module API and SMMUv3/temp callbacks. The export is specifically an ARM KVM nVHE host API; ordinary SDK module customization remains separately supported.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "5f6ad1173a6018538a8cb089a3b2da0d23735fac",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Corrects cookie-versus-io_pgtable pointer in the added ARM put_pages walker. Native source has neither that callback nor the faulty call, and remains unchanged; not treated as an unnecessary security fix in an enabled implementation.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "2a08b4c06f5ed2ed51f7e23bcd77e45272d51e18",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds leaf checking and invalid-entry progress to ARM put_pages traversal, temporarily reintroducing its wrong pointer. Omit the entire alternate lifecycle, not selectively preserve this defective intermediate state.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "57d76559d65e15855a987682bbb146ec33d97dca",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Corrects the repeated ARM put_pages pointer regression from 2a08b4c06f5e. The native allocator has no such callback or call site after the header restoration; original and fixed alternate implementations are both excluded.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "728bed07dca63d7d66fe6f7e3da17ecde1298ea7",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Eliminates duplicate protected page accounting by using ARM table-free traversal once, passing gather through recursion and restoring walker error propagation. Native source already lacks the alternate release accounting and is preserved wholesale.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "27ee5f4a3db7fa5f9b0d8c5ce3420d5f5be351ae",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Removes unused ARM put_pages_data after the accounting redesign. Native source never contains this added helper type; no SDK effect remains.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "14bd792e1d032d7f7e27165cf57285aa98520408",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Removes redundant per-entry invalidation from the protected ARM IDMAP split path. Native allocator lacks that reintroduced split path; native invalidation logic remains unchanged.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "3d68f198ec0f89873afaaacebacbf0b3aedcd7f2",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Batches PTE population only inside protected ARM IDMAP block splitting. Omit this architecture/backend optimization with its feature; preserve native LTS allocator.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "1d1be39fe5998d0a4de2354d566a91a25a2ef8bf",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Fixes old-block TLB invalidation to use aligned IOVA in the added protected ARM IDMAP split path. Native source has no such path or advanced physical-address invalidation bug. This omission makes no ARM protected isolation claim.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "88bef7bf6f82bb1ccdd3dd6448de7624b45b361f",
+    "disposition": "omitted-current-target",
+    "result_commits": [
+      "af2563ef3dd38669f57187da2dc7839eec57a555"
+    ],
+    "rationale": "Names ARM MMIO guard enrollment/info/map/unmap services and updates the ARM_PKVM_GUEST driver, whose Kconfig explicitly depends on ARM64. Restore the native header and matching native driver spelling; the SDK exposes no ARM SMCCC service.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "808cc9b799af55b91751ebf6442386d5a1428a41",
+    "disposition": "omitted-current-target",
+    "result_commits": [
+      "af2563ef3dd38669f57187da2dc7839eec57a555"
+    ],
+    "rationale": "Introduces ARM protected guest MEM_RELINQUISH handling and function encoding, with ARM nVHE memory ownership/host plumbing. Restore native shared header rather than leave a declaration for an unported protected memory protocol.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "c089817faa68468c67b7a06e78da4fe3d5a77ca3",
+    "disposition": "omitted-current-target",
+    "result_commits": [
+      "af2563ef3dd38669f57187da2dc7839eec57a555"
+    ],
+    "rationale": "Adds range support to ARM protected share/unshare HVCs and the KVM_FUNC_HAS_RANGE header bit. These are ARM exception/hypercall semantics, not native x86 KVM memory sharing; preserve native header/API.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "d6aac890612778890b6ed0f0d5cc38a33d312e4b",
+    "disposition": "omitted-current-target",
+    "result_commits": [
+      "af2563ef3dd38669f57187da2dc7839eec57a555"
+    ],
+    "rationale": "Adds ARM protected range-MMIO guard handlers and reserved SMCCC IDs 10/11. Keep native reserved definitions and native ARM handlers; no x86 interface uses these ARM function encodings.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "2864d7152511a57f4ffcf2636d4cc7c42d544c45",
+    "disposition": "omitted-current-target",
+    "result_commits": [
+      "af2563ef3dd38669f57187da2dc7839eec57a555"
+    ],
+    "rationale": "Adds SMC64 trapping/module dispatch for ARM protected guests and CCA function upper bounds in the shared header. Native x86 has no ARM SMC exception path; omit the alternate dispatch and restore native constants.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "4dbd8ddf9ba3af99a1d338303520cf756a220abf",
+    "disposition": "omitted-current-target",
+    "result_commits": [
+      "af2563ef3dd38669f57187da2dc7839eec57a555"
+    ],
+    "rationale": "Adds ARM protected guest MMIO device-request ownership and SMCCC function 63. The implementation is entirely in ARM nVHE/device code; native header restoration omits its orphan encoding, not a generic x86 MMIO feature.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "7a1e8a67b0f809f523cb5350b5a2756d05108169",
+    "disposition": "omitted-current-target",
+    "result_commits": [
+      "af2563ef3dd38669f57187da2dc7839eec57a555"
+    ],
+    "rationale": "Adds ARM nVHE pvIOMMU HVC dispatcher and operation IDs. The transport is ARM SMCCC and its guest driver depends on ARM64. Restore native shared header with no alternate backend enabled.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "32767c4f2d6c00342cf5bb7fae0a2da9aca5bf3b",
+    "disposition": "omitted-current-target",
+    "result_commits": [
+      "af2563ef3dd38669f57187da2dc7839eec57a555"
+    ],
+    "rationale": "Implements ARM protected pvIOMMU map/unmap HVC operations and translates ARM protocol protection bits. The shared addition is only those wire bit definitions; native x86 IOMMU permissions and mapping remain intact.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "378db052714bc70ec3dbbde24bfde655b481c261",
+    "disposition": "omitted-current-target",
+    "result_commits": [
+      "af2563ef3dd38669f57187da2dc7839eec57a555"
+    ],
+    "rationale": "Adds no-poison option to ARM protected guest relinquish and documents its ARM hypercall flags. This changes that separate protected memory-sharing contract; omit it and its documentation/header delta for SDK without relaxing any native x86 zeroing.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "e139c078d2ceea40fc81f3c930525ce12dbf80e0",
+    "disposition": "omitted-current-target",
+    "result_commits": [
+      "af2563ef3dd38669f57187da2dc7839eec57a555"
+    ],
+    "rationale": "Adds ARM protected guest device-power HVC and per-protected-device power lock. include/kvm/device.h is absent in the current/native trees; no orphan power field is carried. Restore native SMCCC header; ordinary SDK power management remains unchanged.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "37ba3f5e03be240613ea4e0030aec5f7f7b54656",
+    "disposition": "omitted-current-target",
+    "result_commits": [
+      "af2563ef3dd38669f57187da2dc7839eec57a555"
+    ],
+    "rationale": "Adds C1-Pro SME DVMSync firmware probing and ARM protected hyp helper plus its SMCCC number. This is a real ARM CPU erratum mitigation, outside the x86 ISA target; retain all native ARM LTS code and do not claim that omitted ARM protected execution would be safe.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "527f6994c4b3951c5e0732941c376d367c0284d7",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [
+      "2ff600d29ee478d0a8d46ef8a58afb5e038fe692"
+    ],
+    "rationale": "All unique remerge hunks examined: SMMU modular registration/aliases and legacy init conflict, QCOM register mask prefix conversion, modern free SMR selection, unused PCI include removal and generic pgsize_bitmap documentation. Preserve current native ARM/OF code and generic owner/bitmap declarations; do not reintroduce historical probing code. No hidden generic executable resolution is omitted.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "eb1a2a5f9bf825c361f6d0c890e29494e370c882",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [
+      "b42000e4b8741bf6591fcbbbefff6aa745f8eb29",
+      "2ff600d29ee478d0a8d46ef8a58afb5e038fe692"
+    ],
+    "rationale": "Single unique hunk removes old ARM SMMU MMU dependency while retaining SCM modular-linkage restriction. Current native ARM Kconfig implements later QCOM-specific selection; retain that complete dependency design, not the obsolete combined expression.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "46ff0a247f036da19b07cd821a1b7b71794d8607",
+    "disposition": "merge-resolution-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Single include conflict keeps Android IOMMU hook header while removing obsolete crash_dump/dma-direct includes at that point in history. Current dma-iommu.c retains trace/hooks/iommu.h alongside its current LTS includes; no executable merge-only delta is lost.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "aba9e3492c68f9b388036b00ce0d22534f971df3",
+    "disposition": "merge-resolution-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "5aa2127f22250288d2ff23e9c257a8f2d50bd717"
+    ],
+    "rationale": "Single allocation hunk places Android IOVA notification after the shared done label, covering successful 32-bit fast allocation and normal allocation. Current native control flow retains the same notification placement and later native bounds/allocator fixes, including separately adapted hook guards.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "6fe236d7fa3a60fa66510ec2b3be2748ab9cd254",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "2ff600d29ee478d0a8d46ef8a58afb5e038fe692"
+    ],
+    "rationale": "Examine all unique remerge hunks across four files: retain mixed-build Makefile setup with native current W/KBUILD_EXTRA_WARN handling; omit ARM-only setup hook by architecture gate; retain both native SWIOTLB trace and Android IOMMU hook includes; reject the historical deletion of native battery-info properties/getters. Whole power_supply_core.c remains LTS, preserving its exported interfaces and later fixes. No claim of historical KMI is needed for rebuilt mixed modules.",
+    "evidence": [
+      "evidence/arm-iommu-review.json",
+      "SECURITY.md: ARM IOMMU and SMCCC declarations"
+    ]
+  },
+  {
+    "commit": "3cf5c714221300214767e62afd28d66248f44d20",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "ACK explicitly reverts these jack switch additions in e5f5e3334480 after 73a11b09610f renumbers them around SW_MACHINE_COVER. Final ACK and port have identical native switch IDs/maxima and sound/core/jack.c; native sound header differs from ACK only by omitted historical KABI reserve. Do not resurrect removed event IDs or widened bitmap bounds. This is positive revert/final-tree evidence, not lack of a consumer.",
+    "evidence": [
+      "evidence/input-numbering-review.json",
+      "SECURITY.md: Input event numbering"
+    ]
+  },
+  {
+    "commit": "e5f5e33344806c2d694f8de943fe4c3fa7c8c659",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Retain the final state of this ACK revert: remove three historical jack switches and restore bounded native switch definitions/jack table. Later native SW_USB_INSERT at 0x11 remains. Exact current jack.c/mod_devicetable.h/native jack header equality and final ACK switch definitions verify no residual historical jack feature is needed.",
+    "evidence": [
+      "evidence/input-numbering-review.json",
+      "SECURITY.md: Input event numbering"
+    ]
+  },
+  {
+    "commit": "73a11b09610faa29248ed8424b1c2366d4a0108a",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [
+      "2ff600d29ee478d0a8d46ef8a58afb5e038fe692"
+    ],
+    "rationale": "All unique remerge hunks examined. ARM QCOM probe plus __maybe_unused annotation remains native under the architecture gate. Generic input resolution preserves then-new SW_MACHINE_COVER and shifts private jack events; ACK e5f5e3334480 later removes all three private events and increased bounds. Final ACK and native switch IDs match, including newer SW_USB_INSERT, so retain native definitions without reviving the historical collision. The previously recorded necessity question is resolved by explicit revert history.",
+    "evidence": [
+      "evidence/input-numbering-review.json",
+      "SECURITY.md: Input event numbering"
+    ]
+  },
+  {
+    "commit": "637cf1d86b54defa94e095a93b86c0f800acdc4c",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "5e574340df36bdf3ad27c169fc2cb8e55fa84347"
+    ],
+    "rationale": "Retain three generic contextual-action key UAPI definitions, HID consumer-page mappings and debug names already carried in the port. Whole files equal current LTS after removing only these additions; no older HID safety code replaces LTS. Codes 0x254..0x256 are within native KEY_MAX and do not renumber existing events. Existing SDK input/uinput/HID infrastructure can carry generic key events; no specific GrapheneOS action consumer was established in the examined bionic/framework/goldfish files, so runtime action support is not claimed. Compatibility takes priority over removing this small generic input extension.",
+    "evidence": [
+      "evidence/input-numbering-review.json",
+      "SECURITY.md: Input event numbering"
+    ]
   }
 ]

@@ -1,0 +1,496 @@
+{
+  "source_head": "eb47f4db3c60e29ac75591323eccc13a5d6b752d",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "a8434d7d887eea1ac9654aceb95d1f0290a6121b",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds private pkvm_init_ops hyp_iommu_init callback, VMX initializer and a separate CONFIG_PKVM_INTEL hyp object. The subject calls these vendor hooks, but they are protected-hypervisor initialization callbacks, not Android trace/vendor module hooks or exported symbols. The SDK ordinary guest boot gate does not enable this alternate hypervisor. Preserve native IOMMU initialization and independently carried Android module infrastructure.",
+      "evidence": [
+        "evidence/intel-hypercalls-dma-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md"
+      ],
+      "patch_sha256": "6d32f64ba08923a3300530120c473ab4bacaef42110dae9622ab67034718ddbb",
+      "changed_paths": [
+        "arch/x86/kvm/pkvm/Makefile",
+        "arch/x86/kvm/pkvm/init.c",
+        "arch/x86/kvm/pkvm/init.h",
+        "arch/x86/kvm/pkvm/vmx/host_vmx.c",
+        "drivers/iommu/intel/pkvm/Makefile.pkvm",
+        "drivers/iommu/intel/pkvm/iommu.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "88879d86c75c502c36634bb0f94f4a9f224f2c8e",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Defers x86_init.iommu.iommu_init only when enable_pkvm is true and invokes it from protected initialization; retains ordinary init/shutdown in the false branch. Adds protected host glue build dependency. SDK command-line evidence establishes the false branch, so retain native direct initialization/shutdown rather than its unused protected deferral.",
+      "evidence": [
+        "evidence/intel-hypercalls-dma-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md"
+      ],
+      "patch_sha256": "2f20cd4ef40e994724970eecb33d28eff7739a83420fa58ec36c6d635e2f19c6",
+      "changed_paths": [
+        "arch/x86/kvm/Kconfig",
+        "arch/x86/kvm/Makefile",
+        "arch/x86/kvm/vmx/pkvm_init.c",
+        "drivers/iommu/intel/dmar.c",
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/pkvm_iommu.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "eba799add8871c946c2b68761dfa35ae56467aad",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Routes qi_submit_sync to a protected descriptor-submission hypercall only when pkvm_enabled; adds its private handlers/payload plumbing. Later 510c8cbcbb95 removes this general submission hypercall in favor of narrowly scoped IEC invalidation. Native direct QI submission and LTS descriptor/presence fixes remain, without either excluded protected entry point.",
+      "evidence": [
+        "evidence/intel-hypercalls-dma-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md"
+      ],
+      "patch_sha256": "741af4ecc570e1b3c4209cf4c6d37ea5cd881db738d98fbf76b6e2741a7bf84c",
+      "changed_paths": [
+        "arch/x86/include/asm/pkvm_hypercalls.h",
+        "arch/x86/kvm/pkvm/pkvm.c",
+        "drivers/iommu/intel/dmar.c",
+        "drivers/iommu/intel/pkvm/Makefile.pkvm",
+        "drivers/iommu/intel/pkvm/iommu.c",
+        "drivers/iommu/intel/pkvm/iommu_hc.c",
+        "drivers/iommu/intel/pkvm_iommu.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "3cf82cef8d7fb9703e4865a9d1dd64ed0d24843d",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Legacy context setup/clear and passthrough obtain protected hypercall early-return branches, with donation payloads and private level_to_agaw helper. Ordinary SDK uses native direct context tables, not protected EPT-backed passthrough. Keep native ATS setup, invalidation and root guard; do not introduce the protected donation protocol or ATS policy for a future host platform.",
+      "evidence": [
+        "evidence/intel-hypercalls-dma-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md"
+      ],
+      "patch_sha256": "a6a32078ae271092bad069a18389cf0db81de4616cbad18473b19cacfeca5e7d",
+      "changed_paths": [
+        "arch/x86/include/asm/kvm_pkvm.h",
+        "arch/x86/include/asm/pkvm_hypercalls.h",
+        "arch/x86/kvm/pkvm/pkvm.c",
+        "drivers/iommu/intel/iommu.c",
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/pkvm/iommu_hc.c",
+        "drivers/iommu/intel/pkvm_iommu.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "12c1f7f2f18f06a9dcf087b658560330d6688c75",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Scalable context setup/teardown gains pkvm_enabled branches and hypervisor-only PASID-directory donation/freeing. Native device_pasid_table_setup/teardown retain their direct allocation and context invalidation ownership. Positive protected backend gate, not failure to find a consumer, excludes the payload, dispatch and donated-table model.",
+      "evidence": [
+        "evidence/intel-hypercalls-dma-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md"
+      ],
+      "patch_sha256": "9b5ccd8ef98cfed0d27a7dc87fe683a2241547f289ad10db97828d7e13437837",
+      "changed_paths": [
+        "arch/x86/include/asm/kvm_pkvm.h",
+        "arch/x86/include/asm/pkvm_hypercalls.h",
+        "arch/x86/kvm/pkvm/pkvm.c",
+        "drivers/iommu/intel/iommu.c",
+        "drivers/iommu/intel/pasid.c",
+        "drivers/iommu/intel/pkvm/iommu_hc.c",
+        "drivers/iommu/intel/pkvm_iommu.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "3dbd753022e4d909a1d12bbe0088faf5d4f5668b",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds first-level PASID setup/replacement hypercalls selected only by pkvm_enabled plus their handlers/payloads. Retain native setup and current teardown-before-replacement fix instead of reviving the older duplicate replace helper. Shared PASID ERR_PTR propagation is separately adapted in 667a74f8499e.",
+      "evidence": [
+        "evidence/intel-hypercalls-dma-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md"
+      ],
+      "patch_sha256": "63ba2df5d24f424cb8fa595181a952795e80c868f3c5a9df11f535da48857102",
+      "changed_paths": [
+        "arch/x86/include/asm/kvm_pkvm.h",
+        "arch/x86/include/asm/pkvm_hypercalls.h",
+        "arch/x86/kvm/pkvm/pkvm.c",
+        "drivers/iommu/intel/pasid.c",
+        "drivers/iommu/intel/pkvm/iommu_hc.c",
+        "drivers/iommu/intel/pkvm_iommu.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "e0b5603a1d24518c3965beb6027a99bc2438605c",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds protected second-level and protected EPT-backed passthrough PASID hypercalls, all native entry branches conditional on pkvm_enabled. The SDK native driver retains native second-level/passthrough translation and newer replacement ordering. No host-donated PGD or protected domain-ID contract is exposed.",
+      "evidence": [
+        "evidence/intel-hypercalls-dma-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md"
+      ],
+      "patch_sha256": "25eb4ee063ee80fe2b2d7bb90b8a30d7f6f27c764a40b2276df8fe4c5ea8a1df",
+      "changed_paths": [
+        "arch/x86/include/asm/kvm_pkvm.h",
+        "arch/x86/include/asm/pkvm_hypercalls.h",
+        "arch/x86/kvm/pkvm/pkvm.c",
+        "drivers/iommu/intel/pasid.c",
+        "drivers/iommu/intel/pkvm/iommu_hc.c",
+        "drivers/iommu/intel/pkvm_iommu.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "0d618d5eddcbbde626b00c6669e1e30d87d7797c",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds protected PASID teardown early-return branch, payload and hypercall implementation. Native teardown remains local, with Present-clear, invalidation, final clear and native PRQ draining preserved. The protected alternative is unnecessary for the pinned ordinary SDK boot mode, not a historical KMI-only change.",
+      "evidence": [
+        "evidence/intel-hypercalls-dma-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md"
+      ],
+      "patch_sha256": "f7f9beae24e5aff1d67ee514c51b17f73cbbb82435d0309d1c1657eafbc43243",
+      "changed_paths": [
+        "arch/x86/include/asm/kvm_pkvm.h",
+        "arch/x86/include/asm/pkvm_hypercalls.h",
+        "arch/x86/kvm/pkvm/pkvm.c",
+        "drivers/iommu/intel/pasid.c",
+        "drivers/iommu/intel/pkvm/iommu_hc.c",
+        "drivers/iommu/intel/pkvm_iommu.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "a62cc27b7e0b05117e61cfa460eda1c729aa7708",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds protected domain allocation/free handoff and moves unchanged private domain_flush_cache into a header for that backend. Native allocation still flushes its PGD before use and native free owns the whole tree. No exported API is added; retain native helper scope and lifecycle rather than protected donation rollback and host/hyp domain copies.",
+      "evidence": [
+        "evidence/intel-hypercalls-dma-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md"
+      ],
+      "patch_sha256": "590a2a9c6a6cbde5406f875b5a6f58e3b21a782cc2be5db0666f12c3f2c02c2c",
+      "changed_paths": [
+        "arch/x86/include/asm/kvm_pkvm.h",
+        "arch/x86/include/asm/pkvm_hypercalls.h",
+        "arch/x86/kvm/pkvm/pkvm.c",
+        "drivers/iommu/intel/iommu.c",
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/pkvm/domain.c",
+        "drivers/iommu/intel/pkvm/iommu_hc.c",
+        "drivers/iommu/intel/pkvm_iommu.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "00793043dadc63f1089b9886fd2d0444f8ba3e01",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Repairs protected domain teardown by returning donated table pages in an output memcache and restricting native domain_unmap/free to the !pkvm_enabled branch. Native target already performs exactly that ordinary unmap and deferred-free sequence. It has no donated-page memcache to recover; native full root teardown remains intact, distinct from the conversion-helper cleanup in a9ad95721fc4.",
+      "evidence": [
+        "evidence/intel-hypercalls-dma-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md"
+      ],
+      "patch_sha256": "9b8193c506e26da65adde8c2165605d066b5e701443fbe449dc6a7269c09ddc4",
+      "changed_paths": [
+        "arch/x86/include/asm/kvm_pkvm.h",
+        "arch/x86/include/asm/pkvm_hypercalls.h",
+        "arch/x86/kvm/pkvm/pkvm.c",
+        "drivers/iommu/intel/iommu.c",
+        "drivers/iommu/intel/pkvm/domain.c",
+        "drivers/iommu/intel/pkvm/iommu_hc.c",
+        "drivers/iommu/intel/pkvm_iommu.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "8b8d3297e39418f542b6e947ffddafab5698dbc1",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds pkvm_enabled map/unmap early-return branches and protected map payload/memcache plumbing. Native map/unmap remains direct and receives separately reviewed superpage traversal guards. Do not copy the protected unmap branch that reports the requested size after logging a hypercall failure; native invalid partial-unmap limitation is explicitly documented separately.",
+      "evidence": [
+        "evidence/intel-hypercalls-dma-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md"
+      ],
+      "patch_sha256": "4bcb366298964eaf3dc9442c1d82d5811215b933dfe7e18b94c58624838d2e3e",
+      "changed_paths": [
+        "arch/x86/include/asm/kvm_pkvm.h",
+        "arch/x86/include/asm/pkvm_hypercalls.h",
+        "arch/x86/kvm/pkvm/pkvm.c",
+        "drivers/iommu/intel/iommu.c",
+        "drivers/iommu/intel/pkvm/domain.c",
+        "drivers/iommu/intel/pkvm_iommu.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "510c8cbcbb9558123d62c525d41928dce271836b",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Removes general protected QI submission and adds only protected IEC invalidation. Moves qi_flush_iec from irq_remapping.c to dmar.c so the hyp build can reuse it; descriptor construction in the native fallback is unchanged and no module export appears. Keep native private helper and direct QI path with LTS fixes; neither protected interface is required by SDK boot mode.",
+      "evidence": [
+        "evidence/intel-hypercalls-dma-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md"
+      ],
+      "patch_sha256": "6d41e2b82dfe081166722762b04e6410c5690e626211ce3c709303be94fa4784",
+      "changed_paths": [
+        "arch/x86/include/asm/pkvm_hypercalls.h",
+        "arch/x86/kvm/pkvm/pkvm.c",
+        "drivers/iommu/intel/dmar.c",
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/irq_remapping.c",
+        "drivers/iommu/intel/pkvm/iommu_hc.c",
+        "drivers/iommu/intel/pkvm_iommu.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "3963302892e770800d6ae3216d96a65e0632d3fb",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds protected IRTE-management payload/hypercall and ir_table to the __PKVM_HYP__ intel_iommu variant. Native interrupt remapping keeps its existing table and locking, not the donated hypervisor-protected copy. The separate protected Makefile/boot gates exclude this backend; normal IRQ remapping remains available.",
+      "evidence": [
+        "evidence/intel-hypercalls-dma-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md"
+      ],
+      "patch_sha256": "1ca58a94aff77b83d891e107d0ba3164a46ded811682cac22ccafb4781466e2e",
+      "changed_paths": [
+        "arch/x86/include/asm/kvm_pkvm.h",
+        "arch/x86/include/asm/pkvm_hypercalls.h",
+        "arch/x86/kvm/pkvm/pkvm.c",
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/pkvm/iommu_hc.c",
+        "drivers/iommu/intel/pkvm_iommu.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "70a02d7773901ebb189423066e548ff60ee85d10",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds validation and hypercall dispatch for protected DMAR MSI writes. Native dmar_msi_write changes only by a pkvm_enabled branch; its false branch performs the same three locked register writes. Keep native behavior and native interrupt handling without the excluded protected register-emulation layer.",
+      "evidence": [
+        "evidence/intel-hypercalls-dma-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md"
+      ],
+      "patch_sha256": "868e137c6c1c20e17b7f49cf8d4cdb751a99d77175ff3fea0773ba723c064052",
+      "changed_paths": [
+        "arch/x86/include/asm/pkvm_hypercalls.h",
+        "arch/x86/kvm/pkvm/pkvm.c",
+        "drivers/iommu/intel/dmar.c",
+        "drivers/iommu/intel/pkvm/iommu.c",
+        "drivers/iommu/intel/pkvm_iommu.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "9e52737a4829ec6736735ed054b022aa67bcec11",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Removes untrusted ATS flags from protected payloads and derives protected pfsid from context/SATC state; shared-header additions are inside the __PKVM_HYP__ variant. Native PCI device identity/ATS state is unchanged and retained. Omit the protected payload cleanup without introducing its optimistic SATC physical-function assumption into the native driver.",
+      "evidence": [
+        "evidence/intel-hypercalls-dma-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md"
+      ],
+      "patch_sha256": "2704ba2cdb2b590fc76d324b7e617b8fbe6b0d2094dbe5d7ae52ff313ae95236",
+      "changed_paths": [
+        "arch/x86/include/asm/kvm_pkvm.h",
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/pkvm/iommu_hc.c",
+        "drivers/iommu/intel/pkvm_iommu.c"
+      ]
+    },
+    {
+      "commit": "3be13f85015cfe863eae0838464dbf0e2c742e90",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [
+        "4718007870547e1efebbdd6745d9fce58f008fef",
+        "667a74f8499e86603f270b9ad7fdbeb824ed9496"
+      ],
+      "rationale": "Retain native 471800787054 replacement race fix: tear down the old PASID before setup for first-level, second-level, passthrough and nested domains, with duplicate overwrite helpers removed. Native nested.c/pasid.h are exact LTS and iommu.c replacement helpers unchanged; whole pasid.c differs only by separately carried error-pointer propagation. Omit protected payload old_did removal and hypercall-specific cleanup because that alternate backend is excluded. Never restore whole ACK pasid.c over later native fixes.",
+      "evidence": [
+        "evidence/intel-hypercalls-dma-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md"
+      ],
+      "patch_sha256": "0b1fd3d01675834997a643d6036a973a049c43bda0f4e230205a19b7ea8dfd34",
+      "changed_paths": [
+        "arch/x86/include/asm/kvm_pkvm.h",
+        "drivers/iommu/intel/iommu.c",
+        "drivers/iommu/intel/nested.c",
+        "drivers/iommu/intel/pasid.c",
+        "drivers/iommu/intel/pasid.h",
+        "drivers/iommu/intel/pkvm/iommu_hc.c",
+        "drivers/iommu/intel/pkvm_iommu.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "a9ad95721fc4c700263b99f9cc106da1babb0c6c",
+      "disposition": "applied",
+      "result_commits": [
+        "48dc11713c50b9c5738888ac35ee49e2b1212681"
+      ],
+      "rationale": "Apply the six-line removal of top-level PGD freeing from dma_pte_free_pagetable. Its only caller is superpage conversion, which retains domain root ownership; native domain_unmap/full domain teardown still releases the root. This does not assert the full-range condition is impossible on every hardware width. Existing extracted conversion test mocks this helper, so evidence for this change is call-graph/source review and the emulator compilation, not runtime teardown testing.",
+      "evidence": [
+        "evidence/intel-hypercalls-dma-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md"
+      ],
+      "patch_sha256": "76b83d4918729d4bea28ee760532acc88fd3195230912fb297acdeaf5ecf777d",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c"
+      ]
+    },
+    {
+      "commit": "f880f0340afab5fee0a01b056f4e5852fe11cbb2",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [
+        "eb47f4db3c60e29ac75591323eccc13a5d6b752d"
+      ],
+      "rationale": "Remove the partial generic batching import while retaining native synchronous DMA helpers. Only ACK ARM64 selects ARCH_HAS_BATCHED_DMA_SYNC and replaces cache operations with _nosync plus dsb completion; x86 uses the empty completion stub. Native x86 DMA semantics and public interfaces are unchanged. ARM64, IOMMU DMA and Xen retain native synchronous implementations rather than mixing deferred cache operations with absent completion. Preserve unrelated Android export/allocation checks and native LTS scatterlist fixes.",
+      "evidence": [
+        "evidence/intel-hypercalls-dma-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md"
+      ],
+      "patch_sha256": "39952aac09088011330c89afbd44f801e5493eb78c7329927e94302be14c02b5",
+      "changed_paths": [
+        "arch/arm64/Kconfig",
+        "arch/arm64/include/asm/cache.h",
+        "arch/arm64/mm/dma-mapping.c",
+        "drivers/iommu/dma-iommu.c",
+        "drivers/xen/swiotlb-xen.c",
+        "include/linux/dma-map-ops.h",
+        "kernel/dma/Kconfig",
+        "kernel/dma/direct.c",
+        "kernel/dma/direct.h",
+        "kernel/dma/swiotlb.c"
+      ]
+    },
+    {
+      "commit": "5bef17dd887876877144f6acfcc72ada0afa9d26",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [
+        "eb47f4db3c60e29ac75591323eccc13a5d6b752d"
+      ],
+      "rationale": "Restore native internal direct-DMA helper signatures and SG map/unmap loops, removing bool flush batching whose completion is a no-op on x86. These private kernel/dma/direct.h helpers are not public module API. Preserve public mapping API and native 4ee4d628c4d9 THRU_HOST_BRIDGE fallthrough and d0d08f4bd7f6 bus-address SG length assignment. This omits an ARM64 performance optimization, not required SDK DMA functionality; no device runtime test is claimed.",
+      "evidence": [
+        "evidence/intel-hypercalls-dma-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md"
+      ],
+      "patch_sha256": "b9e4558d765a8d1b8200347f0710f1ab5ea2ecd22b0739ac9219f8ce1b4b04bf",
+      "changed_paths": [
+        "kernel/dma/direct.c",
+        "kernel/dma/direct.h",
+        "kernel/dma/mapping.c"
+      ]
+    }
+  ],
+  "witnesses": {
+    "drivers/iommu/intel/iommu.c": {
+      "blob": "57ae770ee4490beb339175744c970b07a37decad",
+      "native_sha256": "20fa002a674d9f6378f87b1f64fd6eae999cc24a57ccc7dc4bd2d98d6cda31fe",
+      "only_changed_functions": [
+        "iommu_context_addr",
+        "pfn_to_dma_pte",
+        "dma_pte_clear_level",
+        "dma_pte_free_pagetable",
+        "switch_to_super_page",
+        "__domain_mapping",
+        "intel_iommu_unmap",
+        "intel_iommu_iova_to_phys",
+        "intel_iommu_read_and_clear_dirty"
+      ]
+    },
+    "drivers/iommu/intel/cache.c": {
+      "blob": "385ae5cfb30d4af1afd8354dfb86702720cf3da5",
+      "native_equal": true
+    },
+    "drivers/iommu/intel/dmar.c": {
+      "blob": "f4bdc5ffa9d9bf078c93869149e41ec3f4fe7408",
+      "native_equal": true
+    },
+    "drivers/iommu/intel/nested.c": {
+      "blob": "eb3e6d687e04da409169a4a84e094352a4ec1de0",
+      "native_equal": true
+    },
+    "drivers/iommu/intel/irq_remapping.c": {
+      "blob": "8bcbfe3d9c72216188165037fef3fe79fcd0965e",
+      "native_equal": true
+    },
+    "drivers/iommu/intel/iommu.h": {
+      "blob": "e696e019e969798713d3458b63c80738bf029ac5",
+      "native_equal": true
+    },
+    "drivers/iommu/intel/pasid.h": {
+      "blob": "0296ca55ea5e62998e30e625e2d679c6e2e36379",
+      "native_equal": true
+    },
+    "kernel/dma/direct.h": {
+      "blob": "62f0d9d0ba02ef98740589bb2feaf07c20d1fca8",
+      "native_equal": true
+    },
+    "kernel/dma/mapping.c": {
+      "blob": "35e4556b9556648a435484aafafb71cbe956d02e",
+      "native_equal": true
+    },
+    "kernel/dma/Kconfig": {
+      "blob": "31cfdb6b4bc3e33c239111955d97b3ec160baafa",
+      "native_equal": true
+    },
+    "drivers/xen/swiotlb-xen.c": {
+      "blob": "dd7747a2de879d8242fe978c323faa1c2be42c72",
+      "native_equal": true
+    },
+    "arch/arm64/mm/dma-mapping.c": {
+      "blob": "b2b5792b2caaf81ccfc3204c94395bb0faeabddd",
+      "native_equal": true
+    },
+    "arch/arm64/include/asm/cache.h": {
+      "blob": "09963004ceea92d6cb0057ee99e3e1329b9cbf85",
+      "native_equal": true
+    },
+    "drivers/iommu/intel/pasid.c": {
+      "blob": "132187befcaaf07d45fd481370660ba65a0c594e",
+      "only_error_pointer_adaptation": true
+    },
+    "kernel/dma/direct.c": {
+      "blob": "2c8f27558a67f3288760d629939e63e16e380e46",
+      "only_changed_functions": [
+        "dma_direct_optimal_gfp_mask",
+        "__dma_direct_alloc_pages"
+      ]
+    }
+  },
+  "ack_batching_selection": "23112ce1886ea26b19be03207c0227a06a6ca009:arch/arm64/Kconfig:57:\tselect ARCH_HAS_BATCHED_DMA_SYNC\n",
+  "config_sha256": "48f19810fd5e10021d64b96e82cdb2b0b587f7cb24b3b4b5660b6732ae05cd09",
+  "scope_gate": "evidence/intel-iommu-gates-review.json: pinned SDK command lines and ACK enable_pkvm early-option initialization; drivers/iommu/intel/pkvm/Makefile.pkvm CONFIG_PKVM_INTEL object gating",
+  "limitations": [
+    "No runtime DMA, IRQ remapping, protected VM, emulator boot or domain teardown verification.",
+    "Existing helper harness mocks dma_pte_free_pagetable; it is not a runtime test of a9ad95721fc4."
+  ],
+  "remote_sources_used": []
+}

@@ -12,6 +12,7 @@ def nonblank_blob(oid):
   blob_cache[oid]=b'\n'.join(line.rstrip() for line in content.splitlines() if line.strip())
  return blob_cache[oid]
 def omitted(p):
+ if p in ('kernel/dma/direct.h','kernel/dma/mapping.c'):return 'lts-native-source-api'
  if p=='drivers/usb/gadget/function/f_fs.c':return 'lts-native-source-api'
  if p in ('mm/mm_init.c','include/linux/memblock.h'):return 'sdk-memsize-report'
  if p.startswith('drivers/android/debug_kinfo'):return 'physical-device'
@@ -77,6 +78,8 @@ for p,x in out.items():
   x['review_record']='SECURITY.md: historical KMI and module compatibility'
 # Reviewed specific evidence prevents broad policy names from hiding source differences.
 notes={
+ 'kernel/dma/direct.h':'Native synchronous internal DMA helpers after eb47f4db3c60. ACK batching completion is empty on x86; retain public DMA interfaces and native cache completion. See evidence/intel-hypercalls-dma-review.json for f880f0340afa/5bef17dd8878 architecture gates and whole-file equality.',
+ 'kernel/dma/mapping.c':'Exact native LTS after eb47f4db3c60; only the unused internal batching arguments were removed. Public DMA API and all later native mapping fixes remain. See evidence/intel-hypercalls-dma-review.json.',
  'drivers/usb/gadget/function/f_fs.c':'Whole-file native LTS after 0ab54d1e2660. Native SS/SSP descriptor sharing, get_alt and separate disable supersede the historical ACK sequence. Preserve native alternate-setting validation order, reset-work initialization and endpoint state locking. See evidence/ffs-uvc-review.json for all seven reviewed candidate patches and native replacement history.',
  'kernel/time/posix-cpu-timers.c':'LTS also has timer_lock_sighand; keep newer expiry-list retry, timer deletion on nanosleep error, and 64-bit rlimit multiplication.',
  'kernel/time/alarmtimer.c':'The residual ACK difference is an inaccurate Return documentation comment on a void callback; the bool rearm/arm implementation is already LTS.',

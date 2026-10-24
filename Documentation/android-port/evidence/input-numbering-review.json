@@ -1,0 +1,94 @@
+{
+  "source_head": "0ea4d52c31a09bae11a629d1ffbf4bc0661f9b88",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "3cf5c714221300214767e62afd28d66248f44d20",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "ACK explicitly reverts these jack switch additions in e5f5e3334480 after 73a11b09610f renumbers them around SW_MACHINE_COVER. Final ACK and port have identical native switch IDs/maxima and sound/core/jack.c; native sound header differs from ACK only by omitted historical KABI reserve. Do not resurrect removed event IDs or widened bitmap bounds. This is positive revert/final-tree evidence, not lack of a consumer.",
+      "evidence": [
+        "evidence/input-numbering-review.json",
+        "SECURITY.md: Input event numbering"
+      ],
+      "patch_sha256": "73f728bafff074c4a48db40d06cd49725bd9a4b9e021451b9b4107105f9e1da3"
+    },
+    {
+      "commit": "e5f5e33344806c2d694f8de943fe4c3fa7c8c659",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Retain the final state of this ACK revert: remove three historical jack switches and restore bounded native switch definitions/jack table. Later native SW_USB_INSERT at 0x11 remains. Exact current jack.c/mod_devicetable.h/native jack header equality and final ACK switch definitions verify no residual historical jack feature is needed.",
+      "evidence": [
+        "evidence/input-numbering-review.json",
+        "SECURITY.md: Input event numbering"
+      ],
+      "patch_sha256": "a782f7f05f40a7808c891835519c6b164df1ed3fbdc070efcae5fbab01c4a222"
+    },
+    {
+      "commit": "73a11b09610faa29248ed8424b1c2366d4a0108a",
+      "disposition": "merge-resolution-reconciled-to-lts",
+      "result_commits": [
+        "2ff600d29ee478d0a8d46ef8a58afb5e038fe692"
+      ],
+      "rationale": "All unique remerge hunks examined. ARM QCOM probe plus __maybe_unused annotation remains native under the architecture gate. Generic input resolution preserves then-new SW_MACHINE_COVER and shifts private jack events; ACK e5f5e3334480 later removes all three private events and increased bounds. Final ACK and native switch IDs match, including newer SW_USB_INSERT, so retain native definitions without reviving the historical collision. The previously recorded necessity question is resolved by explicit revert history.",
+      "evidence": [
+        "evidence/input-numbering-review.json",
+        "SECURITY.md: Input event numbering"
+      ],
+      "patch_sha256": "2c1e95419fc6848930a0496b0e3c7e317e95b620abd1e19f25963cd95231c8b3"
+    },
+    {
+      "commit": "637cf1d86b54defa94e095a93b86c0f800acdc4c",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "5e574340df36bdf3ad27c169fc2cb8e55fa84347"
+      ],
+      "rationale": "Retain three generic contextual-action key UAPI definitions, HID consumer-page mappings and debug names already carried in the port. Whole files equal current LTS after removing only these additions; no older HID safety code replaces LTS. Codes 0x254..0x256 are within native KEY_MAX and do not renumber existing events. Existing SDK input/uinput/HID infrastructure can carry generic key events; no specific GrapheneOS action consumer was established in the examined bionic/framework/goldfish files, so runtime action support is not claimed. Compatibility takes priority over removing this small generic input extension.",
+      "evidence": [
+        "evidence/input-numbering-review.json",
+        "SECURITY.md: Input event numbering"
+      ],
+      "patch_sha256": "9acd29e59af006f063010f2c9ada755c0777127fc4881b1758bb33b46fdc4ebb"
+    }
+  ],
+  "witnesses": {
+    "drivers/hid/hid-debug.c": {
+      "port_blob": "ddcd6a097ae84a2bd2e2821b99041ea4672b0f62",
+      "native_blob": "337d2dc81b4ca9336a9617752313468b20cb0845",
+      "only_ack_keycode_additions": true
+    },
+    "drivers/hid/hid-input.c": {
+      "port_blob": "fee6f31778319e200ca708ead3fc7c7a640c6ce0",
+      "native_blob": "b2fa8c42f09b3c3aea75cfb8ae047155fce6ab9a",
+      "only_ack_keycode_additions": true
+    },
+    "include/uapi/linux/input-event-codes.h": {
+      "port_blob": "a64148b07bbc1586d256a12a4b6f02337a1b90a4",
+      "native_blob": "30f3c9eaafaad9c357e6e5e400cfa27079bfe910",
+      "only_ack_keycode_additions": true
+    },
+    "include/linux/mod_devicetable.h": {
+      "port_blob": "6077972e8b45de3d07881c0226459d815dd1f83d",
+      "native_equal": true
+    },
+    "include/sound/jack.h": {
+      "port_blob": "715b95983188aa10b4563f6d40627eee69a731bb",
+      "native_equal": true
+    },
+    "sound/core/jack.c": {
+      "port_blob": "93e357a23f1717ae3d2d8dfe465bea23d8fdec0d",
+      "native_equal": true
+    }
+  },
+  "local_consumer_evidence_examined": [
+    "bionic/libc/kernel/uapi/linux/input-event-codes.h",
+    "frameworks/native/libs/input",
+    "frameworks/native/services/inputflinger",
+    "frameworks/base/core/java/android/view/KeyEvent.java",
+    "device/generic/goldfish"
+  ],
+  "consumer_search_result": "No matching contextual/private-jack symbols in these searched locations; not proof of absence and not used to omit retained contextual keycodes.",
+  "remote_sources_used": []
+}

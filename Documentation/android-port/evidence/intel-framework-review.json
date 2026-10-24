@@ -1,0 +1,540 @@
+{
+  "source_head": "590c2aec04b94c2e76c9942b40a4b6060ffb9fcf",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "58b8ae48cc7e292e89208e5329613643ab32649f",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Builds a second iommu.o for protected mode, defines hyp-specific IOMMU/domain/device structures and initializes protected MMIO/state from host-prepared data. Native driver, root allocation and firmware probing remain; omit protected initialization and its QI/RWBF/boot-state restrictions because the pinned SDK early-option gate leaves this backend inactive. The dual structs are functional protected-state definitions, not historical KMI padding.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "evidence/intel-shared-review.json"
+      ],
+      "patch_sha256": "eb79e13b46160d491efdd5f87f333841bd3c6baac396521341434d700098630c",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c",
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/pkvm/Makefile.pkvm",
+        "drivers/iommu/intel/pkvm/iommu.c",
+        "drivers/iommu/intel/pkvm_iommu.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "5d52a807e5124e1315b7010f4eae0284d7867910",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Converts raw address MMIO calls to (iommu,offset) wrappers and PMU address-relative wrappers in seven files, preparing hypercall interception. With protected mode disabled the wrappers reduce to the same native read/write operations. The earlier iommu_pmu->iommu assignment only supports the new PMU wrappers; native raw register accesses do not need it. Retain current native register functions, current syscore callbacks and later driver fixes; these private wrappers are not exported module interfaces.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "evidence/intel-shared-review.json"
+      ],
+      "patch_sha256": "0a4ac8232439ff9a73db8f57c7284289072415fd5fc0eeb0a03e456a11a6601f",
+      "changed_paths": [
+        "drivers/iommu/intel/debugfs.c",
+        "drivers/iommu/intel/dmar.c",
+        "drivers/iommu/intel/iommu.c",
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/irq_remapping.c",
+        "drivers/iommu/intel/perfmon.c",
+        "drivers/iommu/intel/prq.c"
+      ]
+    },
+    {
+      "commit": "3afef6db295fefe6738dc53a27018b2473455fc2",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds hypervisor GCMD dispatch, virtual-status tracking and an unbounded hyp-only wait macro. Native timed IOMMU_WAIT_OP is retained. The protected register interface is outside the current SDK boot contract, and its unsafe no-timeout predecessor is not introduced; the later a0e91455513e repair is independently resolved.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "evidence/intel-shared-review.json"
+      ],
+      "patch_sha256": "2100a6b076f890a9c1b7c1ad719b5d280d0be1ffd0afb2cd91f14871161fdb88",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/pkvm/iommu.c"
+      ]
+    },
+    {
+      "commit": "a36609eec8ba62839a131bef5983ec8e089c1438",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds protected QI initialization/state and reinitializes/requires QI only for pkvm_enabled. Its initial int-return conversion also erroneously propagates a failed QI enable after installing native register fallback; 4df943df176a later repairs that. Keep native void init_qi with working QI/register fallback, not this transient regression or protected-only strict-QI policy.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "evidence/intel-shared-review.json"
+      ],
+      "patch_sha256": "fd720deb7b76c7e69327e20f046a412e79b656933af7360b83b058d78db59d02",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c",
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/pkvm/iommu.c"
+      ]
+    },
+    {
+      "commit": "2188ead28b3053af22a1e5664008e4e28351398e",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Compiles dmar.c inside the hypervisor with alternate spinlocks/physical conversion, no tracing/latency accounting, virtual GSTS and removal of host device-presence checks. Ordinary SDK retains native full dmar.c including presence checks, normal locks, tracing, register fallback and the later descriptor-index retry fix. No protected duplicate is needed; omitted mode is not claimed secure or supported.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "evidence/intel-shared-review.json"
+      ],
+      "patch_sha256": "f27be7259415f816268791058b488b9f76bd32833406727c2faf75dd2a909170",
+      "changed_paths": [
+        "drivers/iommu/intel/dmar.c",
+        "drivers/iommu/intel/pkvm/Makefile.pkvm"
+      ]
+    },
+    {
+      "commit": "1bfc7d5816da3afe98c85a880cddffbd44fd1203",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds protected SRTP emulation/root table tracking and skips native post-SRTP invalidation only when pkvm_enabled because hyp performs it. Keep all native context/PASID/IOTLB invalidations and direct root setup in current SDK mode. Do not install the host early return without its protected replacement.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "evidence/intel-shared-review.json"
+      ],
+      "patch_sha256": "74254a24316605e009f9c338cdf35871a96b074fcfa7bd9d078a46117bf6e903",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c",
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/pkvm/iommu.c"
+      ]
+    },
+    {
+      "commit": "4f3685cfe7820ce6aa59324435e65dce502650a7",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds CONFIG_PKVM_INTEL SATC scanning into a fixed protected-device array and copies it during protected preparation to enforce that backend ATS policy. Native SATC parsing and ATS behavior stay intact; omit the duplicate array, its 16-device capacity restriction and hyp-only consumer. The gate is evidenced by actual build/early-option wiring, not a failed text search for consumers.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "evidence/intel-shared-review.json"
+      ],
+      "patch_sha256": "3799653d61ac3432a4418a3f1d572f865a7fa814f46b7517df17b4f22b9470bd",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c",
+        "drivers/iommu/intel/pkvm/iommu.c",
+        "drivers/iommu/intel/pkvm_iommu.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "3ad9eeaa7a642d5ca539f3315a58b30ef8557274",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Ports legacy context helpers to hyp using donated pages, hyp address conversion/spinlocks and variants of private mapping helpers. Native host path remains equivalent apart from private static visibility. Retain native allocation/locks and QAT extra-device-TLB flushing instead of the protected omission of that quirk; no EXPORT_SYMBOL module interface was added by this candidate.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "evidence/intel-shared-review.json"
+      ],
+      "patch_sha256": "3ed26be0ca1b7e855b064d3dbcbece14686360cd4907860e8dd4169da831351d",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c",
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/pasid.c",
+        "drivers/iommu/intel/pkvm/Makefile.pkvm"
+      ]
+    },
+    {
+      "commit": "bbcdf2982de79d1d412069fb4c5bd968f943ece4",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds scalable context helper signatures and compact pkvm_device wrapper for hyp stack usage, plus a pkvm_enabled-only BUG for copied contexts in host code. Native SDK uses real struct device and normal copied-context handling. Keep native private helper scope and omit protected type/signature/BUG prerequisites; current shared error/root defenses are covered separately.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "evidence/intel-shared-review.json"
+      ],
+      "patch_sha256": "84b0f93ed8d6d57e436b5cd927ed1650d385d5ac30d5937deef67da1fa41a268",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/pasid.c",
+        "drivers/iommu/intel/pasid.h",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "ae2b248e0b4eaad1b35b0c188058eb9044d51848",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds protected variants of PASID setup/teardown and donation-page allocation, excluding PCI presence checks, PRQ drain and lockdep assertions only in hyp. The remaining host-visible change is diagnostic name-to-seq_id formatting for the compact hyp structure. Retain native diagnostics, real device lifetime, checks and PRQ behavior; carry fcb3f4455248 error semantics separately without reverting later native replacement API consolidation.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "evidence/intel-shared-review.json"
+      ],
+      "patch_sha256": "94c9280612a93f7c84ae8da24ade09bfbe7ea74b19d6facae7de9dd6512d2e79",
+      "changed_paths": [
+        "drivers/iommu/intel/pasid.c",
+        "drivers/iommu/intel/pasid.h"
+      ]
+    },
+    {
+      "commit": "43ac393ee9f5ba6a4a7b01f5424004c55187e269",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds fixed protected-domain array/hash/refcounts and per-domain locks under the CONFIG_PKVM_INTEL hyp build with matching alternate struct fields. Native paging-domain allocations use the existing host domain infrastructure; no protected host donation/hypercall lifecycle is activated by SDK. Omit this separate domain manager rather than constrain native domains to its fixed capacity.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "evidence/intel-shared-review.json"
+      ],
+      "patch_sha256": "f5e5f6cab5bc7c750775da52b1447059d8ee5e8c44f5d03bf369fd14eb743ae1",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/pkvm/Makefile.pkvm",
+        "drivers/iommu/intel/pkvm/domain.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "728414d551d989f9fdf8510ab5ccb5403ec1ae5a",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds protected fixed cache-tag pool, compact BDF identity, hyp locks/types and embedded QI batch. Host branch behavior is preserved by keeping complete native cache.c, including dynamic allocation, device identity, tracing, register fallback, translation checks and extra device flush quirks. The alternative BDF matching subsequently needed 784fb98008ea; neither vulnerable variant nor unused backend is imported.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "evidence/intel-shared-review.json"
+      ],
+      "patch_sha256": "82b3300486b9406f9389a47fddf67e379e9af7e51237b703cf257e6de63170f3",
+      "changed_paths": [
+        "drivers/iommu/intel/cache.c",
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/pkvm/Makefile.pkvm",
+        "drivers/iommu/intel/pkvm/cache.c",
+        "drivers/iommu/intel/pkvm/domain.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "4bb9e1915ed6122abe40ed7e7cefbdc6ded9d819",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Moves protected tag assignment/reference acquisition into legacy/PASID context operations and releases it during hyp teardown. New inline FL/SL pointer readers feed those protected paths; host-visible ret declarations merely move scope. Keep native host tag lifetime and setup/teardown code. Later protected lifetime repair 3b857a15e6bb is separately accounted for, not used as justification to import its prerequisite.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "evidence/intel-shared-review.json"
+      ],
+      "patch_sha256": "e2f985fbf029cfde53582635af88675f5a8e10c37828e1f76cbc38ca6aff87a7",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c",
+        "drivers/iommu/intel/pasid.c",
+        "drivers/iommu/intel/pasid.h",
+        "drivers/iommu/intel/pkvm/domain.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "243f4ddf38f5bfcc2085f5740121e2b882ec3195",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds hyp memcache allocation/free, immediate protected invalidation and exposed private domain_map/domain_unmap names to compile shared walkers in hyp. Native SDK keeps ordinary allocation/deferred-free ownership, nested-parent erratum check, mapping diagnostics and LTS native APIs. No exported module API is introduced by these private name changes. Shared e55de9a5a0a8/46cbf93c3172 traversal defenses are independently adapted, so this is not blanket rejection of shared code.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "evidence/intel-shared-review.json"
+      ],
+      "patch_sha256": "53c11dcb5623610ea3b3049661c1d79df9655f94c0a97c1e5bbe13906820ddfb",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c",
+        "drivers/iommu/intel/iommu.h"
+      ]
+    },
+    {
+      "commit": "f622e76011cd34d39d98f1c44b56a6aeeb204cfd",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds protected domain flag and cache-tag negative-translation flush after map, selected by hardware caching mode during hyp domain creation. Native intel_iommu_iotlb_sync_map and IOMMU core synchronization remain. Omit duplicate protected flush accounting; do not remove or weaken the native host synchronization path.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "evidence/intel-shared-review.json"
+      ],
+      "patch_sha256": "0fd00f5683b21818986161da4a0a58bcc9785df7708fabf40a080bad34ea783a",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c",
+        "drivers/iommu/intel/pkvm/domain.c",
+        "drivers/iommu/intel/pkvm/iommu_hc.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "019c99390aba092e5e9be673e096a2aaf5d07bf6",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Pins host DMA pages against donation to protected VMs and uses a hyp-only second pass to unpin after invalidation. Shared boolean return/goto plumbing serves that protected accounting; native void recursion and gather freelist derive invalidation hints without this accumulator. Preserve ordinary mapping ownership and LTS gather-before-splice fix. The native shared leaf guard is carried separately; no guarantee against donation to pVMs is claimed without the backend.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "evidence/intel-shared-review.json"
+      ],
+      "patch_sha256": "6987246f1a54a8008d6ca7e0014a260337a9158f79a6908c5b84f1c3c55e859f",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c"
+      ]
+    },
+    {
+      "commit": "31f6838c24e24deef8f345525241dcf82655a8d5",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Uses hardware-ignored PTE bit 63 for hyp two-pass pin accounting, including physical address zero, and masks it under CONFIG_PKVM_INTEL. Native host never sets this protected metadata and has no donation unpin pass; its native address helper/representation is retained. Omit the extra state format with the excluded accounting implementation, not physical-zero DMA support generally.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "evidence/intel-shared-review.json"
+      ],
+      "patch_sha256": "5555b809e70755ce288a50bfa5d1e442674dec0398cfd63269c5639bfa8e248a",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c",
+        "drivers/iommu/intel/iommu.h"
+      ]
+    },
+    {
+      "commit": "449ea50d868c19f4ce755f5ba983eeb6aa474255",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Protects interrupt-remapping table through host-to-hyp read-only donation, emulated IRTA and hypercalls selected only by pkvm_enabled in host modify/clear helpers. Native SDK retains ordinary interrupt remapping, atomic updates and invalidation. This host-compromise isolation feature requires protected ownership and is outside the pinned SDK mode; native IRQ remapping is not treated as absent.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "evidence/intel-shared-review.json"
+      ],
+      "patch_sha256": "9b5980f8cba0108dc5109f1a0372f79f610a8ffa3fed2dad23235ea27728eba8",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/irq_remapping.c",
+        "drivers/iommu/intel/pkvm/iommu.c"
+      ]
+    },
+    {
+      "commit": "a03e002906af96790710a09181fdecc5c1d4eaa8",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds a protected PMU MMIO classifier with window bounds, exact access widths, counter-capability limits and allowed write masks. New object is in pkvm-hyp-$(CONFIG_PKVM_INTEL); new state is in the hyp IOMMU struct. Shared PMU constant visibility only enables that build. Native host PMU programming remains unchanged, without claiming it provides a hypervisor trust boundary against malicious kernel register requests.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "evidence/intel-shared-review.json"
+      ],
+      "patch_sha256": "b4d58851153111d6db2414af1ae8329b651ea0008e8c99c829126f1ee8d12f03",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/pkvm/Makefile.pkvm",
+        "drivers/iommu/intel/pkvm/iommu.c",
+        "drivers/iommu/intel/pkvm/iommu_pmu.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "61feb6ee6997529d7d57e80a12be354b47158734",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds protected fault-record MMIO classifier with range/width checks and only fault-bit acknowledgement writes, built as a protected-only object. Native dmar_fault accesses known fault-register offsets and remains native. Omit the additional hypervisor access-control boundary because SDK does not expose it, not because fault recording is unnecessary.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "evidence/intel-shared-review.json"
+      ],
+      "patch_sha256": "63850494329ec93d1dbb2bcbb3632fa23082f860e0fbe448c7b4e052e3d81cc5",
+      "changed_paths": [
+        "drivers/iommu/intel/pkvm/Makefile.pkvm",
+        "drivers/iommu/intel/pkvm/iommu.c",
+        "drivers/iommu/intel/pkvm/iommu_frcd.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "d33405bebb1ba3e358655265900a2de9bbca3dd2",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Changes protected read dispatch to explicit allowed fixed registers and PMU/fault validators, denying unknown offsets, with debugfs-specific extra entries. Three shared register constants serve this protected dispatcher; host access routines remain native. Do not introduce a permissive protected MMIO handler or claim native driver accesses enforce isolation from a compromised host.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "evidence/intel-shared-review.json"
+      ],
+      "patch_sha256": "9a2da8842cc3c25ccd3c35ee19e3c7b82c7700bc3e46cb98a156e889edec7788",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/pkvm/iommu.c"
+      ]
+    },
+    {
+      "commit": "3b857a15e6bb010ba24e362068c2c6fe5d5dbd62",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Repairs protected domain lifetime by acquiring references in legacy/PASID hypercall handlers, retaining them while entries are active and releasing after teardown; shared function signature/return variants are hyp-only. Keep native host device-domain ownership and APIs, which do not use the vulnerable transient stack domains or protected refcount manager. This is a functional security repair for an omitted backend, not an ABI omission.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "evidence/intel-shared-review.json"
+      ],
+      "patch_sha256": "575a0c592dec8b9c0a4394710832ae40aabb88be1d44dd085599d7abf71d5482",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c",
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/pasid.c",
+        "drivers/iommu/intel/pasid.h",
+        "drivers/iommu/intel/pkvm/domain.c",
+        "drivers/iommu/intel/pkvm/iommu_hc.c",
+        "drivers/iommu/intel/pkvm_iommu.h"
+      ]
+    },
+    {
+      "commit": "2d643b72fd309e9cf3836d5b15dccd6bd6a7f469",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Prevents protected host from disabling TE/QIE and rejects protected S3 IRQ remapping transitions; all host changes require pkvm_enabled. Native SDK retains ordinary translation/IRQ suspend and resume semantics and error handling. The protected virtual-status consistency BUGs and refusal paths require hyp ownership and are omitted with that mode.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "evidence/intel-shared-review.json"
+      ],
+      "patch_sha256": "c8892aa3690c4ad3141c79b6f55a7f54d441e0aeba0c7aa741b4cc4e95bf15ba",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c",
+        "drivers/iommu/intel/irq_remapping.c",
+        "drivers/iommu/intel/pkvm/iommu.c"
+      ]
+    },
+    {
+      "commit": "f5b0a52e535db5e99f2b8a0080e7bdac15c9093b",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Replaces hyp-only early returns with BUG_ON for device-TLB flushes while protected translation is off, relying on 2d643b72fd30 prohibition. Native host intentionally permits disabling translation and preserves its normal return checks. Importing the protected invariant unconditionally would create native crashes; no hyp variant is built for current target.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-gates-review.json",
+        "evidence/intel-shared-review.json"
+      ],
+      "patch_sha256": "21e538b1e6ad276bcd12aa1b62a9ea2c204a72da86965c511a9c38b77ec3eef7",
+      "changed_paths": [
+        "drivers/iommu/intel/dmar.c"
+      ]
+    },
+    {
+      "commit": "460bb3531af775a2de69c79280b0aee07ad47b4c",
+      "disposition": "already-represented-upstream",
+      "result_commits": [
+        "36244dfd3853f7bf89d03b8e90d56b23ce7fbc16",
+        "667a74f8499e86603f270b9ad7fdbeb824ed9496"
+      ],
+      "rationale": "ACK removes an accidentally duplicated PASID-table cache flush. Native 36244dfd3853 supplies exactly one pre-publication flush, and current error-pointer adaptation preserves that entire lookup after only error normalization. Reassessed explicitly because pasid.c blob changed; archive the old text witness instead of silently refreshing it.",
+      "evidence": [
+        "evidence/intel-framework-review.json",
+        "evidence/intel-iommu-walk-check.json"
+      ],
+      "patch_sha256": "1e4662c610ecb320883b193955b7c02803def763418cb54ed89c8568b93c0422",
+      "changed_paths": [
+        "drivers/iommu/intel/pasid.c"
+      ]
+    }
+  ],
+  "path_witnesses": {
+    "drivers/iommu/intel/cache.c": {
+      "ack_blob": "46e81d2eabf96711d46fa9440a541bdd2b10348d",
+      "port_blob": "385ae5cfb30d4af1afd8354dfb86702720cf3da5"
+    },
+    "drivers/iommu/intel/debugfs.c": {
+      "ack_blob": "f36b5a7aa93052f4a37f695b50cd9fb5b92b2d7b",
+      "port_blob": "617fd81a80f07ed488af7195c0b7fc406513572d"
+    },
+    "drivers/iommu/intel/dmar.c": {
+      "ack_blob": "92e9d5c741e44fbb9b2607ca256ce1943dddba36",
+      "port_blob": "f4bdc5ffa9d9bf078c93869149e41ec3f4fe7408"
+    },
+    "drivers/iommu/intel/iommu.c": {
+      "ack_blob": "5541e759224aa9e88195b17f693f6077c8a3dfec",
+      "port_blob": "194fea21caf4056375f51a18b24d5549545f88be"
+    },
+    "drivers/iommu/intel/iommu.h": {
+      "ack_blob": "b8ddc8e2b5e723c7b897901dde2dfc41c3784243",
+      "port_blob": "e696e019e969798713d3458b63c80738bf029ac5"
+    },
+    "drivers/iommu/intel/irq_remapping.c": {
+      "ack_blob": "ffa10c715bed1d63a090e4818e33c7486471f5ed",
+      "port_blob": "8bcbfe3d9c72216188165037fef3fe79fcd0965e"
+    },
+    "drivers/iommu/intel/pasid.c": {
+      "ack_blob": "23731236fe05ec97d67cae4200be4c6f6b048db1",
+      "port_blob": "132187befcaaf07d45fd481370660ba65a0c594e"
+    },
+    "drivers/iommu/intel/pasid.h": {
+      "ack_blob": "8d68c8fc87500591bad50c752720d47a1f656292",
+      "port_blob": "0296ca55ea5e62998e30e625e2d679c6e2e36379"
+    },
+    "drivers/iommu/intel/perfmon.c": {
+      "ack_blob": "18e111c7a8914596ec929c60bdc453fb8c5263aa",
+      "port_blob": "75f493bcb353ed0ccf0e744f1e71261d36947acd"
+    },
+    "drivers/iommu/intel/pkvm/Makefile.pkvm": {
+      "ack_blob": "0cf018359043fc74b6a82cf2f6e0a506851fac68",
+      "port_blob": null
+    },
+    "drivers/iommu/intel/pkvm/cache.c": {
+      "ack_blob": "ba86530cf2f3c78f28f16c348bc79ff45940bc89",
+      "port_blob": null
+    },
+    "drivers/iommu/intel/pkvm/domain.c": {
+      "ack_blob": "7faebc0f6bc0ba32965adeb095043f201c028d42",
+      "port_blob": null
+    },
+    "drivers/iommu/intel/pkvm/iommu.c": {
+      "ack_blob": "a86bcf6d0c8917f3871690ce7015fc250272147d",
+      "port_blob": null
+    },
+    "drivers/iommu/intel/pkvm/iommu_frcd.c": {
+      "ack_blob": "29170f39b9527f1c9d6c49349fc5be2a6cba6a0d",
+      "port_blob": null
+    },
+    "drivers/iommu/intel/pkvm/iommu_hc.c": {
+      "ack_blob": "44cf3f4bb6b08e23048e3f16dcd1566e8170e8b0",
+      "port_blob": null
+    },
+    "drivers/iommu/intel/pkvm/iommu_pmu.c": {
+      "ack_blob": "0039357a7a26eb06eccc4b6b900854e02115e7a0",
+      "port_blob": null
+    },
+    "drivers/iommu/intel/pkvm_iommu.c": {
+      "ack_blob": "80e82e5a63fb62f5d7c38f9472275296f9ecbbac",
+      "port_blob": null
+    },
+    "drivers/iommu/intel/pkvm_iommu.h": {
+      "ack_blob": "4233b7ea8200079b240c566c43e99d17e9616fd5",
+      "port_blob": null
+    },
+    "drivers/iommu/intel/prq.c": {
+      "ack_blob": "9137f6916bb97e81e05dc56520e95c9530147d3f",
+      "port_blob": "ff63c228e6e19d9a01be6f9eac307957d846dd6f"
+    }
+  },
+  "protected_makefile_blob": "0cf018359043fc74b6a82cf2f6e0a506851fac68",
+  "scope_gate": "Pinned SDK command lines and enable_pkvm default/early option in evidence/intel-iommu-gates-review.json; current native code normalization in evidence/intel-shared-review.json",
+  "superseded_text_witnesses": [
+    {
+      "commit": "460bb3531af775a2de69c79280b0aee07ad47b4c",
+      "patch_sha256": "a39f6531f7492c5470784222588a4491617156476ba08188cea337ca8da2f710",
+      "path_witnesses": {
+        "drivers/iommu/intel/pasid.c": {
+          "lts_blob": "48e21743f20772842d10b39659e3a6460084889f",
+          "port_blob": "48e21743f20772842d10b39659e3a6460084889f"
+        }
+      }
+    }
+  ],
+  "security": "Protected-host ownership, MMIO validation, domain reference and DMA donation machinery is omitted consistently for current ordinary SDK mode. Shared traversal/root/error defenses were considered and adapted separately. No protected-VM guarantee or runtime verification is asserted.",
+  "remote_sources_used": []
+}
