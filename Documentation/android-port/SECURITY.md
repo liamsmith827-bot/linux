@@ -7519,6 +7519,25 @@ This does not claim those protected-guest interfaces or the erratum mitigation
 are unnecessary on ARM; those platforms are outside this delivery. The complete
 header deltas and local architecture gates are recorded in the review evidence.
 
+## Input event numbering
+
+Retain ACK 637cf1d86b54's three contextual-action key definitions and their HID
+consumer-usage/debug mappings. These add generic input UAPI values below the
+existing KEY_MAX and do not renumber native events or enable another platform.
+They can use the existing SDK input interfaces; no specific GrapheneOS action
+consumer was established, and no action behavior is claimed. Compatibility
+retention does not depend on proving such a consumer absent. The initial import
+already carries these additions; the current whole files match native LTS after
+removing only these additions, preserving all later HID safety checks.
+
+Historical headphone-overcurrent/unsupported-jack switch codes from 3cf5c7142213
+were explicitly removed by ACK e5f5e3334480, after merge 73a11b09610f renumbered
+them around SW_MACHINE_COVER. Final ACK and native switch definitions agree,
+including SW_USB_INSERT. Preserve the final definitions and native jack code;
+do not resurrect historical switch IDs that now conflict. This resolves the
+recorded merge question by positive revert/final-tree evidence, not by failure
+to find userspace references. Hardware input and emulator runtime were not tested.
+
 ## DMA synchronization batching and the SDK architecture
 
 ACK f880f0340afa and 5bef17dd8878 split cache maintenance from completion
