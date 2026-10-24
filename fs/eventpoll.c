@@ -1688,10 +1688,12 @@ static int ep_create_wakeup_source(struct epitem *epi)
 {
 	struct name_snapshot n;
 	struct wakeup_source *ws;
+	const char *name;
 	char ws_name[64];
 
-	strscpy(ws_name, "eventpoll", sizeof(ws_name));
+	strscpy_pad(ws_name, "eventpoll", sizeof(ws_name));
 	trace_android_vh_ep_create_wakeup_source(ws_name, sizeof(ws_name));
+	ws_name[sizeof(ws_name) - 1] = '\0';
 	if (!epi->ep->ws) {
 		epi->ep->ws = wakeup_source_register(NULL, ws_name);
 		if (!epi->ep->ws)
@@ -1699,9 +1701,14 @@ static int ep_create_wakeup_source(struct epitem *epi)
 	}
 
 	take_dentry_name_snapshot(&n, epi->ffd.file->f_path.dentry);
-	strscpy(ws_name, n.name.name, sizeof(ws_name));
-	trace_android_vh_ep_create_wakeup_source(ws_name, sizeof(ws_name));
-	ws = wakeup_source_register(NULL, ws_name);
+	name = n.name.name;
+	if (trace_android_vh_ep_create_wakeup_source_enabled()) {
+		strscpy_pad(ws_name, name, sizeof(ws_name));
+		trace_android_vh_ep_create_wakeup_source(ws_name, sizeof(ws_name));
+		ws_name[sizeof(ws_name) - 1] = '\0';
+		name = ws_name;
+	}
+	ws = wakeup_source_register(NULL, name);
 	release_dentry_name_snapshot(&n);
 
 	if (!ws)

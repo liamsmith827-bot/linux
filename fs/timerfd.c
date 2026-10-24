@@ -441,8 +441,9 @@ SYSCALL_DEFINE2(timerfd_create, int, clockid, int, flags)
 		return ufd;
 	}
 
-	strscpy(file_name_buf, "[timerfd]", sizeof(file_name_buf));
+	strscpy_pad(file_name_buf, "[timerfd]", sizeof(file_name_buf));
 	trace_android_vh_timerfd_create(file_name_buf, sizeof(file_name_buf));
+	file_name_buf[sizeof(file_name_buf) - 1] = '\0';
 	file = anon_inode_getfile_fmode(file_name_buf, &timerfd_fops, ctx,
 			    O_RDWR | (flags & TFD_SHARED_FCNTL_FLAGS),
 			    FMODE_NOWAIT);

@@ -14,6 +14,7 @@ struct va_format;
 struct file;
 struct dentry;
 
+/* Name buffers are borrowed for the callback; len includes the terminator. */
 DECLARE_HOOK(android_vh_ep_create_wakeup_source,
 	TP_PROTO(char *name, int len),
 	TP_ARGS(name, len));
