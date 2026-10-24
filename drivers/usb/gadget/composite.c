@@ -1904,8 +1904,11 @@ composite_setup(struct usb_gadget *gadget, const struct usb_ctrlrequest *ctrl)
 		}
 		spin_lock(&cdev->lock);
 		value = set_config(cdev, ctrl, w_value);
+		if (cdev->config)
+			android_set_configured(&cdev->android_opts);
+		else
+			android_set_unconfigured(&cdev->android_opts);
 		spin_unlock(&cdev->lock);
-		android_set_configured(&cdev->android_opts);
 		break;
 	case USB_REQ_GET_CONFIGURATION:
 		if (ctrl->bRequestType != USB_DIR_IN)

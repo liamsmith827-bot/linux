@@ -125,11 +125,14 @@ static ssize_t state_show(struct device *pdev,
 {
 	struct android_uevent_opts *opts = dev_get_drvdata(pdev);
 	char *state = "DISCONNECTED";
+	unsigned long flags;
 
+	spin_lock_irqsave(&opts_lock, flags);
 	if (opts->configured)
 		state = "CONFIGURED";
 	else if (opts->connected)
 		state = "CONNECTED";
+	spin_unlock_irqrestore(&opts_lock, flags);
 
 	return sysfs_emit(buf, "%s\n", state);
 }
@@ -194,34 +197,32 @@ void android_device_destroy(struct android_uevent_opts *opts)
 {
 	unsigned long flags;
 	struct device *dev;
+	int device_id;
 
 	/*
-	 * This scheme is used to safely cleanup any remaining work. Once
-	 * opts->dev is set to NULL, any newly scheduled work will return
-	 * after getting the lock and checking for NULL. Any currently
-	 * running work finishes with the flush_work (the worker caches
-	 * opts->dev so it can continue), before we free the device.
-	 *
-	 * Ideally, this cleanup would be handled via reference counting, but
-	 * there are nuances around device destroy (or the fact that we are
-	 * currently statically allocating opts) which prevent this from
-	 * being implemented without a significant refactor.
+	 * Stop producers before draining work. A worker that already cached
+	 * dev can finish before unregistering it; later updates cannot enqueue
+	 * work against opts after its containing gadget has been released.
 	 */
 	spin_lock_irqsave(&opts_lock, flags);
 	dev = opts->dev;
 	opts->dev = NULL;
+	device_id = opts->device_id;
+	opts->device_id = -1;
+	if (android_opts == opts)
+		android_opts = NULL;
 	spin_unlock_irqrestore(&opts_lock, flags);
+
+	if (!dev)
+		return;
 
 	flush_work(&opts->work);
 
-	spin_lock_irqsave(&opts_lock, flags);
-	if (opts->device_id >= 0)
-		ida_free(&android_ida, opts->device_id);
-
-	android_opts = NULL;
+	if (device_id >= 0)
+		ida_free(&android_ida, device_id);
 	ida_destroy(&opts->function_ida);
-	device_destroy(dev->class, dev->devt);
-	spin_unlock_irqrestore(&opts_lock, flags);
+	/* Every instance has devt == 0; unregister this exact device. */
+	device_unregister(dev);
 }
 
 static void __android_set_connected(struct android_uevent_opts *opts,
@@ -231,8 +232,10 @@ static void __android_set_connected(struct android_uevent_opts *opts,
 
 	spin_lock_irqsave(&opts_lock, flags);
 	// Don't send the uevent if connected state is not changed
-	if (opts->connected != connected) {
+	if (opts->dev && opts->connected != connected) {
 		opts->connected = connected;
+		if (!connected)
+			opts->configured = false;
 		schedule_work(&opts->work);
 	}
 	spin_unlock_irqrestore(&opts_lock, flags);
@@ -245,7 +248,7 @@ static void __android_set_configured(struct android_uevent_opts *opts,
 
 	spin_lock_irqsave(&opts_lock, flags);
 	// Don't send the uevent if configure state is not changed
-	if (opts->configured != configured) {
+	if (opts->dev && opts->configured != configured) {
 		opts->configured = configured;
 		schedule_work(&opts->work);
 	}
