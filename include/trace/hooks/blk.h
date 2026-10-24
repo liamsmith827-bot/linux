@@ -56,6 +56,10 @@ DECLARE_RESTRICTED_HOOK(android_rvh_submit_bio_pre,
 	TP_PROTO(struct bio *bio, struct request *rq),
 	TP_ARGS(bio, rq), 1);
 
+/*
+ * The objects are referenced through this callback, but IO may have completed
+ * and their mutable fields still require the usual synchronization.
+ */
 DECLARE_RESTRICTED_HOOK(android_rvh_submit_bio_post,
 	TP_PROTO(struct bio *bio, struct request *rq),
 	TP_ARGS(bio, rq), 1);

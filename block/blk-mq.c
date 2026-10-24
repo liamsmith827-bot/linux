@@ -3165,6 +3165,7 @@ void blk_mq_submit_bio(struct bio *bio)
 	unsigned int nr_segs;
 	struct request *rq;
 	blk_status_t ret;
+	bool post_hook;
 
 	trace_android_vh_check_set_ioprio(bio);
 
@@ -3259,15 +3260,18 @@ new_request:
 
 	trace_android_rvh_submit_bio_pre(bio, rq);
 
-	if (op_is_flush(bio->bi_opf) && blk_insert_flush(rq)) {
-		trace_android_rvh_submit_bio_post(bio, rq);
-		return;
-	}
+	/* Submission may complete and release both objects before returning. */
+	post_hook = trace_android_rvh_submit_bio_post_enabled() &&
+		    req_ref_inc_not_zero(rq);
+	if (post_hook)
+		bio_get(bio);
+
+	if (op_is_flush(bio->bi_opf) && blk_insert_flush(rq))
+		goto out_post;
 
 	if (plug) {
 		blk_add_rq_to_plug(plug, rq);
-		trace_android_rvh_submit_bio_post(bio, rq);
-		return;
+		goto out_post;
 	}
 
 	hctx = rq->mq_hctx;
@@ -3279,7 +3283,12 @@ new_request:
 		blk_mq_run_dispatch_ops(q, blk_mq_try_issue_directly(hctx, rq));
 	}
 
-	trace_android_rvh_submit_bio_post(bio, rq);
+out_post:
+	if (post_hook) {
+		trace_android_rvh_submit_bio_post(bio, rq);
+		bio_put(bio);
+		blk_mq_put_rq_ref(rq);
+	}
 	return;
 
 queue_exit:
