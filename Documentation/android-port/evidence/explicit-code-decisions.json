@@ -19472,5 +19472,620 @@
       "evidence/allocation-hooks-check.json",
       "SECURITY.md: Workqueue allocation and idle hook output validation"
     ]
+  },
+  {
+    "commit": "fbbc48ef1854f36aba48538b3034c884878d9a65",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Original five-hook ftrace addition was reverted and reintroduced as four hooks by 54f7868c7c38/c8f870ca5172. Retain final format/enter/exit/buffer interfaces in current native notifier/dump structure; do not restore obsolete size-check hook or old per-CPU tracing-disable implementation. Native dump serialization, user-object suppression, iteration and watchdog touches remain. No runtime/boot validation.",
+    "evidence": [
+      "evidence/tracing-signal-review.json",
+      "evidence/trace-subbuffers-check.json",
+      "evidence/trace-subbuffers-consumers.json",
+      "SECURITY.md: Tracing and signal hook contracts"
+    ]
+  },
+  {
+    "commit": "1a094aba37bd7db038b8fc719833eb553361e7da",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "Temporary ftrace-hook removal was superseded by the two final re-adds. Account for the intermediate retirement without removing the final four source interfaces. The fifth historical size-check interface remains retired. No runtime/boot validation.",
+    "evidence": [
+      "evidence/tracing-signal-review.json",
+      "evidence/trace-subbuffers-check.json",
+      "evidence/trace-subbuffers-consumers.json",
+      "SECURITY.md: Tracing and signal hook contracts"
+    ]
+  },
+  {
+    "commit": "54f7868c7c38194644832f671eeb303b33826025",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain dump-format selection: true defaults to native latency format, false selects absolute timestamps. Native trace iterator initialization and user-object suppression remain. The callback executes once per dump in final ACK, not once per entry as in the historical first addition. No runtime/boot validation.",
+    "evidence": [
+      "evidence/tracing-signal-review.json",
+      "evidence/trace-subbuffers-check.json",
+      "evidence/trace-subbuffers-consumers.json",
+      "SECURITY.md: Tracing and signal hook contracts"
+    ]
+  },
+  {
+    "commit": "c8f870ca517282e32ec734710b5902d0c7663416",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain panic/oops enter/exit and buffer hooks on native notifier/dump code. Entry callback can suppress dumping, buffer callback can suppress printk or access diagnostic content. These are intentional privileged confidentiality/availability surfaces; a callback must preserve trace_seq bounds and termination if printing continues. The exit callback is not a balanced finally hook: native-disabled/non-oops/veto paths return before it. No obsolete size-check hook is reintroduced. No runtime/boot validation.",
+    "evidence": [
+      "evidence/tracing-signal-review.json",
+      "evidence/trace-subbuffers-check.json",
+      "evidence/trace-subbuffers-consumers.json",
+      "SECURITY.md: Tracing and signal hook contracts"
+    ]
+  },
+  {
+    "commit": "fd84c028725765cad52a6027b8e3d9f4ae4d06e7",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain final hung-task selection/completion hooks via 9e68cdaadf25. Native task-state filtering now lives in check_hung_task and is not replaced by the old outer READ_ONCE test. Callbacks can suppress diagnostic checks and panic caused by those checks; see final hook state/lifetime contract, not an assertion that the hook is security-neutral. No runtime/boot validation.",
+    "evidence": [
+      "evidence/tracing-signal-review.json",
+      "evidence/trace-subbuffers-check.json",
+      "evidence/trace-subbuffers-consumers.json",
+      "SECURITY.md: Tracing and signal hook contracts"
+    ]
+  },
+  {
+    "commit": "9c6c316e3d7ba022bb16c80ea81e5143bf1010fb",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "Explicit old hung-task hook revert was later superseded by a re-add adapted to native task-state filtering. Preserve final source interfaces without replaying obsolete scheduler state access. No runtime/boot validation.",
+    "evidence": [
+      "evidence/tracing-signal-review.json",
+      "evidence/trace-subbuffers-check.json",
+      "evidence/trace-subbuffers-consumers.json",
+      "SECURITY.md: Tracing and signal hook contracts"
+    ]
+  },
+  {
+    "commit": "9e68cdaadf251ea8ceded5378c3f8bab1d9d01a2",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain ACK final hung-task hooks with native check_hung_task body, RCU lock/break handling, budget and panic/report code. need_check is deliberately recorded as pass-scoped ACK state: false persists for later tasks unless a callback resets it. Completion hook runs only after a complete traversal, not early budget/RCU exits. Modules must explicitly choose/reset state and cannot assume balanced completion. Suppression can hide hangs; retention favors the requested vendor diagnostic policy contract, not untrusted module isolation. No runtime/boot validation.",
+    "evidence": [
+      "evidence/tracing-signal-review.json",
+      "evidence/trace-subbuffers-check.json",
+      "evidence/trace-subbuffers-consumers.json",
+      "SECURITY.md: Tracing and signal hook contracts"
+    ]
+  },
+  {
+    "commit": "2e14f01dc4abfa95ab6192deea9b99c235f53ca3",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain final four restricted preempt/IRQ interfaces via modern re-add. Old rcuidle-only implementation and obsolete caller wrappers are not restored; final native trace macro/context-tracking/lockdep ordering remains. Vendor callbacks are NMI-excluded, receive addresses by value, and must avoid recursion, sleeping and unbalanced IRQ/preempt state. No runtime/boot validation.",
+    "evidence": [
+      "evidence/tracing-signal-review.json",
+      "evidence/trace-subbuffers-check.json",
+      "evidence/trace-subbuffers-consumers.json",
+      "SECURITY.md: Tracing and signal hook contracts"
+    ]
+  },
+  {
+    "commit": "d94fa9dcf5ba9d35ae76e6c25aaca7cc947eadb4",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "Temporary preempt/IRQ hook removal was explicitly undone by 6fef927fafb7. Keep final callbacks integrated with current native tracing; do not infer retirement from the earlier revert alone. No runtime/boot validation.",
+    "evidence": [
+      "evidence/tracing-signal-review.json",
+      "evidence/trace-subbuffers-check.json",
+      "evidence/trace-subbuffers-consumers.json",
+      "SECURITY.md: Tracing and signal hook contracts"
+    ]
+  },
+  {
+    "commit": "6fef927fafb78efe6e82dc5d25e811ca38aeec52",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain four GPL restricted hook exports and six guarded callsites. Whole trace_preemptirq.c equals pinned LTS after removing only hook include/reset and six NMI-excluded callbacks. Native tracing, context tracking, IRQ redundancy state and lockdep remain untouched; no claim of measured overhead or runtime interrupt safety. No runtime/boot validation.",
+    "evidence": [
+      "evidence/tracing-signal-review.json",
+      "evidence/trace-subbuffers-check.json",
+      "evidence/trace-subbuffers-consumers.json",
+      "SECURITY.md: Tracing and signal hook contracts"
+    ]
+  },
+  {
+    "commit": "f4fe09c3ea58e0ea446946a3bc71e768430341f2",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain do_send_sig_info observation before acquiring sighand. Native send/locking/return path is unchanged and native check_kill_permission body is identical; hook sees an attempted send, not guaranteed delivery. Borrowed task pointers and potentially failed lock lookup require callback lifetime discipline. It does not itself bypass signal permission checks. No runtime/boot validation.",
+    "evidence": [
+      "evidence/tracing-signal-review.json",
+      "evidence/trace-subbuffers-check.json",
+      "evidence/trace-subbuffers-consumers.json",
+      "SECURITY.md: Tracing and signal hook contracts"
+    ]
+  },
+  {
+    "commit": "32160c479dd22413cb4759fb74005d10edff016e",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain exit_signal notification inside native fatal-group-exit iteration before job-control cleanup, SIGKILL insertion and wake handling. Callbacks run in the signal locking context and must not sleep. This candidate adds observation/priority customization; the separate whether_wake veto and killed-process reaper hooks are separately scoped, not declared safe by this row. No runtime/boot validation.",
+    "evidence": [
+      "evidence/tracing-signal-review.json",
+      "evidence/trace-subbuffers-check.json",
+      "evidence/trace-subbuffers-consumers.json",
+      "SECURITY.md: Tracing and signal hook contracts"
+    ]
+  },
+  {
+    "commit": "d85362738531e88d4139a503e1f1460b7efe1cdd",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Native 8438f5211479 provides export type flags and per-type static keys. Current trace.h and all export registration/dispatch/function/event bodies equal pinned LTS. Keep later native guard-based preemption/mutex handling and marker extension rather than replacing them with the old ACK implementation. No runtime/boot validation.",
+    "evidence": [
+      "evidence/tracing-signal-review.json",
+      "evidence/trace-subbuffers-check.json",
+      "evidence/trace-subbuffers-consumers.json",
+      "SECURITY.md: Tracing and signal hook contracts"
+    ]
+  },
+  {
+    "commit": "23e1124fab2c0c8a0abb809d37339290dc51a6a8",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Native 8ab7a2b7055c provides event export dispatch and TRACE_EXPORT_EVENT. Full current native export/commit functions and header checked. Existing callback context/lifetime requirements remain; no duplicate ACK code or historical static-key implementation is overlaid. No runtime/boot validation.",
+    "evidence": [
+      "evidence/tracing-signal-review.json",
+      "evidence/trace-subbuffers-check.json",
+      "evidence/trace-subbuffers-consumers.json",
+      "SECURITY.md: Tracing and signal hook contracts"
+    ]
+  },
+  {
+    "commit": "c4fa71e25126d32473493b648af0767e4492a85b",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Old LTO recordmcount workaround is explicitly retired by 16fe007e6175. All nine affected paths were reviewed: no __norecordmcount/.text..ftrace special section or old link-script recordmcount function remains in final ACK/port. Keep modern native LTO/ftrace build machinery and successful SDK toolchain integration; do not recreate historical compiler restrictions. No runtime/boot validation.",
+    "evidence": [
+      "evidence/tracing-signal-review.json",
+      "evidence/trace-subbuffers-check.json",
+      "evidence/trace-subbuffers-consumers.json",
+      "SECURITY.md: Tracing and signal hook contracts"
+    ]
+  },
+  {
+    "commit": "16fe007e6175c783444613bda07cc416a2da8263",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Retain final retirement of the obsolete delayed-recordmcount workaround, including annotation, linker section, special post-LTO script calls and old Kconfig constraint. Modern compiler/CFl definitions and native build pipeline supersede the intermediate revert text; no old compiler_types or linker file is copied over LTS. No runtime/boot validation.",
+    "evidence": [
+      "evidence/tracing-signal-review.json",
+      "evidence/trace-subbuffers-check.json",
+      "evidence/trace-subbuffers-consumers.json",
+      "SECURITY.md: Tracing and signal hook contracts"
+    ]
+  },
+  {
+    "commit": "992cefeb822546980be4eb6e1769d8750e6a503e",
+    "disposition": "adapted",
+    "result_commits": [
+      "917f330ad4b2cba3fcc77dc5ae66aa8a01f9065b"
+    ],
+    "rationale": "Adapt ordinary and persistent buffer default allocation order to __PAGE_SIZE for SDK page_shift=14 and positive Perfetto page-sized read consumer. Keep native allocator signature without the separate external-writer parameter. Whole ring_buffer.c remains LTS apart from default/header/comment, preserving resize/mmap/validation fixes. Greater minimum allocation or reduced reserved-range capacity can fail through native cleanup. No runtime/boot validation.",
+    "evidence": [
+      "evidence/tracing-signal-review.json",
+      "evidence/trace-subbuffers-check.json",
+      "evidence/trace-subbuffers-consumers.json",
+      "SECURITY.md: Tracing and signal hook contracts"
+    ]
+  },
+  {
+    "commit": "4d75f609dbe805da0c62d37bda5e32ac521f1ade",
+    "disposition": "adapted",
+    "result_commits": [
+      "917f330ad4b2cba3fcc77dc5ae66aa8a01f9065b"
+    ],
+    "rationale": "Round tracefs subbuffer requests to emulated pages and retain native/actual ACK maximum of 128 physical pages. ACK get_order(nr_subpages) adds zero for supported ratios; do not reinterpret counts as bytes to enlarge limit. Bound nonzero KiB input before multiply/narrowing to reject wraparound aliases. Native locking, snapshot/rollback suffix and write-counter bound remain. Extracted host checks cover valid ACK/native sizes and hostile integer values. No runtime/boot validation.",
+    "evidence": [
+      "evidence/tracing-signal-review.json",
+      "evidence/trace-subbuffers-check.json",
+      "evidence/trace-subbuffers-consumers.json",
+      "SECURITY.md: Tracing and signal hook contracts"
+    ]
+  },
+  {
+    "commit": "98810c472d88f4a8fd352ad1549f2e9f34d827e3",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "External-writer ring-buffer ownership/metadata/callback API belongs to the positively identified ARM protected-hypervisor tracing integration: arch/arm64/kvm/hyp_trace.c constructs the writer and invokes reader/poll helpers. That architecture backend is outside the current x86 SDK target. Keep native buffer ownership, allocation signature and read/mmap algorithms; the independent Android page-size default is now adapted. This does not assert that no unknown external consumer could ever use a general writer API. This replaces the stale whole-file-native witness with a scoped preservation proof; no new runtime validation.",
+    "evidence": [
+      "evidence/trace-witness-revalidation.json",
+      "evidence/trace-subbuffers-check.json",
+      "SECURITY.md: Android page-size-compatible trace subbuffers"
+    ]
+  },
+  {
+    "commit": "1e36e57801966f5b7bb5a3f2586690d9a717f975",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Public buffer_data_page layout and timestamp/alignment material support the same external protected-hypervisor writer. Keep native internal definitions and supported ordinary trace interfaces; no shared externally produced buffer is added solely for the excluded ARM target. Native and emulated-page SDK trace readers remain supported. Future module consumers of the exposed material are not claimed absent. This replaces the stale whole-file-native witness with a scoped preservation proof; no new runtime validation.",
+    "evidence": [
+      "evidence/trace-witness-revalidation.json",
+      "evidence/trace-subbuffers-check.json",
+      "SECURITY.md: Android page-size-compatible trace subbuffers"
+    ]
+  },
+  {
+    "commit": "7ca5dfcb4ab32d3a7e1e6b406a57223c36fa9a9f",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Correction removes invalid fast-path pointer arithmetic in rb_page_desc, which is part of the excluded external-writer implementation. The helper is absent with that feature; the faulty arithmetic is not retained anywhere. No native descriptor path is replaced. This replaces the stale whole-file-native witness with a scoped preservation proof; no new runtime validation.",
+    "evidence": [
+      "evidence/trace-witness-revalidation.json",
+      "evidence/trace-subbuffers-check.json",
+      "SECURITY.md: Android page-size-compatible trace subbuffers"
+    ]
+  },
+  {
+    "commit": "4f521a75a756fd5639588060968e6fe7982e28a8",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "External writer reset/read-stamp/id/empty-buffer corrections apply to the excluded writer callback path. Preserve native owned-reader reset and timestamp algorithms, with no implementation of the old faulty external writer. SDK page-size default is independent. This replaces the stale whole-file-native witness with a scoped preservation proof; no new runtime validation.",
+    "evidence": [
+      "evidence/trace-witness-revalidation.json",
+      "evidence/trace-subbuffers-check.json",
+      "SECURITY.md: Android page-size-compatible trace subbuffers"
+    ]
+  },
+  {
+    "commit": "d4e6e86b92abea38db153edd37d4bc3dbdf92482",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "External writer fast-forward handling and CONFIG_PKVM_DUMP_TRACE_ON_PANIC warning relaxation are coupled to ARM hypervisor trace shared metadata. That backend is outside x86 SDK scope; retain native ordinary-reader validation without importing the external-writer path or suppressing native warnings. This replaces the stale whole-file-native witness with a scoped preservation proof; no new runtime validation.",
+    "evidence": [
+      "evidence/trace-witness-revalidation.json",
+      "evidence/trace-subbuffers-check.json",
+      "SECURITY.md: Android page-size-compatible trace subbuffers"
+    ]
+  },
+  {
+    "commit": "f0667fbd6574c7aecd7d77d7896468e3b5c8fc3e",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Native 27d7fcaf237d supplies alloc_cpu_buffer/page/data helpers, NUMA placement and initialization/error behavior. Whole ring_buffer.c, including all helper/caller bodies, remains LTS except the separately tested emulated allocation default. No older helper implementation is imported. This replaces the stale whole-file-native witness with a scoped preservation proof; no new runtime validation.",
+    "evidence": [
+      "evidence/trace-witness-revalidation.json",
+      "evidence/trace-subbuffers-check.json",
+      "SECURITY.md: Android page-size-compatible trace subbuffers"
+    ]
+  },
+  {
+    "commit": "285a9c2a8e4888436156e43ee825afd0cca3d577",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Native 50f4a793c4ff supplies page-capacity-based sizing and reader/resize locking correction. Preserve all native bodies and later LTS fixes, including resize_disabled before order publication and persistent buffer validation. ACK external-writer-specific conditions are inapplicable with the excluded backend; native resize fixes are fully retained. This replaces the stale whole-file-native witness with a scoped preservation proof; no new runtime validation.",
+    "evidence": [
+      "evidence/trace-witness-revalidation.json",
+      "evidence/trace-subbuffers-check.json",
+      "SECURITY.md: Android page-size-compatible trace subbuffers"
+    ]
+  },
+  {
+    "commit": "c9bc54a29b1b3e49a7408618337a9b97badb7996",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Native qcom-pdc modular support is present through 95bf9305d2e3 and final IRQCHIP_PLATFORM_DRIVER conversion 4acd8a4be614. Keep native tristate and platform initialization/error cleanup, not the historical MODULE-only duplicate probe/IRQCHIP_DECLARE split. The whole driver/Kconfig remains LTS; no native module support is removed. No missing-consumer search is used as the sole reason; native support/history or explicit hardware/backend selection is the evidence. No hardware runtime validation.",
+    "evidence": [
+      "evidence/irq-controller-review.json",
+      "SECURITY.md: Interrupt-controller target review"
+    ]
+  },
+  {
+    "commit": "78ecb2c230f62b0f468a6ebc55b1e1553a4a9148",
+    "disposition": "superseded-configuration",
+    "result_commits": [],
+    "rationale": "Historical QCOM_SCM || !QCOM_SCM linkage constraint was superseded as the PDC driver/dependencies evolved; current ACK and LTS QCOM_PDC stanza contain no SCM dependency and current driver has no qcom_scm call. Preserve final native stanza, not an old forced linkage relation. No missing-consumer search is used as the sole reason; native support/history or explicit hardware/backend selection is the evidence. No hardware runtime validation.",
+    "evidence": [
+      "evidence/irq-controller-review.json",
+      "SECURITY.md: Interrupt-controller target review"
+    ]
+  },
+  {
+    "commit": "f887911b19e5175710193188a3649f437b7ea59d",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "This patch actually selects QCOM_SCM to repair an intermediate arm64 allmodconfig, despite the title wording. 0ec8b4c6469e explicitly undoes that selection, and final native/ACK PDC stanza has no SCM relation. Do not force an unrelated firmware provider. No missing-consumer search is used as the sole reason; native support/history or explicit hardware/backend selection is the evidence. No hardware runtime validation.",
+    "evidence": [
+      "evidence/irq-controller-review.json",
+      "SECURITY.md: Interrupt-controller target review"
+    ]
+  },
+  {
+    "commit": "b26213f8bd50a48cc3d967cf69370dd4a4f8769a",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Historical permanent-module re-add is represented by native final IRQCHIP_PLATFORM_DRIVER qcom_pdc probe and tristate Kconfig. Keep later native node handling, locking and error cleanup. No older explicit platform_driver structure is needed. No missing-consumer search is used as the sole reason; native support/history or explicit hardware/backend selection is the evidence. No hardware runtime validation.",
+    "evidence": [
+      "evidence/irq-controller-review.json",
+      "SECURITY.md: Interrupt-controller target review"
+    ]
+  },
+  {
+    "commit": "0ec8b4c6469eb0b501b548fc78f78b5783c35f1e",
+    "disposition": "superseded-configuration",
+    "result_commits": [],
+    "rationale": "Retirement of intermediate select QCOM_SCM is retained in final native PDC configuration; its replacement optional dependency was itself later superseded. Do not recreate either old constraint. Native driver/Kconfig equal LTS. No missing-consumer search is used as the sole reason; native support/history or explicit hardware/backend selection is the evidence. No hardware runtime validation.",
+    "evidence": [
+      "evidence/irq-controller-review.json",
+      "SECURITY.md: Interrupt-controller target review"
+    ]
+  },
+  {
+    "commit": "95d5435480680dc25fa85a8b47d2ef4a5c086ba3",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Native a947aa00edd4 provides Meson GPIO IRQ modular support with IRQCHIP_PLATFORM_DRIVER; current driver and Kconfig are exactly LTS. Do not replay old devm/remove/probe ownership implementation over native cleanup and current raw-spinlock behavior. No missing-consumer search is used as the sole reason; native support/history or explicit hardware/backend selection is the evidence. No hardware runtime validation.",
+    "evidence": [
+      "evidence/irq-controller-review.json",
+      "SECURITY.md: Interrupt-controller target review"
+    ]
+  },
+  {
+    "commit": "d1a7e1ba6c43b81563222c3fec400efd65991c59",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "This revert explicitly makes way for native Meson modular support. Keep current native tristate/platform helper, not the temporary bool/IRQCHIP_DECLARE state. Positive native replacement history and exact final files establish the disposition. No missing-consumer search is used as the sole reason; native support/history or explicit hardware/backend selection is the evidence. No hardware runtime validation.",
+    "evidence": [
+      "evidence/irq-controller-review.json",
+      "SECURITY.md: Interrupt-controller target review"
+    ]
+  },
+  {
+    "commit": "0df7b95498a951dc788020d536d4b63f2541892b",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Old GICv3 syscore-resume hook was explicitly removed in 3d41a21a35d3; it addresses ARM distributor MMIO, not the x86 SDK APIC. Keep native GIC file/header and omit this ARM-only header/export/registration. Generic PM and wakeup reporting remain separately retained. No missing-consumer search is used as the sole reason; native support/history or explicit hardware/backend selection is the evidence. No hardware runtime validation.",
+    "evidence": [
+      "evidence/irq-controller-review.json",
+      "SECURITY.md: Interrupt-controller target review"
+    ]
+  },
+  {
+    "commit": "00c6f53e034e2b580e51d3339dbc4b7f06529073",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "GICv3 initial affinity/routing callbacks mutate ARM distributor IROUTER values. Historical hooks were removed and later changed to a restricted interface. No version is needed for the selected x86 APIC backend; native ARM code remains LTS and no stub Android export is added solely for a future target. No missing-consumer search is used as the sole reason; native support/history or explicit hardware/backend selection is the evidence. No hardware runtime validation.",
+    "evidence": [
+      "evidence/irq-controller-review.json",
+      "SECURITY.md: Interrupt-controller target review"
+    ]
+  },
+  {
+    "commit": "574d6e2909bae13109f520077c82ada16306861c",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Public gic_resume function/export/!PM stub were part of the later explicitly removed GICv3 resume-hook path. They do not implement generic system resume. Omit ARM-only API while preserving native driver and all x86 PM paths. No missing-consumer search is used as the sole reason; native support/history or explicit hardware/backend selection is the evidence. No hardware runtime validation.",
+    "evidence": [
+      "evidence/irq-controller-review.json",
+      "SECURITY.md: Interrupt-controller target review"
+    ]
+  },
+  {
+    "commit": "9abe98e69f0e84a50a79c6f24d5ce8905db87078",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Extending the GICv3 affinity hook with force and distributor MMIO base remains ARM-only routing customization. The later restricted replacement is likewise outside the SDK x86 target; keep native GIC implementation without either old source callback signature. No missing-consumer search is used as the sole reason; native support/history or explicit hardware/backend selection is the evidence. No hardware runtime validation.",
+    "evidence": [
+      "evidence/irq-controller-review.json",
+      "SECURITY.md: Interrupt-controller target review"
+    ]
+  },
+  {
+    "commit": "3d41a21a35d3d0c8cd468d90b56648070f783877",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Preserve native GICv3 implementation without the retired resume/affinity hooks, old export and GIC-specific unexpected-wakeup reporting. Later ARM re-adds are independently omitted for target scope. This is not a claim that ACK permanently removed every GIC hook; x86 generic wakeup reporting and IRQ customization are separate. No missing-consumer search is used as the sole reason; native support/history or explicit hardware/backend selection is the evidence. No hardware runtime validation.",
+    "evidence": [
+      "evidence/irq-controller-review.json",
+      "SECURITY.md: Interrupt-controller target review"
+    ]
+  },
+  {
+    "commit": "3dc71aaa72d7daabe5c17670e31b4034c4fed18b",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "GICv2 post-affinity hook exposes ARM CPU-target map/MMIO register after native affinity update. SDK selects x86 local/I/O APIC and cannot execute this ARM driver. Omit only this driver-specific declaration/export/callsite; native generic IRQ interfaces remain. No missing-consumer search is used as the sole reason; native support/history or explicit hardware/backend selection is the evidence. No hardware runtime validation.",
+    "evidence": [
+      "evidence/irq-controller-review.json",
+      "SECURITY.md: Interrupt-controller target review"
+    ]
+  },
+  {
+    "commit": "a2a0550225ce547d1e3d80e40d180affcc4e0cce",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "GICv3 re-add provides initial routing hook and restricted affinity callback with distributor/redistributor addresses/stride. These parameters and callsites are ARM controller-specific, not generic IRQ policy. Omit for current x86 SDK without declaring the hardware feature unnecessary on ARM. No missing-consumer search is used as the sole reason; native support/history or explicit hardware/backend selection is the evidence. No hardware runtime validation.",
+    "evidence": [
+      "evidence/irq-controller-review.json",
+      "SECURITY.md: Interrupt-controller target review"
+    ]
+  },
+  {
+    "commit": "b4b436ca33c0900359df8643d5c0b27c35954f30",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "GICv3 suspend hook plus public distributor/CPU initialization and write-pending exports support ARM controller suspend policy. Omit the entire target-specific dependency chain, including syscore registration and renamed public helpers, while retaining native LTS bodies and x86 suspend infrastructure. No missing-consumer search is used as the sole reason; native support/history or explicit hardware/backend selection is the evidence. No hardware runtime validation.",
+    "evidence": [
+      "evidence/irq-controller-review.json",
+      "SECURITY.md: Interrupt-controller target review"
+    ]
+  },
+  {
+    "commit": "9eb08c902ab22211ec1dc6d7199966ad8c361191",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "ITS save/disable and restore/enable exports are ARM GIC interrupt-translation service helpers for platform S2IDLE. Native private implementations remain; no ARM-only source API is added solely for future hardware. x86 APIC/MSI and generic PM are unaffected. No missing-consumer search is used as the sole reason; native support/history or explicit hardware/backend selection is the evidence. No hardware runtime validation.",
+    "evidence": [
+      "evidence/irq-controller-review.json",
+      "SECURITY.md: Interrupt-controller target review"
+    ]
+  },
+  {
+    "commit": "eeac78ca57dcf684b63e60c10a6cf2271def8b57",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Apple AIC firmware-specifier affinity callback is selected only with ARM64 and ARCH_APPLE/COMPILE_TEST. The patch adds a controller-specific get_fwspec_info implementation, not a generic firmware ABI. Retain native AIC file under x86 SDK target scope; no Apple hardware support is required here. No missing-consumer search is used as the sole reason; native support/history or explicit hardware/backend selection is the evidence. No hardware runtime validation.",
+    "evidence": [
+      "evidence/irq-controller-review.json",
+      "SECURITY.md: Interrupt-controller target review"
+    ]
+  },
+  {
+    "commit": "74555f39924dc4c173b4bec9bd015acfeb895e68",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Original ARM64 FPSIMD context-switch hook and vendor thread data were reverted and re-added later at a different layout location. Omit the ARM execution-context interface and its data because SDK uses x86 XSAVE/FPU context, not ARM FPSIMD. Vendor data is functional customization storage, not mislabeled KMI-only. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+    "evidence": [
+      "evidence/arm-only-hooks-review.json",
+      "SECURITY.md: ARM exception and firmware hook scope"
+    ]
+  },
+  {
+    "commit": "6cab370bf8a3c22c8741a0dced6e32b60abf8439",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "This FPSIMD-hook revert is superseded in ACK by e8ac88bbf71b, so it is not proof of permanent retirement. Current port nevertheless keeps native ARM files because the entire ARM context-switch feature is outside the x86 SDK target. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+    "evidence": [
+      "evidence/arm-only-hooks-review.json",
+      "SECURITY.md: ARM exception and firmware hook scope"
+    ]
+  },
+  {
+    "commit": "e8ac88bbf71ba8c59a0fde1034cc9fddb17f9441",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Final ARM FPSIMD save/restore callback and ARM thread_struct vendor-data addition are tied to ARM64 __switch_to and its register state. No ARM-specific callback/export/data is included solely for a future target. Native ARM and x86 FPU state ownership remains unchanged by this decision. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+    "evidence": [
+      "evidence/arm-only-hooks-review.json",
+      "SECURITY.md: ARM exception and firmware hook scope"
+    ]
+  },
+  {
+    "commit": "1aa1f6a7cf67c9cea1a609581eb9c2602fd96576",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "MPAM callback occurs in ARM64 context switching before dsb for ARM cache/resource-partition state. This is not a generic scheduler hook; omit the architecture-specific declaration/export/callsite for the x86 SDK, preserving native ARM barriers and common scheduler interfaces. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+    "evidence": [
+      "evidence/arm-only-hooks-review.json",
+      "SECURITY.md: ARM exception and firmware hook scope"
+    ]
+  },
+  {
+    "commit": "3567f516024d93b7e353408d2b1e92b219caf8d2",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "PSCI idle-domain enter/exit hooks wrap ARM firmware CPU-idle/PM-domain operations. SDK x86 does not select ARM_PSCI_FW/ARM_PSCI_CPUIDLE. Keep native driver and the separately retained generic cpuidle hooks; no PSCI-specific API is added for future platforms. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+    "evidence": [
+      "evidence/arm-only-hooks-review.json",
+      "SECURITY.md: ARM exception and firmware hook scope"
+    ]
+  },
+  {
+    "commit": "126b17ae2bd34dd0d65ffdc4c3ef01ec8f03b582",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Resident trusted-OS and CPU-suspend veto hooks are specific to ARM PSCI/SMCCC calls. Omit the callbacks and header/exports with this unselected firmware backend; native resident-CPU and firmware error handling remain. Generic CPU hotplug/suspend customization is separately retained. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+    "evidence": [
+      "evidence/arm-only-hooks-review.json",
+      "SECURITY.md: ARM exception and firmware hook scope"
+    ]
+  },
+  {
+    "commit": "03418a3836d48f9f8ef90c0a3abf3f8be2d975a3",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Restricted-hook declaration correction applies only to the two excluded PSCI hooks. The incorrect DECLARE_HOOK form is not retained. Generic restricted-hook implementation and selected hook declarations are unaffected. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+    "evidence": [
+      "evidence/arm-only-hooks-review.json",
+      "SECURITY.md: ARM exception and firmware hook scope"
+    ]
+  },
+  {
+    "commit": "cd61fdefab25b078ca4cd8f630fb6e148d373a69",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "SError panic callback takes ARM64 ESR/register context and is invoked only in arm64_serror_panic. Omit the ARM-only diagnostic interface for x86 SDK; keep native panic/error handling and common diagnostics. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+    "evidence": [
+      "evidence/arm-only-hooks-review.json",
+      "SECURITY.md: ARM exception and firmware hook scope"
+    ]
+  },
+  {
+    "commit": "2fb5b15f1198924c52ee31c0dd553e3951a7361b",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "EL1 undefined-instruction, BTI, FPAC and unhandled-vector hooks observe ARM exception state. These are not x86 exception or generic panic interfaces. Omit declarations/exports/calls while leaving native ARM exception handling byte-identical to LTS. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+    "evidence": [
+      "evidence/arm-only-hooks-review.json",
+      "SECURITY.md: ARM exception and firmware hook scope"
+    ]
+  },
+  {
+    "commit": "fa26ffa4f033236dd3b3d3aed15c037b01bed1a3",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "ARM bad-stack hook executes in the ARM64 noinstr/NMI exception path with ESR/FAR. SDK uses x86 stack/exception handling. Keep native bad-stack panic without adding an unused ARM callback surface. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+    "evidence": [
+      "evidence/arm-only-hooks-review.json",
+      "SECURITY.md: ARM exception and firmware hook scope"
+    ]
+  },
+  {
+    "commit": "de5860d7c5a7241422c93001f25cf1daf18bb5fb",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Vendor CPU-info callback extends ARM64 MIDR-based /proc/cpuinfo output, not the x86 proc implementation. Omit the ARM-only declaration/export/call; this does not conclude that Android does not read /proc/cpuinfo. Native x86 reporting remains. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+    "evidence": [
+      "evidence/arm-only-hooks-review.json",
+      "SECURITY.md: ARM exception and firmware hook scope"
+    ]
+  },
+  {
+    "commit": "eaa35a2157ee9d1a6e9a696b15b17c65b234d71d",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "FIQ dump hooks are in ARM64 EL1/EL0 FIQ entry before native handling. x86 SDK has no ARM FIQ/ESR entry context. Omit callback/export/header additions while native ARM entry code and generic IRQ diagnostics stay intact. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+    "evidence": [
+      "evidence/arm-only-hooks-review.json",
+      "SECURITY.md: ARM exception and firmware hook scope"
+    ]
+  },
+  {
+    "commit": "c2473c00e7247042eb51a02e78afeb8319b96b7d",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Unrecognized ARM EL0 exception override and first SME-use notification depend on ARM ESR/opcodes and SME register state. The former can suppress native SIGILL on ARM, a policy surface not imported into this x86 target. Keep native ARM exception/SME bodies and x86 instruction handling; no speculative future CPU support. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+    "evidence": [
+      "evidence/arm-only-hooks-review.json",
+      "SECURITY.md: ARM exception and firmware hook scope"
+    ]
   }
 ]

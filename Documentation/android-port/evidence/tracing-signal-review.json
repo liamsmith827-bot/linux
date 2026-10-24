@@ -1,0 +1,484 @@
+{
+  "source_head": "917f330ad4b2cba3fcc77dc5ae66aa8a01f9065b",
+  "records": [
+    {
+      "commit": "fbbc48ef1854f36aba48538b3034c884878d9a65",
+      "disposition": "partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Original five-hook ftrace addition was reverted and reintroduced as four hooks by 54f7868c7c38/c8f870ca5172. Retain final format/enter/exit/buffer interfaces in current native notifier/dump structure; do not restore obsolete size-check hook or old per-CPU tracing-disable implementation. Native dump serialization, user-object suppression, iteration and watchdog touches remain. No runtime/boot validation.",
+      "evidence": [
+        "evidence/tracing-signal-review.json",
+        "evidence/trace-subbuffers-check.json",
+        "evidence/trace-subbuffers-consumers.json",
+        "SECURITY.md: Tracing and signal hook contracts"
+      ],
+      "patch_sha256": "67e0bb3a87f96f9e7f504027369972478f668c10c5fc8435129e5fc616aa90c3",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/ftrace_dump.h",
+        "kernel/trace/trace.c"
+      ]
+    },
+    {
+      "commit": "1a094aba37bd7db038b8fc719833eb553361e7da",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [],
+      "rationale": "Temporary ftrace-hook removal was superseded by the two final re-adds. Account for the intermediate retirement without removing the final four source interfaces. The fifth historical size-check interface remains retired. No runtime/boot validation.",
+      "evidence": [
+        "evidence/tracing-signal-review.json",
+        "evidence/trace-subbuffers-check.json",
+        "evidence/trace-subbuffers-consumers.json",
+        "SECURITY.md: Tracing and signal hook contracts"
+      ],
+      "patch_sha256": "c10cfac214835bca7f98f899d86414cff6b8bf5a81d07e06dfbe9acfbeb1fe21",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/ftrace_dump.h",
+        "kernel/trace/trace.c"
+      ]
+    },
+    {
+      "commit": "54f7868c7c38194644832f671eeb303b33826025",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain dump-format selection: true defaults to native latency format, false selects absolute timestamps. Native trace iterator initialization and user-object suppression remain. The callback executes once per dump in final ACK, not once per entry as in the historical first addition. No runtime/boot validation.",
+      "evidence": [
+        "evidence/tracing-signal-review.json",
+        "evidence/trace-subbuffers-check.json",
+        "evidence/trace-subbuffers-consumers.json",
+        "SECURITY.md: Tracing and signal hook contracts"
+      ],
+      "patch_sha256": "bc51d4c58dc1e035cccea705002e83507e5056d40503bcd860de74dc33011667",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/ftrace_dump.h",
+        "kernel/trace/trace.c"
+      ]
+    },
+    {
+      "commit": "c8f870ca517282e32ec734710b5902d0c7663416",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain panic/oops enter/exit and buffer hooks on native notifier/dump code. Entry callback can suppress dumping, buffer callback can suppress printk or access diagnostic content. These are intentional privileged confidentiality/availability surfaces; a callback must preserve trace_seq bounds and termination if printing continues. The exit callback is not a balanced finally hook: native-disabled/non-oops/veto paths return before it. No obsolete size-check hook is reintroduced. No runtime/boot validation.",
+      "evidence": [
+        "evidence/tracing-signal-review.json",
+        "evidence/trace-subbuffers-check.json",
+        "evidence/trace-subbuffers-consumers.json",
+        "SECURITY.md: Tracing and signal hook contracts"
+      ],
+      "patch_sha256": "a8810a04054f76e733ade4c4bf2b239aa016551e88314702cb817b601f2bc575",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/ftrace_dump.h",
+        "kernel/trace/trace.c"
+      ]
+    },
+    {
+      "commit": "fd84c028725765cad52a6027b8e3d9f4ae4d06e7",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain final hung-task selection/completion hooks via 9e68cdaadf25. Native task-state filtering now lives in check_hung_task and is not replaced by the old outer READ_ONCE test. Callbacks can suppress diagnostic checks and panic caused by those checks; see final hook state/lifetime contract, not an assertion that the hook is security-neutral. No runtime/boot validation.",
+      "evidence": [
+        "evidence/tracing-signal-review.json",
+        "evidence/trace-subbuffers-check.json",
+        "evidence/trace-subbuffers-consumers.json",
+        "SECURITY.md: Tracing and signal hook contracts"
+      ],
+      "patch_sha256": "140d7e17e203300f0ab79ff9562d5fad769e9149129f458488e196b3a8a7fca5",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/hung_task.h",
+        "kernel/hung_task.c"
+      ]
+    },
+    {
+      "commit": "9c6c316e3d7ba022bb16c80ea81e5143bf1010fb",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [],
+      "rationale": "Explicit old hung-task hook revert was later superseded by a re-add adapted to native task-state filtering. Preserve final source interfaces without replaying obsolete scheduler state access. No runtime/boot validation.",
+      "evidence": [
+        "evidence/tracing-signal-review.json",
+        "evidence/trace-subbuffers-check.json",
+        "evidence/trace-subbuffers-consumers.json",
+        "SECURITY.md: Tracing and signal hook contracts"
+      ],
+      "patch_sha256": "77dfd4e7471f9ac6a1bcc29b1448277224270fc238bf692fbe8b9099bd378b8d",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/hung_task.h",
+        "kernel/hung_task.c"
+      ]
+    },
+    {
+      "commit": "9e68cdaadf251ea8ceded5378c3f8bab1d9d01a2",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain ACK final hung-task hooks with native check_hung_task body, RCU lock/break handling, budget and panic/report code. need_check is deliberately recorded as pass-scoped ACK state: false persists for later tasks unless a callback resets it. Completion hook runs only after a complete traversal, not early budget/RCU exits. Modules must explicitly choose/reset state and cannot assume balanced completion. Suppression can hide hangs; retention favors the requested vendor diagnostic policy contract, not untrusted module isolation. No runtime/boot validation.",
+      "evidence": [
+        "evidence/tracing-signal-review.json",
+        "evidence/trace-subbuffers-check.json",
+        "evidence/trace-subbuffers-consumers.json",
+        "SECURITY.md: Tracing and signal hook contracts"
+      ],
+      "patch_sha256": "f91b2c054e63373438b993535c5a6e06043218cd48fc5c1c8b7cf82edbca64cf",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/hung_task.h",
+        "kernel/hung_task.c"
+      ]
+    },
+    {
+      "commit": "2e14f01dc4abfa95ab6192deea9b99c235f53ca3",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain final four restricted preempt/IRQ interfaces via modern re-add. Old rcuidle-only implementation and obsolete caller wrappers are not restored; final native trace macro/context-tracking/lockdep ordering remains. Vendor callbacks are NMI-excluded, receive addresses by value, and must avoid recursion, sleeping and unbalanced IRQ/preempt state. No runtime/boot validation.",
+      "evidence": [
+        "evidence/tracing-signal-review.json",
+        "evidence/trace-subbuffers-check.json",
+        "evidence/trace-subbuffers-consumers.json",
+        "SECURITY.md: Tracing and signal hook contracts"
+      ],
+      "patch_sha256": "46890e66ba314892d609c28876979109084fd2c775915f95749cd45800ae9d64",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/preemptirq.h",
+        "kernel/trace/trace_preemptirq.c"
+      ]
+    },
+    {
+      "commit": "d94fa9dcf5ba9d35ae76e6c25aaca7cc947eadb4",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [],
+      "rationale": "Temporary preempt/IRQ hook removal was explicitly undone by 6fef927fafb7. Keep final callbacks integrated with current native tracing; do not infer retirement from the earlier revert alone. No runtime/boot validation.",
+      "evidence": [
+        "evidence/tracing-signal-review.json",
+        "evidence/trace-subbuffers-check.json",
+        "evidence/trace-subbuffers-consumers.json",
+        "SECURITY.md: Tracing and signal hook contracts"
+      ],
+      "patch_sha256": "b095ca66ea731789d366afc345e5aaefca8b77be44d933f9c4b20424ca63ae7c",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/preemptirq.h",
+        "kernel/trace/trace_preemptirq.c"
+      ]
+    },
+    {
+      "commit": "6fef927fafb78efe6e82dc5d25e811ca38aeec52",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain four GPL restricted hook exports and six guarded callsites. Whole trace_preemptirq.c equals pinned LTS after removing only hook include/reset and six NMI-excluded callbacks. Native tracing, context tracking, IRQ redundancy state and lockdep remain untouched; no claim of measured overhead or runtime interrupt safety. No runtime/boot validation.",
+      "evidence": [
+        "evidence/tracing-signal-review.json",
+        "evidence/trace-subbuffers-check.json",
+        "evidence/trace-subbuffers-consumers.json",
+        "SECURITY.md: Tracing and signal hook contracts"
+      ],
+      "patch_sha256": "ad17cebdf49bcbaa793d137813b166763106f992c617e5bd070cd4a57b134c67",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/preemptirq.h",
+        "kernel/trace/trace_preemptirq.c"
+      ]
+    },
+    {
+      "commit": "f4fe09c3ea58e0ea446946a3bc71e768430341f2",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain do_send_sig_info observation before acquiring sighand. Native send/locking/return path is unchanged and native check_kill_permission body is identical; hook sees an attempted send, not guaranteed delivery. Borrowed task pointers and potentially failed lock lookup require callback lifetime discipline. It does not itself bypass signal permission checks. No runtime/boot validation.",
+      "evidence": [
+        "evidence/tracing-signal-review.json",
+        "evidence/trace-subbuffers-check.json",
+        "evidence/trace-subbuffers-consumers.json",
+        "SECURITY.md: Tracing and signal hook contracts"
+      ],
+      "patch_sha256": "9bb98aaae4b6cdcbb7265e114dabbaf887a0a12f9a19e3478825f5691f5a8cff",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/signal.h",
+        "kernel/signal.c"
+      ]
+    },
+    {
+      "commit": "32160c479dd22413cb4759fb74005d10edff016e",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain exit_signal notification inside native fatal-group-exit iteration before job-control cleanup, SIGKILL insertion and wake handling. Callbacks run in the signal locking context and must not sleep. This candidate adds observation/priority customization; the separate whether_wake veto and killed-process reaper hooks are separately scoped, not declared safe by this row. No runtime/boot validation.",
+      "evidence": [
+        "evidence/tracing-signal-review.json",
+        "evidence/trace-subbuffers-check.json",
+        "evidence/trace-subbuffers-consumers.json",
+        "SECURITY.md: Tracing and signal hook contracts"
+      ],
+      "patch_sha256": "288f5fa10237b3e9d3654e3acafce5eccb574a340611b26f4df1ea212790ce2c",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/signal.h",
+        "kernel/signal.c"
+      ]
+    },
+    {
+      "commit": "d85362738531e88d4139a503e1f1460b7efe1cdd",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Native 8438f5211479 provides export type flags and per-type static keys. Current trace.h and all export registration/dispatch/function/event bodies equal pinned LTS. Keep later native guard-based preemption/mutex handling and marker extension rather than replacing them with the old ACK implementation. No runtime/boot validation.",
+      "evidence": [
+        "evidence/tracing-signal-review.json",
+        "evidence/trace-subbuffers-check.json",
+        "evidence/trace-subbuffers-consumers.json",
+        "SECURITY.md: Tracing and signal hook contracts"
+      ],
+      "patch_sha256": "6730b7510c11aed111f1f95473cb14cd1dc199e1d524f48e0f939e44a44291b4",
+      "changed_paths": [
+        "include/linux/trace.h",
+        "kernel/trace/trace.c"
+      ]
+    },
+    {
+      "commit": "23e1124fab2c0c8a0abb809d37339290dc51a6a8",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Native 8ab7a2b7055c provides event export dispatch and TRACE_EXPORT_EVENT. Full current native export/commit functions and header checked. Existing callback context/lifetime requirements remain; no duplicate ACK code or historical static-key implementation is overlaid. No runtime/boot validation.",
+      "evidence": [
+        "evidence/tracing-signal-review.json",
+        "evidence/trace-subbuffers-check.json",
+        "evidence/trace-subbuffers-consumers.json",
+        "SECURITY.md: Tracing and signal hook contracts"
+      ],
+      "patch_sha256": "72306fcd50b39560735f5b7a2ebef8afba5a6bb4fbde157d5f3f8c35de4838ab",
+      "changed_paths": [
+        "include/linux/trace.h",
+        "kernel/trace/trace.c"
+      ]
+    },
+    {
+      "commit": "c4fa71e25126d32473493b648af0767e4492a85b",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Old LTO recordmcount workaround is explicitly retired by 16fe007e6175. All nine affected paths were reviewed: no __norecordmcount/.text..ftrace special section or old link-script recordmcount function remains in final ACK/port. Keep modern native LTO/ftrace build machinery and successful SDK toolchain integration; do not recreate historical compiler restrictions. No runtime/boot validation.",
+      "evidence": [
+        "evidence/tracing-signal-review.json",
+        "evidence/trace-subbuffers-check.json",
+        "evidence/trace-subbuffers-consumers.json",
+        "SECURITY.md: Tracing and signal hook contracts"
+      ],
+      "patch_sha256": "6a04315257f436499e773d9ef5a4eeddab5c66c6a9aac8778d8b98193e938bd3",
+      "changed_paths": [
+        "arch/Kconfig",
+        "include/asm-generic/vmlinux.lds.h",
+        "include/linux/compiler-clang.h",
+        "include/linux/compiler_types.h",
+        "kernel/trace/ftrace.c",
+        "scripts/Makefile.build",
+        "scripts/Makefile.modfinal",
+        "scripts/link-vmlinux.sh",
+        "scripts/recordmcount.c"
+      ]
+    },
+    {
+      "commit": "16fe007e6175c783444613bda07cc416a2da8263",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [],
+      "rationale": "Retain final retirement of the obsolete delayed-recordmcount workaround, including annotation, linker section, special post-LTO script calls and old Kconfig constraint. Modern compiler/CFl definitions and native build pipeline supersede the intermediate revert text; no old compiler_types or linker file is copied over LTS. No runtime/boot validation.",
+      "evidence": [
+        "evidence/tracing-signal-review.json",
+        "evidence/trace-subbuffers-check.json",
+        "evidence/trace-subbuffers-consumers.json",
+        "SECURITY.md: Tracing and signal hook contracts"
+      ],
+      "patch_sha256": "002b98949d6451e138e2629c3174f7f8a128d2d92faf2c34673103c6b57abc09",
+      "changed_paths": [
+        "arch/Kconfig",
+        "include/asm-generic/vmlinux.lds.h",
+        "include/linux/compiler-clang.h",
+        "include/linux/compiler_types.h",
+        "kernel/trace/ftrace.c",
+        "scripts/Makefile.build",
+        "scripts/Makefile.modfinal",
+        "scripts/link-vmlinux.sh",
+        "scripts/recordmcount.c"
+      ]
+    },
+    {
+      "commit": "992cefeb822546980be4eb6e1769d8750e6a503e",
+      "disposition": "adapted",
+      "result_commits": [
+        "917f330ad4b2cba3fcc77dc5ae66aa8a01f9065b"
+      ],
+      "rationale": "Adapt ordinary and persistent buffer default allocation order to __PAGE_SIZE for SDK page_shift=14 and positive Perfetto page-sized read consumer. Keep native allocator signature without the separate external-writer parameter. Whole ring_buffer.c remains LTS apart from default/header/comment, preserving resize/mmap/validation fixes. Greater minimum allocation or reduced reserved-range capacity can fail through native cleanup. No runtime/boot validation.",
+      "evidence": [
+        "evidence/tracing-signal-review.json",
+        "evidence/trace-subbuffers-check.json",
+        "evidence/trace-subbuffers-consumers.json",
+        "SECURITY.md: Tracing and signal hook contracts"
+      ],
+      "patch_sha256": "85d237ba25ecac9836d1c192f2a7b4e7adf8f0e1130abf6620d35a5b3155b223",
+      "changed_paths": [
+        "kernel/trace/ring_buffer.c",
+        "kernel/trace/trace.c"
+      ]
+    },
+    {
+      "commit": "4d75f609dbe805da0c62d37bda5e32ac521f1ade",
+      "disposition": "adapted",
+      "result_commits": [
+        "917f330ad4b2cba3fcc77dc5ae66aa8a01f9065b"
+      ],
+      "rationale": "Round tracefs subbuffer requests to emulated pages and retain native/actual ACK maximum of 128 physical pages. ACK get_order(nr_subpages) adds zero for supported ratios; do not reinterpret counts as bytes to enlarge limit. Bound nonzero KiB input before multiply/narrowing to reject wraparound aliases. Native locking, snapshot/rollback suffix and write-counter bound remain. Extracted host checks cover valid ACK/native sizes and hostile integer values. No runtime/boot validation.",
+      "evidence": [
+        "evidence/tracing-signal-review.json",
+        "evidence/trace-subbuffers-check.json",
+        "evidence/trace-subbuffers-consumers.json",
+        "SECURITY.md: Tracing and signal hook contracts"
+      ],
+      "patch_sha256": "a6ac90624dd0f63d5b1fa2bb19c52369ba906fde13a6423ff2320aa7ef05204a",
+      "changed_paths": [
+        "kernel/trace/trace.c"
+      ]
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/trace/trace_preemptirq.c",
+      "relationship": "Whole native file plus six guarded callbacks and hook include",
+      "sha256": "1282c8f8b98ae947cb56d1bc7232914c5640ba5dcb3b4f63ce00a14c9716fe28"
+    },
+    {
+      "path": "kernel/trace/trace.c",
+      "function": "trace_process_export",
+      "native_equal": true,
+      "sha256": "75e6ccffbf9f7788e9422b786dd8efee6baf5f19e3b85f68bedd3d339f39de15"
+    },
+    {
+      "path": "kernel/trace/trace.c",
+      "function": "ftrace_exports_enable",
+      "native_equal": true,
+      "sha256": "04a7ad97d99dc2457521e459ef461290ef0a7a8271f6f859d54f94dbabfc9489"
+    },
+    {
+      "path": "kernel/trace/trace.c",
+      "function": "ftrace_exports_disable",
+      "native_equal": true,
+      "sha256": "bc2866419c1a6e4e139979ad230b642a66ca43b9bd2dc2672c6ee35b3e7bf377"
+    },
+    {
+      "path": "kernel/trace/trace.c",
+      "function": "ftrace_exports",
+      "native_equal": true,
+      "sha256": "ce54d4c3a92ebedee8cadf77428fb5d7095109eebaae1ec26f3f8aa46afaa7b2"
+    },
+    {
+      "path": "kernel/trace/trace.c",
+      "function": "add_trace_export",
+      "native_equal": true,
+      "sha256": "0f1b138223ad70611a56f0a2f057aae406e15bc9c96ec1d1e851a4e4da67e5dd"
+    },
+    {
+      "path": "kernel/trace/trace.c",
+      "function": "rm_trace_export",
+      "native_equal": true,
+      "sha256": "40be507727021309064351dace75886a72c8d51ff82b27eb27bc358cfd345333"
+    },
+    {
+      "path": "kernel/trace/trace.c",
+      "function": "add_ftrace_export",
+      "native_equal": true,
+      "sha256": "871ed9f20c7e1dc8eee3850ff88d88eab832f699bb269b75bdfbb06c21222d01"
+    },
+    {
+      "path": "kernel/trace/trace.c",
+      "function": "rm_ftrace_export",
+      "native_equal": true,
+      "sha256": "c47c322010cbd64edc8b31ca6208f8ac0b72be737dbfe9dbf82281a3b304330b"
+    },
+    {
+      "path": "kernel/trace/trace.c",
+      "function": "register_ftrace_export",
+      "native_equal": true,
+      "sha256": "5a7527cc7165067739e5bc238e02fbf3d0de41494e85a46ba52eed6a2d001058"
+    },
+    {
+      "path": "kernel/trace/trace.c",
+      "function": "unregister_ftrace_export",
+      "native_equal": true,
+      "sha256": "6446b830027b29d6760015174e75e8c3f159de8238483193d800a1d5c017bfd8"
+    },
+    {
+      "path": "kernel/trace/trace.c",
+      "function": "trace_function",
+      "native_equal": true,
+      "sha256": "783d5aea2c1c123ff8393e4f6954563d13abe3ce71990b5ef1e73267a89a8cec"
+    },
+    {
+      "path": "kernel/trace/trace.c",
+      "function": "trace_event_buffer_commit",
+      "native_equal": true,
+      "sha256": "a38f6f97def6a5ab134a0d70c4790880c8356e39c06233b53992f56514feeb06"
+    },
+    {
+      "candidate": "d85362738531e88d4139a503e1f1460b7efe1cdd",
+      "native_origin": "8438f5211479e4b8433f641634362264bc3bbd9e",
+      "native_is_lts_ancestor": true
+    },
+    {
+      "candidate": "23e1124fab2c0c8a0abb809d37339290dc51a6a8",
+      "native_origin": "8ab7a2b7055c88c3da5e4684dfa015c6a8987c28",
+      "native_is_lts_ancestor": true
+    },
+    {
+      "path": "kernel/hung_task.c",
+      "function": "check_hung_task",
+      "native_equal": true,
+      "sha256": "fdd6cc57bf74a552dc44bea9352021509812d853ac24db9a4810c0fdc5f60670"
+    },
+    {
+      "path": "kernel/signal.c",
+      "function": "check_kill_permission",
+      "native_equal": true,
+      "sha256": "de64da24cea2c3f6e6190757efedeaffd6183f68eea9805845155d646626a4f1"
+    },
+    {
+      "path": "kernel/trace/trace.c",
+      "function": "trace_die_panic_handler",
+      "relationship": "Native function modulo explicit hook inputs and policy gates; whitespace normalized",
+      "sha256": "4fadd1fa536b7733b7347ccbf4aa88029dbc0dfe1a573bb3475e174dc3deca8b"
+    },
+    {
+      "path": "kernel/trace/trace.c",
+      "function": "trace_printk_seq",
+      "relationship": "Native function modulo explicit hook inputs and policy gates; whitespace normalized",
+      "sha256": "e8499dd601272e38b0010d234024a8e565ea59711d7f025329eda87b13166003"
+    },
+    {
+      "path": "kernel/trace/trace.c",
+      "function": "ftrace_dump_one",
+      "relationship": "Native function modulo explicit hook inputs and policy gates; whitespace normalized",
+      "sha256": "db7a1f6d64798d54e602103280a2a6a369631cd2626e7543201b95f092084b98"
+    }
+  ],
+  "callback_consumer_search": {
+    "scope": "Explicit register_trace names in local manifest common-modules C/header/Rust",
+    "matches": "",
+    "conclusion": "Consumers unresolved; generic Android/vendor source interfaces retained conservatively. Absence not used as omission proof."
+  },
+  "remote_sources_used": [],
+  "scope": "Full eighteen patches read, native function/header comparisons and local positive consumer history. Build 157 pending, separately recorded after successful workflow; no runtime hook execution."
+}

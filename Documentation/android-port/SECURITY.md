@@ -7203,3 +7203,70 @@ the writer's complete locking/snapshot/rollback suffix and range-allocation body
 are checked against LTS. These host checks do not test kernel tracing, mmap,
 Perfetto parsing or boot behavior. Full emulator build evidence is recorded
 separately after the source commit is built.
+
+# Tracing and signal hook contracts
+
+Eighteen candidates are reconciled individually in
+`evidence/tracing-signal-review.json`, including the page-size adaptation above.
+The three historical diagnostic hook add/revert/re-add sequences retain their
+final source interfaces, while obsolete ftrace-size hooks and LTO recordmcount
+workarounds stay retired. Native export-type/event support is already present.
+Exact function/file comparisons preserve native tracing iteration, user-object
+suppression, lockdep/context tracking and signal permission/send algorithms.
+
+The callbacks are privileged policy surfaces. Ftrace enter and dump callbacks
+can suppress diagnostics; buffer access can reveal trace data, and callbacks
+must preserve buffer bounds/termination when allowing printing. Enter/exit hooks
+are not balanced on veto/disabled/non-oops returns. The hung-task hook retains
+ACK pass-scoped need_check state, so a false value persists until a callback
+resets it; completion is skipped on traversal budget/RCU breaks. This can suppress
+subsequent hang diagnostics and their panic action. Preserve that ACK policy
+contract for vendor customization, while documenting it explicitly rather than
+claiming every task gets an independently initialized selector. Native task-state
+filtering inside check_hung_task is untouched.
+
+Preemption/IRQ callbacks are NMI-excluded and must avoid recursion or sleeping.
+Signal observation occurs before the sighand lookup and can report a failed send;
+exit observation runs in the fatal group-exit locking context. Task pointers are
+borrowed. The independently scoped wake-veto and process-reaping hooks are not
+certified by these observation-hook decisions. Local exact registration searches
+did not identify module consumers, so these generic interfaces are retained with
+that uncertainty recorded. No callback, signal or diagnostic path was executed.
+
+# Interrupt-controller target review
+
+Seventeen candidates are recorded in `evidence/irq-controller-review.json`.
+Qualcomm PDC and Meson GPIO modular support is already represented in native
+Linux, with current platform-driver helpers and cleanup preserved. Historical
+SCM linkage constraints and temporary Meson/PDC reverts are accounted for through
+their final replacements. No old allocator, locking or probe path replaces LTS.
+
+GIC affinity/resume/suspend hooks and public ITS helpers operate on ARM-specific
+controller registers and state; Apple AIC firmware affinity is likewise selected
+by an ARM64 hardware configuration. The built SDK target selects x86 local and
+I/O APIC, and none of these controller symbols. Their target-specific additions
+are omitted, including unused hook declarations/exports, while the entire native
+driver files, IRQ Kconfig/Makefile and GIC header remain byte-identical to LTS.
+This is explicit backend/hardware evidence, not an inference from a failed
+consumer search. It says nothing about necessity on future ARM platforms or
+shared interrupt interfaces reviewed elsewhere. Mixed merge resolutions remain
+open until every affected subsystem is accounted for. No new remote source or
+hardware execution was used.
+
+# ARM exception and firmware hook scope
+
+Thirteen additional candidates are reviewed in
+`evidence/arm-only-hooks-review.json`. Their callsites and arguments depend on
+ARM FPSIMD/SME state, MPAM context-switch barriers, ESR/FAR exception state, FIQ
+entry, MIDR CPU reporting or PSCI firmware operations. The built x86 SDK does not
+select ARM/ARM64 or PSCI. Omit these architecture-specific headers/exports/calls
+and functional ARM thread storage while preserving every affected native ARM
+source file byte-for-byte. Functional vendor storage is not called KMI-only.
+
+The FPSIMD add/revert/re-add is accounted for as a sequence, not mistaken for
+permanent ACK retirement. ARM EL0 exception override can suppress SIGILL on that
+architecture; this policy is not imported into x86 instruction handling. Generic
+cpuidle, scheduler, interrupt, diagnostic and PM interfaces remain separately
+retained/reviewed. These decisions rely on positive architecture and firmware
+contracts, not on claiming Android lacks consumers of CPU information, exceptions
+or power management. No ARM execution or new remote source was used.

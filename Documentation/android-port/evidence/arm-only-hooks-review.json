@@ -1,0 +1,293 @@
+{
+  "source_head": "917f330ad4b2cba3fcc77dc5ae66aa8a01f9065b",
+  "records": [
+    {
+      "commit": "74555f39924dc4c173b4bec9bd015acfeb895e68",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Original ARM64 FPSIMD context-switch hook and vendor thread data were reverted and re-added later at a different layout location. Omit the ARM execution-context interface and its data because SDK uses x86 XSAVE/FPU context, not ARM FPSIMD. Vendor data is functional customization storage, not mislabeled KMI-only. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+      "evidence": [
+        "evidence/arm-only-hooks-review.json",
+        "SECURITY.md: ARM exception and firmware hook scope"
+      ],
+      "patch_sha256": "1b59ce0d6a9eb8f5b98f8d46525e8513bd87105242a97768c8a5a0e0bacd69b0",
+      "changed_paths": [
+        "arch/arm64/include/asm/processor.h",
+        "arch/arm64/kernel/process.c",
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/fpsimd.h"
+      ]
+    },
+    {
+      "commit": "6cab370bf8a3c22c8741a0dced6e32b60abf8439",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [],
+      "rationale": "This FPSIMD-hook revert is superseded in ACK by e8ac88bbf71b, so it is not proof of permanent retirement. Current port nevertheless keeps native ARM files because the entire ARM context-switch feature is outside the x86 SDK target. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+      "evidence": [
+        "evidence/arm-only-hooks-review.json",
+        "SECURITY.md: ARM exception and firmware hook scope"
+      ],
+      "patch_sha256": "c9c3ff8584e9653103d8a09fecec5bea192ca2f861ed22e7466352f293fcf3a1",
+      "changed_paths": [
+        "arch/arm64/include/asm/processor.h",
+        "arch/arm64/kernel/process.c",
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/fpsimd.h"
+      ]
+    },
+    {
+      "commit": "e8ac88bbf71ba8c59a0fde1034cc9fddb17f9441",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Final ARM FPSIMD save/restore callback and ARM thread_struct vendor-data addition are tied to ARM64 __switch_to and its register state. No ARM-specific callback/export/data is included solely for a future target. Native ARM and x86 FPU state ownership remains unchanged by this decision. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+      "evidence": [
+        "evidence/arm-only-hooks-review.json",
+        "SECURITY.md: ARM exception and firmware hook scope"
+      ],
+      "patch_sha256": "9fd88e3da145a6d1011b7ac72e275e1cea1d4e57ce7ed9941eab064add60265f",
+      "changed_paths": [
+        "arch/arm64/include/asm/processor.h",
+        "arch/arm64/kernel/process.c",
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/fpsimd.h"
+      ]
+    },
+    {
+      "commit": "1aa1f6a7cf67c9cea1a609581eb9c2602fd96576",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "MPAM callback occurs in ARM64 context switching before dsb for ARM cache/resource-partition state. This is not a generic scheduler hook; omit the architecture-specific declaration/export/callsite for the x86 SDK, preserving native ARM barriers and common scheduler interfaces. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+      "evidence": [
+        "evidence/arm-only-hooks-review.json",
+        "SECURITY.md: ARM exception and firmware hook scope"
+      ],
+      "patch_sha256": "39dff3d8b5b5b7ca980bc046a7161bd359eb30ca387bf159b8f817c6262496ee",
+      "changed_paths": [
+        "arch/arm64/kernel/process.c",
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/mpam.h"
+      ]
+    },
+    {
+      "commit": "3567f516024d93b7e353408d2b1e92b219caf8d2",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "PSCI idle-domain enter/exit hooks wrap ARM firmware CPU-idle/PM-domain operations. SDK x86 does not select ARM_PSCI_FW/ARM_PSCI_CPUIDLE. Keep native driver and the separately retained generic cpuidle hooks; no PSCI-specific API is added for future platforms. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+      "evidence": [
+        "evidence/arm-only-hooks-review.json",
+        "SECURITY.md: ARM exception and firmware hook scope"
+      ],
+      "patch_sha256": "bc20fbd66056cd963638db8a00b67e76c860e02acced0c53de22f4b6dbda9d39",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/cpuidle/cpuidle-psci.c",
+        "include/trace/hooks/cpuidle_psci.h"
+      ]
+    },
+    {
+      "commit": "126b17ae2bd34dd0d65ffdc4c3ef01ec8f03b582",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Resident trusted-OS and CPU-suspend veto hooks are specific to ARM PSCI/SMCCC calls. Omit the callbacks and header/exports with this unselected firmware backend; native resident-CPU and firmware error handling remain. Generic CPU hotplug/suspend customization is separately retained. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+      "evidence": [
+        "evidence/arm-only-hooks-review.json",
+        "SECURITY.md: ARM exception and firmware hook scope"
+      ],
+      "patch_sha256": "9c5673d3bb437200fd41cf7915f530067b6fcc9ac384356ebc1eb7ee7f7b3265",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/firmware/psci/psci.c",
+        "include/trace/hooks/psci.h"
+      ]
+    },
+    {
+      "commit": "03418a3836d48f9f8ef90c0a3abf3f8be2d975a3",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Restricted-hook declaration correction applies only to the two excluded PSCI hooks. The incorrect DECLARE_HOOK form is not retained. Generic restricted-hook implementation and selected hook declarations are unaffected. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+      "evidence": [
+        "evidence/arm-only-hooks-review.json",
+        "SECURITY.md: ARM exception and firmware hook scope"
+      ],
+      "patch_sha256": "56c013bcf31759189d3c7b1202c500420b6002381253291983f47b4f28ab2363",
+      "changed_paths": [
+        "include/trace/hooks/psci.h"
+      ]
+    },
+    {
+      "commit": "cd61fdefab25b078ca4cd8f630fb6e148d373a69",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "SError panic callback takes ARM64 ESR/register context and is invoked only in arm64_serror_panic. Omit the ARM-only diagnostic interface for x86 SDK; keep native panic/error handling and common diagnostics. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+      "evidence": [
+        "evidence/arm-only-hooks-review.json",
+        "SECURITY.md: ARM exception and firmware hook scope"
+      ],
+      "patch_sha256": "24d22287be6bc64bff2698fb7b61ed74d131fcb0c8b7660a2cf293faee254ad6",
+      "changed_paths": [
+        "arch/arm64/kernel/traps.c",
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/traps.h"
+      ]
+    },
+    {
+      "commit": "2fb5b15f1198924c52ee31c0dd553e3951a7361b",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "EL1 undefined-instruction, BTI, FPAC and unhandled-vector hooks observe ARM exception state. These are not x86 exception or generic panic interfaces. Omit declarations/exports/calls while leaving native ARM exception handling byte-identical to LTS. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+      "evidence": [
+        "evidence/arm-only-hooks-review.json",
+        "SECURITY.md: ARM exception and firmware hook scope"
+      ],
+      "patch_sha256": "7caa4dfd3ca0ff4ee0a648e48163f25f7d3dc87bd9d363c542a7607d7b0ea145",
+      "changed_paths": [
+        "arch/arm64/kernel/entry-common.c",
+        "arch/arm64/kernel/traps.c",
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/traps.h"
+      ]
+    },
+    {
+      "commit": "fa26ffa4f033236dd3b3d3aed15c037b01bed1a3",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "ARM bad-stack hook executes in the ARM64 noinstr/NMI exception path with ESR/FAR. SDK uses x86 stack/exception handling. Keep native bad-stack panic without adding an unused ARM callback surface. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+      "evidence": [
+        "evidence/arm-only-hooks-review.json",
+        "SECURITY.md: ARM exception and firmware hook scope"
+      ],
+      "patch_sha256": "d9a1fdb9e213e936f8cdafa1c3565695d5406dc3af87682f3e4f8f04dfb1b850",
+      "changed_paths": [
+        "arch/arm64/kernel/entry-common.c",
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/traps.h"
+      ]
+    },
+    {
+      "commit": "de5860d7c5a7241422c93001f25cf1daf18bb5fb",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Vendor CPU-info callback extends ARM64 MIDR-based /proc/cpuinfo output, not the x86 proc implementation. Omit the ARM-only declaration/export/call; this does not conclude that Android does not read /proc/cpuinfo. Native x86 reporting remains. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+      "evidence": [
+        "evidence/arm-only-hooks-review.json",
+        "SECURITY.md: ARM exception and firmware hook scope"
+      ],
+      "patch_sha256": "3cfcc5d9f1175ede77d2d2fa22e959f3263ccb1e4a45e8b63280f322e3625f86",
+      "changed_paths": [
+        "arch/arm64/kernel/cpuinfo.c",
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/cpuinfo.h"
+      ]
+    },
+    {
+      "commit": "eaa35a2157ee9d1a6e9a696b15b17c65b234d71d",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "FIQ dump hooks are in ARM64 EL1/EL0 FIQ entry before native handling. x86 SDK has no ARM FIQ/ESR entry context. Omit callback/export/header additions while native ARM entry code and generic IRQ diagnostics stay intact. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+      "evidence": [
+        "evidence/arm-only-hooks-review.json",
+        "SECURITY.md: ARM exception and firmware hook scope"
+      ],
+      "patch_sha256": "a01e91bcc13472c68489d8cecd07b0b38f73e96b671ea00548f6445d04c65778",
+      "changed_paths": [
+        "arch/arm64/kernel/entry-common.c",
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/gic.h"
+      ]
+    },
+    {
+      "commit": "c2473c00e7247042eb51a02e78afeb8319b96b7d",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Unrecognized ARM EL0 exception override and first SME-use notification depend on ARM ESR/opcodes and SME register state. The former can suppress native SIGILL on ARM, a policy surface not imported into this x86 target. Keep native ARM exception/SME bodies and x86 instruction handling; no speculative future CPU support. Positive architecture/callsite/selected-config evidence, not a failed consumer search. No ARM runtime validation.",
+      "evidence": [
+        "evidence/arm-only-hooks-review.json",
+        "SECURITY.md: ARM exception and firmware hook scope"
+      ],
+      "patch_sha256": "6ac0524b097b0be827a7f8aa079e6087b45427e3fa1da608e63d5ac9a139d671",
+      "changed_paths": [
+        "arch/arm64/kernel/entry-common.c",
+        "arch/arm64/kernel/fpsimd.c",
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/fpsimd.h",
+        "include/trace/hooks/traps.h"
+      ]
+    }
+  ],
+  "path_witnesses": {
+    "arch/arm64/include/asm/processor.h": {
+      "native_equal": true,
+      "blob": "ba0517d80fa56cf896da173ece5c9c0f12f71905"
+    },
+    "arch/arm64/kernel/cpuinfo.c": {
+      "native_equal": true,
+      "blob": "c44e6d94f5deb11390937b27d99dd32595fec60d"
+    },
+    "arch/arm64/kernel/entry-common.c": {
+      "native_equal": true,
+      "blob": "5b97dfcf796d98c91f8fd516040c9dc43a7de4df"
+    },
+    "arch/arm64/kernel/fpsimd.c": {
+      "native_equal": true,
+      "blob": "ca18214ce2abec525bc17234e14d18e0ccf16787"
+    },
+    "arch/arm64/kernel/process.c": {
+      "native_equal": true,
+      "blob": "4c328b7c79ba3a470f4ab096c1f61e9fd60162f7"
+    },
+    "arch/arm64/kernel/traps.c": {
+      "native_equal": true,
+      "blob": "681939ef5d16e752d10cbb946441fd5752052bc2"
+    },
+    "drivers/cpuidle/cpuidle-psci.c": {
+      "native_equal": true,
+      "blob": "49156e67db275c2a63c5aa9b20ab26b4ab8abcd0"
+    },
+    "drivers/firmware/psci/psci.c": {
+      "native_equal": true,
+      "blob": "38ca190d4a22d6e7e0f06420e8478a2b0ec2fe6f"
+    },
+    "include/trace/hooks/cpuidle_psci.h": {
+      "port_absent": true
+    },
+    "include/trace/hooks/cpuinfo.h": {
+      "port_absent": true
+    },
+    "include/trace/hooks/fpsimd.h": {
+      "port_absent": true
+    },
+    "include/trace/hooks/gic.h": {
+      "port_absent": true
+    },
+    "include/trace/hooks/mpam.h": {
+      "port_absent": true
+    },
+    "include/trace/hooks/psci.h": {
+      "port_absent": true
+    },
+    "include/trace/hooks/traps.h": {
+      "port_absent": true
+    }
+  },
+  "excluded_hook_exports": [
+    "android_rvh_arm64_serror_panic",
+    "android_rvh_cpuinfo_c_show",
+    "android_rvh_do_el1_bti",
+    "android_rvh_do_el1_fpac",
+    "android_rvh_do_el1_undef",
+    "android_rvh_el0_impdef_exception",
+    "android_rvh_fiq_dump",
+    "android_rvh_handle_bad_stack",
+    "android_rvh_panic_unhandled",
+    "android_rvh_psci_cpu_suspend",
+    "android_rvh_psci_tos_resident_on",
+    "android_rvh_sme_smstart",
+    "android_vh_cpuidle_psci_enter",
+    "android_vh_cpuidle_psci_exit",
+    "android_vh_is_fpsimd_save",
+    "android_vh_mpam_set"
+  ],
+  "effective_config_sha256": "48f19810fd5e10021d64b96e82cdb2b0b587f7cb24b3b4b5660b6732ae05cd09",
+  "selected": "X86_64=y; ARM/ARM64 and ARM_PSCI_FW/ARM_PSCI_CPUIDLE not enabled",
+  "remote_sources_used": []
+}
