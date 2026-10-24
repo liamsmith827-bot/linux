@@ -1,0 +1,344 @@
+{
+  "source_head": "745b182c358dddfa7734d41f6e0c3dfb8d436847",
+  "records": [
+    {
+      "commit": "9e0cf0e90d88ddb5d675dd6714e4119e057c7245",
+      "disposition": "partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain centralized enabled/NOP hook definition handling for selected generic headers instead of per-header CONFIG wrappers and hand-coded empty call macros. Final declarations follow ACK, allowing separately documented Binder/printk lifetime comments, widened contiguous-range end type and omitted SCMI hook. ARM FPSIMD/GIC/MPAM headers stay excluded; epoch hooks are gated by unselected GENERIC_SCHED_CLOCK (76b58ff07b29 review). This is source preprocessing infrastructure, not a new authorization or historical CRC guarantee. No runtime callback or remote-processor operation was executed.",
+      "evidence": [
+        "evidence/hook-headers-remoteproc-review.json",
+        "SECURITY.md: Hook header consolidation and remoteproc scope"
+      ],
+      "patch_sha256": "d395147465271e9b08669c31c3ce2b9fdaac5b62b926c2845f01865bcbff7101",
+      "changed_paths": [
+        "include/trace/hooks/binder.h",
+        "include/trace/hooks/cpufreq.h",
+        "include/trace/hooks/cpuidle.h",
+        "include/trace/hooks/dtask.h",
+        "include/trace/hooks/epoch.h",
+        "include/trace/hooks/fpsimd.h",
+        "include/trace/hooks/futex.h",
+        "include/trace/hooks/gic.h",
+        "include/trace/hooks/gic_v3.h",
+        "include/trace/hooks/mm.h",
+        "include/trace/hooks/mpam.h",
+        "include/trace/hooks/preemptirq.h",
+        "include/trace/hooks/printk.h",
+        "include/trace/hooks/rwsem.h",
+        "include/trace/hooks/sysrqcrash.h",
+        "include/trace/hooks/topology.h",
+        "include/trace/hooks/wqlockup.h"
+      ]
+    },
+    {
+      "commit": "b5247e9a1174de819f9ce97289af6d9ef4a9cb9f",
+      "disposition": "partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain lean declaration headers for selected cpufreq/ftrace/hung-task/IOMMU/MM hooks, with shared vendor_hooks.h providing tracepoint machinery/types and final re-add header forms. Do not restore heavyweight include chains merely to preserve old CRCs; no signatures change in this cleanup. Remoteproc header follows the excluded backend decision below. Later final ftrace/hung headers need not literally retain the old added forward declarations because final include context builds successfully. No runtime callback or remote-processor operation was executed.",
+      "evidence": [
+        "evidence/hook-headers-remoteproc-review.json",
+        "SECURITY.md: Hook header consolidation and remoteproc scope"
+      ],
+      "patch_sha256": "a3e7df13f51a8942231c5002d30b3e2714a8fc167f4e2682abc6f7e858a36e8b",
+      "changed_paths": [
+        "include/trace/hooks/cpufreq.h",
+        "include/trace/hooks/ftrace_dump.h",
+        "include/trace/hooks/hung_task.h",
+        "include/trace/hooks/iommu.h",
+        "include/trace/hooks/mm.h",
+        "include/trace/hooks/remoteproc.h"
+      ]
+    },
+    {
+      "commit": "4e7ce4f71d70da34bebe8c52edbc1d36dd5df799",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Recovery callback is for remote-processor firmware-crash work. The selected SDK build includes native remoteproc framework/CDEV but no remote processor provider from its complete Makefile list; the current SDK target supplies no remote-processor platform backend. Keep native framework/cleanup and omit added header/export/call for such future hardware. Original was reverted, with final callback re-added at the common out label in 1ad401ef290e; do not mislabel it permanently retired. No runtime callback or remote-processor operation was executed.",
+      "evidence": [
+        "evidence/hook-headers-remoteproc-review.json",
+        "SECURITY.md: Hook header consolidation and remoteproc scope"
+      ],
+      "patch_sha256": "b314082daf9cf0a258bf41b5fb583fcdbe4462e6d517c362666064129b9f754c",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/remoteproc/remoteproc_core.c",
+        "include/trace/hooks/remoteproc.h"
+      ]
+    },
+    {
+      "commit": "c99ebf4e8b906337be7ea3aaa96436489b766082",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Sysfs recovery-policy callback was removed by 3e6506b39902, then restored by 4824c0ad359b. Final ACK calls it in enabled/disabled branches under rproc->lock, after changing recovery_disabled; enabled then triggers recovery after unlock. Omit that platform callback for the selected SDK without a remote-processor backend; keep native sysfs control, locking and error handling. The temporary revert is not the reason for final omission. No runtime callback or remote-processor operation was executed.",
+      "evidence": [
+        "evidence/hook-headers-remoteproc-review.json",
+        "SECURITY.md: Hook header consolidation and remoteproc scope"
+      ],
+      "patch_sha256": "3997bd5c815d73c3675b6e5498d51a91e1aa307423f59b8abd2039ce2825945b",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/remoteproc/remoteproc_sysfs.c",
+        "include/trace/hooks/remoteproc.h"
+      ]
+    },
+    {
+      "commit": "3e6506b39902d5168da4b8fea609e24919e566a4",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [],
+      "rationale": "The policy-notification revert is superseded by 4824c0ad359b, which restores both sysfs callsites and the export. Final omission is a current SDK backend scope decision, not permanent retirement by this revert. Native sysfs locking and recovery/error handling are retained exactly. No runtime callback or remote-processor operation was executed.",
+      "evidence": [
+        "evidence/hook-headers-remoteproc-review.json",
+        "SECURITY.md: Hook header consolidation and remoteproc scope"
+      ],
+      "patch_sha256": "f33714953421e85d1f22b3f3a8a88f3c61475cae181bd97360865b28b5097275",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/remoteproc/remoteproc_sysfs.c",
+        "include/trace/hooks/remoteproc.h"
+      ]
+    },
+    {
+      "commit": "a3de1883d8607b74e8cb0913695d808b57d63bd2",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [],
+      "rationale": "Removal of the recovery-work hook was superseded by 1ad401ef290e. Its final omission here is justified by SDK remote-processor backend selection, not treating this transient revert as permanent ACK retirement. Keep native recovery work and reference/PM cleanup. No runtime callback or remote-processor operation was executed.",
+      "evidence": [
+        "evidence/hook-headers-remoteproc-review.json",
+        "SECURITY.md: Hook header consolidation and remoteproc scope"
+      ],
+      "patch_sha256": "eb1ad40fef609e4aa170649865fb79993c0e46042a4eeae5b84ed3125207903e",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/remoteproc/remoteproc_core.c",
+        "include/trace/hooks/remoteproc.h"
+      ]
+    },
+    {
+      "commit": "1ad401ef290e9bfd7aa8ee85ae08eb6d4cea7f5b",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Final recovery callback is at the common out label and can run even when no successful recovery occurred, despite the old header comment. The selected SDK has the native generic framework but no platform remote-processor provider. Omit added callback/header/exports for that hardware-specific service while retaining native core and CDEV. Unknown external module providers are not asserted absent; no future platform is implemented in this stage. No runtime callback or remote-processor operation was executed.",
+      "evidence": [
+        "evidence/hook-headers-remoteproc-review.json",
+        "SECURITY.md: Hook header consolidation and remoteproc scope"
+      ],
+      "patch_sha256": "8672dc0c8e0e1a18957171abc26d084a3d7cbf16c4e6c62031a9a29ecb2f4a4a",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/remoteproc/remoteproc_core.c",
+        "include/trace/hooks/remoteproc.h"
+      ]
+    },
+    {
+      "commit": "4824c0ad359bff09f23761c6787001caf533d30e",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Re-add restores recovery_set at both enabled/disabled sysfs branches and exports it; final ACK surrounds flag update and callback with the remoteproc mutex. This is an active ACK interface, omitted only for the current SDK without a remote-processor platform backend. Native sysfs locking, errors and recovery semantics remain exactly. Replaces the earlier broad partially-adapted registry disposition with this specific whole-feature decision. No runtime callback or remote-processor operation was executed.",
+      "evidence": [
+        "evidence/hook-headers-remoteproc-review.json",
+        "SECURITY.md: Hook header consolidation and remoteproc scope"
+      ],
+      "patch_sha256": "943f73426d6306a0996af3a21e9ea57dea78a6514d108e0dc2db4bbdd0297fe2",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/remoteproc/remoteproc_sysfs.c"
+      ]
+    }
+  ],
+  "witnesses": {
+    "include/trace/hooks/binder.h": {
+      "port_sha256": "5fd0a923b4a6ea70fde752e7c7e66c348757eca5d24b1376a9775c259927d72a",
+      "ack_sha256": "c61d2b2815a10fd491b0e2a418c2b9fed4ca2be78eed52ca9e731fd1c280bc91",
+      "ack_equal_ignoring_trailing_whitespace": false,
+      "centralized_hook_definitions": true
+    },
+    "include/trace/hooks/cpufreq.h": {
+      "port_sha256": "cfb6d56f89b4a86b8b73d2729587c5c77370876c3622f8bd61e249d1e068f70a",
+      "ack_sha256": "01a037bfc6444727ef1d2924d415a91c0430aa327cca8122b36339c6261a7adc",
+      "ack_equal_ignoring_trailing_whitespace": false,
+      "centralized_hook_definitions": true
+    },
+    "include/trace/hooks/cpuidle.h": {
+      "port_sha256": "809832f66296e0e5b39dc76ec54c0fbdc9f3c96227300e45a8750628fcce7b0f",
+      "ack_sha256": "d218c43576b3dd0e75a372044a5ec728af3f4d79f8196434e27cd290608c1fcc",
+      "ack_equal_ignoring_trailing_whitespace": true,
+      "centralized_hook_definitions": true
+    },
+    "include/trace/hooks/dtask.h": {
+      "port_sha256": "1439634612bfdc38a26eec0ee8059e9745b6ba99b9fa415818d7c71aeb30d12f",
+      "ack_sha256": "1439634612bfdc38a26eec0ee8059e9745b6ba99b9fa415818d7c71aeb30d12f",
+      "ack_equal_ignoring_trailing_whitespace": true,
+      "centralized_hook_definitions": true
+    },
+    "include/trace/hooks/epoch.h": {
+      "port_absent": true
+    },
+    "include/trace/hooks/fpsimd.h": {
+      "port_absent": true
+    },
+    "include/trace/hooks/futex.h": {
+      "port_sha256": "950c0e8e230ebd4f96801641aa4339ce2fa6ca762f040a060b338f0e4131aa99",
+      "ack_sha256": "950c0e8e230ebd4f96801641aa4339ce2fa6ca762f040a060b338f0e4131aa99",
+      "ack_equal_ignoring_trailing_whitespace": true,
+      "centralized_hook_definitions": true
+    },
+    "include/trace/hooks/gic.h": {
+      "port_absent": true
+    },
+    "include/trace/hooks/gic_v3.h": {
+      "port_absent": true
+    },
+    "include/trace/hooks/mm.h": {
+      "port_sha256": "c96c29fa70d89c4e4ab44ef1e74af7d6cc1edc32672029eeb20eb69301163c3b",
+      "ack_sha256": "8b04b5301bbda7c24ee6ec153dd7b5e34c29c3b926a6d3a10fff6877e029108d",
+      "ack_equal_ignoring_trailing_whitespace": false,
+      "centralized_hook_definitions": true
+    },
+    "include/trace/hooks/mpam.h": {
+      "port_absent": true
+    },
+    "include/trace/hooks/preemptirq.h": {
+      "port_sha256": "e9a22c2b3826ec220eedfd19306c41785a589e2de511180917db22cff0039584",
+      "ack_sha256": "e9a22c2b3826ec220eedfd19306c41785a589e2de511180917db22cff0039584",
+      "ack_equal_ignoring_trailing_whitespace": true,
+      "centralized_hook_definitions": true
+    },
+    "include/trace/hooks/printk.h": {
+      "port_sha256": "f613ab767232a4e0391245dd0c8a32ad981dadac6614e8ad26882763afe7709f",
+      "ack_sha256": "88d547bb71df5188ac1d034449b455edb60dfaf35365fcf08830e671aad9110f",
+      "ack_equal_ignoring_trailing_whitespace": false,
+      "centralized_hook_definitions": true
+    },
+    "include/trace/hooks/rwsem.h": {
+      "port_sha256": "0896498b47e93d1fe0ab78097e1bad35d92056c5a56c95260bcb0597ea55c6bb",
+      "ack_sha256": "0896498b47e93d1fe0ab78097e1bad35d92056c5a56c95260bcb0597ea55c6bb",
+      "ack_equal_ignoring_trailing_whitespace": true,
+      "centralized_hook_definitions": true
+    },
+    "include/trace/hooks/sysrqcrash.h": {
+      "port_sha256": "5b29e71166cbfbb6ec397f4ee29e80ef7bcfbb3a04d65de98b70f5ade8fc44e0",
+      "ack_sha256": "5b29e71166cbfbb6ec397f4ee29e80ef7bcfbb3a04d65de98b70f5ade8fc44e0",
+      "ack_equal_ignoring_trailing_whitespace": true,
+      "centralized_hook_definitions": true
+    },
+    "include/trace/hooks/topology.h": {
+      "port_sha256": "6e4298c219e830d0ac54c83842281fec402449980cd6766e35601401104ccdb7",
+      "ack_sha256": "6e4298c219e830d0ac54c83842281fec402449980cd6766e35601401104ccdb7",
+      "ack_equal_ignoring_trailing_whitespace": true,
+      "centralized_hook_definitions": true
+    },
+    "include/trace/hooks/wqlockup.h": {
+      "port_sha256": "9d831702176a9e04418040262041e7569ddec280306938502f8410691dbfbd7c",
+      "ack_sha256": "9d831702176a9e04418040262041e7569ddec280306938502f8410691dbfbd7c",
+      "ack_equal_ignoring_trailing_whitespace": true,
+      "centralized_hook_definitions": true
+    },
+    "include/trace/hooks/ftrace_dump.h": {
+      "port_sha256": "26cf9e416de8a79940c46ff558f0099b6755fb2663cfc4fcdb91d73bc491b917",
+      "ack_sha256": "26cf9e416de8a79940c46ff558f0099b6755fb2663cfc4fcdb91d73bc491b917",
+      "ack_equal_ignoring_trailing_whitespace": true,
+      "centralized_hook_definitions": true
+    },
+    "include/trace/hooks/hung_task.h": {
+      "port_sha256": "626c121e27248796caae87f226a99d5b64592c017eae71782989d92610484fff",
+      "ack_sha256": "626c121e27248796caae87f226a99d5b64592c017eae71782989d92610484fff",
+      "ack_equal_ignoring_trailing_whitespace": true,
+      "centralized_hook_definitions": true
+    },
+    "include/trace/hooks/iommu.h": {
+      "port_sha256": "459061e81ac5c077061f7673e13ad28a66a2ed39d01300a629fd9836a30e2176",
+      "ack_sha256": "459061e81ac5c077061f7673e13ad28a66a2ed39d01300a629fd9836a30e2176",
+      "ack_equal_ignoring_trailing_whitespace": true,
+      "centralized_hook_definitions": true
+    },
+    "include/trace/hooks/remoteproc.h": {
+      "port_absent": true
+    },
+    "drivers/remoteproc/remoteproc_core.c": {
+      "native_equal": true,
+      "blob": "bbc781e41a1b8b886fa57959545399cf8dcd5737"
+    },
+    "drivers/remoteproc/remoteproc_sysfs.c": {
+      "native_equal": true,
+      "blob": "925b0cdbe57788cfedaef668868624293e42135b"
+    },
+    "drivers/remoteproc/Makefile": {
+      "native_equal": true,
+      "blob": "1c7598b8475d6057a3e044b41e3515103b7aa9f1"
+    },
+    "drivers/remoteproc/Kconfig": {
+      "native_equal": true,
+      "blob": "48a0d3a69ed08057716f1e7ea950899f60bbe0cf"
+    },
+    "kernel/time/sched_clock.c": {
+      "native_equal": true,
+      "blob": "f3aaef695b8cdb21e6335e2ab47fb99319f869c6"
+    }
+  },
+  "remoteproc_provider_symbols": [
+    "DA8XX_REMOTEPROC",
+    "IMX_DSP_REMOTEPROC",
+    "IMX_REMOTEPROC",
+    "INGENIC_VPU_RPROC",
+    "KEYSTONE_REMOTEPROC",
+    "MESON_MX_AO_ARC_REMOTEPROC",
+    "MTK_SCP",
+    "OMAP_REMOTEPROC",
+    "PRU_REMOTEPROC",
+    "QCOM_PIL_INFO",
+    "QCOM_Q6V5_ADSP",
+    "QCOM_Q6V5_COMMON",
+    "QCOM_Q6V5_MSS",
+    "QCOM_Q6V5_PAS",
+    "QCOM_Q6V5_WCSS",
+    "QCOM_RPROC_COMMON",
+    "QCOM_SYSMON",
+    "QCOM_WCNSS_PIL",
+    "RCAR_REMOTEPROC",
+    "STM32_RPROC",
+    "ST_REMOTEPROC",
+    "ST_SLIM_REMOTEPROC",
+    "TI_K3_DSP_REMOTEPROC",
+    "TI_K3_M4_REMOTEPROC",
+    "TI_K3_R5_REMOTEPROC",
+    "WKUP_M3_RPROC",
+    "XLNX_R5_REMOTEPROC"
+  ],
+  "selected_remoteproc_providers": [],
+  "effective_config_sha256": "48f19810fd5e10021d64b96e82cdb2b0b587f7cb24b3b4b5660b6732ae05cd09",
+  "consumer_uncertainty": "External modules could in principle register a remote processor; no global absence proof is asserted. Current target implementation scope is the SDK platform without a remote-processor backend, while native framework/module support remains.",
+  "migrated_prior_decisions": [
+    {
+      "commit": "4824c0ad359bff09f23761c6787001caf533d30e",
+      "source_head": "a83fe26baa415ac546af1b927a90be8e3b7e2691",
+      "disposition": "partially-adapted-net-state",
+      "method": "Final generic hook declarations, definition/export registries and restricted registration were structurally/source reviewed. Every other path has a previously completed source witness, final identity, excluded architecture or historical-KMI-only evidence. Runtime call-site correctness is not inferred merely from a matching signature. See vendor-hook-registry-review.json and SECURITY.md.",
+      "path_witnesses": {
+        "drivers/android/vendor_hooks.c": {
+          "policy": "ported-net-source",
+          "ack_blob": "d5e98cbe95e1cee151f1d0cc769fe1792e774018",
+          "lts_blob": null,
+          "port_blob": "c5c8da29b4f3f9c3083b1d4507ae076689693e24",
+          "normalized_ack_blob": "d5e98cbe95e1cee151f1d0cc769fe1792e774018",
+          "common_ancestor_blob": null,
+          "specific_evidence": "Reviewed all central includes/exports and the complete ACK delta. This registry only generates hook objects and GPL exports; it adds no callback body. Retain generic Android interfaces and native tracepoint types. Omit documented ARM64 fault/IRQ/PSCI/SME/Gunyah, physical UFS/DWC3/remoteproc/power-domain, unavailable generic sched_clock, SCMI and DT PCI-power-specific hooks. Restore configured generic TTM hooks in a83fe26baa41. Registry cross-reference accounts for every declaration/export and records special event/Rust wrappers and final-ACK stale scheduler declarations. See evidence/vendor-hook-registry-review.json; invocation semantics are reviewed at each call site."
+        },
+        "drivers/remoteproc/remoteproc_sysfs.c": {
+          "policy": "physical-device",
+          "ack_blob": "6beaca6dee0370c62cd68657f75e280677ac1a60",
+          "lts_blob": "925b0cdbe57788cfedaef668868624293e42135b",
+          "port_blob": "925b0cdbe57788cfedaef668868624293e42135b",
+          "normalized_ack_blob": "6beaca6dee0370c62cd68657f75e280677ac1a60",
+          "common_ancestor_blob": "138e752c5e4e08db8c28c2b054c7cbd193995f81",
+          "specific_evidence": "The recovery-toggle locking and callbacks accompany physical remoteproc recovery hooks. Omit that complete set for the ordinary SDK guest; retain LTS implementation and its fixes."
+        }
+      }
+    }
+  ],
+  "remote_sources_used": []
+}

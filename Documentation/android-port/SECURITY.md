@@ -7291,3 +7291,50 @@ fails 2,457 cases. The control explicitly initializes to INT_MIN to demonstrate
 unset-output propagation without claiming to execute undefined C reliably.
 This verifies host control flow only, not futex concurrency, module loading or
 scheduler behavior. No LTS fix is removed and no new remote source is used.
+
+# Futex and syscall hook contracts
+
+Nine candidates are reconciled in `evidence/futex-syscall-hooks-review.json`.
+Mmap/open/BPF observation retains native permission checks, copy/zeroing, locks
+and cleanup; BPF minimum-output-size protections added earlier are also retained.
+Observation does not promise a successful syscall, and the copied BPF attribute
+pointer is stack-owned. Generic CPU capacity reporting remains customizable
+through bounded sysfs_emit, independently of scheduler capacity and ARM CPU-info.
+
+The VMA-name bypass keeps b39eeed468ef's initialized error and unconditional local
+name-reference release; modules retain their own reference if needed. It can
+claim success without native naming work and is a trusted policy interface.
+Futex queue insertion customization must preserve plist membership/ordering under
+the bucket lock, before q->task is assigned. Syscall callbacks can alter internal
+flags and must obey operation invariants; native user input checks remain.
+Wake traversal/per-waiter hooks run under the hash lock, while completion follows
+unlock/wake_up_q. The post-setup wait observation follows actual native queueing
+and unlock despite an older lock comment nearby. All native wake/return behavior
+is preserved by scoped whole-function/file comparisons and the initialization
+regression checks. No actual futex concurrency, callback or syscall was executed.
+Exact local module registrations were not found; that unresolved consumer detail
+is recorded while retaining these generic Android interfaces. No remote source
+was used.
+
+# Hook header consolidation and remoteproc scope
+
+Seven newly resolved candidates and one previously finalized re-add are accounted for in
+`evidence/hook-headers-remoteproc-review.json`. Selected hook headers use the
+central enabled/NOP definitions and lean type dependencies. Current header
+changes for Binder/printk lifetime contracts, contiguous-range type width and
+excluded SCMI are preserved; no old signature or CRC is recreated. Epoch hooks
+remain excluded under the already reviewed unselected GENERIC_SCHED_CLOCK path.
+
+Native remoteproc framework and character-device support are built, but no
+provider selected by the complete remoteproc Makefile is enabled for this SDK
+platform. Its firmware-crash recovery hooks are omitted with that absent platform
+backend, leaving native core/sysfs code exactly intact. This does not assert
+that an unknown external module could never register a remote processor; the
+current SDK target scope, not failure to find a registration, is the reason.
+Both historical add/revert/re-add sequences are distinguished. Final ACK
+calls recovery_set under the remoteproc mutex in both enabled/disabled sysfs
+branches, after changing the flag; enabled triggers recovery after unlocking.
+The recovery-work hook is on the common exit path and is not success-only
+despite its comment. The earlier broad disposition for 4824c0ad359b is replaced
+with this explicit whole-feature omission, without increasing the final count. No remote processor, callback or alternate-config kernel was run.
+No new remote resource was consulted.

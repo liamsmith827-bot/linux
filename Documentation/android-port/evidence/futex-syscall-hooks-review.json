@@ -1,0 +1,258 @@
+{
+  "source_head": "745b182c358dddfa7734d41f6e0c3dfb8d436847",
+  "records": [
+    {
+      "commit": "e13e55eae1fb2dfdb1ac9f30554cb064caae94a6",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain mmap observation with file/prot/flags/result passed by value after native security_mmap_file, fsnotify permission, mmap lock, mapping and population sequence. Whole vm_mmap_pgoff equals LTS after removing one call. Lock-interruption early return still skips notification. Historical __GENSYMS__ include hiding is not retained for binary KMI. Source and scoped host-model validation only; no syscall/futex runtime or concurrency test.",
+      "evidence": [
+        "evidence/futex-syscall-hooks-review.json",
+        "evidence/futex-hook-state-check.json",
+        "evidence/madvise-bypass-check.json",
+        "SECURITY.md: Futex and syscall hook contracts"
+      ],
+      "patch_sha256": "42eaf2da792bf9dec60800018bc5ef417b92861d446c3e02f93b03dabafb4671",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/syscall_check.h",
+        "mm/util.c"
+      ]
+    },
+    {
+      "commit": "996496b8eaf7131bc72971f346d7ee0720f609e7",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain const-file open observation immediately before native security_file_open. Whole do_dentry_open equals LTS after removing one call, preserving native security rejection, leases, file-operation references and cleanup. Callback sees an attempted open, not an access grant; no new return override is introduced. Source and scoped host-model validation only; no syscall/futex runtime or concurrency test.",
+      "evidence": [
+        "evidence/futex-syscall-hooks-review.json",
+        "evidence/futex-hook-state-check.json",
+        "evidence/madvise-bypass-check.json",
+        "SECURITY.md: Futex and syscall hook contracts"
+      ],
+      "patch_sha256": "c4bde07a265835c6e1bd66bde2986a90e7ffa0283f89a3da5757e812429cb384",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "fs/open.c",
+        "include/trace/hooks/syscall_check.h"
+      ]
+    },
+    {
+      "commit": "c68c223735eb1abe9d54ce3942b5c3a6d608d25e",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain const BPF-attribute observation after native zero-tail validation, bounded copy and zero fill, before security_bpf. Native uattr.is_kernel propagation and permission/dispatch behavior remain; separately added minimum-output-size guards also remain. Callback is not a verifier or privilege bypass and must not retain the stack attr pointer. Source and scoped host-model validation only; no syscall/futex runtime or concurrency test.",
+      "evidence": [
+        "evidence/futex-syscall-hooks-review.json",
+        "evidence/futex-hook-state-check.json",
+        "evidence/madvise-bypass-check.json",
+        "SECURITY.md: Futex and syscall hook contracts"
+      ],
+      "patch_sha256": "73a682dd79af7863446004576aaf643e750bf8cd5ef16a3e6af2c7a190d0c0ed",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/syscall_check.h",
+        "kernel/bpf/syscall.c"
+      ]
+    },
+    {
+      "commit": "3c35fec29fba950203833f8d45f9ebf9c74a429d",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "b39eeed468efb77aaa5154d7aea538f428c3d8c0"
+      ],
+      "rationale": "Retain PR_SET_VMA name bypass for source customization, with b39eeed468ef initializing error and always releasing the local anon_name reference after either callback or native path. Native user-copy/name-character checks remain. Callback receives borrowed name and must acquire a reference to retain it; bypass can claim success without changing mappings, an intentional privileged policy. Earlier cleanup model tests cover ownership/failure paths. Source and scoped host-model validation only; no syscall/futex runtime or concurrency test.",
+      "evidence": [
+        "evidence/futex-syscall-hooks-review.json",
+        "evidence/futex-hook-state-check.json",
+        "evidence/madvise-bypass-check.json",
+        "SECURITY.md: Futex and syscall hook contracts"
+      ],
+      "patch_sha256": "41a641fc41dd3f454b769d9ebe12060a1d9ffc65baee50ae9a1702821540c4c1",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/sys.h",
+        "mm/madvise.c"
+      ]
+    },
+    {
+      "commit": "616412c9b51622dbdedbb6641c857f4044430e1d",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain generic CPU capacity sysfs reporting hook and GPL export. Default remains topology_get_cpu_scale; sysfs_emit still bounds formatting. Callback changes reported capacity, not the native scheduler capacity itself, and can affect userspace placement decisions. It is a common topology interface, distinct from omitted ARM MIDR reporting. Source and scoped host-model validation only; no syscall/futex runtime or concurrency test.",
+      "evidence": [
+        "evidence/futex-syscall-hooks-review.json",
+        "evidence/futex-hook-state-check.json",
+        "evidence/madvise-bypass-check.json",
+        "SECURITY.md: Futex and syscall hook contracts"
+      ],
+      "patch_sha256": "da12cd9daf10180f406e12ffb7f42452101236eb6ca73b3333036ba0e805fb88",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/base/topology.c",
+        "include/trace/hooks/topology.h"
+      ]
+    },
+    {
+      "commit": "b8fb479caa25f58370efcc8357bed59f9918620d",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain futex plist insertion customization under native hash-bucket locking. already_on_hb defaults false; a callback setting true must have linked the node correctly and preserve plist invariants. Native priority calculation, node initialization and later q->task publication remain; callback must not assume task assignment has already occurred. Misuse can lose wakes/corrupt queues, so this is trusted module authority. Source and scoped host-model validation only; no syscall/futex runtime or concurrency test.",
+      "evidence": [
+        "evidence/futex-syscall-hooks-review.json",
+        "evidence/futex-hook-state-check.json",
+        "evidence/madvise-bypass-check.json",
+        "SECURITY.md: Futex and syscall hook contracts"
+      ],
+      "patch_sha256": "d437fddc61c0749ac860ecd171d8c46da07b407bcacf0bcce690e637364a0221",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/futex.h",
+        "kernel/futex/core.c"
+      ]
+    },
+    {
+      "commit": "7f747c86301ff7d94a2690426fb393407d59baed",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain sleep-start observation only on native path that still has a queued waiter and unexpired/no timeout, immediately before schedule. Native task-state/barrier and timeout behavior are unchanged. Callback may adjust task policy but must not invalidate queue ownership or assume schedule guarantees sleeping. Source and scoped host-model validation only; no syscall/futex runtime or concurrency test.",
+      "evidence": [
+        "evidence/futex-syscall-hooks-review.json",
+        "evidence/futex-hook-state-check.json",
+        "evidence/madvise-bypass-check.json",
+        "SECURITY.md: Futex and syscall hook contracts"
+      ],
+      "patch_sha256": "59a096c4ec5750d9deacdfd17048937c928feada997147b67e17aaa140c31ec1",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/futex.h",
+        "kernel/futex/waitwake.c"
+      ]
+    },
+    {
+      "commit": "d3d80333c42aa28f85ac5af3e5f6ac777a58aeab",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "745b182c358dddfa7734d41f6e0c3dfb8d436847"
+      ],
+      "rationale": "Retain OEM futex syscall flags, wait start/end and wake traversal/per-waiter/completion interfaces. Final do_futex interface also carries uaddr. Initialize target_nr to nr_wake in 745b182c358d so independently registered wake hooks never see an unset traversal output; native wake termination still uses nr_wake. Callbacks may alter internal flags/queue ordering and must preserve native invariants. Wake/queue callbacks run under bucket lock; completion runs after unlock/wake_up_q. Wait-end remains on every native futex_wait return including restart. Source and scoped host-model validation only; no syscall/futex runtime or concurrency test.",
+      "evidence": [
+        "evidence/futex-syscall-hooks-review.json",
+        "evidence/futex-hook-state-check.json",
+        "evidence/madvise-bypass-check.json",
+        "SECURITY.md: Futex and syscall hook contracts"
+      ],
+      "patch_sha256": "db5b894619ba5b00a66214a9b48fa3673fd61958730c438fe3232fd11375ec04",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/futex.h",
+        "kernel/futex/syscalls.c",
+        "kernel/futex/waitwake.c"
+      ]
+    },
+    {
+      "commit": "cac1714ae9a3be185717f4f3ff603b8bf817a45e",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain wait-queue observation after successful native futex_wait_setup and before futex_do_wait, including retries. Current setup has already queued the waiter and released the hash-bucket lock; preserve current native placement rather than rely on stale nearby lock comment. Native spurious-wake retry, unqueue, timeout and signal paths remain unchanged. Source and scoped host-model validation only; no syscall/futex runtime or concurrency test.",
+      "evidence": [
+        "evidence/futex-syscall-hooks-review.json",
+        "evidence/futex-hook-state-check.json",
+        "evidence/madvise-bypass-check.json",
+        "SECURITY.md: Futex and syscall hook contracts"
+      ],
+      "patch_sha256": "8a29eed9432836c64a7927b64096c6ef966f5e14f3de6678d0d4928e36c7c3c1",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/futex.h",
+        "kernel/futex/waitwake.c"
+      ]
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "mm/util.c",
+      "function": "vm_mmap_pgoff",
+      "relationship": "Whole native function plus one observation callback",
+      "sha256": "50ff7c8359c60237f4fe9a33bab9759fdd54b98d3866d7f2d709b67882073f4e"
+    },
+    {
+      "path": "fs/open.c",
+      "function": "do_dentry_open",
+      "relationship": "Whole native function plus one observation callback",
+      "sha256": "9f6db334df794313608f29db2d6114c87e15954774e32f3cef5b721a56d820a1"
+    },
+    {
+      "path": "kernel/bpf/syscall.c",
+      "function": "__sys_bpf",
+      "separate_retained_output_size_guards": 11,
+      "relationship": "Native function plus observation and separately reviewed minimum-size checks",
+      "sha256": "c5cdae7cd23926f6eacf5e0e2864db2537d25eb41524718a0ccc61f8815234b6"
+    },
+    {
+      "path": "mm/madvise.c",
+      "function": "set_anon_vma_name",
+      "relationship": "Native validation/reference cleanup plus bounded bypass adaptation; unchanged from tested b39eeed468ef",
+      "sha256": "c5c9538730defacdf90cb38190d769efea3717e5de7beb1ec3878cd8513191e4"
+    },
+    {
+      "path": "kernel/futex/core.c",
+      "function": "__futex_queue",
+      "relationship": "Native body with only scoped callbacks, initialized callback outputs and necessary conditional insertion",
+      "sha256": "9f466c16aabfa1e49661cb0ade00e717a14538e7000651eee213e30e3b359422"
+    },
+    {
+      "path": "kernel/futex/syscalls.c",
+      "function": "do_futex",
+      "relationship": "Native body with only scoped callbacks, initialized callback outputs and necessary conditional insertion",
+      "sha256": "f7dcb3735af3b4350a46ad2861b7ddfbfca262b19287ad0e242821693637c3a7"
+    },
+    {
+      "path": "kernel/futex/waitwake.c",
+      "function": "futex_wake",
+      "relationship": "Native body with only scoped callbacks, initialized callback outputs and necessary conditional insertion",
+      "sha256": "1e3685f9e0b65b326c7ad621afe81f8ae20ff552a4869afcf53d247f3f816ae2"
+    },
+    {
+      "path": "kernel/futex/waitwake.c",
+      "function": "futex_do_wait",
+      "relationship": "Native body with only scoped callbacks, initialized callback outputs and necessary conditional insertion",
+      "sha256": "2ca9c187d1bbc7acf5761a014419576142ccf7088060f50f3f32af9bd056898e"
+    },
+    {
+      "path": "kernel/futex/waitwake.c",
+      "function": "__futex_wait",
+      "relationship": "Native body with only scoped callbacks, initialized callback outputs and necessary conditional insertion",
+      "sha256": "27662e3a923a84d7f6eef0b54fd367033ffc9fe050041507171449d616cfc7eb"
+    },
+    {
+      "path": "kernel/futex/waitwake.c",
+      "function": "futex_wait",
+      "relationship": "Native body with only scoped callbacks, initialized callback outputs and necessary conditional insertion",
+      "sha256": "374327878a29b3dcb17630ce0e0b3daeca0f878ad5661ba36d7de71e88ca5888"
+    }
+  ],
+  "callback_consumer_search": {
+    "scope": "Exact registration names for selected hooks in local manifest common-modules",
+    "matches": "",
+    "conclusion": "Exact consumers unresolved; generic source interfaces retained. Absence not used to omit."
+  },
+  "remote_sources_used": [],
+  "build_scope": "Build 158 pending, recorded separately only after successful completion."
+}

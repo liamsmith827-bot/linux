@@ -20087,5 +20087,217 @@
       "evidence/arm-only-hooks-review.json",
       "SECURITY.md: ARM exception and firmware hook scope"
     ]
+  },
+  {
+    "commit": "e13e55eae1fb2dfdb1ac9f30554cb064caae94a6",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain mmap observation with file/prot/flags/result passed by value after native security_mmap_file, fsnotify permission, mmap lock, mapping and population sequence. Whole vm_mmap_pgoff equals LTS after removing one call. Lock-interruption early return still skips notification. Historical __GENSYMS__ include hiding is not retained for binary KMI. Source and scoped host-model validation only; no syscall/futex runtime or concurrency test.",
+    "evidence": [
+      "evidence/futex-syscall-hooks-review.json",
+      "evidence/futex-hook-state-check.json",
+      "evidence/madvise-bypass-check.json",
+      "SECURITY.md: Futex and syscall hook contracts"
+    ]
+  },
+  {
+    "commit": "996496b8eaf7131bc72971f346d7ee0720f609e7",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain const-file open observation immediately before native security_file_open. Whole do_dentry_open equals LTS after removing one call, preserving native security rejection, leases, file-operation references and cleanup. Callback sees an attempted open, not an access grant; no new return override is introduced. Source and scoped host-model validation only; no syscall/futex runtime or concurrency test.",
+    "evidence": [
+      "evidence/futex-syscall-hooks-review.json",
+      "evidence/futex-hook-state-check.json",
+      "evidence/madvise-bypass-check.json",
+      "SECURITY.md: Futex and syscall hook contracts"
+    ]
+  },
+  {
+    "commit": "c68c223735eb1abe9d54ce3942b5c3a6d608d25e",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain const BPF-attribute observation after native zero-tail validation, bounded copy and zero fill, before security_bpf. Native uattr.is_kernel propagation and permission/dispatch behavior remain; separately added minimum-output-size guards also remain. Callback is not a verifier or privilege bypass and must not retain the stack attr pointer. Source and scoped host-model validation only; no syscall/futex runtime or concurrency test.",
+    "evidence": [
+      "evidence/futex-syscall-hooks-review.json",
+      "evidence/futex-hook-state-check.json",
+      "evidence/madvise-bypass-check.json",
+      "SECURITY.md: Futex and syscall hook contracts"
+    ]
+  },
+  {
+    "commit": "3c35fec29fba950203833f8d45f9ebf9c74a429d",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "b39eeed468efb77aaa5154d7aea538f428c3d8c0"
+    ],
+    "rationale": "Retain PR_SET_VMA name bypass for source customization, with b39eeed468ef initializing error and always releasing the local anon_name reference after either callback or native path. Native user-copy/name-character checks remain. Callback receives borrowed name and must acquire a reference to retain it; bypass can claim success without changing mappings, an intentional privileged policy. Earlier cleanup model tests cover ownership/failure paths. Source and scoped host-model validation only; no syscall/futex runtime or concurrency test.",
+    "evidence": [
+      "evidence/futex-syscall-hooks-review.json",
+      "evidence/futex-hook-state-check.json",
+      "evidence/madvise-bypass-check.json",
+      "SECURITY.md: Futex and syscall hook contracts"
+    ]
+  },
+  {
+    "commit": "616412c9b51622dbdedbb6641c857f4044430e1d",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain generic CPU capacity sysfs reporting hook and GPL export. Default remains topology_get_cpu_scale; sysfs_emit still bounds formatting. Callback changes reported capacity, not the native scheduler capacity itself, and can affect userspace placement decisions. It is a common topology interface, distinct from omitted ARM MIDR reporting. Source and scoped host-model validation only; no syscall/futex runtime or concurrency test.",
+    "evidence": [
+      "evidence/futex-syscall-hooks-review.json",
+      "evidence/futex-hook-state-check.json",
+      "evidence/madvise-bypass-check.json",
+      "SECURITY.md: Futex and syscall hook contracts"
+    ]
+  },
+  {
+    "commit": "b8fb479caa25f58370efcc8357bed59f9918620d",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain futex plist insertion customization under native hash-bucket locking. already_on_hb defaults false; a callback setting true must have linked the node correctly and preserve plist invariants. Native priority calculation, node initialization and later q->task publication remain; callback must not assume task assignment has already occurred. Misuse can lose wakes/corrupt queues, so this is trusted module authority. Source and scoped host-model validation only; no syscall/futex runtime or concurrency test.",
+    "evidence": [
+      "evidence/futex-syscall-hooks-review.json",
+      "evidence/futex-hook-state-check.json",
+      "evidence/madvise-bypass-check.json",
+      "SECURITY.md: Futex and syscall hook contracts"
+    ]
+  },
+  {
+    "commit": "7f747c86301ff7d94a2690426fb393407d59baed",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain sleep-start observation only on native path that still has a queued waiter and unexpired/no timeout, immediately before schedule. Native task-state/barrier and timeout behavior are unchanged. Callback may adjust task policy but must not invalidate queue ownership or assume schedule guarantees sleeping. Source and scoped host-model validation only; no syscall/futex runtime or concurrency test.",
+    "evidence": [
+      "evidence/futex-syscall-hooks-review.json",
+      "evidence/futex-hook-state-check.json",
+      "evidence/madvise-bypass-check.json",
+      "SECURITY.md: Futex and syscall hook contracts"
+    ]
+  },
+  {
+    "commit": "d3d80333c42aa28f85ac5af3e5f6ac777a58aeab",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "745b182c358dddfa7734d41f6e0c3dfb8d436847"
+    ],
+    "rationale": "Retain OEM futex syscall flags, wait start/end and wake traversal/per-waiter/completion interfaces. Final do_futex interface also carries uaddr. Initialize target_nr to nr_wake in 745b182c358d so independently registered wake hooks never see an unset traversal output; native wake termination still uses nr_wake. Callbacks may alter internal flags/queue ordering and must preserve native invariants. Wake/queue callbacks run under bucket lock; completion runs after unlock/wake_up_q. Wait-end remains on every native futex_wait return including restart. Source and scoped host-model validation only; no syscall/futex runtime or concurrency test.",
+    "evidence": [
+      "evidence/futex-syscall-hooks-review.json",
+      "evidence/futex-hook-state-check.json",
+      "evidence/madvise-bypass-check.json",
+      "SECURITY.md: Futex and syscall hook contracts"
+    ]
+  },
+  {
+    "commit": "cac1714ae9a3be185717f4f3ff603b8bf817a45e",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain wait-queue observation after successful native futex_wait_setup and before futex_do_wait, including retries. Current setup has already queued the waiter and released the hash-bucket lock; preserve current native placement rather than rely on stale nearby lock comment. Native spurious-wake retry, unqueue, timeout and signal paths remain unchanged. Source and scoped host-model validation only; no syscall/futex runtime or concurrency test.",
+    "evidence": [
+      "evidence/futex-syscall-hooks-review.json",
+      "evidence/futex-hook-state-check.json",
+      "evidence/madvise-bypass-check.json",
+      "SECURITY.md: Futex and syscall hook contracts"
+    ]
+  },
+  {
+    "commit": "9e0cf0e90d88ddb5d675dd6714e4119e057c7245",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain centralized enabled/NOP hook definition handling for selected generic headers instead of per-header CONFIG wrappers and hand-coded empty call macros. Final declarations follow ACK, allowing separately documented Binder/printk lifetime comments, widened contiguous-range end type and omitted SCMI hook. ARM FPSIMD/GIC/MPAM headers stay excluded; epoch hooks are gated by unselected GENERIC_SCHED_CLOCK (76b58ff07b29 review). This is source preprocessing infrastructure, not a new authorization or historical CRC guarantee. No runtime callback or remote-processor operation was executed.",
+    "evidence": [
+      "evidence/hook-headers-remoteproc-review.json",
+      "SECURITY.md: Hook header consolidation and remoteproc scope"
+    ]
+  },
+  {
+    "commit": "b5247e9a1174de819f9ce97289af6d9ef4a9cb9f",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain lean declaration headers for selected cpufreq/ftrace/hung-task/IOMMU/MM hooks, with shared vendor_hooks.h providing tracepoint machinery/types and final re-add header forms. Do not restore heavyweight include chains merely to preserve old CRCs; no signatures change in this cleanup. Remoteproc header follows the excluded backend decision below. Later final ftrace/hung headers need not literally retain the old added forward declarations because final include context builds successfully. No runtime callback or remote-processor operation was executed.",
+    "evidence": [
+      "evidence/hook-headers-remoteproc-review.json",
+      "SECURITY.md: Hook header consolidation and remoteproc scope"
+    ]
+  },
+  {
+    "commit": "4e7ce4f71d70da34bebe8c52edbc1d36dd5df799",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Recovery callback is for remote-processor firmware-crash work. The selected SDK build includes native remoteproc framework/CDEV but no remote processor provider from its complete Makefile list; the current SDK target supplies no remote-processor platform backend. Keep native framework/cleanup and omit added header/export/call for such future hardware. Original was reverted, with final callback re-added at the common out label in 1ad401ef290e; do not mislabel it permanently retired. No runtime callback or remote-processor operation was executed.",
+    "evidence": [
+      "evidence/hook-headers-remoteproc-review.json",
+      "SECURITY.md: Hook header consolidation and remoteproc scope"
+    ]
+  },
+  {
+    "commit": "c99ebf4e8b906337be7ea3aaa96436489b766082",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Sysfs recovery-policy callback was removed by 3e6506b39902, then restored by 4824c0ad359b. Final ACK calls it in enabled/disabled branches under rproc->lock, after changing recovery_disabled; enabled then triggers recovery after unlock. Omit that platform callback for the selected SDK without a remote-processor backend; keep native sysfs control, locking and error handling. The temporary revert is not the reason for final omission. No runtime callback or remote-processor operation was executed.",
+    "evidence": [
+      "evidence/hook-headers-remoteproc-review.json",
+      "SECURITY.md: Hook header consolidation and remoteproc scope"
+    ]
+  },
+  {
+    "commit": "3e6506b39902d5168da4b8fea609e24919e566a4",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "The policy-notification revert is superseded by 4824c0ad359b, which restores both sysfs callsites and the export. Final omission is a current SDK backend scope decision, not permanent retirement by this revert. Native sysfs locking and recovery/error handling are retained exactly. No runtime callback or remote-processor operation was executed.",
+    "evidence": [
+      "evidence/hook-headers-remoteproc-review.json",
+      "SECURITY.md: Hook header consolidation and remoteproc scope"
+    ]
+  },
+  {
+    "commit": "a3de1883d8607b74e8cb0913695d808b57d63bd2",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "Removal of the recovery-work hook was superseded by 1ad401ef290e. Its final omission here is justified by SDK remote-processor backend selection, not treating this transient revert as permanent ACK retirement. Keep native recovery work and reference/PM cleanup. No runtime callback or remote-processor operation was executed.",
+    "evidence": [
+      "evidence/hook-headers-remoteproc-review.json",
+      "SECURITY.md: Hook header consolidation and remoteproc scope"
+    ]
+  },
+  {
+    "commit": "1ad401ef290e9bfd7aa8ee85ae08eb6d4cea7f5b",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Final recovery callback is at the common out label and can run even when no successful recovery occurred, despite the old header comment. The selected SDK has the native generic framework but no platform remote-processor provider. Omit added callback/header/exports for that hardware-specific service while retaining native core and CDEV. Unknown external module providers are not asserted absent; no future platform is implemented in this stage. No runtime callback or remote-processor operation was executed.",
+    "evidence": [
+      "evidence/hook-headers-remoteproc-review.json",
+      "SECURITY.md: Hook header consolidation and remoteproc scope"
+    ]
+  },
+  {
+    "commit": "4824c0ad359bff09f23761c6787001caf533d30e",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Re-add restores recovery_set at both enabled/disabled sysfs branches and exports it; final ACK surrounds flag update and callback with the remoteproc mutex. This is an active ACK interface, omitted only for the current SDK without a remote-processor platform backend. Native sysfs locking, errors and recovery semantics remain exactly. Replaces the earlier broad partially-adapted registry disposition with this specific whole-feature decision. No runtime callback or remote-processor operation was executed.",
+    "evidence": [
+      "evidence/hook-headers-remoteproc-review.json",
+      "SECURITY.md: Hook header consolidation and remoteproc scope"
+    ]
   }
 ]
