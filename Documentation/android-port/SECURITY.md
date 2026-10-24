@@ -7480,3 +7480,16 @@ userspace can trigger the pKVM hypercall attack. The extracted helper passes
 1,500 checks covering missing roots, allocation failure, copied contexts and
 legacy/scalable bus/device indexing. A pre-fix NULL-root control is rejected by
 UBSan. No register access, physical IOMMU or concurrent initialization is tested.
+
+ACK a9ad95721fc4's removal of top-level PGD freeing from the private
+`dma_pte_free_pagetable` conversion helper is retained. Its sole caller is
+`switch_to_super_page`, which replaces mappings while retaining the domain and
+its root. Full root teardown remains in native `domain_unmap` and domain-free
+paths. The six removed lines have no replacement from another ACK file; native
+child-table clearing/freeing and flush order are unchanged. This avoids giving a
+mapping-conversion helper authority to destroy its caller's retained root.
+The audit does not assert that the full-address-range condition is unreachable
+for every possible hardware address-width/superpage combination. This small
+source ownership change is checked against the local call graph and the full
+emulator compilation; no hardware reproduction or runtime teardown test is
+claimed.
