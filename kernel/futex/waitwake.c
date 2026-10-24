@@ -159,7 +159,7 @@ int futex_wake(u32 __user *uaddr, unsigned int flags, int nr_wake, u32 bitset)
 	union futex_key key = FUTEX_KEY_INIT;
 	DEFINE_WAKE_Q(wake_q);
 	int ret;
-	int target_nr;
+	int target_nr = nr_wake;
 
 	if (!bitset)
 		return -EINVAL;

@@ -7270,3 +7270,24 @@ cpuidle, scheduler, interrupt, diagnostic and PM interfaces remain separately
 retained/reviewed. These decisions rely on positive architecture and firmware
 contracts, not on claiming Android lacks consumers of CPU information, exceptions
 or power management. No ARM execution or new remote source was used.
+
+# Futex wake callback output initialization
+
+The OEM futex wake hooks introduced by d3d80333c42a can be registered
+independently. ACK left target_nr uninitialized and passed it by value to the
+per-waiter and completion hooks even when no traversal callback supplied a value.
+Initialize it to nr_wake, the native requested wake budget; a traversal callback
+can still replace it. This changes no native waiter matching, PI-state rejection,
+bitset, wake-count, strict-zero, hash-lock or wake-queue behavior. The value is
+hook metadata, not a replacement for the native nr_wake termination condition.
+It avoids an indeterminate/stack-derived value in partially registered callback
+configurations; it does not sandbox arbitrary kernel callbacks.
+
+`check_futex_hook_state.py` exercises the entire extracted futex_wake body under
+ASan/UBSan with mocked hash buckets/locks and all eight combinations of the three
+hooks. All 43,008 cases match native return values and woken-task masks, with
+6,852 observed hook arguments. A defined-poison model of the old unset output
+fails 2,457 cases. The control explicitly initializes to INT_MIN to demonstrate
+unset-output propagation without claiming to execute undefined C reliably.
+This verifies host control flow only, not futex concurrency, module loading or
+scheduler behavior. No LTS fix is removed and no new remote source is used.
