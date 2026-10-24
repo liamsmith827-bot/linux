@@ -7493,3 +7493,26 @@ for every possible hardware address-width/superpage combination. This small
 source ownership change is checked against the local call graph and the full
 emulator compilation; no hardware reproduction or runtime teardown test is
 claimed.
+
+## DMA synchronization batching and the SDK architecture
+
+ACK f880f0340afa and 5bef17dd8878 split cache maintenance from completion
+and batch completion across scatterlists. The only architecture enabling their
+new ARCH_HAS_BATCHED_DMA_SYNC capability is ARM64; its implementation changes
+cache operations to `_nosync` and supplies a `dsb(sy)` completion. ACK x86 has
+no such selection and uses the empty completion stub. Native x86 cache-coherent
+DMA behavior does not gain an Android interface from this optimization.
+
+Remove the partial generic batching import and keep native synchronous DMA
+helpers, their internal signatures, and scatterlist loops. Public DMA interfaces,
+Android exports, and the separate empty-DMA32-zone allocation checks remain.
+In particular, retain LTS 4ee4d628c4d9's THRU_HOST_BRIDGE mapping fallthrough and
+d0d08f4bd7f6's P2PDMA segment length assignment. No cache completion barrier is
+removed from the target: the removed function was empty for x86. ARM64 keeps
+its native synchronous cache maintenance, so the missing batching implementation
+is not combined with asynchronous operations. This is an architecture-specific
+optimization omission, not an assertion that all DMA code is unused on the SDK.
+Evidence includes both full ACK patches, native/current file comparisons and the
+build configuration. Only local source was consulted; patch-message links were
+not accessed. Compilation verifies this restoration; hardware DMA operation is
+outside the verified scope.
