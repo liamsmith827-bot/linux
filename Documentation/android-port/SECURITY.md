@@ -7560,3 +7560,48 @@ Evidence includes both full ACK patches, native/current file comparisons and the
 build configuration. Only local source was consulted; patch-message links were
 not accessed. Compilation verifies this restoration; hardware DMA operation is
 outside the verified scope.
+
+## Android quota2 accounting and counter lifetime
+
+Retain the quota2 revision-3 IPv4/IPv6 match, named procfs counters and legacy
+NETLINK_NFLOG notifications. GrapheneOS system/netd's BandwidthController installs
+quota2 rules and reads/writes /proc/net/xt_quota; its NetlinkManager subscribes to
+the quota notification group. The local iptables extension supplies this ABI.
+The SDK configuration enables both quota2 and its logging option. These are
+positive userspace and configuration consumers, not inferred hardware needs.
+
+Keep ACK's short-write termination, whole-message zeroing, bounded string copies,
+and usersize boundary before the private master pointer. These respectively
+avoid parsing uninitialized stack bytes, disclosing uninitialized notification
+bytes, unbounded string handling, and copying a kernel pointer to userspace.
+Keep the proc_ops conversion and Android's exact quota-threshold notification
+behavior. The historical GROW inversion and NO_CHANGE threshold semantics are
+unchanged; no new packet-policy behavior is claimed.
+
+ACK 550e926637c5 fixes a use-after-free when a second rule acquires a newly
+published counter before its proc entry creation fails. Retain that reference
+handling. Adapt final destruction to call proc_remove on the owned entry,
+initialized to NULL, after dropping the list lock. A surviving counter whose
+creation failed has no proc entry: after its final list removal, another thread
+can create a same-name counter and proc node. The old name-based removal could
+then delete that replacement's node. The NULL-aware removal now leaves the
+replacement alone. For a successful creation the old node occupies the name
+until removal. Native procfs rundown drains active callbacks before the counter
+is freed; no sleeping proc operation is moved under a spinlock.
+
+Release the logging socket on proc-directory/xtables-registration failure and
+module exit, after unregistering matches and removing proc entries as applicable.
+This closes resource leaks without changing the notification wire format.
+The implementation remains globally named in init_net, as in ACK: no network
+namespace isolation is claimed. The SDK disables user namespaces. A shared
+counter surviving initial proc creation failure can still lack its proc node
+until fully removed and recreated; this adaptation does not promise availability
+under allocation failure.
+
+check_quota2_lifetime.py executes extracted lifecycle functions with modeled
+procfs/netlink and injected interleavings. Nine nonlogging and ten logging cases
+pass ASan/UBSan. Negative controls detect the pre-ACK-fix use-after-free, deletion
+of a replacement node, and the old initialization socket leak. These are host
+control-flow checks, not kernel-thread, real proc rundown, packet, or emulator
+runtime tests. Native LTS has no quota2 implementation; native netfilter/procfs
+security checks are unchanged. Only local source/history was consulted.

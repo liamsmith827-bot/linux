@@ -188,6 +188,7 @@ q2_new_counter(const struct xt_quota_mtinfo2 *q, bool anon)
 		INIT_LIST_HEAD(&e->list);
 		atomic_set(&e->ref, 1);
 		strscpy(e->name, q->name, sizeof(e->name));
+		e->procfs_entry = NULL;
 	}
 	return e;
 }
@@ -293,7 +294,8 @@ static void quota_mt2_destroy(const struct xt_mtdtor_param *par)
 
 	list_del(&e->list);
 	spin_unlock_bh(&counter_list_lock);
-	remove_proc_entry(e->name, proc_xt_quota);
+	/* A failed creation can leave a shared counter without a proc entry. */
+	proc_remove(e->procfs_entry);
 	kfree(e);
 }
 
@@ -372,13 +374,23 @@ static int __init quota_mt2_init(void)
 #endif
 
 	proc_xt_quota = proc_mkdir("xt_quota", init_net.proc_net);
-	if (proc_xt_quota == NULL)
-		return -EACCES;
+	if (proc_xt_quota == NULL) {
+		ret = -EACCES;
+		goto out_release;
+	}
 
 	ret = xt_register_matches(quota_mt2_reg, ARRAY_SIZE(quota_mt2_reg));
-	if (ret < 0)
+	if (ret < 0) {
 		remove_proc_entry("xt_quota", init_net.proc_net);
+		goto out_release;
+	}
 	pr_debug("xt_quota2: init() %d", ret);
+	return ret;
+
+out_release:
+#ifdef CONFIG_NETFILTER_XT_MATCH_QUOTA2_LOG
+	netlink_kernel_release(nflognl);
+#endif
 	return ret;
 }
 
@@ -386,6 +398,9 @@ static void __exit quota_mt2_exit(void)
 {
 	xt_unregister_matches(quota_mt2_reg, ARRAY_SIZE(quota_mt2_reg));
 	remove_proc_entry("xt_quota", init_net.proc_net);
+#ifdef CONFIG_NETFILTER_XT_MATCH_QUOTA2_LOG
+	netlink_kernel_release(nflognl);
+#endif
 }
 
 module_init(quota_mt2_init);
