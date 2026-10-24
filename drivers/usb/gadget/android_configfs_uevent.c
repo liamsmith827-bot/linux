@@ -218,11 +218,12 @@ void android_device_destroy(struct android_uevent_opts *opts)
 
 	flush_work(&opts->work);
 
-	if (device_id >= 0)
-		ida_free(&android_ida, device_id);
 	ida_destroy(&opts->function_ida);
 	/* Every instance has devt == 0; unregister this exact device. */
 	device_unregister(dev);
+	/* Do not reuse android%d until its old sysfs entry is gone. */
+	if (device_id >= 0)
+		ida_free(&android_ida, device_id);
 }
 
 static void __android_set_connected(struct android_uevent_opts *opts,
