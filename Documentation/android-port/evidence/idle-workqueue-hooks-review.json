@@ -1,0 +1,372 @@
+{
+  "source_head": "a2a3fc106810f0e6c7c39f6d0b146aa00771feec",
+  "records": [
+    {
+      "commit": "fc33a8fd5430ac22d40696e74b1ea734c1782471",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "The old CFI-specific suppression of delayed-work timer callback checking was explicitly removed by 5a2a02b63475. Preserve the native unconditional callback identity check and modern CFI behavior; do not disable a validation because an older CFI implementation once needed it. Conservative retention supports generic Android/vendor source compatibility; no assumption that a missing located registration proves dispensability. No runtime validation.",
+      "evidence": [
+        "evidence/idle-workqueue-hooks-review.json",
+        "evidence/allocation-hooks-check.json",
+        "SECURITY.md: Workqueue allocation and idle hook output validation"
+      ],
+      "patch_sha256": "824933c2ebbdfed3ef2cdbee00045ada50d0eaadbab0810e941b65578c300d91",
+      "changed_paths": [
+        "kernel/workqueue.c"
+      ]
+    },
+    {
+      "commit": "494d70ec87b0fb2977b230eb88040873a5e426b8",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [],
+      "rationale": "The CONFIG_CFI to CONFIG_CFI_CLANG rename applies solely to the subsequently removed callback-check suppression. Native unconditional delayed-work callback verification remains; no obsolete preprocessor guard is recreated. Conservative retention supports generic Android/vendor source compatibility; no assumption that a missing located registration proves dispensability. No runtime validation.",
+      "evidence": [
+        "evidence/idle-workqueue-hooks-review.json",
+        "evidence/allocation-hooks-check.json",
+        "SECURITY.md: Workqueue allocation and idle hook output validation"
+      ],
+      "patch_sha256": "70f6b577431e4a4903128c1d86019da014bddd22e09414a0e5c42d4dc2f8eceb",
+      "changed_paths": [
+        "kernel/workqueue.c"
+      ]
+    },
+    {
+      "commit": "322f59e74253d48f1df13da6469ef9006c5d69ee",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "a2a3fc106810f0e6c7c39f6d0b146aa00771feec"
+      ],
+      "rationale": "The original single idle-event hook was superseded by separate enter/exit interfaces in ae8ff465c5cd. Retain final source interfaces and native tracing. The enter hook may change state; final adaptation validates its index before array access and retains negative cancellation semantics. Conservative retention supports generic Android/vendor source compatibility; no assumption that a missing located registration proves dispensability. No runtime validation.",
+      "evidence": [
+        "evidence/idle-workqueue-hooks-review.json",
+        "evidence/allocation-hooks-check.json",
+        "SECURITY.md: Workqueue allocation and idle hook output validation"
+      ],
+      "patch_sha256": "9af00a91dca24beb36209c71b9402cef3bfb9888dcf570d95b43feeb4758f70f",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/cpuidle/cpuidle.c",
+        "include/trace/hooks/cpuidle.h"
+      ]
+    },
+    {
+      "commit": "ae8ff465c5cdfe67bd94d27f59b45ee07e3b5fa6",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "a2a3fc106810f0e6c7c39f6d0b146aa00771feec"
+      ],
+      "rationale": "Retain separate cpu_idle_enter(index pointer, device) and cpu_idle_exit(result, device) declarations/exports. Keep later hook-before-state-selection ordering, negative cancellation and the new upper-bound check. Entry selection authority is intentional privileged customization, not a sandbox; native RCU/noinstr and IRQ behavior remain. Conservative retention supports generic Android/vendor source compatibility; no assumption that a missing located registration proves dispensability. No runtime validation.",
+      "evidence": [
+        "evidence/idle-workqueue-hooks-review.json",
+        "evidence/allocation-hooks-check.json",
+        "SECURITY.md: Workqueue allocation and idle hook output validation"
+      ],
+      "patch_sha256": "1b23de5799d4c68de6f438b5288d0c74acd30d923b35f63ff64258c11a546eaa",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/cpuidle/cpuidle.c",
+        "include/trace/hooks/cpuidle.h"
+      ]
+    },
+    {
+      "commit": "75e40a17f00f65b4db02c966108cc249332b6e32",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "a2a3fc106810f0e6c7c39f6d0b146aa00771feec"
+      ],
+      "rationale": "Retain hook invocation before deriving target_state and broadcast from the chosen index, preventing mixed-state use after a callback. Current code additionally rejects out-of-range results and balances instrumentation on error. Native broadcast fallback and subsequent idle/statistics code remain. Conservative retention supports generic Android/vendor source compatibility; no assumption that a missing located registration proves dispensability. No runtime validation.",
+      "evidence": [
+        "evidence/idle-workqueue-hooks-review.json",
+        "evidence/allocation-hooks-check.json",
+        "SECURITY.md: Workqueue allocation and idle hook output validation"
+      ],
+      "patch_sha256": "39f81c2331692388f3079d455eacece922bc2247dca6d5c718b820d4f692f948",
+      "changed_paths": [
+        "drivers/cpuidle/cpuidle.c"
+      ]
+    },
+    {
+      "commit": "132d8ef6173f20f4ad2320b6545a2bcd0bbfb31d",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "a2a3fc106810f0e6c7c39f6d0b146aa00771feec"
+      ],
+      "rationale": "Retain negative index as callback-requested early cancellation, with instrumentation_end before returning under native noinstr control. Reject excessive nonnegative indices separately. Source-model tests cover valid, negative and excessive selections; no idle driver has been executed. Conservative retention supports generic Android/vendor source compatibility; no assumption that a missing located registration proves dispensability. No runtime validation.",
+      "evidence": [
+        "evidence/idle-workqueue-hooks-review.json",
+        "evidence/allocation-hooks-check.json",
+        "SECURITY.md: Workqueue allocation and idle hook output validation"
+      ],
+      "patch_sha256": "14088b3debc9a2691f753f15886d5b0854d1b3dd4b92dd98a69ed502864f05e5",
+      "changed_paths": [
+        "drivers/cpuidle/cpuidle.c"
+      ]
+    },
+    {
+      "commit": "f022c0602ca8342d70190a06ada1fd18cab17f5e",
+      "disposition": "merge-resolution-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "a2a3fc106810f0e6c7c39f6d0b146aa00771feec"
+      ],
+      "rationale": "Read both unique remerge hunks: keep Android entry/exit observation while adopting native trace_cpu_idle instead of the old rcuidle macro. Historical single hook is replaced by final split interfaces. Current native context-tracking/noinstr code and later safety adaptation are retained; no 5.9 implementation is replayed. Conservative retention supports generic Android/vendor source compatibility; no assumption that a missing located registration proves dispensability. No runtime validation.",
+      "evidence": [
+        "evidence/idle-workqueue-hooks-review.json",
+        "evidence/allocation-hooks-check.json",
+        "SECURITY.md: Workqueue allocation and idle hook output validation"
+      ],
+      "patch_sha256": "dfccbe4b5505c083fbeb8f856cea349a31585373f2d2584bc1146d571c542507",
+      "changed_paths": [
+        "drivers/cpuidle/cpuidle.c"
+      ]
+    },
+    {
+      "commit": "34f087452f27d1f07a6f8a214fdeb83846e9e670",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain wq_lockup_pool diagnostic hook and GPL export. Full watchdog function differs from LTS only by that callback. It receives CPU/timestamp values after native stall detection; no stall predicate or native panic/report behavior is suppressed. Timer-context callback must not block. Conservative retention supports generic Android/vendor source compatibility; no assumption that a missing located registration proves dispensability. No runtime validation.",
+      "evidence": [
+        "evidence/idle-workqueue-hooks-review.json",
+        "evidence/allocation-hooks-check.json",
+        "SECURITY.md: Workqueue allocation and idle hook output validation"
+      ],
+      "patch_sha256": "4dd243a4b6669db5f03a8ebf12f51053ef04dcf76ddfc9ca4280c3034f30c6a1",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/wqlockup.h",
+        "kernel/workqueue.c"
+      ]
+    },
+    {
+      "commit": "affd3ce34edbbd7216c59f5ddeb57dee2ad0dd00",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "a2a3fc106810f0e6c7c39f6d0b146aa00771feec"
+      ],
+      "rationale": "Retain allocation hook and writable flags/max_active contract, with a2a3fc106810 fixing allocation shape and native validation after callback output. Bound-to-unbound changes now have node slots and attributes; reverse changes release attributes. Native BH constraints, power-efficient policy and max_active clamping are reapplied. Queue pointer remains stable. Extra pointer storage is documented; no native allocation/publication/error cleanup ordering is discarded. Conservative retention supports generic Android/vendor source compatibility; no assumption that a missing located registration proves dispensability. No runtime validation.",
+      "evidence": [
+        "evidence/idle-workqueue-hooks-review.json",
+        "evidence/allocation-hooks-check.json",
+        "SECURITY.md: Workqueue allocation and idle hook output validation"
+      ],
+      "patch_sha256": "0963d6c567e5227378b31d949bda639517546fbd853f281d5ed19e896337ae48",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/wqlockup.h",
+        "kernel/workqueue.c"
+      ]
+    },
+    {
+      "commit": "e894ea8a77a7c037b74fbe1e350ed1de77f83b19",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain create_worker hook after successful task creation/set_user_nice and before binding/attachment/wakeup. Whole native function equals port after removing only this call. Task and pool attributes are borrowed; privileged callbacks must obey locking/lifetime and cannot assume the worker is already running. Conservative retention supports generic Android/vendor source compatibility; no assumption that a missing located registration proves dispensability. No runtime validation.",
+      "evidence": [
+        "evidence/idle-workqueue-hooks-review.json",
+        "evidence/allocation-hooks-check.json",
+        "SECURITY.md: Workqueue allocation and idle hook output validation"
+      ],
+      "patch_sha256": "4df7ec54aa0e0b79c04da433979734c1e0118e490d95b3bda25d1d8b4f75867e",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/wqlockup.h",
+        "kernel/workqueue.c"
+      ]
+    },
+    {
+      "commit": "0c32ba6b9cba31bfe8266e2a7ebe3506fc464018",
+      "disposition": "merge-resolution-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Complete unique remerge hunk retains vendor workqueue header/TRACE_INCLUDE_PATH reset and adopts native named worker_pool_flags enum. Both coexist in current source; no worker flags or behavior from the native parent is dropped. Conservative retention supports generic Android/vendor source compatibility; no assumption that a missing located registration proves dispensability. No runtime validation.",
+      "evidence": [
+        "evidence/idle-workqueue-hooks-review.json",
+        "evidence/allocation-hooks-check.json",
+        "SECURITY.md: Workqueue allocation and idle hook output validation"
+      ],
+      "patch_sha256": "2565a92c18f4433e7e5eb3c1ae155f1112ad3e75592602a4218cf7ac748368e9",
+      "changed_paths": [
+        "kernel/workqueue.c"
+      ]
+    },
+    {
+      "commit": "18550710107dcdd4a370ad43a8ff346074df4faa",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain final timer calculation hook via later re-add 5ae616b4a60d and relocation caae30085832. Do not restore old arithmetic or the original post-granularity callback location. Current hook changes raw expiry before native shift/add/mask bucket calculation; source module interface is retained without historical binary semantics. Conservative retention supports generic Android/vendor source compatibility; no assumption that a missing located registration proves dispensability. No runtime validation.",
+      "evidence": [
+        "evidence/idle-workqueue-hooks-review.json",
+        "evidence/allocation-hooks-check.json",
+        "SECURITY.md: Workqueue allocation and idle hook output validation"
+      ],
+      "patch_sha256": "066f3c5e31fa2673b9265caa835aa6401bd4f29466bd9f7387964665a422e8fd",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/timer.h",
+        "kernel/time/timer.c"
+      ]
+    },
+    {
+      "commit": "ab2ca64e06972eee20e7a1e4bbf6351205bcd2fe",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [],
+      "rationale": "Temporary timer hook/header/export removal was explicitly superseded by 5ae616b4a60d re-add. Preserve the final callback and later placement; do not replay the transient absence. Conservative retention supports generic Android/vendor source compatibility; no assumption that a missing located registration proves dispensability. No runtime validation.",
+      "evidence": [
+        "evidence/idle-workqueue-hooks-review.json",
+        "evidence/allocation-hooks-check.json",
+        "SECURITY.md: Workqueue allocation and idle hook output validation"
+      ],
+      "patch_sha256": "b5a1690c0586eb43938e05d83bf5ea3ca56bc11cc4b4dc2af3b01a8858395f76",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/timer.h",
+        "kernel/time/timer.c"
+      ]
+    },
+    {
+      "commit": "5ae616b4a60de1b3875b2bfa81d041a318b7a3d8",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain timer hook declaration/export and final callsite, including subsequent raw-expiry placement correction. Native overflow-safe shift-before-add and masked bucket indexing remain. Callback can change timeouts and must honor timer/IRQ context; no runtime scheduling behavior is claimed. Conservative retention supports generic Android/vendor source compatibility; no assumption that a missing located registration proves dispensability. No runtime validation.",
+      "evidence": [
+        "evidence/idle-workqueue-hooks-review.json",
+        "evidence/allocation-hooks-check.json",
+        "SECURITY.md: Workqueue allocation and idle hook output validation"
+      ],
+      "patch_sha256": "669c66d58273f452f46326785bee684a42d6c4f78559633e0989afbf4751ed01",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/timer.h",
+        "kernel/time/timer.c"
+      ]
+    },
+    {
+      "commit": "caae300858323f8e9a88de3a338f023bbc24f453",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain move of timer_calc_index before level granularity conversion, giving callbacks raw expiry values. Whole calc_index equals LTS after removing that one call. Native lvl argument is passed by value and bucket masking remains; expiry mutation can affect deadlines, an intentional privileged policy surface. Conservative retention supports generic Android/vendor source compatibility; no assumption that a missing located registration proves dispensability. No runtime validation.",
+      "evidence": [
+        "evidence/idle-workqueue-hooks-review.json",
+        "evidence/allocation-hooks-check.json",
+        "SECURITY.md: Workqueue allocation and idle hook output validation"
+      ],
+      "patch_sha256": "ce551ef19470ba749a7fc7bd87eb6294fc227d9cb4ce7286cb9d48d29ff73d07",
+      "changed_paths": [
+        "kernel/time/timer.c"
+      ]
+    },
+    {
+      "commit": "1abc68878a6deab49a79d0e13976803fbaeb0fd2",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Original four credential hooks were removed by 8e5a624b36ba, reintroduced by b04dea9ffcfc and finally removed by 5e5d81fed553. Final ACK and port have no header, declarations, exports or callsites. Keep native credential ownership/refcounts and publication, avoiding the original exit callback after reference release. Positive withdrawal history, not missing-consumer inference. Conservative retention supports generic Android/vendor source compatibility; no assumption that a missing located registration proves dispensability. No runtime validation.",
+      "evidence": [
+        "evidence/idle-workqueue-hooks-review.json",
+        "evidence/allocation-hooks-check.json",
+        "SECURITY.md: Workqueue allocation and idle hook output validation"
+      ],
+      "patch_sha256": "0951a22a56c5127977bf541b9a62fd2ec1b0cb9d4df17b2ca35cc2d229fecdbd",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/creds.h",
+        "kernel/cred.c"
+      ]
+    },
+    {
+      "commit": "8e5a624b36ba162bd39913cee37d7b41f5163e73",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [],
+      "rationale": "First credential-hook revert was temporarily undone, but final 5e5d81fed553 retires the same four interfaces. Account for both cycles rather than assert this first revert alone establishes final state. Current native credential algorithms are retained. Conservative retention supports generic Android/vendor source compatibility; no assumption that a missing located registration proves dispensability. No runtime validation.",
+      "evidence": [
+        "evidence/idle-workqueue-hooks-review.json",
+        "evidence/allocation-hooks-check.json",
+        "SECURITY.md: Workqueue allocation and idle hook output validation"
+      ],
+      "patch_sha256": "e88505e5e1989b2583af73f0d97d429c647a09112dacea51ad48f0739bfa7be0",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/creds.h",
+        "kernel/cred.c"
+      ]
+    },
+    {
+      "commit": "b04dea9ffcfcce7f3b7fd022dd81062ca7efb936",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Credential hook re-add is explicitly removed by 5e5d81fed553. No final hook interface remains; do not recreate callbacks around sensitive credential lifetime/publication paths. Native modern override_creds_light/revert_creds_light behavior is retained. Conservative retention supports generic Android/vendor source compatibility; no assumption that a missing located registration proves dispensability. No runtime validation.",
+      "evidence": [
+        "evidence/idle-workqueue-hooks-review.json",
+        "evidence/allocation-hooks-check.json",
+        "SECURITY.md: Workqueue allocation and idle hook output validation"
+      ],
+      "patch_sha256": "e89db043c17c0f34b7f6ad1aafd90e88fab39b1a669f3afe7ffb27e794025e52",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/creds.h",
+        "kernel/cred.c"
+      ]
+    },
+    {
+      "commit": "5e5d81fed553410c13fea5884d850f8fc1868b4b",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [],
+      "rationale": "Retain final removal of all four credential callback sites/header/exports, including modern light-override/revert callsites. Current cred.c equals LTS except separately scoped prepare_creds export namespace; no credential body or native security check is replaced. Conservative retention supports generic Android/vendor source compatibility; no assumption that a missing located registration proves dispensability. No runtime validation.",
+      "evidence": [
+        "evidence/idle-workqueue-hooks-review.json",
+        "evidence/allocation-hooks-check.json",
+        "SECURITY.md: Workqueue allocation and idle hook output validation"
+      ],
+      "patch_sha256": "768337b7d17507a3af7b4ab9410949bce7688ea4189c7483b4dddf9e523e3d24",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/creds.h",
+        "kernel/cred.c"
+      ]
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/workqueue.c",
+      "function": "create_worker",
+      "sha256": "9f31a6d50c7bbb0dbddf58ba0918c78c4a218f163916a23268e5d36b4f892671",
+      "relationship": "Exact native function plus the single identified callback"
+    },
+    {
+      "path": "kernel/workqueue.c",
+      "function": "wq_watchdog_timer_fn",
+      "sha256": "85e2f3f4e219d7b18e7dd9d1e6a414c32f0343e57cb44ec2ac496f28833b81f5",
+      "relationship": "Exact native function plus the single identified callback"
+    },
+    {
+      "path": "kernel/time/timer.c",
+      "function": "calc_index",
+      "sha256": "8b25888c02861c03547ddf4c7e897058344ed85ce177ebdc99307c4a8ccf58e1",
+      "relationship": "Exact native function plus the single identified callback"
+    }
+  ],
+  "credential_body_relationship": "Whole cred.c equals native after normalizing only the separate prepare_creds export namespace.",
+  "callback_consumer_search": {
+    "scope": "Local manifest common-modules C/header/Rust explicit register_trace calls for the six selected names",
+    "matches": "",
+    "conclusion": "Exact consumers unresolved; interfaces retained conservatively. No runtime callback behavior claim."
+  },
+  "validation": "Original patches and complete unique remerge hunks read. Current cpuidle/workqueue allocation paths read; native function comparisons and positive retirements checked. Extracted allocation/idle regression tests passed. Build 156 is separately recorded only after successful completion.",
+  "remote_sources_used": []
+}

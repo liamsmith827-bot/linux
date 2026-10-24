@@ -7149,3 +7149,19 @@ intercepted before an actual invalid host write. These are meaningful regression
 controls, not kernel concurrency, scheduler or device tests. Evidence is in
 `evidence/allocation-hooks-check.json`. Build validation follows separately;
 related candidate finalization remains pending. No new remote resource used.
+
+The associated nineteen source/merge candidates are individually reconciled in
+`evidence/idle-workqueue-hooks-review.json`. Final generic idle, worker creation,
+watchdog and timer customization interfaces remain. Exact native function
+comparisons confirm that timer bucket arithmetic, worker lifecycle and watchdog
+stall/report logic differ only by the identified callbacks. The timer callback
+receives raw expiry before native granularity conversion and can change deadlines;
+that authority is intentional and must obey the callback context.
+
+Both credential-hook add/revert cycles are accounted for through final explicit
+retirement. Native credential bodies remain intact, with only a separately
+scoped export namespace difference. The old CFI-specific suppression of delayed
+work callback validation remains reverted. Its complete textual witness was
+rechecked after the new allocation changes, using temporary indexes. Scoped
+module registration searches did not locate consumers of these six retained
+hooks; that uncertainty is recorded and is not used to remove them.
