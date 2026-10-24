@@ -11,7 +11,7 @@ ROOT=Path(__file__).resolve().parents[2]
 OLD='aad8b72c5b0f'
 p='drivers/iommu/intel/iommu.c'
 src=(ROOT/p).read_text();old=subprocess.check_output(['git','show',OLD+':'+p],cwd=ROOT,text=True)
-names=['pfn_to_dma_pte','dma_pte_clear_level','switch_to_super_page']
+names=['pfn_to_dma_pte','dma_pte_clear_level','switch_to_super_page','iommu_context_addr']
 bodies={n:function(src,n) for n in names}
 previous={n:function(old,n) for n in names}
 pre=r'''
@@ -90,9 +90,31 @@ static struct dma_pte *seed(struct dmar_domain *d,unsigned long pfn,int leaf) {
  struct dma_pte *p=&table[pfn_level_offset(pfn,leaf)];p->val=(uintptr_t)pool[31]|(leaf>1?131:3);return p;
 }
 '''
+pre+='\ntypedef uint8_t u8;\n#define VTD_PAGE_MASK (~4095UL)\n#define CONTEXT_SIZE 4096\nstruct root_entry { u64 lo,hi; };\nstruct context_entry { u64 lo,hi; };\nstruct intel_iommu { struct root_entry *root_entry; int node; bool scalable; };\nstatic struct root_entry roots[256];\nstatic bool copied;\nstatic bool context_copied(struct intel_iommu *i,u8 b,u8 d) {return copied;}\nstatic bool sm_supported(struct intel_iommu *i) {return i->scalable;}\nstatic void __iommu_flush_cache(struct intel_iommu *i,void *p,size_t n) {flushes++;}\n'
 main=r'''
-int main(void) {
- unsigned walk_cases=0,old_bad=0,unmap_cases=0,upgrade_cases=0;
+int main(int argc,char **argv) {
+ if(argc>1) {struct intel_iommu i={0}; return !!old_context(&i,0,0,0);}
+ unsigned walk_cases=0,old_bad=0,unmap_cases=0,upgrade_cases=0,context_cases=0;
+
+ unsigned buses[]={0,1,127,128,255},devfns[]={0,1,127,128,254,255};
+ for(unsigned sm=0;sm<2;sm++) for(unsigned b=0;b<5;b++) for(unsigned f=0;f<6;f++)
+ for(unsigned alloc=0;alloc<2;alloc++) for(unsigned copy=0;copy<2;copy++) for(unsigned mode=0;mode<3;mode++) {
+  struct context_entry *before=NULL;unsigned before_flush=0;
+  for(int version=0;version<2;version++) {
+   reset();memset(roots,0,sizeof(roots));copied=copy;fail_alloc=mode==2;
+   struct intel_iommu i={.root_entry=roots,.scalable=sm};
+   if(!mode) {roots[buses[b]].lo=(uintptr_t)pool[2]|1;roots[buses[b]].hi=(uintptr_t)pool[3]|1;}
+   struct context_entry *p=version?new_context(&i,buses[b],devfns[f],alloc):old_context(&i,buses[b],devfns[f],alloc);
+   if((!alloc&&copied) || (mode&&(!alloc||fail_alloc)))assert(!p);
+   else assert(p);
+   if(!version){before=p;before_flush=flushes;}else assert(p==before&&flushes==before_flush);
+   context_cases++;
+  }
+ }
+ for(unsigned b=0;b<5;b++) for(unsigned f=0;f<6;f++) for(unsigned alloc=0;alloc<2;alloc++) {
+  reset();copied=false;struct intel_iommu i={0};assert(!new_context(&i,buses[b],devfns[f],alloc)&&warnings==1);context_cases++;
+ }
+
  for(int leaf=1;leaf<=3;leaf++) for(unsigned k=0;k<5;k++) {
   unsigned long pfn=3*level_size(leaf)+k;
   for(int target=0;target<=leaf;target++) for(int version=0;version<2;version++) {
@@ -153,11 +175,11 @@ int main(void) {
   }
  }
  assert(old_bad);
- printf("{\"walker_cases\":%u,\"unmap_cases\":%u,\"upgrade_cases\":%u,\"pre_fix_leaf_descents\":%u}\n",walk_cases,unmap_cases,upgrade_cases,old_bad);
+ printf("{\"context_cases\":%u,\"walker_cases\":%u,\"unmap_cases\":%u,\"upgrade_cases\":%u,\"pre_fix_leaf_descents\":%u}\n",context_cases,walk_cases,unmap_cases,upgrade_cases,old_bad);
 }
 '''
 code=pre+function(src,'dma_pte_list_pagetables')
-for n,before,after in [('pfn_to_dma_pte','old_walk','new_walk'),('dma_pte_clear_level','old_clear','new_clear'),('switch_to_super_page','old_upgrade','new_upgrade')]:
+for n,before,after in [('pfn_to_dma_pte','old_walk','new_walk'),('dma_pte_clear_level','old_clear','new_clear'),('switch_to_super_page','old_upgrade','new_upgrade'),('iommu_context_addr','old_context','new_context')]:
     code+=previous[n].replace(n,before).replace('pfn_to_dma_pte','old_walk')
     code+=bodies[n].replace(n,after)
 code+=main
@@ -165,6 +187,9 @@ with tempfile.TemporaryDirectory(prefix='intel-iommu-walk-') as tmp:
     c=Path(tmp)/'test.c';exe=Path(tmp)/'test';c.write_text(code)
     subprocess.run(['cc','-std=gnu11','-O1','-g','-fsanitize=address,undefined','-fno-sanitize-recover=all','-fno-omit-frame-pointer',str(c),'-o',str(exe)],check=True)
     result=json.loads(subprocess.check_output([str(exe)],text=True))
+    negative=subprocess.run([str(exe),'old-null-root'],capture_output=True,text=True)
+    assert negative.returncode and 'runtime error' in negative.stderr
+    result['pre_fix_null_root_rejected_by_ubsan']=True
 # Each PASID change is error representation/propagation only, preserving native
 # cache publication, teardown ordering, and replacement APIs byte for byte.
 pp='drivers/iommu/intel/pasid.c';ps=(ROOT/pp).read_text();po=subprocess.check_output(['git','show',OLD+':'+pp],cwd=ROOT,text=True)

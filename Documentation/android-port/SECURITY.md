@@ -7472,3 +7472,11 @@ ranges. These are host control-flow checks, not hardware, concurrency or boot
 verification. Whole-file PASID normalization is a source check, not an OOM
 runtime test. Only local pinned source/history was used; commit-message URLs
 were not fetched.
+
+The shared `iommu_context_addr` NULL-root check from 975cf29244d2 is also
+retained. Native initialization allocates the root before device registration,
+so this is defensive handling of an invalid call order, not evidence that SDK
+userspace can trigger the pKVM hypercall attack. The extracted helper passes
+1,500 checks covering missing roots, allocation failure, copied contexts and
+legacy/scalable bus/device indexing. A pre-fix NULL-root control is rejected by
+UBSan. No register access, physical IOMMU or concurrent initialization is tested.
