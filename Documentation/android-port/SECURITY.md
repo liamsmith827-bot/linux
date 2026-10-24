@@ -7748,3 +7748,42 @@ and bootconfig size/checksum checks. That additive checksum is not authenticatio
 The temporary KUnit boot-runner removal was explicitly reverted; keep the runner
 and its native no-op stub for this SDK's KUNIT=m configuration. No tests were
 executed in a running kernel. Only local sources were used in this review.
+
+## Generic xHCI reset customization
+
+Retain the generic xHCI portion of 9326f2e6e8a3, preserving its hook name and
+three reset phases. Although the motivating defect concerns a Synopsys PHY,
+this callback is in the common xHCI reset path with no DWC3-only guard. The SDK
+enables PCI and platform xHCI. The pinned local emulator binary contains
+`nec-usb-xhci`, `qemu-xhci`, and `qemu-xhci,p2=15,p3=15` strings. These are
+supporting binary evidence, not a successful device-registry query or proof of
+the controller selected by a running SDK. Retention is conservative source
+customization compatibility for this generic compiled driver; a specific vendor
+callback consumer has not been established.
+
+Omit the separate DWC3 core callback, which takes the physical controller's
+register mapping and USB3 PHY array for the documented clock/PLL reset-domain
+workaround. This hardware-specific extension is outside the virtual SDK target;
+native DWC3 remains compiled, with all LTS fixes. This decision does not claim
+that DWC3 was disabled or that an unsuccessful emulator help query proves its
+absence. The accompanying merge 097816659d76 keeps the native DWC3 register API
+and, separately, every native zoned-plug lifetime fix instead of ACK's reversal.
+
+Place SOFT_RESET_INITIATED after the native Intel 1 ms register-access delay.
+ACK calls it before that delay, allowing a callback to touch registers during
+the forbidden interval. PRE remains after accessible/halted checks; POST is
+called after the reset-bit handshake, including its error path, and before the
+controller-not-ready handshake. POST does not imply successful reset or readiness.
+The hook has no return override. With no callback, all native register operations,
+return values and bus-state clearing remain intact. Registered callbacks are
+trusted kernel code and can still invalidate controller state; they must not
+sleep, retain the borrowed hcd, or assume missing probe allocations exist. Stop,
+shutdown and resume callers can hold the host spinlock with interrupts disabled.
+
+`check_xhci_reset_hooks.py` extracts the actual port, native and ACK functions.
+Ten cases per function cover inaccessible/running controllers, both handshake
+failures, Intel delay and ASMedia flow control under ASan/UBSan. Port results,
+register-operation order and bus state match native. A callback that reads a
+register during INIT exposes premature access in three ACK-control cases and
+none in the port. These are host shims, not real MMIO, locking or USB tests.
+The complete emulator workflow must validate the new code separately.

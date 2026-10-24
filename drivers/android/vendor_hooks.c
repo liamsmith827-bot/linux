@@ -24,6 +24,7 @@
 #include <trace/hooks/cpuidle.h>
 #include <trace/hooks/dmabuf.h>
 #include <trace/hooks/dtask.h>
+#include <trace/hooks/dwc3.h>
 #include <trace/hooks/fs.h>
 #include <trace/hooks/fsnotify.h>
 #include <trace/hooks/ftrace_dump.h>
@@ -307,6 +308,7 @@ EXPORT_TRACEPOINT_SYMBOL_GPL(android_vh_do_wp_page);
 EXPORT_TRACEPOINT_SYMBOL_GPL(android_vh_dpm_wait_finish);
 EXPORT_TRACEPOINT_SYMBOL_GPL(android_vh_dpm_wait_start);
 EXPORT_TRACEPOINT_SYMBOL_GPL(android_vh_drain_all_pages_bypass);
+EXPORT_TRACEPOINT_SYMBOL_GPL(android_vh_dwc3_xhci_soft_reset);
 EXPORT_TRACEPOINT_SYMBOL_GPL(android_vh_early_resume_begin);
 EXPORT_TRACEPOINT_SYMBOL_GPL(android_vh_enable_thermal_genl_check);
 EXPORT_TRACEPOINT_SYMBOL_GPL(android_vh_encrypt_page);
