@@ -17848,5 +17848,104 @@
       "evidence/accessory-hid-lifetime-check.json",
       "SECURITY.md: Accessory bulk I/O and historical replacement"
     ]
+  },
+  {
+    "commit": "cac70628fbe41ecf5c8f2661f3733fe4aaa8795f",
+    "disposition": "already-represented-upstream",
+    "result_commits": [
+      "0ab54d1e26606efc6acb7860abb5ceb051617ede"
+    ],
+    "rationale": "Full two-hunk patch read. Native a353397b0d5d supports USB_SPEED_SUPER_PLUS endpoint descriptor lookup and shares SS/SSP descriptors in the existing allocation, with unbind clearing SSP. Keep this native ownership rather than resurrecting the historical separate descriptor copy. Current f_fs.c is whole-file identical to LTS after restoring native alternate-setting validation order in 0ab54d1e2660.",
+    "evidence": [
+      "evidence/ffs-uvc-review.json",
+      "evidence/uvc-allocator-fallback-check.json",
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native FunctionFS and UVC fallback"
+    ]
+  },
+  {
+    "commit": "551c6efeb2a0a13c82b99bed6fc4036a24cf475e",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [
+      "0ab54d1e26606efc6acb7860abb5ceb051617ede"
+    ],
+    "rationale": "Full temporary get_alt revert read. ACK later explicitly reapplies it in d56bde2ef4c5 after the disconnect fix. Native 382b6eabb031 and a59d8cc9292c separate disable from the unsigned -1 alternate-setting sentinel, avoiding the original MAX_ALT_SETTINGS rejection; keep get_alt, current-alt storage and native disable. Preserve newer LTS reset-work initialization and eps_lock state transitions. The entire final FunctionFS file is native LTS.",
+    "evidence": [
+      "evidence/ffs-uvc-review.json",
+      "evidence/uvc-allocator-fallback-check.json",
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native FunctionFS and UVC fallback"
+    ]
+  },
+  {
+    "commit": "c515eaac9ecf5ee6361d71f419d300b492a240dc",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [
+      "0ab54d1e26606efc6acb7860abb5ceb051617ede"
+    ],
+    "rationale": "Full three-line removal read. It repairs a temporary missing MAX_ALT_SETTINGS definition after the Android revert/merge. d56bde2ef4c5 restores the definition and validation. Native LTS has a defined bound, alternate-setting callbacks and separate disable; do not preserve a temporary absence of validation. Current whole file equals LTS.",
+    "evidence": [
+      "evidence/ffs-uvc-review.json",
+      "evidence/uvc-allocator-fallback-check.json",
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native FunctionFS and UVC fallback"
+    ]
+  },
+  {
+    "commit": "d56bde2ef4c5a229e2aa085c916eddf87e2603cd",
+    "disposition": "already-represented-upstream",
+    "result_commits": [
+      "0ab54d1e26606efc6acb7860abb5ceb051617ede"
+    ],
+    "rationale": "Full reapplication read. Restore native get_alt/cur_alt/set_alt wiring already provided by 2f550553e23c and subsequent disconnect fixes. Its only residual difference was moving alternate validation after interface lookup; 0ab54d1e2660 restores native check ordering and therefore native error precedence when both inputs are invalid. Both checks still precede endpoint changes. No Android runtime feature depends on the historical order in the reviewed patch; no new functionality or frozen layout is carried. Whole-file equality preserves all newer LTS FunctionFS fixes.",
+    "evidence": [
+      "evidence/ffs-uvc-review.json",
+      "evidence/uvc-allocator-fallback-check.json",
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native FunctionFS and UVC fallback"
+    ]
+  },
+  {
+    "commit": "ac37f41e887f7dd4c693983b17e8eae031b2d1f7",
+    "disposition": "merge-resolution-already-represented-upstream",
+    "result_commits": [
+      "0ab54d1e26606efc6acb7860abb5ceb051617ede"
+    ],
+    "rationale": "Entire unique remerge diff read: one FunctionFS conflict resolves to separate interface validation and MAX_ALT_SETTINGS handling after upstream disable extraction. Historical intermediate Android tree lacked the macro, repaired by c515eaac9ecf/reapply. Final native LTS has coherent get/set-alt and dedicated disable implementation. Keep complete LTS file, including current reset-work/locking fixes; both parents remain separately inventoried.",
+    "evidence": [
+      "evidence/ffs-uvc-review.json",
+      "evidence/uvc-allocator-fallback-check.json",
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native FunctionFS and UVC fallback"
+    ]
+  },
+  {
+    "commit": "be1f7c11fa392a8fd936bc1c8c379825ddcf3fd7",
+    "disposition": "merge-resolution-already-represented-upstream",
+    "result_commits": [
+      "0ab54d1e26606efc6acb7860abb5ceb051617ede"
+    ],
+    "rationale": "Entire unique three-file remerge diff read, including non-conflict edit removing duplicate USB_SPEED_SUPER_PLUS switch case, MIDI descriptor whitespace resolution, and placement of legacy check_contaminant callback/docs beside native vsafe0v. FunctionFS/MIDI are whole native LTS. TCPM header is whole native LTS: native 599f008c and later TCPM reconciliation supply the void contaminant-check callback/state machine rather than the superseded Android int callback. See tcpm-history-review.json for positive replacement evidence; no old ABI layout is reconstructed.",
+    "evidence": [
+      "evidence/ffs-uvc-review.json",
+      "evidence/uvc-allocator-fallback-check.json",
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native FunctionFS and UVC fallback"
+    ]
+  },
+  {
+    "commit": "cd7b2f842280ec05f9d04b538c28ca28b44ab0df",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "0ab54d1e26606efc6acb7860abb5ceb051617ede"
+    ],
+    "rationale": "Full one-function patch read. Retain generic UVC vmalloc fallback for SG allocation failure; SDK enables USB_CONFIGFS_F_UVC and no consumer-absence omission is made. Native vb2_reqbufs/core_reqbufs can return EBUSY during streaming while buffers remain, and allocator operations dispatch through q->mem_ops; ACK unconditional fallback could replace those operations for existing SG allocations and switch buffer preparation/encoding state. 0ab54d1e2660 permits fallback only on ENOMEM for a nonzero MMAP request with zero allocated buffers and no streaming. Native queue cleanup runs with the old allocator before the retry; existing and non-allocation errors preserve queue state. V4L2 video mutex serializes queue operations, as in native UVC setup. No native videobuf2 function is changed. Actual SDK UVC use, DMA and camera/USB runtime are unverified.",
+    "evidence": [
+      "evidence/ffs-uvc-review.json",
+      "evidence/uvc-allocator-fallback-check.json",
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native FunctionFS and UVC fallback"
+    ]
   }
 ]

@@ -6922,3 +6922,27 @@ Native MIDI's gadget-parented ALSA path and UDC gadget symlink positively match 
 framework's preferred lookup; old android0/f_midi/alsa is a backward fallback.
 All native core fixes remain. Build 154 verifies the bulk source separately.
 No additional remote resource was used; embedded links were not opened.
+
+# Native FunctionFS and UVC fallback
+
+`0ab54d1e2660` restores native FunctionFS alternate-setting validation order;
+the entire file is now identical to 6.18.57. Native SS/SSP descriptor ownership,
+get_alt, separate disable, eps_lock transitions and reset-work initialization
+supersede the reviewed Android temporary revert/reapply/merge history. Two merge
+resolutions include all unique hunks; the older TCPM contaminant callback is
+covered by the documented native replacement, without historical ABI layout.
+
+The same commit bounds the generic UVC SG-to-vmalloc fallback. The original ACK
+patch changed queue mem_ops and use_sg after any error, including EBUSY with live
+buffers/streaming. Native videobuf2 later dispatches allocator operations through
+that queue pointer, so the old memory would be interpreted by a different backend.
+Retry now requires ENOMEM, a nonzero MMAP request, no allocated buffers and no
+streaming. Native failure cleanup completes using the original allocator first.
+The V4L2 video mutex and all native videobuf2 implementations remain unchanged.
+
+480 extracted host cases pass. The old callback fails the policy in 190 cases,
+including 144 allocator changes with live buffers or streaming (overlapping
+counts). This does not execute DMA, real vb2 allocation, ioctls or USB. SDK config
+enables both FunctionFS and UVC; exact UVC runtime use remains unverified and the
+generic capability is retained. Build 155 is recorded separately. No remote
+source was accessed; embedded commit-message links were not opened.
