@@ -720,7 +720,7 @@ static struct dma_pte *pfn_to_dma_pte(struct dmar_domain *domain,
 
 	if (!domain_pfn_supported(domain, pfn))
 		/* Address beyond IOMMU's addressing capabilities. */
-		return NULL;
+		return ERR_PTR(-EINVAL);
 
 	parent = domain->pgd;
 
@@ -741,7 +741,7 @@ static struct dma_pte *pfn_to_dma_pte(struct dmar_domain *domain,
 							     SZ_4K);
 
 			if (!tmp_page)
-				return NULL;
+				return ERR_PTR(-ENOMEM);
 
 			domain_flush_cache(domain, tmp_page, VTD_PAGE_SIZE);
 			pteval = virt_to_phys(tmp_page) | DMA_PTE_READ |
@@ -758,6 +758,10 @@ static struct dma_pte *pfn_to_dma_pte(struct dmar_domain *domain,
 		}
 		if (level == 1)
 			break;
+
+		/* A leaf must never be interpreted as a lower-level table. */
+		if (WARN_ON_ONCE(dma_pte_superpage(pte)))
+			return ERR_PTR(-EEXIST);
 
 		parent = phys_to_virt(dma_pte_addr(pte));
 		level--;
@@ -947,6 +951,9 @@ static void dma_pte_clear_level(struct dmar_domain *domain, int level,
 				first_pte = pte;
 			last_pte = pte;
 		} else if (level > 1) {
+			if (WARN_ON_ONCE(dma_pte_superpage(pte)))
+				goto next;
+
 			/* Recurse down into a level that isn't *entirely* obsolete */
 			dma_pte_clear_level(domain, level - 1,
 					    phys_to_virt(dma_pte_addr(pte)),
@@ -1577,20 +1584,16 @@ static int hardware_largepage_caps(struct dmar_domain *domain, unsigned long iov
  */
 static void switch_to_super_page(struct dmar_domain *domain,
 				 unsigned long start_pfn,
-				 unsigned long end_pfn, int level)
+				 unsigned long end_pfn, int level,
+				 struct dma_pte *pte)
 {
 	unsigned long lvl_pages = lvl_to_nr_pages(level);
-	struct dma_pte *pte = NULL;
 
 	if (WARN_ON(!IS_ALIGNED(start_pfn, lvl_pages) ||
 		    !IS_ALIGNED(end_pfn + 1, lvl_pages)))
 		return;
 
 	while (start_pfn <= end_pfn) {
-		if (!pte)
-			pte = pfn_to_dma_pte(domain, start_pfn, &level,
-					     GFP_ATOMIC);
-
 		if (dma_pte_present(pte)) {
 			dma_pte_free_pagetable(domain, start_pfn,
 					       start_pfn + lvl_pages - 1,
@@ -1602,8 +1605,6 @@ static void switch_to_super_page(struct dmar_domain *domain,
 
 		pte++;
 		start_pfn += lvl_pages;
-		if (first_pte_in_page(pte))
-			pte = NULL;
 	}
 }
 
@@ -1649,8 +1650,8 @@ __domain_mapping(struct dmar_domain *domain, unsigned long iov_pfn,
 
 			pte = pfn_to_dma_pte(domain, iov_pfn, &largepage_lvl,
 					     gfp);
-			if (!pte)
-				return -ENOMEM;
+			if (IS_ERR(pte))
+				return PTR_ERR(pte);
 			first_pte = pte;
 
 			lvl_pages = lvl_to_nr_pages(largepage_lvl);
@@ -1665,7 +1666,8 @@ __domain_mapping(struct dmar_domain *domain, unsigned long iov_pfn,
 							round_down(nr_pages, lvl_pages),
 							nr_pte_to_next_page(pte) * lvl_pages);
 				end_pfn = iov_pfn + pages_to_remove - 1;
-				switch_to_super_page(domain, iov_pfn, end_pfn, largepage_lvl);
+				switch_to_super_page(domain, iov_pfn, end_pfn,
+						     largepage_lvl, pte);
 			} else {
 				pteval &= ~(uint64_t)DMA_PTE_LARGE_PAGE;
 			}
@@ -3635,12 +3637,14 @@ static size_t intel_iommu_unmap(struct iommu_domain *domain,
 	struct iommu_pages_list freelist = IOMMU_PAGES_LIST_INIT(freelist);
 	struct dmar_domain *dmar_domain = to_dmar_domain(domain);
 	unsigned long start_pfn, last_pfn;
+	struct dma_pte *pte;
 	int level = 0;
 
 	/* Cope with horrid API which requires us to unmap more than the
 	   size argument if it happens to be a large-page mapping. */
-	if (unlikely(!pfn_to_dma_pte(dmar_domain, iova >> VTD_PAGE_SHIFT,
-				     &level, GFP_ATOMIC)))
+	pte = pfn_to_dma_pte(dmar_domain, iova >> VTD_PAGE_SHIFT, &level,
+			     GFP_ATOMIC);
+	if (IS_ERR(pte))
 		return 0;
 
 	if (size < VTD_PAGE_SIZE << level_to_offset_bits(level))
@@ -3702,7 +3706,7 @@ static phys_addr_t intel_iommu_iova_to_phys(struct iommu_domain *domain,
 
 	pte = pfn_to_dma_pte(dmar_domain, iova >> VTD_PAGE_SHIFT, &level,
 			     GFP_ATOMIC);
-	if (pte && dma_pte_present(pte))
+	if (!IS_ERR(pte) && dma_pte_present(pte))
 		phys = dma_pte_addr(pte) +
 			(iova & (BIT_MASK(level_to_offset_bits(level) +
 						VTD_PAGE_SHIFT) - 1));
@@ -4350,8 +4354,10 @@ static int intel_iommu_read_and_clear_dirty(struct iommu_domain *domain,
 
 		pte = pfn_to_dma_pte(dmar_domain, iova >> VTD_PAGE_SHIFT, &lvl,
 				     GFP_ATOMIC);
+		if (IS_ERR(pte))
+			return PTR_ERR(pte);
 		pgsize = level_size(lvl) << VTD_PAGE_SHIFT;
-		if (!pte || !dma_pte_present(pte)) {
+		if (!dma_pte_present(pte)) {
 			iova += pgsize;
 			continue;
 		}

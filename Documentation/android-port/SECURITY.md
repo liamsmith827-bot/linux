@@ -7426,3 +7426,49 @@ unmap recursion. These are code-specific findings, not subject-name filtering.
 Generic overlap-walker and partial-superpage defenses remain provisional pending
 additional analysis of native caller contracts; not all pKVM-labeled changes
 are presumed unnecessary. No new remote source or hardware runtime test was used.
+
+# Intel shared page-table walk defenses
+
+The native host portions of ACK e55de9a5a0a8 and 46cbf93c3172 are retained.
+`pfn_to_dma_pte` rejects descent through a superpage with -EEXIST, distinguishing
+allocation failure (-ENOMEM) and unsupported addresses (-EINVAL). The check is
+also performed after a failed table-install compare/exchange, unlike ACK's
+else-if placement, so an injected winning leaf cannot bypass it. All native
+callers use error pointers consistently. Dirty tracking returns a lookup error
+before computing a page size from an unset level. The native unmap recursion
+warns and skips a partially covered superpage instead of interpreting its DMA
+payload as a table. The pKVM-only second unpin walk is not introduced.
+
+This does not add support for arbitrary partial unmaps. The native iommu_unmap
+and iommu_unmap_fast contracts prohibit subdividing a prior map; IOMMUFD and
+VFIO enforce whole-area boundaries for userspace. An invalid kernel caller can
+still receive an overstated unmapped byte count after the recursive guard skips
+a leaf. Similarly, Intel mapping can leave partial mappings on a later error
+without reporting partial progress. These existing API limitations are not
+claimed fixed, and these tests do not prove every kernel caller obeys its
+contract. The added guards prevent the specific payload-as-table traversal.
+
+The precomputed-PTE part of d74e32c4ba53 is adapted to remove a redundant,
+previously unchecked walk in superpage conversion. The caller's native rounded
+page count and PTE-page bound (dce043c07ca1) remain intact. Native per-entry
+invalidation is retained; the optional flush batching is omitted to avoid
+changing its timing without a target compatibility requirement. The native
+cf8a9672fc25 gather-before-freelist splice remains unchanged, as do context,
+PASID, cache-tag and alias teardown fixes.
+
+ACK fcb3f4455248's PASID error distinction is adapted to the current native
+setup helpers. OOM now reports -ENOMEM rather than -ENODEV, matching ACK's
+source API behavior. The complete native pasid.c is unchanged after normalizing
+only error-pointer spelling/propagation; especially, 36244dfd3853's flush before
+publishing a PASID table remains. Native replacement helpers differ from ACK's
+historical duplicate routines and are not reverted.
+
+`check_intel_iommu_walk.py` executes extracted walkers and superpage conversion
+with modeled pages, allocation, compare/exchange and flush operations: 100 walk,
+18 unmap and 2,108 conversion cases pass ASan/UBSan. The pre-fix controls observe
+22 invalid leaf descents, including one injected compare/exchange loss. Valid
+superpage conversions retain the exact observed sequence of native flush
+ranges. These are host control-flow checks, not hardware, concurrency or boot
+verification. Whole-file PASID normalization is a source check, not an OOM
+runtime test. Only local pinned source/history was used; commit-message URLs
+were not fetched.

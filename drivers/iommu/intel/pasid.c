@@ -136,7 +136,7 @@ static struct pasid_entry *intel_pasid_get_entry(struct device *dev, u32 pasid)
 
 	pasid_table = intel_pasid_get_table(dev);
 	if (WARN_ON(!pasid_table || pasid >= intel_pasid_get_dev_max_id(dev)))
-		return NULL;
+		return ERR_PTR(-ENODEV);
 
 	dir = pasid_table->table;
 	info = dev_iommu_priv_get(dev);
@@ -151,7 +151,7 @@ retry:
 		entries = iommu_alloc_pages_node_sz(info->iommu->node,
 						    GFP_ATOMIC, SZ_4K);
 		if (!entries)
-			return NULL;
+			return ERR_PTR(-ENOMEM);
 
 		if (!ecap_coherent(info->iommu->ecap))
 			clflush_cache_range(entries, VTD_PAGE_SIZE);
@@ -184,7 +184,7 @@ intel_pasid_clear_entry(struct device *dev, u32 pasid, bool fault_ignore)
 	struct pasid_entry *pe;
 
 	pe = intel_pasid_get_entry(dev, pasid);
-	if (WARN_ON(!pe))
+	if (WARN_ON(IS_ERR(pe)))
 		return;
 
 	if (fault_ignore && pasid_pte_is_present(pe))
@@ -246,7 +246,7 @@ void intel_pasid_tear_down_entry(struct intel_iommu *iommu, struct device *dev,
 
 	spin_lock(&iommu->lock);
 	pte = intel_pasid_get_entry(dev, pasid);
-	if (WARN_ON(!pte)) {
+	if (WARN_ON(IS_ERR(pte))) {
 		spin_unlock(&iommu->lock);
 		return;
 	}
@@ -398,9 +398,9 @@ int intel_pasid_setup_first_level(struct intel_iommu *iommu, struct device *dev,
 
 	spin_lock(&iommu->lock);
 	pte = intel_pasid_get_entry(dev, pasid);
-	if (!pte) {
+	if (IS_ERR(pte)) {
 		spin_unlock(&iommu->lock);
-		return -ENODEV;
+		return PTR_ERR(pte);
 	}
 
 	if (pasid_pte_is_present(pte)) {
@@ -465,9 +465,9 @@ int intel_pasid_setup_second_level(struct intel_iommu *iommu,
 
 	spin_lock(&iommu->lock);
 	pte = intel_pasid_get_entry(dev, pasid);
-	if (!pte) {
+	if (IS_ERR(pte)) {
 		spin_unlock(&iommu->lock);
-		return -ENODEV;
+		return PTR_ERR(pte);
 	}
 
 	if (pasid_pte_is_present(pte)) {
@@ -497,11 +497,11 @@ int intel_pasid_setup_dirty_tracking(struct intel_iommu *iommu,
 	spin_lock(&iommu->lock);
 
 	pte = intel_pasid_get_entry(dev, pasid);
-	if (!pte) {
+	if (IS_ERR(pte)) {
 		spin_unlock(&iommu->lock);
 		dev_err_ratelimited(
 			dev, "Failed to get pasid entry of PASID %d\n", pasid);
-		return -ENODEV;
+		return PTR_ERR(pte);
 	}
 
 	did = pasid_get_domain_id(pte);
@@ -578,9 +578,9 @@ int intel_pasid_setup_pass_through(struct intel_iommu *iommu,
 
 	spin_lock(&iommu->lock);
 	pte = intel_pasid_get_entry(dev, pasid);
-	if (!pte) {
+	if (IS_ERR(pte)) {
 		spin_unlock(&iommu->lock);
-		return -ENODEV;
+		return PTR_ERR(pte);
 	}
 
 	if (pasid_pte_is_present(pte)) {
@@ -607,7 +607,7 @@ void intel_pasid_setup_page_snoop_control(struct intel_iommu *iommu,
 
 	spin_lock(&iommu->lock);
 	pte = intel_pasid_get_entry(dev, pasid);
-	if (WARN_ON(!pte || !pasid_pte_is_present(pte))) {
+	if (WARN_ON(IS_ERR(pte) || !pasid_pte_is_present(pte))) {
 		spin_unlock(&iommu->lock);
 		return;
 	}
@@ -709,9 +709,9 @@ int intel_pasid_setup_nested(struct intel_iommu *iommu, struct device *dev,
 
 	spin_lock(&iommu->lock);
 	pte = intel_pasid_get_entry(dev, pasid);
-	if (!pte) {
+	if (IS_ERR(pte)) {
 		spin_unlock(&iommu->lock);
-		return -ENODEV;
+		return PTR_ERR(pte);
 	}
 	if (pasid_pte_is_present(pte)) {
 		spin_unlock(&iommu->lock);
