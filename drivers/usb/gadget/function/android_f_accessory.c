@@ -70,6 +70,7 @@ struct acc_dev {
 	struct usb_composite_dev *cdev;
 	spinlock_t lock;
 	struct kref kref;
+	struct work_struct release_work;
 
 	struct usb_ep *ep_in;
 	struct usb_ep *ep_out;
@@ -270,6 +271,7 @@ static struct usb_gadget_strings *acc_strings[] = {
 
 static DEFINE_SPINLOCK(acc_dev_instance_lock);
 static struct acc_dev *acc_dev_instance;
+static bool acc_dev_instance_creating;
 
 struct acc_instance {
 	struct usb_function_instance func_inst;
@@ -278,44 +280,46 @@ struct acc_instance {
 
 static struct acc_dev *get_acc_dev(void)
 {
+	struct acc_dev *dev;
 	unsigned long flags;
 
 	spin_lock_irqsave(&acc_dev_instance_lock, flags);
-	if (acc_dev_instance)
-		kref_get(&acc_dev_instance->kref);
+	dev = acc_dev_instance;
+	if (dev && !kref_get_unless_zero(&dev->kref))
+		dev = NULL;
 	spin_unlock_irqrestore(&acc_dev_instance_lock, flags);
 
-	return acc_dev_instance;
+	return dev;
+}
+
+static void acc_dev_release_work(struct work_struct *work)
+{
+	struct acc_dev *dev = container_of(work, struct acc_dev, release_work);
+	unsigned long flags;
+
+	/* The last reference may be dropped in interrupt context or hid_work. */
+	cancel_delayed_work_sync(&dev->start_work);
+	cancel_work_sync(&dev->getprotocol_work);
+	cancel_work_sync(&dev->sendstring_work);
+	cancel_work_sync(&dev->hid_work);
+
+	/* Keep the singleton reserved until its old workers have stopped. */
+	spin_lock_irqsave(&acc_dev_instance_lock, flags);
+	acc_dev_instance = NULL;
+	spin_unlock_irqrestore(&acc_dev_instance_lock, flags);
+	kfree(dev);
 }
 
 static void __acc_dev_instance_release(struct kref *kref)
 {
 	struct acc_dev *dev = container_of(kref, struct acc_dev, kref);
 
-	acc_dev_instance = NULL;
-
-	/* Cancel any async work */
-	cancel_delayed_work_sync(&dev->start_work);
-	cancel_work_sync(&dev->getprotocol_work);
-	cancel_work_sync(&dev->sendstring_work);
-	cancel_work_sync(&dev->hid_work);
-
-	kfree(dev);
+	schedule_work(&dev->release_work);
 }
 
 static void put_acc_dev(struct acc_dev *dev)
 {
-	unsigned long flags;
-
-	/*
-	 * This is not best engineering practice, and does cause coupling with
-	 * kref internal structure. It might cause an issue if kref internal
-	 * refcount structure is changed. We will remove this implementation
-	 * in the next kernel version.
-	 */
-	if (refcount_dec_and_lock_irqsave(&acc_dev_instance->kref.refcount,
-		&acc_dev_instance_lock, &flags))
-		__acc_dev_instance_release(&acc_dev_instance->kref);
+	kref_put(&dev->kref, __acc_dev_instance_release);
 }
 
 static inline struct acc_dev *func_to_dev(struct usb_function *f)
@@ -1268,14 +1272,17 @@ static int acc_init(void)
 	unsigned long flags;
 
 	spin_lock_irqsave(&acc_dev_instance_lock, flags);
-	if (acc_dev_instance) {
+	if (acc_dev_instance || acc_dev_instance_creating) {
 		spin_unlock_irqrestore(&acc_dev_instance_lock, flags);
 		return -EBUSY;
 	}
-	dev = kzalloc(sizeof(*dev), GFP_ATOMIC);
+	acc_dev_instance_creating = true;
+	spin_unlock_irqrestore(&acc_dev_instance_lock, flags);
+
+	dev = kzalloc(sizeof(*dev), GFP_KERNEL);
 	if (!dev) {
-		spin_unlock_irqrestore(&acc_dev_instance_lock, flags);
-		return -ENOMEM;
+		ret = -ENOMEM;
+		goto err_clear_creating;
 	}
 
 	spin_lock_init(&dev->lock);
@@ -1289,27 +1296,27 @@ static int acc_init(void)
 	INIT_WORK(&dev->hid_work, acc_hid_work);
 	INIT_WORK(&dev->getprotocol_work, acc_getprotocol_work);
 	INIT_WORK(&dev->sendstring_work, acc_sendstring_work);
+	INIT_WORK(&dev->release_work, acc_dev_release_work);
 
 	kref_init(&dev->kref);
-	acc_dev_instance = dev;
-	spin_unlock_irqrestore(&acc_dev_instance_lock, flags);
 
 	ret = misc_register(&acc_device);
 	if (ret)
 		goto err_free_dev;
 
+	/* A failed registration must never expose an object to get_acc_dev(). */
+	spin_lock_irqsave(&acc_dev_instance_lock, flags);
+	acc_dev_instance = dev;
+	acc_dev_instance_creating = false;
+	spin_unlock_irqrestore(&acc_dev_instance_lock, flags);
 	return 0;
 
 err_free_dev:
-	/*
-	 * Multiple threads might try to access the acc_dev_instance
-	 * therefore protect the failure path with spinlock to avoid race
-	 * conditions.
-	 */
-	spin_lock_irqsave(&acc_dev_instance_lock, flags);
-	acc_dev_instance = NULL;
-	spin_unlock_irqrestore(&acc_dev_instance_lock, flags);
 	kfree(dev);
+err_clear_creating:
+	spin_lock_irqsave(&acc_dev_instance_lock, flags);
+	acc_dev_instance_creating = false;
+	spin_unlock_irqrestore(&acc_dev_instance_lock, flags);
 	pr_err("USB accessory gadget driver failed to initialize\n");
 	return ret;
 }
