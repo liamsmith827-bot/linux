@@ -7716,3 +7716,35 @@ cannot prevent truncation of an individual unsplittable long token. It is not a
 redaction mechanism. No emulator boot or log-consumer runtime test was performed.
 All evidence in this review comes from the pinned local histories and completed
 build; commit-message links were not opened and no remote source was added.
+
+## Early module protection, CFI and boot history
+
+`evidence/module-early-history-review.json` resolves 12 more historical candidates.
+The namespace-removal/reapply pair is exactly inverse by stable patch ID. Keep
+native namespace verification, metadata scanning, modpost/nsdeps and USB_STORAGE
+imports. Missing namespace imports are rejected in the SDK configuration; the
+2019 namespace encoding and export layout are not restored. These checks express
+source dependencies and do not isolate kernel modules from one another.
+
+The five early module-protection add/revert/reapply commits are represented by
+the current list-based export protection. Obsolete placeholder ABI lists and
+generated string-array headers are replaced by the current symbol/flag tables.
+Native signature verification is unchanged, including fatal invalid-signature
+errors, enable-only sig_enforce and lockdown. The original suppression of
+sig_enforce is not retained. Historical KMI import allowlisting is not configured:
+the SDK disables symbol trimming and does not pass the whitelist switch that
+marks other imports protected. Signed-module export protection remains separate.
+Build164 checks all 659 protected export names, the corrected four-byte PREL32
+lookup stride, and symbol/flag/CRC tables for 145 modules. It does not test runtime
+load rejection or establish a sandbox for privileged kernel code.
+
+The original cross-DSO CFI shadow implementation was explicitly reverted and
+subsequently superseded upstream. Keep native KCFI, its RCU-protected module trap
+lookup and current compiler/init annotations. The old broad __init CFI bypass
+and shadow allocation are absent; CONFIG_CFI=y and CFI_PERMISSIVE=n. No runtime
+CFI failure was triggered. The separate native ttynull-fallback revert and shared
+bootconfig checksum are already represented, preserving console failure handling
+and bootconfig size/checksum checks. That additive checksum is not authentication.
+The temporary KUnit boot-runner removal was explicitly reverted; keep the runner
+and its native no-op stub for this SDK's KUNIT=m configuration. No tests were
+executed in a running kernel. Only local sources were used in this review.

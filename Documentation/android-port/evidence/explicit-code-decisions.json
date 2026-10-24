@@ -23182,5 +23182,159 @@
       "evidence/build-config-history-review.json",
       "SECURITY.md: Release generation and compiler configuration history"
     ]
+  },
+  {
+    "commit": "3fde1dfb006cd16bed3153fb035ca62ac9604df0",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Temporary module-namespace removal, motivated by the historical ABI checker, is exactly reversed by 537d1f70d126 (stable inverse patch IDs match). Preserve native namespace infrastructure, USB_STORAGE imports and signature/config relocation. Do not recreate a KMI-checker workaround that removes source-module dependency checks.",
+    "evidence": [
+      "evidence/module-early-history-review.json",
+      "SECURITY.md: Early module protection, CFI and boot history"
+    ]
+  },
+  {
+    "commit": "537d1f70d12629080a8a587f2e0dfd7e01859649",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [
+      "e0703556644a531e50b5dc61b9f6ea83af5f6604"
+    ],
+    "rationale": "All 29-path restoration hunks reviewed. Preserve current native module namespaces, metadata bounds handling, modpost checks/nsdeps, USB_STORAGE imports and MODULE_SIG_FORMAT selection. Namespace import verification matches LTS and missing imports remain rejected in the SDK configuration. Modern quoted namespace strings, current symvers ordering and export representation supersede the 2019 format; no historical layout is restored. Namespaces express module dependencies rather than isolate privileged code.",
+    "evidence": [
+      "evidence/module-early-history-review.json",
+      "SECURITY.md: Early module protection, CFI and boot history"
+    ]
+  },
+  {
+    "commit": "fa91466f31377f27f0032fe35ffaefb0c71e18ca",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [
+      "cf68fffb66d60d96209446bfc4a15291dc5a5d41",
+      "89245600941e4e0f87d77f60ee269b5e61ef4e49",
+      "e151955bacf881e1f918613558e04f2f976169e4"
+    ],
+    "rationale": "Original 12-path cross-DSO CFI/shadow implementation was explicitly removed by bd98af7d214e, including unchanged original cfi.c/cfi.h. Native later upstream CFI and KCFI implementations replace it. Current CFI source/header and compiler/init annotations equal LTS, preserving native RCU protection around module trap lookup. SDK enables CFI with permissive mode disabled; do not reintroduce old shadow allocation or broad __init CFI bypass. No runtime CFI failure test is claimed.",
+    "evidence": [
+      "evidence/module-early-history-review.json",
+      "SECURITY.md: Early module protection, CFI and boot history"
+    ]
+  },
+  {
+    "commit": "bd98af7d214e0a43282dc02663b8ec0d42a0ee0c",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [
+      "cf68fffb66d60d96209446bfc4a15291dc5a5d41",
+      "89245600941e4e0f87d77f60ee269b5e61ef4e49",
+      "e151955bacf881e1f918613558e04f2f976169e4"
+    ],
+    "rationale": "Full removal reviewed, including compiler_types restoration of the then-needed __norecordmcount fallback. Keep maintained native KCFI support instead of replaying removal onto present CFI. The old cross-DSO module fields, shadow lookup and __init __nocfi annotation remain absent; modern native annotations are unchanged. This retires an obsolete implementation without disabling current indirect-call checking.",
+    "evidence": [
+      "evidence/module-early-history-review.json",
+      "SECURITY.md: Early module protection, CFI and boot history"
+    ]
+  },
+  {
+    "commit": "ce1a471629e2c8113765d8012d23bca9096e3649",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "b9307c13e253ae50776dcbd06ae5476832f5d8f3",
+      "f08e12b0ed1a675de6f61e0ed8c5989173b517ee"
+    ],
+    "rationale": "Retain the signed-module export-protection purpose through the final relocated implementation. Old placeholder ABI lists, script-generated headers and protected-import whitelist are superseded or omitted as historical KMI policy; x86 signing/protection config is retained, ARM64 config is outside the SDK target. Final implementation uses native module paths plus current list-based export protection and flag tables, not the historical generated gki_module.c string arrays. Build164 verifies 659 protected export names, correct four-byte PREL32 lookup stride and all 145 symbol/flag/CRC tables. Native signing.c is unchanged: invalid signatures remain fatal, sig_enforce can only be enabled, and lockdown remains checked. The old suppression of sig_enforce is not retained. Historical KMI import allowlisting is not configured (TRIM_UNUSED_KSYMS=n); source-built vendor modules remain supported. Export protection is not a sandbox for arbitrary kernel code. No runtime module-load rejection test was performed.",
+    "evidence": [
+      "evidence/module-early-history-review.json",
+      "SECURITY.md: Early module protection, CFI and boot history"
+    ]
+  },
+  {
+    "commit": "5e1f58c7646c8e0280c199ec361a17f6f3d3417f",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "b9307c13e253ae50776dcbd06ae5476832f5d8f3",
+      "f08e12b0ed1a675de6f61e0ed8c5989173b517ee"
+    ],
+    "rationale": "Exact inverse patch of ce1a471629e2, itself exactly reversed by 5ffc4c227547. Do not remove final module export protection because of this temporary historical revert. Final implementation uses native module paths plus current list-based export protection and flag tables, not the historical generated gki_module.c string arrays. Build164 verifies 659 protected export names, correct four-byte PREL32 lookup stride and all 145 symbol/flag/CRC tables. Native signing.c is unchanged: invalid signatures remain fatal, sig_enforce can only be enabled, and lockdown remains checked. The old suppression of sig_enforce is not retained. Historical KMI import allowlisting is not configured (TRIM_UNUSED_KSYMS=n); source-built vendor modules remain supported. Export protection is not a sandbox for arbitrary kernel code. No runtime module-load rejection test was performed.",
+    "evidence": [
+      "evidence/module-early-history-review.json",
+      "SECURITY.md: Early module protection, CFI and boot history"
+    ]
+  },
+  {
+    "commit": "5ffc4c2275478f8d4c17795dc5f1b552559fff26",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "b9307c13e253ae50776dcbd06ae5476832f5d8f3",
+      "f08e12b0ed1a675de6f61e0ed8c5989173b517ee"
+    ],
+    "rationale": "Exact inverse of the first revert restores the original feature; final code evolves to list/flag-based module protection. Retain its applicable export-protection behavior with native signing checks, omitting obsolete ABI import-list plumbing and ARM64 config. Final implementation uses native module paths plus current list-based export protection and flag tables, not the historical generated gki_module.c string arrays. Build164 verifies 659 protected export names, correct four-byte PREL32 lookup stride and all 145 symbol/flag/CRC tables. Native signing.c is unchanged: invalid signatures remain fatal, sig_enforce can only be enabled, and lockdown remains checked. The old suppression of sig_enforce is not retained. Historical KMI import allowlisting is not configured (TRIM_UNUSED_KSYMS=n); source-built vendor modules remain supported. Export protection is not a sandbox for arbitrary kernel code. No runtime module-load rejection test was performed.",
+    "evidence": [
+      "evidence/module-early-history-review.json",
+      "SECURITY.md: Early module protection, CFI and boot history"
+    ]
+  },
+  {
+    "commit": "090a1da69705ab33ae9a49214636e2176638bf7f",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "b9307c13e253ae50776dcbd06ae5476832f5d8f3",
+      "f08e12b0ed1a675de6f61e0ed8c5989173b517ee"
+    ],
+    "rationale": "Second temporary removal was undone by f5794dc18420 after module-source reorganization. Its difference from the original inverse includes the already removed MODULE_SIG_ALL select. Keep final export protection; do not recreate the temporary removal or restore the obsolete signing select. Final implementation uses native module paths plus current list-based export protection and flag tables, not the historical generated gki_module.c string arrays. Build164 verifies 659 protected export names, correct four-byte PREL32 lookup stride and all 145 symbol/flag/CRC tables. Native signing.c is unchanged: invalid signatures remain fatal, sig_enforce can only be enabled, and lockdown remains checked. The old suppression of sig_enforce is not retained. Historical KMI import allowlisting is not configured (TRIM_UNUSED_KSYMS=n); source-built vendor modules remain supported. Export protection is not a sandbox for arbitrary kernel code. No runtime module-load rejection test was performed.",
+    "evidence": [
+      "evidence/module-early-history-review.json",
+      "SECURITY.md: Early module protection, CFI and boot history"
+    ]
+  },
+  {
+    "commit": "f5794dc18420234c36aa0dc5a823958f2689d8d6",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "b9307c13e253ae50776dcbd06ae5476832f5d8f3",
+      "f08e12b0ed1a675de6f61e0ed8c5989173b517ee"
+    ],
+    "rationale": "Restoration after module.c split retains source loading/protection behavior through final kernel/module paths. It already omits the old forced MODULE_SIG_ALL selection and sig_enforce suppression. Preserve current native metadata/signature validation and independently configured list-based protection rather than old generated tables and historical binary-KMI lists. Final implementation uses native module paths plus current list-based export protection and flag tables, not the historical generated gki_module.c string arrays. Build164 verifies 659 protected export names, correct four-byte PREL32 lookup stride and all 145 symbol/flag/CRC tables. Native signing.c is unchanged: invalid signatures remain fatal, sig_enforce can only be enabled, and lockdown remains checked. The old suppression of sig_enforce is not retained. Historical KMI import allowlisting is not configured (TRIM_UNUSED_KSYMS=n); source-built vendor modules remain supported. Export protection is not a sandbox for arbitrary kernel code. No runtime module-load rejection test was performed.",
+    "evidence": [
+      "evidence/module-early-history-review.json",
+      "SECURITY.md: Early module protection, CFI and boot history"
+    ]
+  },
+  {
+    "commit": "aff56c67b01d919c7de4d5e8351eff88a5c0d2fa",
+    "disposition": "already-represented-upstream",
+    "result_commits": [
+      "a91bd6223ecd46addc71ee6fcd432206d39365d2"
+    ],
+    "rationale": "Native LTS already contains this complete ttynull-fallback revert. Preserve optional NULL_TTY driver and native console-open failure behavior; do not automatically replace a failed requested console with a silent one. Current ttynull.c and console_on_rootfs match LTS. No console runtime test was performed.",
+    "evidence": [
+      "evidence/module-early-history-review.json",
+      "SECURITY.md: Early module protection, CFI and boot history"
+    ]
+  },
+  {
+    "commit": "c055fe67f40c6ea5606b475e54a8082e3b1c0caa",
+    "disposition": "already-represented-upstream",
+    "result_commits": [
+      "99f4f5d62338cab9dcf45735344541574daedd20"
+    ],
+    "rationale": "Native LTS already shares xbc_calc_checksum between kernel and bootconfig tool. Header/tool source and kernel setup_boot_config match LTS, including native size/checksum validation. The additive checksum detects accidental corruption; it is not cryptographic authentication. No additional code application is needed.",
+    "evidence": [
+      "evidence/module-early-history-review.json",
+      "SECURITY.md: Early module protection, CFI and boot history"
+    ]
+  },
+  {
+    "commit": "c779f49b07a9dfa476ab268c766767148271c894",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Explicitly undone by fd174e395a79, which restores the KUnit include and call after do_basic_setup and before wait_for_initramfs. Keep native/current-ACK boot-test plumbing. SDK KUNIT=m selects the inline no-op for this built-in call, while module tests remain buildable; no KUnit runtime execution is claimed.",
+    "evidence": [
+      "evidence/module-early-history-review.json",
+      "SECURITY.md: Early module protection, CFI and boot history"
+    ]
   }
 ]
