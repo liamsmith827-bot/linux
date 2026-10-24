@@ -4,6 +4,7 @@
  *
  * Copyright (C) 2008 Steven Rostedt <srostedt@redhat.com>
  */
+#include <linux/page_size_compat_defs.h>
 #include <linux/trace_recursion.h>
 #include <linux/panic_notifier.h>
 #include <linux/trace_events.h>
@@ -2714,8 +2715,8 @@ static struct trace_buffer *alloc_buffer(unsigned long size, unsigned flags,
 struct trace_buffer *__ring_buffer_alloc(unsigned long size, unsigned flags,
 					struct lock_class_key *key)
 {
-	/* Default buffer page size - one system page */
-	return alloc_buffer(size, flags, 0, 0, 0, 0, key);
+	/* Match the page size presented to Android tracing readers. */
+	return alloc_buffer(size, flags, get_order(__PAGE_SIZE), 0, 0, 0, key);
 
 }
 EXPORT_SYMBOL_GPL(__ring_buffer_alloc);

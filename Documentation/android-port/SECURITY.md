@@ -7165,3 +7165,41 @@ work callback validation remains reverted. Its complete textual witness was
 rechecked after the new allocation changes, using temporary indexes. Scoped
 module registration searches did not locate consumers of these six retained
 hooks; that uncertainty is recorded and is not used to remove them.
+
+# Android page-size-compatible trace subbuffers
+
+The two ACK changes 992cefeb8225 and 4d75f609dbe8 have a positive SDK
+consumer: the pinned Goldfish 16 KiB command line enables page_shift=14, and
+Perfetto's CpuReader::ReadAndProcessBatch reads one reported userspace page and
+rejects a nonzero shorter read as a partial-page error. Local file and repository
+pins are recorded in `evidence/trace-subbuffers-consumers.json`. No remote source
+was consulted, and Perfetto itself was not built or executed.
+
+Default ordinary and persistent trace buffers now use get_order(__PAGE_SIZE).
+The tracefs subbuffer-size writer rounds requests to the emulated page granularity
+before deriving physical allocation order. Native 4 KiB mode retains its sizing.
+Keep the native maximum of 128 physical pages: ACK's expression
+7 + get_order(nr_subpages) also yields 7 for the supported x86 ratios 1 and 4,
+because get_order expects bytes, not a count of pages. Do not reinterpret that
+expression to enlarge the maximum. The native write-counter bound, allocation
+failures, mmap restrictions, locking, snapshot update and rollback remain intact.
+
+Reject zero or above-limit KiB values before multiplication and narrowing to int;
+otherwise crafted large inputs can wrap into small accepted allocations. This
+also avoids old signed page-count overflow. The change rejects out-of-range
+aliases while matching ACK for valid requests. Larger default subbuffers can
+increase minimum per-CPU allocation and reduce capacity of a fixed reserved
+range; native failure handling is retained. No native LTS fix is removed or
+weakened. The old writer/polling API for the excluded ARM protected-hypervisor
+trace implementation is a separate concern and is not introduced here.
+
+`check_trace_subbuffers.py` passes 12,048 extracted size cases, 10,860 native
+valid-input comparisons, 11,402 ACK valid-input comparisons and 68 allocation
+wrapper cases under ASan/UBSan with the kernel's -fno-strict-overflow setting.
+Controls expose 18 small-buffer mismatches and 114 oversized values accepted by
+the old calculation. Whole ring_buffer.c equality after removing only the new
+allocation default/header/comment verifies preservation of native algorithms;
+the writer's complete locking/snapshot/rollback suffix and range-allocation body
+are checked against LTS. These host checks do not test kernel tracing, mmap,
+Perfetto parsing or boot behavior. Full emulator build evidence is recorded
+separately after the source commit is built.
