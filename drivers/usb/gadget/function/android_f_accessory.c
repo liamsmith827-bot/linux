@@ -509,7 +509,8 @@ static void acc_complete_send_hid_event(struct usb_ep *ep,
 		return;
 	}
 
-	hid_report_raw_event(hid->hid, HID_INPUT_REPORT, req->buf, length, length, 1);
+	/* Serialize delivery with native HID probe/remove and input quiescing. */
+	hid_safe_input_report(hid->hid, HID_INPUT_REPORT, req->buf, length, length, 1);
 }
 
 static int acc_hid_parse(struct hid_device *hid)
