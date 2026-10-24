@@ -1,0 +1,223 @@
+{
+  "source_head": "a46ca7ce5534ca01b7cb3ed4fb39444680ebf4ee",
+  "records": [
+    {
+      "commit": "a74701a387025a49ec80b5e8fe5cd79cd5c3574d",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "e43fbaaa4eaf8d766329854c00e292b438e16cb7"
+      ],
+      "rationale": "Full one-path patch read. Keep all six GPL module trace exports: bio queue, getrq, request issue, merge, requeue and completion. Initial integrated port had none; e43fbaaa4eaf restores them alongside IO start/done from separately reviewed candidates. Build 144 generated four GPL symbols per tracepoint (tracepoint/iterator/static-call key/trampoline). Event payload definitions and callsites remain native; this grants rebuilt trusted modules instrumentation access, not new userspace access or a historical KMI promise. Generic SDK block paths are present; exact module subscriber unconfirmed, not a reason to omit.",
+      "evidence": [
+        "evidence/block-instrumentation-review.json",
+        "evidence/block-submit-hook-lifetime-check.json",
+        "SECURITY.md: Block instrumentation lifetime and priority"
+      ],
+      "patch_sha256": "0325988da41f1e1eeee02c61b1658a8576f237a7958b14e5ece66507cd066a35"
+    },
+    {
+      "commit": "7bdb645465b0f50da4c9108b4689181cfb47a126",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Complete three-path patch retains early bio I/O priority hook/declaration/GPL export. Whole submit_bio equals LTS after this notification, with native bio_set_ioprio before it and submit_bio_noacct after it. Local DM_VERITY=y target and dm-verity-target.c concrete use of bio->bi_ioprio for hash reads and prefetch establish relevance of placement before stacked IO. Existing later blk_mq hook cannot affect already-created upstream hash IO. Callback may deliberately override task/cgroup-derived priority and affect starvation/fairness; trusted callback must honor bio ownership and valid priorities. No crypto verification or block-error path is changed.",
+      "evidence": [
+        "evidence/block-instrumentation-review.json",
+        "evidence/block-submit-hook-lifetime-check.json",
+        "SECURITY.md: Block instrumentation lifetime and priority"
+      ],
+      "patch_sha256": "e349fb5973d47a8ab58f7bf938d3241454a2bc4f092190b6e9e343808094be2c"
+    },
+    {
+      "commit": "cd329e5a4b4e41d65f32291068f1b8ed9238d74b",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [],
+      "rationale": "Full one-path patch examined. Do not restore the historical skip of task/cgroup priority assignment for sequential zoned WRITE/WRITE_ZEROES. Preserve native bio_set_ioprio and whole native blk-zoned.c. LTS now serializes these writes with per-zone write plugs before request dispatch: first write plugs the zone, following bios queue, completion advances/unplugs the next, and the resubmission branch explicitly identifies its bio as the only in-flight write for that zone. Priority can therefore order independent eligible requests without relying on clearing priorities to serialize one zone. Native conventional-zone and native/emulated append distinctions remain. This is an evidence-based native ordering implementation choice, not a claim BLK_DEV_ZONED is disabled (it is y), nor an untested assertion of runtime correctness on zoned hardware. SDK zoned runtime use is unconfirmed; no new hardware path is enabled.",
+      "evidence": [
+        "evidence/block-instrumentation-review.json",
+        "evidence/block-submit-hook-lifetime-check.json",
+        "SECURITY.md: Block instrumentation lifetime and priority"
+      ],
+      "patch_sha256": "66e214283b32d54ea8bcc3013522875b58e3d8b26ea8aa28f5330c5893f8e58a"
+    },
+    {
+      "commit": "18fc3793db1db68c1a9db2c0300326ac1df1c47e",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "e43fbaaa4eaf8d766329854c00e292b438e16cb7",
+        "a365a6fe08002037c10bbfe7c7c91fef5842ad3e",
+        "a46ca7ce5534ca01b7cb3ed4fb39444680ebf4ee"
+      ],
+      "rationale": "Complete five-path patch retains IO-start GPL trace export, submit pre/post hooks, cloned-request error notification and scsi_device_from_queue export. Restore missing IO-start export in e43fbaaa4eaf. Adapt post callback lifetime in a365a6fe0800: snapshot post-hook enabled after pre callback, acquire nonzero request reference and bio reference before flush/plug/direct/queued handoff, invoke one post notification via common successful exit and release both references afterward. Native immediate empty-flush completion can free/reuse both objects before original callback; host old-control reproduces modeled invalid arguments. References preserve object allocation, not immutable contents, payload/child-object lifetime or safe concurrent field access. A callback registered after the snapshot begins observing subsequent submissions; restricted hooks cannot unregister. Early error/merge paths remain native without invented post events. Preserve full native cloned-request integrity/crypto checks. Native SCSI lookup validates queue ops and takes get_device reference, so consumer releases with matching put_device; it does not take LLDD module ref and scsi_device_put would additionally drop one. a46ca7 removes the obsolete conditional duplicate export; no new SCSI transport is enabled and SDK SCSI=y/SCSI_VIRTIO disabled.",
+      "evidence": [
+        "evidence/block-instrumentation-review.json",
+        "evidence/block-submit-hook-lifetime-check.json",
+        "SECURITY.md: Block instrumentation lifetime and priority"
+      ],
+      "patch_sha256": "d5ef5e6ddee13fe1cef8da59247e5ac6d84aaf6074753b263dea9a7326fef5b7"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "block/blk-core.c",
+      "function": "bio_set_ioprio",
+      "sha256": "87e490a33a239e04c6e0324a88d9882fd12edc531c484c18bdcca596c91dcb0a",
+      "relationship": "Whole native function"
+    },
+    {
+      "path": "drivers/scsi/scsi_lib.c",
+      "function": "scsi_device_from_queue",
+      "sha256": "9af99cca44825f7721025454f88b799201558c117d22f1aea790c0a45d13dfbe",
+      "relationship": "Whole native function"
+    },
+    {
+      "path": "block/blk-zoned.c",
+      "function": "blk_zone_wplug_handle_write",
+      "sha256": "9384f4dd8d85553e3279c214f7a4c0c3de5a4e1b9f48cda62a6a28df41d708b8",
+      "relationship": "Whole native function"
+    },
+    {
+      "path": "block/blk-zoned.c",
+      "function": "blk_zone_plug_bio",
+      "sha256": "4e41f14342aff84c63047ef0c922900781246d2ec892b3f284b09d0da20b012e",
+      "relationship": "Whole native function"
+    },
+    {
+      "path": "block/blk-zoned.c",
+      "function": "blk_zone_write_plug_init_request",
+      "sha256": "b27573c4c2bd5b1165dd218a15e461ceb32a079576e1ca95e568437910410e80",
+      "relationship": "Whole native function"
+    },
+    {
+      "path": "block/blk-zoned.c",
+      "function": "blk_zone_write_plug_finish_request",
+      "sha256": "a8acc01777670b862d58244739bbe22bdf6abf308064c100e239f3e58a9b2b2f",
+      "relationship": "Whole native function"
+    },
+    {
+      "path": "block/blk-zoned.c",
+      "sha256": "8b0c694f723eccefe34341ad709364c65f68539c0002dd93d1ccc4d92ac110da",
+      "relationship": "Whole file exactly pinned LTS"
+    },
+    {
+      "path": "block/blk-core.c",
+      "function": "submit_bio",
+      "sha256": "a7991024b94539970d4798b7ee5dd2ebc2a3c79e571368c4aeafbb6fd4897d4b",
+      "relationship": "Whole native function after added post-bio_set_ioprio callback removal"
+    },
+    {
+      "path": "block/blk-mq.c",
+      "function": "blk_mq_submit_bio",
+      "sha256": "36a2206616d0339835cc2cb0dc5f19feb8193ac41e722d6275d7157ccb7564e4",
+      "relationship": "Whole native function after removing priority/pre/post hooks, post callback reference holds and routing three success exits through that callback; blank lines ignored"
+    },
+    {
+      "path": "block/blk-mq.c",
+      "function": "blk_insert_cloned_request",
+      "sha256": "93da3554141f148adde9ca060cd2023d220e061b8e39fdff7af4f1109882a1b2",
+      "relationship": "Whole native function after error-only notification removal, including integrity-segment and crypto checks"
+    },
+    {
+      "path": "block/blk-mq.c",
+      "function": "blk_mq_put_rq_ref",
+      "sha256": "6602f239511bf708bb7b4bb38ed484652d28a76f870fc6e1edda975492302357",
+      "relationship": "Whole native lifetime/completion function"
+    },
+    {
+      "path": "block/blk-mq.c",
+      "function": "blk_mq_free_request",
+      "sha256": "d67fbf486eae6baf23a9e3a3b32854bdeb07cac7cee7e59ab16503140830155d",
+      "relationship": "Whole native lifetime/completion function"
+    },
+    {
+      "path": "block/blk-mq.c",
+      "function": "__blk_mq_free_request",
+      "sha256": "ca66c2072555319445caed29550c1a912d551d0be6185996566a8d47b5c0d597",
+      "relationship": "Whole native lifetime/completion function"
+    },
+    {
+      "path": "block/blk-mq.c",
+      "function": "blk_mq_end_request_batch",
+      "sha256": "ff472daec9ffded77976e78faa741517f4ff8b5f78d0ff9c89794679c232c6f4",
+      "relationship": "Whole native lifetime/completion function"
+    },
+    {
+      "path": "block/blk-flush.c",
+      "function": "blk_insert_flush",
+      "sha256": "b2a0180c1976b5c8ff28164d686a3d3c7a9878425fe3dde67262df1b65355d85",
+      "relationship": "Whole native lifetime/completion function"
+    },
+    {
+      "path": "block/blk-flush.c",
+      "function": "is_flush_rq",
+      "sha256": "9c8b633cd56311cbc97e509fd9bcb786f7f2a370bf9d429debf3a56c51794d8b",
+      "relationship": "Whole native lifetime/completion function"
+    }
+  ],
+  "generated_symbol_evidence": {
+    "run": "sdk-build-attempt-145",
+    "source": "a46ca7ce5534ca01b7cb3ed4fb39444680ebf4ee",
+    "file": "/home/liamsmith/src/kernel/kernel_manifest-6.18/common_dist/kernel_x86_64_Module.symvers",
+    "sha256": "cb8f26077f3540fb2052e6535f5fc957b0c9224405436b3f5d4c2e883f6e6a37",
+    "lines": {
+      "block_bio_queue": [
+        "0x56bae107\t__tracepoint_block_bio_queue\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x915522ff\t__traceiter_block_bio_queue\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x18014cf2\t__SCK__tp_func_block_bio_queue\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0xba41a48d\t__SCT__tp_func_block_bio_queue\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+      ],
+      "block_getrq": [
+        "0x56bae107\t__tracepoint_block_getrq\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x915522ff\t__traceiter_block_getrq\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x18014cf2\t__SCK__tp_func_block_getrq\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0xba41a48d\t__SCT__tp_func_block_getrq\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+      ],
+      "block_rq_issue": [
+        "0x56bae107\t__tracepoint_block_rq_issue\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x9370c652\t__traceiter_block_rq_issue\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x18014cf2\t__SCK__tp_func_block_rq_issue\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x12bd5c67\t__SCT__tp_func_block_rq_issue\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+      ],
+      "block_rq_merge": [
+        "0x56bae107\t__tracepoint_block_rq_merge\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x9370c652\t__traceiter_block_rq_merge\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x18014cf2\t__SCK__tp_func_block_rq_merge\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x12bd5c67\t__SCT__tp_func_block_rq_merge\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+      ],
+      "block_rq_requeue": [
+        "0x56bae107\t__tracepoint_block_rq_requeue\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x9370c652\t__traceiter_block_rq_requeue\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x18014cf2\t__SCK__tp_func_block_rq_requeue\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x12bd5c67\t__SCT__tp_func_block_rq_requeue\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+      ],
+      "block_rq_complete": [
+        "0x56bae107\t__tracepoint_block_rq_complete\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x854885e1\t__traceiter_block_rq_complete\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x18014cf2\t__SCK__tp_func_block_rq_complete\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x60f13cb1\t__SCT__tp_func_block_rq_complete\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+      ],
+      "block_io_start": [
+        "0x56bae107\t__tracepoint_block_io_start\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x9370c652\t__traceiter_block_io_start\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x18014cf2\t__SCK__tp_func_block_io_start\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x12bd5c67\t__SCT__tp_func_block_io_start\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+      ],
+      "block_io_done": [
+        "0x56bae107\t__tracepoint_block_io_done\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x9370c652\t__traceiter_block_io_done\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x18014cf2\t__SCK__tp_func_block_io_done\tvmlinux\tEXPORT_SYMBOL_GPL\t",
+        "0x12bd5c67\t__SCT__tp_func_block_io_done\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+      ]
+    }
+  },
+  "validation": "Build 144 verified eight exports and all 145 signatures/table CRCs. Build 145 passed with the subsequent post-submit lifetime and SCSI duplicate-export adaptations. Host extracted submission tail passed 1536 cases including 256 no-callback and 256 registration-after-snapshot cases; unprotected control had 640 modeled dead-object callback cases. Models do not exercise real block IO, concurrency or arbitrary completion handlers.",
+  "security": "Keep GPL source instrumentation and Android effective-priority timing with native LTS block IO checks. No subscriber is needed for default native behavior. When post callback was enabled at snapshot, references briefly defer request tag/queue and bio final release; caller must not recursively wait for those same held resources. No-hook path acquires no added references. References do not pin mutable fields, page payloads, callback-private allocations or caller-managed stack-object lifetimes beyond their normal ownership rules.",
+  "remote_sources_used": [],
+  "subsequent_build_verification": {
+    "run": "sdk-build-attempt-145",
+    "source": "a46ca7ce5534ca01b7cb3ed4fb39444680ebf4ee",
+    "result": "Workflow passed; 145 signatures and generated CRC/flag tables verified."
+  }
+}

@@ -1,0 +1,175 @@
+{
+  "source_head": "e1b59f578d4d25c50b177aeb638917498e720bb1",
+  "records": [
+    {
+      "commit": "9a3160603f3a7bb20ac7f090ae991fd329a5d4bb",
+      "disposition": "partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "e1b59f578d4d25c50b177aeb638917498e720bb1"
+      ],
+      "rationale": "Full four-path patch read. Retain migration-event opt-in, slice-refill hook, lifecycle events, affinity replacement and switch-finish notifications. Replace original task_should_scx hook/helper override with final ACK consolidated setscheduler_class interface from 0952ab8171ab, not both historical hooks. Switch-finish callbacks adapted in e1b59 to original after-class/before-enqueue phase using LTS guards. Full root functions equal native after explicitly removing hooks/repeat and normalizing separately justified READY gate; migration/affinity native defaults compared. Generic SCX capabilities remain relevant with SDK SCHED_CLASS_EXT=y despite original OGKI motivation; no ABI layout preservation is imported. Contract/risk details in this report apply.",
+      "evidence": [
+        "evidence/scx-lifecycle-contract-review.json",
+        "evidence/scx-callback-order-check.json",
+        "SECURITY.md: SCX customization contracts"
+      ],
+      "patch_sha256": "91428e224348c3c681cb6c17e7e6fcd3ace910e33f596a5e4c4331460d6f22fe"
+    },
+    {
+      "commit": "ce132a07802ae6b69f24bbd25c03eee756dd5e10",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full four-path patch read. Retain restore_flags hook/header/GPL registry before native scoped sched_change in PI and syscall paths, enabling the documented RT/SCX DEQUEUE_MOVE repair. Full PI/syscall functions equal LTS with hooks removed, including native DL PI helper and scope flags. No redundant hand-written dequeue/reenqueue is restored. Mutable flags are trusted queue-state policy and may be unsafe if callback violates invariants; contract recorded.",
+      "evidence": [
+        "evidence/scx-lifecycle-contract-review.json",
+        "evidence/scx-callback-order-check.json",
+        "SECURITY.md: SCX customization contracts"
+      ],
+      "patch_sha256": "17967433290523ca4cfb9aa7deb6bb1ea0e8d367b0e951692dbfe99a321a83f2"
+    },
+    {
+      "commit": "0952ab8171ab93427aab319decba2f1816eff54d",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full five-path patch read. Keep task-aware consolidated class-selection callback at fork, PI, syscall and enable/disable; remove obsolete task_should_scx API, including its helper override. Native __setscheduler_class and scx_setscheduler_class functions remain identical. Keep DISABLING event after acquiring fork rwsem write lock as ACK fix requires. Preserve callback NULL-argument distinction and trusted task-class choice; no unsupported claim of automatic validity checking. Enabling custom RT management can alter real-time guarantees and must honor helper/stop/lifetime requirements.",
+      "evidence": [
+        "evidence/scx-lifecycle-contract-review.json",
+        "evidence/scx-callback-order-check.json",
+        "SECURITY.md: SCX customization contracts"
+      ],
+      "patch_sha256": "95c9052b46c514871acc88bf809c6dfc13aa54ff5e5254688c9c9d9b424d2baf"
+    },
+    {
+      "commit": "740fc669b4ae0968f78a15c09b4def57cc747d40",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full three-path patch read. Retain per-queue priority override, per-task tick notification and skip/repeat ordering. Native queue membership/accounting/RCU code is unchanged aside from callback decision; root lifecycle comparisons retain native cleanup order when callbacks honor contract. Positive repeat and skip deliberately transfer ordering/completeness responsibility to trusted module. This weakens unconditional LTS completion and built-in FIFO policy in presence of callbacks; preserve for requested Android vendor/runtime compatibility with explicit starvation, hang and teardown lifetime risks rather than assuming author safety claims. No concrete SDK callback found/verified; this is not a dispensability conclusion or runtime safety claim.",
+      "evidence": [
+        "evidence/scx-lifecycle-contract-review.json",
+        "evidence/scx-callback-order-check.json",
+        "SECURITY.md: SCX customization contracts"
+      ],
+      "patch_sha256": "2bf11680024d4f294bc9fe73247d25d1645707e3139d84dac2f0c015be9f7e07"
+    },
+    {
+      "commit": "3ae8649a123511a04abdea0d7de097e330691276",
+      "disposition": "merge-resolution-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "e1b59f578d4d25c50b177aeb638917498e720bb1"
+      ],
+      "rationale": "Complete three-path unique remerge diff read, including added post-assignment hooks outside conflict markers. Keep native scoped sched_change conversion, rq clock updates, NOCLOCK dequeue flags, delayed-entity handling and scope->flags updates. PI/syscall notifications remain inside guard after assignment. Correct merge-introduced SCX switch_finish phase: disable had run before class assignment, enable after reenqueue; e1b59 moves both inside guard after class check and before enqueue restoration, consistent with original hook intent. Do not copy old manual queue cleanup or replace current native DL PI helper. Native guard functions are wholly identical, and corrected SCX transition host checks pass.",
+      "evidence": [
+        "evidence/scx-lifecycle-contract-review.json",
+        "evidence/scx-callback-order-check.json",
+        "SECURITY.md: SCX customization contracts"
+      ],
+      "patch_sha256": "568274aa21a657f7fc4f40488d676df64ca9f0cfd00532469ffa5f2165e4fbc8"
+    }
+  ],
+  "contracts": {
+    "class_selection": "Default selector stays exactly LTS. Current consolidated callback receives either class** (PI, syscall, enable/disable) or should_scx* (fork), with the other argument NULL. Callback must handle NULL and preserve valid class/lifetime, stop/helper/idle task roles and initialized SCX state. It may deliberately route RT tasks to SCX without changing their policy/priority numbers; latency, PI and starvation behavior then depend on the trusted scheduler. Fork still rejects DL before the hook; PI/syscall whole functions preserve native checks and guards after hook removal. No validation of arbitrary class pointers or automatic exclusion of stop/helper tasks is added after the callback. A bad callback can cause NULL/UAF, hang or scheduling privilege/latency changes. This is a trusted in-kernel customization interface, not safe for arbitrary user-controlled selection.",
+    "queue_flags": "Retain mutable queue flags after class selection/delayed dequeue and before native sched_change guard in PI/syscall paths. Intended callback restores DEQUEUE_MOVE when custom RT/SCX changes classes despite equal priority; native scope->flags enqueue updates and cleanup still apply. Callback can also remove required flags; it must preserve queue/accounting invariants. The kernel does not constrain this to adding DEQUEUE_MOVE only, preserving the ACK source contract.",
+    "migration_events": "False-by-default callback runs only when corresponding runnable/quiescent op exists. Opt-in invokes that op for migrating tasks too. Native runnable counters and operation flags are unchanged; callback/BPF implementation must tolerate extra migration notifications and avoid duplicate ownership/accounting.",
+    "affinity": "done is zero by default. Nonzero transfers the entire set_cpus_allowed_scx implementation to the callback, skipping both common mask update and BPF effective-cpumask notification. Custom implementation must perform equivalent required state updates and synchronization, including temporarily distinct cpus_ptr/cpus_mask. Generic task-affinity guards do not certify arbitrary callback state mutation.",
+    "slice_and_tick": "fix_prev_slice runs only after refilling a zero slice for the kept previous task; callback may change that slice. Tick callback runs after native tick/BPF handling and before zero-slice reschedule. Trusted callbacks can change run time and starvation behavior; no callback deadline/cap is introduced.",
+    "lifecycle_events": "ENABLING event follows state transition before root setup; enabled(1) follows static key enable, before per-task switching; ENABLED event follows successful final state transition but precedes __scx_switched_all key enable. DISABLING event is inside fork rwsem write section, not earlier. enabled(0) follows key disable and precedes operation bitmap clear/synchronize_rcu. DISABLED event follows state transition after enable mutex unlock on normal teardown; early error paths need not emit every event. These events are ordered notifications, not a guarantee that every similarly named state key has already changed. Switch-finish placement is adapted by source e1b59 to run after class assignment/checking, inside native guard before enqueue restoration.",
+    "priority_enqueue": "enq_priq=false default retains native FIFO/flag behavior. True may force vtime ordering even for built-in queues, intentionally bypassing the native built-in vtime prohibition through this separate trusted hook. Native BPF flag rejection/error still occurs before callback. Both rbtree and list insertion and normal unlink/flags are retained, so vtime ordering is reflected in the list consumed by built-in queues. Native mixed FIFO/PRIQ diagnostics remain. Consistent queue mode and vtime initialization belong to callback; inconsistent policy can starve tasks or trigger SCX error/disable. Commit author assurance that all risks were eliminated is not treated as evidence that arbitrary callbacks are safe.",
+    "skip_repeat": "Retain explicit per-task skip and shared repeat integer for ordering critical tasks before others across multiple passes. skip resets each task; repeat starts zero, stays shared between passes, increments when positive and repeats. Callback must clear repeat to terminate and eventually process every required task. No automatic termination bound is claimed. On disable, all tasks must leave SCX and complete scx_exit_task before keys/ops are disabled; skip with no subsequent processing can violate this and leave tasks referring to a destroyed scheduler. A permanently positive repeat can stall teardown/fork and eventually overflow its signed counter. Enable admits only READY tasks; processed tasks may become ENABLED and stop reaching the repeat hook in later passes, so callback must ensure some eligible invocation clears its request. These are real availability/lifetime obligations of trusted callback code, not safeguards enforced by the port. We retain this customization contract rather than imposing an arbitrary pass count or disabling the hook; exact installed SDK callback behavior is unconfirmed and not declared safe."
+  },
+  "witnesses": [
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "scx_root_disable",
+      "sha256": "90f87b41d15005eea68d5f68d7561d02b4ae795d5ffabf5a062ac13e160792a6",
+      "relationship": "Native whole root lifecycle after removing hooks/repeat policy and reverting separately justified READY gate to native refcount gate for comparison (blank-line differences ignored)"
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "scx_root_enable_workfn",
+      "sha256": "a99b51de41f16d88b165ef554484d677b3f08273b58704b4b613b6335d603a4a",
+      "relationship": "Native whole root lifecycle after removing hooks/repeat policy and reverting separately justified READY gate to native refcount gate for comparison (blank-line differences ignored)"
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "task_tick_scx",
+      "sha256": "099d240418b0aa14866f34e3bce4ad1f8af8aa3bf35f49a4483d31744eeed1b4",
+      "relationship": "Native whole function after removing tick callback (blank-line differences ignored)"
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "set_cpus_allowed_scx",
+      "sha256": "acc52000c968000ea256a13e7dcf9c42383b5d835547abb748f419a462f46268",
+      "relationship": "Native whole function after removing affinity replacement hook and its done branch (blank-line differences ignored)"
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "scx_setscheduler_class",
+      "sha256": "24558780877db76c9184781aef0f940376e208a879cebb9018e6e425317c4cae",
+      "relationship": "Whole native function (blank-line differences ignored)"
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "scx_check_setscheduler",
+      "sha256": "996e5bea1611bceebbc222024bdd7932db56965125cdc9c15c61d525f644b0d7",
+      "relationship": "Whole native function (blank-line differences ignored)"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "__setscheduler_class",
+      "sha256": "5ef0a760ca294d32eb36c34a235d0bf826f8e378b115e4bc504f2824212dd073",
+      "relationship": "Whole native function (blank-line differences ignored)"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "rt_mutex_setprio",
+      "sha256": "52b1c538d14da9fbc734fd016d5ae5088ae9df8d87d645b0267c5efa6ecab6ec",
+      "relationship": "Native whole function after removing class/flags/priority hooks (blank-line differences ignored)"
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "__sched_setscheduler",
+      "sha256": "cdeaf462edc32658e63785dd4e82ce0e287e811c3156faa8765a92f9f4958fdc",
+      "relationship": "Native whole function after removing class/flags/post-assignment hooks; native checks and DL PI helper preserved (blank-line differences ignored)"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "sched_change_begin",
+      "sha256": "a03fef988093d9a2fe7cc5e36bdf8246c5dc757375b7b4e91842c9a274a4a468",
+      "relationship": "Whole native function (blank-line differences ignored)"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "sched_change_end",
+      "sha256": "43fec38b06857031acd26f5fca0d8d6a34a9393e192ebc72623962894e6dedf1",
+      "relationship": "Whole native function (blank-line differences ignored)"
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "enqueue_task_scx",
+      "sha256": "feb1507992339f5865fcaa08890ca85d69dd4bfa7022ded4eb52148eed359b55",
+      "relationship": "Native whole function after migration callback opt-in and separately reviewed DL-server start removal (blank-line differences ignored)"
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "dequeue_task_scx",
+      "sha256": "a19653daaf11dda7e2ab9d2fa3102470ec8b1b4bc6de2e4459ba534a448afb37",
+      "relationship": "Native whole function after migration callback opt-in and separately reviewed DL-server start removal (blank-line differences ignored)"
+    }
+  ],
+  "sdk_config": {
+    "run": "sdk-build-attempt-143",
+    "sha256": "48f19810fd5e10021d64b96e82cdb2b0b587f7cb24b3b4b5660b6732ae05cd09",
+    "SCHED_CLASS_EXT": "y"
+  },
+  "review_method": "Complete candidate patches/remerge resolutions and full current ext.c/syscalls.c delta against LTS read. Thirteen complete function comparisons with explicitly enumerated hook adaptations, excluding blank lines. Whole guard functions actually equal native without substitution; initial checker assumption of a donor/current difference failed and was corrected to exact comparison.",
+  "validation": "Build 143 and all 145 signatures/flag/CRC tables passed; previously recorded extracted callback-phase tests cover 102400 dispatch and 256 transition cases. No new runtime result, no proof of callback termination, RT latency, arbitrary class validity or DSQ fairness. Generic hook support retained; installed OEM callback implementations are not available/verified in this review.",
+  "remote_sources_used": []
+}

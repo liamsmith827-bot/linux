@@ -1,0 +1,57 @@
+{
+  "source_head": "a46ca7ce5534ca01b7cb3ed4fb39444680ebf4ee",
+  "records": [
+    {
+      "commit": "d80b10fd062258124d3e497cca27454add278462",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Reread complete two-path patch after unrelated SCSI export cleanup invalidated its older whole-file witness. Native scsi_mode_sense still sets DBD according to set_dbd_for_ms and entire function equals pinned LTS; whole scsi_device.h equals LTS including that field. Original patch effects are already represented, regardless of historical vendor ABI annotations in ACK. No new application or omission of the mode-sense behavior.",
+      "evidence": [
+        "evidence/scsi-export-witness-revalidation.json",
+        "SECURITY.md: SCSI witness revalidation"
+      ]
+    },
+    {
+      "commit": "28ec7ea1f3ef6fc3e311e4adbfc5107d046682e4",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Reread full export-only patch after unrelated lookup-export cleanup invalidated its whole-file witness. Both scsi_dispatch_cmd_start/done GPL exports remain; full original patch reverse-applies to current committed index. Keep generic trusted module source instrumentation without changing the native SCSI command implementation or preserving historical binaries.",
+      "evidence": [
+        "evidence/scsi-export-witness-revalidation.json",
+        "SECURITY.md: SCSI witness revalidation"
+      ]
+    }
+  ],
+  "reverse_apply_checks": {
+    "d80b10fd062258124d3e497cca27454add278462": {
+      "2ff600d29ee478d0a8d46ef8a58afb5e038fe692": {
+        "exit_code": 1,
+        "stderr": "error: patch failed: include/scsi/scsi_device.h:172\nerror: include/scsi/scsi_device.h: patch does not apply\nerror: patch failed: drivers/scsi/scsi_lib.c:2108\nerror: drivers/scsi/scsi_lib.c: patch does not apply\n",
+        "patch_sha256": "da7614257b3f932f7b3d043c2e8b5bb91a8a1b00e4e55f6480ffd4470e046ad6"
+      },
+      "a46ca7ce5534ca01b7cb3ed4fb39444680ebf4ee": {
+        "exit_code": 1,
+        "stderr": "error: patch failed: include/scsi/scsi_device.h:172\nerror: include/scsi/scsi_device.h: patch does not apply\nerror: patch failed: drivers/scsi/scsi_lib.c:2108\nerror: drivers/scsi/scsi_lib.c: patch does not apply\n",
+        "patch_sha256": "da7614257b3f932f7b3d043c2e8b5bb91a8a1b00e4e55f6480ffd4470e046ad6"
+      }
+    },
+    "28ec7ea1f3ef6fc3e311e4adbfc5107d046682e4": {
+      "2ff600d29ee478d0a8d46ef8a58afb5e038fe692": {
+        "exit_code": 1,
+        "stderr": "error: patch failed: drivers/scsi/scsi_lib.c:53\nerror: drivers/scsi/scsi_lib.c: patch does not apply\n",
+        "patch_sha256": "2acad842bfda437b0543476b280945956c87f54249d5316d2a28a29fec062965"
+      },
+      "a46ca7ce5534ca01b7cb3ed4fb39444680ebf4ee": {
+        "exit_code": 0,
+        "stderr": "",
+        "patch_sha256": "2acad842bfda437b0543476b280945956c87f54249d5316d2a28a29fec062965"
+      }
+    }
+  },
+  "mode_sense_sha256": "14246d3ac4f1a3ee6378bbf58519271947787e2cf5ebc32a9c8065861cf56f35",
+  "device_header_sha256": "d6cf1f24cdae5b7e44d2a64b5c9d24620df755641d82eddd30ffe6a9490559c2",
+  "method": "Full candidate patches reread; unrelated source change triggered conservative old witness invalidation, then replaced with explicit individual code decisions. Full reverse checks include original context and may fail solely due later surrounding layout changes; native whole-function/header comparison separately establishes DBD effect.",
+  "remote_sources_used": []
+}

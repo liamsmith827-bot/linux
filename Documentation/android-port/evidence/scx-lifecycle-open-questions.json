@@ -1,0 +1,45 @@
+{
+  "source_head": "e48d2b13bac41b2dd1b8d2db356459b196f772d1",
+  "status": "Port selection resolved by retaining generic customization with explicit trusted-callback obligations; runtime callback correctness remains unverified",
+  "questions": [
+    {
+      "topic": "Task switch notification timing",
+      "evidence": [
+        "Full original 9a3160603f3a patch and 3ae8649a1235 remerge diff",
+        "Current scx_root_disable and scx_root_enable_workfn loops",
+        "Native scoped sched_change cleanup"
+      ],
+      "finding": "Original switch_finish runs after class assignment/check_class_changing but before enqueue restoration. Merge moves disable before the guard and enable after it. Adapt placement to preserve original callback contract with native guards; full lifecycle tests pending. Source adaptation and host phase checks are now recorded in scx-callback-phase-review.json; full runtime lifecycle remains untested.",
+      "status": "Source adaptation and host ordering checks passed; build 143 passed with 145 signatures and generated flag/CRC tables verified"
+    },
+    {
+      "topic": "Dispatch veto reuse",
+      "evidence": [
+        "Full 3369614ee629 patch",
+        "Current consume_dispatch_q whole function"
+      ],
+      "finding": "disallow initialized once outside retry and task loop; a set-only callback can make one veto affect later candidates. Reset per candidate and check retries.",
+      "status": "Source adaptation and host candidate/retry checks passed; build 143 passed with 145 signatures and generated flag/CRC tables verified"
+    },
+    {
+      "topic": "Skip/repeat and class overrides",
+      "evidence": [
+        "Full 740fc669b4ae and 0952ab8171ab patches",
+        "Current enable/disable loops and SCX_TASK_READY gate"
+      ],
+      "finding": "Need assess native all-tasks-out-before-disable invariant, callback repeat/skip policy, class pointer overrides and current source contracts. No conclusion yet.",
+      "status": "Resolved for port selection: retain ACK contract and explicitly document weakened unconditional teardown/FIFO guarantees; not runtime validated",
+      "resolution_evidence": "evidence/scx-lifecycle-contract-review.json"
+    },
+    {
+      "topic": "Exit notification lifetime",
+      "evidence": [
+        "Current scx_error_irq_workfn and scx_sched_free_rcu_work"
+      ],
+      "finding": "irq_work_sync precedes free_exit_info in native cleanup. Runtime concurrency and arbitrary callback mutation unverified.",
+      "status": "Native error IRQ-work lifetime synchronization confirmed by whole-function equality; runtime concurrency not tested"
+    }
+  ],
+  "remote_sources_used": [],
+  "resolution_evidence": "evidence/scx-callback-phase-review.json"
+}

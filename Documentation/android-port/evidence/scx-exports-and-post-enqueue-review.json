@@ -1,0 +1,135 @@
+{
+  "source_head": "e1b59f578d4d25c50b177aeb638917498e720bb1",
+  "records": [
+    {
+      "commit": "edba90116b0c330cf7345aa9122546dc43e6a3d5",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Actual complete patch exports only __scx_switched_all despite broader commit-message discussion of status symbols and kfunc registration. Retain GPL export as a rebuilt-module source interface for observing full-switch state. It does not register a BPF kfunc or grant userspace access. Consumers must observe rather than independently toggle the lifecycle key. Exact SDK module use unconfirmed; generic source customization retained.",
+      "evidence": [
+        "evidence/scx-exports-and-post-enqueue-review.json",
+        "evidence/module-tables-build-143.json",
+        "SECURITY.md: SCX source exports and post-enqueue merges"
+      ],
+      "patch_sha256": "9acfaa946fd7f2f89b74c1c87fdb79e83be4f9cecfc5963fbb9b8b3b2cfd225e"
+    },
+    {
+      "commit": "e7517b2fdc758cfc87b3ea2a17c3284772b65e76",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full two-path patch retains scx_root GPL export, non-static find_user_dsq GPL export and header declaration/prototype. Lookup function body and native destruction/free paths equal LTS. Returned DSQ and scheduler are borrowed, not refcounted handles: provide proper RCU/scheduler synchronization, reject NULL root and hold queue locking for mutable fields. Do not retain raw pointers after protection expires. Native deletion marks queues invalid and schedules kfree_rcu; root kobject release queues RCU work. Export alone supplies no lifetime pin or new userspace/BPF callable entry. SDK build exports verified; particular installed consumer unconfirmed, not grounds for omission.",
+      "evidence": [
+        "evidence/scx-exports-and-post-enqueue-review.json",
+        "evidence/module-tables-build-143.json",
+        "SECURITY.md: SCX source exports and post-enqueue merges"
+      ],
+      "patch_sha256": "c6162851e56f154aa6f1f1374f29a114580d1e6b766a4a2aed7d600645ab8645"
+    },
+    {
+      "commit": "e61271a0b21f7de5dc335da38b4a39529c388ee9",
+      "disposition": "merge-resolution-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full unique remerge diff, including non-conflict curr-to-donor edits, examined. Keep upstream local_dsq_post_enq factorization and use the scheduling donor for priority and slice decisions under proxy execution; the running lock owner may differ. Whole helper equals LTS after donor substitution, including later IN_BALANCE early return. dispatch_enqueue retains one helper call and native release ordering with separately reviewed priority-queue hook. Do not restore duplicate pre-factorization code.",
+      "evidence": [
+        "evidence/scx-exports-and-post-enqueue-review.json",
+        "evidence/module-tables-build-143.json",
+        "SECURITY.md: SCX source exports and post-enqueue merges"
+      ],
+      "patch_sha256": "a15e228b8f415a397aefff7385d402c8b50c0f4083b0624e9af3d0ad50a059ff"
+    },
+    {
+      "commit": "f139be5bb5a2fb0b1308c7f0c2b7240c9619541d",
+      "disposition": "merge-resolution-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full unique remerge diff examined. Preserve upstream IN_BALANCE early return and donor-based preempt/slice selection. Whole move_local_task_to_local_dsq remains native LTS, including its required post-enqueue helper call, so moving a task triggers repaired preemption handling. Whole helper matches LTS except donor substitution. Preserve the stable missing-post-enqueue fix while accounting policy against the donor.",
+      "evidence": [
+        "evidence/scx-exports-and-post-enqueue-review.json",
+        "evidence/module-tables-build-143.json",
+        "SECURITY.md: SCX source exports and post-enqueue merges"
+      ],
+      "patch_sha256": "fde93dbc6904d7685df2f4927c2b97de610179eec4cdfe66a88c2acb21ec10b3"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "find_user_dsq",
+      "sha256": "c839cad1b9f521bf62acf0100120fa7d1dba752a08e81a899fc5172fe634fc1b",
+      "relationship": "Whole function equals pinned LTS except external linkage for find_user_dsq."
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "move_local_task_to_local_dsq",
+      "sha256": "f195b7d40f852ceaaedfe490d2b123a2156a27e427eb0b8be58d74a7c37b8673",
+      "relationship": "Whole function equals pinned LTS except external linkage for find_user_dsq."
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "destroy_dsq",
+      "sha256": "a4c547aed0aa6eedb3f456389171403751a1a41cfbb7d94dbcc46b8cc62cd225",
+      "relationship": "Whole function equals pinned LTS except external linkage for find_user_dsq."
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "free_dsq_irq_workfn",
+      "sha256": "f9ec91143cd1fcc9948369b282f89f3089bbd7d106c8e0ab672c8dec856e52fd",
+      "relationship": "Whole function equals pinned LTS except external linkage for find_user_dsq."
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "scx_kobj_release",
+      "sha256": "5d5dd5d55f65d7d9303408029b2c11091ae8398007e267294f2ee5b4d92c6137",
+      "relationship": "Whole function equals pinned LTS except external linkage for find_user_dsq."
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "scx_sched_free_rcu_work",
+      "sha256": "3a47d681abed46a724c94fd313e47f641b74a3e6e6830fe1e93d1d0bf723c1c2",
+      "relationship": "Whole function equals pinned LTS except external linkage for find_user_dsq."
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "scx_bpf_dsq_nr_queued",
+      "sha256": "be1fff84d901106df47e188e83546f16192555eddb94123b68e148953908472c",
+      "relationship": "Whole function equals pinned LTS except external linkage for find_user_dsq."
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "local_dsq_post_enq",
+      "sha256": "ad9c6c77b77dd6657df00790b38a08a4ba1c65296e9908e565a21679671d3e81",
+      "relationship": "Whole native helper with rq->curr replaced by rq->donor; IN_BALANCE early return preserved."
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "dispatch_enqueue",
+      "sha256": "ffb9e39f43383251330f1ef4727e07c2886bbb6abd5cb524c7d532e41adcdf94",
+      "relationship": "Whole native function after removing priority-enqueue hook, its bool and bool condition; factorized local_dsq_post_enq call preserved."
+    }
+  ],
+  "generated_export_evidence": {
+    "run": "sdk-build-attempt-143",
+    "file": "/home/liamsmith/src/kernel/kernel_manifest-6.18/common_dist/kernel_x86_64_Module.symvers",
+    "sha256": "0cc4a091c95c976a83bf976bd25691ae0b435ee96d8242d86c437028b3939544",
+    "lines": {
+      "__scx_switched_all": [
+        "0x8ee1928d\t__scx_switched_all\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+      ],
+      "scx_root": [
+        "0x2ffa329b\tscx_root\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+      ],
+      "find_user_dsq": [
+        "0xbbae39e3\tfind_user_dsq\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+      ]
+    }
+  },
+  "security": "GPL module source interfaces, not historical binary KMI promises. Native borrowed lookup requires caller lifetime and locking discipline. Whole-function comparisons and generated-symbol checks do not execute BPF, queue concurrency, module loads or emulator runtime. Initial comparison assertion included the intended static-linkage difference; corrected to compare with that prefix removed, without modifying code.",
+  "remote_sources_used": []
+}

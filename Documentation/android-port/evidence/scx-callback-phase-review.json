@@ -1,0 +1,143 @@
+{
+  "source_head": "e1b59f578d4d25c50b177aeb638917498e720bb1",
+  "records": [
+    {
+      "commit": "208fb20685fae5ec4adc26a441f44e1c51a47ea5",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full three-path patch read. Keep switching_to_scx notification after native scx_enable_task and optional BPF set_cpumask synchronization; entire function otherwise equals LTS. Callback sees native task enable/cpumask operation complete, under caller rq/task locking, before later scheduler transition completion. Callback must not sleep or retain task without valid lifetime. Exact installed SDK user unconfirmed; generic source-customization retained.",
+      "evidence": [
+        "evidence/scx-callback-phase-review.json",
+        "evidence/scx-callback-order-check.json",
+        "SECURITY.md: SCX callback phase and per-task veto"
+      ],
+      "patch_sha256": "45a9b5a6531f5ed575890fa81acdebe543ef9a4e93a2540be34e64a59c7fb135"
+    },
+    {
+      "commit": "3369614ee6295b4527d6c641b779d36466bca520",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "e1b59f578d4d25c50b177aeb638917498e720bb1"
+      ],
+      "rationale": "Full three-path two-hook patch read. Keep per-task dispatch eligibility veto and abnormal-exit notification. Adapt disallow initialization to each examined candidate, including after retry; one task veto no longer suppresses later tasks unless callback independently vetoes them. Native queue locks, remote migration eligibility and retry breather remain exactly LTS after hook removal. Exit notification remains after queuing disable work; native scx_sched_free_rcu_work synchronizes error_irq_work before freeing exit_info, so callback argument lifetime includes its invocation. Callback can run in atomic IRQ-work context and cannot retain raw exit_info beyond callback or assume all mutable state frozen. No actual lifetime race test claimed.",
+      "evidence": [
+        "evidence/scx-callback-phase-review.json",
+        "evidence/scx-callback-order-check.json",
+        "SECURITY.md: SCX callback phase and per-task veto"
+      ],
+      "patch_sha256": "840553f35bfeecd6b94f1c31dcac1599b6bb03046db9eefb1011be3bf4bb846a"
+    },
+    {
+      "commit": "a8c8158f74db775e5fe5ce9019d3aef25d37d9fc",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full backport patch/message and local upstream b7d4b28db7da89de1d03316c4e67b5a47390fcd3 patch read. Unlike pinned LTS tryget/put, use SCX_TASK_READY to admit only tasks prepared by the preceding init loop. Native scx_tasks_lock serializes list iteration against sched_ext_free removal; task rq/pi locking remains native, so no added reference is needed while this loop keeps iterator locks. Removing final put under that list lock also avoids the backport-described possible last-reference release recursing into sched_ext_free and the same lock; the reported deadlock was not reproduced here. Earlier preparation loop still obtains a reference before explicitly unlocking the iterator for init, and drops it outside the iterator locks. Batching drops locks before selecting the next candidate, not while using a selected task. Native lifetime routines are identical; hooks must honor their lock/lifetime context. READY gate is a deliberate adaptation over LTS, not an upstream-presence claim. Host checks cover gate/notification sequencing only, not actual reference counts or deadlock.",
+      "evidence": [
+        "evidence/scx-callback-phase-review.json",
+        "evidence/scx-callback-order-check.json",
+        "SECURITY.md: SCX callback phase and per-task veto"
+      ],
+      "patch_sha256": "7b1cdcc7866a8aad9280a0a1d94562ec7a3aa555035d4c527a5f37a3378e27bd"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "switching_to_scx",
+      "sha256": "d7ecac875e70f619fcef3aebdd4d69415ba7368db27a6df48a063e9b688232b3",
+      "relationship": "Whole native function after listed hook differences",
+      "changes": [
+        [
+          "\n\ttrace_android_vh_switching_to_scx(rq, p);\n",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "scx_error_irq_workfn",
+      "sha256": "c21f5a3b899550e380c45d73f5188df3b705d2af4e338a1f2846aaf86bd48831",
+      "relationship": "Whole native function after listed hook differences",
+      "changes": [
+        [
+          "\ttrace_android_vh_scx_exit_on_abnormal(ei);\n",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "scx_sched_free_rcu_work",
+      "sha256": "3a47d681abed46a724c94fd313e47f641b74a3e6e6830fe1e93d1d0bf723c1c2",
+      "relationship": "Whole native function after listed hook differences",
+      "changes": []
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "consume_dispatch_q",
+      "sha256": "1ec7f8ef5b6515a090a3ec0e55e71a1da1931f4faa490ff81586551601374461",
+      "relationship": "Whole native function after listed hook differences",
+      "changes": [
+        [
+          "\t\tbool disallow = false;\n",
+          ""
+        ],
+        [
+          "\n\t\ttrace_android_vh_scx_task_can_run_on(&disallow, p, rq);\n\t\tif (disallow)\n\t\t\tcontinue;",
+          ""
+        ]
+      ]
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "scx_task_iter_start",
+      "sha256": "f34c193bef7c20d576c884de61f2c70a99af5ba06b6053d7316a1dd89c575bd7",
+      "relationship": "Whole function identical to pinned LTS; list lock serializes removal and task lifetime during locked iteration."
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "scx_task_iter_next",
+      "sha256": "c7814efe62ed34425b74c3808616c72b103351ef889e8ed5da1cd54e39a291cb",
+      "relationship": "Whole function identical to pinned LTS; list lock serializes removal and task lifetime during locked iteration."
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "scx_task_iter_next_locked",
+      "sha256": "834f810fa7da24f5df329268a7d8228bf4e628dec00d1b335f045176694099c6",
+      "relationship": "Whole function identical to pinned LTS; list lock serializes removal and task lifetime during locked iteration."
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "sched_ext_free",
+      "sha256": "fa429b0f92e783250905a6bce85ce4b75b3926aede3b9b55bd4e230fd78791bd",
+      "relationship": "Whole function identical to pinned LTS; list lock serializes removal and task lifetime during locked iteration."
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "scx_root_disable",
+      "transition_loop_sha256": "c0c3ab0ddfafcfae30d69707e7419e81f58ccb882650db0f7cac0d09ef54df28",
+      "relationship": "Removing one notification yields identical pre-adaptation transition loop. Full root lifecycle not certified by this comparison."
+    },
+    {
+      "path": "kernel/sched/ext.c",
+      "function": "scx_root_enable_workfn",
+      "transition_loop_sha256": "14e7320e0e59f8e46c676029365f3073a43afb7a80e628340702a1b4f08b133a",
+      "relationship": "Removing one notification yields identical pre-adaptation transition loop. Full root lifecycle not certified by this comparison."
+    }
+  ],
+  "additional_local_reference": {
+    "commit": "b7d4b28db7da89de1d03316c4e67b5a47390fcd3",
+    "patch_sha256": "bbde06a880711fa709345c630880379f717496adede2a5ef53b125dfed759836",
+    "access": "Existing local git object; no remote contacted"
+  },
+  "additional_adaptation": "Move both scx_task_switch_finish notifications inside native sched_change guard after class assignment/check_class_changing and before automatic enqueue restoration, matching original 9a3160603f3a phase. Merge 3ae8649a1235 had moved disable before guard and enable after it. Other parts of those candidates remain open; these are not counted final here.",
+  "security": "Per-task veto must not leak to the next candidate. Transition callback must observe new class while task remains removed from queues, permitting vendor state preparation before enqueue. Native class guard and cleanup are preserved; arbitrary callback state corruption is not checked.",
+  "validation": "102400 extracted dispatch cases and 256 extracted transition-loop cases pass. Old control fails 18464 dispatch and 80 transition cases. Initial harness accidentally extracted the earlier preparation loop; its missing real APIs caused compile failure, corrected by selecting loop after repeat_iter label. Final current/control harnesses compile with -Werror. No BPF, actual locks, real class methods or kernel task lifetime executed. Build 143 passed; 145 module signatures and generated flag/CRC tables verified.",
+  "uncertainty": "Class override validity, skip/repeat exit completeness and full enable/disable lifecycle remain open in scx-lifecycle-open-questions.json. Exact SDK callback installation unconfirmed; keep generic source capabilities.",
+  "remote_sources_used": []
+}

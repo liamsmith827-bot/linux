@@ -6439,3 +6439,196 @@ rather than obsolete positional prefix. Build 141 passed this existing workflow
 and all 145 module signatures/tables verified. CMA pool provisioning remains
 unconfirmed and the retained runtime code is not claimed boot-tested. No remote
 source was accessed.
+
+# Recent scheduler merges and workqueue error ownership
+
+Eight merges and the original workqueue-hook addition are resolved in
+`evidence/recent-scheduler-merges-review.json`. Preserve newer native UCLAMP
+ordering, donor yield, actual-execution-task SCX kicks, slice protection and
+tracepoint exports. All unique code hunks were read. Historical ABI snapshots
+have every file delta/hunk counted and hashed, then excluded as KMI-only data;
+individual legacy field layouts are not claimed reviewed for compatibility.
+
+e48d2b13bac41b2dd1b8d2db356459b196f772d1 retains the native allocation-cleanup obligation when a vendor
+workqueue-setup callback fails. The caller frees the workqueue itself, but relies
+on this callee to release/null its per-CPU pointer allocation. Route callback
+errors through that cleanup, preserve negative status and reject missing or
+positive invalid status as EINVAL. Preserve successful custom setup. Callbacks
+must release their own partial subordinate objects, leave the core-owned array
+for core cleanup, and produce valid pool/link state on success. The hook remains
+trusted and can intentionally override ordinary allocation policy.
+
+5120 extracted-function host cases pass, with 1280 native-default comparisons;
+old control retains allocations in 480 failed cases. Pool/lock/RCU behavior is
+modeled, not kernel-thread execution. Selected SDK zero initialization masks
+uninitialized stack contents but cannot supply valid missing callback status.
+Build 142 passed; all 145 module signatures and flag/CRC tables verified.
+No remote source was accessed.
+
+# SCX callback phase and per-task veto
+
+e1b59f578d4d25c50b177aeb638917498e720bb1 resets dispatch veto state for each candidate and retry iteration.
+It also places both switch-finish callbacks after class assignment/checking and
+before automatic enqueue restoration inside the native sched_change guard,
+preserving the original hook phase while retaining Linux guard cleanup. The
+complete loops otherwise remain unchanged after removing those notifications.
+Three candidates are finalized in `evidence/scx-callback-phase-review.json`;
+the broader class-selection and skip/repeat lifecycle is still open.
+
+Native switching_to_scx setup/cpumask propagation is preserved. The ACK
+READY-only class-transition gate replaces the pinned LTS tryget/put pair.
+Native list locking protects task lifetime during this locked loop, avoiding
+a final put recursively entering sched_ext_free under the same list lock.
+The earlier preparation loop still takes a reference before unlocking for init.
+The reported deadlock was not reproduced; the host check models task states. Native cleanup synchronizes error IRQ-work before freeing
+exit_info, keeping the abnormal-exit callback argument alive through invocation;
+callbacks must not retain that raw pointer beyond its lifetime or sleep in IRQ
+context. 102400 dispatch and 256 transition-loop host cases pass; actual BPF,
+locks, class methods, asynchronous callbacks and runtime behavior are untested.
+Build 143 passed; all 145 module signatures and generated flag/CRC tables
+verified. No remote source was accessed.
+
+# SCX source exports and post-enqueue merges
+
+Four candidates in `evidence/scx-exports-and-post-enqueue-review.json` retain
+GPL module source access to the SCX full-switch static key, scheduler root and
+user DSQ lookup, plus donor-aware resolutions of two enqueue fixes. The root
+and lookup return borrowed pointers: callers must provide RCU/lifetime and
+queue locking and must not keep unprotected raw pointers. No new userspace or
+BPF-callable entry is introduced by these exports. Native destruction and RCU
+free paths are unchanged. The factorized post-enqueue helper and its native
+IN_BALANCE gate remain; local queue moves still call the repaired helper.
+Build 143 contains all three exports. No runtime concurrency was verified, and
+no remote source was accessed.
+
+# SCX customization contracts
+
+`evidence/scx-lifecycle-contract-review.json` finalizes five original/merge
+candidates while retaining generic SCX source hooks on the configured SDK kernel.
+Thirteen whole-function comparisons distinguish the hook behavior from native
+LTS code. The native class selectors, scheduler change guards, permission/error
+checks in the syscall body and DL PI fix remain. The old task_should_scx hook is
+superseded by the task-aware consolidated callback. Class/flags callbacks run
+before the guard; switch-finish notifications run after assignment and before
+reenqueue, correcting the historical merge's callback phase.
+
+These APIs deliberately trust kernel module callbacks. They can route RT tasks
+to SCX, replace affinity updates, request migration notifications and change
+slices. Callbacks must preserve valid classes, task roles, affinity accounting,
+lock context and lifetime. The port does not validate arbitrary callback pointers
+or enforce real-time latency guarantees. Default paths retain native behavior.
+
+The priority-queue hook intentionally permits vtime ordering of built-in queues,
+bypassing the policy otherwise enforced for BPF flags. Native list/tree updates
+and mixed-mode diagnostics remain, but consistent queue mode and vtime values
+are callback obligations. Starvation and SCX error/disable remain possible.
+The author's assertion of eliminated risks is not adopted as a safety finding.
+
+The skip/repeat hook allows critical tasks to transition first over multiple
+passes. A callback must eventually clear repeat and process all required tasks.
+In particular, disabling must leave no task attached to the outgoing scheduler.
+The port retains this contract: it does not guarantee termination or completeness
+for malformed callbacks. Leaving repeat positive can stall teardown/fork and
+eventually overflow; skipping remaining tasks can violate the native teardown
+lifetime invariant. Enable's READY gate also means already-enabled tasks may no
+longer reach the repeat hook to clear it. These risks are explicitly accepted for
+the requested trusted vendor customization interface, not attributed to ordinary
+userspace or claimed to be ruled out by compilation. No exact installed SDK
+callback was verified. This uncertainty is retained, not used to omit support.
+
+Build 143 and generated module checks passed. Host tests verify the recorded
+callback phase and veto scenarios only; they do not run BPF, real locks, callback
+termination or scheduler teardown. No remote source was accessed.
+
+# Diagnostic, wake and IO scheduling hooks
+
+`evidence/misc-scheduler-hooks-review.json` finalizes four commits using sixteen
+whole-function comparisons and build 144 symbol evidence. Diagnostic/task-stack,
+cmdline priority-pair, wake/exit and IO QoS source hooks remain. The block tag
+file's historical KMI declaration-only annotation is excluded. Native cmdline
+copy/bounds logic, signal bookkeeping, exit cleanup and block queue/completion
+operations remain after removing the documented callback decisions.
+
+The cmdline hooks only request vendor inheritance and restoration; the pair must
+save/restore the reader's priority, including errors, and coordinate registration
+and lifetime. There is no automatic priority boost without callbacks. Diagnostic
+hooks must avoid inappropriate disclosure and honor task/stack lifetime.
+
+Fatal-signal and cgroup freeze/thaw callbacks can suppress wakeups. Suppressing
+signal_wake_up also skips setting TIF_SIGPENDING in that call; the callback must
+arrange eventual signal notification and wake. No maximum delay is imposed.
+Malformed policy can prevent timely killing/freezing/thawing and resource release.
+Wake defaults are reset for each thread/task, and native signal/jobctl state
+changes remain. The exit-check callback is a notification after PF_EXITING,
+before seccomp-filter release, with no veto return value.
+
+IO hooks expose borrowed request/bio state and wait events; a synchronous request
+can complete before its notification, so callbacks must not assume it is still
+in flight. The six callsites retain native queue/token/wait behavior. WBT is
+compiled but WBT_MQ is disabled by default in the SDK config. Runtime IO effects,
+callback priority behavior and freeze/signal liveness were not tested. No remote
+source was accessed.
+
+# Block instrumentation lifetime and priority
+
+`evidence/block-instrumentation-review.json` records four candidates and the
+additional IO-done export is covered by the misc scheduler hook review. Source
+e43fbaaa4eaf restores eight missing generic block tracepoint exports, verified in
+build 144. Their native event payloads/calls are unchanged. Modules are rebuilt
+against these APIs; historical binary ABI preservation is not introduced.
+
+The original post-submit callback could receive objects already released by
+synchronous completion, including blk_insert_flush's empty-flush path. Source
+a365a6fe0800 snapshots callback enablement after pre-submit notification and holds
+request/bio references through the common post callback, releasing them afterward.
+The no-callback path takes no extra references. Registration after the snapshot
+starts observing later submissions. References prevent normal allocation release
+and request-tag reuse; they do not freeze mutable fields or extend referenced
+payload, callback-private or caller-managed stack lifetimes beyond their own
+ownership contracts. Callback code still needs synchronization, must not retain
+unowned pointers, and must not wait recursively for resources held by its own
+submission. Native early failure/merge paths gain no artificial post event.
+
+The SCSI queue lookup export is retained with one unconditional definition;
+a46ca7ce5534 removes its obsolete conditional duplicate. Its native get_device
+reference needs a matching put_device, not an unmatched LLDD module-reference
+drop. No new SCSI transport is selected for the SDK.
+
+The early bio priority hook remains after native priority assignment and before
+stacked submission, allowing dm-verity hash IO to inherit the selected priority.
+Native per-zone write plugging supersedes the historical workaround that skipped
+priority assignment for sequential zoned writes. Whole blk-zoned.c is pinned LTS,
+including serialized dispatch/completion and native append distinctions; zoned
+hardware behavior was not executed. Vendor priority changes can alter fairness.
+
+Build 144 passed. The lifetime host check passes 1536 cases; the old control fails
+640 modeled lifetime cases. These are allocation/reference/control-flow models,
+not real IO or concurrency tests. Build 145 passed with all 145 module signatures and tables verified. No remote
+resource was accessed.
+
+# SCSI witness revalidation
+
+The duplicate-export cleanup conservatively invalidated two older whole-file
+review witnesses. `evidence/scsi-export-witness-revalidation.json` replaces them
+with individual decisions after reading both complete patches. Native mode-sense
+DBD selection and its device field remain present; both command trace exports
+remain. The source change does not lose either previously reviewed behavior.
+Full reverse-apply outcomes and current source hashes are recorded. No remote
+source was accessed; URLs embedded in commit messages were not opened.
+
+# Scheduler syscall-move merge
+
+The entire unique resolution of 1dfbe413d21f was read, including the 1466-line
+core patch. `evidence/scheduler-syscall-move-merge-review.json` maps its removed
+helpers and syscall bodies to current native locations and reviewed Android
+hooks. It does not restore old syscall copies or obsolete non-SMP stubs. The
+current kernel retains native copying/authorization/guard/DL/affinity fixes and
+post-hook nice/clamp validation adaptations. The old sched_getaffinity hook has
+no callsite in final ACK either; its declaration/export is retained without
+inventing a new active callback.
+
+Makefile.modfinal remains exactly LTS. The pinned Kleaf mixed-build staging puts
+base outputs in OUT_DIR/objtree, where native BTF processing expects vmlinux;
+MODULE_PAHOLE_FLAGS remains. No historical mixed-build-prefix patch is required.
+Build 145 passed with 145 verified module signatures and tables. Runtime syscall
+behavior and BTF/module loading were not tested. No remote source was accessed.

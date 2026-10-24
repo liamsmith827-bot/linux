@@ -1,0 +1,328 @@
+{
+  "source_head": "a46ca7ce5534ca01b7cb3ed4fb39444680ebf4ee",
+  "record": {
+    "commit": "1dfbe413d21f18f714cca818435299947bf5649a",
+    "disposition": "merge-resolution-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "8771c5fb4ae85a547ef9ccb03a1f5210c7de997c",
+      "277f9e226c2176d4d1f7581400f26af58c6190ba",
+      "5ef031bd0c535c61b84f5d00a453f0fb7819e87e"
+    ],
+    "rationale": "Complete four-path unique remerge diff read, including both large core.c deletion hunks (1466-line rendered core patch) and non-conflict syscall/helper removal. Keep LTS function placement: syscall code in syscalls.c and CPU utilization in fair.c, not duplicate historical copies in core.c. Mapped 37 removed helper entries and 10 syscall entry bodies; 28 helper implementations plus one replaced helper and all 10 syscall bodies are native. Eight modified helpers are individually accounted for by current reviewed hooks/guards in this report. Retain current Android uclamp/nice/affinity/yield hooks and module exports at their native locations. Historical sched_getaffinity hook call is absent in final ACK as well as port; retain its declaration/export but do not invent an active call. Preserve KUnit header and task trace definition boundary. Retain Android max_load_balance_interval declaration; old !SMP stubs were subsequently removed from native tree, and SDK is SMP. Whole Makefile.modfinal equals LTS, retaining MODULE_PAHOLE_FLAGS and objtree vmlinux; local pinned Kleaf copies base-kernel outputs into OUT_DIR/objtree for mixed builds, making historical mixed-build-prefix unnecessary. Build145 verifies original workflow with this staging. Native copy_struct_to_user, permission/bounds checks, scoped guards and DL/affinity fixes are not replaced by 2024 implementations.",
+    "evidence": [
+      "evidence/scheduler-syscall-move-merge-review.json",
+      "evidence/scx-lifecycle-contract-review.json",
+      "evidence/affinity-hooks-review.json",
+      "evidence/nice-hook-bounds-check.json",
+      "SECURITY.md: Scheduler syscall-move merge"
+    ]
+  },
+  "patch_sha256": "c7e963edf9ab4e05ed96d47d26d5b2431a069ca084d1daab8b9ddb0fa8f32524",
+  "mapping": [
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "uclamp_validate",
+      "sha256": "3e10497e13c41a5b0e6b2847c2d2064bb164d03e535008dd03124090aa7ad1a9",
+      "native_equal": false,
+      "review": "Current native validation plus callback override; successful override enables uclamp static key before rq locking, as 277f9e226c21 requires. Existing bounds/override analysis retained."
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "uclamp_reset",
+      "sha256": "a93f8de10033e0ad486b176e0fcd2d3577634628833aca2e186cf3c8674fe248",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "__setscheduler_uclamp",
+      "sha256": "b36af7099f3d56556b47f5683f55ba36a7cf10c57c99e149e7d921327027719e",
+      "native_equal": false,
+      "review": "Native implementation plus post-setting min/max notifications; no manual historical clamp restore."
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "set_user_nice",
+      "sha256": "6d115f9fad9480e037d7918ead783f2f7e1a51445e1b89145dfd859b2266c308",
+      "native_equal": false,
+      "review": "Native scope guard plus before-lock and locked callbacks; 8771c5fb4ae8 revalidates mutable nice after locked hook before priority arithmetic."
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "is_nice_reduction",
+      "sha256": "9f870fa362570838afe2dcd5b0352ded9373467a066b726b72f22357b02563a4",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "can_nice",
+      "sha256": "1429f82fdc76ff8f988adff94153f78aea8235ecdbb9aa4cc537606c5f21476f",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "task_prio",
+      "sha256": "83ff34f3730075366c4c0fc88b192d8fa0733ac47372ac6b10397ba1ea382039",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "idle_cpu",
+      "sha256": "dd883e0a71053d8465cff537f625161e5061da6bf712d9806bb4c0433f3591f9",
+      "native_equal": false,
+      "review": "Uses idle_rq helper for same idle/current/nr_running/ttwu_pending predicate. Retain current placement."
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "available_idle_cpu",
+      "sha256": "7f44121c75310ec2587cbb013a5f6f9044c22eca0fa3a5273d230e85d7d52109",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "sched_core_idle_cpu",
+      "sha256": "f7c3dc15489e4969bc3ccfa4338dd20e086bd12767b982dc25e462492e11d680",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "effective_cpu_util",
+      "sha256": "b8707c59ed7db66ec29f12e91699f50da2ced0bf5c4e1ef2da1e96d6446e932e",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/fair.c",
+      "function": "sched_cpu_util",
+      "sha256": "90f81cbf50793c72b78af8bd6639412e52e5e653b57b6de7a1dc12b1f3f7d9b1",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "check_same_owner",
+      "sha256": "f3f0a64115b31ec05a549c9c6c9a77f943007c69e937deed6d2950bb8d539365",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "user_check_sched_setscheduler",
+      "sha256": "ff0d895699a193f9726150fb8319e852d8b9b1c21dd54ad322bd93b1dbafd90a",
+      "native_equal": false,
+      "review": "Native checks plus Android CAP_SYS_NICE requirement for util-clamp changes; does not weaken native owner/rlimit/capability checks."
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "__sched_setscheduler",
+      "sha256": "cdeaf462edc32658e63785dd4e82ce0e287e811c3156faa8765a92f9f4958fdc",
+      "native_equal": false,
+      "review": "Native whole body after class/flags/post-assignment notifications, as SCX whole-function witness shows. Native DL PI helper and sched_change cleanup retained."
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "_sched_setscheduler",
+      "sha256": "d5a85e29f66b2e7fc4c472483d7f7619eb075305d44fcba943c092ff794377c5",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "sched_setscheduler",
+      "sha256": "a9984079bcdef0f6ec7522d8ce71c18d9053046ced77870762420316c2e166a9",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "sched_setattr",
+      "sha256": "9bb275d240cac1c3ede99d0bf5aee0ab769c43b29a177e39324fd206ca0c227f",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "sched_setattr_nocheck",
+      "sha256": "37603962ca95522127931fafdaffdea71d7e260044247d16326f3727e0191b6e",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "sched_setscheduler_nocheck",
+      "sha256": "2e4ed85d2f779a222e9c6c1588d7ebb6635d2634dee2401da52d61616e733463",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "sched_set_fifo",
+      "sha256": "882baf706dfce639cd71ab7c862ab8fa2dd7fa2ad5e07aea13a56a1960ea219d",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "sched_set_fifo_low",
+      "sha256": "993a607fc115220d3521f477e99ab11e7650c3b81d73434debb6042ab942a95e",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "sched_set_normal",
+      "sha256": "272c056263bf2b2418ad76eafe16823555ac1889c40db45dc9fd1d2a1ac264f3",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "do_sched_setscheduler",
+      "sha256": "0be438592b112c95b55a862385686d8fc4f85a79631331eeaa0d30e9e1de2dd7",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "sched_copy_attr",
+      "sha256": "3ef6c89b3964a3f3f0cbd48aeab902375abfd74c915180f2db14fd1065197317",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "get_params",
+      "sha256": "3bebf55def0a1cf1ec2cfbe698e7c42f14a3b7d8cd051ce7c25ca371fbc91ff8",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "sched_attr_copy_to_user",
+      "replacement": "Native sched_getattr copy_struct_to_user path; whole syscall compared below",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "dl_task_check_affinity",
+      "sha256": "3006201ce3f0ab9d8d6d919f30e14910e6930c4aecbb1e99910251770c67a195",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "__sched_setaffinity",
+      "sha256": "388ffa202a1a82bc505f6f3c03c3a70bf499453b73e62a7f507d1329d97ffd8e",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "sched_setaffinity",
+      "sha256": "694cd0105c14f98d087f278703418a4b72c1fe73daffbe6184c8dcbdb57738e3",
+      "native_equal": false,
+      "review": "Native path with early skip notification after ownership/capability/LSM checks and post-result hook. Current affinity_context/cleanup and mask guards remain."
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "get_user_cpu_mask",
+      "sha256": "f18d57708d6f8aea1d6435ef5b597054c80a1a838aed24f8dcce97bf6b777f0e",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "sched_getaffinity",
+      "sha256": "f19c4f3c3d8bd638ffaf9c9a5ae9506d4a9135fc75b17cc437643a6002e48b54",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "do_sched_yield",
+      "sha256": "833ec2cfd3889f5e578015839e995a79d1f747782c7b48f12424a5b2ccc8385c",
+      "native_equal": false,
+      "review": "Native donor yield and lock/accounting flow plus trusted early veto/post notification and optional NULL method handling; no resurrection of current-task-only dispatch."
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "idle_task",
+      "sha256": "65b63cbeca1c1757f0b6f05cb9d23481051a1e24a3f547031ed0b7cd847d85ec",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "find_process_by_pid",
+      "sha256": "3e89e74d0e967bb4cd48afd6bb30c1cc8daa84ab57371d9288173fb3334b76ca",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "find_get_task",
+      "sha256": "dd5380364bcccd870e091ac07fccf74c497a94dc6eb98900d118c6581193a93b",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "function": "__setscheduler_params",
+      "sha256": "6d19ff37409e763369bbc246fa0c62f3de6dd3c44511b22af94d2c8070e550ff",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "syscall": "nice",
+      "sha256": "2c0cf6774e06f5b918bea27612b118c04ffef9f10458290ec1f425019898562a",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "syscall": "sched_setscheduler",
+      "sha256": "a0e67e917b446f9170601b04a0b3508ee49745154a23f5b48e7da55b4ca97a92",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "syscall": "sched_setparam",
+      "sha256": "9a7d9324ecc3a0954fed4508b6ef319784848e811d2ece16fd485a078c66c790",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "syscall": "sched_setattr",
+      "sha256": "7911d8c4ebeb7c231c9579bbd0e6bbeb28b5988d0ccf1ecd0bb8bb55dc5b1ea3",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "syscall": "sched_getscheduler",
+      "sha256": "29c827ec52b2ce69d20f4c96abc05a0f293fe41b0505b4292148040ee4fa9a95",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "syscall": "sched_getparam",
+      "sha256": "596bf16b5b87348132707c56273544fadeba8aeaf91f6cb9001fe8265c76b256",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "syscall": "sched_getattr",
+      "sha256": "a709c8d23f2d08b9afe7987284b8c189f8396e73ed19ba8a225ce9045dc770b5",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "syscall": "sched_setaffinity",
+      "sha256": "bc99da8cbca70861a2270296d2485554562b4ee98e17063a3713c539867efc37",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "syscall": "sched_getaffinity",
+      "sha256": "b2dc103108b80e574c4b53bb6ae283e25688b9039e420852f9ad6f511cf30e26",
+      "native_equal": true
+    },
+    {
+      "path": "kernel/sched/syscalls.c",
+      "syscall": "sched_yield",
+      "sha256": "160b62f0f444d4a9dd944811f63344a26765fb673d5328dd7484dc53b858cd61",
+      "native_equal": true
+    },
+    {
+      "path": "scripts/Makefile.modfinal",
+      "sha256": "e3f49283b69cac0c29b33e23c7f2422cb7d5cd40016f1407da4b3b372a9d7619",
+      "native_equal": true
+    }
+  ],
+  "build_dependency": {
+    "commit": "2142663d1a266266ec5d42c942ae14172be8dcc0",
+    "path": "/home/liamsmith/src/kernel/kernel_manifest-6.18/build/kernel/kleaf/impl/kernel_build.bzl",
+    "sha256": "04abf2f66efbf5d7f556b4819c1bafc838f3c4d877cc961011dccad607eafe9f",
+    "evidence": "_create_kbuild_mixed_tree sets KBUILD_MIXED_TREE=${OUT_DIR}, documented as objtree, copies flattened base outputs there. Native module BTF consumes objtree/vmlinux and MODULE_PAHOLE_FLAGS."
+  },
+  "historical_api": "Local final ACK git grep returns only sched_getaffinity hook declaration and export, no invocation. The original merge syscalls.c also contains no trace_android calls; later required hooks were independently restored. This deletion merge is assessed by actual final code, not replayed wholesale.",
+  "verification": "Build145 passed, all 145 signatures and flag/CRC tables verified. Function inventory initially needed pointer-return helpers added and fair.c searched; obsolete sched_attr_copy_to_user is replaced by the native sched_getattr copy_struct_to_user path. Whole syscall comparisons establish current LTS bodies. No runtime syscall or BTF-loading test.",
+  "remote_sources_used": []
+}

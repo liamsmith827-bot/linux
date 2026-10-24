@@ -1,0 +1,181 @@
+{
+  "source_head": "a46ca7ce5534ca01b7cb3ed4fb39444680ebf4ee",
+  "records": [
+    {
+      "commit": "fe901328d4613066a620028690db6b14f8975b84",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Complete three-path patch retains blocked-task diagnostic hook, header include/declaration and GPL registry. Whole sched_show_task equals LTS after hook removal. Callback executes after worker/stop/SCX diagnostics while try_get_task_stack reference is held, before show_stack/put_task_stack; it is skipped when no task stack can be acquired. Diagnostic callback must respect caller context and task field synchronization, not retain the raw pointer or leak sensitive task data into logs. No new proc/tracefs userspace entry is added. Exact installed callback unconfirmed; generic diagnostic customization retained.",
+      "evidence": [
+        "evidence/misc-scheduler-hooks-review.json",
+        "SECURITY.md: Diagnostic, wake and IO scheduling hooks"
+      ],
+      "patch_sha256": "2d568986df8fe8bc9639e4a4a2b0cbeb0be26dceee87e43b3e8a019c720b247e"
+    },
+    {
+      "commit": "8494e1968073750683e85057ae52d79d4690fa20",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Complete three-path patch retains cmdline priority inherit/restore hooks around get_mm_cmdline. Native task reference in proc_pid_cmdline_read and mm reference remain; entire get_mm_cmdline and reader functions equal LTS, preserving arg_lock/FOLL_ANON/bounds/copy behavior. If inherit sets prio_inherited, restore is called for every returned result including read errors before mmput. The paired callbacks must save/restore the reading task priority and register/coordinate their lifetime; saved_prio is meaningful only when the inherit callback initialized it. No callback means prio_inherited=false and no saved_prio read. SDK zero stack initialization does not prove callback correctness. A bad or missing restore callback can leave a reader boosted and alter scheduling fairness; no automatic priority boost is implemented by these trace calls. Does not add a new read-authorization bypass.",
+      "evidence": [
+        "evidence/misc-scheduler-hooks-review.json",
+        "SECURITY.md: Diagnostic, wake and IO scheduling hooks"
+      ],
+      "patch_sha256": "cb31a5245fde911cc5e460117bcae17dacd94e9f277b72c3508d110ddb0e23a0"
+    },
+    {
+      "commit": "65298bbcf59e4d250025fb0b04dec4bc3148d353",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Complete six-path patch retains process exit notification, per-thread fatal-signal wake veto, cgroup freeze/thaw wake veto, headers/registries and non-GPL-specific EXPORT_SYMBOL wake_up_state/nr_running interfaces. Whole functions match native after listed hooks removed; signal pending SIGKILL, group-exit/jobctl bookkeeping, sighand locking and native do_exit cleanup remain. wake resets true for every signal-loop thread, not once across the group. Vetoing signal_wake_up also skips TIF_SIGPENDING setting inside that function, not merely the physical wake; a deferred callback implementation must arrange eventual flag/wake handling or tasks can remain alive/frozen and resource release stalls. Freeze hook receives task and wake pointer, not the freeze bool, and can veto both freeze and thaw wake. Exit callback runs after PF_EXITING before seccomp release, not as a veto return. Retain intentional vendor load-smoothing control with explicit liveness/security tradeoff; no bounded delay or runtime guarantee claimed.",
+      "evidence": [
+        "evidence/misc-scheduler-hooks-review.json",
+        "SECURITY.md: Diagnostic, wake and IO scheduling hooks"
+      ],
+      "patch_sha256": "0a095e39fb17cf7996a9de082a33f930d543260393f3fb622f51b580acad1527"
+    },
+    {
+      "commit": "88906d72c37cf8736b03a9417d68d6c8c0eb147a",
+      "disposition": "partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "e43fbaaa4eaf8d766329854c00e292b438e16cb7"
+      ],
+      "rationale": "Complete eight-path patch read. Initial symbol check found the block_io_done export missing from the integrated port; e43fbaaa4eaf adds it. Retain block_io_done GPL trace export and six QoS notifications: tag wait before io_schedule, rq_qos token wait before io_schedule, synchronous request after queue run before wait/poll, WBT classification before filtering, WBT tracking after flags update, and io_schedule_prepare after in_iowait=1 before plug flush. Whole affected functions equal LTS after notifications removed, preserving native queue/token/completion control flow. Request may already have completed before notification; native synchronous end_io returns RQ_END_IO_NONE and caller owns request, so do not assume in-flight state or retain an unowned pointer. NULL arguments on wait events are intentional. WBT=y but WBT_MQ default disabled in SDK; no claim default WBT activity. Omit sole historical KMI android_kabi include/ANDROID_KABI_DECLONLY(trace_eval_map). Generic IO instrumentation/source customization is retained, not future hardware support. Callback overhead/state mutation can affect latency; no callback measurements are claimed.",
+      "evidence": [
+        "evidence/misc-scheduler-hooks-review.json",
+        "SECURITY.md: Diagnostic, wake and IO scheduling hooks"
+      ],
+      "patch_sha256": "a04a607ca2f77edb06988ba7618206a067c1a65f9e8b020aaf514ba80dbb3ee6"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/sched/core.c",
+      "function": "sched_show_task",
+      "sha256": "ea1f7d65967834034e45debb756a1dcae16de100bf4f83c51cf357e3ba6d7395",
+      "relationship": "Whole native function after notification hook removal (blank-line differences ignored)"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "io_schedule_prepare",
+      "sha256": "2545749c572451d0365c5db33c4262a362c214f088bb612572b0c5bf6784162a",
+      "relationship": "Whole native function after notification hook removal (blank-line differences ignored)"
+    },
+    {
+      "path": "block/blk-mq-tag.c",
+      "function": "blk_mq_get_tag",
+      "sha256": "0017c811c86166fa8b4436f2875902a06d1ffbdd459cc39a556e1a57d515a66b",
+      "relationship": "Whole native function after notification hook removal (blank-line differences ignored)"
+    },
+    {
+      "path": "block/blk-mq.c",
+      "function": "blk_execute_rq",
+      "sha256": "0927fded5f72d713801a019623a6fdf7e1528bcd8ed3c1d67bd2691b332c5d84",
+      "relationship": "Whole native function after notification hook removal (blank-line differences ignored)"
+    },
+    {
+      "path": "block/blk-rq-qos.c",
+      "function": "rq_qos_wait",
+      "sha256": "5fede233efd3b36a837b6bf9b7ae78f7387b7f41c99927a49e84af9ac9c88bd6",
+      "relationship": "Whole native function after notification hook removal (blank-line differences ignored)"
+    },
+    {
+      "path": "block/blk-wbt.c",
+      "function": "wbt_wait",
+      "sha256": "bab92c5ca1ba4d8dacf5d5fd881a6fa2ec27896296758bcda52e34c0961dd815",
+      "relationship": "Whole native function after notification hook removal (blank-line differences ignored)"
+    },
+    {
+      "path": "block/blk-wbt.c",
+      "function": "wbt_track",
+      "sha256": "396fe1ea8d94f6e8de7233352a7066f94dcfa8ac5642906a521a4f34ab10e065",
+      "relationship": "Whole native function after notification hook removal (blank-line differences ignored)"
+    },
+    {
+      "path": "fs/proc/base.c",
+      "function": "get_mm_cmdline",
+      "sha256": "7ba7051f3ccefe143cc43e0dcddde1d1109f86fc513ad336e2521191bce4bc51",
+      "relationship": "Whole native function (blank-line differences ignored)"
+    },
+    {
+      "path": "fs/proc/base.c",
+      "function": "proc_pid_cmdline_read",
+      "sha256": "d93d5dadd243df65ff02c947b743f5bea4673c6da4c74bc79f97666c6124dc9a",
+      "relationship": "Whole native function (blank-line differences ignored)"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "wake_up_state",
+      "sha256": "75064c96fed4b4399e07e07567b7a205779b1299629a30f0d40fa55c94069ab4",
+      "relationship": "Whole native function (blank-line differences ignored)"
+    },
+    {
+      "path": "kernel/sched/core.c",
+      "function": "nr_running",
+      "sha256": "7151cc09907f95fd7aefdd24a5616397d7889b3ceac019775ef79bb8603b9e43",
+      "relationship": "Whole native function (blank-line differences ignored)"
+    },
+    {
+      "path": "kernel/signal.c",
+      "function": "signal_wake_up_state",
+      "sha256": "a6b52808be3660bdf583552df8a3cecadf482e6fee65d1b131fed955a02ae935",
+      "relationship": "Whole native function (blank-line differences ignored)"
+    },
+    {
+      "path": "fs/proc/base.c",
+      "function": "get_task_cmdline",
+      "sha256": "24b6aaf6442a4f998a76143320dd03f3355c778aa89d851357e27862419c28db",
+      "relationship": "Whole native function after inherit/restore callbacks, locals and explanatory comment removal (blank-line differences ignored)"
+    },
+    {
+      "path": "kernel/cgroup/freezer.c",
+      "function": "cgroup_freeze_task",
+      "sha256": "dac6892781c2577af1ec6bf4792914de03fa89aba61273a3ccd3cc84750b6030",
+      "relationship": "Whole native function after wake veto callback/branches removal; jobctl and sighand locking unchanged (blank-line differences ignored)"
+    },
+    {
+      "path": "kernel/signal.c",
+      "function": "complete_signal",
+      "sha256": "fc5b85fb6e42e02e4a367a6afb0dae4f0be506056fa36e070946b3c0d41e814e",
+      "relationship": "Whole native function after notification and per-task wake veto removal; pending SIGKILL and exit bookkeeping unchanged (blank-line differences ignored)"
+    },
+    {
+      "path": "kernel/exit.c",
+      "function": "do_exit",
+      "sha256": "2a8d54dcef7e8d27e14b284baf3ea5c7716d0ec213f699d70c1ba4aecba5022d",
+      "relationship": "Whole native function after hooks and separately retained profile_task_exit removal; native cleanup remains (blank-line differences ignored)"
+    }
+  ],
+  "generated_symbol_evidence": {
+    "run": "sdk-build-attempt-145",
+    "file": "/home/liamsmith/src/kernel/kernel_manifest-6.18/common_dist/kernel_x86_64_Module.symvers",
+    "sha256": "cb8f26077f3540fb2052e6535f5fc957b0c9224405436b3f5d4c2e883f6e6a37",
+    "lines": {
+      "wake_up_state": [
+        "0x79db2105\twake_up_state\tvmlinux\tEXPORT_SYMBOL\t"
+      ],
+      "nr_running": [
+        "0xd2c7d4a1\tnr_running\tvmlinux\tEXPORT_SYMBOL\t"
+      ],
+      "__tracepoint_block_io_done": [
+        "0x56bae107\t__tracepoint_block_io_done\tvmlinux\tEXPORT_SYMBOL_GPL\t"
+      ]
+    },
+    "source": "a46ca7ce5534ca01b7cb3ed4fb39444680ebf4ee"
+  },
+  "validation": "Sixteen whole-function comparisons after explicitly listed Android hook changes, ignoring blank lines. Build 144 and generated module signature/table checks passed. These compared functions are unchanged since the verified source; later post-submit lifetime and duplicate SCSI export changes also passed build 145. No runtime priority inversion, signal delivery, freeze/thaw or IO timing test was run. Callback deployment remains unconfirmed; generic capability is retained rather than omitted from lack of a located consumer.",
+  "callback_context": "Unrestricted DECLARE_HOOK follows normal tracepoint protection; restricted hook macro directly invokes non-unregisterable callback. Both still inherit callsite context. Signal/freezer callbacks run under sighand locking; IO callbacks must honor local wait/queue/plug state and avoid recursive IO or invalid lifetime. No blanket assumption that every restricted hook disables preemption is made.",
+  "remote_sources_used": [],
+  "subsequent_build_verification": {
+    "run": "sdk-build-attempt-145",
+    "source": "a46ca7ce5534ca01b7cb3ed4fb39444680ebf4ee",
+    "result": "Workflow passed; 145 signatures and generated CRC/flag tables verified."
+  }
+}
