@@ -818,7 +818,7 @@ __perf_mmap_to_page(struct perf_buffer *rb, unsigned long pgoff)
 		return NULL;
 
 	if (pgoff < metadata_pages)
-		return virt_to_page(rb->user_page + pgoff * PAGE_SIZE);
+		return virt_to_page((char *)rb->user_page + pgoff * PAGE_SIZE);
 
 	return virt_to_page(rb->data_pages[pgoff - metadata_pages]);
 }
@@ -840,7 +840,6 @@ static void __perf_mmap_free(void *addr, int order)
 {
 	struct page *page = virt_to_page(addr);
 
-	page->mapping = NULL;
 	__free_pages(page, order);
 }
 

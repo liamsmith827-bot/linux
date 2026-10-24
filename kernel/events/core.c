@@ -6863,8 +6863,8 @@ out_put:
 
 static vm_fault_t perf_mmap_pfn_mkwrite(struct vm_fault *vmf)
 {
-	/* The first page is the user control page, others are read-only. */
-	return vmf->pgoff == 0 ? 0 : VM_FAULT_SIGBUS;
+	/* The reported metadata page is writable; data and AUX stay read-only. */
+	return vmf->pgoff < __PAGE_SIZE / PAGE_SIZE ? 0 : VM_FAULT_SIGBUS;
 }
 
 static int perf_mmap_may_split(struct vm_area_struct *vma, unsigned long addr)
@@ -7001,7 +7001,8 @@ static void perf_mmap_unaccount(struct vm_area_struct *vma, struct perf_buffer *
 {
 	struct user_struct *user = rb->mmap_user;
 
-	atomic_long_sub((perf_data_size(rb) >> PAGE_SHIFT) + 1 - rb->mmap_locked,
+	atomic_long_sub((perf_data_size(rb) >> PAGE_SHIFT) +
+			(__PAGE_SIZE / PAGE_SIZE) - rb->mmap_locked,
 			&user->locked_vm);
 	atomic64_sub(rb->mmap_locked, &vma->vm_mm->pinned_vm);
 }
@@ -7013,6 +7014,8 @@ static int perf_mmap_rb(struct vm_area_struct *vma, struct perf_event *event,
 	struct perf_buffer *rb;
 	int rb_flags = 0;
 
+	if (nr_pages < __PAGE_SIZE / PAGE_SIZE)
+		return -EINVAL;
 	nr_pages -= (__PAGE_SIZE / PAGE_SIZE);
 
 	/*
@@ -7104,7 +7107,7 @@ static int perf_mmap_aux(struct vm_area_struct *vma, struct perf_event *event,
 	aux_offset = READ_ONCE(rb->user_page->aux_offset);
 	aux_size = READ_ONCE(rb->user_page->aux_size);
 
-	if (aux_offset < perf_data_size(rb) + PAGE_SIZE)
+	if (aux_offset < perf_data_size(rb) + __PAGE_SIZE)
 		return -EINVAL;
 
 	if (aux_offset != vma->vm_pgoff << PAGE_SHIFT)
