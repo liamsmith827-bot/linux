@@ -1,0 +1,464 @@
+{
+  "source_head": "5aa2127f22250288d2ff23e9c257a8f2d50bd717",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "baf3e174b8b11e60a7b0b199db84d1b688fbccf8",
+      "disposition": "already-represented-upstream",
+      "result_commits": [
+        "25f003de987aed630db265ceae9cd978537a3f80"
+      ],
+      "rationale": "Native core takes ops->owner module reference before probe_device and drops it on failure/teardown after domains are released. This supersedes the old add_device/remove_device spelling and preserves module lifetime protection. Entire core iommu.c is LTS-identical. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+      "evidence": [
+        "evidence/iommu-generic-review.json",
+        "evidence/iommu-hook-bounds-check.json",
+        "SECURITY.md: IOMMU callback allocation and cookie contracts"
+      ],
+      "patch_sha256": "6dac2678fc3d7742dcbf90e3c624c6625c1711ae1ab806aae0abad803e6c8455",
+      "changed_paths": [
+        "drivers/iommu/iommu.c",
+        "include/linux/iommu.h"
+      ]
+    },
+    {
+      "commit": "237cd1e40dae35e2dfc1207ecc12d5338e4f4fbd",
+      "disposition": "superseded",
+      "result_commits": [
+        "fc10cca69ee8af49778ad76c1e5fddf83d5026c8",
+        "c0aec6680b6c82fe893a546e322e1130cd5cf21e"
+      ],
+      "rationale": "Initial automatic owner assignment landed upstream, then c0aec6680b6c deliberately restored static THIS_MODULE initialization to permit const ops. Keep final native ARM SMMU/SMMUv3 owner initializers and registration API rather than reviving a const-casting dynamic write. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+      "evidence": [
+        "evidence/iommu-generic-review.json",
+        "evidence/iommu-hook-bounds-check.json",
+        "SECURITY.md: IOMMU callback allocation and cookie contracts"
+      ],
+      "patch_sha256": "89dfefb675eb44faa35d018cb118fbc64ad8d30cde5fa14f13eded2ca780cfac",
+      "changed_paths": [
+        "drivers/iommu/arm-smmu-v3.c",
+        "drivers/iommu/arm-smmu.c",
+        "include/linux/iommu.h"
+      ]
+    },
+    {
+      "commit": "0d5de782bbcb6056d000c24c553ba771e4a57929",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Explicit DMA reserve-I/O-range helper/declaration/stub was removed by 0cb1adebab01 and remains absent in final ACK and port. This does not remove native reserved-region handling; do not restore an obsolete public helper solely from its original addition. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+      "evidence": [
+        "evidence/iommu-generic-review.json",
+        "evidence/iommu-hook-bounds-check.json",
+        "SECURITY.md: IOMMU callback allocation and cookie contracts"
+      ],
+      "patch_sha256": "5f22bb7106c81d11b10c9b2349b83172047698e98488c42fdd936651c897bd27",
+      "changed_paths": [
+        "drivers/iommu/dma-iommu.c",
+        "include/linux/dma-iommu.h"
+      ]
+    },
+    {
+      "commit": "c640e76a4e2d8c7cd88308234b7173d63a4048b5",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Hard-coded best_fit field, implementation and enable API were removed by dd2de4d1215b and remain absent. The final generic vendor-data, algorithm-selection and replacement-allocation hooks provide customization and are retained separately; do not reintroduce this obsolete allocator alongside them. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+      "evidence": [
+        "evidence/iommu-generic-review.json",
+        "evidence/iommu-hook-bounds-check.json",
+        "SECURITY.md: IOMMU callback allocation and cookie contracts"
+      ],
+      "patch_sha256": "7fc5b4c53160d142b3fc1565ee716a6881e65aff63d6164f21228dcf08fbe919",
+      "changed_paths": [
+        "drivers/iommu/dma-iommu.c",
+        "drivers/iommu/iova.c",
+        "include/linux/dma-iommu.h",
+        "include/linux/iova.h"
+      ]
+    },
+    {
+      "commit": "ee98c0848c622439978cdd4b5998aa3ea9e1b970",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "5aa2127f22250288d2ff23e9c257a8f2d50bd717"
+      ],
+      "rationale": "The compile-time IOMMU_LIMIT_IOVA_ALIGNMENT/IOMMU_IOVA_ALIGNMENT policy/helper was removed by 9a76e701d5cf and is absent in final ACK and port. Final ACK uses a49f6098d54b callback instead; retain that configurable interface with bounds checking, not the old build-time policy. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+      "evidence": [
+        "evidence/iommu-generic-review.json",
+        "evidence/iommu-hook-bounds-check.json",
+        "SECURITY.md: IOMMU callback allocation and cookie contracts"
+      ],
+      "patch_sha256": "ad6063aa959a7e696f8c7946c7892d189cd9381df40050e6ee1a242f0172af57",
+      "changed_paths": [
+        "drivers/iommu/Kconfig",
+        "drivers/iommu/iova.c"
+      ]
+    },
+    {
+      "commit": "da3e085cec054bdb780e396ab9c89352c8de6a8e",
+      "disposition": "already-represented-upstream",
+      "result_commits": [
+        "4e89dce725213d3d0b0475211b500eda4ef4bf2f"
+      ],
+      "rationale": "Despite a historical ACK revert, upstream supplies full-tree retry after cached-node search fails. Current native retry_pfn/iova_find_limit traversal and subsequent fixes are retained exactly; no claim that retry behavior was permanently removed. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+      "evidence": [
+        "evidence/iommu-generic-review.json",
+        "evidence/iommu-hook-bounds-check.json",
+        "SECURITY.md: IOMMU callback allocation and cookie contracts"
+      ],
+      "patch_sha256": "bbd98b3dae32fe6f6475d83a3d6274f77fab885aac3919ec43af11526b1f1aa4",
+      "changed_paths": [
+        "drivers/iommu/iova.c"
+      ]
+    },
+    {
+      "commit": "14bb6f87db411b8a105888e175b5231448b467b0",
+      "disposition": "already-represented-upstream",
+      "result_commits": [
+        "6fa3525b455ae1fde5b424907141b33651f137b0"
+      ],
+      "rationale": "Upstream contains global rcache draining after CPU cache draining on allocation failure. Final helper is internal/static with native current locking/depot design; old exported header/stub need not be resurrected. Whole alloc_iova_fast and cache helper match LTS. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+      "evidence": [
+        "evidence/iommu-generic-review.json",
+        "evidence/iommu-hook-bounds-check.json",
+        "SECURITY.md: IOMMU callback allocation and cookie contracts"
+      ],
+      "patch_sha256": "a0b4498aee3ecdabe1c0b2e1206ef286f42f83b64d70d2f27a8a32ac01d22acb",
+      "changed_paths": [
+        "drivers/iommu/iova.c",
+        "include/linux/iova.h"
+      ]
+    },
+    {
+      "commit": "6e8ead1376c268a6e20ed7aee3e753ba8424ab5f",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [
+        "6fa3525b455ae1fde5b424907141b33651f137b0"
+      ],
+      "rationale": "Transient ACK removal of global-cache draining does not describe final behavior: upstream has the drain, retained in final ACK/port. Keep native static helper and its current cache synchronization rather than replaying this revert. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+      "evidence": [
+        "evidence/iommu-generic-review.json",
+        "evidence/iommu-hook-bounds-check.json",
+        "SECURITY.md: IOMMU callback allocation and cookie contracts"
+      ],
+      "patch_sha256": "3513e1ad916092d83a5dbcd957beb154a5c2341419ec8bd85a6cc47d732f2cc4",
+      "changed_paths": [
+        "drivers/iommu/iova.c",
+        "include/linux/iova.h"
+      ]
+    },
+    {
+      "commit": "ac94b7aa541717b4d9fe1323dc8fc7a61e952557",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [
+        "4e89dce725213d3d0b0475211b500eda4ef4bf2f"
+      ],
+      "rationale": "Transient ACK removal of retry search is superseded by upstream representation. Preserve native complete retry and subsequent range/cache fixes, without restoring this historical revert. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+      "evidence": [
+        "evidence/iommu-generic-review.json",
+        "evidence/iommu-hook-bounds-check.json",
+        "SECURITY.md: IOMMU callback allocation and cookie contracts"
+      ],
+      "patch_sha256": "2db7edfbaa6f224a64f203158f3776c4e1a87580890c0df2cf192b4ff247338e",
+      "changed_paths": [
+        "drivers/iommu/iova.c"
+      ]
+    },
+    {
+      "commit": "9a76e701d5cfaafc2bc79a2c15b9e21a1357a210",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "5aa2127f22250288d2ff23e9c257a8f2d50bd717"
+      ],
+      "rationale": "Old compile-time alignment limiting was removed; final customization is the retained runtime restricted hook. Do not interpret the revert as disabling alignment customization permanently or recreate old Kconfig symbols. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+      "evidence": [
+        "evidence/iommu-generic-review.json",
+        "evidence/iommu-hook-bounds-check.json",
+        "SECURITY.md: IOMMU callback allocation and cookie contracts"
+      ],
+      "patch_sha256": "fd5b78f5315747e5fc5cd6dd103485b684dd0abbcd9f01371b9f413dae60ae15",
+      "changed_paths": [
+        "drivers/iommu/Kconfig",
+        "drivers/iommu/iova.c"
+      ]
+    },
+    {
+      "commit": "dd2de4d1215b60f755e874a11365af9ee9433474",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Old hard-coded best-fit removal remains effective, while later generic data/selection/allocation hooks support vendor algorithms. Keep native default allocator and final hooks; do not promise that a best-fit implementation is bundled in core. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+      "evidence": [
+        "evidence/iommu-generic-review.json",
+        "evidence/iommu-hook-bounds-check.json",
+        "SECURITY.md: IOMMU callback allocation and cookie contracts"
+      ],
+      "patch_sha256": "61b9b52c461421f38b370bb5102aec82142945d5680d0789749edaeb11cee98e",
+      "changed_paths": [
+        "drivers/iommu/dma-iommu.c",
+        "drivers/iommu/iova.c",
+        "include/linux/dma-iommu.h",
+        "include/linux/iova.h"
+      ]
+    },
+    {
+      "commit": "0cb1adebab01b426c7dc1b38334f6e61226f14bb",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Retain final removal of iommu_dma_reserve_iova and its declaration/stub, verified absent in ACK/port source. Native reserved regions and reservation primitives remain; this decision concerns only the explicitly removed public wrapper. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+      "evidence": [
+        "evidence/iommu-generic-review.json",
+        "evidence/iommu-hook-bounds-check.json",
+        "SECURITY.md: IOMMU callback allocation and cookie contracts"
+      ],
+      "patch_sha256": "b466293aeff28869ef251ceef0d0c1a5a9f97521f2f09d504870ddb1687def30",
+      "changed_paths": [
+        "drivers/iommu/dma-iommu.c",
+        "include/linux/dma-iommu.h"
+      ]
+    },
+    {
+      "commit": "f21e6e9178282ee4a66b0a6dc727fa1593875151",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "5aa2127f22250288d2ff23e9c257a8f2d50bd717"
+      ],
+      "rationale": "Retain allocation/free tracking, including zero allocation results and queued-free notification before eventual reuse. Adapt MSI-only free to skip callback: its union cookie is a smaller MSI object, not an iova_domain, and MSI allocation already bypasses notification. Native MSI cursor rollback and regular allocator/free operations are preserved; callbacks must not assume immediate reclamation or paired success-only events. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+      "evidence": [
+        "evidence/iommu-generic-review.json",
+        "evidence/iommu-hook-bounds-check.json",
+        "SECURITY.md: IOMMU callback allocation and cookie contracts"
+      ],
+      "patch_sha256": "144be37863fa637fcdb41848d5fbd1f311cf6d2d6e77668a7d9eabcd5d37c174",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/iommu/dma-iommu.c",
+        "include/trace/hooks/iommu.h"
+      ]
+    },
+    {
+      "commit": "592a281e889da4339e27811acf7d5e960a6371b2",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain restricted setup_dma_ops(dev) after successful native setup/init, including native non-IOMMU cases which reach that path. Callback can customize device DMA policy; native initialization failure still goes through out_err before callback. Preserve final one-argument source interface, not obsolete dma_base/limit arguments. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+      "evidence": [
+        "evidence/iommu-generic-review.json",
+        "evidence/iommu-hook-bounds-check.json",
+        "SECURITY.md: IOMMU callback allocation and cookie contracts"
+      ],
+      "patch_sha256": "5f3c38f5f287246bf057c6395c50f0e79c72468afa0388fefd0bbced560f55b7",
+      "changed_paths": [
+        "drivers/iommu/dma-iommu.c",
+        "include/trace/hooks/iommu.h"
+      ]
+    },
+    {
+      "commit": "369d6782edd600db2968dfa013236819da736399",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Temporary unrestricted legacy domain_alloc API was explicitly reversed by ea989f2e6e54. Final core/header retain native CONFIG_FSL_PAMU guard. Do not reinstate an obsolete Pixel source API after final ACK reclosed it; this was functional source compatibility, not solely historical binary KMI. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+      "evidence": [
+        "evidence/iommu-generic-review.json",
+        "evidence/iommu-hook-bounds-check.json",
+        "SECURITY.md: IOMMU callback allocation and cookie contracts"
+      ],
+      "patch_sha256": "40692e94189de6cf2aa31cee848f73638ebee6992d465e0120b9ac23dac89160",
+      "changed_paths": [
+        "drivers/iommu/iommu.c",
+        "include/linux/iommu.h"
+      ]
+    },
+    {
+      "commit": "ea989f2e6e54e1185f65074a00b61a925b16fdb4",
+      "disposition": "already-represented-upstream",
+      "result_commits": [
+        "21c03574df19f0d77cb2e4d28bc02c79b21e656a"
+      ],
+      "rationale": "Final reapplication matches native CONFIG_FSL_PAMU restriction on legacy domain_alloc declaration and call path. Keep newer domain_alloc_paging/flags interfaces and the exact native guarded fallback. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+      "evidence": [
+        "evidence/iommu-generic-review.json",
+        "evidence/iommu-hook-bounds-check.json",
+        "SECURITY.md: IOMMU callback allocation and cookie contracts"
+      ],
+      "patch_sha256": "e696a673b2d128414dc3f5ceba6ed28a96906d478e0f661917eff1d398d8000d",
+      "changed_paths": [
+        "drivers/iommu/iommu.c",
+        "include/linux/iommu.h"
+      ]
+    },
+    {
+      "commit": "a4ac7ab3003df2077cc6fb4b6a15ffb9438081d7",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "5aa2127f22250288d2ff23e9c257a8f2d50bd717"
+      ],
+      "rationale": "Retain per-order allocation-policy callback before alloc_pages_node. It can change reclaim/retry policy, but enforce non-compound pages for subsequent split_page/free and preserve caller-requested zeroing. Native order bounds/fallback/count/allocation-error cleanup stay intact; these constraints prevent invalid page ownership or exposure of stale contents while retaining policy tuning. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+      "evidence": [
+        "evidence/iommu-generic-review.json",
+        "evidence/iommu-hook-bounds-check.json",
+        "SECURITY.md: IOMMU callback allocation and cookie contracts"
+      ],
+      "patch_sha256": "14536817b07d2eac622c9d26dfe00e97260181eef14f598045a3c76c6e5aa598",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/iommu/dma-iommu.c",
+        "include/trace/hooks/iommu.h"
+      ]
+    },
+    {
+      "commit": "51f18f3faa2efcf91a42ce0f45de5dbac43546cc",
+      "disposition": "omitted-current-target",
+      "result_commits": [
+        "5aa2127f22250288d2ff23e9c257a8f2d50bd717"
+      ],
+      "rationale": "Final ACK deferred scatterlist operations are implemented by ARM64 arm-smmu-v3-kvm-pv, selected by ARM_SMMU_V3_PKVM_PV with ARM64/KVM dependencies. Current x86 SDK excludes that backend; the commit describes virtio support only as future work. Preserve native iommu_map_sg and all LTS fixes. Remove initial-integration orphan header callbacks/type so the port does not advertise a dispatch interface it never invokes. Arbitrary unknown OOT providers are not asserted absent. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+      "evidence": [
+        "evidence/iommu-generic-review.json",
+        "evidence/iommu-hook-bounds-check.json",
+        "SECURITY.md: IOMMU callback allocation and cookie contracts"
+      ],
+      "patch_sha256": "88298206cee677052e79c63efc1ccdfe9b3391337773222142696bfecab426b3",
+      "changed_paths": [
+        "drivers/iommu/iommu.c",
+        "include/linux/iommu.h"
+      ]
+    },
+    {
+      "commit": "36c1f698cba401469131ef974d51f4c8dfb25e24",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain iova_domain vendor storage and explicit zero initialization in init_iova_domain, including reused caller-owned objects. This is functional storage for per-domain allocation policy, not solely ABI padding; no historical layout is promised. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+      "evidence": [
+        "evidence/iommu-generic-review.json",
+        "evidence/iommu-hook-bounds-check.json",
+        "SECURITY.md: IOMMU callback allocation and cookie contracts"
+      ],
+      "patch_sha256": "9bfa41896ec3cdf84b8542e5ab2f8bbebe334dc12d98e17af235eb50cbf94b73",
+      "changed_paths": [
+        "drivers/iommu/iova.c",
+        "include/linux/iova.h"
+      ]
+    },
+    {
+      "commit": "cf48f2324bbb3a40fc74689e7c8d823d16157a94",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain restricted per-device IOVA algorithm initialization immediately after native init_iova_domain and before cache setup. Zeroed vendor data is available. Callback does not imply that a best-fit algorithm is supplied by core, and must not corrupt granule/tree/lock invariants or leave owned resources requiring unimplemented error cleanup. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+      "evidence": [
+        "evidence/iommu-generic-review.json",
+        "evidence/iommu-hook-bounds-check.json",
+        "SECURITY.md: IOMMU callback allocation and cookie contracts"
+      ],
+      "patch_sha256": "ae01c1be26057abc4a5dbd8445f18eb32e4fa8cb26cd8fd9774a9f93b660fb50",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/iommu/dma-iommu.c",
+        "include/trace/hooks/iommu.h"
+      ]
+    },
+    {
+      "commit": "061c9f2acddedc0b2dfeab14236cfd55284ae708",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain replacement allocation callback with ret initialized nonzero; no callback or nonzero result falls back to complete native allocator. A zero result promises the callback has initialized and inserted new_iova under correct locking with valid aperture/range and cache invariants. Returning nonzero after partially inserting would corrupt the tree; this privileged callback contract cannot be inferred from its signature. Native allocation/free error handling remains. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+      "evidence": [
+        "evidence/iommu-generic-review.json",
+        "evidence/iommu-hook-bounds-check.json",
+        "SECURITY.md: IOMMU callback allocation and cookie contracts"
+      ],
+      "patch_sha256": "8914c9311d90869a9cbc91e804908e82d89b6c045cb7d53b4f9a6d341ab86c0c",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/iommu/iova.c",
+        "include/trace/hooks/iommu.h"
+      ]
+    },
+    {
+      "commit": "a49f6098d54b43d8141d7e792b921a90da3c2316",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "5aa2127f22250288d2ff23e9c257a8f2d50bd717"
+      ],
+      "rationale": "Retain maximum-alignment customization with native default fls_long(size-1), before taking the tree lock. Reject resulting shift >= BITS_PER_LONG instead of undefined mask shift. All valid shifts retain ACK behavior and native tree traversal/retry/insertion remain unchanged; invalid output yields allocation failure. This does not validate arbitrary external allocator algorithms. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+      "evidence": [
+        "evidence/iommu-generic-review.json",
+        "evidence/iommu-hook-bounds-check.json",
+        "SECURITY.md: IOMMU callback allocation and cookie contracts"
+      ],
+      "patch_sha256": "5e48e1d5953e522068ffb89e46366a3041087d2ad016c69a627f33974d7fb58e",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/iommu/iova.c",
+        "include/trace/hooks/iommu.h"
+      ]
+    },
+    {
+      "commit": "4d51cb49b38108caaf7d9bfe574490bdac2350ca",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain restricted DMA attribute/protection callback after native cache/privilege attributes and before direction bits are ORed. It can alter caching, privilege and add read/write access, so module policy can weaken DMA isolation; that customization is intentionally retained for Android compatibility. Native invalid-direction return zero and required direction access bits remain. No hardware isolation claim is made. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+      "evidence": [
+        "evidence/iommu-generic-review.json",
+        "evidence/iommu-hook-bounds-check.json",
+        "SECURITY.md: IOMMU callback allocation and cookie contracts"
+      ],
+      "patch_sha256": "ea64448099c1a045d03a00323dd172fb3fcfa2e5b517386523a862c7d52d71e8",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/iommu/dma-iommu.c",
+        "include/trace/hooks/iommu.h"
+      ]
+    }
+  ],
+  "witnesses": {
+    "drivers/iommu/iommu.c": {
+      "whole_file_native": true,
+      "blob": "34c06fb26bf5ca44ffbdfca324e1351435ee90f4"
+    },
+    "drivers/iommu/Kconfig": {
+      "whole_file_native": true,
+      "blob": "70d29b14d85196d7c8c09c80fd33dbd9cb54e870"
+    },
+    "drivers/iommu/arm/arm-smmu/arm-smmu.c": {
+      "whole_file_native": true,
+      "blob": "1e218fbea35a022bb87e4d961c094af18263948c"
+    },
+    "drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c": {
+      "whole_file_native": true,
+      "blob": "2c237ca4a38374bc59afe9beacc48b715ab4dd32"
+    },
+    "drivers/iommu/iova.c": {
+      "whole_file_native_after_only_documented_hooks_and_checks": true,
+      "blob": "19009004f81d2770d40643e68c7bfa2c99eaf02b"
+    },
+    "drivers/iommu/dma-iommu.c": {
+      "whole_file_native_after_only_documented_hooks_and_checks": true,
+      "blob": "89face5d9c25dbddff96db8982c460d066699797"
+    }
+  },
+  "ack_deferred_backend": {
+    "path": "drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3-kvm-pv.c",
+    "sha256": "830923679cd0ebf64b8a6cd6c7283180aee6735df3398c7bba7e0a561edb2405",
+    "kconfig_sha256": "1393e92201cf8fba6c0fc4857d4a2ed4329e010c03aa2590b279005462b7fc22",
+    "makefile_sha256": "de5645c2e257e13fcacc0c630b3587c0146233b5061e7bf5a2839f1a5bca8975"
+  },
+  "consumer_uncertainty": "Exact SDK vendor hook consumers and DMA runtime behavior unconfirmed; retain generic hooks conservatively. Deferred-sg backend scope has positive ARM64 implementation/build-gate evidence, not a claim that arbitrary external providers cannot exist.",
+  "remote_sources_used": []
+}

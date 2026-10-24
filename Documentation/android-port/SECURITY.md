@@ -7405,3 +7405,24 @@ This target omission does not assert that arbitrary out-of-tree drivers could
 never implement the interface. Native core mapping, synchronization, cleanup
 and all 6.18.57 fixes remain unchanged. Generic vendor-data fields and other
 independently reviewed interfaces remain. No new remote source was consulted.
+
+# Intel IOMMU native fixes and protected-host gates
+
+Nineteen candidates are individually resolved in
+`evidence/intel-iommu-gates-review.json`. Native PASID publication cache flushing,
+SVA/nested PIOTLB invalidation and inaccessible-device ATS guards are preserved.
+The ACK build-conflict reverts are not replayed. The whole current Intel IOMMU
+subtree is byte-identical to 6.18.57, including later context teardown, alias,
+replacement and deferred-free fixes.
+
+The SDK command-line files and ACK early-option gate are pinned in the evidence.
+Protected-host-specific feature restrictions, host-EPT diagnostic exclusions,
+cache-management handoff, forced IOMMU policy and S3 rejection are omitted for
+this ordinary SDK mode. Native KVM/IOMMU support remains. QI array zeroing and
+return-value follow-ups are assessed against native allocation/fallback: native
+desc_status is separately kcalloc-initialized, and native init_qi returns void.
+The pKVM leaf_ptes_only accumulator does not exist in native void-returning
+unmap recursion. These are code-specific findings, not subject-name filtering.
+Generic overlap-walker and partial-superpage defenses remain provisional pending
+additional analysis of native caller contracts; not all pKVM-labeled changes
+are presumed unnecessary. No new remote source or hardware runtime test was used.

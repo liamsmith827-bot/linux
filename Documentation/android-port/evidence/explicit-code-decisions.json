@@ -20299,5 +20299,654 @@
       "evidence/hook-headers-remoteproc-review.json",
       "SECURITY.md: Hook header consolidation and remoteproc scope"
     ]
+  },
+  {
+    "commit": "4323574be31815b4b467c0ca1751f6813b1e87df",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Initial android_vh_ufs_update_sdev call, declaration and export were removed by 0c6b941459fd and re-added by 04770aa67819 in renamed ufshcd_sdev_init. Final interface is active in ACK, not permanently reverted. It customizes a UFS SCSI device after link setup; it does not serve the SDK virtio block devices. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+    "evidence": [
+      "evidence/ufs-review.json",
+      "SECURITY.md: UFS platform scope and upstream interrupt fix"
+    ]
+  },
+  {
+    "commit": "0c6b941459fd49c86f512000349c3aaf1010129f",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "The patch removes only update_sdev despite its broader subject. 04770aa67819 restores that call/declaration/export. Do not claim ACK discarded this customization permanently; final omission here rests on the current SDK storage backend. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+    "evidence": [
+      "evidence/ufs-review.json",
+      "SECURITY.md: UFS platform scope and upstream interrupt fix"
+    ]
+  },
+  {
+    "commit": "3b51f2bb7fe4a74e6fb98644bf5b80755e0400ff",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Five callbacks observe UFS UIC-command wait completion, device-command completion, link startup, transfer-response status and error-handler timeout. Three native UFS profile tracepoints are additionally GPL-exported. Omit this complete UFS-specific observer/export set for the virtio SDK storage target; native SCSI/UFS error handling and tracepoints remain. Callback access to pointers/error states would require privileged module lifetime and locking discipline on a UFS platform. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+    "evidence": [
+      "evidence/ufs-review.json",
+      "SECURITY.md: UFS platform scope and upstream interrupt fix"
+    ]
+  },
+  {
+    "commit": "dc9f64bcdbe3723cf30d0bf7ca65bf654e7c81a6",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Restricted hook can bypass native keyslot restoration after UFS reset whenever callback changes err from -EOPNOTSUPP; other callback errors are not propagated by this patch. Final ACK uses this unconditional callback form after crypto capability check. Native ufshcd_crypto_enable remains intact and always calls blk_crypto_reprogram_all_keys. This omission concerns hardware reset/keyslot programming, not generic Android file encryption. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+    "evidence": [
+      "evidence/ufs-review.json",
+      "SECURITY.md: UFS platform scope and upstream interrupt fix"
+    ]
+  },
+  {
+    "commit": "99931d55f27b5e0f833a4d15b503ce499c1342fe",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Restricted callback at successful UFS device initialization supports hardware inline-encryption self-tests after reset and can sleep. It is not historical KMI-only. Omit for the SDK virtio block backend; no FIPS certification or equivalence of hardware self-tests is claimed, and generic fscrypt/inline-crypto fallback remain selected. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+    "evidence": [
+      "evidence/ufs-review.json",
+      "SECURITY.md: UFS platform scope and upstream interrupt fix"
+    ]
+  },
+  {
+    "commit": "d70d323d0cd4f9577b661715caa32b2361447a38",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Parallel historical key-restoration hook form guards invocation with crypto_profile.num_slots. Final ACK instead contains dc9f64bcdbe3-style unconditional callback after capability check. Neither form is imported for SDK virtio storage. Native keyslot restoration and error/quirk handling remain unchanged; no callback can suppress restoration in ported UFS code. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+    "evidence": [
+      "evidence/ufs-review.json",
+      "SECURITY.md: UFS platform scope and upstream interrupt fix"
+    ]
+  },
+  {
+    "commit": "520c1950ca450aad66b5e48439747c59282c70f6",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Changes UFS physical power-rail delay from per-device quirk to universal 5ms delay when VCC is actually switched off, and adjusts MediaTek/QCOM quirks. LTS still uses its quirk-based implementation. This is a hardware reliability change with potential data-loss implications on affected physical UFS hardware, not a generic SDK I/O fix. Omit for the virtio storage target without claiming physical UFS equivalence or removing any LTS fix. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+    "evidence": [
+      "evidence/ufs-review.json",
+      "SECURITY.md: UFS platform scope and upstream interrupt fix"
+    ]
+  },
+  {
+    "commit": "04770aa67819feb9cb53fa1857194c146fa4efb1",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Re-adds active update_sdev customization after ufshcd_setup_links in ufshcd_sdev_init, with declaration/export. Omit this UFS-specific SCSI-device policy callback for current SDK virtio storage. Generic SCSI and vendor customization outside the UFS device path are not decided by this omission. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+    "evidence": [
+      "evidence/ufs-review.json",
+      "SECURITY.md: UFS platform scope and upstream interrupt fix"
+    ]
+  },
+  {
+    "commit": "1e05115006a3761a0eba56a6d794a4c2c0de10da",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds UFS UniPro DME QoS notification sysfs state, reset flag, IRQ notification, kernfs reference lifetime and mask definitions. This is a userspace hardware monitoring ABI, not just a KMI field change. Omit because SDK uses virtio disks, without a UniPro link; native UFS sysfs/interrupt cleanup remain byte-identical to LTS. No assertion about future physical-platform userspace consumers is made. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+    "evidence": [
+      "evidence/ufs-review.json",
+      "SECURITY.md: UFS platform scope and upstream interrupt fix"
+    ]
+  },
+  {
+    "commit": "a7d3212975e66378b30e3322cae2cfbf7e80acc5",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Splits physical UFS power negotiation from pre/post change notifications to prepare TX equalization training, changes variant signatures across Exynos/HiSilicon/MediaTek/QCOM/SPRD and Intel PCI, and exports new helper. This is functional module source API, not historical KMI-only. Omit the coordinated UFS platform refactor for SDK virtio storage; retain consistent native variant APIs and callers, not a partial mixture. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+    "evidence": [
+      "evidence/ufs-review.json",
+      "SECURITY.md: UFS platform scope and upstream interrupt fix"
+    ]
+  },
+  {
+    "commit": "605c1c43171d74fb409c66520d43861f4eb8e83c",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Replaces hba force_pmc toggles with explicit UFSHCD_PMC_POLICY in the new power-mode interfaces and adjusts all core/Intel callers. This follows the omitted physical UFS negotiation series. Keep native paired force_pmc transitions and locking rather than importing mismatched signatures; SDK virtio does not use these power-mode paths. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+    "evidence": [
+      "evidence/ufs-review.json",
+      "SECURITY.md: UFS platform scope and upstream interrupt fix"
+    ]
+  },
+  {
+    "commit": "c4a3b5f9ce5341fb6f29bcd9ec01165483714dae",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds UFS5 TX equalization attribute encoding/decoding, query and storage paths, module settings, initialization/shutdown calls and JEDEC attribute IDs. Native LTS lacks the adaptive TX EQ subsystem. Omit hardware feature for SDK virtio; separately omit ARM64 ABI snapshot/allowed-break entries and enumerator-ignore wrappers as historical KMI metadata. ACK avoids is_trained field via eqtr_record for KMI; that layout workaround is not a reason to import its algorithm. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+    "evidence": [
+      "evidence/ufs-review.json",
+      "SECURITY.md: UFS platform scope and upstream interrupt fix"
+    ]
+  },
+  {
+    "commit": "082b3816c9c69baebcbf5775fcc9020bc4787da3",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [
+      "ff333def314762b94e0933be7e84947d876f20bf"
+    ],
+    "rationale": "ACK opt-out callback selects direct execution of ufshcd_threaded_intr. Later native LTS ff333def3147 removes the delegated threaded handler to resolve the same reported performance regression, while preserving MCQ interrupt handling and host-lock inversion fixes. Keep this native direct IRQ implementation and devm_request_irq; do not resurrect threaded infrastructure just to add its opt-out. Hardware UFS hook customization is outside current virtio SDK scope. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+    "evidence": [
+      "evidence/ufs-review.json",
+      "SECURITY.md: UFS platform scope and upstream interrupt fix"
+    ]
+  },
+  {
+    "commit": "16d9648dc1db1ab24b8c4260de3478e139654af3",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Parses per-lane/per-gear static TX EQ values and G6 precoding from DT, validates counts/ranges, and tracks from_dt so adaptive results override defaults. Omit with the absent LTS TX EQ feature for SDK virtio storage. This is real physical-board tuning, not ABI padding. No claim that missing settings are safe on future UFS5 boards is made. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+    "evidence": [
+      "evidence/ufs-review.json",
+      "SECURITY.md: UFS platform scope and upstream interrupt fix"
+    ]
+  },
+  {
+    "commit": "4ed628ec0b5cfc864ea9958618cba76e3b5ca959",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds start/end callbacks around UFS MCQ submission-queue cleanup under sq_mutex, including the common unlock/error exit. Omit hardware queue hook/header/export for SDK virtio storage while retaining native cleanup/timeouts. Also omit ANDROID_KABI_DECLONLY(trace_eval_map), which only preserves historical type/KMI view. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+    "evidence": [
+      "evidence/ufs-review.json",
+      "SECURITY.md: UFS platform scope and upstream interrupt fix"
+    ]
+  },
+  {
+    "commit": "baf3e174b8b11e60a7b0b199db84d1b688fbccf8",
+    "disposition": "already-represented-upstream",
+    "result_commits": [
+      "25f003de987aed630db265ceae9cd978537a3f80"
+    ],
+    "rationale": "Native core takes ops->owner module reference before probe_device and drops it on failure/teardown after domains are released. This supersedes the old add_device/remove_device spelling and preserves module lifetime protection. Entire core iommu.c is LTS-identical. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+    "evidence": [
+      "evidence/iommu-generic-review.json",
+      "evidence/iommu-hook-bounds-check.json",
+      "SECURITY.md: IOMMU callback allocation and cookie contracts"
+    ]
+  },
+  {
+    "commit": "237cd1e40dae35e2dfc1207ecc12d5338e4f4fbd",
+    "disposition": "superseded",
+    "result_commits": [
+      "fc10cca69ee8af49778ad76c1e5fddf83d5026c8",
+      "c0aec6680b6c82fe893a546e322e1130cd5cf21e"
+    ],
+    "rationale": "Initial automatic owner assignment landed upstream, then c0aec6680b6c deliberately restored static THIS_MODULE initialization to permit const ops. Keep final native ARM SMMU/SMMUv3 owner initializers and registration API rather than reviving a const-casting dynamic write. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+    "evidence": [
+      "evidence/iommu-generic-review.json",
+      "evidence/iommu-hook-bounds-check.json",
+      "SECURITY.md: IOMMU callback allocation and cookie contracts"
+    ]
+  },
+  {
+    "commit": "0d5de782bbcb6056d000c24c553ba771e4a57929",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Explicit DMA reserve-I/O-range helper/declaration/stub was removed by 0cb1adebab01 and remains absent in final ACK and port. This does not remove native reserved-region handling; do not restore an obsolete public helper solely from its original addition. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+    "evidence": [
+      "evidence/iommu-generic-review.json",
+      "evidence/iommu-hook-bounds-check.json",
+      "SECURITY.md: IOMMU callback allocation and cookie contracts"
+    ]
+  },
+  {
+    "commit": "c640e76a4e2d8c7cd88308234b7173d63a4048b5",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Hard-coded best_fit field, implementation and enable API were removed by dd2de4d1215b and remain absent. The final generic vendor-data, algorithm-selection and replacement-allocation hooks provide customization and are retained separately; do not reintroduce this obsolete allocator alongside them. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+    "evidence": [
+      "evidence/iommu-generic-review.json",
+      "evidence/iommu-hook-bounds-check.json",
+      "SECURITY.md: IOMMU callback allocation and cookie contracts"
+    ]
+  },
+  {
+    "commit": "ee98c0848c622439978cdd4b5998aa3ea9e1b970",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "5aa2127f22250288d2ff23e9c257a8f2d50bd717"
+    ],
+    "rationale": "The compile-time IOMMU_LIMIT_IOVA_ALIGNMENT/IOMMU_IOVA_ALIGNMENT policy/helper was removed by 9a76e701d5cf and is absent in final ACK and port. Final ACK uses a49f6098d54b callback instead; retain that configurable interface with bounds checking, not the old build-time policy. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+    "evidence": [
+      "evidence/iommu-generic-review.json",
+      "evidence/iommu-hook-bounds-check.json",
+      "SECURITY.md: IOMMU callback allocation and cookie contracts"
+    ]
+  },
+  {
+    "commit": "da3e085cec054bdb780e396ab9c89352c8de6a8e",
+    "disposition": "already-represented-upstream",
+    "result_commits": [
+      "4e89dce725213d3d0b0475211b500eda4ef4bf2f"
+    ],
+    "rationale": "Despite a historical ACK revert, upstream supplies full-tree retry after cached-node search fails. Current native retry_pfn/iova_find_limit traversal and subsequent fixes are retained exactly; no claim that retry behavior was permanently removed. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+    "evidence": [
+      "evidence/iommu-generic-review.json",
+      "evidence/iommu-hook-bounds-check.json",
+      "SECURITY.md: IOMMU callback allocation and cookie contracts"
+    ]
+  },
+  {
+    "commit": "14bb6f87db411b8a105888e175b5231448b467b0",
+    "disposition": "already-represented-upstream",
+    "result_commits": [
+      "6fa3525b455ae1fde5b424907141b33651f137b0"
+    ],
+    "rationale": "Upstream contains global rcache draining after CPU cache draining on allocation failure. Final helper is internal/static with native current locking/depot design; old exported header/stub need not be resurrected. Whole alloc_iova_fast and cache helper match LTS. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+    "evidence": [
+      "evidence/iommu-generic-review.json",
+      "evidence/iommu-hook-bounds-check.json",
+      "SECURITY.md: IOMMU callback allocation and cookie contracts"
+    ]
+  },
+  {
+    "commit": "6e8ead1376c268a6e20ed7aee3e753ba8424ab5f",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [
+      "6fa3525b455ae1fde5b424907141b33651f137b0"
+    ],
+    "rationale": "Transient ACK removal of global-cache draining does not describe final behavior: upstream has the drain, retained in final ACK/port. Keep native static helper and its current cache synchronization rather than replaying this revert. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+    "evidence": [
+      "evidence/iommu-generic-review.json",
+      "evidence/iommu-hook-bounds-check.json",
+      "SECURITY.md: IOMMU callback allocation and cookie contracts"
+    ]
+  },
+  {
+    "commit": "ac94b7aa541717b4d9fe1323dc8fc7a61e952557",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [
+      "4e89dce725213d3d0b0475211b500eda4ef4bf2f"
+    ],
+    "rationale": "Transient ACK removal of retry search is superseded by upstream representation. Preserve native complete retry and subsequent range/cache fixes, without restoring this historical revert. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+    "evidence": [
+      "evidence/iommu-generic-review.json",
+      "evidence/iommu-hook-bounds-check.json",
+      "SECURITY.md: IOMMU callback allocation and cookie contracts"
+    ]
+  },
+  {
+    "commit": "9a76e701d5cfaafc2bc79a2c15b9e21a1357a210",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "5aa2127f22250288d2ff23e9c257a8f2d50bd717"
+    ],
+    "rationale": "Old compile-time alignment limiting was removed; final customization is the retained runtime restricted hook. Do not interpret the revert as disabling alignment customization permanently or recreate old Kconfig symbols. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+    "evidence": [
+      "evidence/iommu-generic-review.json",
+      "evidence/iommu-hook-bounds-check.json",
+      "SECURITY.md: IOMMU callback allocation and cookie contracts"
+    ]
+  },
+  {
+    "commit": "dd2de4d1215b60f755e874a11365af9ee9433474",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Old hard-coded best-fit removal remains effective, while later generic data/selection/allocation hooks support vendor algorithms. Keep native default allocator and final hooks; do not promise that a best-fit implementation is bundled in core. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+    "evidence": [
+      "evidence/iommu-generic-review.json",
+      "evidence/iommu-hook-bounds-check.json",
+      "SECURITY.md: IOMMU callback allocation and cookie contracts"
+    ]
+  },
+  {
+    "commit": "0cb1adebab01b426c7dc1b38334f6e61226f14bb",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Retain final removal of iommu_dma_reserve_iova and its declaration/stub, verified absent in ACK/port source. Native reserved regions and reservation primitives remain; this decision concerns only the explicitly removed public wrapper. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+    "evidence": [
+      "evidence/iommu-generic-review.json",
+      "evidence/iommu-hook-bounds-check.json",
+      "SECURITY.md: IOMMU callback allocation and cookie contracts"
+    ]
+  },
+  {
+    "commit": "f21e6e9178282ee4a66b0a6dc727fa1593875151",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "5aa2127f22250288d2ff23e9c257a8f2d50bd717"
+    ],
+    "rationale": "Retain allocation/free tracking, including zero allocation results and queued-free notification before eventual reuse. Adapt MSI-only free to skip callback: its union cookie is a smaller MSI object, not an iova_domain, and MSI allocation already bypasses notification. Native MSI cursor rollback and regular allocator/free operations are preserved; callbacks must not assume immediate reclamation or paired success-only events. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+    "evidence": [
+      "evidence/iommu-generic-review.json",
+      "evidence/iommu-hook-bounds-check.json",
+      "SECURITY.md: IOMMU callback allocation and cookie contracts"
+    ]
+  },
+  {
+    "commit": "592a281e889da4339e27811acf7d5e960a6371b2",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain restricted setup_dma_ops(dev) after successful native setup/init, including native non-IOMMU cases which reach that path. Callback can customize device DMA policy; native initialization failure still goes through out_err before callback. Preserve final one-argument source interface, not obsolete dma_base/limit arguments. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+    "evidence": [
+      "evidence/iommu-generic-review.json",
+      "evidence/iommu-hook-bounds-check.json",
+      "SECURITY.md: IOMMU callback allocation and cookie contracts"
+    ]
+  },
+  {
+    "commit": "369d6782edd600db2968dfa013236819da736399",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Temporary unrestricted legacy domain_alloc API was explicitly reversed by ea989f2e6e54. Final core/header retain native CONFIG_FSL_PAMU guard. Do not reinstate an obsolete Pixel source API after final ACK reclosed it; this was functional source compatibility, not solely historical binary KMI. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+    "evidence": [
+      "evidence/iommu-generic-review.json",
+      "evidence/iommu-hook-bounds-check.json",
+      "SECURITY.md: IOMMU callback allocation and cookie contracts"
+    ]
+  },
+  {
+    "commit": "ea989f2e6e54e1185f65074a00b61a925b16fdb4",
+    "disposition": "already-represented-upstream",
+    "result_commits": [
+      "21c03574df19f0d77cb2e4d28bc02c79b21e656a"
+    ],
+    "rationale": "Final reapplication matches native CONFIG_FSL_PAMU restriction on legacy domain_alloc declaration and call path. Keep newer domain_alloc_paging/flags interfaces and the exact native guarded fallback. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+    "evidence": [
+      "evidence/iommu-generic-review.json",
+      "evidence/iommu-hook-bounds-check.json",
+      "SECURITY.md: IOMMU callback allocation and cookie contracts"
+    ]
+  },
+  {
+    "commit": "a4ac7ab3003df2077cc6fb4b6a15ffb9438081d7",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "5aa2127f22250288d2ff23e9c257a8f2d50bd717"
+    ],
+    "rationale": "Retain per-order allocation-policy callback before alloc_pages_node. It can change reclaim/retry policy, but enforce non-compound pages for subsequent split_page/free and preserve caller-requested zeroing. Native order bounds/fallback/count/allocation-error cleanup stay intact; these constraints prevent invalid page ownership or exposure of stale contents while retaining policy tuning. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+    "evidence": [
+      "evidence/iommu-generic-review.json",
+      "evidence/iommu-hook-bounds-check.json",
+      "SECURITY.md: IOMMU callback allocation and cookie contracts"
+    ]
+  },
+  {
+    "commit": "51f18f3faa2efcf91a42ce0f45de5dbac43546cc",
+    "disposition": "omitted-current-target",
+    "result_commits": [
+      "5aa2127f22250288d2ff23e9c257a8f2d50bd717"
+    ],
+    "rationale": "Final ACK deferred scatterlist operations are implemented by ARM64 arm-smmu-v3-kvm-pv, selected by ARM_SMMU_V3_PKVM_PV with ARM64/KVM dependencies. Current x86 SDK excludes that backend; the commit describes virtio support only as future work. Preserve native iommu_map_sg and all LTS fixes. Remove initial-integration orphan header callbacks/type so the port does not advertise a dispatch interface it never invokes. Arbitrary unknown OOT providers are not asserted absent. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+    "evidence": [
+      "evidence/iommu-generic-review.json",
+      "evidence/iommu-hook-bounds-check.json",
+      "SECURITY.md: IOMMU callback allocation and cookie contracts"
+    ]
+  },
+  {
+    "commit": "36c1f698cba401469131ef974d51f4c8dfb25e24",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain iova_domain vendor storage and explicit zero initialization in init_iova_domain, including reused caller-owned objects. This is functional storage for per-domain allocation policy, not solely ABI padding; no historical layout is promised. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+    "evidence": [
+      "evidence/iommu-generic-review.json",
+      "evidence/iommu-hook-bounds-check.json",
+      "SECURITY.md: IOMMU callback allocation and cookie contracts"
+    ]
+  },
+  {
+    "commit": "cf48f2324bbb3a40fc74689e7c8d823d16157a94",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain restricted per-device IOVA algorithm initialization immediately after native init_iova_domain and before cache setup. Zeroed vendor data is available. Callback does not imply that a best-fit algorithm is supplied by core, and must not corrupt granule/tree/lock invariants or leave owned resources requiring unimplemented error cleanup. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+    "evidence": [
+      "evidence/iommu-generic-review.json",
+      "evidence/iommu-hook-bounds-check.json",
+      "SECURITY.md: IOMMU callback allocation and cookie contracts"
+    ]
+  },
+  {
+    "commit": "061c9f2acddedc0b2dfeab14236cfd55284ae708",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain replacement allocation callback with ret initialized nonzero; no callback or nonzero result falls back to complete native allocator. A zero result promises the callback has initialized and inserted new_iova under correct locking with valid aperture/range and cache invariants. Returning nonzero after partially inserting would corrupt the tree; this privileged callback contract cannot be inferred from its signature. Native allocation/free error handling remains. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+    "evidence": [
+      "evidence/iommu-generic-review.json",
+      "evidence/iommu-hook-bounds-check.json",
+      "SECURITY.md: IOMMU callback allocation and cookie contracts"
+    ]
+  },
+  {
+    "commit": "a49f6098d54b43d8141d7e792b921a90da3c2316",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "5aa2127f22250288d2ff23e9c257a8f2d50bd717"
+    ],
+    "rationale": "Retain maximum-alignment customization with native default fls_long(size-1), before taking the tree lock. Reject resulting shift >= BITS_PER_LONG instead of undefined mask shift. All valid shifts retain ACK behavior and native tree traversal/retry/insertion remain unchanged; invalid output yields allocation failure. This does not validate arbitrary external allocator algorithms. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+    "evidence": [
+      "evidence/iommu-generic-review.json",
+      "evidence/iommu-hook-bounds-check.json",
+      "SECURITY.md: IOMMU callback allocation and cookie contracts"
+    ]
+  },
+  {
+    "commit": "4d51cb49b38108caaf7d9bfe574490bdac2350ca",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain restricted DMA attribute/protection callback after native cache/privilege attributes and before direction bits are ORed. It can alter caching, privilege and add read/write access, so module policy can weaken DMA isolation; that customization is intentionally retained for Android compatibility. Native invalid-direction return zero and required direction access bits remain. No hardware isolation claim is made. Scoped source/host-model review, not runtime IOMMU or vendor-module validation.",
+    "evidence": [
+      "evidence/iommu-generic-review.json",
+      "evidence/iommu-hook-bounds-check.json",
+      "SECURITY.md: IOMMU callback allocation and cookie contracts"
+    ]
+  },
+  {
+    "commit": "5eef9ecfc17c7d95675dbdeeaba744d402f8ffe6",
+    "disposition": "already-represented-upstream",
+    "result_commits": [
+      "36244dfd3853f7bf89d03b8e90d56b23ce7fbc16"
+    ],
+    "rationale": "Retain native PASID table cache flush before publishing directory entry, preventing noncoherent hardware from seeing stale uninitialized entries. Native final pasid.c exactly retains this fix and later teardown/replacement fixes; do not copy the older ACK whole file. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+    "evidence": [
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+    ]
+  },
+  {
+    "commit": "b283cd6f9a1a518455ea1d05c20066055ff31d29",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [
+      "8722a8fb7ed9242029531b880851f43163482fcc"
+    ],
+    "rationale": "ACK temporarily reverted SVA/nested PIOTLB flushing for a pKVM build conflict; 1f3968c7484c restores it. Native LTS flushes SVA, nested and first-stage domains and is retained. Replaying the revert would weaken translation invalidation. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+    "evidence": [
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+    ]
+  },
+  {
+    "commit": "1f3968c7484c62a6c7f0e82e6cbf320b7a030c76",
+    "disposition": "already-represented-upstream",
+    "result_commits": [
+      "8722a8fb7ed9242029531b880851f43163482fcc"
+    ],
+    "rationale": "Retain native intel_domain_use_piotlb predicate covering SVA/nested/first-stage domains. ACK extra __PKVM_HYP__ alternative addresses the excluded protected-host build and is not needed in native LTS source. Native entire cache.c stays intact. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+    "evidence": [
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+    ]
+  },
+  {
+    "commit": "6775536b222bd380bfc37e44de791bdeee312f1d",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [
+      "e70d5feb10c5ba2bbf7ca400b8f39a2f82d653e8"
+    ],
+    "rationale": "Do not carry ACK build-workaround revert of inaccessible-PCIe dev-IOTLB guard. Native __context_flush_dev_iotlb checks pci_device_is_present before ATS invalidation, avoiding an indefinite wait for a vanished device; later context teardown/alias fixes remain. The omitted pKVM dual compilation is not a reason to remove this LTS fix. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+    "evidence": [
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+    ]
+  },
+  {
+    "commit": "9203e0d647fb77de9efd587877384fcffd5b9680",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Both added fault-log guards require pkvm_enabled and FLPT_DEFAULT_DID because the protected host cannot read its EPT backing identity devices. Current SDK does not enable the protected-host backend; native debug walk never has that protected host-EPT ownership model. Retain native fault diagnostics, without claiming protected-host operation. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+    "evidence": [
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+    ]
+  },
+  {
+    "commit": "a880c23a1286ffa197388eee6d740196722560ea",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Two debugfs guards likewise skip legacy/scalable page-table walks only for pKVM-owned host EPT under FLPT_DEFAULT_DID. The SDK boot contract leaves that protected mode disabled. Preserve native debugfs behavior and native translation ownership rather than introduce special protected table assumptions. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+    "evidence": [
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+    ]
+  },
+  {
+    "commit": "96fd40fa139fe3d2c8428a0926dabfed3574e46d",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Additional WARN_ON_ONCE for existing leaf mappings is compiled only under __PKVM_HYP__. It checks potentially malicious host requests in the excluded hypervisor build; native host dma_pte_clear_range remains unchanged. This warning alone is not described as a complete enforcement check. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+    "evidence": [
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+    ]
+  },
+  {
+    "commit": "98ed121bc4942ae85bcb9235ce87fb73defde8ca",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Fixes boolean accumulation in ACK pKVM dma_pte_clear_level after 019c99390aba changed its return contract. Native routine returns void, lists page-table pages for deferred free and derives invalidation hint from gather freelist; it has no leaf_ptes_only accumulator to overwrite. Preserve that native invalidation/free design and cf8a9672fc25 ordering fix, not the vulnerable pKVM predecessor. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+    "evidence": [
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+    ]
+  },
+  {
+    "commit": "7c7e6d1d8b4576064e93af9731b6ad45719412ba",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Private helper removal prepares hypervisor PASID lookup from live context entries. Native intel_pasid_get_table and intel_pasid_get_dev_max_id both read the same device_domain_info->pasid_table under native caller locking; no transient hypervisor-derived table exists. Keep native static helper/API, avoiding this prerequisite cleanup without its protected-host consumer. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+    "evidence": [
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+    ]
+  },
+  {
+    "commit": "c1a1544ab767ce41debcd6214c4c4bd9c74401a8",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Feature disabling for dirty tracking, SVM, PRS, nested translation and hotplug is conditioned on pkvm_enabled or __PKVM_HYP__. It enforces limits of that protected-host implementation, which the SDK boot contract does not enable. Keep native capabilities and native feature cleanup consistently; do not globally disable them in ordinary SDK/native KVM mode. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+    "evidence": [
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+    ]
+  },
+  {
+    "commit": "dd4489f7211ccb60eab33c0f29cfb7b9aec5e164",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Embeds QI desc_status array so pKVM need not receive a separately donated allocation. Native host retains its separately allocated kcalloc array with complete failure cleanup/free. This is a functional hypervisor-allocation adaptation, not solely historical KMI preservation, and its absent embedded form does not require the later zeroing repair. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+    "evidence": [
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+    ]
+  },
+  {
+    "commit": "6ea77bbecf5055725c595cdefbb4731c1e98fe00",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Limits ATS to SATC devices only when pkvm_enabled, protecting the hypervisor from devices outside its trust policy. Native host SATC/root-port ATS logic stays intact for SDK ordinary mode. No guarantee of pKVM DMA isolation is claimed without that backend. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+    "evidence": [
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+    ]
+  },
+  {
+    "commit": "3fda791e9a80f1b475045883a75ca5d6a83ec541",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Added early returns skip host cache-tag assignment/unassignment when pKVM owns it. Retain native tag management because the SDK uses native host IOMMU ownership; importing these skips without protected-side management would lose invalidation tracking. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+    "evidence": [
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+    ]
+  },
+  {
+    "commit": "426afef23ae179cc45ffc93c3508f1333fc267ed",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Skips host sync-map/unmap flushing and alters advertised capabilities only with pKVM immediate flushing. Preserve native host flushes, capability behavior and delayed-free ordering; no protected-side substitute exists in this target. This omission avoids weakening native DMA isolation. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+    "evidence": [
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+    ]
+  },
+  {
+    "commit": "3431bf0936d688d484823e0f2c9f8adf93932a49",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Overrides igfx_off only under pKVM so the hypervisor can enforce EPT-backed identity translation. Current SDK does not enable protected host mode. Keep native command-line/graphics handling and its later Q35 DMAR quirk; neither protected identity transformation nor a new graphics platform is introduced. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+    "evidence": [
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+    ]
+  },
+  {
+    "commit": "c9688cbe7094ecd091d418df7bef821bcd82bd51",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Forces platform IOMMU opt-in when pkvm_enabled even if ordinary firmware/external-PCI conditions are absent. Omit that protected-host prerequisite while preserving native opt-in, no_iommu, tboot and platform security logic. No SDK protected-memory guarantee is asserted. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+    "evidence": [
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+    ]
+  },
+  {
+    "commit": "99340500c68571f7b0d43ab33357378a12e9dd6a",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "S3 suspend/resume rejection is guarded by pkvm_enabled because that hypervisor cannot suspend. Native SDK path keeps full upstream suspend/resume behavior, including current syscore callback signatures, without imposing protected-host restrictions. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+    "evidence": [
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+    ]
+  },
+  {
+    "commit": "719d9b611b234dc7f19cb06016b9ed6731ee59ea",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Zeroing repair is required for the embedded desc_status introduced by dd4489f7211c. Native separate desc_status uses kcalloc and is already zero-initialized; whole dmar.c remains native. Do not carry the embedded-array regression or infer that native kmalloc of q_inval leaves desc_status contents uninitialized. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+    "evidence": [
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+    ]
+  },
+  {
+    "commit": "4df943df176a04afbdb76cab8824f493b7ee0834",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Repairs error return after ordinary register-invalidation fallback in ACK int-returning intel_iommu_init_qi. Native helper returns void and installs either QI or register-based callbacks; no erroneous ret is propagated. Keep native coherent fallback without introducing protected mode strict-QI requirements. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+    "evidence": [
+      "evidence/intel-iommu-gates-review.json",
+      "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+    ]
   }
 ]

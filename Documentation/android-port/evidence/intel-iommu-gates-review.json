@@ -1,0 +1,339 @@
+{
+  "source_head": "5aa2127f22250288d2ff23e9c257a8f2d50bd717",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "5eef9ecfc17c7d95675dbdeeaba744d402f8ffe6",
+      "disposition": "already-represented-upstream",
+      "result_commits": [
+        "36244dfd3853f7bf89d03b8e90d56b23ce7fbc16"
+      ],
+      "rationale": "Retain native PASID table cache flush before publishing directory entry, preventing noncoherent hardware from seeing stale uninitialized entries. Native final pasid.c exactly retains this fix and later teardown/replacement fixes; do not copy the older ACK whole file. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+      "evidence": [
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+      ],
+      "patch_sha256": "8295bd1be27344d6d044d2848f5403a06adf41e4764dab2bb53304bdcf164858",
+      "changed_paths": [
+        "drivers/iommu/intel/pasid.c"
+      ]
+    },
+    {
+      "commit": "b283cd6f9a1a518455ea1d05c20066055ff31d29",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [
+        "8722a8fb7ed9242029531b880851f43163482fcc"
+      ],
+      "rationale": "ACK temporarily reverted SVA/nested PIOTLB flushing for a pKVM build conflict; 1f3968c7484c restores it. Native LTS flushes SVA, nested and first-stage domains and is retained. Replaying the revert would weaken translation invalidation. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+      "evidence": [
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+      ],
+      "patch_sha256": "460633776f86b01412d7c94c9df7a00f84f841c05fe3983cbdf5c7961ccd72ee",
+      "changed_paths": [
+        "drivers/iommu/intel/cache.c"
+      ]
+    },
+    {
+      "commit": "1f3968c7484c62a6c7f0e82e6cbf320b7a030c76",
+      "disposition": "already-represented-upstream",
+      "result_commits": [
+        "8722a8fb7ed9242029531b880851f43163482fcc"
+      ],
+      "rationale": "Retain native intel_domain_use_piotlb predicate covering SVA/nested/first-stage domains. ACK extra __PKVM_HYP__ alternative addresses the excluded protected-host build and is not needed in native LTS source. Native entire cache.c stays intact. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+      "evidence": [
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+      ],
+      "patch_sha256": "3569b8007f80e663c9a15040ea802853ce6ea16f6c515eea2e4921067d1bf756",
+      "changed_paths": [
+        "drivers/iommu/intel/cache.c"
+      ]
+    },
+    {
+      "commit": "6775536b222bd380bfc37e44de791bdeee312f1d",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [
+        "e70d5feb10c5ba2bbf7ca400b8f39a2f82d653e8"
+      ],
+      "rationale": "Do not carry ACK build-workaround revert of inaccessible-PCIe dev-IOTLB guard. Native __context_flush_dev_iotlb checks pci_device_is_present before ATS invalidation, avoiding an indefinite wait for a vanished device; later context teardown/alias fixes remain. The omitted pKVM dual compilation is not a reason to remove this LTS fix. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+      "evidence": [
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+      ],
+      "patch_sha256": "adfcbc6f21f6ccc2d552aaf5c65854d91bd22d869cb59956ac498c3151703f17",
+      "changed_paths": [
+        "drivers/iommu/intel/pasid.c"
+      ]
+    },
+    {
+      "commit": "9203e0d647fb77de9efd587877384fcffd5b9680",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Both added fault-log guards require pkvm_enabled and FLPT_DEFAULT_DID because the protected host cannot read its EPT backing identity devices. Current SDK does not enable the protected-host backend; native debug walk never has that protected host-EPT ownership model. Retain native fault diagnostics, without claiming protected-host operation. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+      "evidence": [
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+      ],
+      "patch_sha256": "bf3fdd3fa3ef54ba740e6f4a34882c79ce90f28b34fc786706d99bb10996ac16",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c"
+      ]
+    },
+    {
+      "commit": "a880c23a1286ffa197388eee6d740196722560ea",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Two debugfs guards likewise skip legacy/scalable page-table walks only for pKVM-owned host EPT under FLPT_DEFAULT_DID. The SDK boot contract leaves that protected mode disabled. Preserve native debugfs behavior and native translation ownership rather than introduce special protected table assumptions. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+      "evidence": [
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+      ],
+      "patch_sha256": "445e4d408c0760dec96da1fbfa33932e400f70b2d30d0bdf10d601b4cb60b759",
+      "changed_paths": [
+        "drivers/iommu/intel/debugfs.c"
+      ]
+    },
+    {
+      "commit": "96fd40fa139fe3d2c8428a0926dabfed3574e46d",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Additional WARN_ON_ONCE for existing leaf mappings is compiled only under __PKVM_HYP__. It checks potentially malicious host requests in the excluded hypervisor build; native host dma_pte_clear_range remains unchanged. This warning alone is not described as a complete enforcement check. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+      "evidence": [
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+      ],
+      "patch_sha256": "c463cc4b67cb87e245df273609a1884b83c67fcefcd1b73d296188dd148c101a",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c"
+      ]
+    },
+    {
+      "commit": "98ed121bc4942ae85bcb9235ce87fb73defde8ca",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Fixes boolean accumulation in ACK pKVM dma_pte_clear_level after 019c99390aba changed its return contract. Native routine returns void, lists page-table pages for deferred free and derives invalidation hint from gather freelist; it has no leaf_ptes_only accumulator to overwrite. Preserve that native invalidation/free design and cf8a9672fc25 ordering fix, not the vulnerable pKVM predecessor. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+      "evidence": [
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+      ],
+      "patch_sha256": "5bdafccc0d91831376e570bf2950c2bc1c79df49b86dab453b96d59fa37aaab4",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c"
+      ]
+    },
+    {
+      "commit": "7c7e6d1d8b4576064e93af9731b6ad45719412ba",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Private helper removal prepares hypervisor PASID lookup from live context entries. Native intel_pasid_get_table and intel_pasid_get_dev_max_id both read the same device_domain_info->pasid_table under native caller locking; no transient hypervisor-derived table exists. Keep native static helper/API, avoiding this prerequisite cleanup without its protected-host consumer. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+      "evidence": [
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+      ],
+      "patch_sha256": "11ad09d33c3db1069c1f4b8a851a3bc3b5ee9e6b3c7002f4e1b2a381c571396c",
+      "changed_paths": [
+        "drivers/iommu/intel/pasid.c"
+      ]
+    },
+    {
+      "commit": "c1a1544ab767ce41debcd6214c4c4bd9c74401a8",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Feature disabling for dirty tracking, SVM, PRS, nested translation and hotplug is conditioned on pkvm_enabled or __PKVM_HYP__. It enforces limits of that protected-host implementation, which the SDK boot contract does not enable. Keep native capabilities and native feature cleanup consistently; do not globally disable them in ordinary SDK/native KVM mode. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+      "evidence": [
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+      ],
+      "patch_sha256": "8a09883dea353e1a2ac023f3c4231dc883412ee3936a658c99df8055630ece5f",
+      "changed_paths": [
+        "drivers/iommu/intel/dmar.c",
+        "drivers/iommu/intel/iommu.c",
+        "drivers/iommu/intel/iommu.h",
+        "drivers/iommu/intel/svm.c"
+      ]
+    },
+    {
+      "commit": "dd4489f7211ccb60eab33c0f29cfb7b9aec5e164",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Embeds QI desc_status array so pKVM need not receive a separately donated allocation. Native host retains its separately allocated kcalloc array with complete failure cleanup/free. This is a functional hypervisor-allocation adaptation, not solely historical KMI preservation, and its absent embedded form does not require the later zeroing repair. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+      "evidence": [
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+      ],
+      "patch_sha256": "b4b07ed57fd5a6433719bcd21b7f8839deb64d058940f01d595bbcfcb11ce37b",
+      "changed_paths": [
+        "drivers/iommu/intel/dmar.c",
+        "drivers/iommu/intel/iommu.h"
+      ]
+    },
+    {
+      "commit": "6ea77bbecf5055725c595cdefbb4731c1e98fe00",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Limits ATS to SATC devices only when pkvm_enabled, protecting the hypervisor from devices outside its trust policy. Native host SATC/root-port ATS logic stays intact for SDK ordinary mode. No guarantee of pKVM DMA isolation is claimed without that backend. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+      "evidence": [
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+      ],
+      "patch_sha256": "77019a539ab99398b021624cd7cd3d8c09426c7637d44f39d81e14d94f2a1b1a",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c"
+      ]
+    },
+    {
+      "commit": "3fda791e9a80f1b475045883a75ca5d6a83ec541",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Added early returns skip host cache-tag assignment/unassignment when pKVM owns it. Retain native tag management because the SDK uses native host IOMMU ownership; importing these skips without protected-side management would lose invalidation tracking. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+      "evidence": [
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+      ],
+      "patch_sha256": "0cc42d3b86b2951d859302163ab1749fd8f9d159ae10d7b11d7889ce5ee3979f",
+      "changed_paths": [
+        "drivers/iommu/intel/cache.c"
+      ]
+    },
+    {
+      "commit": "426afef23ae179cc45ffc93c3508f1333fc267ed",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Skips host sync-map/unmap flushing and alters advertised capabilities only with pKVM immediate flushing. Preserve native host flushes, capability behavior and delayed-free ordering; no protected-side substitute exists in this target. This omission avoids weakening native DMA isolation. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+      "evidence": [
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+      ],
+      "patch_sha256": "69d4a3cc0e63a17fec57d43d55f3bd2ef4b412c415b7a007d44dd57a98f6bb05",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c"
+      ]
+    },
+    {
+      "commit": "3431bf0936d688d484823e0f2c9f8adf93932a49",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Overrides igfx_off only under pKVM so the hypervisor can enforce EPT-backed identity translation. Current SDK does not enable protected host mode. Keep native command-line/graphics handling and its later Q35 DMAR quirk; neither protected identity transformation nor a new graphics platform is introduced. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+      "evidence": [
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+      ],
+      "patch_sha256": "2852b37087505bc1bbd80c5d04e81c6f508e57226e8e7a92cf84b2050a648b79",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c"
+      ]
+    },
+    {
+      "commit": "c9688cbe7094ecd091d418df7bef821bcd82bd51",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Forces platform IOMMU opt-in when pkvm_enabled even if ordinary firmware/external-PCI conditions are absent. Omit that protected-host prerequisite while preserving native opt-in, no_iommu, tboot and platform security logic. No SDK protected-memory guarantee is asserted. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+      "evidence": [
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+      ],
+      "patch_sha256": "6613025c1d628fe95fbdbceea65cd10eef18cd4aba7eb54f19d5986e03d064ac",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c"
+      ]
+    },
+    {
+      "commit": "99340500c68571f7b0d43ab33357378a12e9dd6a",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "S3 suspend/resume rejection is guarded by pkvm_enabled because that hypervisor cannot suspend. Native SDK path keeps full upstream suspend/resume behavior, including current syscore callback signatures, without imposing protected-host restrictions. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+      "evidence": [
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+      ],
+      "patch_sha256": "fbb2f85c060015a05cf0c1fce9747ef438d19df3ce19dbbf9d16849ab0e5d034",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c"
+      ]
+    },
+    {
+      "commit": "719d9b611b234dc7f19cb06016b9ed6731ee59ea",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Zeroing repair is required for the embedded desc_status introduced by dd4489f7211c. Native separate desc_status uses kcalloc and is already zero-initialized; whole dmar.c remains native. Do not carry the embedded-array regression or infer that native kmalloc of q_inval leaves desc_status contents uninitialized. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+      "evidence": [
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+      ],
+      "patch_sha256": "5b4971274d2ca821568fb418035053047dbca70461816fc1a726d83410de8112",
+      "changed_paths": [
+        "drivers/iommu/intel/dmar.c"
+      ]
+    },
+    {
+      "commit": "4df943df176a04afbdb76cab8824f493b7ee0834",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Repairs error return after ordinary register-invalidation fallback in ACK int-returning intel_iommu_init_qi. Native helper returns void and installs either QI or register-based callbacks; no erroneous ret is propagated. Keep native coherent fallback without introducing protected mode strict-QI requirements. No IOMMU hardware, protected VM or suspend runtime test was performed.",
+      "evidence": [
+        "evidence/intel-iommu-gates-review.json",
+        "SECURITY.md: Intel IOMMU native fixes and protected-host gates"
+      ],
+      "patch_sha256": "1e22171463c8502dbb9cede0f3ddf64a4671df53264bd1f912fa340127cd3c9c",
+      "changed_paths": [
+        "drivers/iommu/intel/iommu.c"
+      ]
+    }
+  ],
+  "witnesses": {
+    "drivers/iommu/intel/cache.c": {
+      "native_equal": true,
+      "blob": "385ae5cfb30d4af1afd8354dfb86702720cf3da5"
+    },
+    "drivers/iommu/intel/debugfs.c": {
+      "native_equal": true,
+      "blob": "617fd81a80f07ed488af7195c0b7fc406513572d"
+    },
+    "drivers/iommu/intel/dmar.c": {
+      "native_equal": true,
+      "blob": "f4bdc5ffa9d9bf078c93869149e41ec3f4fe7408"
+    },
+    "drivers/iommu/intel/iommu.c": {
+      "native_equal": true,
+      "blob": "94781f620680388e2e7148a0129d4c7efbb7f81b"
+    },
+    "drivers/iommu/intel/iommu.h": {
+      "native_equal": true,
+      "blob": "e696e019e969798713d3458b63c80738bf029ac5"
+    },
+    "drivers/iommu/intel/pasid.c": {
+      "native_equal": true,
+      "blob": "48e21743f20772842d10b39659e3a6460084889f"
+    },
+    "drivers/iommu/intel/svm.c": {
+      "native_equal": true,
+      "blob": "6c275c7679459eedd32561aa8240eede3b5b8f99"
+    }
+  },
+  "protected_mode_gate": {
+    "arch/x86/kvm/pkvm.c": "de0bbaef7023ec16a991fe174b6ccc74d354bc5c3e2475323bfd6f2ce42acda8",
+    "arch/x86/kvm/vmx/pkvm_init.c": "c5ed03c358497d3ce6e69000174c2ec1b4021172e426153253f204923e113184"
+  },
+  "goldfish_commit": "5281db702f36e0e8c0af9e33d70b63d3ba4916ae",
+  "goldfish_files": {
+    "board/kernel/x86_64.mk": {
+      "sha256": "f5431c8a99767dcc022310cf8d3d67b8a663cddf9765bae089b6a69c3f11ac54"
+    },
+    "board/kernel/x86_64_cmdline.txt": {
+      "sha256": "ec34f1f155caa37116a3396e454beefab1eed40b66d95027450a1e4dbb95b2ff"
+    },
+    "board/kernel/x86_64_16k.mk": {
+      "sha256": "3f2c157019d8176aa05f23631e3e85876a864bc5eb3e5a84edb1fc118c5024e4"
+    },
+    "board/kernel/x86_64_16k_cmdline.txt": {
+      "sha256": "a8df23ba1cec47cf4d8de94467b50a95b8d87e2e9d131e93ead446df8347e1d1"
+    }
+  },
+  "remaining_questions": [
+    "e55de9a5a0a8 overlap-walker rejection and 46cbf93c3172 partial-superpage unmap touch native-shared walkers. Native callers have different range/locking contracts; do not conclude their generic defensive checks unnecessary solely from pKVM subjects. Further review required.",
+    "Other shared Intel host/hypervisor changes remain individually provisional; no blanket disposition is made for drivers/iommu/intel."
+  ],
+  "remote_sources_used": []
+}
