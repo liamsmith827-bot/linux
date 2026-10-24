@@ -1,0 +1,108 @@
+{
+  "source_head": "ab5f9be720d5a2c1f721b1c71a0e32bd33e8b5d2",
+  "records": [
+    {
+      "commit": "7a2a62c55dab259e026b4d55907365fef4aa5dc1",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [],
+      "rationale": "Original five-file implementation truncated the file VMA and recursively overlaid its tail with a private MAP_FIXED anonymous VMA. f24ebb94679f explicitly removes the helpers, their do_mmap calls and alternate alignment macro. The original mm_inline include is also absent in final ACK/port, replaced by later independent includes. Do not resurrect mapping-time fixed remapping, stale EOF decisions or lost sharing semantics. Existing emulation flags predated this commit and later retired separately; not every page-size facility is removed. These are positive retirement decisions, not a finding that 16 KiB emulation lacks consumers. No new code or runtime verification.",
+      "evidence": [
+        "evidence/retired-filemap-fixup-review.json",
+        "evidence/unresolved-feature-questions.json: Shared file tail behavior",
+        "SECURITY.md: Retired mapping-time page-size fixups"
+      ],
+      "patch_sha256": "84d860e2a395bb6b3498bd90757f6ecc038d4915cf42bd00cca75c8310d87d3b",
+      "changed_paths": [
+        "include/linux/mman.h",
+        "include/linux/page_size_compat.h",
+        "mm/mmap.c",
+        "mm/nommu.c",
+        "mm/page_size_compat.c"
+      ]
+    },
+    {
+      "commit": "e35913a77139feb5dd22880e89474f063f849278",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [],
+      "rationale": "Original three-file revision keeps the full initial file mapping and limits its private anonymous overlay to the remaining emulated-page tail, correcting SIGBUS boundaries in the old design. 13fa503273ef restores both helper function bodies exactly to pre-revision form; f24ebb94679f then removes the entire design. Preserve that explicit retirement. Its intent is not proof that the newer shared-tail design is safe or fully implemented. These are positive retirement decisions, not a finding that 16 KiB emulation lacks consumers. No new code or runtime verification.",
+      "evidence": [
+        "evidence/retired-filemap-fixup-review.json",
+        "evidence/unresolved-feature-questions.json: Shared file tail behavior",
+        "SECURITY.md: Retired mapping-time page-size fixups"
+      ],
+      "patch_sha256": "9c59accfc33fbacece4e47d2c2cb4f7e1474c7dad5c369eed50a20042a3522a9",
+      "changed_paths": [
+        "include/linux/page_size_compat.h",
+        "mm/mmap.c",
+        "mm/page_size_compat.c"
+      ]
+    },
+    {
+      "commit": "13fa503273ef296c3ca0a16437b137bab8b81776",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [],
+      "rationale": "Read the full meaningful inverse changes and checked both helper bodies against e35913a77139 parent. This revert temporarily restores the older length-shrinking/remap algorithm; the following f24ebb94679f removes both helpers and callsites. No reason to recreate that intermediate algorithm in the LTS port. These are positive retirement decisions, not a finding that 16 KiB emulation lacks consumers. No new code or runtime verification.",
+      "evidence": [
+        "evidence/retired-filemap-fixup-review.json",
+        "evidence/unresolved-feature-questions.json: Shared file tail behavior",
+        "SECURITY.md: Retired mapping-time page-size fixups"
+      ],
+      "patch_sha256": "ba8736c5ab0971ca2f645c4c4f74025c321837235064386d5fb69892320773af",
+      "changed_paths": [
+        "include/linux/page_size_compat.h",
+        "mm/mmap.c",
+        "mm/page_size_compat.c"
+      ]
+    },
+    {
+      "commit": "f24ebb94679fd37dec2b86d31a24a3ebe01dc4af",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [],
+      "rationale": "Retain explicit removal of mapping-time file-length shrinking, recursive anonymous MAP_FIXED tail replacement, helper declarations and __COMPAT_PAGE_ALIGN. Current do_mmap has no retired calls and retains native overflow and mapping checks with the separately audited __PAGE_ALIGN emulation. The replacement fault-time b3c77090341c candidate remains provisional because its shared-tail behavior still needs safe resolution. These are positive retirement decisions, not a finding that 16 KiB emulation lacks consumers. No new code or runtime verification.",
+      "evidence": [
+        "evidence/retired-filemap-fixup-review.json",
+        "evidence/unresolved-feature-questions.json: Shared file tail behavior",
+        "SECURITY.md: Retired mapping-time page-size fixups"
+      ],
+      "patch_sha256": "cce7de7a89216880e98bf1c6a69d61340f22beadd74460318db4be973633cf89",
+      "changed_paths": [
+        "include/linux/mman.h",
+        "include/linux/page_size_compat.h",
+        "mm/mmap.c",
+        "mm/nommu.c",
+        "mm/page_size_compat.c"
+      ]
+    }
+  ],
+  "witnesses": [
+    {
+      "function": "___filemap_len",
+      "exact_reverted_body_sha256": "40055b1ab527ec4208eb1f5957244a51bd711b81ac2ee7639809b984252d2f19"
+    },
+    {
+      "function": "___filemap_fixup",
+      "exact_reverted_body_sha256": "4e10fdfd5c7ecb3e6ffb796575084b56d913fa3fa9606a0ac5461d34e1c56372"
+    },
+    {
+      "original": "e35913a77139feb5dd22880e89474f063f849278",
+      "revert": "13fa503273ef296c3ca0a16437b137bab8b81776",
+      "whole_inverse_patch_id_equal": false,
+      "note": "Intervening changes mean whole-file/inverse-patch identity is not asserted. Exact helper restoration and subsequent complete removal establish retired algorithm; current header/mmap implementation independently inspected."
+    },
+    {
+      "original": "7a2a62c55dab259e026b4d55907365fef4aa5dc1",
+      "revert": "f24ebb94679fd37dec2b86d31a24a3ebe01dc4af",
+      "whole_inverse_patch_id_equal": false,
+      "note": "Intervening changes mean whole-file/inverse-patch identity is not asserted. Exact helper restoration and subsequent complete removal establish retired algorithm; current header/mmap implementation independently inspected."
+    }
+  ],
+  "current_file_sha256": {
+    "include/linux/mman.h": "fb951f3dacffbf8b69452643acb8d0c6b659c42eb823cbbc82331f48a072818d",
+    "include/linux/page_size_compat.h": "f02ee91d8c41d54f505fd3d121d6adc24312e1c2faec9b2267e59b6d2e3e5e27",
+    "mm/mmap.c": "edba033b8ee9ebf5102feff4cc3df640bc3153e688045b8e06bf7515e10a1a9b",
+    "mm/nommu.c": "b606435f2fcd2f12e92680e3facad9fed36e94fa6d488058da170ff88133c3cd",
+    "mm/page_size_compat.c": "bf31a2a69254a59120ffdac55c7557b060a5767cd85b29dce2aed43410ea37f1"
+  },
+  "remaining": "b3c77090341c remains provisional. Positive SDK page_shift=14 consumer and native shared-zero-page/copy-on-write/ownership invariants are documented in unresolved-feature-questions.json; no closure of that compatibility question.",
+  "remote_sources_used": []
+}

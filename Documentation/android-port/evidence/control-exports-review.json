@@ -1,0 +1,290 @@
+{
+  "source_head": "ab5f9be720d5a2c1f721b1c71a0e32bd33e8b5d2",
+  "records": [
+    {
+      "commit": "cdc9f6ef946f3c17b048b3ee9e36aa0bbc12d712",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Five GPL DMA exports were explicitly removed by 1756dedada25, including helpers moved from mapping.c to ops_helpers.c. Exact added/removed export name sets match and all five are absent in final ACK/LTS/port. Do not resurrect this withdrawn module API or replace native DMA mapping implementations. This is positive history, not a missing-consumer inference. Source/link metadata verification only; callbacks and module loading were not exercised.",
+      "evidence": [
+        "evidence/control-exports-review.json",
+        "SECURITY.md: Native control exports and locking contracts"
+      ],
+      "patch_sha256": "434ef808f20405989d151385ba42e6c638ef61e9e2346ded6c7e7e30f01fdb47",
+      "changed_paths": [
+        "kernel/dma/direct.c",
+        "kernel/dma/mapping.c"
+      ]
+    },
+    {
+      "commit": "1756dedada2549166ad3fef487ca778795a7dca6",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [],
+      "rationale": "Retain explicit removal of dma_direct_get_required_mask, dma_direct_alloc/free and dma_common_get_sgtable/mmap exports. Original and revert patches read; filename/function placement changes are accounted for. The omission concerns these annotations only; current native direct-DMA API and security fixes remain. Source/link metadata verification only; callbacks and module loading were not exercised.",
+      "evidence": [
+        "evidence/control-exports-review.json",
+        "SECURITY.md: Native control exports and locking contracts"
+      ],
+      "patch_sha256": "cdccfa51bbc22057221692f1b552835c8812b0810d985e2da4b4247cc07202a1",
+      "changed_paths": [
+        "kernel/dma/direct.c",
+        "kernel/dma/ops_helpers.c"
+      ]
+    },
+    {
+      "commit": "4de53aef65d4de1e8adfa5083b14a6ea289ef60a",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain GPL tick_nohz_get_sleep_length source-module interface. The entire function equals LTS; native idle/tick policy and timing calculations are unchanged. Modules must respect the native timing/CPU context and returned next-event contract. No idle/power runtime measurement is claimed. Source/link metadata verification only; callbacks and module loading were not exercised.",
+      "evidence": [
+        "evidence/control-exports-review.json",
+        "SECURITY.md: Native control exports and locking contracts"
+      ],
+      "patch_sha256": "70b5c3f4ca278d9e3d0411fe4f3b6e817501ae2e4cf0db8425f29b86150adf10",
+      "changed_paths": [
+        "kernel/time/tick-sched.c"
+      ]
+    },
+    {
+      "commit": "f2e5227422469c87f868608e8342be4d7fcdc873",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Adapt historical swiotlb_find_pool export to native __swiotlb_find_pool plus the existing inline public wrapper. Native header is exactly LTS, preserving the read barrier and dma_uses_io_tlb check; native helper body retains RCU traversal and is byte-identical. The old binary symbol name is not preserved. Pool lifetime remains tied to valid outstanding DMA mappings; arbitrary stale addresses are not made safe by exporting lookup. Source/link metadata verification only; callbacks and module loading were not exercised.",
+      "evidence": [
+        "evidence/control-exports-review.json",
+        "SECURITY.md: Native control exports and locking contracts"
+      ],
+      "patch_sha256": "363ac4f640d1dd26ef3ba5d939098e107c336aa31ae8154cc1a733ca99c68b37",
+      "changed_paths": [
+        "kernel/dma/swiotlb.c"
+      ]
+    },
+    {
+      "commit": "9bb473b373ad64c2459f70db7040effe81de160f",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [],
+      "rationale": "Deliberately retain native GPL tracing_on and tracing_is_on exports rather than ACK removal. The ACK message explicitly seeks to deny vendor module control/query of global tracing; this is a real policy difference, not claimed KMI-only. Requested vendor source customization and minimal native deviation favor keeping the existing upstream interface. Trusted modules can therefore disable global tracing or observe its state, potentially reducing diagnostic visibility. These are kernel-code interfaces, not a new unprivileged access path, and removing two exports would not sandbox arbitrary loaded kernel code. Native function bodies/export types and build symbols are unchanged. Source/link metadata verification only; callbacks and module loading were not exercised.",
+      "evidence": [
+        "evidence/control-exports-review.json",
+        "SECURITY.md: Native control exports and locking contracts"
+      ],
+      "patch_sha256": "36c54abba042b8b355e03ff16bd48666d9f44f25db80da080157c2166deb9242",
+      "changed_paths": [
+        "kernel/trace/trace.c"
+      ]
+    },
+    {
+      "commit": "9d4e34a5f965fefe0489ccd5dae1f531cf4c52cf",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain elevator_alloc, workqueue-attribute allocate/free exports and public apply_workqueue_attrs_locked declaration/definition. All four function bodies equal LTS after only static visibility normalization for the locked helper. It does not acquire wq_pool_mutex: vendor callers must already have the native locking context; the ordinary apply_workqueue_attrs wrapper remains the lock-taking entry. Unbound-workqueue validation and allocation failures are preserved. No separate vendor scheduler or historical object layout is imported. Source/link metadata verification only; callbacks and module loading were not exercised.",
+      "evidence": [
+        "evidence/control-exports-review.json",
+        "SECURITY.md: Native control exports and locking contracts"
+      ],
+      "patch_sha256": "c3aa61afefee2fb4dc8d5c00c64dfb8428b98564ee8db2751ef8b5aca11f757c",
+      "changed_paths": [
+        "block/elevator.c",
+        "include/linux/workqueue.h",
+        "kernel/workqueue.c"
+      ]
+    },
+    {
+      "commit": "634a6f075d623b9aa6a9b641a24574efbdab812a",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain GPL bdi_list, wb_wakeup and redirty_tail_locked exports/declarations for hierarchical vendor writeback control. wb_wakeup is native apart from visibility. redirty_tail_locked retains native I_FREEING early cleanup and timestamp/list logic, with a separate existing vendor target-list hook; this candidate only changes visibility/export. Callers must respect inode/writeback-list locks and bdi lifetime; mutable list exposure is privileged authority, not safe untrusted traversal. No old writeback implementation replaces LTS. Source/link metadata verification only; callbacks and module loading were not exercised.",
+      "evidence": [
+        "evidence/control-exports-review.json",
+        "SECURITY.md: Native control exports and locking contracts"
+      ],
+      "patch_sha256": "002ea9ab6ab1fcc9b315558ce0ba31a76387b3b8fba86004815cd212b9551202",
+      "changed_paths": [
+        "fs/fs-writeback.c",
+        "include/linux/backing-dev.h",
+        "mm/backing-dev.c"
+      ]
+    },
+    {
+      "commit": "ec3601aba611c7d6da822a2807464da60e185790",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain common GPL cpumask_backtrace wrapper and route all four inline backtrace helpers through it under the existing arch capability guard. Complete two-file current delta equals the original ACK patch; native low-level backtrace implementation is untouched. Modules gain an expensive cross-CPU diagnostic operation and must supply valid mask/context; no unprivileged invocation or NMI runtime test is added. The local mainline bd26ae0caa20 object is evidence of origin, not assumed to be in the pinned LTS. Source/link metadata verification only; callbacks and module loading were not exercised.",
+      "evidence": [
+        "evidence/control-exports-review.json",
+        "SECURITY.md: Native control exports and locking contracts"
+      ],
+      "patch_sha256": "003365edad7579753dcdc9d3e7f5b3408d6e13944b33b30f5108e5647cef60d6",
+      "changed_paths": [
+        "include/linux/nmi.h",
+        "lib/nmi_backtrace.c"
+      ]
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/time/tick-sched.c",
+      "function": "tick_nohz_get_sleep_length",
+      "sha256": "a41555725ac811740a96aabfd8fa98d70477454fb0e477902888eff302ec4974",
+      "native_equal": true,
+      "only_static_visibility_changed": false
+    },
+    {
+      "path": "kernel/dma/swiotlb.c",
+      "function": "__swiotlb_find_pool",
+      "sha256": "8022498e7b2f40ee876eb38253cb6e97500fe614a9574f9b2249720c9fbd6c4f",
+      "native_equal": true,
+      "only_static_visibility_changed": false
+    },
+    {
+      "path": "kernel/trace/trace.c",
+      "function": "tracing_on",
+      "sha256": "8fe93ccfdc5afee568fd0e90db332e1b885747114aec777a70d3935059040968",
+      "native_equal": true,
+      "only_static_visibility_changed": false
+    },
+    {
+      "path": "kernel/trace/trace.c",
+      "function": "tracing_is_on",
+      "sha256": "64fa8310ce8b430bf36bda4cca5d4b827eacddeec4308470fa1e907f09e06d39",
+      "native_equal": true,
+      "only_static_visibility_changed": false
+    },
+    {
+      "path": "kernel/workqueue.c",
+      "function": "apply_workqueue_attrs_locked",
+      "sha256": "e5232014d7abfda23064edf5f48f51d7ee7bbbb9028637f85c3d2d62f2e27bc6",
+      "native_equal": true,
+      "only_static_visibility_changed": true
+    },
+    {
+      "path": "kernel/workqueue.c",
+      "function": "free_workqueue_attrs",
+      "sha256": "2c4215041b26cf0b1cbbbfff195d63cc4af6334120659056cc54b4dd15d1e3e2",
+      "native_equal": true,
+      "only_static_visibility_changed": false
+    },
+    {
+      "path": "kernel/workqueue.c",
+      "function": "alloc_workqueue_attrs_noprof",
+      "sha256": "b69eff8932bace07a52f2d151edca9340a9e54bf04523985522993f493f8fa44",
+      "native_equal": true,
+      "only_static_visibility_changed": false
+    },
+    {
+      "path": "block/elevator.c",
+      "function": "elevator_alloc",
+      "sha256": "3f05e3035952b64c96bfefe419c2dce041e1890f19e72f2ba47d77526a5ea50b",
+      "native_equal": true,
+      "only_static_visibility_changed": false
+    },
+    {
+      "path": "fs/fs-writeback.c",
+      "function": "wb_wakeup",
+      "sha256": "19654fd5fc4f6e496e48492b20b7d1c615f9b68a6438b3f86a762f70fb4d5502",
+      "native_equal": true,
+      "only_static_visibility_changed": true
+    },
+    {
+      "path": "fs/fs-writeback.c",
+      "function": "redirty_tail_locked",
+      "sha256": "714d688eee232a329d95a5fa40d60ffc14734fccdf54532d7d4c467ed9c789d2",
+      "relationship": "Native function plus public visibility and separately scoped target-list vendor hook; native I_FREEING branch precedes callback"
+    }
+  ],
+  "built_exports": {
+    "tick_nohz_get_sleep_length": [
+      "0xf1035627",
+      "tick_nohz_get_sleep_length",
+      "vmlinux",
+      "EXPORT_SYMBOL_GPL"
+    ],
+    "__swiotlb_find_pool": [
+      "0xa4e4be3d",
+      "__swiotlb_find_pool",
+      "vmlinux",
+      "EXPORT_SYMBOL_GPL"
+    ],
+    "tracing_on": [
+      "0xd272d446",
+      "tracing_on",
+      "vmlinux",
+      "EXPORT_SYMBOL_GPL"
+    ],
+    "tracing_is_on": [
+      "0x7851be11",
+      "tracing_is_on",
+      "vmlinux",
+      "EXPORT_SYMBOL_GPL"
+    ],
+    "elevator_alloc": [
+      "0x5e23462e",
+      "elevator_alloc",
+      "vmlinux",
+      "EXPORT_SYMBOL"
+    ],
+    "apply_workqueue_attrs_locked": [
+      "0x9379bfbf",
+      "apply_workqueue_attrs_locked",
+      "vmlinux",
+      "EXPORT_SYMBOL_GPL"
+    ],
+    "free_workqueue_attrs": [
+      "0x593f24c0",
+      "free_workqueue_attrs",
+      "vmlinux",
+      "EXPORT_SYMBOL_GPL"
+    ],
+    "alloc_workqueue_attrs_noprof": [
+      "0x4759e293",
+      "alloc_workqueue_attrs_noprof",
+      "vmlinux",
+      "EXPORT_SYMBOL_GPL"
+    ],
+    "wb_wakeup": [
+      "0xf510e5f4",
+      "wb_wakeup",
+      "vmlinux",
+      "EXPORT_SYMBOL_GPL"
+    ],
+    "redirty_tail_locked": [
+      "0x4a26a8fc",
+      "redirty_tail_locked",
+      "vmlinux",
+      "EXPORT_SYMBOL_GPL"
+    ],
+    "bdi_list": [
+      "0x7ce7ad9f",
+      "bdi_list",
+      "vmlinux",
+      "EXPORT_SYMBOL_GPL"
+    ],
+    "cpumask_backtrace": [
+      "0x53ee23eb",
+      "cpumask_backtrace",
+      "vmlinux",
+      "EXPORT_SYMBOL_GPL"
+    ]
+  },
+  "symvers_sha256": "093e9e5e82c4b0788701062c323157a4f10f3bc149e7680f3426756908a71a62",
+  "retired_dma_exports": [
+    "dma_common_get_sgtable",
+    "dma_common_mmap",
+    "dma_direct_alloc",
+    "dma_direct_free",
+    "dma_direct_get_required_mask"
+  ],
+  "native_source_header_sha256": "5e3ae31315cfe8692415835abf3147fef87b7b655bc6bb095ee5f6348ff0362b",
+  "remote_sources_used": [],
+  "source_limits": "Local commit-message URL in NMI origin was not accessed. No binary layout compatibility, runtime tracing policy or callback safety guarantee."
+}

@@ -1,0 +1,1178 @@
+{
+  "source_head": "ab5f9be720d5a2c1f721b1c71a0e32bd33e8b5d2",
+  "records": [
+    {
+      "commit": "f04767b9fad4ee8d6439670c0995e527a741bdb7",
+      "disposition": "superseded-configuration",
+      "result_commits": [],
+      "rationale": "The sdcardfs driver and registration were explicitly retired by a96c98dd7a30, as audited in sdcardfs-retirement-review.json. Final ACK and port no longer request SDCARD_FS. Keep that retirement; do not resurrect the obsolete filesystem merely because this historical config enabled it. That report includes positive vold FUSE selection and acknowledges remaining legacy sdcardfs userspace support. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "204add295288af171df5eb4f94b3fb7306d51ee8740186a675120a7a3bfdbe32",
+      "changed_paths": [
+        "arch/arm64/configs/cuttlefish_defconfig",
+        "arch/arm64/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig",
+        "arch/x86/configs/x86_64_cuttlefish_defconfig"
+      ],
+      "changed_config_lines": [
+        "+CONFIG_SDCARD_FS=y",
+        "+CONFIG_SDCARD_FS=y",
+        "+CONFIG_SDCARD_FS=y",
+        "+CONFIG_SDCARD_FS=y"
+      ],
+      "effective_values": {
+        "CONFIG_SDCARD_FS": {
+          "ack_defconfig": "absent",
+          "port_defconfig": "absent",
+          "common_build": "absent",
+          "virtual_build": "absent"
+        }
+      }
+    },
+    {
+      "commit": "7b04173768723aa0d441f0b6a2034d85f3876049",
+      "disposition": "merge-resolution-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "The complete unique remerge resolution only removes the redundant VIRTIO_MEM=n line. Preserve native Kconfig, which has no enabling default; build 155 resolves VIRTIO_MEM=n. This does not enable memory hotplug or replace either merge parent implementation. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "fcac1fd5c594a60bd1dbe7287e8dec7a65e9180b380ea2411a4cec5bc32890dc",
+      "changed_paths": [
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "-# CONFIG_VIRTIO_MEM is not set"
+      ],
+      "effective_values": {
+        "CONFIG_VIRTIO_MEM": {
+          "ack_defconfig": "absent",
+          "port_defconfig": "absent",
+          "common_build": "n",
+          "virtual_build": "n"
+        }
+      }
+    },
+    {
+      "commit": "542062486f94a069c2f7c1f530e2daefeca13e72",
+      "disposition": "adapted-net-configuration",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Keep FS_VERITY=y and BUILTIN_SIGNATURES=n. GrapheneOS VerityUtils positively enables fs-verity without a signature and verifies detached signatures against a supplied trusted certificate in userspace. This removes the optional in-kernel signature verification policy, not Merkle integrity verification. Retain the native filesystem/verity implementation and existing Android trust-policy split; runtime signature validation was not executed. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "53d8912a3dd3e793e48f2836c040b2628f6acc3ec171b3fefaa29266e0be2a53",
+      "changed_paths": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/riscv/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "-CONFIG_FS_VERITY_BUILTIN_SIGNATURES=y",
+        "-CONFIG_FS_VERITY_BUILTIN_SIGNATURES=y",
+        "-CONFIG_FS_VERITY_BUILTIN_SIGNATURES=y"
+      ],
+      "effective_values": {
+        "CONFIG_FS_VERITY_BUILTIN_SIGNATURES": {
+          "ack_defconfig": "absent",
+          "port_defconfig": "absent",
+          "common_build": "n",
+          "virtual_build": "n"
+        }
+      }
+    },
+    {
+      "commit": "1ffaaad78b8cccec7497e87bbcb27652f3864790",
+      "disposition": "adapted-net-configuration",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Dropping the explicit LOCAL_BOUNDS line does not disable bounds checks: native lib/Kconfig.ubsan makes it UBSAN_ARRAY_BOUNDS && UBSAN_TRAP. All three plus UBSAN are y in build 155. Keep native compiler instrumentation selection; no sanitizer reduction from this config cleanup. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "c7b298671d50b4304d471870dfb593500a35c69bbd4a010917bcbe58ced9d711",
+      "changed_paths": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/riscv/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "-CONFIG_UBSAN_LOCAL_BOUNDS=y",
+        "-CONFIG_UBSAN_LOCAL_BOUNDS=y",
+        "-CONFIG_UBSAN_LOCAL_BOUNDS=y"
+      ],
+      "effective_values": {
+        "CONFIG_UBSAN_LOCAL_BOUNDS": {
+          "ack_defconfig": "absent",
+          "port_defconfig": "absent",
+          "common_build": "y",
+          "virtual_build": "y"
+        }
+      }
+    },
+    {
+      "commit": "64302bc801132ef90fff0073f5fb586a9b77c2a2",
+      "disposition": "superseded-configuration",
+      "result_commits": [],
+      "rationale": "The temporary removal of VSOCKETS/VHOST_VSOCK/VIRTIO_FS is explicitly superseded by eef10ae9bd9a and 4b6aa37b0867. All three are y in final ACK, port and build 155. Preserve final Android virtual transport/filesystem availability, including native implementations and fixes. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "de4740fa03b3a5e67a241d4bbbabbd612dd12fd73619225cfe03da58b377182d",
+      "changed_paths": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/riscv/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "-CONFIG_VSOCKETS=y",
+        "-CONFIG_VHOST_VSOCK=y",
+        "-CONFIG_VIRTIO_FS=y",
+        "-CONFIG_VSOCKETS=y",
+        "-CONFIG_VHOST_VSOCK=y",
+        "-CONFIG_VIRTIO_FS=y",
+        "-CONFIG_VSOCKETS=y",
+        "-CONFIG_VHOST_VSOCK=y",
+        "-CONFIG_VIRTIO_FS=y"
+      ],
+      "effective_values": {
+        "CONFIG_VHOST_VSOCK": {
+          "ack_defconfig": "y",
+          "port_defconfig": "y",
+          "common_build": "y",
+          "virtual_build": "y"
+        },
+        "CONFIG_VIRTIO_FS": {
+          "ack_defconfig": "y",
+          "port_defconfig": "y",
+          "common_build": "y",
+          "virtual_build": "y"
+        },
+        "CONFIG_VSOCKETS": {
+          "ack_defconfig": "y",
+          "port_defconfig": "y",
+          "common_build": "y",
+          "virtual_build": "y"
+        }
+      }
+    },
+    {
+      "commit": "6c25e06df41a2924fae86d14ce68828a3fc58f24",
+      "disposition": "adapted-net-configuration",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain BLK_CGROUP_IOPRIO=y and the native block cgroup priority policy interface. This preserves Android configurable I/O prioritization without introducing an old block implementation or altering LTS permission checks. No workload latency claim is made. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "2924f7278a138a536984a6fe6cc64f76dcde510a55f3619940e62a29d4a717fb",
+      "changed_paths": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/riscv/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "+CONFIG_BLK_CGROUP_IOPRIO=y",
+        "+CONFIG_BLK_CGROUP_IOPRIO=y",
+        "+CONFIG_BLK_CGROUP_IOPRIO=y"
+      ],
+      "effective_values": {
+        "CONFIG_BLK_CGROUP_IOPRIO": {
+          "ack_defconfig": "y",
+          "port_defconfig": "y",
+          "common_build": "y",
+          "virtual_build": "y"
+        }
+      }
+    },
+    {
+      "commit": "108c31cb883083647c80558013f20af2601b0b8f",
+      "disposition": "adapted-net-configuration",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain the final build split: CFG80211 is a virtual-device module, with CERTIFICATION_ONUS and REG_CELLULAR_HINTS enabled in the unmodified virtual_device.fragment. The actual virtual-device .config also has DEFAULT_PS=y and CRDA_SUPPORT=y after removal of explicit n lines, plus REQUIRE_SIGNED_REGDB=y and USE_KERNEL_REGDB_KEYS=y. Thus the entire historical setting change is represented, not discarded because common .config disables CFG80211. Preserve native regulatory validation and driver opt-in semantics; no real-radio regulatory validation is claimed. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "25f88e2bc43462b9360510e48bb414dcd430d3b33e1c0925d1bd12b7d28adc86",
+      "changed_paths": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/riscv/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "-# CONFIG_CFG80211_DEFAULT_PS is not set",
+        "-# CONFIG_CFG80211_CRDA_SUPPORT is not set",
+        "+CONFIG_CFG80211_CERTIFICATION_ONUS=y",
+        "+CONFIG_CFG80211_REG_CELLULAR_HINTS=y",
+        "-# CONFIG_CFG80211_DEFAULT_PS is not set",
+        "-# CONFIG_CFG80211_CRDA_SUPPORT is not set",
+        "+CONFIG_CFG80211_CERTIFICATION_ONUS=y",
+        "+CONFIG_CFG80211_REG_CELLULAR_HINTS=y",
+        "-# CONFIG_CFG80211_DEFAULT_PS is not set",
+        "-# CONFIG_CFG80211_CRDA_SUPPORT is not set",
+        "+CONFIG_CFG80211_CERTIFICATION_ONUS=y",
+        "+CONFIG_CFG80211_REG_CELLULAR_HINTS=y"
+      ],
+      "effective_values": {
+        "CONFIG_CFG80211_CERTIFICATION_ONUS": {
+          "ack_defconfig": "absent",
+          "port_defconfig": "absent",
+          "common_build": "absent",
+          "virtual_build": "y"
+        },
+        "CONFIG_CFG80211_CRDA_SUPPORT": {
+          "ack_defconfig": "absent",
+          "port_defconfig": "absent",
+          "common_build": "absent",
+          "virtual_build": "y"
+        },
+        "CONFIG_CFG80211_DEFAULT_PS": {
+          "ack_defconfig": "absent",
+          "port_defconfig": "absent",
+          "common_build": "absent",
+          "virtual_build": "y"
+        },
+        "CONFIG_CFG80211_REG_CELLULAR_HINTS": {
+          "ack_defconfig": "absent",
+          "port_defconfig": "absent",
+          "common_build": "absent",
+          "virtual_build": "y"
+        }
+      }
+    },
+    {
+      "commit": "49fe8567b2efca3b9419b2729c29787b0dd73635",
+      "disposition": "adapted-net-configuration",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "This only reorders BUG_ON_DATA_CORRUPTION=y; parsed pre/post configuration maps are identical for all three architectures. Build 155 retains y. Keep corruption fail-stop configuration without any code or policy weakening. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "a234f882078a265bd219e4d20e577a985794f1ae1e5e7b34dbb39420b39b2443",
+      "changed_paths": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/riscv/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "+CONFIG_BUG_ON_DATA_CORRUPTION=y",
+        "-CONFIG_BUG_ON_DATA_CORRUPTION=y",
+        "+CONFIG_BUG_ON_DATA_CORRUPTION=y",
+        "-CONFIG_BUG_ON_DATA_CORRUPTION=y",
+        "+CONFIG_BUG_ON_DATA_CORRUPTION=y",
+        "-CONFIG_BUG_ON_DATA_CORRUPTION=y"
+      ],
+      "effective_values": {
+        "CONFIG_BUG_ON_DATA_CORRUPTION": {
+          "ack_defconfig": "y",
+          "port_defconfig": "y",
+          "common_build": "y",
+          "virtual_build": "y"
+        }
+      }
+    },
+    {
+      "commit": "78b7fb432ac1cde9a9575c2576f4a57e2ef6d26a",
+      "disposition": "superseded-configuration",
+      "result_commits": [],
+      "rationale": "The temporary mainline PROVE_LOCKING enablement and KALLSYMS_ALL removal are explicitly superseded on ACK LTS by 6653bf09f838. Current build has PROVE_LOCKING=n, KALLSYMS_ALL=y and DRM_DEBUG_MODESET_LOCK=n. Retain the final ACK configuration; this does not prove absence of locking bugs and no lockdep runtime test is claimed. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "1caa1fd907c94e62224308b3292235e4fdf80e0fc82c104454425720af8bd266",
+      "changed_paths": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/riscv/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "-CONFIG_KALLSYMS_ALL=y",
+        "+# CONFIG_DRM_DEBUG_MODESET_LOCK is not set",
+        "+CONFIG_PROVE_LOCKING=y",
+        "-CONFIG_KALLSYMS_ALL=y",
+        "+# CONFIG_DRM_DEBUG_MODESET_LOCK is not set",
+        "+CONFIG_PROVE_LOCKING=y",
+        "-CONFIG_KALLSYMS_ALL=y",
+        "+# CONFIG_DRM_DEBUG_MODESET_LOCK is not set",
+        "+CONFIG_PROVE_LOCKING=y"
+      ],
+      "effective_values": {
+        "CONFIG_DRM_DEBUG_MODESET_LOCK": {
+          "ack_defconfig": "absent",
+          "port_defconfig": "absent",
+          "common_build": "n",
+          "virtual_build": "n"
+        },
+        "CONFIG_KALLSYMS_ALL": {
+          "ack_defconfig": "y",
+          "port_defconfig": "y",
+          "common_build": "y",
+          "virtual_build": "y"
+        },
+        "CONFIG_PROVE_LOCKING": {
+          "ack_defconfig": "absent",
+          "port_defconfig": "absent",
+          "common_build": "n",
+          "virtual_build": "n"
+        }
+      }
+    },
+    {
+      "commit": "b898575c704e09e67c7c025d09dfe75d7343c6c4",
+      "disposition": "adapted-net-configuration",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain explicit EXPERT=y after retirement of the old EMBEDDED selector. Native init/Kconfig exposes expert choices and selects DEBUG_KERNEL; the resulting build has EXPERT=y. This preserves explicit Android configuration choices, not a blanket change to all optional features. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "0772f78fa9572f097f6d8762ea62f49baecfc7e4d6ff83d5079003f15ba11fbf",
+      "changed_paths": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/riscv/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "+CONFIG_EXPERT=y",
+        "-CONFIG_EMBEDDED=y",
+        "+CONFIG_EXPERT=y",
+        "-CONFIG_EMBEDDED=y",
+        "+CONFIG_EXPERT=y",
+        "-CONFIG_EMBEDDED=y"
+      ],
+      "effective_values": {
+        "CONFIG_EMBEDDED": {
+          "ack_defconfig": "absent",
+          "port_defconfig": "absent",
+          "common_build": "absent",
+          "virtual_build": "absent"
+        },
+        "CONFIG_EXPERT": {
+          "ack_defconfig": "y",
+          "port_defconfig": "y",
+          "common_build": "y",
+          "virtual_build": "y"
+        }
+      }
+    },
+    {
+      "commit": "484348c4904a62d71c44a703719a7785615c4c9f",
+      "disposition": "adapted-net-configuration",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain the native generic thermal governor option THERMAL_GOV_BANG_BANG=y for Android configuration compatibility. This exposes the existing two-point governor to the thermal framework; it adds no platform driver or automatic fan registration. Governor behavior or cooling efficacy has not been tested. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "bd010f5dc133b6eaa5a0064b6cc912273440d038ec5a4b16dcbbd1e7e3f4be9a",
+      "changed_paths": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/riscv/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "+CONFIG_THERMAL_GOV_BANG_BANG=y",
+        "+CONFIG_THERMAL_GOV_BANG_BANG=y",
+        "+CONFIG_THERMAL_GOV_BANG_BANG=y"
+      ],
+      "effective_values": {
+        "CONFIG_THERMAL_GOV_BANG_BANG": {
+          "ack_defconfig": "y",
+          "port_defconfig": "y",
+          "common_build": "y",
+          "virtual_build": "y"
+        }
+      }
+    },
+    {
+      "commit": "eef10ae9bd9a5a3e83783be23e12b0375d91c18d",
+      "disposition": "adapted-net-configuration",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain VSOCKETS=y and VHOST_VSOCK=y, explicitly restoring the virtual socket facilities after 64302bc80113. These are Android virtual transport/configuration interfaces and the SDK uses virtual transports. Preserve upstream socket implementation and fixes; no host or guest connection was executed. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "e24ca021df48cbec79b5f8855956f6879224ecea567e133d20ed26416cf53450",
+      "changed_paths": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/riscv/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "+CONFIG_VSOCKETS=y",
+        "+CONFIG_VHOST_VSOCK=y",
+        "+CONFIG_VSOCKETS=y",
+        "+CONFIG_VHOST_VSOCK=y",
+        "+CONFIG_VSOCKETS=y",
+        "+CONFIG_VHOST_VSOCK=y"
+      ],
+      "effective_values": {
+        "CONFIG_VHOST_VSOCK": {
+          "ack_defconfig": "y",
+          "port_defconfig": "y",
+          "common_build": "y",
+          "virtual_build": "y"
+        },
+        "CONFIG_VSOCKETS": {
+          "ack_defconfig": "y",
+          "port_defconfig": "y",
+          "common_build": "y",
+          "virtual_build": "y"
+        }
+      }
+    },
+    {
+      "commit": "4b6aa37b086728130220336b4b8cc76f35455ddb",
+      "disposition": "adapted-net-configuration",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain VIRTIO_FS=y and native virtio filesystem support after the earlier temporary config removal. Although the original message cites KMI export reduction, the actual effect is built-in filesystem availability. Retain that final Android virtual filesystem configuration for source/runtime compatibility independently of historical binary KMI; no KMI layout or symbol allowlist restriction is introduced by this decision. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "13395d6017f150f79c5917cdd9624ace5384e082225a00ebb0a618dec497d8c0",
+      "changed_paths": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/riscv/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "+CONFIG_VIRTIO_FS=y",
+        "+CONFIG_VIRTIO_FS=y",
+        "+CONFIG_VIRTIO_FS=y"
+      ],
+      "effective_values": {
+        "CONFIG_VIRTIO_FS": {
+          "ack_defconfig": "y",
+          "port_defconfig": "y",
+          "common_build": "y",
+          "virtual_build": "y"
+        }
+      }
+    },
+    {
+      "commit": "019f81c100ba56cd3cd68cbfaf1ea1386bc17582",
+      "disposition": "adapted-net-configuration",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain TASK_DELAY_ACCT=y with TASKSTATS and SCHED_INFO dependencies for per-task delay accounting. Preserve native privilege and runtime enablement behavior; a compiled accounting option is not evidence that accounting is enabled at boot or that any measured delay is correct. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "72ac2e9f73062ef1267ddbaf4ed34a0f7b61b7ca36c9ac7532167042dc5075b4",
+      "changed_paths": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/riscv/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "+CONFIG_TASK_DELAY_ACCT=y",
+        "+CONFIG_TASK_DELAY_ACCT=y",
+        "+CONFIG_TASK_DELAY_ACCT=y"
+      ],
+      "effective_values": {
+        "CONFIG_TASK_DELAY_ACCT": {
+          "ack_defconfig": "y",
+          "port_defconfig": "y",
+          "common_build": "y",
+          "virtual_build": "y"
+        }
+      }
+    },
+    {
+      "commit": "73fa7017d65e9b02d1a0a7d6109ed8f017c56ed9",
+      "disposition": "adapted-net-configuration",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain the generic SPI_SLAVE=y framework option from the Android config. The time and system-control protocol handlers remain n in build 155; this does not add a physical controller driver, remote reboot handler or future-board support. Preserve native SPI implementation and source customization interface. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "0f75e48ebcc5282c922ea9cf528bd42a66a49f31b503ae29ec235c008b5e00c8",
+      "changed_paths": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/riscv/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "+CONFIG_SPI_SLAVE=y",
+        "+CONFIG_SPI_SLAVE=y",
+        "+CONFIG_SPI_SLAVE=y"
+      ],
+      "effective_values": {
+        "CONFIG_SPI_SLAVE": {
+          "ack_defconfig": "y",
+          "port_defconfig": "y",
+          "common_build": "y",
+          "virtual_build": "y"
+        }
+      }
+    },
+    {
+      "commit": "b1b26a65b20e3448c3837281a88afb38a3493035",
+      "disposition": "adapted-net-configuration",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain EROFS_FS_PCPU_KTHREAD=y and its HIPRI default for the existing Android EROFS decompression worker configuration. Actual build resolves both y. This config decision does not certify the separately reviewed worker source or reproduce the performance percentage in the historical commit message. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "363eb265917e572ea9995450eccfc8e5f87eec49fffaae30903159b218e3a5ad",
+      "changed_paths": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/riscv/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "+CONFIG_EROFS_FS_PCPU_KTHREAD=y",
+        "+CONFIG_EROFS_FS_PCPU_KTHREAD=y",
+        "+CONFIG_EROFS_FS_PCPU_KTHREAD=y"
+      ],
+      "effective_values": {
+        "CONFIG_EROFS_FS_PCPU_KTHREAD": {
+          "ack_defconfig": "y",
+          "port_defconfig": "y",
+          "common_build": "y",
+          "virtual_build": "y"
+        }
+      }
+    },
+    {
+      "commit": "2c76b550f4715c9ae7c953256a821b52bff40bd3",
+      "disposition": "adapted-net-configuration",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain DEBUG_INFO_COMPRESSED_ZSTD=y with native compiler/linker capability gates. Build 155 enables it using the manifest toolchain. This affects build debug data representation, not runtime decompression of untrusted input or kernel permissions. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "7cf91ad1103b4a6d8e779e7f5037001af5e99a87610a90b39829a5d0912da750",
+      "changed_paths": [
+        "arch/riscv/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "+CONFIG_DEBUG_INFO_COMPRESSED_ZSTD=y",
+        "+CONFIG_DEBUG_INFO_COMPRESSED_ZSTD=y"
+      ],
+      "effective_values": {
+        "CONFIG_DEBUG_INFO_COMPRESSED_ZSTD": {
+          "ack_defconfig": "y",
+          "port_defconfig": "y",
+          "common_build": "y",
+          "virtual_build": "y"
+        }
+      }
+    },
+    {
+      "commit": "a6080762a6813ad26ed6d17353b8b214367fe013",
+      "disposition": "adapted-net-configuration",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain MODPROBE_PATH=\"\" from initial integration. Native request_module returns -ENOENT for an empty path, avoiding the early-boot autoload window before Android init writes the same empty sysctl. Explicit privileged module loading remains supported. This is a default, not an immutable autoload prohibition: native privileged sysctl behavior remains. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "386366f56cfda9a65a5c40fd4f9a7de9f816f88a00601918302635d4a78e5aab",
+      "changed_paths": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/riscv/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "+CONFIG_MODPROBE_PATH=\"\"",
+        "+CONFIG_MODPROBE_PATH=\"\"",
+        "+CONFIG_MODPROBE_PATH=\"\""
+      ],
+      "effective_values": {
+        "CONFIG_MODPROBE_PATH": {
+          "ack_defconfig": "\"\"",
+          "port_defconfig": "\"\"",
+          "common_build": "\"\"",
+          "virtual_build": "\"\""
+        }
+      }
+    },
+    {
+      "commit": "f0b67aae6978c2d5f55e4b1d9e0eee20e6af2fad",
+      "disposition": "adapted-net-configuration",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain SWIOTLB_DYNAMIC=y for native dynamically allocated DMA bounce pools. This preserves Android DMA allocation configuration without replacing native mapping/ownership checks or reintroducing an older DMA implementation. No hardware DMA test was run. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "099da986c194af1bfd88b306716101afd45022815965ebacc7dad77932eec24f",
+      "changed_paths": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/riscv/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "+CONFIG_SWIOTLB_DYNAMIC=y",
+        "+CONFIG_SWIOTLB_DYNAMIC=y",
+        "+CONFIG_SWIOTLB_DYNAMIC=y"
+      ],
+      "effective_values": {
+        "CONFIG_SWIOTLB_DYNAMIC": {
+          "ack_defconfig": "y",
+          "port_defconfig": "y",
+          "common_build": "y",
+          "virtual_build": "y"
+        }
+      }
+    },
+    {
+      "commit": "79e617648399889cc7b10253ce6f97c84ee57a8e",
+      "disposition": "adapted-net-configuration",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Drop the obsolete WLAN_VENDOR_CISCO=n line after native 6853c70ba5ed removed the driver/Kconfig. The removed selector is absent from the native and port Kconfig, and no Cisco driver is introduced. This is obsolete configuration cleanup, not disabling a currently compiled driver. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "cee060c483696d5f6da5889034d3c0ef91f5078f8995ae987be3f037e392d08c",
+      "changed_paths": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/riscv/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "-# CONFIG_WLAN_VENDOR_CISCO is not set",
+        "-# CONFIG_WLAN_VENDOR_CISCO is not set",
+        "-# CONFIG_WLAN_VENDOR_CISCO is not set"
+      ],
+      "effective_values": {
+        "CONFIG_WLAN_VENDOR_CISCO": {
+          "ack_defconfig": "absent",
+          "port_defconfig": "absent",
+          "common_build": "absent",
+          "virtual_build": "absent"
+        }
+      }
+    },
+    {
+      "commit": "2cfc63c17a8c70e3b1441b420d5692c42b24e979",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Explicitly reverted by 0029c51646d4; all three whole files at revert equal pre-addition blobs. Preserve native defaults: build 155 uses mmap randomization bits 28 and compat bits 8 on x86_64. These old explicit values are not additional hardening and no GrapheneOS kernel hardening is imported. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "e3e85c83b8182d2adec7230aee0dc2ebec686f683df57350ede2bbd3899101df",
+      "changed_paths": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/riscv/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "+CONFIG_ARCH_MMAP_RND_BITS=18",
+        "+CONFIG_ARCH_MMAP_RND_COMPAT_BITS=11",
+        "+CONFIG_ARCH_MMAP_RND_BITS=18",
+        "+CONFIG_ARCH_MMAP_RND_COMPAT_BITS=8",
+        "+CONFIG_ARCH_MMAP_RND_BITS=28",
+        "+CONFIG_ARCH_MMAP_RND_COMPAT_BITS=8"
+      ],
+      "effective_values": {
+        "CONFIG_ARCH_MMAP_RND_BITS": {
+          "ack_defconfig": "absent",
+          "port_defconfig": "absent",
+          "common_build": "28",
+          "virtual_build": "28"
+        },
+        "CONFIG_ARCH_MMAP_RND_COMPAT_BITS": {
+          "ack_defconfig": "absent",
+          "port_defconfig": "absent",
+          "common_build": "8",
+          "virtual_build": "8"
+        }
+      }
+    },
+    {
+      "commit": "0029c51646d4efea8cc83cfc4842354555f295ab",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Keep removal of the transient explicit mmap bit counts. Whole-file equality proves this exact add/revert pair has no residual config effect. Current native x86 defaults are recorded separately; do not infer disabled ASLR from absent defconfig lines. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "c540ae70ee2fd2c47677b2babf03ad1a82bce1545c62e00f50f81a61aed1b450",
+      "changed_paths": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/riscv/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "-CONFIG_ARCH_MMAP_RND_BITS=18",
+        "-CONFIG_ARCH_MMAP_RND_COMPAT_BITS=11",
+        "-CONFIG_ARCH_MMAP_RND_BITS=18",
+        "-CONFIG_ARCH_MMAP_RND_COMPAT_BITS=8",
+        "-CONFIG_ARCH_MMAP_RND_BITS=28",
+        "-CONFIG_ARCH_MMAP_RND_COMPAT_BITS=8"
+      ],
+      "effective_values": {
+        "CONFIG_ARCH_MMAP_RND_BITS": {
+          "ack_defconfig": "absent",
+          "port_defconfig": "absent",
+          "common_build": "28",
+          "virtual_build": "28"
+        },
+        "CONFIG_ARCH_MMAP_RND_COMPAT_BITS": {
+          "ack_defconfig": "absent",
+          "port_defconfig": "absent",
+          "common_build": "8",
+          "virtual_build": "8"
+        }
+      }
+    },
+    {
+      "commit": "3d11428ad8baec63493e03a4f0759e379f31f36d",
+      "disposition": "adapted-net-configuration",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Keep removal of the redundant UBSAN_SHIFT=n line. Native option has no enabling default and build 155 still resolves n. Other UBSAN checks, including LOCAL_BOUNDS, remain enabled; no sanitizer runtime pass is claimed. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "2522e267669bae0ee026f181d20da882b4e0edbcfb76b329d73cc91e5fb8a72b",
+      "changed_paths": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/riscv/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "-# CONFIG_UBSAN_SHIFT is not set",
+        "-# CONFIG_UBSAN_SHIFT is not set",
+        "-# CONFIG_UBSAN_SHIFT is not set"
+      ],
+      "effective_values": {
+        "CONFIG_UBSAN_SHIFT": {
+          "ack_defconfig": "absent",
+          "port_defconfig": "absent",
+          "common_build": "n",
+          "virtual_build": "n"
+        }
+      }
+    },
+    {
+      "commit": "b23f669cb4e118b9bc9eff68c4e1f8e44af83362",
+      "disposition": "adapted-net-configuration",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Keep removal of explicit IP_NF_ARPTABLES=y because native IP_NF_ARPFILTER selects it. Both are y in build 155, preserving ARP filtering support and native netfilter validation. The cleanup does not remove ARP tables. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "2374dae071e95776ba1b7d6c60781a3be634b1256ee8657ef367a96b853bfcac",
+      "changed_paths": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/riscv/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "-CONFIG_IP_NF_ARPTABLES=y",
+        "-CONFIG_IP_NF_ARPTABLES=y",
+        "-CONFIG_IP_NF_ARPTABLES=y"
+      ],
+      "effective_values": {
+        "CONFIG_IP_NF_ARPTABLES": {
+          "ack_defconfig": "absent",
+          "port_defconfig": "absent",
+          "common_build": "y",
+          "virtual_build": "y"
+        }
+      }
+    },
+    {
+      "commit": "b34bc9320a69f65baceb0ec8fa0898adf9c9ade1",
+      "disposition": "adapted-net-configuration",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain PM_DEBUG=y and PM_ADVANCED_DEBUG=y so Android can tune per-device asynchronous suspend/resume through native power/async. This exposes additional debug/control surface deliberately for compatibility; native DEVICE_ATTR_RW owner-write permission and enabled/disabled value validation remain. No runtime suspend/resume behavior is verified. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "56375b0059fb17ce0098da3bf7a08a4b42ef92a018590dee2b6b72621ff6deb0",
+      "changed_paths": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/riscv/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "+CONFIG_PM_DEBUG=y",
+        "+CONFIG_PM_ADVANCED_DEBUG=y",
+        "+CONFIG_PM_DEBUG=y",
+        "+CONFIG_PM_ADVANCED_DEBUG=y",
+        "+CONFIG_PM_DEBUG=y",
+        "+CONFIG_PM_ADVANCED_DEBUG=y"
+      ],
+      "effective_values": {
+        "CONFIG_PM_ADVANCED_DEBUG": {
+          "ack_defconfig": "y",
+          "port_defconfig": "y",
+          "common_build": "y",
+          "virtual_build": "y"
+        },
+        "CONFIG_PM_DEBUG": {
+          "ack_defconfig": "y",
+          "port_defconfig": "y",
+          "common_build": "y",
+          "virtual_build": "y"
+        }
+      }
+    },
+    {
+      "commit": "b41b3dd3dd137a62a2233a7cf972f04cade2c1d4",
+      "disposition": "partially-adapted-net-configuration",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain removal of obsolete X86_5LEVEL=n in the selected GKI config. Native 7212b58d6d71 made x86_64 support unconditional; build 155 PGTABLE_LEVELS=5 is a compile-time capability, not proof of five-level runtime use. Separate crashdump config is not selected by either SDK build target and is outside this delivery; no pKVM decision follows from that exclusion. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "c62022200af998416d11a123b3971f1795228c3cbaa3dd88fa94349cd3baabb7",
+      "changed_paths": [
+        "arch/x86/configs/crashdump_defconfig",
+        "arch/x86/configs/gki_defconfig"
+      ],
+      "changed_config_lines": [
+        "-# CONFIG_X86_5LEVEL is not set",
+        "-# CONFIG_X86_5LEVEL is not set"
+      ],
+      "effective_values": {
+        "CONFIG_X86_5LEVEL": {
+          "ack_defconfig": "absent",
+          "port_defconfig": "absent",
+          "common_build": "absent",
+          "virtual_build": "absent"
+        }
+      }
+    },
+    {
+      "commit": "2ff0f57655c0cfb53e18b1fb07a097e45dab86de",
+      "disposition": "partially-adapted-net-configuration",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Drop obsolete SHA512_SSSE3 from GKI after native 484c18119f4f migrated optimized code to lib/crypto. Build 155 has CRYPTO_LIB_SHA512=y and its ARCH option y, so the primitive and optimization remain. The separate Microdroid defconfig is outside the selected SDK build, not a basis to omit host virtualization. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "1e43732dff7521059e9d6454988b02bcebe7faadf60db36b3f9266796515ca15",
+      "changed_paths": [
+        "arch/x86/configs/gki_defconfig",
+        "arch/x86/configs/microdroid_defconfig"
+      ],
+      "changed_config_lines": [
+        "-CONFIG_CRYPTO_SHA512_SSSE3=y",
+        "-CONFIG_CRYPTO_SHA512_SSSE3=y"
+      ],
+      "effective_values": {
+        "CONFIG_CRYPTO_SHA512_SSSE3": {
+          "ack_defconfig": "absent",
+          "port_defconfig": "absent",
+          "common_build": "absent",
+          "virtual_build": "absent"
+        }
+      }
+    },
+    {
+      "commit": "9eb7168d21babd324453313c48c26bf6a5ce7b2d",
+      "disposition": "partially-adapted-net-configuration",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Drop obsolete POLYVAL_CLMUL_NI from GKI; native HCTR2 selects CRYPTO_LIB_POLYVAL and x86_64 selects its ARCH default. Both are y in build 155. Native cryptographic source remains; this does not remove POLYVAL or substitute an old implementation. ARM and separate Microdroid config variants are outside the selected SDK build. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+      "evidence": [
+        "evidence/gki-effective-config-review.json",
+        "SECURITY.md: Effective SDK configuration review"
+      ],
+      "patch_sha256": "cee58866e22f157e44ff3e1f35181a7bfca4271c546204fc974a687281fda54a",
+      "changed_paths": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/arm64/configs/microdroid_defconfig",
+        "arch/x86/configs/gki_defconfig",
+        "arch/x86/configs/microdroid_defconfig"
+      ],
+      "changed_config_lines": [
+        "-CONFIG_CRYPTO_POLYVAL_ARM64_CE=y",
+        "-CONFIG_CRYPTO_POLYVAL_ARM64_CE=y",
+        "-CONFIG_CRYPTO_POLYVAL_CLMUL_NI=y",
+        "-CONFIG_CRYPTO_POLYVAL_CLMUL_NI=y"
+      ],
+      "effective_values": {
+        "CONFIG_CRYPTO_POLYVAL_ARM64_CE": {
+          "ack_defconfig": "absent",
+          "port_defconfig": "absent",
+          "common_build": "absent",
+          "virtual_build": "absent"
+        },
+        "CONFIG_CRYPTO_POLYVAL_CLMUL_NI": {
+          "ack_defconfig": "absent",
+          "port_defconfig": "absent",
+          "common_build": "absent",
+          "virtual_build": "absent"
+        }
+      }
+    }
+  ],
+  "common_effective_config": {
+    "path": "../kernel_manifest-6.18/common_dist/kernel_x86_64_dot_config",
+    "sha256": "48f19810fd5e10021d64b96e82cdb2b0b587f7cb24b3b4b5660b6732ae05cd09",
+    "checked_values": {
+      "FS_VERITY": "y",
+      "FS_VERITY_BUILTIN_SIGNATURES": "n",
+      "UBSAN": "y",
+      "UBSAN_TRAP": "y",
+      "UBSAN_ARRAY_BOUNDS": "y",
+      "UBSAN_LOCAL_BOUNDS": "y",
+      "UBSAN_SHIFT": "n",
+      "VSOCKETS": "y",
+      "VHOST_VSOCK": "y",
+      "VIRTIO_FS": "y",
+      "VIRTIO_MEM": "n",
+      "BLK_CGROUP_IOPRIO": "y",
+      "BUG_ON_DATA_CORRUPTION": "y",
+      "PROVE_LOCKING": "n",
+      "KALLSYMS_ALL": "y",
+      "DRM_DEBUG_MODESET_LOCK": "n",
+      "EXPERT": "y",
+      "THERMAL_GOV_BANG_BANG": "y",
+      "TASK_DELAY_ACCT": "y",
+      "SPI_SLAVE": "y",
+      "SPI_SLAVE_TIME": "n",
+      "SPI_SLAVE_SYSTEM_CONTROL": "n",
+      "EROFS_FS_PCPU_KTHREAD": "y",
+      "EROFS_FS_PCPU_KTHREAD_HIPRI": "y",
+      "DEBUG_INFO_COMPRESSED_ZSTD": "y",
+      "MODPROBE_PATH": "\"\"",
+      "SWIOTLB_DYNAMIC": "y",
+      "ARCH_MMAP_RND_BITS": "28",
+      "ARCH_MMAP_RND_COMPAT_BITS": "8",
+      "IP_NF_ARPTABLES": "y",
+      "IP_NF_ARPFILTER": "y",
+      "PM_DEBUG": "y",
+      "PM_ADVANCED_DEBUG": "y",
+      "PGTABLE_LEVELS": "5",
+      "CRYPTO_LIB_SHA512": "y",
+      "CRYPTO_LIB_SHA512_ARCH": "y",
+      "CRYPTO_LIB_POLYVAL": "y",
+      "CRYPTO_LIB_POLYVAL_ARCH": "y"
+    }
+  },
+  "virtual_effective_config": {
+    "path": "../kernel_manifest-6.18/out/bazel/output_user_root/961789292c522f6ecd25a5ebbdd4dcbc/execroot/_main/bazel-out/k8-fastbuild/bin/common-modules/virtual-device/virtual_device_x86_64_config/out_dir/.config",
+    "sha256": "a40bb32adc46c30db3166865fa9bdf72f65d1c9f73c0aa2e8b737520729b3cfc",
+    "checked_values": {
+      "CFG80211": "m",
+      "CFG80211_CERTIFICATION_ONUS": "y",
+      "CFG80211_REG_CELLULAR_HINTS": "y",
+      "CFG80211_DEFAULT_PS": "y",
+      "CFG80211_CRDA_SUPPORT": "y",
+      "CFG80211_REQUIRE_SIGNED_REGDB": "y",
+      "CFG80211_USE_KERNEL_REGDB_KEYS": "y",
+      "MAC80211_HWSIM": "m"
+    }
+  },
+  "source_witnesses": [
+    {
+      "path": "arch/x86/configs/gki_defconfig",
+      "sha256": "9c0279462018a588660cc2db33106fc70878a409b33acdabf200b42a7e5aabb8",
+      "whole_lts_equal": false
+    },
+    {
+      "path": "BUILD.bazel",
+      "sha256": "ea7ee17f21735f0aa437ce3197bd495fec0891fb14166b2d981d0b1f8bcc98b2",
+      "whole_lts_equal": false
+    },
+    {
+      "path": "build_virt.sh",
+      "sha256": "b2a4c275d20b41172686179428c4f4d9d0f0616810371711f760a0e7399e4610",
+      "whole_lts_equal": false
+    },
+    {
+      "path": "fs/verity/Kconfig",
+      "sha256": "a30f6eccff12c1451ee1d65f2c97d567ef531c5103dc902949bbc500dd2328ed",
+      "whole_lts_equal": true
+    },
+    {
+      "path": "lib/Kconfig.ubsan",
+      "sha256": "173f7b153a950a1ac47fda5c0c8378075988749fad5140c53a1018287eff5548",
+      "whole_lts_equal": true
+    },
+    {
+      "path": "block/Kconfig",
+      "sha256": "76434b3a88b7d9aa45c250e4a9722f89a6c64cd5c405802e3a356b1836d19733",
+      "whole_lts_equal": true
+    },
+    {
+      "path": "init/Kconfig",
+      "sha256": "1bd7a975f45f08bafdc1335419367ae862ff2f5ca37a9e96acc99a427bfeec0f",
+      "whole_lts_equal": false
+    },
+    {
+      "path": "drivers/thermal/Kconfig",
+      "sha256": "0d5c2d07376aed8600d7abd2dc9bc21ba4f65154465551b8fa8ee597daacab9a",
+      "whole_lts_equal": true
+    },
+    {
+      "path": "drivers/spi/Kconfig",
+      "sha256": "6e935e53b6be35e1558e8e67b7a9151b1fe2aee23fb55a4a49adf6c43fda4d1f",
+      "whole_lts_equal": true
+    },
+    {
+      "path": "fs/erofs/Kconfig",
+      "sha256": "b0d08da6bfc7464767dfd84c343f0839aa7ef584c4747a0001b543f76b38b37b",
+      "whole_lts_equal": true
+    },
+    {
+      "path": "lib/Kconfig.debug",
+      "sha256": "34faf950aaf435f9bb3f743778cec45e78d0decfc9f81bd9e1f4a1bd0a2fcb86",
+      "whole_lts_equal": false
+    },
+    {
+      "path": "kernel/module/Kconfig",
+      "sha256": "4c6333172bb83045f19cf635f3cbfec3f0ca7298d3d726656b86ce4cfbddd10d",
+      "whole_lts_equal": false
+    },
+    {
+      "path": "kernel/module/kmod.c",
+      "sha256": "0662fc474100bac0cd38c487dac680c0191f01f9180d50bb7db89524d2493092",
+      "whole_lts_equal": true
+    },
+    {
+      "path": "kernel/dma/Kconfig",
+      "sha256": "467bd4110e7d17de920bdfb8926d419b5e06780d0fc52d6f696d066901cecddb",
+      "whole_lts_equal": false
+    },
+    {
+      "path": "drivers/net/wireless/Kconfig",
+      "sha256": "b057e006529f9f89a975512b61035550c77abb7a7d1d83c601ac4f5fba4a21d7",
+      "whole_lts_equal": true
+    },
+    {
+      "path": "net/ipv4/netfilter/Kconfig",
+      "sha256": "0ba1f96e7a8278b5ba87564c72b4aba28d6def65026e80584b23d77f604ce424",
+      "whole_lts_equal": true
+    },
+    {
+      "path": "kernel/power/Kconfig",
+      "sha256": "75f397e857fada860388c12ffabbe801aa5cc53d4cc8dbf9546a1a5c6234bd79",
+      "whole_lts_equal": false
+    },
+    {
+      "path": "drivers/base/power/sysfs.c",
+      "sha256": "90a76852afb18640f943653c79bffb899ff46c7dee6a90e329114fad760e838a",
+      "whole_lts_equal": true
+    },
+    {
+      "path": "arch/x86/Kconfig",
+      "sha256": "d8ae262ebc6dc081dbb44948b247df4f5289f321d7607293d94b16bee9d32bc4",
+      "whole_lts_equal": true
+    },
+    {
+      "path": "lib/crypto/Kconfig",
+      "sha256": "5d1f2bd91506ebc2b17ad22cc4bb3a8839d0706cd7a17271679bab2e84822b92",
+      "whole_lts_equal": false
+    },
+    {
+      "path": "crypto/Kconfig",
+      "sha256": "7fdf58fbaaf3b37c358e8de3e280fa8bb66faa6e894415d84a23867ba5c95c55",
+      "whole_lts_equal": false
+    },
+    {
+      "path": "net/wireless/Kconfig",
+      "sha256": "e879156b461d1e4c4a93a43b7bc965dbc662853bda38020d351cbc90bc38b2fd",
+      "whole_lts_equal": true
+    },
+    {
+      "path": "drivers/virtio/Kconfig",
+      "sha256": "ad5185aeb09ba901216b0d50be6e6468efabfb36d2a1fb05cc92e9446b35ef77",
+      "whole_lts_equal": true
+    }
+  ],
+  "local_other_project_evidence": [
+    {
+      "local_checkout": "../grapheneos-17/frameworks/base",
+      "pin": "8304f868f2114c6a35c76e21691f3f54c3ee1c4f",
+      "path": "core/java/com/android/internal/security/VerityUtils.java",
+      "sha256": "6183e7b6295c5d9ea251f25765604c7538bf6ca5dfb51ae836bdf441b42abba3"
+    },
+    {
+      "local_checkout": "../grapheneos-17/system/core",
+      "pin": "322ff5129d865a5e8d958667e6c63ac943449493",
+      "path": "rootdir/init.rc",
+      "sha256": "71bcc80b5c70f87f1b0c5dcf23be86c15c90c5237e83bce1319b7a35c331b334"
+    },
+    {
+      "local_checkout": "../kernel_manifest-6.18/common-modules/virtual-device",
+      "pin": "63ad7b13b89b935fac402976151ffcd3e319ca4f",
+      "path": "virtual_device.fragment",
+      "sha256": "e63c143d165c2c4df5223e4df8d174e9d43fd0d5fd02b05769cb2b3b2f4d5503"
+    },
+    {
+      "local_checkout": "../kernel_manifest-6.18/common-modules/virtual-device",
+      "pin": "63ad7b13b89b935fac402976151ffcd3e319ca4f",
+      "path": "BUILD.bazel",
+      "sha256": "0b847df7553808750766684ebf743fa306bb6a6f1f25b7b35d9f9149abf4e4fb"
+    }
+  ],
+  "review_method": "Read all original CONFIG changes and surrounding patch contexts; examine complete unique remerge delta separately. Validate add/revert by exact whole-file equality and reorder by parsed-map equality. Compare final ACK/port defconfigs and effective build-155 common/virtual configurations; symbols absent from defconfig are not assumed disabled. Native Kconfig and relevant interface code examined.",
+  "scope": "28 finalized config candidates. 002e9fb54954 (PKVM_INTEL) remains provisional pending protected virtualization implementation review; config-only cleanup does not decide that issue. No new source change or new build in this batch.",
+  "remote_sources_used": []
+}

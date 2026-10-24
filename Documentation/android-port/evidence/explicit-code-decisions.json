@@ -17947,5 +17947,1291 @@
       "evidence/tcpm-history-review.json",
       "SECURITY.md: Native FunctionFS and UVC fallback"
     ]
+  },
+  {
+    "commit": "752f5e3c7bc5fc22cf27e56ec8efc1e37d426070",
+    "disposition": "superseded",
+    "result_commits": [],
+    "rationale": "Original two-file patch and native replacement 512df95b9432 read. The complicated pre/post-ACK inferred-change loop was explicitly replaced upstream by ucsi_check_connection delayed rechecking. Current native code still schedules the check on partner connection and re-reads connector status, handles disconnection and unregisters the partner. Preserve newer native command/notification locking and buffer fixes; do not resurrect the old state fields. Source selection and build only; no Type-C or FUSE runtime claim.",
+    "evidence": [
+      "evidence/typec-native-api-review.json",
+      "SECURITY.md: Native Type-C API and teardown"
+    ]
+  },
+  {
+    "commit": "a8899463882710d0430979052d1f451c3a8b8f3d",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Full patch read. Native partner alternate-mode count has -1 initialization, hidden-until-known sysfs attribute, nonnegative exported setter, group update and notification. Current setter additionally emits a change uevent. Retain native fields/API and all later fixes, without binary layout constraints. Source selection and build only; no Type-C or FUSE runtime claim.",
+    "evidence": [
+      "evidence/typec-native-api-review.json",
+      "SECURITY.md: Native Type-C API and teardown"
+    ]
+  },
+  {
+    "commit": "41e2a6758f7b358c452598e2062782fc2b0afb66",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Full patch read. Native plug alternate-mode count shares the show callback with partners, initializes -1, hides unknown count, validates setter input and exports setter. Current setter additionally emits a change uevent. Native documentation and header declarations remain. Source selection and build only; no Type-C or FUSE runtime claim.",
+    "evidence": [
+      "evidence/typec-native-api-review.json",
+      "SECURITY.md: Native Type-C API and teardown"
+    ]
+  },
+  {
+    "commit": "41146962e9aea0d588ee9487c40cebbbaeb7dcca",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Full patch read. Native identity attributes expose all three product-type VDO words and notify on identity updates. The same read-only interfaces and documentation remain; whole touched files equal LTS. Source selection and build only; no Type-C or FUSE runtime claim.",
+    "evidence": [
+      "evidence/typec-native-api-review.json",
+      "SECURITY.md: Native Type-C API and teardown"
+    ]
+  },
+  {
+    "commit": "616dcfb9de19e29bb5fd11bd70ed3a70b357c0da",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Full patch read. Native type visibility, role-dependent product-type lookup, PRODUCT_TYPE uevent and role-change notification remain. Current native typec_get_partner obtains the partner device reference and matching put_device releases it; retain current product type tables including later naming changes rather than restore historical constants. Source selection and build only; no Type-C or FUSE runtime claim.",
+    "evidence": [
+      "evidence/typec-native-api-review.json",
+      "SECURITY.md: Native Type-C API and teardown"
+    ]
+  },
+  {
+    "commit": "8d085cacdcf3b3716383e0a9188acaaddf5f3b4e",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Full one-hunk patch read. Current native typec_register_altmode assigns the Type-C class to plug alternate-mode devices to generate uevents. The later ACK all-altmode bus/mode-selection series is a separate candidate, not a reason to lose this existing native interface. Source selection and build only; no Type-C or FUSE runtime claim.",
+    "evidence": [
+      "evidence/typec-native-api-review.json",
+      "SECURITY.md: Native Type-C API and teardown"
+    ]
+  },
+  {
+    "commit": "886c744a05e9eb8e14b9bbdfd1685aeb2445f22a",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Full ACK backport and native stable patches read. Native ucsi_unregister_port unregisters partner under connector lock, cancels/requeues only pending delayed tasks before destroying the queue and centralizes both normal/error cleanup. Preserve native dynamic lock classes and later 7bc7af179916, which releases ports before unregistering lockdep keys in init failure. Whole ucsi.c equals LTS. This retains use-after-free/double-release protection; no older ACK teardown is substituted. Source selection and build only; no Type-C or FUSE runtime claim.",
+    "evidence": [
+      "evidence/typec-native-api-review.json",
+      "SECURITY.md: Native Type-C API and teardown"
+    ]
+  },
+  {
+    "commit": "b61b6f74f9055abecd41968465afc403efccb3d8",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Entire two-file unique remerge diff read. Native TCPM retains self-powered CC-open versus bus-powered default-Rd/Rp PORT_RESET behavior. FUSE resolution combined old passthrough_req IDR cleanup with kfree instead of kfree_rcu. ACK 25867a2d88c5 explicitly removed that old map initialization and free_fuse_passthrough cleanup. Current native fuse_conn_put frees the replacement backing_files_map through fuse_backing_files_free and invokes final release after call_rcu; fuse_free_conn itself is native WARN_ON plus kfree. Relevant native cleanup functions match LTS byte-for-byte. Do not reintroduce the removed map or duplicate RCU freeing. Other Android FUSE adaptations remain separately audited. Source selection and build only; no Type-C or FUSE runtime claim.",
+    "evidence": [
+      "evidence/typec-native-api-review.json",
+      "SECURITY.md: Native Type-C API and teardown"
+    ]
+  },
+  {
+    "commit": "a1a99fe48f53f0e5c55cdf2a36e6f3fb05b2d780",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds SPR/EPR AVS PDO bitfield decoding and debug logging. This describes physical adjustable charger capabilities; native PPS decoding/logging remains. No generic memory-safety fix is bundled. Do not add the new protocol helpers solely for future charging hardware. Full candidate patch read. Decision is restricted to the SDK emulator, whose goldfish product explicitly describes USB as unavailable and creates only an unused gadget for sysfs testing. Native generic Type-C support remains compiled; configuration alone is not an exclusion proof. No LTS code is changed or fix reversed. Physical platforms/forwarded physical Type-C topologies are outside this decision; runtime was not tested.",
+    "evidence": [
+      "evidence/typec-target-review.json",
+      "SECURITY.md: Type-C physical protocol additions"
+    ]
+  },
+  {
+    "commit": "9ca4b9baf6f54844645034b2b72dea4b9529f11e",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds read-only SPR AVS current/peak-current sysfs attributes and APDO registration. A positive consumer exists in the SDK-selected USB HAL: UsbPowerProfileMonitor::createPowerProfile parses these exact names. Its query path is feature-flag and enumerated-port dependent; the flag value and live port list were not measured. The current product explicitly lacks USB and creates an unused test gadget, so no AVS charging topology is supplied by this target. Keep native existing power-delivery classes; omission is target-scoped, not a claim that Android never reads these attributes. Full candidate patch read. Decision is restricted to the SDK emulator, whose goldfish product explicitly describes USB as unavailable and creates only an unused gadget for sysfs testing. Native generic Type-C support remains compiled; configuration alone is not an exclusion proof. No LTS code is changed or fix reversed. Physical platforms/forwarded physical Type-C topologies are outside this decision; runtime was not tested.",
+    "evidence": [
+      "evidence/typec-target-review.json",
+      "SECURITY.md: Type-C physical protocol additions"
+    ]
+  },
+  {
+    "commit": "fa81881872f25152bde1fc97f63bb4fecf6b76f3",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Moves port and plug alternate modes onto the Type-C bus and splits device types, with partner-only matching/attributes/events. This supports the physical alternate-mode selection series. Keep the coherent native partner bus plus plug class implementation and existing plug uevents; do not partially switch registration models. Full candidate patch read. Decision is restricted to the SDK emulator, whose goldfish product explicitly describes USB as unavailable and creates only an unused gadget for sysfs testing. Native generic Type-C support remains compiled; configuration alone is not an exclusion proof. No LTS code is changed or fix reversed. Physical platforms/forwarded physical Type-C topologies are outside this decision; runtime was not tested.",
+    "evidence": [
+      "evidence/typec-target-review.json",
+      "SECURITY.md: Type-C physical protocol additions"
+    ]
+  },
+  {
+    "commit": "6459b55ae77d76e3255d8519f49682e358dfb053",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Exports the Type-C bus and three new alternate-mode device types, moving declarations to public headers. These are source-module exports, not historical KMI, but the new types belong to the excluded all-altmode bus/physical negotiation feature. Keep native port/partner/plug registration APIs and configured source-module infrastructure. Reassess these exports with a target providing Type-C ports. Full candidate patch read. Decision is restricted to the SDK emulator, whose goldfish product explicitly describes USB as unavailable and creates only an unused gadget for sysfs testing. Native generic Type-C support remains compiled; configuration alone is not an exclusion proof. No LTS code is changed or fix reversed. Physical platforms/forwarded physical Type-C topologies are outside this decision; runtime was not tested.",
+    "evidence": [
+      "evidence/typec-target-review.json",
+      "SECURITY.md: Type-C physical protocol additions"
+    ]
+  },
+  {
+    "commit": "6f65f7a58251d8fb713ed015c7329de00706e63b",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds per-port mode-control policy and gates alternate-mode active sysfs writability based on controller capability. This concerns physical alternate-mode activation; retain native active control with its native callback gating for current baseline. Full candidate patch read. Decision is restricted to the SDK emulator, whose goldfish product explicitly describes USB as unavailable and creates only an unused gadget for sysfs testing. Native generic Type-C support remains compiled; configuration alone is not an exclusion proof. No LTS code is changed or fix reversed. Physical platforms/forwarded physical Type-C topologies are outside this decision; runtime was not tested.",
+    "evidence": [
+      "evidence/typec-target-review.json",
+      "SECURITY.md: Type-C physical protocol additions"
+    ]
+  },
+  {
+    "commit": "0a8acc008494e4e3e311b08728d2f1a4ed1edf3e",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds priority sysfs writes, conflict renumbering, per-altmode priority storage and port registration rollback. These configure priorities for physical Type-C alternate-mode negotiation. No corresponding mode-selection engine is imported; native interfaces/registration remain coherent. Full candidate patch read. Decision is restricted to the SDK emulator, whose goldfish product explicitly describes USB as unavailable and creates only an unused gadget for sysfs testing. Native generic Type-C support remains compiled; configuration alone is not an exclusion proof. No LTS code is changed or fix reversed. Physical platforms/forwarded physical Type-C topologies are outside this decision; runtime was not tested.",
+    "evidence": [
+      "evidence/typec-target-review.json",
+      "SECURITY.md: Type-C physical protocol additions"
+    ]
+  },
+  {
+    "commit": "1d067637ecfdc8719efcf62a6656a1e01edd8724",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds the complete 283-line asynchronous mode-selection engine, new build object, partner ownership and exported start/delete/state-update APIs. The reviewed engine drives physical partner activation with delays, callbacks and priorities; it is not an Android userspace or generic module loader facility. Omit the feature and its coordinated users together; no claim that the feature is unsafe or universally unnecessary. Full candidate patch read. Decision is restricted to the SDK emulator, whose goldfish product explicitly describes USB as unavailable and creates only an unused gadget for sysfs testing. Native generic Type-C support remains compiled; configuration alone is not an exclusion proof. No LTS code is changed or fix reversed. Physical platforms/forwarded physical Type-C topologies are outside this decision; runtime was not tested.",
+    "evidence": [
+      "evidence/typec-target-review.json",
+      "SECURITY.md: Type-C physical protocol additions"
+    ]
+  },
+  {
+    "commit": "fdb8722a05841e78f144eef78fddbccb27591138",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds a mode_selection descriptor bit and suppresses automatic DP/Thunderbolt entry for ports managed by the new selector. With the selector excluded, retain native automatic entry; do not suppress callbacks without their replacement. Full candidate patch read. Decision is restricted to the SDK emulator, whose goldfish product explicitly describes USB as unavailable and creates only an unused gadget for sysfs testing. Native generic Type-C support remains compiled; configuration alone is not an exclusion proof. No LTS code is changed or fix reversed. Physical platforms/forwarded physical Type-C topologies are outside this decision; runtime was not tested.",
+    "evidence": [
+      "evidence/typec-target-review.json",
+      "SECURITY.md: Type-C physical protocol additions"
+    ]
+  },
+  {
+    "commit": "9ae698ea195c4915b3d6b21fbdccfe4388170538",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds UCSI add/remove_partner_altmodes callbacks, status forwarding, controller mode-control capability and selector descriptor propagation. These are dependencies of the physical selector, not required to expose the native Type-C class. Native UCSI teardown/race fixes remain as separately reviewed. Full candidate patch read. Decision is restricted to the SDK emulator, whose goldfish product explicitly describes USB as unavailable and creates only an unused gadget for sysfs testing. Native generic Type-C support remains compiled; configuration alone is not an exclusion proof. No LTS code is changed or fix reversed. Physical platforms/forwarded physical Type-C topologies are outside this decision; runtime was not tested.",
+    "evidence": [
+      "evidence/typec-target-review.json",
+      "SECURITY.md: Type-C physical protocol additions"
+    ]
+  },
+  {
+    "commit": "a0f4d4dd89f4b62b1092225a29094baf54d36bdb",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Enables the selector through ChromeOS EC UCSI callbacks and timing parameters. The explicit provider is cros_ec_ucsi, a separate physical EC platform; no ChromeOS EC source platform is implemented for this SDK. Keep original configured sources. Full candidate patch read. Decision is restricted to the SDK emulator, whose goldfish product explicitly describes USB as unavailable and creates only an unused gadget for sysfs testing. Native generic Type-C support remains compiled; configuration alone is not an exclusion proof. No LTS code is changed or fix reversed. Physical platforms/forwarded physical Type-C topologies are outside this decision; runtime was not tested.",
+    "evidence": [
+      "evidence/typec-target-review.json",
+      "SECURITY.md: Type-C physical protocol additions"
+    ]
+  },
+  {
+    "commit": "700d788a9d439bfedcb67407e1f616683ceec398",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds a UCSI Thunderbolt implementation, build wiring, command/VDM work, teardown and partner change active-mode refresh. It requires UCSI firmware and Thunderbolt physical alternate modes. Current target lacks that topology; native DP/UCSI lifecycle and native Thunderbolt driver remain, including compiled baseline support. Do not claim entire UCSI subsystem is disabled. Full candidate patch read. Decision is restricted to the SDK emulator, whose goldfish product explicitly describes USB as unavailable and creates only an unused gadget for sysfs testing. Native generic Type-C support remains compiled; configuration alone is not an exclusion proof. No LTS code is changed or fix reversed. Physical platforms/forwarded physical Type-C topologies are outside this decision; runtime was not tested.",
+    "evidence": [
+      "evidence/typec-target-review.json",
+      "SECURITY.md: Type-C physical protocol additions"
+    ]
+  },
+  {
+    "commit": "3cea00c22f443fcd8fb3a979e5862196d15cf316",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds PD Get Sink Capabilities Extended parsing/response, firmware identifiers and charging power/characteristics, packed protocol data and associated PDO helpers. These respond to a PD-connected charger and are not generic battery status exposed to Android. Preserve native unsupported-message handling and later LTS parser/state-machine fixes. Full candidate patch read. Decision is restricted to the SDK emulator, whose goldfish product explicitly describes USB as unavailable and creates only an unused gadget for sysfs testing. Native generic Type-C support remains compiled; configuration alone is not an exclusion proof. No LTS code is changed or fix reversed. Physical platforms/forwarded physical Type-C topologies are outside this decision; runtime was not tested.",
+    "evidence": [
+      "evidence/typec-target-review.json",
+      "SECURITY.md: Type-C physical protocol additions"
+    ]
+  },
+  {
+    "commit": "b61cd7ae42094609ac6e6f1b8b06842638696906",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "All 1033 patch lines read. Adds physical SPR AVS sink negotiation, charger limits and request encoding; generalizes PPS completions, activation, power-supply properties and transition timing. Retain native PPS implementation and native SNK_TRANSITION_SINK fallthrough/timeout behavior rather than replaying the broad state-machine rewrite. The supplied SDK product does not negotiate physical charger voltages. The consumer of read-only AVS profiles is explicitly recorded in the separate sysfs candidate; this is not proof of AVS runtime parity. Full candidate patch read. Decision is restricted to the SDK emulator, whose goldfish product explicitly describes USB as unavailable and creates only an unused gadget for sysfs testing. Native generic Type-C support remains compiled; configuration alone is not an exclusion proof. No LTS code is changed or fix reversed. Physical platforms/forwarded physical Type-C topologies are outside this decision; runtime was not tested.",
+    "evidence": [
+      "evidence/typec-target-review.json",
+      "SECURITY.md: Type-C physical protocol additions"
+    ]
+  },
+  {
+    "commit": "99de0b672029155ff05fc2807b3dba6f0beefb26",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Reports USB4 mode on UCSI partner changes for UCSI 2/3 firmware capability bits. This applies to a physical USB4 link and mux state. Keep native UCSI partner processing and latest LTS connector validation; current SDK has no such negotiated link. Full candidate patch read. Decision is restricted to the SDK emulator, whose goldfish product explicitly describes USB as unavailable and creates only an unused gadget for sysfs testing. Native generic Type-C support remains compiled; configuration alone is not an exclusion proof. No LTS code is changed or fix reversed. Physical platforms/forwarded physical Type-C topologies are outside this decision; runtime was not tested.",
+    "evidence": [
+      "evidence/typec-target-review.json",
+      "SECURITY.md: Type-C physical protocol additions"
+    ]
+  },
+  {
+    "commit": "b7ffff4b3add30ba1c628e25f6fe19a19d748dfc",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Removes plug alternate-mode class assignment after the new all-altmode bus conversion. The conversion is omitted, so this dependent removal must also be omitted to retain native plug uevents. This is a deliberate native registration choice, not a missed upstream bug fix. Full candidate patch read. Decision is restricted to the SDK emulator, whose goldfish product explicitly describes USB as unavailable and creates only an unused gadget for sysfs testing. Native generic Type-C support remains compiled; configuration alone is not an exclusion proof. No LTS code is changed or fix reversed. Physical platforms/forwarded physical Type-C topologies are outside this decision; runtime was not tested.",
+    "evidence": [
+      "evidence/typec-target-review.json",
+      "SECURITY.md: Type-C physical protocol additions"
+    ]
+  },
+  {
+    "commit": "28edb81f6895c0bf535bdae8c800a2c94bb91ef7",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds exported cable-altmode eligibility detection using e-marker identity, SOP-prime mode registration and cable speed. It supports physical DP/Thunderbolt restrictions. Keep native cable/plug references and API; no cable electrical topology is provided by the current target. Full candidate patch read. Decision is restricted to the SDK emulator, whose goldfish product explicitly describes USB as unavailable and creates only an unused gadget for sysfs testing. Native generic Type-C support remains compiled; configuration alone is not an exclusion proof. No LTS code is changed or fix reversed. Physical platforms/forwarded physical Type-C topologies are outside this decision; runtime was not tested.",
+    "evidence": [
+      "evidence/typec-target-review.json",
+      "SECURITY.md: Type-C physical protocol additions"
+    ]
+  },
+  {
+    "commit": "906be4934e52c6549177ca0d53b5082616b403d5",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Uses the new cable eligibility helper to suppress Thunderbolt mode ops for unsupported physical cables. Omit together with the physical eligibility feature; native Thunderbolt remains, without claiming equivalent cable rejection on future physical targets. Full candidate patch read. Decision is restricted to the SDK emulator, whose goldfish product explicitly describes USB as unavailable and creates only an unused gadget for sysfs testing. Native generic Type-C support remains compiled; configuration alone is not an exclusion proof. No LTS code is changed or fix reversed. Physical platforms/forwarded physical Type-C topologies are outside this decision; runtime was not tested.",
+    "evidence": [
+      "evidence/typec-target-review.json",
+      "SECURITY.md: Type-C physical protocol additions"
+    ]
+  },
+  {
+    "commit": "5601a4e95ff64cb913a561204647a7d69c3e6321",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Moves DP mode ops setup after a physical receptacle/cable eligibility check. Omit coherently with the helper and selector; preserve native DP probe/plug lifetime handling. Future physical targets must revisit the cable restrictions. Full candidate patch read. Decision is restricted to the SDK emulator, whose goldfish product explicitly describes USB as unavailable and creates only an unused gadget for sysfs testing. Native generic Type-C support remains compiled; configuration alone is not an exclusion proof. No LTS code is changed or fix reversed. Physical platforms/forwarded physical Type-C topologies are outside this decision; runtime was not tested.",
+    "evidence": [
+      "evidence/typec-target-review.json",
+      "SECURITY.md: Type-C physical protocol additions"
+    ]
+  },
+  {
+    "commit": "9f7a982130f9a34cd0d0c28a4f64289dd171b262",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds TCPM battery enumeration/ref cleanup and PD Battery Status response encoding, request-length check and 64-bit conversion for the new telemetry. This is charger-facing PD communication, not goldfish battery/Android power_supply support. Omit this new external protocol response and keep native battery subsystem behavior. Full candidate patch read. Decision is restricted to the SDK emulator, whose goldfish product explicitly describes USB as unavailable and creates only an unused gadget for sysfs testing. Native generic Type-C support remains compiled; configuration alone is not an exclusion proof. No LTS code is changed or fix reversed. Physical platforms/forwarded physical Type-C topologies are outside this decision; runtime was not tested.",
+    "evidence": [
+      "evidence/typec-target-review.json",
+      "SECURITY.md: Type-C physical protocol additions"
+    ]
+  },
+  {
+    "commit": "19fa58626d0aaa0440aa17f36ca216e23293b383",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds PD Battery Capabilities response and factors the new charge-to-energy helper, with request-length validation and packed wire data. It depends on the omitted physical PD battery-status/extended-capability series; native unsupported-message behavior is retained. Full candidate patch read. Decision is restricted to the SDK emulator, whose goldfish product explicitly describes USB as unavailable and creates only an unused gadget for sysfs testing. Native generic Type-C support remains compiled; configuration alone is not an exclusion proof. No LTS code is changed or fix reversed. Physical platforms/forwarded physical Type-C topologies are outside this decision; runtime was not tested.",
+    "evidence": [
+      "evidence/typec-target-review.json",
+      "SECURITY.md: Type-C physical protocol additions"
+    ]
+  },
+  {
+    "commit": "44189444fdec08a5fcb6cb9c7048f90c3428f5a6",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Rejects a physical DP partner VDO claiming a single direction without the corresponding pin assignment, releasing the plug reference on rejection. This is a real protocol validation improvement, not already present in LTS. Omit for the current SDK target with no Type-C DP topology; native compatible-pin intersection and plug cleanup remain. This does not assert equivalent malformed-VDO rejection; reevaluation is required before supporting physical DP links. Full candidate patch read. Decision is restricted to the SDK emulator, whose goldfish product explicitly describes USB as unavailable and creates only an unused gadget for sysfs testing. Native generic Type-C support remains compiled; configuration alone is not an exclusion proof. No LTS code is changed or fix reversed. Physical platforms/forwarded physical Type-C topologies are outside this decision; runtime was not tested.",
+    "evidence": [
+      "evidence/typec-target-review.json",
+      "SECURITY.md: Type-C physical protocol additions"
+    ]
+  },
+  {
+    "commit": "6e498d5efd99923a63ff111b2be44be3356d2950",
+    "disposition": "adapted-build-metadata",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain net centralized executable permission/shebang preparation and direct test invocations. Original malformed find semicolon was corrected by a0b51f579f27; do not replay it. These are Tradefed commands for a separate on-device test run, not kernel runtime code or commands executed during this audit. Retained shared test metadata supports the existing emulator distribution packaging. Other architecture XML is retained metadata, not a claim of building another kernel target. No native LTS fix changes.",
+    "evidence": [
+      "evidence/selftest-metadata-review.json",
+      "evidence/selftest-archive-check.json",
+      "SECURITY.md: Selftest distribution metadata"
+    ]
+  },
+  {
+    "commit": "93dd59141d5f36d55b4d144d3e85dd93f6d584cc",
+    "disposition": "adapted-build-metadata",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain KernelTargetTest runner, skip exit code 4 and skip-binary-check metadata. This records correct interpretation of skipped tests; no device tests were run and no skipped test is counted as passed. Retained shared test metadata supports the existing emulator distribution packaging. Other architecture XML is retained metadata, not a claim of building another kernel target. No native LTS fix changes.",
+    "evidence": [
+      "evidence/selftest-metadata-review.json",
+      "evidence/selftest-archive-check.json",
+      "SECURITY.md: Selftest distribution metadata"
+    ]
+  },
+  {
+    "commit": "a0b51f579f273e25d2b436ffcd6c217df321e48d",
+    "disposition": "adapted-build-metadata",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain ktest_dir entity, cd to the test directory and relative executables so sibling resources resolve, plus corrected find command. Complete x86_64 diff read; arm64 diff is identical after architecture names, object IDs and hunk coordinates are normalized, checked programmatically. All test argument variants in the patch were examined. Final ACK supersedes some historical command variants; retain final suite, not obsolete invocations. Retained shared test metadata supports the existing emulator distribution packaging. Other architecture XML is retained metadata, not a claim of building another kernel target. No native LTS fix changes.",
+    "evidence": [
+      "evidence/selftest-metadata-review.json",
+      "evidence/selftest-archive-check.json",
+      "SECURITY.md: Selftest distribution metadata"
+    ]
+  },
+  {
+    "commit": "4e9b6d4f3ee2c6efb5db44656388d4e0d5997768",
+    "disposition": "adapted-build-metadata",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain removal of eleven clock-changing/suspend/destructive timer invocations from the default Tradefed suite. Some binaries remain packaged by the original build; packaging does not execute them. Native kernel timer code and test source are unchanged by this decision. Retained shared test metadata supports the existing emulator distribution packaging. Other architecture XML is retained metadata, not a claim of building another kernel target. No native LTS fix changes.",
+    "evidence": [
+      "evidence/selftest-metadata-review.json",
+      "evidence/selftest-archive-check.json",
+      "SECURITY.md: Selftest distribution metadata"
+    ]
+  },
+  {
+    "commit": "ec2e16e5160b3d7fe581631d52f62dc24b5c4e49",
+    "disposition": "adapted-build-metadata",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain final executable names inconsistency-check, nanosleep, nsleep-lat and raw_skew in timer invocations. All 41 current x86_64 command executables exist in build 155 tests.zip, including these four; no test was run. Retained shared test metadata supports the existing emulator distribution packaging. Other architecture XML is retained metadata, not a claim of building another kernel target. No native LTS fix changes.",
+    "evidence": [
+      "evidence/selftest-metadata-review.json",
+      "evidence/selftest-archive-check.json",
+      "SECURITY.md: Selftest distribution metadata"
+    ]
+  },
+  {
+    "commit": "ef3a3d71a8c1ad9f4a25035599f4e5ddeabd59d5",
+    "disposition": "adapted-build-metadata",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain KernelTestModuleController architecture tag so the test harness selects the matching binaries. SDK distribution selects the x86_64 XML, verified from BUILD.bazel and tests.zip. Retained shared test metadata supports the existing emulator distribution packaging. Other architecture XML is retained metadata, not a claim of building another kernel target. No native LTS fix changes.",
+    "evidence": [
+      "evidence/selftest-metadata-review.json",
+      "evidence/selftest-archive-check.json",
+      "SECURITY.md: Selftest distribution metadata"
+    ]
+  },
+  {
+    "commit": "ff4969e8ce24c072de543657366ca0688fcb9ffa",
+    "disposition": "adapted-build-metadata",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain INDIVIDUAL_LEAVES KTAP parsing metadata in the final suite. It controls test result granularity, not kernel behavior; the final x86_64 XML is exactly ACK and is packaged unchanged. Retained shared test metadata supports the existing emulator distribution packaging. Other architecture XML is retained metadata, not a claim of building another kernel target. No native LTS fix changes.",
+    "evidence": [
+      "evidence/selftest-metadata-review.json",
+      "evidence/selftest-archive-check.json",
+      "SECURITY.md: Selftest distribution metadata"
+    ]
+  },
+  {
+    "commit": "929c8115eb3d3cf7e6804084d62c8ed31254ee37",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "The added validate_cap 1 1 0 0 invocation is explicitly removed by 6d9754eab855. Both complete patches read; all four touched files at revert equal the corresponding pre-addition file. No validate_cap invocation remains in any current configuration; its helper binary remains separately built and may be used by another test. Retained shared test metadata supports the existing emulator distribution packaging. Other architecture XML is retained metadata, not a claim of building another kernel target. No native LTS fix changes.",
+    "evidence": [
+      "evidence/selftest-metadata-review.json",
+      "evidence/selftest-archive-check.json",
+      "SECURITY.md: Selftest distribution metadata"
+    ]
+  },
+  {
+    "commit": "6d9754eab8551c3bbdc6f987106adb6a8ebc383f",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Retain final removal of the validate_cap standalone invocation; the whole touched files equal the pre-addition state at this revert. This does not remove the native capabilities implementation or claim the separate capability test has passed. Retained shared test metadata supports the existing emulator distribution packaging. Other architecture XML is retained metadata, not a claim of building another kernel target. No native LTS fix changes.",
+    "evidence": [
+      "evidence/selftest-metadata-review.json",
+      "evidence/selftest-archive-check.json",
+      "SECURITY.md: Selftest distribution metadata"
+    ]
+  },
+  {
+    "commit": "f04767b9fad4ee8d6439670c0995e527a741bdb7",
+    "disposition": "superseded-configuration",
+    "result_commits": [],
+    "rationale": "The sdcardfs driver and registration were explicitly retired by a96c98dd7a30, as audited in sdcardfs-retirement-review.json. Final ACK and port no longer request SDCARD_FS. Keep that retirement; do not resurrect the obsolete filesystem merely because this historical config enabled it. That report includes positive vold FUSE selection and acknowledges remaining legacy sdcardfs userspace support. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "7b04173768723aa0d441f0b6a2034d85f3876049",
+    "disposition": "merge-resolution-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "The complete unique remerge resolution only removes the redundant VIRTIO_MEM=n line. Preserve native Kconfig, which has no enabling default; build 155 resolves VIRTIO_MEM=n. This does not enable memory hotplug or replace either merge parent implementation. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "542062486f94a069c2f7c1f530e2daefeca13e72",
+    "disposition": "adapted-net-configuration",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Keep FS_VERITY=y and BUILTIN_SIGNATURES=n. GrapheneOS VerityUtils positively enables fs-verity without a signature and verifies detached signatures against a supplied trusted certificate in userspace. This removes the optional in-kernel signature verification policy, not Merkle integrity verification. Retain the native filesystem/verity implementation and existing Android trust-policy split; runtime signature validation was not executed. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "1ffaaad78b8cccec7497e87bbcb27652f3864790",
+    "disposition": "adapted-net-configuration",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Dropping the explicit LOCAL_BOUNDS line does not disable bounds checks: native lib/Kconfig.ubsan makes it UBSAN_ARRAY_BOUNDS && UBSAN_TRAP. All three plus UBSAN are y in build 155. Keep native compiler instrumentation selection; no sanitizer reduction from this config cleanup. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "64302bc801132ef90fff0073f5fb586a9b77c2a2",
+    "disposition": "superseded-configuration",
+    "result_commits": [],
+    "rationale": "The temporary removal of VSOCKETS/VHOST_VSOCK/VIRTIO_FS is explicitly superseded by eef10ae9bd9a and 4b6aa37b0867. All three are y in final ACK, port and build 155. Preserve final Android virtual transport/filesystem availability, including native implementations and fixes. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "6c25e06df41a2924fae86d14ce68828a3fc58f24",
+    "disposition": "adapted-net-configuration",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain BLK_CGROUP_IOPRIO=y and the native block cgroup priority policy interface. This preserves Android configurable I/O prioritization without introducing an old block implementation or altering LTS permission checks. No workload latency claim is made. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "108c31cb883083647c80558013f20af2601b0b8f",
+    "disposition": "adapted-net-configuration",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain the final build split: CFG80211 is a virtual-device module, with CERTIFICATION_ONUS and REG_CELLULAR_HINTS enabled in the unmodified virtual_device.fragment. The actual virtual-device .config also has DEFAULT_PS=y and CRDA_SUPPORT=y after removal of explicit n lines, plus REQUIRE_SIGNED_REGDB=y and USE_KERNEL_REGDB_KEYS=y. Thus the entire historical setting change is represented, not discarded because common .config disables CFG80211. Preserve native regulatory validation and driver opt-in semantics; no real-radio regulatory validation is claimed. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "49fe8567b2efca3b9419b2729c29787b0dd73635",
+    "disposition": "adapted-net-configuration",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "This only reorders BUG_ON_DATA_CORRUPTION=y; parsed pre/post configuration maps are identical for all three architectures. Build 155 retains y. Keep corruption fail-stop configuration without any code or policy weakening. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "78b7fb432ac1cde9a9575c2576f4a57e2ef6d26a",
+    "disposition": "superseded-configuration",
+    "result_commits": [],
+    "rationale": "The temporary mainline PROVE_LOCKING enablement and KALLSYMS_ALL removal are explicitly superseded on ACK LTS by 6653bf09f838. Current build has PROVE_LOCKING=n, KALLSYMS_ALL=y and DRM_DEBUG_MODESET_LOCK=n. Retain the final ACK configuration; this does not prove absence of locking bugs and no lockdep runtime test is claimed. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "b898575c704e09e67c7c025d09dfe75d7343c6c4",
+    "disposition": "adapted-net-configuration",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain explicit EXPERT=y after retirement of the old EMBEDDED selector. Native init/Kconfig exposes expert choices and selects DEBUG_KERNEL; the resulting build has EXPERT=y. This preserves explicit Android configuration choices, not a blanket change to all optional features. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "484348c4904a62d71c44a703719a7785615c4c9f",
+    "disposition": "adapted-net-configuration",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain the native generic thermal governor option THERMAL_GOV_BANG_BANG=y for Android configuration compatibility. This exposes the existing two-point governor to the thermal framework; it adds no platform driver or automatic fan registration. Governor behavior or cooling efficacy has not been tested. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "eef10ae9bd9a5a3e83783be23e12b0375d91c18d",
+    "disposition": "adapted-net-configuration",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain VSOCKETS=y and VHOST_VSOCK=y, explicitly restoring the virtual socket facilities after 64302bc80113. These are Android virtual transport/configuration interfaces and the SDK uses virtual transports. Preserve upstream socket implementation and fixes; no host or guest connection was executed. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "4b6aa37b086728130220336b4b8cc76f35455ddb",
+    "disposition": "adapted-net-configuration",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain VIRTIO_FS=y and native virtio filesystem support after the earlier temporary config removal. Although the original message cites KMI export reduction, the actual effect is built-in filesystem availability. Retain that final Android virtual filesystem configuration for source/runtime compatibility independently of historical binary KMI; no KMI layout or symbol allowlist restriction is introduced by this decision. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "019f81c100ba56cd3cd68cbfaf1ea1386bc17582",
+    "disposition": "adapted-net-configuration",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain TASK_DELAY_ACCT=y with TASKSTATS and SCHED_INFO dependencies for per-task delay accounting. Preserve native privilege and runtime enablement behavior; a compiled accounting option is not evidence that accounting is enabled at boot or that any measured delay is correct. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "73fa7017d65e9b02d1a0a7d6109ed8f017c56ed9",
+    "disposition": "adapted-net-configuration",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain the generic SPI_SLAVE=y framework option from the Android config. The time and system-control protocol handlers remain n in build 155; this does not add a physical controller driver, remote reboot handler or future-board support. Preserve native SPI implementation and source customization interface. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "b1b26a65b20e3448c3837281a88afb38a3493035",
+    "disposition": "adapted-net-configuration",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain EROFS_FS_PCPU_KTHREAD=y and its HIPRI default for the existing Android EROFS decompression worker configuration. Actual build resolves both y. This config decision does not certify the separately reviewed worker source or reproduce the performance percentage in the historical commit message. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "2c76b550f4715c9ae7c953256a821b52bff40bd3",
+    "disposition": "adapted-net-configuration",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain DEBUG_INFO_COMPRESSED_ZSTD=y with native compiler/linker capability gates. Build 155 enables it using the manifest toolchain. This affects build debug data representation, not runtime decompression of untrusted input or kernel permissions. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "a6080762a6813ad26ed6d17353b8b214367fe013",
+    "disposition": "adapted-net-configuration",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain MODPROBE_PATH=\"\" from initial integration. Native request_module returns -ENOENT for an empty path, avoiding the early-boot autoload window before Android init writes the same empty sysctl. Explicit privileged module loading remains supported. This is a default, not an immutable autoload prohibition: native privileged sysctl behavior remains. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "f0b67aae6978c2d5f55e4b1d9e0eee20e6af2fad",
+    "disposition": "adapted-net-configuration",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain SWIOTLB_DYNAMIC=y for native dynamically allocated DMA bounce pools. This preserves Android DMA allocation configuration without replacing native mapping/ownership checks or reintroducing an older DMA implementation. No hardware DMA test was run. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "79e617648399889cc7b10253ce6f97c84ee57a8e",
+    "disposition": "adapted-net-configuration",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Drop the obsolete WLAN_VENDOR_CISCO=n line after native 6853c70ba5ed removed the driver/Kconfig. The removed selector is absent from the native and port Kconfig, and no Cisco driver is introduced. This is obsolete configuration cleanup, not disabling a currently compiled driver. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "2cfc63c17a8c70e3b1441b420d5692c42b24e979",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Explicitly reverted by 0029c51646d4; all three whole files at revert equal pre-addition blobs. Preserve native defaults: build 155 uses mmap randomization bits 28 and compat bits 8 on x86_64. These old explicit values are not additional hardening and no GrapheneOS kernel hardening is imported. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "0029c51646d4efea8cc83cfc4842354555f295ab",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Keep removal of the transient explicit mmap bit counts. Whole-file equality proves this exact add/revert pair has no residual config effect. Current native x86 defaults are recorded separately; do not infer disabled ASLR from absent defconfig lines. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "3d11428ad8baec63493e03a4f0759e379f31f36d",
+    "disposition": "adapted-net-configuration",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Keep removal of the redundant UBSAN_SHIFT=n line. Native option has no enabling default and build 155 still resolves n. Other UBSAN checks, including LOCAL_BOUNDS, remain enabled; no sanitizer runtime pass is claimed. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "b23f669cb4e118b9bc9eff68c4e1f8e44af83362",
+    "disposition": "adapted-net-configuration",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Keep removal of explicit IP_NF_ARPTABLES=y because native IP_NF_ARPFILTER selects it. Both are y in build 155, preserving ARP filtering support and native netfilter validation. The cleanup does not remove ARP tables. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "b34bc9320a69f65baceb0ec8fa0898adf9c9ade1",
+    "disposition": "adapted-net-configuration",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain PM_DEBUG=y and PM_ADVANCED_DEBUG=y so Android can tune per-device asynchronous suspend/resume through native power/async. This exposes additional debug/control surface deliberately for compatibility; native DEVICE_ATTR_RW owner-write permission and enabled/disabled value validation remain. No runtime suspend/resume behavior is verified. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "b41b3dd3dd137a62a2233a7cf972f04cade2c1d4",
+    "disposition": "partially-adapted-net-configuration",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain removal of obsolete X86_5LEVEL=n in the selected GKI config. Native 7212b58d6d71 made x86_64 support unconditional; build 155 PGTABLE_LEVELS=5 is a compile-time capability, not proof of five-level runtime use. Separate crashdump config is not selected by either SDK build target and is outside this delivery; no pKVM decision follows from that exclusion. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "2ff0f57655c0cfb53e18b1fb07a097e45dab86de",
+    "disposition": "partially-adapted-net-configuration",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Drop obsolete SHA512_SSSE3 from GKI after native 484c18119f4f migrated optimized code to lib/crypto. Build 155 has CRYPTO_LIB_SHA512=y and its ARCH option y, so the primitive and optimization remain. The separate Microdroid defconfig is outside the selected SDK build, not a basis to omit host virtualization. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "9eb7168d21babd324453313c48c26bf6a5ce7b2d",
+    "disposition": "partially-adapted-net-configuration",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Drop obsolete POLYVAL_CLMUL_NI from GKI; native HCTR2 selects CRYPTO_LIB_POLYVAL and x86_64 selects its ARCH default. Both are y in build 155. Native cryptographic source remains; this does not remove POLYVAL or substitute an old implementation. ARM and separate Microdroid config variants are outside the selected SDK build. Only the selected x86_64 GKI kernel and its virtual-device module build are verified; architecture-specific/Cuttlefish/Microdroid/crashdump config hunks in this candidate do not select a second kernel target. No native LTS implementation is replaced by this configuration decision.",
+    "evidence": [
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Effective SDK configuration review"
+    ]
+  },
+  {
+    "commit": "dfc76c451145629aa0209d88a17b9d49fd1faeb2",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Removes stale CMDLINE_EXTEND/debug compression/thermal-trip config entries only in Microdroid. No SDK configuration change is required; the historical claim of unchanged Microdroid .config was not independently built here. Affirmative target evidence: ACK BUILD.bazel assigns these files to distinct kernel_*_microdroid, kernel_*_crashdump or kernel_*_allmodconfig targets. The authorized build_virt.sh selects kernel_x86_64_dist and virtual_device_x86_64_dist, whose definitions use GKI/sdk and virtual-device fragments. No general source or Kconfig definition changes in this candidate. The alternate target is outside the current delivery, not proven to have no Android consumer.",
+    "evidence": [
+      "evidence/separate-target-config-review.json",
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Separate kernel target configurations"
+    ]
+  },
+  {
+    "commit": "727323e6ce8226ed8bf19ad9d89abebe2d515cc7",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Updates separate crashdump kernels for KEXEC and native config dependencies, removing obsolete mitigation disables and reordering memory options. Do not transfer that small secondary-kernel configuration to the general SDK kernel or claim its crash path has been exercised. Affirmative target evidence: ACK BUILD.bazel assigns these files to distinct kernel_*_microdroid, kernel_*_crashdump or kernel_*_allmodconfig targets. The authorized build_virt.sh selects kernel_x86_64_dist and virtual_device_x86_64_dist, whose definitions use GKI/sdk and virtual-device fragments. No general source or Kconfig definition changes in this candidate. The alternate target is outside the current delivery, not proven to have no Android consumer.",
+    "evidence": [
+      "evidence/separate-target-config-review.json",
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Separate kernel target configurations"
+    ]
+  },
+  {
+    "commit": "695e31e50f626d95def1e1a8d677b4adfe572c89",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Removes DM_INIT only from Microdroid config. This does not remove native device-mapper initialization implementation or alter the selected SDK storage configuration. Affirmative target evidence: ACK BUILD.bazel assigns these files to distinct kernel_*_microdroid, kernel_*_crashdump or kernel_*_allmodconfig targets. The authorized build_virt.sh selects kernel_x86_64_dist and virtual_device_x86_64_dist, whose definitions use GKI/sdk and virtual-device fragments. No general source or Kconfig definition changes in this candidate. The alternate target is outside the current delivery, not proven to have no Android consumer.",
+    "evidence": [
+      "evidence/separate-target-config-review.json",
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Separate kernel target configurations"
+    ]
+  },
+  {
+    "commit": "3f9280f10078b32aaa2ca3585a66c8576c20354a",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Historical Microdroid-only MODULES removal is outside the SDK target and later superseded there by a0862fdb1036. SDK MODULES=y is retained and both module sets were built. Affirmative target evidence: ACK BUILD.bazel assigns these files to distinct kernel_*_microdroid, kernel_*_crashdump or kernel_*_allmodconfig targets. The authorized build_virt.sh selects kernel_x86_64_dist and virtual_device_x86_64_dist, whose definitions use GKI/sdk and virtual-device fragments. No general source or Kconfig definition changes in this candidate. The alternate target is outside the current delivery, not proven to have no Android consumer.",
+    "evidence": [
+      "evidence/separate-target-config-review.json",
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Separate kernel target configurations"
+    ]
+  },
+  {
+    "commit": "6ab8cf3e119e5846b97e0cd66ade22fa83d7ddde",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Microdroid image-size reduction removes its inline-encryption, cipher/hash and compression config selections. These removals are not applied to the general Android SDK configuration; crypto and storage features are separately configured and retained as needed. Affirmative target evidence: ACK BUILD.bazel assigns these files to distinct kernel_*_microdroid, kernel_*_crashdump or kernel_*_allmodconfig targets. The authorized build_virt.sh selects kernel_x86_64_dist and virtual_device_x86_64_dist, whose definitions use GKI/sdk and virtual-device fragments. No general source or Kconfig definition changes in this candidate. The alternate target is outside the current delivery, not proven to have no Android consumer.",
+    "evidence": [
+      "evidence/separate-target-config-review.json",
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Separate kernel target configurations"
+    ]
+  },
+  {
+    "commit": "1fc049da7bb6cf282700896ad8e6a0e169c63a28",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Microdroid-only networking reduction removes packet/XFRM/IP routing/tunnel/diagnostic selections. Do not apply these removals to the SDK Android networking configuration; all exact changed selections are recorded. Affirmative target evidence: ACK BUILD.bazel assigns these files to distinct kernel_*_microdroid, kernel_*_crashdump or kernel_*_allmodconfig targets. The authorized build_virt.sh selects kernel_x86_64_dist and virtual_device_x86_64_dist, whose definitions use GKI/sdk and virtual-device fragments. No general source or Kconfig definition changes in this candidate. The alternate target is outside the current delivery, not proven to have no Android consumer.",
+    "evidence": [
+      "evidence/separate-target-config-review.json",
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Separate kernel target configurations"
+    ]
+  },
+  {
+    "commit": "48f89dd45e8304064fe7617b3a1ba73848ecaa12",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Repairs separate crashdump savedefconfig expectations for ARM jump labels/VMAP_STACK and x86 SPARSEMEM_VMEMMAP. No native MM implementation changes and no SDK config dependency on these files. Affirmative target evidence: ACK BUILD.bazel assigns these files to distinct kernel_*_microdroid, kernel_*_crashdump or kernel_*_allmodconfig targets. The authorized build_virt.sh selects kernel_x86_64_dist and virtual_device_x86_64_dist, whose definitions use GKI/sdk and virtual-device fragments. No general source or Kconfig definition changes in this candidate. The alternate target is outside the current delivery, not proven to have no Android consumer.",
+    "evidence": [
+      "evidence/separate-target-config-review.json",
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Separate kernel target configurations"
+    ]
+  },
+  {
+    "commit": "259d671ac091aeabaee6b5481fb3c64f4a4d6e86",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Disables UAPI_HEADER_TEST only in allmodconfig build-test fragments. Those are separately named ACK build tests, not either SDK distribution. The SDK has its independently selected UAPI_HEADER_TEST=n; this decision is not evidence that header tests passed. Affirmative target evidence: ACK BUILD.bazel assigns these files to distinct kernel_*_microdroid, kernel_*_crashdump or kernel_*_allmodconfig targets. The authorized build_virt.sh selects kernel_x86_64_dist and virtual_device_x86_64_dist, whose definitions use GKI/sdk and virtual-device fragments. No general source or Kconfig definition changes in this candidate. The alternate target is outside the current delivery, not proven to have no Android consumer.",
+    "evidence": [
+      "evidence/separate-target-config-review.json",
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Separate kernel target configurations"
+    ]
+  },
+  {
+    "commit": "bd1f7ed062ffbaf1567591b97b9ff50455c12f4b",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Enables Microdroid storage encryption options including dm-default-key, fscrypt inline encryption and XTS. SDK already compiles DM_DEFAULT_KEY, FS_ENCRYPTION, FS_ENCRYPTION_INLINE_CRYPT and CRYPTO_XTS=y; omitting the separate guest config does not remove those implementations. Affirmative target evidence: ACK BUILD.bazel assigns these files to distinct kernel_*_microdroid, kernel_*_crashdump or kernel_*_allmodconfig targets. The authorized build_virt.sh selects kernel_x86_64_dist and virtual_device_x86_64_dist, whose definitions use GKI/sdk and virtual-device fragments. No general source or Kconfig definition changes in this candidate. The alternate target is outside the current delivery, not proven to have no Android consumer.",
+    "evidence": [
+      "evidence/separate-target-config-review.json",
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Separate kernel target configurations"
+    ]
+  },
+  {
+    "commit": "36b958f4b012d87d35b9989977a9e5456e7f0d29",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Repairs Microdroid SHA256 configuration after the old SSSE3 selector was retired. SDK CRYPTO_SHA256=y is confirmed in build 155, so this omission cannot be interpreted as dropping its verity hash primitive. No Microdroid boot is claimed. Affirmative target evidence: ACK BUILD.bazel assigns these files to distinct kernel_*_microdroid, kernel_*_crashdump or kernel_*_allmodconfig targets. The authorized build_virt.sh selects kernel_x86_64_dist and virtual_device_x86_64_dist, whose definitions use GKI/sdk and virtual-device fragments. No general source or Kconfig definition changes in this candidate. The alternate target is outside the current delivery, not proven to have no Android consumer.",
+    "evidence": [
+      "evidence/separate-target-config-review.json",
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Separate kernel target configurations"
+    ]
+  },
+  {
+    "commit": "bf6bbf9cd6994be3ba29d323a9af856dea9d8061",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Normalizes separate Microdroid config by moving encryption/hardening/KEXEC settings and dropping redundant/obsolete symbols. All changed lines examined; no assertion of effective Microdroid config equivalence without a separate build. The SDK uses its own GKI config and native defaults. Affirmative target evidence: ACK BUILD.bazel assigns these files to distinct kernel_*_microdroid, kernel_*_crashdump or kernel_*_allmodconfig targets. The authorized build_virt.sh selects kernel_x86_64_dist and virtual_device_x86_64_dist, whose definitions use GKI/sdk and virtual-device fragments. No general source or Kconfig definition changes in this candidate. The alternate target is outside the current delivery, not proven to have no Android consumer.",
+    "evidence": [
+      "evidence/separate-target-config-review.json",
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Separate kernel target configurations"
+    ]
+  },
+  {
+    "commit": "7962ddb363475ad421aed92cd928036225485e07",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Enables PKVM_X86_GUEST and OPEN_DICE only for the separately built protected Microdroid guest. Omit this alternate guest defconfig, without deciding shared guest-support code or protected-host necessity through an absence-of-consumer argument. No protected VM compatibility claim is made. Affirmative target evidence: ACK BUILD.bazel assigns these files to distinct kernel_*_microdroid, kernel_*_crashdump or kernel_*_allmodconfig targets. The authorized build_virt.sh selects kernel_x86_64_dist and virtual_device_x86_64_dist, whose definitions use GKI/sdk and virtual-device fragments. No general source or Kconfig definition changes in this candidate. The alternate target is outside the current delivery, not proven to have no Android consumer.",
+    "evidence": [
+      "evidence/separate-target-config-review.json",
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Separate kernel target configurations"
+    ]
+  },
+  {
+    "commit": "4e31f9219a5e0db49a864c33f763faf10be1894f",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Removes DAMON and DAMON_RECLAIM only from Microdroid for size. SDK DAMON remains y (RECLAIM=n in its own effective config). This is not a request to remove the SDK monitoring subsystem. Affirmative target evidence: ACK BUILD.bazel assigns these files to distinct kernel_*_microdroid, kernel_*_crashdump or kernel_*_allmodconfig targets. The authorized build_virt.sh selects kernel_x86_64_dist and virtual_device_x86_64_dist, whose definitions use GKI/sdk and virtual-device fragments. No general source or Kconfig definition changes in this candidate. The alternate target is outside the current delivery, not proven to have no Android consumer.",
+    "evidence": [
+      "evidence/separate-target-config-review.json",
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Separate kernel target configurations"
+    ]
+  },
+  {
+    "commit": "6df17ae72b6245aeb206aff24190a76cf33561c0",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Changes Microdroid DMABUF_SYSFS_STATS to explicit n. SDK independently resolves n; its DMA-BUF statistics decisions and implementation are separately audited, not inferred from guest config policy. Affirmative target evidence: ACK BUILD.bazel assigns these files to distinct kernel_*_microdroid, kernel_*_crashdump or kernel_*_allmodconfig targets. The authorized build_virt.sh selects kernel_x86_64_dist and virtual_device_x86_64_dist, whose definitions use GKI/sdk and virtual-device fragments. No general source or Kconfig definition changes in this candidate. The alternate target is outside the current delivery, not proven to have no Android consumer.",
+    "evidence": [
+      "evidence/separate-target-config-review.json",
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Separate kernel target configurations"
+    ]
+  },
+  {
+    "commit": "a0862fdb1036fc2f833d53ff0ef3d64239176ef0",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Re-enables Microdroid MODULES and HW_RANDOM for its guest device-assignment development. This is an alternate guest configuration, not historical KMI-only code. SDK module support is already enabled and both module artifact sets exist; no device assignment support is inferred. Affirmative target evidence: ACK BUILD.bazel assigns these files to distinct kernel_*_microdroid, kernel_*_crashdump or kernel_*_allmodconfig targets. The authorized build_virt.sh selects kernel_x86_64_dist and virtual_device_x86_64_dist, whose definitions use GKI/sdk and virtual-device fragments. No general source or Kconfig definition changes in this candidate. The alternate target is outside the current delivery, not proven to have no Android consumer.",
+    "evidence": [
+      "evidence/separate-target-config-review.json",
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Separate kernel target configurations"
+    ]
+  },
+  {
+    "commit": "9eb6482ae067def55514c47a24d7d14e265f9902",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Enables hypervisor/paravirtual/protected-guest config in the separate crashdump kernel. SDK ordinary HYPERVISOR_GUEST/PARAVIRT are already y. This does not decide remaining shared protected-guest changes or validate kexec inside a pVM. Affirmative target evidence: ACK BUILD.bazel assigns these files to distinct kernel_*_microdroid, kernel_*_crashdump or kernel_*_allmodconfig targets. The authorized build_virt.sh selects kernel_x86_64_dist and virtual_device_x86_64_dist, whose definitions use GKI/sdk and virtual-device fragments. No general source or Kconfig definition changes in this candidate. The alternate target is outside the current delivery, not proven to have no Android consumer.",
+    "evidence": [
+      "evidence/separate-target-config-review.json",
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Separate kernel target configurations"
+    ]
+  },
+  {
+    "commit": "09a044295dff7669dbba3cc1a3ae742bfbdfc3a5",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds x2apic_phys builtin command line to the separate crashdump kernel to address its protected-VM kexec APIC context. Do not impose that secondary-kernel platform assumption on the ordinary SDK kernel. This is a real alternate-target boot fix, not claimed unnecessary for its original target. Affirmative target evidence: ACK BUILD.bazel assigns these files to distinct kernel_*_microdroid, kernel_*_crashdump or kernel_*_allmodconfig targets. The authorized build_virt.sh selects kernel_x86_64_dist and virtual_device_x86_64_dist, whose definitions use GKI/sdk and virtual-device fragments. No general source or Kconfig definition changes in this candidate. The alternate target is outside the current delivery, not proven to have no Android consumer.",
+    "evidence": [
+      "evidence/separate-target-config-review.json",
+      "evidence/gki-effective-config-review.json",
+      "SECURITY.md: Separate kernel target configurations"
+    ]
+  },
+  {
+    "commit": "c32fef399dc04a181a25b01186b827d968f0e23a",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "PCI ACS/DMA-alias export additions explicitly withdrawn by 1769f78ed089. Both complete patches read; exports absent in final ACK/LTS/port, and both native function bodies match LTS. Do not restore an interface ACK itself retired; no claim that third-party consumers cannot exist. Retained exports serve vendor source/module compatibility, not historical binary KMI. No new source change or runtime module loading in this batch.",
+    "evidence": [
+      "evidence/module-exports-review.json",
+      "SECURITY.md: Module exports and explicit retirements"
+    ]
+  },
+  {
+    "commit": "1769f78ed0891cc3b1c7f7be01a94fae9513e5b3",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Retain removal of pci_request_acs and pci_for_each_dma_alias exports while preserving exact native implementations. No PCI ACS enforcement or DMA-alias traversal code is removed. Other PCI vendor hooks are outside this two-annotation decision. Retained exports serve vendor source/module compatibility, not historical binary KMI. No new source change or runtime module loading in this batch.",
+    "evidence": [
+      "evidence/module-exports-review.json",
+      "SECURITY.md: Module exports and explicit retirements"
+    ]
+  },
+  {
+    "commit": "14e014655b298f5d7835fa4df0a4fdcceabf16b0",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain final GPL reboot_mode and panic_reboot_mode exports. The intervening 9871bca777db removal is exactly undone by af1d96f26709. These expose existing mutable reboot policy to privileged modules; they add no userspace permission bypass or binary layout guarantee. Retained exports serve vendor source/module compatibility, not historical binary KMI. No new source change or runtime module loading in this batch.",
+    "evidence": [
+      "evidence/module-exports-review.json",
+      "SECURITY.md: Module exports and explicit retirements"
+    ]
+  },
+  {
+    "commit": "9871bca777dbc81ae3a3eef28425b32fd6eb8737",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "The complete two-annotation revert was immediately undone by af1d96f26709; whole reboot.c at re-add equals the pre-revert blob. Do not replay the transient export removal over the final ACK module interface. Retained exports serve vendor source/module compatibility, not historical binary KMI. No new source change or runtime module loading in this batch.",
+    "evidence": [
+      "evidence/module-exports-review.json",
+      "SECURITY.md: Module exports and explicit retirements"
+    ]
+  },
+  {
+    "commit": "af1d96f2670987de51a4ecd5c6321ff4d67bb5b2",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain re-added GPL exports of reboot_mode and panic_reboot_mode, confirmed in source and build-155 vmlinux.symvers. Native variables and reboot implementation remain; vendor modules are trusted kernel code and can affect reboot policy. Retained exports serve vendor source/module compatibility, not historical binary KMI. No new source change or runtime module loading in this batch.",
+    "evidence": [
+      "evidence/module-exports-review.json",
+      "SECURITY.md: Module exports and explicit retirements"
+    ]
+  },
+  {
+    "commit": "92a1c6a253cf366a717814d24c87a67b11cd3439",
+    "disposition": "adapted",
+    "result_commits": [
+      "f9dd0aa8659c46264586d82bb15da11ca7fadf8b"
+    ],
+    "rationale": "Retain drm_mode_convert_umode module availability with the later GPL export type, rather than original unrestricted annotation. The whole conversion function matches LTS, retaining bounded name copy, aspect-ratio validation and driver mode validation. Implemented in f9dd0aa8659c, not the initial integration. Retained exports serve vendor source/module compatibility, not historical binary KMI. No new source change or runtime module loading in this batch.",
+    "evidence": [
+      "evidence/module-exports-review.json",
+      "SECURITY.md: Module exports and explicit retirements"
+    ]
+  },
+  {
+    "commit": "d1efcd44900b9dda62c058991a8113bcac01465e",
+    "disposition": "adapted",
+    "result_commits": [
+      "f9dd0aa8659c46264586d82bb15da11ca7fadf8b"
+    ],
+    "rationale": "Retain GPL-only drm_mode_convert_umode export type from the final ACK API. Build 155 symbol metadata confirms GPL export. Native conversion/validation is byte-identical to LTS; license metadata is not treated as a security sandbox. Retained exports serve vendor source/module compatibility, not historical binary KMI. No new source change or runtime module loading in this batch.",
+    "evidence": [
+      "evidence/module-exports-review.json",
+      "SECURITY.md: Module exports and explicit retirements"
+    ]
+  },
+  {
+    "commit": "391397729f4b1f42bfb4177445c9b27f9740e7a4",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "All eleven changed GPL annotations belong to permission2/lookup_one_len2/VFS2 wrappers explicitly removed by c3271fe2811c during sdcardfs retirement. Every named wrapper is absent in ACK/LTS/port. Do not recreate obsolete mount-aware APIs solely for their export annotations; retain native idmapped/LSM permission paths. Retained exports serve vendor source/module compatibility, not historical binary KMI. No new source change or runtime module loading in this batch.",
+    "evidence": [
+      "evidence/module-exports-review.json",
+      "SECURITY.md: Module exports and explicit retirements"
+    ]
+  },
+  {
+    "commit": "36a70a33e16614c5e192bae0901806ce56998b2d",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "notify_change2 and its GPL annotation were explicitly removed by 584c54745dab during sdcardfs retirement. Keep native notify_change and its current permission/delegation behavior; no obsolete wrapper or export is restored. Retained exports serve vendor source/module compatibility, not historical binary KMI. No new source change or runtime module loading in this batch.",
+    "evidence": [
+      "evidence/module-exports-review.json",
+      "SECURITY.md: Module exports and explicit retirements"
+    ]
+  },
+  {
+    "commit": "a719abf03114cfc0b9f68937d9cd900d74d65cae",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "The __lock_task_sighand export was explicitly removed by 1e2c746b956f. Final ACK, LTS and port lack that export; the port function exactly matches native RCU/locking/recheck implementation. This follows positive withdrawal history, not the original reverter's missing-ABI-consumer inference. No claim that all potential consumers are absent. Retained exports serve vendor source/module compatibility, not historical binary KMI. No new source change or runtime module loading in this batch.",
+    "evidence": [
+      "evidence/module-exports-review.json",
+      "SECURITY.md: Module exports and explicit retirements"
+    ]
+  },
+  {
+    "commit": "c1e2c674005c758817710ba1714d35185f6fa8b6",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain GPL device_pm_callback_start/end tracepoint exports for vendor power instrumentation. Current power-traces.c equals LTS after removing precisely these two annotations and normalizing its trailing blank line. Native PM events and their call ordering remain. Retained exports serve vendor source/module compatibility, not historical binary KMI. No new source change or runtime module loading in this batch.",
+    "evidence": [
+      "evidence/module-exports-review.json",
+      "SECURITY.md: Module exports and explicit retirements"
+    ]
+  },
+  {
+    "commit": "0bbae53bf635d40f07010d56140d57834e0b2909",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "The clock_set_rate export was explicitly reverted by c47064085b01; whole power-traces.c returns to its pre-add state. No final clock_set_rate export is in ACK/LTS/port or build 155. Do not reintroduce retired tracepoint API. Retained exports serve vendor source/module compatibility, not historical binary KMI. No new source change or runtime module loading in this batch.",
+    "evidence": [
+      "evidence/module-exports-review.json",
+      "SECURITY.md: Module exports and explicit retirements"
+    ]
+  },
+  {
+    "commit": "c47064085b01b8e8acc3d8ecc51b3d985f2d37f1",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Retain explicit removal of clock_set_rate export. Exact add/revert whole-file equality and current source/symbol-table absence establish final state; the two independent device-PM exports remain. Retained exports serve vendor source/module compatibility, not historical binary KMI. No new source change or runtime module loading in this batch.",
+    "evidence": [
+      "evidence/module-exports-review.json",
+      "SECURITY.md: Module exports and explicit retirements"
+    ]
+  },
+  {
+    "commit": "380603d5f29a2265cb058a9ce5f2171f096ccca1",
+    "disposition": "merge-resolution-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Complete unique merge resolution removes retired powernv_throttle export while retaining device_pm_callback_start/end. Current file is precisely native power trace export set plus those two Android GPL exports. Preserve upstream tracepoint retirement and Android instrumentation together; both parents are separately inventoried. Retained exports serve vendor source/module compatibility, not historical binary KMI. No new source change or runtime module loading in this batch.",
+    "evidence": [
+      "evidence/module-exports-review.json",
+      "SECURITY.md: Module exports and explicit retirements"
+    ]
+  },
+  {
+    "commit": "768c8b03bf408986180e4a6b7aff87e13bf07924",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain GPL workqueue_execute_start/end tracepoint exports. Entire process_one_work matches LTS, including end-event treatment of the possibly freed work pointer as an address only. Callbacks run in native execution context and must not dereference expired work or sleep where forbidden. Export availability is intentional vendor instrumentation, not a new hook policy or KMI layout. Retained exports serve vendor source/module compatibility, not historical binary KMI. No new source change or runtime module loading in this batch.",
+    "evidence": [
+      "evidence/module-exports-review.json",
+      "SECURITY.md: Module exports and explicit retirements"
+    ]
+  },
+  {
+    "commit": "1aac3bceb1ed5226daf838758e511d2f7cbb6e48",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain GPL hrtimer_expire_entry/exit tracepoint exports. Entire __run_hrtimer matches LTS, preserving timer state/sequence ordering and lock release/reacquisition. Module callbacks must obey IRQ/lifetime context; compilation does not establish callback safety. Retained exports serve vendor source/module compatibility, not historical binary KMI. No new source change or runtime module loading in this batch.",
+    "evidence": [
+      "evidence/module-exports-review.json",
+      "SECURITY.md: Module exports and explicit retirements"
+    ]
+  },
+  {
+    "commit": "1a3bfa1a336f7a562759c804582bc9d33c3d0e20",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain GPL wq_worker_comm export. Exact native function retains attach mutex, worker-pool raw spinlock and bounded formatting. Modules must supply valid task/buffer and sleepable calling context; no old implementation or layout is imported. Retained exports serve vendor source/module compatibility, not historical binary KMI. No new source change or runtime module loading in this batch.",
+    "evidence": [
+      "evidence/module-exports-review.json",
+      "SECURITY.md: Module exports and explicit retirements"
+    ]
+  },
+  {
+    "commit": "a9083d6f8ac78229e92fca9ac7c68faeb01d1b13",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain five GPL networking tracepoint exports: net_dev_queue, net_dev_xmit, net_dev_start_xmit, netif_receive_skb and netif_rx. Current net-traces.c differs from LTS only by these and the separately audited tcp_retransmit_skb export. No packet handling or validation change is introduced by these annotations; callbacks remain privileged and context-sensitive. Retained exports serve vendor source/module compatibility, not historical binary KMI. No new source change or runtime module loading in this batch.",
+    "evidence": [
+      "evidence/module-exports-review.json",
+      "SECURITY.md: Module exports and explicit retirements"
+    ]
+  },
+  {
+    "commit": "3b12b94909d7c89707b02d5bf82aac0fdc67634e",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain final ACK unrestricted exports of tcp_hashinfo and udp_table for vendor network modules. They expose mutable native protocol state and require callers to respect native locking/lifetime rules; export does not make untrusted access safe. Actual build symbol metadata confirms exact export types. No historical struct layout, old TCP/UDP implementation or userspace access path is added. Retained exports serve vendor source/module compatibility, not historical binary KMI. No new source change or runtime module loading in this batch.",
+    "evidence": [
+      "evidence/module-exports-review.json",
+      "SECURITY.md: Module exports and explicit retirements"
+    ]
+  },
+  {
+    "commit": "f9af791d4adf399e07155f2c3fde647f8d52af5f",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain GPL __set_task_comm and apply_workqueue_attrs exports. apply_workqueue_attrs is whole-function native with pool mutex and error propagation. __set_task_comm retains native bounded copy/NUL fill/perf event exactly, plus the separately audited task-comm vendor hook. Export annotations do not relax native constraints; callers can change kernel task/workqueue behavior as trusted kernel code. Retained exports serve vendor source/module compatibility, not historical binary KMI. No new source change or runtime module loading in this batch.",
+    "evidence": [
+      "evidence/module-exports-review.json",
+      "SECURITY.md: Module exports and explicit retirements"
+    ]
+  },
+  {
+    "commit": "fbdf6497ebc2bb3e26dce53b2759675ac30d6cbe",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain GPL find_user export. Whole native function uses uidhash_lock and uid_hash_find; the documented returned reference must be released by free_uid. No UID lookup permissions or lifetime implementation are replaced. Module consumers are trusted and must obey reference ownership. Retained exports serve vendor source/module compatibility, not historical binary KMI. No new source change or runtime module loading in this batch.",
+    "evidence": [
+      "evidence/module-exports-review.json",
+      "SECURITY.md: Module exports and explicit retirements"
+    ]
+  },
+  {
+    "commit": "7a2a62c55dab259e026b4d55907365fef4aa5dc1",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "Original five-file implementation truncated the file VMA and recursively overlaid its tail with a private MAP_FIXED anonymous VMA. f24ebb94679f explicitly removes the helpers, their do_mmap calls and alternate alignment macro. The original mm_inline include is also absent in final ACK/port, replaced by later independent includes. Do not resurrect mapping-time fixed remapping, stale EOF decisions or lost sharing semantics. Existing emulation flags predated this commit and later retired separately; not every page-size facility is removed. These are positive retirement decisions, not a finding that 16 KiB emulation lacks consumers. No new code or runtime verification.",
+    "evidence": [
+      "evidence/retired-filemap-fixup-review.json",
+      "evidence/unresolved-feature-questions.json: Shared file tail behavior",
+      "SECURITY.md: Retired mapping-time page-size fixups"
+    ]
+  },
+  {
+    "commit": "e35913a77139feb5dd22880e89474f063f849278",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "Original three-file revision keeps the full initial file mapping and limits its private anonymous overlay to the remaining emulated-page tail, correcting SIGBUS boundaries in the old design. 13fa503273ef restores both helper function bodies exactly to pre-revision form; f24ebb94679f then removes the entire design. Preserve that explicit retirement. Its intent is not proof that the newer shared-tail design is safe or fully implemented. These are positive retirement decisions, not a finding that 16 KiB emulation lacks consumers. No new code or runtime verification.",
+    "evidence": [
+      "evidence/retired-filemap-fixup-review.json",
+      "evidence/unresolved-feature-questions.json: Shared file tail behavior",
+      "SECURITY.md: Retired mapping-time page-size fixups"
+    ]
+  },
+  {
+    "commit": "13fa503273ef296c3ca0a16437b137bab8b81776",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "Read the full meaningful inverse changes and checked both helper bodies against e35913a77139 parent. This revert temporarily restores the older length-shrinking/remap algorithm; the following f24ebb94679f removes both helpers and callsites. No reason to recreate that intermediate algorithm in the LTS port. These are positive retirement decisions, not a finding that 16 KiB emulation lacks consumers. No new code or runtime verification.",
+    "evidence": [
+      "evidence/retired-filemap-fixup-review.json",
+      "evidence/unresolved-feature-questions.json: Shared file tail behavior",
+      "SECURITY.md: Retired mapping-time page-size fixups"
+    ]
+  },
+  {
+    "commit": "f24ebb94679fd37dec2b86d31a24a3ebe01dc4af",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Retain explicit removal of mapping-time file-length shrinking, recursive anonymous MAP_FIXED tail replacement, helper declarations and __COMPAT_PAGE_ALIGN. Current do_mmap has no retired calls and retains native overflow and mapping checks with the separately audited __PAGE_ALIGN emulation. The replacement fault-time b3c77090341c candidate remains provisional because its shared-tail behavior still needs safe resolution. These are positive retirement decisions, not a finding that 16 KiB emulation lacks consumers. No new code or runtime verification.",
+    "evidence": [
+      "evidence/retired-filemap-fixup-review.json",
+      "evidence/unresolved-feature-questions.json: Shared file tail behavior",
+      "SECURITY.md: Retired mapping-time page-size fixups"
+    ]
+  },
+  {
+    "commit": "cdc9f6ef946f3c17b048b3ee9e36aa0bbc12d712",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Five GPL DMA exports were explicitly removed by 1756dedada25, including helpers moved from mapping.c to ops_helpers.c. Exact added/removed export name sets match and all five are absent in final ACK/LTS/port. Do not resurrect this withdrawn module API or replace native DMA mapping implementations. This is positive history, not a missing-consumer inference. Source/link metadata verification only; callbacks and module loading were not exercised.",
+    "evidence": [
+      "evidence/control-exports-review.json",
+      "SECURITY.md: Native control exports and locking contracts"
+    ]
+  },
+  {
+    "commit": "1756dedada2549166ad3fef487ca778795a7dca6",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Retain explicit removal of dma_direct_get_required_mask, dma_direct_alloc/free and dma_common_get_sgtable/mmap exports. Original and revert patches read; filename/function placement changes are accounted for. The omission concerns these annotations only; current native direct-DMA API and security fixes remain. Source/link metadata verification only; callbacks and module loading were not exercised.",
+    "evidence": [
+      "evidence/control-exports-review.json",
+      "SECURITY.md: Native control exports and locking contracts"
+    ]
+  },
+  {
+    "commit": "4de53aef65d4de1e8adfa5083b14a6ea289ef60a",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain GPL tick_nohz_get_sleep_length source-module interface. The entire function equals LTS; native idle/tick policy and timing calculations are unchanged. Modules must respect the native timing/CPU context and returned next-event contract. No idle/power runtime measurement is claimed. Source/link metadata verification only; callbacks and module loading were not exercised.",
+    "evidence": [
+      "evidence/control-exports-review.json",
+      "SECURITY.md: Native control exports and locking contracts"
+    ]
+  },
+  {
+    "commit": "f2e5227422469c87f868608e8342be4d7fcdc873",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Adapt historical swiotlb_find_pool export to native __swiotlb_find_pool plus the existing inline public wrapper. Native header is exactly LTS, preserving the read barrier and dma_uses_io_tlb check; native helper body retains RCU traversal and is byte-identical. The old binary symbol name is not preserved. Pool lifetime remains tied to valid outstanding DMA mappings; arbitrary stale addresses are not made safe by exporting lookup. Source/link metadata verification only; callbacks and module loading were not exercised.",
+    "evidence": [
+      "evidence/control-exports-review.json",
+      "SECURITY.md: Native control exports and locking contracts"
+    ]
+  },
+  {
+    "commit": "9bb473b373ad64c2459f70db7040effe81de160f",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Deliberately retain native GPL tracing_on and tracing_is_on exports rather than ACK removal. The ACK message explicitly seeks to deny vendor module control/query of global tracing; this is a real policy difference, not claimed KMI-only. Requested vendor source customization and minimal native deviation favor keeping the existing upstream interface. Trusted modules can therefore disable global tracing or observe its state, potentially reducing diagnostic visibility. These are kernel-code interfaces, not a new unprivileged access path, and removing two exports would not sandbox arbitrary loaded kernel code. Native function bodies/export types and build symbols are unchanged. Source/link metadata verification only; callbacks and module loading were not exercised.",
+    "evidence": [
+      "evidence/control-exports-review.json",
+      "SECURITY.md: Native control exports and locking contracts"
+    ]
+  },
+  {
+    "commit": "9d4e34a5f965fefe0489ccd5dae1f531cf4c52cf",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain elevator_alloc, workqueue-attribute allocate/free exports and public apply_workqueue_attrs_locked declaration/definition. All four function bodies equal LTS after only static visibility normalization for the locked helper. It does not acquire wq_pool_mutex: vendor callers must already have the native locking context; the ordinary apply_workqueue_attrs wrapper remains the lock-taking entry. Unbound-workqueue validation and allocation failures are preserved. No separate vendor scheduler or historical object layout is imported. Source/link metadata verification only; callbacks and module loading were not exercised.",
+    "evidence": [
+      "evidence/control-exports-review.json",
+      "SECURITY.md: Native control exports and locking contracts"
+    ]
+  },
+  {
+    "commit": "634a6f075d623b9aa6a9b641a24574efbdab812a",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain GPL bdi_list, wb_wakeup and redirty_tail_locked exports/declarations for hierarchical vendor writeback control. wb_wakeup is native apart from visibility. redirty_tail_locked retains native I_FREEING early cleanup and timestamp/list logic, with a separate existing vendor target-list hook; this candidate only changes visibility/export. Callers must respect inode/writeback-list locks and bdi lifetime; mutable list exposure is privileged authority, not safe untrusted traversal. No old writeback implementation replaces LTS. Source/link metadata verification only; callbacks and module loading were not exercised.",
+    "evidence": [
+      "evidence/control-exports-review.json",
+      "SECURITY.md: Native control exports and locking contracts"
+    ]
+  },
+  {
+    "commit": "ec3601aba611c7d6da822a2807464da60e185790",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain common GPL cpumask_backtrace wrapper and route all four inline backtrace helpers through it under the existing arch capability guard. Complete two-file current delta equals the original ACK patch; native low-level backtrace implementation is untouched. Modules gain an expensive cross-CPU diagnostic operation and must supply valid mask/context; no unprivileged invocation or NMI runtime test is added. The local mainline bd26ae0caa20 object is evidence of origin, not assumed to be in the pinned LTS. Source/link metadata verification only; callbacks and module loading were not exercised.",
+    "evidence": [
+      "evidence/control-exports-review.json",
+      "SECURITY.md: Native control exports and locking contracts"
+    ]
   }
 ]

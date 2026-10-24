@@ -64,8 +64,17 @@ for r in rows:
         assert all(all(paths[path].get(k) == v for k, v in witness.items())
                    for path, witness in d['path_witnesses'].items()), r['commit']
 
-# Explicitly pending feature selection must not become final via a path refresh.
-pending = {'7a2a62c55dab', 'e35913a77139', '13fa503273ef', 'f24ebb94679f'}
+# The mapping-time filemap implementation was explicitly retired by ACK.
+# Its four historical decisions are separate from the still-open fault-time
+# shared-tail question below; a path refresh must not finalize that question.
+retired_fixups = read('retired-filemap-fixup-review.json')['records']
+assert {r['commit'][:12] for r in retired_fixups} == {
+    '7a2a62c55dab', 'e35913a77139', '13fa503273ef', 'f24ebb94679f'}
+for r in retired_fixups:
+    assert byid[r['commit']]['review_status'] == 'reviewed'
+    assert byid[r['commit']]['disposition'] == r['disposition']
+    assert r['commit'] in {d['commit'] for d in explicit}
+pending = set()
 for question in read('unresolved-feature-questions.json'):
     if 'remain provisional' in question['status'] or 'candidate remains provisional' in question['status']:
         pending.update(question.get('candidates', []))

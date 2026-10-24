@@ -6946,3 +6946,175 @@ counts). This does not execute DMA, real vb2 allocation, ioctls or USB. SDK conf
 enables both FunctionFS and UVC; exact UVC runtime use remains unverified and the
 generic capability is retained. Build 155 is recorded separately. No remote
 source was accessed; embedded commit-message links were not opened.
+
+# Native Type-C API and teardown
+
+Eight further candidates are reconciled in `evidence/typec-native-api-review.json`.
+Native partner/plug alternate-mode counts, product type/VDO sysfs attributes,
+PRODUCT_TYPE notifications and plug-altmode uevents remain intact. UCSI's older
+inferred-change loop was explicitly replaced upstream by connection rechecks.
+The ACK port-unregistration race fix already exists in LTS; preserve its later
+lockdep-key teardown ordering correction as well. No older ACK teardown or
+notification implementation replaces the newer LTS source.
+
+The complete `b61b6f74f905` merge resolution also contains FUSE cleanup. Its old
+passthrough_req allocator was explicitly removed by ACK `25867a2d88c5`.
+Native backing-file map cleanup runs from fuse_conn_put, followed by RCU-delayed
+final connection release; the audited functions remain exactly native. Do not
+resurrect the retired map or add another RCU free to fuse_free_conn. This resolves
+the previously separate FUSE portion of that merge, without deciding unrelated
+FUSE candidate changes. These are source/history findings, not runtime proof.
+All evidence came from local checkouts; no remote resources were accessed.
+
+# Type-C physical protocol additions
+
+`evidence/typec-target-review.json` finalizes 21 original patches after reading
+all hunks, including the 1033-line SPR AVS negotiation change. Keep native LTS
+Type-C classes, UCSI, TCPM and DP/Thunderbolt support. Omit the new physical
+alternate-mode selector/bus conversion and dependent exports, ChromeOS EC
+integration, UCSI Thunderbolt operations, cable eligibility checks, SPR AVS
+negotiation/profile additions and charger-facing battery/extended-cap messages.
+These omissions concern the supplied SDK target, not Android generally.
+
+Positive consumer evidence is recorded: goldfish selects the example USB HAL,
+whose libusbutils reads both SPR AVS current attributes under profile reporting
+and enumerated-port conditions. The consumer is not absent. Target selection is
+instead grounded in the goldfish product's explicit no-USB description and its
+unused gadget for sysfs tests. Compiled native Type-C cores do not establish a
+physical connector topology. UCSI ACPI/CCG/STM32 providers are disabled and native
+TCPCI requires an I2C controller plus firmware connector node. No live port list,
+feature flag, USB forwarding arrangement, or electrical behavior was measured.
+Physical Type-C platform support must revisit these exclusions.
+
+Retaining whole native files preserves LTS parser, lifetime, lock-class teardown
+and transition timeout fixes. The additional DP malformed-VDO rejection and
+cable restrictions are explicitly omitted target-specific improvements, not
+claimed already implemented. Native pin-intersection validation remains but is
+not claimed equivalent. The plug-altmode class removal depends on the excluded
+bus conversion; retaining it would lose the native notification path, so both
+remain at native LTS. New exports are classified by their feature/target scope,
+not falsely as historical KMI. No code or native fix changes in this batch.
+Local checkout pins and exact source hashes are in the report; no remote source
+was accessed, including URLs embedded in the examined commit messages.
+
+# Selftest distribution metadata
+
+Nine Tradefed XML candidates are reconciled in `evidence/selftest-metadata-review.json`.
+The existing build packages the x86_64 suite and binaries, so retain the final ACK
+runner selection, skip-exit semantics, architecture tag, KTAP granularity,
+working-directory setup and corrected executable names. Keep the removal of the
+destructive timer invocations and the explicit validate_cap add/revert pair;
+these are suite choices, not removal of native kernel implementations.
+
+Read-only inspection of build 155 tests.zip confirms its XML matches the source
+exactly and all 41 referenced command executables are present. No XML command,
+Tradefed preparer, device test, emulator or OS build was executed. Archive
+presence is not a test pass. There are no code changes or LTS fix reversals in
+these decisions. All evidence is local; no additional remote resources used.
+
+# Effective SDK configuration review
+
+Twenty-eight configuration candidates, including a unique merge resolution,
+are individually reconciled in `evidence/gki-effective-config-review.json`.
+The review checks build 155's common and virtual-device configurations as well
+as source defconfigs. Removing a redundant line does not imply disabling its
+feature: bounds instrumentation, ARP tables, SHA-512 and POLYVAL remain enabled.
+Wireless settings are supplied by the unchanged virtual-device fragment and
+verified in that build's effective config. Signed regulatory databases remain
+required. The native LTS implementations and security fixes are retained.
+
+The fs-verity decision preserves integrity checking with Android userspace
+signature policy, supported by the local VerityUtils implementation. An empty
+modprobe default closes the early autoload window while retaining explicit
+module loading and native privileged sysctl semantics. PM debug configuration
+retains the Android power/async interface, with its native access permissions;
+this additional control surface is an intentional compatibility choice.
+Temporary sdcardfs, lockdep and mmap-bit settings are reconciled through
+positive retirement/revert history, rather than missing-consumer searches.
+
+This batch does not decide protected virtualization necessity: PKVM_INTEL
+remains provisional. Separate architecture and Microdroid/crashdump configuration
+files do not select another kernel in the SDK build. No kernel source changed,
+no runtime behavior was tested, and no new remote resources were used. URLs
+appearing in local commit messages/Kconfig were not opened.
+
+# Separate kernel target configurations
+
+Seventeen Microdroid, crashdump and allmodconfig-only candidates are recorded
+individually in `evidence/separate-target-config-review.json`. The pinned ACK
+BUILD.bazel positively assigns these files to separate kernel targets; the
+SDK workflow selects GKI and virtual-device targets with different configs.
+The exclusions are bounded to these alternate config files. They do not claim
+that Android lacks Microdroid consumers or decide shared virtualization code.
+
+In particular, Microdroid size-reduction choices must not disable SDK networking,
+crypto, encryption, modules or DAMON. The SDK's relevant compiled selections
+are checked independently. The protected-guest crashdump x2APIC fix is acknowledged
+as a real fix for that separate boot path; it is not imposed as the ordinary SDK
+command line. No alternate kernel was built or booted, no native LTS code changed,
+and no additional remote source was used.
+
+# Module exports and explicit retirements
+
+Twenty-one further annotation candidates are individually resolved in
+`evidence/module-exports-review.json`, including the complete power trace merge
+resolution. Retained exports support vendor source modules and preserve final
+ACK export types. Build 155 vmlinux.symvers confirms availability and license
+metadata; this is link metadata, not runtime callback or module-load testing.
+The DRM mode converter was added in f9dd0aa8659c, while other retained exports
+in this batch came from the initial integration. Both result histories are checked.
+
+Exported native functions retain their LTS bodies; task-comm retains native
+bounded copy and an independently audited vendor hook. Workqueue/timer event
+callers match LTS completely, preserving lifetime and locking order. An exported
+callback may observe pointers whose lifetime is restricted, especially the
+post-execution work pointer. Trusted modules must obey those constraints.
+Mutable TCP/UDP tables and reboot policy expose meaningful kernel authority;
+retaining access increases module-facing surface, intentionally for compatibility.
+GPL metadata is not a sandbox or proof of callback correctness.
+
+Explicit ACK withdrawal history accounts for PCI ACS/DMA-alias, signal-lock,
+clock-rate and obsolete sdcardfs wrapper exports. Their omission is not based
+on a missing consumer search. The power merge retains Android PM callback
+exports while accepting native powernv tracepoint retirement. No LTS fix is
+reversed, no historical binary layout is preserved, and no new remote source
+was accessed for this batch.
+
+# Retired mapping-time page-size fixups
+
+Four historical filemap-fixup candidates are resolved through explicit ACK
+revert history in `evidence/retired-filemap-fixup-review.json`. Both variants of
+the old mapping-time private anonymous overlay, their callsites and declarations
+are gone in final ACK and the port. Native mmap checks remain; no recursive
+MAP_FIXED overlay is restored. Intervening changes prevent whole-file/inverse
+patch identity, so the report instead checks exact helper restoration, full
+subsequent removal and current source state.
+
+This does not resolve b3c77090341c, the newer fault-time design. Its shared-tail
+compatibility question remains explicitly provisional, with positive SDK 16 KiB
+consumer evidence and the security reason for the current native shared-fault
+guard. No runtime behavior or full emulation parity is claimed.
+
+# Native control exports and locking contracts
+
+Eight more candidates are individually reviewed in
+`evidence/control-exports-review.json`. Native timing, DMA pool lookup, workqueue
+and writeback bodies are preserved, with exact comparison allowing only public
+visibility and the separately scoped writeback target-list callback. The public
+SWIOTLB wrapper retains the native memory barrier and uses the exported current
+helper; the old binary symbol is not preserved. Module callers must honor
+outstanding DMA ownership and locking/lifetime contracts. In particular,
+apply_workqueue_attrs_locked does not acquire the private pool mutex itself.
+
+ACK removes tracing_on/tracing_is_on exports as a vendor policy restriction.
+The port deliberately keeps both native GPL exports for source customization
+and minimal deviation: loaded modules can control or observe global tracing,
+with a corresponding risk of lost diagnostic visibility. This is explicitly a
+policy difference, not labeled KMI-only or harmless; export restrictions are not
+a sandbox for arbitrary kernel code. The NMI backtrace wrapper likewise exposes
+an expensive diagnostic operation to trusted modules without replacing native
+backtrace logic. Build 155 confirms all retained symbols and export types.
+
+Five older direct/common DMA exports remain removed following explicit ACK
+withdrawal. No new kernel code or build is needed for this review, no module or
+NMI behavior was executed, and no new remote resource was used.
