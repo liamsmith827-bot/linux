@@ -21,11 +21,14 @@ struct hid_report { int unused; };
 struct hid_driver { int (*raw_event)(void *,void *,void *,int); };
 struct hid_report_enum { int unused; };
 struct hid_device { int driver_input_lock; struct hid_driver *driver; struct hid_report_enum report_enum[1]; int debug_list; };
-struct acc_hid_dev { struct hid_device *hid; };
+struct acc_dev { bool closing; };
+struct acc_hid_dev { struct hid_device *hid; bool dead; };
+struct acc_control_request { struct acc_dev *dev; struct acc_hid_dev *hid; unsigned length; };
 struct usb_ep { int unused; };
-struct usb_request { struct acc_hid_dev *context; int actual,status; u8 *buf; };
+struct usb_request { void *context; unsigned actual; int status; u8 *buf; };
 static int delivered, invalid_buffer, held_delivery;
 static struct hid_report report;
+#define READ_ONCE(x) (x)
 #define pr_err(...) ((void)0)
 #define dbg_hid(...) ((void)0)
 #define IS_ERR(p) false
@@ -50,7 +53,8 @@ int main(void) {
  for(int failed=0;failed<2;failed++) for(int length=0;length<3;length++) {
   struct hid_device h={.driver_input_lock=locked,.driver=driver?&drv:NULL};
   struct acc_hid_dev ah={.hid=&h};
-  struct usb_request req={.context=&ah,.actual=length==2?4096:length,.status=failed?-ESHUTDOWN:0,.buf=buffer};
+  struct acc_dev dev={0}; struct acc_control_request control={.dev=&dev,.hid=&ah,.length=4096};
+  struct usb_request req={.context=CONTEXT,.actual=length==2?4096:length,.status=failed?-ESHUTDOWN:0,.buf=buffer};
   delivered=0; held_delivery=0;
   acc_complete_send_hid_event(NULL,&req); checks++;
   int expected=!locked && driver && !failed && length;
@@ -64,10 +68,11 @@ def run(ref):
     hid=(ROOT/'drivers/hid/hid-core.c').read_text()
     p='drivers/usb/gadget/function/android_f_accessory.c'
     acc=(ROOT/p).read_text() if ref=='working-tree' else subprocess.check_output(['git','show',ref+':'+p],cwd=ROOT,text=True)
-    code=PRE+function(hid,'__hid_input_report')+function(hid,'hid_safe_input_report')+function(acc,'acc_complete_send_hid_event')+MAIN
+    context="&control" if "struct acc_control_request *control" in function(acc,"acc_complete_send_hid_event") else "&ah"
+    code=PRE+function(hid,'__hid_input_report')+function(hid,'hid_safe_input_report')+function(acc,'acc_complete_send_hid_event')+MAIN.replace('CONTEXT',context)
     with tempfile.TemporaryDirectory(prefix='accessory-hid-') as td:
         c=Path(td)/'check.c';e=Path(td)/'check';c.write_text(code)
-        subprocess.run(['cc','-std=gnu11','-Wall','-Wextra','-Werror','-Wno-unused-parameter','-Wno-unused-function',str(c),'-o',str(e)],check=True)
+        subprocess.run(['cc','-std=gnu11','-Wall','-Wextra','-Werror','-Wno-unused-parameter','-Wno-unused-function','-Wno-unused-variable',str(c),'-o',str(e)],check=True)
         out=json.loads(subprocess.check_output([str(e)],text=True))
     return dict(source=ref,extracted_model_sha256=hashlib.sha256(code.encode()).hexdigest(),**out)
 if __name__=='__main__':

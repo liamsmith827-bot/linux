@@ -21,17 +21,25 @@ PRE = r'''
 struct work_struct { void (*fn)(struct work_struct *); int queued; };
 struct delayed_work { struct work_struct work; };
 struct kref { int refcount; };
+struct device { int unused; };
+struct mutex { int unused; };
 struct acc_dev {
+ struct device *device; bool closing;
+ struct mutex read_mutex,write_mutex; int io_lock;
  struct kref kref; struct work_struct release_work, getprotocol_work, sendstring_work, hid_work;
  struct delayed_work start_work; int lock,read_wq,write_wq,tx_idle,hid_list,new_hid_list,dead_hid_list;
 };
 static struct acc_dev *acc_dev_instance, *replacement, *allocation;
 static bool acc_dev_instance_creating;
-static int acc_dev_instance_lock, acc_device, depth, fail_alloc, fail_register;
+static struct { struct device *this_device; } acc_device;
+static int acc_dev_instance_lock, depth, fail_alloc, fail_register;
 static int bad_sleep, self_cancel, publication, resurrected, wrong_identity, bad_reservation, bad_free, checks;
 static int unlock_replace, releasing, drained, register_reentry, reentry_result, inject_drain;
 static struct work_struct *running;
 #define container_of(p,t,m) ((t *)((char *)(p)-offsetof(t,m)))
+#define READ_ONCE(x) (x)
+static struct device *get_device(struct device *d) { return d; }
+static void put_device(struct device *d) {}
 #define GFP_KERNEL 1
 #define GFP_ATOMIC 0
 #define ENOMEM 12
@@ -41,6 +49,7 @@ static struct work_struct *running;
 #define INIT_LIST_HEAD(l) ((void)0)
 #define init_waitqueue_head(l) ((void)0)
 #define spin_lock_init(l) ((void)0)
+#define mutex_init(l) ((void)0)
 #define pr_err(...) ((void)0)
 #define spin_lock_irqsave(l,f) do { (f)=0; depth++; } while(0)
 #define spin_unlock_irqrestore(l,f) do { (void)(f); depth--; if(unlock_replace) { unlock_replace=0; acc_dev_instance=replacement; } } while(0)
@@ -69,7 +78,7 @@ static void acc_start_work(struct work_struct *w) {}
 static void acc_hid_work(struct work_struct *w) {}
 static void acc_getprotocol_work(struct work_struct *w) {}
 static void acc_sendstring_work(struct work_struct *w) {}
-static int misc_register(int *m) {
+static int misc_register(void *m) {
  bad_sleep+=depth!=0;
  struct acc_dev *d=get_acc_dev();
  if(d) { publication++; /* Deliberately keep the reference to test failure free. */ }

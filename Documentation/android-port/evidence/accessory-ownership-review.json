@@ -1,0 +1,80 @@
+{
+  "source_head": "25d9d4d59ed468175d265fec8a5a38f1e384687c",
+  "scope": "Follow-up adaptation of the ACK accessory addition; the whole-driver candidate remains provisional pending bulk-I/O review.",
+  "changes": [
+    "Each queued EP0 request owns a separate acc_dev reference and immutable request metadata. HID lookups acquire a HID kref under dev->lock. Queue failure and every completion, including errors, release those references exactly once. Setup retains its own reference if another CPU completes before usb_ep_queue returns. Native UDC contract promises exactly one completion only after successful queueing; actual hardware not tested.",
+    "HID list ownership, initialization ownership and EP0 ownership are separate references. Sleeping HID destruction runs on a release worker; each HID retains acc_dev until destruction. Initialization remains on new_hid_list so disconnect/replacement can mark it dead. A dead object is never republished; failed initialization is unlinked before final release. hid_parse_report errors propagate.",
+    "Retain existing descriptor limit 4096 and ID range 1..32. New cap 64 counts every allocated HID including dead, in-flight and deferred-release objects. Replacement at this cap returns EBUSY until cleanup finishes; allocation failure leaves the original ID intact. This is intentional bounded backpressure, not a claim of unchanged behavior for an unlimited replacement stream.",
+    "Each acc_dev holds a device-model reference for event workers and HID parents. Cleanup closes new lookup/control producers, drains notifications before misc deregistration, retires all HID lists, and drains registration work. Existing EP0 references keep objects alive until completion; stale completions cannot restart work after closing. The final instance worker drops the stable device reference after draining remaining work. Configfs instance storage is freed."
+  ],
+  "security": "All changes are inside the ACK-added driver. Native HID core, USB core and LTS fixes remain unchanged. Allocation caps mitigate host-driven growth; reference ownership prevents completion use-after-free and detached initialization escaping disconnect. Raw HID input still enters native quiescing. This does not certify bulk request/read/write teardown, which remains under review.",
+  "validation": "31 extracted ASan/UBSan host scenarios pass and leave no allocations. Four explicitly fault-injected variants fail (not executions of the original full ACK driver). Existing eight singleton and 24 native-input model cases also pass after updating modeled structures. Kernel build 153 passed with 145 module signatures/tables verified; no real USB, kernel races, HID BPF or emulator execution.",
+  "native_contracts": [
+    {
+      "path": "drivers/usb/gadget/udc/core.c",
+      "finding": "usb_ep_queue exactly-once successful completion contract; completion may run on another CPU before queuing CPU finishes. usb_ep_dequeue is asynchronous; usb_ep_disable completes pending requests before return, with no other task allowed to use endpoint."
+    },
+    {
+      "path": "drivers/hid/hid-core.c",
+      "finding": "hid_destroy_device removes driver/device before dropping device reference; native input quiescing retained."
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "function": "acc_hid_release_work",
+      "sha256": "fef662d5bce5ed6fee34dddfa567c6e10ec9cf57d24cd187682264b3f5537e8a"
+    },
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "function": "acc_control_put",
+      "sha256": "0d675d072ebfdd6c47176a248659b2c2cdcc052873e4bfc76e2e6cdf92f3c657"
+    },
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "function": "acc_complete_control",
+      "sha256": "56547dd2eb4f93df020e221b98994c86c3ce06617b6d278930cabf965268ff17"
+    },
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "function": "acc_hid_work",
+      "sha256": "3df8cb0a67b943482060db8a332183aa186179a95704adddea23b853362280bb"
+    },
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "function": "acc_register_hid",
+      "sha256": "575dcc231866d87aaf13c380d63ac37a5d59e49d9c2a59c19502fb135eed0303"
+    },
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "function": "acc_unregister_hid",
+      "sha256": "30a82a87a9eb5d516d23d82f025ebb034d7d96c3caa82dc05f96241f8ccd5383"
+    },
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "function": "acc_complete_set_hid_report_desc",
+      "sha256": "461c33ef1935b50a934bd4025294c6de09519d41b67200b6b3e06f14eec2bcaf"
+    },
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "function": "acc_complete_send_hid_event",
+      "sha256": "4e889f39983671bc6173c0a6e32b072668a448abf73ef04fe783d22eb8830ddc"
+    },
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "function": "__acc_setup",
+      "sha256": "906202e16cac07fa4612fc78b3b0c204392b106e946ee602781fb68e5f67d4be"
+    },
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "function": "acc_cleanup",
+      "sha256": "ce8c56d301339ab8ae3090ebae6c4bc0f41ad7395dc0818a776505406928b142"
+    },
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "function": "acc_hid_parse",
+      "sha256": "2d38584305edd6cadc0158ac5407abb31d58ebb8534fae2618d998ebe9efe8f1"
+    }
+  ],
+  "remote_sources_used": []
+}

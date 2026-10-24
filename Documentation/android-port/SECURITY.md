@@ -6868,3 +6868,57 @@ SuperSpeed burst descriptors stay at six. No throughput or physical controller
 runtime behavior was tested. The extracted input-entry model passes 24 cases
 with 12 old-code failures, but stubs report processing and cannot prove object
 lifetime. No additional remote source was used.
+
+# Accessory control and HID ownership
+
+`25d9d4d59ed4` gives each queued control request an owned device reference,
+request metadata and, where relevant, a HID reference acquired under the list
+lock. Successful queue completion and failed queuing release ownership once.
+Initialization retains list visibility and its own reference, so disconnect or
+replacement can retire it before it publishes. Failed initialization unlinks the
+object; parse errors propagate. Sleeping destruction is deferred until all list,
+initialization and control references have gone, retaining the owner meanwhile.
+
+The descriptor/ID limits are supplemented by a 64-object total allocation cap,
+including retired objects awaiting completion or deferred destruction. Repeated
+replacement can receive EBUSY until cleanup runs; this deliberate backpressure
+preserves 32 active IDs while bounding replacement growth. Allocation failure
+keeps the old ID. Workers use an owned device-model reference, and cleanup gates
+control producers and drains notifications before misc deregistration. Final
+release drains work before dropping that device reference. Configfs instance
+storage is now freed. Native USB/HID implementations remain unchanged.
+
+31 extracted ASan/UBSan scenarios pass without live allocations; four injected
+regressions fail. Eight singleton and 24 HID input model cases still pass. These
+are host models, not hardware or kernel concurrency tests. The native UDC contract
+states that dequeue is asynchronous: bulk read/write cancellation and teardown
+remain under review and the whole accessory addition is not finalized. Build
+153 is recorded separately. No remote source was accessed.
+
+# Accessory bulk I/O and historical replacement
+
+`98b3d1d421be` serializes readers and writers separately and makes unbind wait
+for user-copy/request owners after disabling endpoints. Endpoint queue/enable/
+disable operations share an IRQ-safe lock distinct from the completion list
+lock. Completion uses the request owner. Async dequeue retains pending read
+state, preventing request overwrite/requeue before completion; subsequent reads
+wait for the result. Shutdown wakes both directions, zero-length calls finish,
+failed OUT setup disables IN, and ioctl strings are copied from a locked snapshot.
+A second allocation of the singleton's embedded function is rejected with EBUSY
+instead of linking its list node twice. The existing singleton design is retained.
+
+18 host cases pass, including two pthread unbind/user-copy interleavings and two
+asynchronous cancel retries. Injected missing-unbind-lock and lost-pending-state
+variants fail. Native UDC contracts still apply: successful queueing completes
+exactly once and disable drains requests. EP0 teardown remains native; the models
+do not verify every UDC's contract implementation or actual kernel concurrency.
+
+Five original/replacement/removal/dependency commits now have final dispositions.
+Whole-file deletion identities account for the old accessory/audio-source drivers;
+this does not claim a security review of their absent bodies. Modern accessory
+protocol/ioctl values match the legacy public macro values. The audio streaming
+driver is explicitly retired in ACK and the current mode command is deprecated.
+Native MIDI's gadget-parented ALSA path and UDC gadget symlink positively match the
+framework's preferred lookup; old android0/f_midi/alsa is a backward fallback.
+All native core fixes remain. Build 154 verifies the bulk source separately.
+No additional remote resource was used; embedded links were not opened.

@@ -1,0 +1,227 @@
+{
+  "source_head": "98b3d1d421be044e2d77c35d75c7841cc6fd76f3",
+  "records": [
+    {
+      "commit": "33b86e5f432843895a6f0fbb66961bd963a3b8bb",
+      "disposition": "partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "68368a960aade5ca71c204d4a62703101831ff7c",
+        "5c0491d3dd72302c4897f64a24099cefa19804e1",
+        "25d9d4d59ed468175d265fec8a5a38f1e384687c",
+        "98b3d1d421be044e2d77c35d75c7841cc6fd76f3"
+      ],
+      "rationale": "Reviewed entire current accessory driver and complete original-addition-to-pre-adaptation delta, plus all seven other addition paths. Preserve AOA v2 control request whitelist, pre-configuration composite dispatch, HID and bulk exchange, misc device, string/start/audio ioctls, events, Kconfig/Makefile wiring and x86 enablement. ARM64 defconfig is outside SDK x86 scope. Positive local framework consumers and SDK configuration support retaining the feature even though actual emulator USB use is unverified. Adapt singleton publication, deferred destruction, native HID input locking, EP0/HID ownership, bounded replacement, async bulk cancellation and unbind serialization as recorded in dedicated reports. Legacy ioctl/protocol macro values match the old header. No LTS USB/HID core is replaced; native composite validation and teardown remain. Compatibility limits are explicit: one allocated function per existing singleton, EBUSY when 64 live/retired HIDs are allocated, parse errors propagated, stale/error reports rejected, and interrupted reads retain their request until completion. Kernel build 154 passed with all 145 module signatures and tables verified; only compilation/artifacts and extracted host models are verified, never actual USB behavior.",
+      "evidence": [
+        "evidence/accessory-full-review.json",
+        "evidence/accessory-ownership-review.json",
+        "evidence/accessory-bulk-check.json",
+        "evidence/accessory-hid-lifetime-check.json",
+        "SECURITY.md: Accessory bulk I/O and historical replacement"
+      ],
+      "patch_sha256": "97e316b6eb26e51889fd96cbfb04c2a21cb93a5593148d36af4e1f3e7f815397"
+    },
+    {
+      "commit": "483cb5629ea7893f94481511e630ae14a5c0d1c0",
+      "disposition": "partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "68368a960aade5ca71c204d4a62703101831ff7c",
+        "5c0491d3dd72302c4897f64a24099cefa19804e1",
+        "25d9d4d59ed468175d265fec8a5a38f1e384687c",
+        "98b3d1d421be044e2d77c35d75c7841cc6fd76f3"
+      ],
+      "rationale": "All five original paths accounted for. Entire legacy source/header paths are explicitly removed by d23db69132ac and remain absent in final ACK; old Kconfig/Makefile names are retired. The current Android accessory addition 33b86e5f4328 replaces the implementation and integration. Preserve its runtime protocol/ioctl values (all common public macro bodies compared after resolving ACC_STRING_SIZE=256), source/config wiring, and the reviewed lifetime adaptations. Do not reintroduce obsolete duplicate driver/header paths or claim that the initial historical body was cherry-picked verbatim. The old bulk source is handled by whole-file retirement evidence, not a claim of line-by-line security review of deleted code.",
+      "evidence": [
+        "evidence/accessory-full-review.json",
+        "evidence/accessory-ownership-review.json",
+        "evidence/accessory-bulk-check.json",
+        "evidence/accessory-hid-lifetime-check.json",
+        "SECURITY.md: Accessory bulk I/O and historical replacement"
+      ],
+      "patch_sha256": "d632d3a95ddc2163c037d6e2d5439b64025fac6a88a145bf367cae5b43749c6a"
+    },
+    {
+      "commit": "1983276ceb62da2dda057c83fe676916b51fe939",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Three-path audio-source addition is explicitly removed by d23db69132ac: driver deleted wholesale and both Kconfig symbols/build entries removed. The only original-to-removal-parent driver changes are the two CPU latency QoS API renames, which are also wholly retired. Final ACK and port have no audio_source implementation; modern accessory header explicitly deprecates audio mode, and reviewed framework startAccessoryMode selects FUNCTION_ACCESSORY using required strings. Preserve the current ACK mode-query ABI without resurrecting the explicitly retired audio streaming driver. This follows positive removal history, not failure to find a consumer; native UAC functions remain independent and no claim of their protocol equivalence is made.",
+      "evidence": [
+        "evidence/accessory-full-review.json",
+        "evidence/accessory-ownership-review.json",
+        "evidence/accessory-bulk-check.json",
+        "evidence/accessory-hid-lifetime-check.json",
+        "SECURITY.md: Accessory bulk I/O and historical replacement"
+      ],
+      "patch_sha256": "446d2935343c3205763cf23a584c57cfdf792a001436bdf6da1d09749cdead4a"
+    },
+    {
+      "commit": "d23db69132acd1d182bd2a48bb9a95b7ea8bca14",
+      "disposition": "partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "68368a960aade5ca71c204d4a62703101831ff7c",
+        "5c0491d3dd72302c4897f64a24099cefa19804e1",
+        "25d9d4d59ed468175d265fec8a5a38f1e384687c",
+        "98b3d1d421be044e2d77c35d75c7841cc6fd76f3",
+        "75d587b500e8400bdfd7fedadec60ef7e2cacc56",
+        "00951cd18f1e9f344c92e5dbfc2734ae989728b3"
+      ],
+      "rationale": "All twelve paths reviewed through full non-deletion hunks and whole-file deletion identities. Keep retirement of old accessory/audio-source files and headers, old Kconfig names, usb_function_instance.f and old configfs interception/ALSA helper. Later explicit ACK additions restore notifications, UDC none alias and accessory support using the modern helpers, with reviewed lifecycle fixes; do not apply the temporary removal wholesale. Native MIDI uses gadget-parented ALSA registration and native UDC gadget sysfs link; local framework positively prefers that path and uses old f_midi/alsa only as backward fallback. All current f_midi/UDC files and native configfs setup/disconnect/unbind functions are whole-file/function identical to LTS. ARM/RISC-V configuration deletions have no SDK target effect. Whole deleted driver bodies are accounted by deletion rather than represented as a security review of absent code.",
+      "evidence": [
+        "evidence/accessory-full-review.json",
+        "evidence/accessory-ownership-review.json",
+        "evidence/accessory-bulk-check.json",
+        "evidence/accessory-hid-lifetime-check.json",
+        "SECURITY.md: Accessory bulk I/O and historical replacement"
+      ],
+      "patch_sha256": "c33ca7d131ce9b4a1564ce61ea78ba750b51f8a37c0881c4c56c704c6b090633"
+    },
+    {
+      "commit": "f4f6f40ebc621bc31bee7e5160abda908b798f23",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full one-line dependency patch read. Its built-in HID dependency is preserved in the renamed ANDROID_USB_CONFIGFS_F_ACC Kconfig symbol, together with built-in ANDROID_USB_F_ACC. Actual SDK configuration has HID=y and both accessory options=y; native HID APIs link successfully in builds 151-153. Old USB_CONFIGFS_F_ACC name was explicitly retired with the old driver. This keeps source build compatibility without historical binary KMI.",
+      "evidence": [
+        "evidence/accessory-full-review.json",
+        "evidence/accessory-ownership-review.json",
+        "evidence/accessory-bulk-check.json",
+        "evidence/accessory-hid-lifetime-check.json",
+        "SECURITY.md: Accessory bulk I/O and historical replacement"
+      ],
+      "patch_sha256": "0752cc73ec205b64ceec8719cf1ba3994867e90b0245d513408ce194abf8fa14"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "drivers/usb/gadget/function/f_accessory.c",
+      "retired_parent_blob": "ce7814c22057c377dd4b9296eebac24aff620f37",
+      "removal": "d23db69132acd1d182bd2a48bb9a95b7ea8bca14",
+      "relationship": "Whole-file deletion verified from Git; absent in final ACK, native LTS and port"
+    },
+    {
+      "path": "drivers/usb/gadget/function/f_audio_source.c",
+      "retired_parent_blob": "c768a526b31544954216a7d834441b6a33f30527",
+      "removal": "d23db69132acd1d182bd2a48bb9a95b7ea8bca14",
+      "relationship": "Whole-file deletion verified from Git; absent in final ACK, native LTS and port"
+    },
+    {
+      "path": "include/linux/usb/f_accessory.h",
+      "retired_parent_blob": "ebe3c4d59309842b1b92b1d30d04264e02f0300b",
+      "removal": "d23db69132acd1d182bd2a48bb9a95b7ea8bca14",
+      "relationship": "Whole-file deletion verified from Git; absent in final ACK, native LTS and port"
+    },
+    {
+      "path": "include/uapi/linux/usb/f_accessory.h",
+      "retired_parent_blob": "0baeb7d0d74ce485574780d4fcdb285aa21bcdb7",
+      "removal": "d23db69132acd1d182bd2a48bb9a95b7ea8bca14",
+      "relationship": "Whole-file deletion verified from Git; absent in final ACK, native LTS and port"
+    },
+    {
+      "path": "include/linux/usb/android_accessory.h",
+      "sha256": "65ddcc084d95f31bb0db4adc84ebfd70eacaf4ba15b789479553a69747adbe8e",
+      "relationship": "Whole final ACK header"
+    },
+    {
+      "path": "include/uapi/linux/usb/android_accessory.h",
+      "sha256": "d6ca2e288ccc414214714b46c12a5359990975f791db53bdea08630b3385af40",
+      "relationship": "Whole final ACK header"
+    },
+    {
+      "path": "drivers/usb/gadget/function/f_midi.c",
+      "sha256": "7bf3a9e6d41ec6295dbcbff35bf9c3c311d7fc445d7c068efbc081628e0b71e5",
+      "relationship": "Whole native LTS; MIDI sound-card parent and UDC gadget sysfs link retained"
+    },
+    {
+      "path": "drivers/usb/gadget/udc/core.c",
+      "sha256": "a8ba93ee572401786918db9a46660f5898dc0835bf4a4bf31126a145414ce113",
+      "relationship": "Whole native LTS; MIDI sound-card parent and UDC gadget sysfs link retained"
+    },
+    {
+      "path": "drivers/usb/gadget/configfs.c",
+      "function": "configfs_composite_unbind",
+      "sha256": "379c8588273928a3c59c431a33455a0cb94861f482b278e8260700e238e9d72e",
+      "relationship": "Whole native LTS function"
+    },
+    {
+      "path": "drivers/usb/gadget/configfs.c",
+      "function": "configfs_composite_setup",
+      "sha256": "bf2080c3d4b708a41a4abf3508bc733528b4c792e9b3c360d4cf74c999853ad4",
+      "relationship": "Whole native LTS function"
+    },
+    {
+      "path": "drivers/usb/gadget/configfs.c",
+      "function": "configfs_composite_disconnect",
+      "sha256": "975d074792e4dde7b55f2e7f998fb4bc5daf3dad38ca999a1492b589d200a48e",
+      "relationship": "Whole native LTS function"
+    },
+    {
+      "path": "drivers/usb/gadget/configfs.c",
+      "function": "purge_configs_funcs",
+      "sha256": "1e4b39654204e1a059e4d66570dac4f999db1194c9c7cf6dd0fce6652365a7fd",
+      "relationship": "Whole native LTS function"
+    },
+    {
+      "path": "drivers/usb/gadget/composite.c",
+      "function": "composite_dev_cleanup",
+      "sha256": "0003332a47e77f7de274c8ee79af6505786a5ee683ff1a477b90b93d53c75653",
+      "relationship": "Whole native LTS function"
+    },
+    {
+      "path": "drivers/usb/gadget/composite.c",
+      "function": "set_config",
+      "sha256": "44d99224115eb0ff07ee5b98e76a7979ca24e5f17850833ce28396c0acad5a2e",
+      "relationship": "Whole native LTS function"
+    },
+    {
+      "path": "include/linux/usb/composite.h",
+      "declaration": "usb_function_instance",
+      "sha256": "fa28831d0dbf0a6123940486562cd469b8dbc1999f19d80bfb64fa12405c908b",
+      "relationship": "Native LTS instance without legacy f member"
+    }
+  ],
+  "legacy_protocol_macros": {
+    "USB_ACCESSORY_VENDOR_ID": "0x18D1",
+    "USB_ACCESSORY_PRODUCT_ID": "0x2D00",
+    "USB_ACCESSORY_ADB_PRODUCT_ID": "0x2D01",
+    "ACCESSORY_STRING_MANUFACTURER": "0",
+    "ACCESSORY_STRING_MODEL": "1",
+    "ACCESSORY_STRING_DESCRIPTION": "2",
+    "ACCESSORY_STRING_VERSION": "3",
+    "ACCESSORY_STRING_URI": "4",
+    "ACCESSORY_STRING_SERIAL": "5",
+    "ACCESSORY_GET_PROTOCOL": "51",
+    "ACCESSORY_SEND_STRING": "52",
+    "ACCESSORY_START": "53",
+    "ACCESSORY_REGISTER_HID": "54",
+    "ACCESSORY_UNREGISTER_HID": "55",
+    "ACCESSORY_SET_HID_REPORT_DESC": "56",
+    "ACCESSORY_SEND_HID_EVENT": "57",
+    "ACCESSORY_SET_AUDIO_MODE": "58",
+    "ACCESSORY_GET_STRING_MANUFACTURER": "_IOW('M',1,char[256])",
+    "ACCESSORY_GET_STRING_MODEL": "_IOW('M',2,char[256])",
+    "ACCESSORY_GET_STRING_DESCRIPTION": "_IOW('M',3,char[256])",
+    "ACCESSORY_GET_STRING_VERSION": "_IOW('M',4,char[256])",
+    "ACCESSORY_GET_STRING_URI": "_IOW('M',5,char[256])",
+    "ACCESSORY_GET_STRING_SERIAL": "_IOW('M',6,char[256])",
+    "ACCESSORY_IS_START_REQUESTED": "_IO('M',7)",
+    "ACCESSORY_GET_AUDIO_MODE": "_IO('M',8)"
+  },
+  "local_userspace": {
+    "repository": "/home/liamsmith/src/kernel/grapheneos-17/frameworks/base",
+    "head": "8304f868f2114c6a35c76e21691f3f54c3ee1c4f",
+    "path": "services/usb/java/com/android/server/usb/UsbDeviceManager.java",
+    "sha256": "28396667655800f5f37a744425ca824c155e69ada399747b581425fe46256c49",
+    "finding": "Positive accessory misc/events/nativeGetAccessoryStrings and FUNCTION_ACCESSORY state transition. getMidiCardDevice first walks /sys/class/udc/<controller>/gadget/sound/card*/midiC*D*; old android0/f_midi/alsa is explicitly a fallback. Native f_midi parents snd_card to gadget and native UDC creates gadget link. No runtime controller or card discovery test."
+  },
+  "configuration": {
+    "run": "sdk-build-attempt-153",
+    "sha256": "48f19810fd5e10021d64b96e82cdb2b0b587f7cb24b3b4b5660b6732ae05cd09"
+  },
+  "bulk_adaptation": "Read/write mutexes serialize same-direction calls and keep user-copy/request ownership until unbind can free buffers. Separate IRQ-safe endpoint lock serializes queue/enable/disable; completion only takes list lock, avoiding recursive lock deadlock. Successful disable completes queued requests before return, per native UDC contract. Async dequeue leaves rx_pending owned by the reader state; next read waits without requeueing or overwriting. Completion uses req->context, not global singleton. Waits also observe closure/unbind; zero counts return zero; endpoint error cleanup disables IN after failed OUT setup; ioctl strings use a locked snapshot. Duplicate allocation of the single embedded function returns EBUSY instead of linking one list node twice.",
+  "validation": "Eight singleton, 24 native HID input, 31 ownership and 18 bulk host cases pass, including two pthread unbind cases and explicit negative controls. No kernel race/USB hardware or device-model teardown execution. Build 154 passed with all 145 module signatures and flag/CRC tables verified.",
+  "limitations": "Native EP0 request ownership and UDC successful-queue completion contract still apply. No independent proof that every UDC fulfills cancellation/unbind contracts; no source replacement of native core teardown. No boot or Android userspace test.",
+  "remote_sources_used": []
+}
