@@ -1,0 +1,177 @@
+{
+  "source_head": "5c0491d3dd72302c4897f64a24099cefa19804e1",
+  "records": [
+    {
+      "commit": "29c5888f4f1d78add07b342d2eedf5f7a4dfb998",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full two-descriptor patch read. Preserve bMaxBurst=6 in SuperSpeed and SuperSpeedPlus accessory descriptors. Although the motivation cites physical DWC3 FIFO sizing, the code is generic accessory protocol endpoint metadata, not a controller driver or future-platform addition. Keep the current Android source/configuration behavior for the configured accessory function. No throughput measurement or runtime USB speed is asserted; endpoint selection and native USB validation remain.",
+      "evidence": [
+        "evidence/accessory-bounds-review.json",
+        "evidence/accessory-hid-input-check.json",
+        "SECURITY.md: Accessory HID input and bounds"
+      ],
+      "patch_sha256": "3d2be259aedf64db244e4158d8ace649ef06489c9f84791d0126469654a8932f"
+    },
+    {
+      "commit": "fa4bede3fbbbf6178f04dc995c8ecb29fb5f3a9e",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full patch read and final register/new functions compared byte-for-byte with ACK. Preserve descriptor length 1..4096 and ID 1..32 checks before GFP_ATOMIC allocation. These bound descriptor size and the available IDs, but do not by themselves bound all concurrently allocated dead/in-flight objects: repeated replacement can enqueue old objects awaiting worker cleanup. Do not repeat the commit message as a proof of a total memory bound. Resource lifetime/cleanup is part of the still-provisional whole-driver review. Invalid requests return EINVAL; valid ACK protocol behavior retained.",
+      "evidence": [
+        "evidence/accessory-bounds-review.json",
+        "evidence/accessory-hid-input-check.json",
+        "SECURITY.md: Accessory HID input and bounds"
+      ],
+      "patch_sha256": "5b07092008a1af7b1ca05e5bd15a6e6f577b9898208425b841f4163f3710fc2f"
+    },
+    {
+      "commit": "3c9b27b158af7331feea75e684834db7fb9a2e1f",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full patch read. Retain acc_hid_ll_driver.max_buffer_size=USB_COMP_EP0_BUFSIZ (4096), which native hid_add_field uses to cap parsed report bits and hid_report_raw_event uses to cap processing. Preserve the LTS core bounds checks rather than old ACK KMI wrappers. The later caller explicitly supplies actual transfer size as both data extent and buffer extent, retaining conservative rejection of short reports. This parser/processing size limit does not establish HID object lifetime safety.",
+      "evidence": [
+        "evidence/accessory-bounds-review.json",
+        "evidence/accessory-hid-input-check.json",
+        "SECURITY.md: Accessory HID input and bounds"
+      ],
+      "patch_sha256": "23c66750709fe339294ec44f2ad8180879bd1cd661d20c49d66aeaeba66f620a"
+    },
+    {
+      "commit": "a688a70354e44f22f91db667ee70f0f2618b2e31",
+      "disposition": "partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "5c0491d3dd72302c4897f64a24099cefa19804e1"
+      ],
+      "rationale": "Full twelve-file patch read. Eleven non-accessory files are whole-file identical to pinned LTS, including native buffer-size API and BPF extent propagation; local ancestor 509c26050650 implements the original change. Preserve later LTS numbered-report pre-read check dd395744e4ed, correct size_t formats 3ab135238832, safe-input wrapper 301338b8edad and quiesce fixes 544ebb25bd58/01eeb601a162. Accessory originally called the raw entry directly and bypassed driver_input_lock. Adapt its completion to hid_safe_input_report with actual length for both extents so native probe/remove quiescing, missing-driver/empty-report rejection and normal HID/BPF processing apply. No new KMI wrapper or old core implementation. The accessory HID driver has no raw_event callback; other bound HID drivers/BPF now receive their normal native callbacks, subject to native locking. EP0/HID pointer lifetime remains separately unresolved; wrapper locking alone cannot keep a freed HID object alive.",
+      "evidence": [
+        "evidence/accessory-bounds-review.json",
+        "evidence/accessory-hid-input-check.json",
+        "SECURITY.md: Accessory HID input and bounds"
+      ],
+      "patch_sha256": "b832ee939b6dcb9d05d2d50d8b44a8049c9d21f7ea5c92246be7a179da58a738"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "drivers/hid/bpf/hid_bpf_dispatch.c",
+      "sha256": "3bcd730dee7b98c7845d8ef852f5474735ae139584c37f8cdb18504b32b96abd",
+      "relationship": "Whole native LTS file; all eleven non-accessory paths in a688a70354e4"
+    },
+    {
+      "path": "drivers/hid/hid-core.c",
+      "sha256": "3ea596bac1808f7efc3eb892f4be05a7c6f5afcf3d77463b938b7c4580af966d",
+      "relationship": "Whole native LTS file; all eleven non-accessory paths in a688a70354e4"
+    },
+    {
+      "path": "drivers/hid/hid-gfrm.c",
+      "sha256": "4074c8723948b5cd862aa122f719928b43a4e3800fc425068cc2c2c101a78331",
+      "relationship": "Whole native LTS file; all eleven non-accessory paths in a688a70354e4"
+    },
+    {
+      "path": "drivers/hid/hid-logitech-hidpp.c",
+      "sha256": "2cb7cfb63eb8ff5871e17148f81523baec7ec7eb664329b9887ef95e10104112",
+      "relationship": "Whole native LTS file; all eleven non-accessory paths in a688a70354e4"
+    },
+    {
+      "path": "drivers/hid/hid-multitouch.c",
+      "sha256": "c0702f85c9d6de5161370f2bbadc85e8791c580620b66207877cd07fd5e95570",
+      "relationship": "Whole native LTS file; all eleven non-accessory paths in a688a70354e4"
+    },
+    {
+      "path": "drivers/hid/hid-primax.c",
+      "sha256": "3eeb066248e722a02257aca232482a4727dd4bc6f82c64c4769d54b0760278d6",
+      "relationship": "Whole native LTS file; all eleven non-accessory paths in a688a70354e4"
+    },
+    {
+      "path": "drivers/hid/hid-vivaldi-common.c",
+      "sha256": "23581c4ba69492de444e7c9058b7afb59fb1c9250963aa0e957400b990039b57",
+      "relationship": "Whole native LTS file; all eleven non-accessory paths in a688a70354e4"
+    },
+    {
+      "path": "drivers/hid/wacom_sys.c",
+      "sha256": "2dbe326fda425af8dd024ae0baacad202ca7d9e4276e50d942bab92f53f81f78",
+      "relationship": "Whole native LTS file; all eleven non-accessory paths in a688a70354e4"
+    },
+    {
+      "path": "drivers/staging/greybus/hid.c",
+      "sha256": "97c787ac54d6a7a3c055953ea243348a8c519485baa693864e605c6addd1e85f",
+      "relationship": "Whole native LTS file; all eleven non-accessory paths in a688a70354e4"
+    },
+    {
+      "path": "include/linux/hid.h",
+      "sha256": "039e33b49371dcc6cf14641c161e6c3354b86a351da74a2e259b148902baf230",
+      "relationship": "Whole native LTS file; all eleven non-accessory paths in a688a70354e4"
+    },
+    {
+      "path": "include/linux/hid_bpf.h",
+      "sha256": "ec3ad15763a70529cdbb3c84ed4f41ee668b7ea3fe9c3197b02fcbfb199dba82",
+      "relationship": "Whole native LTS file; all eleven non-accessory paths in a688a70354e4"
+    },
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "function": "acc_register_hid",
+      "sha256": "c1de41247d042de6408ad5af1d10e9781f8f80dba61d10c042d6a46fb0badf45",
+      "relationship": "Whole final ACK function; descriptor/id checks precede allocation"
+    },
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "function": "acc_hid_new",
+      "sha256": "beaeab71aa73cbc97c23f8a1cac12f89316a3431e1633f6ed88b2a76ac6a6841",
+      "relationship": "Whole final ACK function; descriptor/id checks precede allocation"
+    },
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "declaration": "acc_superspeedplus_comp_desc",
+      "sha256": "757cc42e55649658e3b20f6d3a06814f31920c1833462574a60cb4a4232aa10e",
+      "relationship": "Exact final ACK initializer"
+    },
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "declaration": "acc_superspeed_comp_desc",
+      "sha256": "a2ec113f54db32d2e80454a93c35a9438a0ae3edcda53557d0c158f40e4a88d7",
+      "relationship": "Exact final ACK initializer"
+    },
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "declaration": "acc_hid_ll_driver",
+      "sha256": "ada8af4d356c768c39d04352c234bbfa1cb4191025282733222bd177ac146496",
+      "relationship": "Exact final ACK initializer"
+    }
+  ],
+  "native_history": [
+    {
+      "commit": "509c2605065004fc4cd86ee50a9350d402785307",
+      "patch_sha256": "9f9f2bd09b16c53ff8b4037bac7239a1f24ad04e5228e8545a2b86d6ae415913"
+    },
+    {
+      "commit": "dd395744e4ed87956fcbf81ecc6a20c51e35fa4e",
+      "patch_sha256": "0865c83ae7996b9e73acb6dd7174ba4978b6c1f4818ab132a0939b3b1f42c711"
+    },
+    {
+      "commit": "3ab135238832446399614e7a4bb796d620717806",
+      "patch_sha256": "b828aabc3012ada352f1d7c52c4e291300c78ba3ae68fe8ace9dc370c57fc13c"
+    },
+    {
+      "commit": "301338b8edadc67a42b1c86add975091e66768d9",
+      "patch_sha256": "fbce8dd43abe6921aecf97216b7967285ab12fcac9b66c67589de3675f94d069"
+    },
+    {
+      "commit": "544ebb25bd58f67e821573412ab7a982b9e02211",
+      "patch_sha256": "faa65d877da1ca9a4ed6c0f95d88f8d70f1d6a7b9857821a682a7c923c5d4189"
+    },
+    {
+      "commit": "01eeb601a1626e683fb7b77c63f442b06fb87093",
+      "patch_sha256": "0ecc08616fc2cbd5fb92687d33348adb66dc93fb45c4974fa4180a8795e749ee"
+    }
+  ],
+  "validation": "24 extracted completion/native entry control-flow cases pass; old direct raw caller fails 12. Model covers held driver_input_lock, missing driver, USB error and lengths 0/1/4096. Native raw report processing is stubbed; no claim of BPF execution, kernel concurrency or HID object lifetime verification. Source 5c0491d3dd72 not yet workflow-built.",
+  "remote_sources_used": []
+}

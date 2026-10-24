@@ -1,0 +1,144 @@
+{
+  "source_head": "68368a960aade5ca71c204d4a62703101831ff7c",
+  "records": [
+    {
+      "commit": "19a7ef67913f06f66deacce278be8682ce1e8a8e",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "68368a960aade5ca71c204d4a62703101831ff7c"
+      ],
+      "rationale": "Full patch and final lookup/release/init code reviewed. Retain IRQ-safe spinlock lookup required by native composite disconnect context. Replace direct kref internals, global-pointer put and locked sleeping destructor with kref_put on the caller-owned object and a separate release worker. Lookup captures the retained pointer under lock and uses get_unless_zero. Final release keeps the singleton reserved until cancellation completes outside IRQ-disabled/spinlocked context, then unpublishes under lock. This prevents lock leakage, self-cancellation when the HID worker drops the last reference, resurrection and wrong-object puts. This scoped decision does not finalize the whole accessory addition or its separate EP0/HID ownership.",
+      "evidence": [
+        "evidence/accessory-instance-review.json",
+        "evidence/accessory-instance-check.json",
+        "SECURITY.md: Accessory singleton lifetime"
+      ],
+      "patch_sha256": "5c77e35ccfc20370fe2701a7759981e185bab69f903eba8a680722062eed2eb9"
+    },
+    {
+      "commit": "80aa4d7dd58b64e3bb25e824bfd8800bf6ef9286",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "68368a960aade5ca71c204d4a62703101831ff7c"
+      ],
+      "rationale": "Full patch read. Preserve misc_register outside the spinlock, but replace premature publication and GFP_ATOMIC allocation with a lock-protected creation reservation, GFP_KERNEL allocation outside the lock, and publication only after registration succeeds. acc_alloc_inst is a configfs process-context creator. Competing construction returns EBUSY. An open during the registration-to-publication window may transiently return ENODEV; the device is unavailable until fully initialized rather than exposing a failed object. No historical layout compatibility is required.",
+      "evidence": [
+        "evidence/accessory-instance-review.json",
+        "evidence/accessory-instance-check.json",
+        "SECURITY.md: Accessory singleton lifetime"
+      ],
+      "patch_sha256": "e5f80d32361a8314dc3f330df9efa493fd683803c04351d1ec9234f8cdc6e9f4"
+    },
+    {
+      "commit": "054c570b7126a77f50824269893ee0db9d4042f7",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "68368a960aade5ca71c204d4a62703101831ff7c"
+      ],
+      "rationale": "Full failure-cleanup patch read. Its goal of leaving no published dangling object on misc_register failure is preserved by never publishing before registration success. Merely clearing the global before kfree, as in ACK, still frees an object that an intervening lookup could reference. Creation reservation is released after failure cleanup. Native misc_register owns its own registration failure cleanup; no misc_deregister is called for a failed registration.",
+      "evidence": [
+        "evidence/accessory-instance-review.json",
+        "evidence/accessory-instance-check.json",
+        "SECURITY.md: Accessory singleton lifetime"
+      ],
+      "patch_sha256": "027941078aee73ff111f1b6087c01fdfd5fbc2b846055a1f7e4214f55e2f0f4d"
+    },
+    {
+      "commit": "4494c99c3e20b92ca55b29feb3f8208b7efacde1",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full one-line patch read. Retain static __acc_req_match visibility and its final-ACK exact body, vendor request whitelist and null-instance handling. The helper has only local wrapper callers; this compiler visibility fix does not remove the composite-facing request matching interface. Its lookup now receives a stable reference through the separate singleton adaptation.",
+      "evidence": [
+        "evidence/accessory-instance-review.json",
+        "evidence/accessory-instance-check.json",
+        "SECURITY.md: Accessory singleton lifetime"
+      ],
+      "patch_sha256": "d66e71ff2e9d32d5ebb844c1392dbb0f1d7921bcf9c529fa9230234446a043bb"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "include/linux/kref.h",
+      "function": "kref_put",
+      "sha256": "ed6ef93d900633a271b3f8a78d65ab5a90581cc549d1a8f2331305c3637a4510",
+      "relationship": "Whole native LTS function"
+    },
+    {
+      "path": "include/linux/kref.h",
+      "function": "kref_get_unless_zero",
+      "sha256": "f73e6606f2bd435806ac8293f170014942e8af61deae29ac83418d8b2895c8e0",
+      "relationship": "Whole native LTS function"
+    },
+    {
+      "path": "drivers/char/misc.c",
+      "function": "misc_register",
+      "sha256": "25bbc21ff4c3860849529a03258d8526745667a912a50e7f2f01f709051acf38",
+      "relationship": "Whole native LTS function"
+    },
+    {
+      "path": "drivers/char/misc.c",
+      "function": "misc_deregister",
+      "sha256": "67a7d0b47b9e4ce571cb1ed2ca5f46926e0252afdda5e1801c77f504fdd74110",
+      "relationship": "Whole native LTS function"
+    },
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "function": "get_acc_dev",
+      "sha256": "7fe40c37518e1583d0fe5b307e7fc5407a519445d49087150916a8c91d680050",
+      "relationship": "Reviewed final implementation"
+    },
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "function": "put_acc_dev",
+      "sha256": "dbfc53335a716620e594950e74ad88e9c0883e81367eaaa2944e0aee0369446e",
+      "relationship": "Reviewed final implementation"
+    },
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "function": "__acc_dev_instance_release",
+      "sha256": "b1a2b203f479db29e7e2ef6767876d00184bdeb7be398f2eae38b31d6ef5e416",
+      "relationship": "Reviewed final implementation"
+    },
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "function": "acc_dev_release_work",
+      "sha256": "977acf5c0ee55c661414c36df5459a1b26871a60b56af76a0c3bec080844807e",
+      "relationship": "Reviewed final implementation"
+    },
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "function": "acc_init",
+      "sha256": "46880bea13791657ccbd45b3c2a24a013f300529c2d1743efa5c9aff34386400",
+      "relationship": "Reviewed final implementation"
+    },
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "function": "__acc_req_match",
+      "sha256": "0e785ce5e5199fa4047ede0d1ac1d4de1caedc00d59453239e2f4de2b8cfa236",
+      "relationship": "Reviewed final implementation"
+    }
+  ],
+  "local_userspace": [
+    {
+      "repository": "/home/liamsmith/src/kernel/grapheneos-17/frameworks/base",
+      "head": "8304f868f2114c6a35c76e21691f3f54c3ee1c4f",
+      "path": "services/usb/java/com/android/server/usb/UsbDeviceManager.java",
+      "sha256": "28396667655800f5f37a744425ca824c155e69ada399747b581425fe46256c49"
+    },
+    {
+      "repository": "/home/liamsmith/src/kernel/grapheneos-17/frameworks/base",
+      "head": "8304f868f2114c6a35c76e21691f3f54c3ee1c4f",
+      "path": "services/core/jni/com_android_server_UsbDeviceManager.cpp",
+      "sha256": "63e373bdbe911921ef9140d59bf23eec183b606f1f9b399cebe43329e97c7826"
+    }
+  ],
+  "consumer": "Framework observes /devices/virtual/misc/usb_accessory with ACCESSORY=GETPROTOCOL/SENDSTRING/START; JNI opens /dev/usb_accessory. These positive consumers support preserving accessory compatibility. SDK enables built-in ANDROID_USB_F_ACC; Kconfig declares it bool and prohibits module construction. No actual SDK USB connection is asserted.",
+  "security": "Fixes are confined to the ACK-added driver; no LTS implementation or fix is replaced. Use native reference counting and work cancellation contracts. Remaining EP0/HID references, bulk request ownership and misc-device worker teardown are explicitly not certified by this scoped review.",
+  "validation": "Eight extracted host lifecycle cases pass; old control demonstrates six defect categories. This is a simulated interleaving model, not USB I/O, kernel race testing or proof of whole-driver lifetime safety. Build 151 passed with 145 module signatures and module tables verified; later HID input adaptation is recorded separately.",
+  "remote_sources_used": []
+}

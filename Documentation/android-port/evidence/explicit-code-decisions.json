@@ -17643,5 +17643,113 @@
       "evidence/usb-notification-review.json",
       "evidence/usb-gadget-lifecycle-check.json"
     ]
+  },
+  {
+    "commit": "19a7ef67913f06f66deacce278be8682ce1e8a8e",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "68368a960aade5ca71c204d4a62703101831ff7c"
+    ],
+    "rationale": "Full patch and final lookup/release/init code reviewed. Retain IRQ-safe spinlock lookup required by native composite disconnect context. Replace direct kref internals, global-pointer put and locked sleeping destructor with kref_put on the caller-owned object and a separate release worker. Lookup captures the retained pointer under lock and uses get_unless_zero. Final release keeps the singleton reserved until cancellation completes outside IRQ-disabled/spinlocked context, then unpublishes under lock. This prevents lock leakage, self-cancellation when the HID worker drops the last reference, resurrection and wrong-object puts. This scoped decision does not finalize the whole accessory addition or its separate EP0/HID ownership.",
+    "evidence": [
+      "evidence/accessory-instance-review.json",
+      "evidence/accessory-instance-check.json",
+      "SECURITY.md: Accessory singleton lifetime"
+    ]
+  },
+  {
+    "commit": "80aa4d7dd58b64e3bb25e824bfd8800bf6ef9286",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "68368a960aade5ca71c204d4a62703101831ff7c"
+    ],
+    "rationale": "Full patch read. Preserve misc_register outside the spinlock, but replace premature publication and GFP_ATOMIC allocation with a lock-protected creation reservation, GFP_KERNEL allocation outside the lock, and publication only after registration succeeds. acc_alloc_inst is a configfs process-context creator. Competing construction returns EBUSY. An open during the registration-to-publication window may transiently return ENODEV; the device is unavailable until fully initialized rather than exposing a failed object. No historical layout compatibility is required.",
+    "evidence": [
+      "evidence/accessory-instance-review.json",
+      "evidence/accessory-instance-check.json",
+      "SECURITY.md: Accessory singleton lifetime"
+    ]
+  },
+  {
+    "commit": "054c570b7126a77f50824269893ee0db9d4042f7",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "68368a960aade5ca71c204d4a62703101831ff7c"
+    ],
+    "rationale": "Full failure-cleanup patch read. Its goal of leaving no published dangling object on misc_register failure is preserved by never publishing before registration success. Merely clearing the global before kfree, as in ACK, still frees an object that an intervening lookup could reference. Creation reservation is released after failure cleanup. Native misc_register owns its own registration failure cleanup; no misc_deregister is called for a failed registration.",
+    "evidence": [
+      "evidence/accessory-instance-review.json",
+      "evidence/accessory-instance-check.json",
+      "SECURITY.md: Accessory singleton lifetime"
+    ]
+  },
+  {
+    "commit": "4494c99c3e20b92ca55b29feb3f8208b7efacde1",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Full one-line patch read. Retain static __acc_req_match visibility and its final-ACK exact body, vendor request whitelist and null-instance handling. The helper has only local wrapper callers; this compiler visibility fix does not remove the composite-facing request matching interface. Its lookup now receives a stable reference through the separate singleton adaptation.",
+    "evidence": [
+      "evidence/accessory-instance-review.json",
+      "evidence/accessory-instance-check.json",
+      "SECURITY.md: Accessory singleton lifetime"
+    ]
+  },
+  {
+    "commit": "29c5888f4f1d78add07b342d2eedf5f7a4dfb998",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Full two-descriptor patch read. Preserve bMaxBurst=6 in SuperSpeed and SuperSpeedPlus accessory descriptors. Although the motivation cites physical DWC3 FIFO sizing, the code is generic accessory protocol endpoint metadata, not a controller driver or future-platform addition. Keep the current Android source/configuration behavior for the configured accessory function. No throughput measurement or runtime USB speed is asserted; endpoint selection and native USB validation remain.",
+    "evidence": [
+      "evidence/accessory-bounds-review.json",
+      "evidence/accessory-hid-input-check.json",
+      "SECURITY.md: Accessory HID input and bounds"
+    ]
+  },
+  {
+    "commit": "fa4bede3fbbbf6178f04dc995c8ecb29fb5f3a9e",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Full patch read and final register/new functions compared byte-for-byte with ACK. Preserve descriptor length 1..4096 and ID 1..32 checks before GFP_ATOMIC allocation. These bound descriptor size and the available IDs, but do not by themselves bound all concurrently allocated dead/in-flight objects: repeated replacement can enqueue old objects awaiting worker cleanup. Do not repeat the commit message as a proof of a total memory bound. Resource lifetime/cleanup is part of the still-provisional whole-driver review. Invalid requests return EINVAL; valid ACK protocol behavior retained.",
+    "evidence": [
+      "evidence/accessory-bounds-review.json",
+      "evidence/accessory-hid-input-check.json",
+      "SECURITY.md: Accessory HID input and bounds"
+    ]
+  },
+  {
+    "commit": "3c9b27b158af7331feea75e684834db7fb9a2e1f",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Full patch read. Retain acc_hid_ll_driver.max_buffer_size=USB_COMP_EP0_BUFSIZ (4096), which native hid_add_field uses to cap parsed report bits and hid_report_raw_event uses to cap processing. Preserve the LTS core bounds checks rather than old ACK KMI wrappers. The later caller explicitly supplies actual transfer size as both data extent and buffer extent, retaining conservative rejection of short reports. This parser/processing size limit does not establish HID object lifetime safety.",
+    "evidence": [
+      "evidence/accessory-bounds-review.json",
+      "evidence/accessory-hid-input-check.json",
+      "SECURITY.md: Accessory HID input and bounds"
+    ]
+  },
+  {
+    "commit": "a688a70354e44f22f91db667ee70f0f2618b2e31",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "5c0491d3dd72302c4897f64a24099cefa19804e1"
+    ],
+    "rationale": "Full twelve-file patch read. Eleven non-accessory files are whole-file identical to pinned LTS, including native buffer-size API and BPF extent propagation; local ancestor 509c26050650 implements the original change. Preserve later LTS numbered-report pre-read check dd395744e4ed, correct size_t formats 3ab135238832, safe-input wrapper 301338b8edad and quiesce fixes 544ebb25bd58/01eeb601a162. Accessory originally called the raw entry directly and bypassed driver_input_lock. Adapt its completion to hid_safe_input_report with actual length for both extents so native probe/remove quiescing, missing-driver/empty-report rejection and normal HID/BPF processing apply. No new KMI wrapper or old core implementation. The accessory HID driver has no raw_event callback; other bound HID drivers/BPF now receive their normal native callbacks, subject to native locking. EP0/HID pointer lifetime remains separately unresolved; wrapper locking alone cannot keep a freed HID object alive.",
+    "evidence": [
+      "evidence/accessory-bounds-review.json",
+      "evidence/accessory-hid-input-check.json",
+      "SECURITY.md: Accessory HID input and bounds"
+    ]
   }
 ]

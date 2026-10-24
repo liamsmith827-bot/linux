@@ -6826,3 +6826,45 @@ upstream implementation/replacement and ACK retirement evidence, not an absent
 consumer or an assertion that USB-C cannot exist on the target. No current LTS
 driver code is changed by these decisions. Later PD additions remain separate.
 No hardware/protocol execution or additional remote source was used.
+
+# Accessory singleton lifetime
+
+`68368a960aad` adapts the three historical singleton-lock/publication patches.
+The final ACK destructor cancelled sleeping work while retaining the IRQ-safe
+instance lock, with no unlock on the last-reference path. It could also cancel
+its own HID worker. Puts used the global instead of their argument; gets returned
+the global again after unlocking. Native kref operations now return and release
+the retained object, prevent resurrection and defer final cancellation to a
+separate worker. The singleton remains reserved until old work has drained.
+Creation reserves the slot, allocates and registers outside the lock, and only
+then publishes. Failed registration cannot leak a referenced object to readers.
+An open during registration may briefly receive ENODEV before publication.
+
+Eight extracted host cases cover registration/allocation failure, competing
+creation, lookup identity, passed-object release, zero-reference lookup and final
+puts from ordinary/worker contexts. Original code fails in six defect categories;
+the adapted code passes. This does not prove kernel concurrency or USB behavior.
+The whole accessory addition remains provisional: EP0/HID ownership, bulk request
+teardown and worker targets after misc deregistration still require review.
+Local framework code positively consumes the accessory misc device and events.
+No native LTS code is replaced and no remote resource was accessed. Build 151 is
+recorded independently when artifact verification finishes.
+
+# Accessory HID input and bounds
+
+`5c0491d3dd72` routes accessory reports through native hid_safe_input_report.
+The old direct raw call bypassed driver_input_lock and therefore the LTS input
+quiescing during failed probe/remove. Both extent arguments remain the actual
+transfer length, so short reports cannot gain permission to access extra bytes.
+Native empty/missing-driver checks and HID/BPF callbacks apply; the accessory's
+own HID driver defines no raw_event callback. All eleven non-accessory files in
+the ACK buffer-size change remain whole-file identical to 6.18.57, including
+later zero-length numbered-report, formatting and input-quiescing fixes.
+
+The 4096-byte descriptor/low-level report limits and ID range 1..32 are retained.
+The ID range does not prove a bound on all dead/in-flight allocations during
+replacement; cleanup and EP0 references remain under review. Generic accessory
+SuperSpeed burst descriptors stay at six. No throughput or physical controller
+runtime behavior was tested. The extracted input-entry model passes 24 cases
+with 12 old-code failures, but stubs report processing and cannot prove object
+lifetime. No additional remote source was used.
