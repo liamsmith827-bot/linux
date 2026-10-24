@@ -712,15 +712,6 @@ struct iommu_ops {
 	struct iommu_domain *release_domain;
 	struct iommu_domain *default_domain;
 	u8 user_pasid_table:1;
-
-};
-
-/**
- * struct iommu_map_cookie_sg - Cookie for a deferred map sg
- * @domain: Domain for the sg lit
- */
-struct iommu_map_cookie_sg {
-	struct iommu_domain *domain;
 };
 
 /**
@@ -760,11 +751,6 @@ struct iommu_map_cookie_sg {
  *                           specific mechanisms.
  * @set_pgtable_quirks: Set io page table quirks (IO_PGTABLE_QUIRK_*)
  * @free: Release the domain after use.
- * @alloc_cookie_sg: Allocate a cookie that would be used to create
- *		     a sg list, filled from the next functions
- * @add_deferred_map_sg: Add a mapping to a cookie of a sg list.
- * @consume_deferred_map_sg: Consume the sg list as now all mappings are added,
- *			     it should also release the cookie as it's not used.
  */
 struct iommu_domain_ops {
 	int (*attach_dev)(struct iommu_domain *domain, struct device *dev,
@@ -795,12 +781,6 @@ struct iommu_domain_ops {
 				  unsigned long quirks);
 
 	void (*free)(struct iommu_domain *domain);
-
-	struct iommu_map_cookie_sg *(*alloc_cookie_sg)(unsigned long iova, int prot,
-						       unsigned int nents, gfp_t gfp);
-	int (*add_deferred_map_sg)(struct iommu_map_cookie_sg *cookie,
-				   phys_addr_t paddr, size_t pgsize, size_t pgcount);
-	size_t (*consume_deferred_map_sg)(struct iommu_map_cookie_sg *cookie);
 };
 
 /**

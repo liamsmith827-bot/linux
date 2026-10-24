@@ -1,0 +1,367 @@
+{
+  "source_head": "4209d699e800326cf845a21e47cad4c63992213e",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "4323574be31815b4b467c0ca1751f6813b1e87df",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Initial android_vh_ufs_update_sdev call, declaration and export were removed by 0c6b941459fd and re-added by 04770aa67819 in renamed ufshcd_sdev_init. Final interface is active in ACK, not permanently reverted. It customizes a UFS SCSI device after link setup; it does not serve the SDK virtio block devices. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+      "evidence": [
+        "evidence/ufs-review.json",
+        "SECURITY.md: UFS platform scope and upstream interrupt fix"
+      ],
+      "patch_sha256": "de0d30ed5712a6ac302d4e89e46c2011cdf2996356718d8d6c78100f315ad1d0",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/ufs/core/ufshcd.c",
+        "include/trace/hooks/ufshcd.h"
+      ]
+    },
+    {
+      "commit": "0c6b941459fd49c86f512000349c3aaf1010129f",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [],
+      "rationale": "The patch removes only update_sdev despite its broader subject. 04770aa67819 restores that call/declaration/export. Do not claim ACK discarded this customization permanently; final omission here rests on the current SDK storage backend. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+      "evidence": [
+        "evidence/ufs-review.json",
+        "SECURITY.md: UFS platform scope and upstream interrupt fix"
+      ],
+      "patch_sha256": "22a3bc8d2df12b41f035b5ea5c2e1c19f9405ce7952c6354d16c87f0a809e31f",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/ufs/core/ufshcd.c",
+        "include/trace/hooks/ufshcd.h"
+      ]
+    },
+    {
+      "commit": "3b51f2bb7fe4a74e6fb98644bf5b80755e0400ff",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Five callbacks observe UFS UIC-command wait completion, device-command completion, link startup, transfer-response status and error-handler timeout. Three native UFS profile tracepoints are additionally GPL-exported. Omit this complete UFS-specific observer/export set for the virtio SDK storage target; native SCSI/UFS error handling and tracepoints remain. Callback access to pointers/error states would require privileged module lifetime and locking discipline on a UFS platform. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+      "evidence": [
+        "evidence/ufs-review.json",
+        "SECURITY.md: UFS platform scope and upstream interrupt fix"
+      ],
+      "patch_sha256": "8a6a6ec929fb000a513e950d8ff8aa23738f5445f9c76d740c588c0138f4009c",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/ufs/core/ufshcd.c",
+        "include/trace/hooks/ufshcd.h"
+      ]
+    },
+    {
+      "commit": "dc9f64bcdbe3723cf30d0bf7ca65bf654e7c81a6",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Restricted hook can bypass native keyslot restoration after UFS reset whenever callback changes err from -EOPNOTSUPP; other callback errors are not propagated by this patch. Final ACK uses this unconditional callback form after crypto capability check. Native ufshcd_crypto_enable remains intact and always calls blk_crypto_reprogram_all_keys. This omission concerns hardware reset/keyslot programming, not generic Android file encryption. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+      "evidence": [
+        "evidence/ufs-review.json",
+        "SECURITY.md: UFS platform scope and upstream interrupt fix"
+      ],
+      "patch_sha256": "3b981171576b09c2258532ba58f2bf8790579c5798051941646dd9cd51d8247c",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/ufs/core/ufshcd-crypto.c",
+        "include/trace/hooks/ufshcd.h"
+      ]
+    },
+    {
+      "commit": "99931d55f27b5e0f833a4d15b503ce499c1342fe",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Restricted callback at successful UFS device initialization supports hardware inline-encryption self-tests after reset and can sleep. It is not historical KMI-only. Omit for the SDK virtio block backend; no FIPS certification or equivalence of hardware self-tests is claimed, and generic fscrypt/inline-crypto fallback remain selected. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+      "evidence": [
+        "evidence/ufs-review.json",
+        "SECURITY.md: UFS platform scope and upstream interrupt fix"
+      ],
+      "patch_sha256": "be62cc4c91795be5c1c76d6b217989f0d7e8be807c82b58ed445165aa363e45c",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/ufs/core/ufshcd.c",
+        "include/trace/hooks/ufshcd.h"
+      ]
+    },
+    {
+      "commit": "d70d323d0cd4f9577b661715caa32b2361447a38",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Parallel historical key-restoration hook form guards invocation with crypto_profile.num_slots. Final ACK instead contains dc9f64bcdbe3-style unconditional callback after capability check. Neither form is imported for SDK virtio storage. Native keyslot restoration and error/quirk handling remain unchanged; no callback can suppress restoration in ported UFS code. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+      "evidence": [
+        "evidence/ufs-review.json",
+        "SECURITY.md: UFS platform scope and upstream interrupt fix"
+      ],
+      "patch_sha256": "b92d36e4c44c2975d13510949991dbaed832946a67c2bcee6f5692b0a4dd1f63",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/ufs/core/ufshcd-crypto.c",
+        "include/trace/hooks/ufshcd.h"
+      ]
+    },
+    {
+      "commit": "520c1950ca450aad66b5e48439747c59282c70f6",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Changes UFS physical power-rail delay from per-device quirk to universal 5ms delay when VCC is actually switched off, and adjusts MediaTek/QCOM quirks. LTS still uses its quirk-based implementation. This is a hardware reliability change with potential data-loss implications on affected physical UFS hardware, not a generic SDK I/O fix. Omit for the virtio storage target without claiming physical UFS equivalence or removing any LTS fix. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+      "evidence": [
+        "evidence/ufs-review.json",
+        "SECURITY.md: UFS platform scope and upstream interrupt fix"
+      ],
+      "patch_sha256": "16235b78b77a712b8385f3d2a45531bb9106922b9dedbc380d4dd007052b93f1",
+      "changed_paths": [
+        "drivers/ufs/core/ufshcd.c",
+        "drivers/ufs/host/ufs-mediatek.c",
+        "drivers/ufs/host/ufs-qcom.c",
+        "include/ufs/ufs_quirks.h"
+      ]
+    },
+    {
+      "commit": "04770aa67819feb9cb53fa1857194c146fa4efb1",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Re-adds active update_sdev customization after ufshcd_setup_links in ufshcd_sdev_init, with declaration/export. Omit this UFS-specific SCSI-device policy callback for current SDK virtio storage. Generic SCSI and vendor customization outside the UFS device path are not decided by this omission. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+      "evidence": [
+        "evidence/ufs-review.json",
+        "SECURITY.md: UFS platform scope and upstream interrupt fix"
+      ],
+      "patch_sha256": "c420b77b35dd7cef85ec6be6773073b45c9779e882c968dbdd398ac50bfa9806",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/ufs/core/ufshcd.c",
+        "include/trace/hooks/ufshcd.h"
+      ]
+    },
+    {
+      "commit": "1e05115006a3761a0eba56a6d794a4c2c0de10da",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds UFS UniPro DME QoS notification sysfs state, reset flag, IRQ notification, kernfs reference lifetime and mask definitions. This is a userspace hardware monitoring ABI, not just a KMI field change. Omit because SDK uses virtio disks, without a UniPro link; native UFS sysfs/interrupt cleanup remain byte-identical to LTS. No assertion about future physical-platform userspace consumers is made. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+      "evidence": [
+        "evidence/ufs-review.json",
+        "SECURITY.md: UFS platform scope and upstream interrupt fix"
+      ],
+      "patch_sha256": "affab02ee66a1f8a5a728eb08755b8f6e7a2e32a00dd18b68183815d8fd04a6f",
+      "changed_paths": [
+        "Documentation/ABI/testing/sysfs-driver-ufs",
+        "drivers/ufs/core/ufs-sysfs.c",
+        "drivers/ufs/core/ufshcd.c",
+        "include/ufs/ufshcd.h",
+        "include/ufs/ufshci.h"
+      ]
+    },
+    {
+      "commit": "a7d3212975e66378b30e3322cae2cfbf7e80acc5",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Splits physical UFS power negotiation from pre/post change notifications to prepare TX equalization training, changes variant signatures across Exynos/HiSilicon/MediaTek/QCOM/SPRD and Intel PCI, and exports new helper. This is functional module source API, not historical KMI-only. Omit the coordinated UFS platform refactor for SDK virtio storage; retain consistent native variant APIs and callers, not a partial mixture. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+      "evidence": [
+        "evidence/ufs-review.json",
+        "SECURITY.md: UFS platform scope and upstream interrupt fix"
+      ],
+      "patch_sha256": "572e4971254ba8fe6bd264b82736c508cab4de9753fc9d6276b79b253bd36216",
+      "changed_paths": [
+        "drivers/ufs/core/ufshcd-priv.h",
+        "drivers/ufs/core/ufshcd.c",
+        "drivers/ufs/host/ufs-exynos.c",
+        "drivers/ufs/host/ufs-hisi.c",
+        "drivers/ufs/host/ufs-mediatek.c",
+        "drivers/ufs/host/ufs-qcom.c",
+        "drivers/ufs/host/ufs-sprd.c",
+        "drivers/ufs/host/ufshcd-pci.c",
+        "include/ufs/ufshcd.h"
+      ]
+    },
+    {
+      "commit": "605c1c43171d74fb409c66520d43861f4eb8e83c",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Replaces hba force_pmc toggles with explicit UFSHCD_PMC_POLICY in the new power-mode interfaces and adjusts all core/Intel callers. This follows the omitted physical UFS negotiation series. Keep native paired force_pmc transitions and locking rather than importing mismatched signatures; SDK virtio does not use these power-mode paths. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+      "evidence": [
+        "evidence/ufs-review.json",
+        "SECURITY.md: UFS platform scope and upstream interrupt fix"
+      ],
+      "patch_sha256": "47746e51cb1fc9a957c66df7a9824adbd9f0a17e35b6fa8bd3d71cec698d6ffe",
+      "changed_paths": [
+        "drivers/ufs/core/ufshcd.c",
+        "drivers/ufs/host/ufshcd-pci.c",
+        "include/ufs/ufshcd.h"
+      ]
+    },
+    {
+      "commit": "c4a3b5f9ce5341fb6f29bcd9ec01165483714dae",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds UFS5 TX equalization attribute encoding/decoding, query and storage paths, module settings, initialization/shutdown calls and JEDEC attribute IDs. Native LTS lacks the adaptive TX EQ subsystem. Omit hardware feature for SDK virtio; separately omit ARM64 ABI snapshot/allowed-break entries and enumerator-ignore wrappers as historical KMI metadata. ACK avoids is_trained field via eqtr_record for KMI; that layout workaround is not a reason to import its algorithm. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+      "evidence": [
+        "evidence/ufs-review.json",
+        "SECURITY.md: UFS platform scope and upstream interrupt fix"
+      ],
+      "patch_sha256": "5c47380f9b0d1b15942b1595e44b678b0a30ec8be31b5cad08eaeb8c9f8755fe",
+      "changed_paths": [
+        "drivers/ufs/core/ufs-txeq.c",
+        "drivers/ufs/core/ufshcd-priv.h",
+        "drivers/ufs/core/ufshcd.c",
+        "gki/aarch64/abi.stg",
+        "gki/aarch64/abi.stg.allowed_breaks",
+        "include/ufs/ufs.h"
+      ]
+    },
+    {
+      "commit": "082b3816c9c69baebcbf5775fcc9020bc4787da3",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [
+        "ff333def314762b94e0933be7e84947d876f20bf"
+      ],
+      "rationale": "ACK opt-out callback selects direct execution of ufshcd_threaded_intr. Later native LTS ff333def3147 removes the delegated threaded handler to resolve the same reported performance regression, while preserving MCQ interrupt handling and host-lock inversion fixes. Keep this native direct IRQ implementation and devm_request_irq; do not resurrect threaded infrastructure just to add its opt-out. Hardware UFS hook customization is outside current virtio SDK scope. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+      "evidence": [
+        "evidence/ufs-review.json",
+        "SECURITY.md: UFS platform scope and upstream interrupt fix"
+      ],
+      "patch_sha256": "0aba466736a134910bef75782251940ca9b68aa99e0428bebb137cd5d2422917",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/ufs/core/ufshcd.c",
+        "include/trace/hooks/ufshcd.h"
+      ]
+    },
+    {
+      "commit": "16d9648dc1db1ab24b8c4260de3478e139654af3",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Parses per-lane/per-gear static TX EQ values and G6 precoding from DT, validates counts/ranges, and tracks from_dt so adaptive results override defaults. Omit with the absent LTS TX EQ feature for SDK virtio storage. This is real physical-board tuning, not ABI padding. No claim that missing settings are safe on future UFS5 boards is made. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+      "evidence": [
+        "evidence/ufs-review.json",
+        "SECURITY.md: UFS platform scope and upstream interrupt fix"
+      ],
+      "patch_sha256": "50dfb2201747a65afc53466f2075c7595d5ba2ce6840c932bf40dfcfdc547418",
+      "changed_paths": [
+        "drivers/ufs/core/ufs-txeq.c",
+        "drivers/ufs/host/ufshcd-pltfrm.c",
+        "include/ufs/ufshcd.h"
+      ]
+    },
+    {
+      "commit": "4ed628ec0b5cfc864ea9958618cba76e3b5ca959",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Adds start/end callbacks around UFS MCQ submission-queue cleanup under sq_mutex, including the common unlock/error exit. Omit hardware queue hook/header/export for SDK virtio storage while retaining native cleanup/timeouts. Also omit ANDROID_KABI_DECLONLY(trace_eval_map), which only preserves historical type/KMI view. The complete affected UFS source/header subtree remains native LTS. See pinned Goldfish fstab/ramdisk evidence; compiled UFS support is not confused with an active SDK controller. No UFS hardware/runtime test was performed.",
+      "evidence": [
+        "evidence/ufs-review.json",
+        "SECURITY.md: UFS platform scope and upstream interrupt fix"
+      ],
+      "patch_sha256": "b5831d1b2fb519a44ed4b9e60ceaf60c8b7d5cb7c028e4d0c44a474314ea85c4",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/ufs/core/ufs-mcq.c",
+        "include/trace/hooks/ufshcd.h"
+      ]
+    }
+  ],
+  "whole_ufs_subtrees_native": true,
+  "witnesses": {
+    "Documentation/ABI/testing/sysfs-driver-ufs": {
+      "lts_blob": "a90612ab5780037f3ba28b6f811e0623f21e71bb",
+      "port_blob": "a90612ab5780037f3ba28b6f811e0623f21e71bb"
+    },
+    "drivers/ufs/core/ufs-mcq.c": {
+      "lts_blob": "c9bdd4140fd04bbdef616d7c047822583dad34bb",
+      "port_blob": "c9bdd4140fd04bbdef616d7c047822583dad34bb"
+    },
+    "drivers/ufs/core/ufs-sysfs.c": {
+      "lts_blob": "0086816b27cd9041b4289d8a292f8b3fd511e17c",
+      "port_blob": "0086816b27cd9041b4289d8a292f8b3fd511e17c"
+    },
+    "drivers/ufs/core/ufshcd-crypto.c": {
+      "lts_blob": "9e63a9d3cb7e2c2e3a467f2d3ad131e5c9cab634",
+      "port_blob": "9e63a9d3cb7e2c2e3a467f2d3ad131e5c9cab634"
+    },
+    "drivers/ufs/core/ufshcd-priv.h": {
+      "lts_blob": "f3eeaf45cfdb8ab0ca3a71631c2f03d8330c8bcd",
+      "port_blob": "f3eeaf45cfdb8ab0ca3a71631c2f03d8330c8bcd"
+    },
+    "drivers/ufs/core/ufshcd.c": {
+      "lts_blob": "9d32e658ad60ec0c04eddba0fe1984a870d16c26",
+      "port_blob": "9d32e658ad60ec0c04eddba0fe1984a870d16c26"
+    },
+    "drivers/ufs/host/ufs-exynos.c": {
+      "lts_blob": "70d195179ebaa01f38331faaee6f8349211c4c3b",
+      "port_blob": "70d195179ebaa01f38331faaee6f8349211c4c3b"
+    },
+    "drivers/ufs/host/ufs-hisi.c": {
+      "lts_blob": "6f2e6bf312253a10f3b83b7c9f699a90aaaee7e0",
+      "port_blob": "6f2e6bf312253a10f3b83b7c9f699a90aaaee7e0"
+    },
+    "drivers/ufs/host/ufs-mediatek.c": {
+      "lts_blob": "3c63adca561d2b994d51f26564a4c64ed342b773",
+      "port_blob": "3c63adca561d2b994d51f26564a4c64ed342b773"
+    },
+    "drivers/ufs/host/ufs-qcom.c": {
+      "lts_blob": "eba0e66174834dc50561773258ae237c82208869",
+      "port_blob": "eba0e66174834dc50561773258ae237c82208869"
+    },
+    "drivers/ufs/host/ufs-sprd.c": {
+      "lts_blob": "65bd8fb96b995ca11e6cf0dee227d2e80ac40d84",
+      "port_blob": "65bd8fb96b995ca11e6cf0dee227d2e80ac40d84"
+    },
+    "drivers/ufs/host/ufshcd-pci.c": {
+      "lts_blob": "5f65dfad1a71a39d86f4057e7cc62cf5a76b8a26",
+      "port_blob": "5f65dfad1a71a39d86f4057e7cc62cf5a76b8a26"
+    },
+    "drivers/ufs/host/ufshcd-pltfrm.c": {
+      "lts_blob": "c2dafb583cf5157d219bf2bf24d3f54741b7f4bc",
+      "port_blob": "c2dafb583cf5157d219bf2bf24d3f54741b7f4bc"
+    },
+    "include/ufs/ufs.h": {
+      "lts_blob": "245a6a829ce998f58da0cab2a7862ab13fcd1afe",
+      "port_blob": "245a6a829ce998f58da0cab2a7862ab13fcd1afe"
+    },
+    "include/ufs/ufs_quirks.h": {
+      "lts_blob": "83563247c36cb26863a3ad5fb304218f6150fa31",
+      "port_blob": "83563247c36cb26863a3ad5fb304218f6150fa31"
+    },
+    "include/ufs/ufshcd.h": {
+      "lts_blob": "a829db5510808fab19fa0773f1db9f60c971769c",
+      "port_blob": "a829db5510808fab19fa0773f1db9f60c971769c"
+    },
+    "include/ufs/ufshci.h": {
+      "lts_blob": "e64b701321010be384175d6fbe1d8893023536e1",
+      "port_blob": "e64b701321010be384175d6fbe1d8893023536e1"
+    }
+  },
+  "goldfish_commit": "5281db702f36e0e8c0af9e33d70b63d3ba4916ae",
+  "goldfish_files": {
+    "board/fstab/x86": {
+      "sha256": "c5e33612915463e59d099922f38f30a977af2250bc4164f8e018f93c24a0f340",
+      "blob": "b6bb7ed3fa85aaa52e3b2cbbd30e676381df77cc"
+    },
+    "board/kernel/x86_64.mk": {
+      "sha256": "f5431c8a99767dcc022310cf8d3d67b8a663cddf9765bae089b6a69c3f11ac54",
+      "blob": "87ab362e165ba383973bd1c0b189bad368e34176"
+    },
+    "board/kernel/x86_64_16k.mk": {
+      "sha256": "3f2c157019d8176aa05f23631e3e85876a864bc5eb3e5a84edb1fc118c5024e4",
+      "blob": "31bbf6340c189104b39529e20fa098e1a250d66e"
+    }
+  },
+  "selected_config": {
+    "BLK_INLINE_ENCRYPTION": "y",
+    "BLK_INLINE_ENCRYPTION_FALLBACK": "y",
+    "VIRTIO_BLK": "m",
+    "SCSI_UFSHCD": "y",
+    "SCSI_UFS_BSG": "y",
+    "SCSI_UFS_CRYPTO": "y",
+    "SCSI_UFSHCD_PCI": "y",
+    "SCSI_UFSHCD_PLATFORM": "y",
+    "SCSI_UFS_DWC_TC_PLATFORM": "y",
+    "SCSI_UFS_VARIABLE_SG_ENTRY_SIZE": "y",
+    "FS_ENCRYPTION": "y",
+    "FS_ENCRYPTION_ALGS": "y",
+    "FS_ENCRYPTION_INLINE_CRYPT": "y"
+  },
+  "effective_config_sha256": "48f19810fd5e10021d64b96e82cdb2b0b587f7cb24b3b4b5660b6732ae05cd09",
+  "security": "Native UFS LTS fixes preserved in full, including interrupt regression revert and subsequent descriptor/race fixes. These omissions do not certify physical UFS devices or their self-tests. Generic fscrypt, block crypto and virtio storage remain selected.",
+  "uncertainty": "No boot/device enumeration performed. Scope follows the pinned SDK fstab and ramdisk device configuration; arbitrary emulator configurations, passthrough or unknown vendor modules are not asserted equivalent.",
+  "remote_sources_used": [],
+  "controller_scope": "Native PCI matching includes QEMU UFS (Red Hat 0x0013), so these paths are not universally physical-only. The pinned SDK board uses virtio block storage; a QEMU configuration with an added UFS device is not the verified/current target."
+}

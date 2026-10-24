@@ -7338,3 +7338,70 @@ The recovery-work hook is on the common exit path and is not success-only
 despite its comment. The earlier broad disposition for 4824c0ad359b is replaced
 with this explicit whole-feature omission, without increasing the final count. No remote processor, callback or alternate-config kernel was run.
 No new remote resource was consulted.
+
+# UFS platform scope and upstream interrupt fix
+
+Fifteen candidates are examined individually in `evidence/ufs-review.json`.
+The pinned Goldfish x86 fstab uses `/dev/block/vdc` for data and the ramdisk
+loads virtio block/PCI modules in both ordinary and 16K configurations. UFS
+core, PCI and platform drivers are nevertheless compiled; they are not called
+disabled. The target-specific omissions cover UFS controller hooks, UniPro
+monitoring, physical power-mode/rail handling and TX equalization, rather than
+generic Android block storage or encryption. Native PCI matching also supports QEMU UFS (Red Hat 0x0013), so these paths
+are not universally physical-only. The pinned SDK uses virtio; adding a QEMU
+UFS device is a different configuration. Unknown vendor modules, arbitrary
+passthrough configurations and physical-device behavior are not certified.
+
+Native 6.18.57 UFS drivers and headers are retained in full. In particular,
+`ff333def3147` already removes threaded IRQ delegation to fix the regression
+addressed by ACK's opt-out hook, retaining the upstream MCQ and lock-inversion
+fixes. The port does not undo that fix to recreate the old callback context.
+Native keyslot restoration remains intact; hardware-specific bulk-restoration
+and initialization/self-test callbacks are omitted for virtio SDK storage.
+This does not claim equivalent FIPS testing on future physical controllers.
+The universal VCC delay and TX tuning changes can matter for physical-device
+reliability and data integrity; their omission is limited to this target.
+Generic fscrypt, inline crypto and software fallback remain selected. ABI
+snapshots, enumerator-ignore wrappers and DECLONLY type-view workarounds are
+separately identified as historical KMI-only material. The add/remove/re-add
+update_sdev sequence and parallel key-restoration variants are accounted for.
+No storage runtime test or new remote resource was used.
+
+# IOMMU callback allocation and cookie contracts
+
+The generic IOVA/DMA hooks are retained for Android vendor source compatibility.
+Three adaptations preserve native allocation invariants: reject alignment shifts
+at or above BITS_PER_LONG before shifting or taking the tree lock; clear
+__GFP_COMP before allocating pages which will be split/freed individually; and
+preserve caller-requested __GFP_ZERO after the allocation-flags callback. The
+latter prevents a callback from exposing uninitialized allocation contents where
+native iommu_dma_alloc requests zeroed memory. Valid alignment values and other
+allocation policy flags remain customizable. Invalid shift output now fails the
+allocation instead of invoking undefined behavior. These are callback contract
+checks, not protection against a malicious kernel module.
+
+The free-tracking callback also needs a real iova_domain. Native cookie pointers
+share a union: an MSI-only cookie is a smaller iommu_dma_msi_cookie, not a null
+DMA cookie or a valid iova_domain. The port preserves native MSI cursor rollback
+and returns before deriving the IOVA pointer or calling its tracking hook. The
+matching MSI allocation path already bypasses the allocation-tracking hook.
+Normal and queued IOVA freeing keep their native operations and notification.
+
+`check_iommu_hook_bounds.py` exercises the extracted whole page allocator,
+whole free routine and alignment prefix with modeled dependencies under
+ASan/UBSan: 22,880 allocation cases, 624 alignment cases and 24 cookie cases.
+Old controls expose 6,120 zeroing/compound contract violations, 12 invalid MSI
+callback contexts and an invalid shift diagnosed by UBSan. Tests model allocator
+outcomes and cookies; they do not execute DMA hardware, the kernel page
+allocator, the RB tree, actual callbacks or concurrency.
+
+The initial integration had retained deferred-map-sg header fields while keeping
+native iommu_map_sg without the implementation. Those misleading declarations
+are removed together. Final ACK supplies the operations in the ARM64
+arm-smmu-v3-kvm-pv driver; its Makefile selects ARM_SMMU_V3_PKVM_PV and Kconfig
+requires ARM64/KVM. The selected x86 SDK cannot use that backend. The commit's
+virtio-IOMMU proposal describes future work, not an implemented SDK provider.
+This target omission does not assert that arbitrary out-of-tree drivers could
+never implement the interface. Native core mapping, synchronization, cleanup
+and all 6.18.57 fixes remain unchanged. Generic vendor-data fields and other
+independently reviewed interfaces remain. No new remote source was consulted.

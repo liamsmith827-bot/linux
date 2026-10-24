@@ -802,12 +802,17 @@ done:
 static void iommu_dma_free_iova(struct iommu_domain *domain, dma_addr_t iova,
 				size_t size, struct iommu_iotlb_gather *gather)
 {
-	struct iova_domain *iovad = &domain->iova_cookie->iovad;
+	struct iova_domain *iovad;
 
 	/* The MSI case is only ever cleaning up its most recent allocation */
-	if (domain->cookie_type == IOMMU_COOKIE_DMA_MSI)
+	if (domain->cookie_type == IOMMU_COOKIE_DMA_MSI) {
 		domain->msi_cookie->msi_iova -= size;
-	else if (gather && gather->queued)
+		/* An MSI-only cookie has no iova_domain for the tracking hook. */
+		return;
+	}
+
+	iovad = &domain->iova_cookie->iovad;
+	if (gather && gather->queued)
 		queue_iova(domain->iova_cookie, iova_pfn(iovad, iova),
 				size >> iova_shift(iovad),
 				&gather->freelist);
@@ -914,6 +919,9 @@ static struct page **__iommu_dma_alloc_pages(struct device *dev,
 			if (order_mask > order_size)
 				alloc_flags |= __GFP_NORETRY;
 			trace_android_vh_adjust_alloc_flags(order, &alloc_flags);
+			/* Pages are split and freed individually; keep requested zeroing. */
+			alloc_flags &= ~__GFP_COMP;
+			alloc_flags |= gfp & __GFP_ZERO;
 			page = alloc_pages_node(nid, alloc_flags, order);
 			if (!page)
 				continue;

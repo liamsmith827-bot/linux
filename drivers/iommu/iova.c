@@ -178,6 +178,9 @@ static int __alloc_and_insert_iova_range(struct iova_domain *iovad,
 		unsigned long shift = fls_long(size - 1);
 
 		trace_android_rvh_iommu_limit_align_shift(iovad, size, &shift);
+		/* A callback must not turn the alignment mask into an invalid shift. */
+		if (shift >= BITS_PER_LONG)
+			return -EINVAL;
 		align_mask <<= shift;
 	}
 
