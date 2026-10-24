@@ -234,6 +234,10 @@ noinstr int cpuidle_enter_state(struct cpuidle_device *dev,
 		instrumentation_end();
 		return index;
 	}
+	if (index >= drv->state_count) {
+		instrumentation_end();
+		return -EINVAL;
+	}
 
 	target_state = &drv->states[index];
 	broadcast = !!(target_state->flags & CPUIDLE_FLAG_TIMER_STOP);

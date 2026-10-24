@@ -7118,3 +7118,34 @@ backtrace logic. Build 155 confirms all retained symbols and export types.
 Five older direct/common DMA exports remain removed following explicit ACK
 withdrawal. No new kernel code or build is needed for this review, no module or
 NMI behavior was executed, and no new remote resource was used.
+
+# Workqueue allocation and idle hook output validation
+
+The workqueue allocation callback receives writable flags after the original
+code sized the allocation and optionally allocated unbound attributes. A callback
+changing a bound queue to WQ_UNBOUND could therefore leave the native per-node
+array outside allocated storage and omit required attributes. The adaptation
+reserves per-node pointer slots whenever Android hooks are compiled, keeping the
+callback's queue pointer stable. It then reconciles unbound attributes and applies
+native BH flag/active-count validation, power-efficient mode and activity limits
+after callback output. Failed allocation uses the native cleanup path. Existing
+native initialization, publication, rescuer and failed-pwq cleanup ordering remain.
+The cost is (nr_node_ids + 1) pointers for each bound queue when hooks are compiled;
+no historical layout or vendor binary compatibility is preserved.
+
+The CPU-idle hook already runs before target-state selection and may return a
+negative cancellation result. The adaptation also rejects indices at or beyond
+drv->state_count before accessing the state array, balancing instrumentation on
+the error return. Existing native idle entry/exit behavior remains for valid
+indices. Callback authority remains privileged; these checks do not sandbox
+arbitrary kernel code or establish correctness of a selected idle state.
+
+`check_allocation_hooks.py` executes extracted allocator code and idle-entry
+prefixes with mocks under ASan/UBSan. It covers 74,088 callback/failure cases,
+3,528 comparisons to native behavior without callbacks, and 104 idle selections.
+The prior code fails 21,528 modeled allocation/limit invariants and accepts 52
+out-of-range idle selections. Allocation shape violations in the control are
+intercepted before an actual invalid host write. These are meaningful regression
+controls, not kernel concurrency, scheduler or device tests. Evidence is in
+`evidence/allocation-hooks-check.json`. Build validation follows separately;
+related candidate finalization remains pending. No new remote resource used.

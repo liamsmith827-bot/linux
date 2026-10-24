@@ -5806,8 +5806,12 @@ static struct workqueue_struct *__alloc_workqueue(const char *fmt,
 	if ((flags & WQ_POWER_EFFICIENT) && wq_power_efficient)
 		flags |= WQ_UNBOUND;
 
-	/* allocate wq and format name */
-	if (flags & WQ_UNBOUND)
+	/*
+	 * The allocation hook may select WQ_UNBOUND after inspecting the name.
+	 * Reserve its node slots up front so that the hook's wq pointer stays
+	 * valid even when it changes the allocation's final flags.
+	 */
+	if (IS_ENABLED(CONFIG_ANDROID_VENDOR_HOOKS) || (flags & WQ_UNBOUND))
 		wq_size = struct_size(wq, node_nr_active, nr_node_ids + 1);
 	else
 		wq_size = sizeof(*wq);
@@ -5840,6 +5844,30 @@ static struct workqueue_struct *__alloc_workqueue(const char *fmt,
 	}
 
 	trace_android_rvh_alloc_workqueue(wq, &flags, &max_active);
+	/* Reconcile callback output with native allocation and limit rules. */
+	if ((flags & WQ_POWER_EFFICIENT) && wq_power_efficient)
+		flags |= WQ_UNBOUND;
+	if (flags & WQ_BH) {
+		if (WARN_ON_ONCE(flags & ~__WQ_BH_ALLOWS))
+			goto err_free_wq;
+		if (WARN_ON_ONCE(max_active && max_active != INT_MAX))
+			goto err_free_wq;
+		max_active = INT_MAX;
+	} else {
+		max_active = max_active ?: WQ_DFL_ACTIVE;
+		max_active = wq_clamp_max_active(max_active, flags, wq->name);
+	}
+	if (flags & WQ_UNBOUND) {
+		if (!wq->unbound_attrs) {
+			wq->unbound_attrs = alloc_workqueue_attrs_noprof();
+			if (!wq->unbound_attrs)
+				goto err_free_wq;
+		}
+	} else {
+		free_workqueue_attrs(wq->unbound_attrs);
+		wq->unbound_attrs = NULL;
+	}
+
 	/* init wq */
 	wq->flags = flags;
 	wq->max_active = max_active;
