@@ -1,7 +1,7 @@
 {
   "base": "7d0a66e4bb9081d75c82ec4957c50034cb0ea449",
   "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
-  "port": "a46ca7ce5534ca01b7cb3ed4fb39444680ebf4ee",
+  "port": "cef6ed5fe6a4edf0d70962a6dabb1c9204018503",
   "commits_examined": 1733,
   "overlaps": [
     {
@@ -298,6 +298,22 @@
       "status": "reviewed; effects preserved or explicitly adapted",
       "assessment": "e2fc28947c38 intentionally makes the bioset allocation GFP_NOWAIT during recursive submission, retaining GFP_NOIO for the rescue worker. The LTS optimized multi-bio splitting, source iterator progression and completion reference accounting remain. Additional partial splits under page pressure and the ACK-derived rescue work prevent allocation from waiting for queued/unsubmitted bios; see SECURITY.md: Software encryption fallback forward progress. This is a deliberate availability fix, not an accidental reversal of the LTS optimization.",
       "assessment_source_head": "45014ef115ff23b096180f9e681ff358a95be8e0"
+    },
+    {
+      "commit": "b07bcdca18fb9437ebc54636db766c44f3f2fc75",
+      "subject": "perf/core: Fix deadlock in perf_mmap() failure path",
+      "lts_added_line_absent": [
+        {
+          "path": "kernel/events/core.c",
+          "port_path": "kernel/events/core.c",
+          "hunk": "@@ -6996,0 +6992,9 @@ static void perf_mmap_account(struct vm_area_struct *vma, long user_extra, long",
+          "line": "atomic_long_sub((perf_data_size(rb) >> PAGE_SHIFT) + 1 - rb->mmap_locked,"
+        }
+      ],
+      "lts_removed_line_present": [],
+      "status": "reviewed-source-adaptation",
+      "assessment": "Full three-path stable fix read. Native perf_mmap and perf_mmap_close bodies remain exact, including minimal first-exposure cleanup under mmap_mutex and complex close outside that mutex. Native ring_buffer_init and entire internal.h preserve mmap_user lifetime/refcount initialization and RCU free_uid. The only overlap is perf_mmap_unaccount arithmetic: replace one physical metadata page with __PAGE_SIZE/PAGE_SIZE, retaining both atomic decrements and the same helper/call placement. This corrects enlarged-metadata overcharging without reintroducing the mutex recursion or failed-buffer exposure. See perf-metadata-review.json whole-function witnesses and perf-metadata-check.json modeled accounting control.",
+      "assessment_source_head": "cef6ed5fe6a4edf0d70962a6dabb1c9204018503"
     },
     {
       "commit": "69d57dbadb27ffd5eef34fd184bab145500cdabc",

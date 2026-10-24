@@ -1,0 +1,225 @@
+{
+  "source_head": "600ffdb508823a56f22e533a87a1bc77b1b7e541",
+  "records": [
+    {
+      "commit": "5dbd8df7b35643210226329bd7e60658c07a036f",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Full four-path original and both e92b6ef8fc96/60701bc1fe7c reverts read. ACK explicitly removes the default-3 Kconfig restriction and residual perf_paranoid_any syscall gate. All retired names are absent in final ACK/LTS/port; kernel default stays native 2. Positive local GrapheneOS init-perfetto.rc writes paranoid=-1 on load-bpf-programs, relying on SELinux perf controls, and sepolicy grants distinct perf permissions to traced_perf, runas_app and shell. Native complete perf_event_open and SELinux open/read/write checks are preserved. Do not treat native paranoid=3 as the old blanket ban or claim SELinux equals that stricter global prohibition. Allowed profiling exposes perf machinery according to policy; enforcement at runtime is unverified and no GrapheneOS kernel_common hardening is imported.",
+      "evidence": [
+        "evidence/perf-policy-and-guest-review.json",
+        "SECURITY.md: Perf access policy and native guest callbacks"
+      ],
+      "patch_sha256": "f6f2b6b42d7e6956934eaf73180c17da0af9b248a2ee5ea0cc242c8aa9154650"
+    },
+    {
+      "commit": "e92b6ef8fc963a068ff70188fb0458b1eeaa7175",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [],
+      "rationale": "Full five-path partial revert read: documentation/default/Kconfig plus both GKI config entries removed. Its intended final state is already native, but this commit alone left the syscall gate and helper; 60701bc1fe7c completes removal. Both are checked together. Preserve current LTS capability/LSM checks and documented default 2, with positive local Android policy/init consumers instead of blanket CAP_SYS_ADMIN-only gating. No unrelated defconfig settings are changed.",
+      "evidence": [
+        "evidence/perf-policy-and-guest-review.json",
+        "SECURITY.md: Perf access policy and native guest callbacks"
+      ],
+      "patch_sha256": "b4e5f4a90143ddbb2c25239adbda5f85d0967fb84169ab718009bc014bb38ff8"
+    },
+    {
+      "commit": "60701bc1fe7c8e8a59f798762302d7d3a4c5aad9",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [],
+      "rationale": "Full two-path cleanup read. Removes the leftover perf_paranoid_any helper and perf_event_open CAP_SYS_ADMIN gate after e92b6ef8fc96. Complete native syscall is unchanged in port and still calls security_perf_event_open(PERF_SECURITY_OPEN), with event-specific checks afterward. The optional original global ban is intentionally absent, not silently claimed equivalent to native paranoid semantics.",
+      "evidence": [
+        "evidence/perf-policy-and-guest-review.json",
+        "SECURITY.md: Perf access policy and native guest callbacks"
+      ],
+      "patch_sha256": "ded2270838210025f80cf1e46c33f13072eaf11c3c3777a7747d39204b21e621"
+    },
+    {
+      "commit": "ec22afdb5abf68188a37811693433286f2d987d9",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full single-export patch read. Retain GPL perf_event_read_local source-module interface. Entire function body equals LTS: local IRQ protection, reject inherited events, validate current task/local or package-adjusted CPU and pinned on-CPU state, read native PMU counter and timing. Caller must own event lifetime and honor its local/NMI-safe contract; export adds no reference or new userspace access. Particular SDK module subscriber remains unconfirmed; generic instrumentation source compatibility is retained.",
+      "evidence": [
+        "evidence/perf-policy-and-guest-review.json",
+        "SECURITY.md: Perf access policy and native guest callbacks"
+      ],
+      "patch_sha256": "098723e059dbbb6bd24ac1661f759313e2c1efbca809acd9a273a767963fc0c5"
+    },
+    {
+      "commit": "a82e2e9f9ab649b62693a3d4dae7b617ff2be3ee",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [
+        "600ffdb508823a56f22e533a87a1bc77b1b7e541"
+      ],
+      "rationale": "Full two-path historical revert and native static-call implementation read. Restore both CONFIG_GUEST_PERF_EVENTS blocks exactly from LTS in 600ffdb50882. Original motivation was Pixel 6 ARM indirect-call CFI failure on __static_call_return0, not an Android userspace API. SDK has HAVE_STATIC_CALL=y and HAVE_STATIC_CALL_INLINE=y: static_call expands to a declared trampoline, x86 trampoline emits direct JMP, and the inline transform replaces return-zero CALL with xor5rax. This is positive architectural implementation evidence, not lack of a consumer. Keep native registration/unregistration GPL interfaces, callback signatures, null-return defaults, optional Intel PT handler and synchronize_rcu. The historical private perf_get_guest_cbs implementation helper is removed along with the workaround; supported registration and perf_guest_* interfaces remain. Native KVM callback provider is present and config-enabled. No CFI disable or type-check bypass is added; native x86 CFI-enabled compilation is being verified in build 147, while callback runtime and ARM behavior are outside this verification.",
+      "evidence": [
+        "evidence/perf-policy-and-guest-review.json",
+        "SECURITY.md: Perf access policy and native guest callbacks"
+      ],
+      "patch_sha256": "8b30fb20379378d335fd42cd0f4ab82b340e03248a8d32fbe2ddc9ef72efeee7"
+    }
+  ],
+  "native_witnesses": [
+    {
+      "path": "kernel/events/core.c",
+      "function": "perf_event_read_local",
+      "sha256": "c83b5549c5b1e75914f6f26ed0cb062988c376b1914aa05198f56e926f346d3b",
+      "relationship": "Whole function identical to pinned LTS"
+    },
+    {
+      "path": "kernel/events/core.c",
+      "function": "perf_allow_kernel",
+      "sha256": "0e7ac689e1d1f721f186de63042e7d629dcefd65e43f406e9be6feb0de41a4f6",
+      "relationship": "Whole function identical to pinned LTS"
+    },
+    {
+      "path": "kernel/events/core.c",
+      "function": "perf_register_guest_info_callbacks",
+      "sha256": "f422b88d146a6ab26389a485cab3447e96e20b5c498299c9f39e51d868a1c429",
+      "relationship": "Whole function identical to pinned LTS"
+    },
+    {
+      "path": "kernel/events/core.c",
+      "function": "perf_unregister_guest_info_callbacks",
+      "sha256": "5ef493f34892b0cd279db708d595ea94bcd50af38d1df00cdb655a48442b699b",
+      "relationship": "Whole function identical to pinned LTS"
+    },
+    {
+      "path": "include/linux/perf_event.h",
+      "function": "perf_allow_cpu",
+      "sha256": "6ada1db495ca1dd3de76148ecabd625baff98554d362f125c37b4b4476976522",
+      "relationship": "Whole function identical to pinned LTS"
+    },
+    {
+      "path": "include/linux/perf_event.h",
+      "function": "perf_guest_state",
+      "sha256": "7b8fc3b57e130aa13eef4e78dcdb7fc83cfc438b4f72ed4967860e6dbae28b88",
+      "relationship": "Whole function identical to pinned LTS"
+    },
+    {
+      "path": "include/linux/perf_event.h",
+      "function": "perf_guest_get_ip",
+      "sha256": "ece12cc1dfd8afe2be2b2ceefc83cbec7b3ee8c26513662b2f89c75cab3fa410",
+      "relationship": "Whole function identical to pinned LTS"
+    },
+    {
+      "path": "include/linux/perf_event.h",
+      "function": "perf_guest_handle_intel_pt_intr",
+      "sha256": "6ee3ac9858acfea183c1d24ab42b82b398532e1176de53b09db19c9b8266bcca",
+      "relationship": "Whole function identical to pinned LTS"
+    },
+    {
+      "path": "security/selinux/hooks.c",
+      "function": "selinux_perf_event_open",
+      "sha256": "5db75236ab58a7c1c1e6aca88860d616152e7ebf0a76748f90869edb701b97fa",
+      "relationship": "Whole function identical to pinned LTS"
+    },
+    {
+      "path": "security/selinux/hooks.c",
+      "function": "selinux_perf_event_alloc",
+      "sha256": "0432bca4f0bd36411ab33a5b3787a9217698e0e0f1117356ad82a057611f9b2b",
+      "relationship": "Whole function identical to pinned LTS"
+    },
+    {
+      "path": "security/selinux/hooks.c",
+      "function": "selinux_perf_event_read",
+      "sha256": "f3096acd25b66ca74f7de4b03c1477abfb6c7dbb8efea6684cfc3eed63e93673",
+      "relationship": "Whole function identical to pinned LTS"
+    },
+    {
+      "path": "security/selinux/hooks.c",
+      "function": "selinux_perf_event_write",
+      "sha256": "5e0a3ff88eabb867d88d60f62153bab66f19af4eb96715c8113622a48c2f4191",
+      "relationship": "Whole function identical to pinned LTS"
+    },
+    {
+      "path": "security/security.c",
+      "function": "security_perf_event_open",
+      "sha256": "bfa59e7a32e7084a26b990066f4007b41e920cd843bdd6c10129c85efaa17a09",
+      "relationship": "Whole function identical to pinned LTS"
+    },
+    {
+      "path": "kernel/events/core.c",
+      "function": "SYSCALL_DEFINE5(perf_event_open)",
+      "sha256": "57b58848d993775e4d4910befaa530f9ae5fc117282ce68b6cdf3e6802bc634d",
+      "relationship": "Complete syscall identical to pinned LTS"
+    },
+    {
+      "path": "kernel/events/core.c",
+      "scope": "complete CONFIG_GUEST_PERF_EVENTS block",
+      "sha256": "2724a9f47a983f1a3ec2a4b004671f67f1e738bb1423907c2dbc43d1c900567e",
+      "relationship": "Restored byte-identical native registration, dispatch and declarations"
+    },
+    {
+      "path": "include/linux/perf_event.h",
+      "scope": "complete CONFIG_GUEST_PERF_EVENTS block",
+      "sha256": "193d75fcaf01ce95d6e46382130c7f955cf9dad9d4961104af9ef6e56c5d2851",
+      "relationship": "Restored byte-identical native registration, dispatch and declarations"
+    },
+    {
+      "path": "include/linux/static_call.h",
+      "scope": "whole file",
+      "sha256": "0c23de51f4e7ae7a8cd59949188986daea891651d3217b0df154c44d8eeeff78",
+      "relationship": "Native x86 direct trampoline/call-patching implementation retained"
+    },
+    {
+      "path": "include/linux/static_call_types.h",
+      "scope": "whole file",
+      "sha256": "886d2713ef01a7d470465685b55615198292b55a842528711b83ad0385d72e60",
+      "relationship": "Native x86 direct trampoline/call-patching implementation retained"
+    },
+    {
+      "path": "arch/x86/include/asm/static_call.h",
+      "scope": "whole file",
+      "sha256": "65851fb86e2c5d3e3882b948ee2339d316c466971ad84424ea5c24472bfa8430",
+      "relationship": "Native x86 direct trampoline/call-patching implementation retained"
+    },
+    {
+      "path": "arch/x86/kernel/static_call.c",
+      "scope": "whole file",
+      "sha256": "12273959e22698671a9dbdb9852121f99bf8db3b725d48763f263ea31c78f5f3",
+      "relationship": "Native x86 direct trampoline/call-patching implementation retained"
+    }
+  ],
+  "local_userspace_evidence": [
+    {
+      "repository": "/home/liamsmith/src/kernel/grapheneos-17/system/sepolicy",
+      "head": "d0cc2f0daa28f3e8c89afb7f07f1b879581bb676",
+      "files": {
+        "private/traced_perf.te": "2cf9e73e4b62d80e50149e2efec268a3978921f475eb889046d3f3101170283d",
+        "private/runas_app.te": "a3f05f27caa2e82e0fcaf7e4039fe0dcb5a3e153919eae001c557828987ea678",
+        "private/shell.te": "a06ae61869fe11bf6e14790b4a87d014ce2653e11436a473a7d42c3c14b19e56"
+      }
+    },
+    {
+      "repository": "/home/liamsmith/src/kernel/grapheneos-17/system/core",
+      "head": "322ff5129d865a5e8d958667e6c63ac943449493",
+      "files": {
+        "rootdir/init-perfetto.rc": "a3de46ffbe93424655648d06f80d1a2664677bb2967906425a9fec02f0d496a5"
+      }
+    }
+  ],
+  "configuration_evidence": {
+    "run": "sdk-build-attempt-146",
+    "sha256": "48f19810fd5e10021d64b96e82cdb2b0b587f7cb24b3b4b5660b6732ae05cd09",
+    "enabled": [
+      "PERF_EVENTS",
+      "GUEST_PERF_EVENTS",
+      "KVM",
+      "KVM_X86",
+      "HAVE_STATIC_CALL",
+      "HAVE_STATIC_CALL_INLINE",
+      "CFI",
+      "SECURITY_SELINUX"
+    ]
+  },
+  "native_kvm_provider": {
+    "path": "virt/kvm/kvm_main.c",
+    "sha256": "ef5e55d05758858c6acfa41fd29b0a19b1f2c359601e08c43b95d55dfbda7372",
+    "scope": "Read kvm_guest_state/get_ip, kvm_guest_cbs and register/unregister wrappers. Not a whole-file KVM security review."
+  },
+  "validation": "SDK build 147 completed at 600ffdb50882 with 145 verified module signatures and matching flag/CRC tables. perf-static-call-build-147.json records direct-JMP code for all three guest-perf trampolines with CFI enabled/nonpermissive. No perf/SELinux/KVM runtime execution or OS build. Embedded external links were not opened.",
+  "remote_sources_used": []
+}

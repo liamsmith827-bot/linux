@@ -1,0 +1,550 @@
+{
+  "source_head": "e6bc4ab2483f740e7eea0ad93e401265758636cc",
+  "records": [
+    {
+      "commit": "044366659c18241a925c12200315109046ee5f64",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Full seven-path original and seven-path 584c54745dab revert read. The mount-specific setattr2 operation, notify_change2/do_truncate2 wrappers and mount-argument plumbing for coredump, privilege removal, truncation, chmod/chown and timestamps were explicitly removed. All retired identifiers are absent in ACK/LTS/port. Preserve native 6.18.57 idmapped permission, delegation and security operations; do not recreate the older parallel API. The separately audited post_setattr notification remains after native successful change.",
+      "evidence": [
+        "evidence/sdcardfs-retirement-review.json",
+        "SECURITY.md: Retired sdcardfs and mount permission extensions"
+      ],
+      "patch_sha256": "d6b40d84a20b21f20caba937c92d8506e0846ea7533b89918de4975830e3e4fc",
+      "changed_paths": [
+        "fs/attr.c",
+        "fs/coredump.c",
+        "fs/inode.c",
+        "fs/namei.c",
+        "fs/open.c",
+        "fs/utimes.c",
+        "include/linux/fs.h"
+      ]
+    },
+    {
+      "commit": "4fd07efd90ca1e9fd62d6cc157828523afbc3010",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Full twelve-path original and c3271fe2811c revert read, including every namei create/delete/link/rename wrapper, mq_open/unlink, securityfs, notification watches, access/chdir/chroot, would_dump and xattr. Original xattr/tmpfile calls passed ERR_PTR(-EOPNOTSUPP), not a usable mount; none is retained. All permission2/VFS2 declarations, wrappers and callsites were explicitly removed. Whole namei implementation equals LTS except separately audited export annotations, with native idmapped and LSM permission checks. This is positive revert history, not inference from failure to locate a consumer.",
+      "evidence": [
+        "evidence/sdcardfs-retirement-review.json",
+        "SECURITY.md: Retired sdcardfs and mount permission extensions"
+      ],
+      "patch_sha256": "4467dd7ed045ad60796686862c656659cc415aa0351da48fb827f19ead5f7a1e",
+      "changed_paths": [
+        "fs/attr.c",
+        "fs/exec.c",
+        "fs/namei.c",
+        "fs/notify/fanotify/fanotify_user.c",
+        "fs/notify/inotify/inotify_user.c",
+        "fs/open.c",
+        "fs/xattr.c",
+        "include/linux/fs.h",
+        "include/linux/namei.h",
+        "ipc/mqueue.c",
+        "security/inode.c"
+      ]
+    },
+    {
+      "commit": "e2b3aa25c512b94b755d93de23bec7af81d4b7d9",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Complete two-path original and 3663c286ac1d revert read. ACK removed the superblock show_options2 callback and both proc mount display callsites after sdcardfs removal. Native proc_namespace.c is byte-identical in port/LTS; ordinary show_options remains. No userspace mount information path is removed from the LTS base.",
+      "evidence": [
+        "evidence/sdcardfs-retirement-review.json",
+        "SECURITY.md: Retired sdcardfs and mount permission extensions"
+      ],
+      "patch_sha256": "cd6dce9be3a77dae681156f511ab51c47247f543b74856d00861bc66eb7c0fa0",
+      "changed_paths": [
+        "fs/proc_namespace.c",
+        "include/linux/fs.h"
+      ]
+    },
+    {
+      "commit": "8e31748d2cf13426154d3f8eacbaa26bea2e5709",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Complete five-path original and fe0d068d7c97 revert read. Explicitly remove historical vfsmount::data, allocation/free/clone/update/copy callbacks and custom remount propagation. These names and storage are absent in all final trees; mount allocation, clone and remount functions and propagation implementation retain LTS behavior. Modern idmapped mount state is native and is not treated as equivalent to this obsolete arbitrary filesystem-private pointer.",
+      "evidence": [
+        "evidence/sdcardfs-retirement-review.json",
+        "SECURITY.md: Retired sdcardfs and mount permission extensions"
+      ],
+      "patch_sha256": "14226ea3e4669411b999f0638ad5e878986b8a2e61052dfb56a00ef8cf45f106",
+      "changed_paths": [
+        "fs/namespace.c",
+        "fs/pnode.c",
+        "fs/pnode.h",
+        "include/linux/fs.h",
+        "include/linux/mount.h"
+      ]
+    },
+    {
+      "commit": "bafafd3663c2e17ec71a43aa90a98b1ef68e759c",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [],
+      "rationale": "Reviewed complete 15-path inventory and Kconfig/Makefile registration; all 13 newly added sdcardfs files were later wholly deleted by a96c98dd7a30 and are absent in final ACK/LTS/port. The obsolete 4,886-line driver body was classified by whole-path addition/deletion, not a claimed line-by-line security review. Positive local vold evidence selects sdcardfs only if /proc/filesystems exposes it and mounts FUSE for visible emulated storage. Keep the final ACK retirement and compiled FUSE interface, avoiding resurrection of obsolete permission/credential and stacking code. Legacy userspace sdcardfs support still exists; no claim it has no consumer or that FUSE runtime was verified.",
+      "evidence": [
+        "evidence/sdcardfs-retirement-review.json",
+        "SECURITY.md: Retired sdcardfs and mount permission extensions"
+      ],
+      "patch_sha256": "72b9dd725cd205f3c0014c9f5f2aca3277f7154349394f461936f3deedd54b9e",
+      "changed_paths": [
+        "fs/Kconfig",
+        "fs/Makefile",
+        "fs/sdcardfs/Kconfig",
+        "fs/sdcardfs/Makefile",
+        "fs/sdcardfs/dentry.c",
+        "fs/sdcardfs/derived_perm.c",
+        "fs/sdcardfs/file.c",
+        "fs/sdcardfs/inode.c",
+        "fs/sdcardfs/lookup.c",
+        "fs/sdcardfs/main.c",
+        "fs/sdcardfs/mmap.c",
+        "fs/sdcardfs/multiuser.h",
+        "fs/sdcardfs/packagelist.c",
+        "fs/sdcardfs/sdcardfs.h",
+        "fs/sdcardfs/super.c"
+      ]
+    },
+    {
+      "commit": "cbfbd9e932dec85e9b30550b79d3b1ba040ce1d5",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [],
+      "rationale": "Full NULL-callback fix and 87b919b2a2ec revert read. The original guarded update_mnt_data during mount creation and remount, preserving normal mount-attribute update without that callback. fe0d068d7c97 subsequently removes the complete facility, including unconditional dereferences temporarily reintroduced by the revert. Current native mount/create/remount functions have no such callback. Omission does not reintroduce the fixed NULL dereference.",
+      "evidence": [
+        "evidence/sdcardfs-retirement-review.json",
+        "SECURITY.md: Retired sdcardfs and mount permission extensions"
+      ],
+      "patch_sha256": "8b86b7269f74622013d5b3f85c775ff6d071462b040edebc36c54ceb41ba7b80",
+      "changed_paths": [
+        "fs/namespace.c"
+      ]
+    },
+    {
+      "commit": "3f6539bc85eec1adcbd6380af0c3ba26e64ad880",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [],
+      "rationale": "Full two-path patch changes set_fs_pwd/free_fs_struct and vfs_read/vfs_write exports from unrestricted to GPL. a96c98dd7a30 later removes all four exports, verified absent in ACK/LTS/port. Retain native function implementations; do not recreate historical module exposure merely to reproduce the license change. Native security checks are unaffected.",
+      "evidence": [
+        "evidence/sdcardfs-retirement-review.json",
+        "SECURITY.md: Retired sdcardfs and mount permission extensions"
+      ],
+      "patch_sha256": "ca2dff434f5f8ce053808fb03a69fb484d26105a6bf7b78878cddfd98dd5390c",
+      "changed_paths": [
+        "fs/fs_struct.c",
+        "fs/read_write.c"
+      ]
+    },
+    {
+      "commit": "a96c98dd7a3087f0c415bb05699f25722f8aef11",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [],
+      "rationale": "All 21 affected paths accounted for: 13 whole sdcardfs file deletions, two build registrations, two ARM board config entries, magic constant and six exports across three source files. Every non-driver hunk was read; driver deletion verified structurally against the original added path set, without claiming individual deleted-body review. All retired features/exports are absent at final ACK/LTS/port, so LTS already has the intended end state. Local vold registered-filesystem selection and visible-volume FUSE mounting support this choice. No unrelated ARM configuration or VFS implementation is replaced.",
+      "evidence": [
+        "evidence/sdcardfs-retirement-review.json",
+        "SECURITY.md: Retired sdcardfs and mount permission extensions"
+      ],
+      "patch_sha256": "cf46844eb1e261a664bbdd6d6602d51c272a06e41751338ad94965537d7188d3",
+      "changed_paths": [
+        "arch/arm64/configs/db845c_gki.fragment",
+        "arch/arm64/configs/rockpi4_defconfig",
+        "fs/Kconfig",
+        "fs/Makefile",
+        "fs/fs_struct.c",
+        "fs/read_write.c",
+        "fs/sdcardfs/Kconfig",
+        "fs/sdcardfs/Makefile",
+        "fs/sdcardfs/dentry.c",
+        "fs/sdcardfs/derived_perm.c",
+        "fs/sdcardfs/file.c",
+        "fs/sdcardfs/inode.c",
+        "fs/sdcardfs/lookup.c",
+        "fs/sdcardfs/main.c",
+        "fs/sdcardfs/mmap.c",
+        "fs/sdcardfs/multiuser.h",
+        "fs/sdcardfs/packagelist.c",
+        "fs/sdcardfs/sdcardfs.h",
+        "fs/sdcardfs/super.c",
+        "include/uapi/linux/magic.h",
+        "security/security.c"
+      ]
+    },
+    {
+      "commit": "c3271fe2811ccd13106ac370cf4cef79bb49117e",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [],
+      "rationale": "Complete twelve-path revert removes permission2 and all mount-aware VFS2 wrappers/calls. Its effect is already represented by the native API, with modern idmaps, current lookup semantics and LSM checks preserved. Exact whole namei comparison allows only separately audited export annotations; mqueue/securityfs files and selected permission callers match LTS. No historical export or ERR_PTR mount sentinel is restored.",
+      "evidence": [
+        "evidence/sdcardfs-retirement-review.json",
+        "SECURITY.md: Retired sdcardfs and mount permission extensions"
+      ],
+      "patch_sha256": "dc0eb01b2bc42f5166d267a7aa419a1d1e7f085a7c1784a53cf4d831285354d7",
+      "changed_paths": [
+        "fs/attr.c",
+        "fs/exec.c",
+        "fs/namei.c",
+        "fs/notify/fanotify/fanotify_user.c",
+        "fs/notify/inotify/inotify_user.c",
+        "fs/open.c",
+        "fs/xattr.c",
+        "include/linux/fs.h",
+        "include/linux/namei.h",
+        "ipc/mqueue.c",
+        "security/inode.c"
+      ]
+    },
+    {
+      "commit": "584c54745dab64b304485ea16e0dff1811e5598a",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [],
+      "rationale": "Complete seven-path revert removes setattr2/notify_change2/do_truncate2 and restores ordinary callsites. Current LTS native idmapped implementations are retained, including privilege removal, truncation, ownership/permission and delegation checks. Revert effect is already present; do not apply an old non-idmapped implementation over 6.18.57. Current notify_change differs only by the separately audited successful-change notification.",
+      "evidence": [
+        "evidence/sdcardfs-retirement-review.json",
+        "SECURITY.md: Retired sdcardfs and mount permission extensions"
+      ],
+      "patch_sha256": "f3a1a45e22bda89709dddb4371a304d3b0a97bdabc39bc61c527cd10c7d32b82",
+      "changed_paths": [
+        "fs/attr.c",
+        "fs/coredump.c",
+        "fs/inode.c",
+        "fs/namei.c",
+        "fs/open.c",
+        "fs/utimes.c",
+        "include/linux/fs.h"
+      ]
+    },
+    {
+      "commit": "3663c286ac1dbbfab53c2b082b90b515348b7386",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [],
+      "rationale": "Complete two-path revert removes show_options2 field and both proc mount display branches. Final absence verified and whole proc_namespace.c equals pinned LTS. Preserve native output and ordinary superblock show_options semantics.",
+      "evidence": [
+        "evidence/sdcardfs-retirement-review.json",
+        "SECURITY.md: Retired sdcardfs and mount permission extensions"
+      ],
+      "patch_sha256": "9476da147e67e59e56cc837e7047ce27e484570dbb2d54baeee4ce98a11a7611",
+      "changed_paths": [
+        "fs/proc_namespace.c",
+        "include/linux/fs.h"
+      ]
+    },
+    {
+      "commit": "87b919b2a2ec6059fe87f09f8d86a3f93cbd5442",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [],
+      "rationale": "Complete revert read. On its own this reintroduces unguarded update_mnt_data calls, but the following fe0d068d7c97 removes those calls and the whole private-data facility. Do not replay the transient unsafe intermediate state. Native final mount implementation has neither pointer nor dereference; exact whole-function witnesses verify the port stays with LTS.",
+      "evidence": [
+        "evidence/sdcardfs-retirement-review.json",
+        "SECURITY.md: Retired sdcardfs and mount permission extensions"
+      ],
+      "patch_sha256": "5bbc687e25fc5887d73db99b7eeb9173163ca7b8e76c880676d7d17adcb173d0",
+      "changed_paths": [
+        "fs/namespace.c"
+      ]
+    },
+    {
+      "commit": "fe0d068d7c97d4ebb8218d24237ebe0c33ee68d1",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [],
+      "rationale": "Complete five-path revert read. Removes private mount data field, allocator/clone/free/update callbacks and custom propagation function/declaration. Native mount allocation/create/clone/remount functions, propagation files and mount header match LTS; all retired names absent in final ACK/LTS/port. Keep native mount namespace and idmap locking/lifetime checks rather than replaying old mount code.",
+      "evidence": [
+        "evidence/sdcardfs-retirement-review.json",
+        "SECURITY.md: Retired sdcardfs and mount permission extensions"
+      ],
+      "patch_sha256": "3f5a6f5766fd2de95dc791a89bfa1df76de01f2900330743e9e5c56c95897705",
+      "changed_paths": [
+        "fs/namespace.c",
+        "fs/pnode.c",
+        "fs/pnode.h",
+        "include/linux/fs.h",
+        "include/linux/mount.h"
+      ]
+    }
+  ],
+  "tree_witnesses": [
+    {
+      "ref": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "driver_path_count": 0,
+      "obsolete_pattern": "\\b(setattr2|notify_change2|do_truncate2|permission2|inode_permission2|lookup_one_len2|vfs_(create|mkdir|mknod|symlink|link|rmdir|unlink|rename|mkobj)2|show_options2|clone_mnt_data|copy_mnt_data|update_mnt_data|alloc_mnt_data|propagate_remount|CONFIG_SDCARD_FS|SDCARDFS_SUPER_MAGIC)\\b",
+      "obsolete_pattern_hits": 0,
+      "registrations_absent": true,
+      "vfsmount_data_absent": true,
+      "removed_exports_absent": [
+        "set_fs_pwd",
+        "free_fs_struct",
+        "copy_fs_struct",
+        "vfs_read",
+        "vfs_write",
+        "security_path_chown"
+      ]
+    },
+    {
+      "ref": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "driver_path_count": 0,
+      "obsolete_pattern": "\\b(setattr2|notify_change2|do_truncate2|permission2|inode_permission2|lookup_one_len2|vfs_(create|mkdir|mknod|symlink|link|rmdir|unlink|rename|mkobj)2|show_options2|clone_mnt_data|copy_mnt_data|update_mnt_data|alloc_mnt_data|propagate_remount|CONFIG_SDCARD_FS|SDCARDFS_SUPER_MAGIC)\\b",
+      "obsolete_pattern_hits": 0,
+      "registrations_absent": true,
+      "vfsmount_data_absent": true,
+      "removed_exports_absent": [
+        "set_fs_pwd",
+        "free_fs_struct",
+        "copy_fs_struct",
+        "vfs_read",
+        "vfs_write",
+        "security_path_chown"
+      ]
+    },
+    {
+      "ref": "e6bc4ab2483f740e7eea0ad93e401265758636cc",
+      "driver_path_count": 0,
+      "obsolete_pattern": "\\b(setattr2|notify_change2|do_truncate2|permission2|inode_permission2|lookup_one_len2|vfs_(create|mkdir|mknod|symlink|link|rmdir|unlink|rename|mkobj)2|show_options2|clone_mnt_data|copy_mnt_data|update_mnt_data|alloc_mnt_data|propagate_remount|CONFIG_SDCARD_FS|SDCARDFS_SUPER_MAGIC)\\b",
+      "obsolete_pattern_hits": 0,
+      "registrations_absent": true,
+      "vfsmount_data_absent": true,
+      "removed_exports_absent": [
+        "set_fs_pwd",
+        "free_fs_struct",
+        "copy_fs_struct",
+        "vfs_read",
+        "vfs_write",
+        "security_path_chown"
+      ]
+    }
+  ],
+  "original_driver_paths": [
+    "fs/sdcardfs/Kconfig",
+    "fs/sdcardfs/Makefile",
+    "fs/sdcardfs/dentry.c",
+    "fs/sdcardfs/derived_perm.c",
+    "fs/sdcardfs/file.c",
+    "fs/sdcardfs/inode.c",
+    "fs/sdcardfs/lookup.c",
+    "fs/sdcardfs/main.c",
+    "fs/sdcardfs/mmap.c",
+    "fs/sdcardfs/multiuser.h",
+    "fs/sdcardfs/packagelist.c",
+    "fs/sdcardfs/sdcardfs.h",
+    "fs/sdcardfs/super.c"
+  ],
+  "addition_inventory": [
+    "M\tfs/Kconfig",
+    "M\tfs/Makefile",
+    "A\tfs/sdcardfs/Kconfig",
+    "A\tfs/sdcardfs/Makefile",
+    "A\tfs/sdcardfs/dentry.c",
+    "A\tfs/sdcardfs/derived_perm.c",
+    "A\tfs/sdcardfs/file.c",
+    "A\tfs/sdcardfs/inode.c",
+    "A\tfs/sdcardfs/lookup.c",
+    "A\tfs/sdcardfs/main.c",
+    "A\tfs/sdcardfs/mmap.c",
+    "A\tfs/sdcardfs/multiuser.h",
+    "A\tfs/sdcardfs/packagelist.c",
+    "A\tfs/sdcardfs/sdcardfs.h",
+    "A\tfs/sdcardfs/super.c"
+  ],
+  "removal_inventory": [
+    "M\tarch/arm64/configs/db845c_gki.fragment",
+    "M\tarch/arm64/configs/rockpi4_defconfig",
+    "M\tfs/Kconfig",
+    "M\tfs/Makefile",
+    "M\tfs/fs_struct.c",
+    "M\tfs/read_write.c",
+    "D\tfs/sdcardfs/Kconfig",
+    "D\tfs/sdcardfs/Makefile",
+    "D\tfs/sdcardfs/dentry.c",
+    "D\tfs/sdcardfs/derived_perm.c",
+    "D\tfs/sdcardfs/file.c",
+    "D\tfs/sdcardfs/inode.c",
+    "D\tfs/sdcardfs/lookup.c",
+    "D\tfs/sdcardfs/main.c",
+    "D\tfs/sdcardfs/mmap.c",
+    "D\tfs/sdcardfs/multiuser.h",
+    "D\tfs/sdcardfs/packagelist.c",
+    "D\tfs/sdcardfs/sdcardfs.h",
+    "D\tfs/sdcardfs/super.c",
+    "M\tinclude/uapi/linux/magic.h",
+    "M\tsecurity/security.c"
+  ],
+  "native_witnesses": [
+    {
+      "path": "fs/pnode.c",
+      "scope": "whole file",
+      "relationship": "identical to pinned LTS",
+      "sha256": "6ef51899ab6dbf0a18b4c6ac898b45166e827e0ea680939af77bd2c39ae9d404"
+    },
+    {
+      "path": "fs/pnode.h",
+      "scope": "whole file",
+      "relationship": "identical to pinned LTS",
+      "sha256": "c86e42ce80a541155a66f5841695c6f4c2426fdd6b5d586d116b2640864d8051"
+    },
+    {
+      "path": "fs/proc_namespace.c",
+      "scope": "whole file",
+      "relationship": "identical to pinned LTS",
+      "sha256": "fd82c0db52055ae807ee0b46c7c9bc5d47a9239805eb8ca5c47d2ba81d695776"
+    },
+    {
+      "path": "fs/utimes.c",
+      "scope": "whole file",
+      "relationship": "identical to pinned LTS",
+      "sha256": "bf4ddd2748076206d32d55eb8981c2a39c8eeec9f0237510409f2d4c42864ff1"
+    },
+    {
+      "path": "ipc/mqueue.c",
+      "scope": "whole file",
+      "relationship": "identical to pinned LTS",
+      "sha256": "283cfc6de800dfd239d28cfd70e99c567044bca85951d577688973e8ef535d32"
+    },
+    {
+      "path": "security/inode.c",
+      "scope": "whole file",
+      "relationship": "identical to pinned LTS",
+      "sha256": "3821b7f8e3069899628502dd266c28076fd8e17a757629bfd43973fb57c97507"
+    },
+    {
+      "path": "include/linux/mount.h",
+      "scope": "whole file",
+      "relationship": "identical to pinned LTS",
+      "sha256": "c655ddb28187e957830acd39816b8b11580331cc41f5f29c43c0871ab4435171"
+    },
+    {
+      "path": "fs/namei.c",
+      "scope": "whole file except EXPORT_SYMBOL lines",
+      "relationship": "identical to pinned LTS after excluding separately audited symbol namespace/license annotations",
+      "sha256": "23134cdcc06cef08796acf8967e1955caa3979f1a8c7c230b528f70c2ed02030",
+      "normalized_sha256": "7ab5ffdd9433601a42203f2114498d6b75065ae3da11ea9e7a34a69533bca0e3"
+    },
+    {
+      "path": "fs/namespace.c",
+      "function": "alloc_vfsmnt",
+      "relationship": "whole function identical to pinned LTS",
+      "sha256": "90e621880a9ee7ce44b8623b0732914edfc394d8715b27e93239600da45496fe"
+    },
+    {
+      "path": "fs/namespace.c",
+      "function": "free_vfsmnt",
+      "relationship": "whole function identical to pinned LTS",
+      "sha256": "effe5f7f5beb27a465961c13b71ade1512c65c598f49804a17b0dae3d7fdf758"
+    },
+    {
+      "path": "fs/namespace.c",
+      "function": "vfs_create_mount",
+      "relationship": "whole function identical to pinned LTS",
+      "sha256": "13e22a61a79bca70985ada20c82dff3089c054eb078e25ff4107fd17cbeccaff"
+    },
+    {
+      "path": "fs/namespace.c",
+      "function": "clone_mnt",
+      "relationship": "whole function identical to pinned LTS",
+      "sha256": "31cc1b0ecc3c56b25275b7672cad6f88ee4cc5a8bb257b81552f3a97c93fcbc2"
+    },
+    {
+      "path": "fs/namespace.c",
+      "function": "do_remount",
+      "relationship": "whole function identical to pinned LTS",
+      "sha256": "558cb190e749d781e6723dd7af3888f822d1f5233b56a5b22cdeb508b2e40459"
+    },
+    {
+      "path": "fs/open.c",
+      "function": "do_truncate",
+      "relationship": "whole function identical to pinned LTS",
+      "sha256": "4f8daf4cd33cd0ed6ec3a60dd118087417b59b4a410f38db191b30f475c79703"
+    },
+    {
+      "path": "fs/open.c",
+      "function": "vfs_truncate",
+      "relationship": "whole function identical to pinned LTS",
+      "sha256": "8394b0258529d0df02e68ca8addd0e1ffc704e38589b246338faf9b52c932106"
+    },
+    {
+      "path": "fs/open.c",
+      "function": "do_sys_ftruncate",
+      "relationship": "whole function identical to pinned LTS",
+      "sha256": "6ea0bbd020a2bb6939f8a769b77f2f2c73f529e71e7142751f657ccd1ade589b"
+    },
+    {
+      "path": "fs/open.c",
+      "function": "chmod_common",
+      "relationship": "whole function identical to pinned LTS",
+      "sha256": "15f44497fcc0da02d5584d398b9a596c090f0e351af11b2457b590dc5ed122d1"
+    },
+    {
+      "path": "fs/open.c",
+      "function": "chown_common",
+      "relationship": "whole function identical to pinned LTS",
+      "sha256": "6c260c53029c307d8794679ad3769601e126a051543dc5bb426f685f9aafc171"
+    },
+    {
+      "path": "fs/open.c",
+      "function": "do_faccessat",
+      "relationship": "whole function identical to pinned LTS",
+      "sha256": "e11141802cd800ca512d86bc4d64231e992f15b63676d729e74ac989a4d27471"
+    },
+    {
+      "path": "fs/inode.c",
+      "function": "__remove_privs",
+      "relationship": "whole function identical to pinned LTS",
+      "sha256": "51719eea50d2c61bcdd1320ceb7a2b369857c017e007453e044f0bae30b89ca5"
+    },
+    {
+      "path": "fs/inode.c",
+      "function": "file_remove_privs",
+      "relationship": "whole function identical to pinned LTS",
+      "sha256": "3ff6954ab8848ce8bbf8de9b04face57406a29398d40e9cc8760493edf169cb4"
+    },
+    {
+      "path": "fs/exec.c",
+      "function": "would_dump",
+      "relationship": "whole function identical to pinned LTS",
+      "sha256": "743eeb1be1350e419cdf716ba5c75c5b1ecad37f8cc0c82e8d063292349bf8a0"
+    },
+    {
+      "path": "fs/xattr.c",
+      "function": "xattr_permission",
+      "relationship": "whole function identical to pinned LTS",
+      "sha256": "528ad638e6808bc97f85bca06cbbf60745a2942d9dbb7b09d9c8cee4de80e7d5"
+    },
+    {
+      "path": "fs/notify/fanotify/fanotify_user.c",
+      "function": "fanotify_find_path",
+      "relationship": "whole function identical to pinned LTS",
+      "sha256": "9e50ed6afb2553252aa4d5496539989acff1af6c43d8ae332ae9dad755851883"
+    },
+    {
+      "path": "fs/notify/inotify/inotify_user.c",
+      "function": "inotify_find_inode",
+      "relationship": "whole function identical to pinned LTS",
+      "sha256": "4951a51a586ab6941e567354c700ce24ad0e742865d434ec45c542d2d96ba83e"
+    },
+    {
+      "path": "fs/attr.c",
+      "function": "notify_change",
+      "relationship": "whole function identical to pinned LTS after removing separately audited post_setattr notification",
+      "sha256": "d35d3e5c185a312a8ca82f06c7c6dfe3b1d3c981c9223b10dd9943c8832810f0"
+    }
+  ],
+  "local_userspace_evidence": {
+    "repository": "/home/liamsmith/src/kernel/grapheneos-17/system/vold",
+    "head": "a47ab7c0d4be9e89459a268eab314cd3c758ec77",
+    "files": {
+      "Utils.cpp": "defcf378300221c44cb6f7f5d67b790dc6ff648b078c60115f1977a89f37b55e",
+      "model/EmulatedVolume.cpp": "d3c801b848028e500350314d5f958ea49cc2b7656acc994ebb6727708fa58910"
+    },
+    "findings": [
+      "Utils.cpp IsFilesystemSupported reads /proc/filesystems; IsSdcardfsUsed requires that registration plus the property.",
+      "Both EmulatedVolume constructors set mUseSdcardFs from that predicate.",
+      "EmulatedVolume::doMount executes sdcardfs only with mUseSdcardFs and owner user 0; isVisible branch calls MountUserFuse and marks mFuseMounted. FUSE is not conditional on sdcardfs presence."
+    ]
+  },
+  "configuration_evidence": {
+    "run": "sdk-build-attempt-145",
+    "path": "/home/liamsmith/src/kernel/kernel_manifest-6.18/common_dist/kernel_x86_64_dot_config",
+    "sha256": "48f19810fd5e10021d64b96e82cdb2b0b587f7cb24b3b4b5660b6732ae05cd09",
+    "FUSE_FS": "y",
+    "SDCARD_FS": "absent"
+  },
+  "limitations": "Static retirement and source preservation review; no Android OS build, storage mounting, permission isolation or filesystem runtime test performed. Entire deleted sdcardfs bodies were accounted for as whole-file retirements, not individually certified safe. No new code change requires a rebuild; build 145 artifacts remain the latest compiled source.",
+  "remote_sources_used": []
+}

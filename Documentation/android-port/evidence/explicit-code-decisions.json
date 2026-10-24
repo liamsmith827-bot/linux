@@ -16578,5 +16578,634 @@
       "evidence/nice-hook-bounds-check.json",
       "SECURITY.md: Scheduler syscall-move merge"
     ]
+  },
+  {
+    "commit": "044366659c18241a925c12200315109046ee5f64",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full seven-path original and seven-path 584c54745dab revert read. The mount-specific setattr2 operation, notify_change2/do_truncate2 wrappers and mount-argument plumbing for coredump, privilege removal, truncation, chmod/chown and timestamps were explicitly removed. All retired identifiers are absent in ACK/LTS/port. Preserve native 6.18.57 idmapped permission, delegation and security operations; do not recreate the older parallel API. The separately audited post_setattr notification remains after native successful change.",
+    "evidence": [
+      "evidence/sdcardfs-retirement-review.json",
+      "SECURITY.md: Retired sdcardfs and mount permission extensions"
+    ]
+  },
+  {
+    "commit": "4fd07efd90ca1e9fd62d6cc157828523afbc3010",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full twelve-path original and c3271fe2811c revert read, including every namei create/delete/link/rename wrapper, mq_open/unlink, securityfs, notification watches, access/chdir/chroot, would_dump and xattr. Original xattr/tmpfile calls passed ERR_PTR(-EOPNOTSUPP), not a usable mount; none is retained. All permission2/VFS2 declarations, wrappers and callsites were explicitly removed. Whole namei implementation equals LTS except separately audited export annotations, with native idmapped and LSM permission checks. This is positive revert history, not inference from failure to locate a consumer.",
+    "evidence": [
+      "evidence/sdcardfs-retirement-review.json",
+      "SECURITY.md: Retired sdcardfs and mount permission extensions"
+    ]
+  },
+  {
+    "commit": "e2b3aa25c512b94b755d93de23bec7af81d4b7d9",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Complete two-path original and 3663c286ac1d revert read. ACK removed the superblock show_options2 callback and both proc mount display callsites after sdcardfs removal. Native proc_namespace.c is byte-identical in port/LTS; ordinary show_options remains. No userspace mount information path is removed from the LTS base.",
+    "evidence": [
+      "evidence/sdcardfs-retirement-review.json",
+      "SECURITY.md: Retired sdcardfs and mount permission extensions"
+    ]
+  },
+  {
+    "commit": "8e31748d2cf13426154d3f8eacbaa26bea2e5709",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Complete five-path original and fe0d068d7c97 revert read. Explicitly remove historical vfsmount::data, allocation/free/clone/update/copy callbacks and custom remount propagation. These names and storage are absent in all final trees; mount allocation, clone and remount functions and propagation implementation retain LTS behavior. Modern idmapped mount state is native and is not treated as equivalent to this obsolete arbitrary filesystem-private pointer.",
+    "evidence": [
+      "evidence/sdcardfs-retirement-review.json",
+      "SECURITY.md: Retired sdcardfs and mount permission extensions"
+    ]
+  },
+  {
+    "commit": "bafafd3663c2e17ec71a43aa90a98b1ef68e759c",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "Reviewed complete 15-path inventory and Kconfig/Makefile registration; all 13 newly added sdcardfs files were later wholly deleted by a96c98dd7a30 and are absent in final ACK/LTS/port. The obsolete 4,886-line driver body was classified by whole-path addition/deletion, not a claimed line-by-line security review. Positive local vold evidence selects sdcardfs only if /proc/filesystems exposes it and mounts FUSE for visible emulated storage. Keep the final ACK retirement and compiled FUSE interface, avoiding resurrection of obsolete permission/credential and stacking code. Legacy userspace sdcardfs support still exists; no claim it has no consumer or that FUSE runtime was verified.",
+    "evidence": [
+      "evidence/sdcardfs-retirement-review.json",
+      "SECURITY.md: Retired sdcardfs and mount permission extensions"
+    ]
+  },
+  {
+    "commit": "cbfbd9e932dec85e9b30550b79d3b1ba040ce1d5",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full NULL-callback fix and 87b919b2a2ec revert read. The original guarded update_mnt_data during mount creation and remount, preserving normal mount-attribute update without that callback. fe0d068d7c97 subsequently removes the complete facility, including unconditional dereferences temporarily reintroduced by the revert. Current native mount/create/remount functions have no such callback. Omission does not reintroduce the fixed NULL dereference.",
+    "evidence": [
+      "evidence/sdcardfs-retirement-review.json",
+      "SECURITY.md: Retired sdcardfs and mount permission extensions"
+    ]
+  },
+  {
+    "commit": "3f6539bc85eec1adcbd6380af0c3ba26e64ad880",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full two-path patch changes set_fs_pwd/free_fs_struct and vfs_read/vfs_write exports from unrestricted to GPL. a96c98dd7a30 later removes all four exports, verified absent in ACK/LTS/port. Retain native function implementations; do not recreate historical module exposure merely to reproduce the license change. Native security checks are unaffected.",
+    "evidence": [
+      "evidence/sdcardfs-retirement-review.json",
+      "SECURITY.md: Retired sdcardfs and mount permission extensions"
+    ]
+  },
+  {
+    "commit": "a96c98dd7a3087f0c415bb05699f25722f8aef11",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "All 21 affected paths accounted for: 13 whole sdcardfs file deletions, two build registrations, two ARM board config entries, magic constant and six exports across three source files. Every non-driver hunk was read; driver deletion verified structurally against the original added path set, without claiming individual deleted-body review. All retired features/exports are absent at final ACK/LTS/port, so LTS already has the intended end state. Local vold registered-filesystem selection and visible-volume FUSE mounting support this choice. No unrelated ARM configuration or VFS implementation is replaced.",
+    "evidence": [
+      "evidence/sdcardfs-retirement-review.json",
+      "SECURITY.md: Retired sdcardfs and mount permission extensions"
+    ]
+  },
+  {
+    "commit": "c3271fe2811ccd13106ac370cf4cef79bb49117e",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Complete twelve-path revert removes permission2 and all mount-aware VFS2 wrappers/calls. Its effect is already represented by the native API, with modern idmaps, current lookup semantics and LSM checks preserved. Exact whole namei comparison allows only separately audited export annotations; mqueue/securityfs files and selected permission callers match LTS. No historical export or ERR_PTR mount sentinel is restored.",
+    "evidence": [
+      "evidence/sdcardfs-retirement-review.json",
+      "SECURITY.md: Retired sdcardfs and mount permission extensions"
+    ]
+  },
+  {
+    "commit": "584c54745dab64b304485ea16e0dff1811e5598a",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Complete seven-path revert removes setattr2/notify_change2/do_truncate2 and restores ordinary callsites. Current LTS native idmapped implementations are retained, including privilege removal, truncation, ownership/permission and delegation checks. Revert effect is already present; do not apply an old non-idmapped implementation over 6.18.57. Current notify_change differs only by the separately audited successful-change notification.",
+    "evidence": [
+      "evidence/sdcardfs-retirement-review.json",
+      "SECURITY.md: Retired sdcardfs and mount permission extensions"
+    ]
+  },
+  {
+    "commit": "3663c286ac1dbbfab53c2b082b90b515348b7386",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Complete two-path revert removes show_options2 field and both proc mount display branches. Final absence verified and whole proc_namespace.c equals pinned LTS. Preserve native output and ordinary superblock show_options semantics.",
+    "evidence": [
+      "evidence/sdcardfs-retirement-review.json",
+      "SECURITY.md: Retired sdcardfs and mount permission extensions"
+    ]
+  },
+  {
+    "commit": "87b919b2a2ec6059fe87f09f8d86a3f93cbd5442",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "Complete revert read. On its own this reintroduces unguarded update_mnt_data calls, but the following fe0d068d7c97 removes those calls and the whole private-data facility. Do not replay the transient unsafe intermediate state. Native final mount implementation has neither pointer nor dereference; exact whole-function witnesses verify the port stays with LTS.",
+    "evidence": [
+      "evidence/sdcardfs-retirement-review.json",
+      "SECURITY.md: Retired sdcardfs and mount permission extensions"
+    ]
+  },
+  {
+    "commit": "fe0d068d7c97d4ebb8218d24237ebe0c33ee68d1",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Complete five-path revert read. Removes private mount data field, allocator/clone/free/update callbacks and custom propagation function/declaration. Native mount allocation/create/clone/remount functions, propagation files and mount header match LTS; all retired names absent in final ACK/LTS/port. Keep native mount namespace and idmap locking/lifetime checks rather than replaying old mount code.",
+    "evidence": [
+      "evidence/sdcardfs-retirement-review.json",
+      "SECURITY.md: Retired sdcardfs and mount permission extensions"
+    ]
+  },
+  {
+    "commit": "7c6ba364ef8b206ff522adfd52626725035c7db7",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Complete original one-path patch reviewed with d07b0181d651/e2db2cceeb22/ebc7af30ceac history. Initial freezable blocking helper was removed, reintroduced for 5.11, and finally explicitly reverted after its helper disappeared in 6.1. Final ACK and port use native scheduling; whole ep_poll equals 6.18.57. Do not recreate the retired helper or old waitqueue/freezer integration. Historical memory-corruption report in the local message was not independently reproduced or consulted remotely.",
+    "evidence": [
+      "evidence/eventpoll-history-review.json",
+      "evidence/event-name-hook-check.json",
+      "SECURITY.md: Epoll history and bounded event names"
+    ]
+  },
+  {
+    "commit": "d07b0181d651bb5541f3160bb6bcc9227e388885",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full temporary revert read; e2db2cceeb22 reinstated the facility, and ebc7af30ceac removed it again. Final native ep_poll is the selected state, not a replay of this intermediate 2020 scheduling body. Current timeout, wakeup and signal semantics remain LTS.",
+    "evidence": [
+      "evidence/eventpoll-history-review.json",
+      "evidence/event-name-hook-check.json",
+      "SECURITY.md: Epoll history and bounded event names"
+    ]
+  },
+  {
+    "commit": "e2db2cceeb223443022ee44001768d8aed273f52",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full reintroduction and explicit ebc7af30ceac revert read. freezable_schedule_hrtimeout_range is absent from final ACK epoll and native port. Preserve the native LTS wait loop and freeze/signal mechanisms; no assertion that the old optimization is still needed or supported.",
+    "evidence": [
+      "evidence/eventpoll-history-review.json",
+      "evidence/event-name-hook-check.json",
+      "SECURITY.md: Epoll history and bounded event names"
+    ]
+  },
+  {
+    "commit": "ebc7af30ceaca5d075f68d54aaa71989f87cccf3",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Full revert read. Its removal of the obsolete freezable helper is already reflected in native 6.18.57 ep_poll, verified as a whole-function match. No helper recreation or freezer behavior change is necessary for the final ACK API. Suspend runtime was not tested.",
+    "evidence": [
+      "evidence/eventpoll-history-review.json",
+      "evidence/event-name-hook-check.json",
+      "SECURITY.md: Epoll history and bounded event names"
+    ]
+  },
+  {
+    "commit": "b100c090ca79cf73dbe1ed28dbda42f9a27cabc3",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full temporary timeout revert and 23ced622035e reapply read. Keep native ep_schedule_timeout with d9ec73301099 fix that sets timed_out when a deadline is already expired, instead of skipping the assignment and potentially spinning forever. Both complete functions equal LTS. Do not replay the temporary removal or claim the pre-fix reapply itself solved the hang.",
+    "evidence": [
+      "evidence/eventpoll-history-review.json",
+      "evidence/event-name-hook-check.json",
+      "SECURITY.md: Epoll history and bounded event names"
+    ]
+  },
+  {
+    "commit": "23ced622035e28690f5d045be935ce2c8123b8e7",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Full reapply read and local native d9ec73301099 fix inspected. Native 6.18.57 contains the timeout helper and corrected !ep_schedule_timeout(to) || !schedule_hrtimeout_range(...) assignment. Preserve the corrected whole ep_poll implementation, avoiding the historical expired-timeout busy loop. No additional code is required; this is final semantic representation rather than patch-context identity.",
+    "evidence": [
+      "evidence/eventpoll-history-review.json",
+      "evidence/event-name-hook-check.json",
+      "SECURITY.md: Epoll history and bounded event names"
+    ]
+  },
+  {
+    "commit": "0e38da25e3d04fdf2d67a44610be2223d205ab66",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full one-comment temporary revert read. Native final source restores the ordinary non-kernel-doc comment for ep_get_upwards_depth_proc, and the already audited 27fdbefb8492 reapply restores it in ACK. All eventpoll text outside the naming adaptation matches LTS, so no obsolete warning-generating comment is introduced. Documentation-only change, no runtime security effect.",
+    "evidence": [
+      "evidence/eventpoll-history-review.json",
+      "evidence/event-name-hook-check.json",
+      "SECURITY.md: Epoll history and bounded event names"
+    ]
+  },
+  {
+    "commit": "dff8cabc741079a355c930c085b25b175a451960",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full recursion-fix revert and 90eaf9670b5c reapply read. Preserve native downward/upward depth accounting, cached loop_check_depth and total-depth rejection. Do not restore the old traversal merely to accommodate the historical test expectation. Current LTS also uses EP_MAX_NESTS+1 sentinel instead of INT_MAX, preventing the locally documented integer overflow from defeating depth checks.",
+    "evidence": [
+      "evidence/eventpoll-history-review.json",
+      "evidence/event-name-hook-check.json",
+      "SECURITY.md: Epoll history and bounded event names"
+    ]
+  },
+  {
+    "commit": "90eaf9670b5c00c08ceb34d36625a617e507c2c9",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Full reapply and local LTS a80161c20370 integer-overflow fix read. Native complete loop-check functions preserve two-direction depth validation and safe EP_MAX_NESTS+1 sentinel; the original reapply uses INT_MAX and is not copied verbatim. The local message mentions an updated LTP expectation; that external URL was not opened and no LTP run is claimed.",
+    "evidence": [
+      "evidence/eventpoll-history-review.json",
+      "evidence/event-name-hook-check.json",
+      "SECURITY.md: Epoll history and bounded event names"
+    ]
+  },
+  {
+    "commit": "7a436faab71e5871f7ee486c156693699dc3f426",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Full seven-hunk identifier/comment rename and native stable f04166c8677a read. Native 6.18.57 already names the function ep_remove and updates all callers/comments. Whole ep_remove, ep_remove_epi, ep_clear_and_put, ep_insert and do_epoll_ctl match LTS, preserving its newer file-reference and eventpoll lifetime fixes. No old body is copied solely for a rename.",
+    "evidence": [
+      "evidence/eventpoll-history-review.json",
+      "evidence/event-name-hook-check.json",
+      "SECURITY.md: Epoll history and bounded event names"
+    ]
+  },
+  {
+    "commit": "02b98a9f59c8308f98cf08bbc58263e1226934dc",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "69c25c295ddc6162295d231fd250577d207060e8"
+    ],
+    "rationale": "Full four-path naming-hook patch reviewed. Retain both source hooks, declarations and GPL trace exports. 69c25c295ddc pads buffers before each callback and terminates them afterward; the inactive epoll item hook uses the complete native snapshot name rather than silently truncating every name to 63 bytes. Active hooks retain their original 64-byte epoll/32-byte timerfd capacities. Callback registration/unregistration racing the enabled snapshot may skip the new callback or use a bounded default for that event; callbacks must not retain the borrowed buffer or write beyond len. Actual string consumers copy synchronously. Native CAP_BLOCK_SUSPEND/WAKE_ALARM, flag/clock validation and cleanup remain. Trusted callbacks can intentionally alter diagnostic names; they do not acquire new alarm/wakeup permissions. No particular installed subscriber was established; generic Android source customization is retained conservatively.",
+    "evidence": [
+      "evidence/eventpoll-history-review.json",
+      "evidence/event-name-hook-check.json",
+      "SECURITY.md: Epoll history and bounded event names"
+    ]
+  },
+  {
+    "commit": "5dbd8df7b35643210226329bd7e60658c07a036f",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full four-path original and both e92b6ef8fc96/60701bc1fe7c reverts read. ACK explicitly removes the default-3 Kconfig restriction and residual perf_paranoid_any syscall gate. All retired names are absent in final ACK/LTS/port; kernel default stays native 2. Positive local GrapheneOS init-perfetto.rc writes paranoid=-1 on load-bpf-programs, relying on SELinux perf controls, and sepolicy grants distinct perf permissions to traced_perf, runas_app and shell. Native complete perf_event_open and SELinux open/read/write checks are preserved. Do not treat native paranoid=3 as the old blanket ban or claim SELinux equals that stricter global prohibition. Allowed profiling exposes perf machinery according to policy; enforcement at runtime is unverified and no GrapheneOS kernel_common hardening is imported.",
+    "evidence": [
+      "evidence/perf-policy-and-guest-review.json",
+      "SECURITY.md: Perf access policy and native guest callbacks"
+    ]
+  },
+  {
+    "commit": "e92b6ef8fc963a068ff70188fb0458b1eeaa7175",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Full five-path partial revert read: documentation/default/Kconfig plus both GKI config entries removed. Its intended final state is already native, but this commit alone left the syscall gate and helper; 60701bc1fe7c completes removal. Both are checked together. Preserve current LTS capability/LSM checks and documented default 2, with positive local Android policy/init consumers instead of blanket CAP_SYS_ADMIN-only gating. No unrelated defconfig settings are changed.",
+    "evidence": [
+      "evidence/perf-policy-and-guest-review.json",
+      "SECURITY.md: Perf access policy and native guest callbacks"
+    ]
+  },
+  {
+    "commit": "60701bc1fe7c8e8a59f798762302d7d3a4c5aad9",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Full two-path cleanup read. Removes the leftover perf_paranoid_any helper and perf_event_open CAP_SYS_ADMIN gate after e92b6ef8fc96. Complete native syscall is unchanged in port and still calls security_perf_event_open(PERF_SECURITY_OPEN), with event-specific checks afterward. The optional original global ban is intentionally absent, not silently claimed equivalent to native paranoid semantics.",
+    "evidence": [
+      "evidence/perf-policy-and-guest-review.json",
+      "SECURITY.md: Perf access policy and native guest callbacks"
+    ]
+  },
+  {
+    "commit": "ec22afdb5abf68188a37811693433286f2d987d9",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Full single-export patch read. Retain GPL perf_event_read_local source-module interface. Entire function body equals LTS: local IRQ protection, reject inherited events, validate current task/local or package-adjusted CPU and pinned on-CPU state, read native PMU counter and timing. Caller must own event lifetime and honor its local/NMI-safe contract; export adds no reference or new userspace access. Particular SDK module subscriber remains unconfirmed; generic instrumentation source compatibility is retained.",
+    "evidence": [
+      "evidence/perf-policy-and-guest-review.json",
+      "SECURITY.md: Perf access policy and native guest callbacks"
+    ]
+  },
+  {
+    "commit": "a82e2e9f9ab649b62693a3d4dae7b617ff2be3ee",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [
+      "600ffdb508823a56f22e533a87a1bc77b1b7e541"
+    ],
+    "rationale": "Full two-path historical revert and native static-call implementation read. Restore both CONFIG_GUEST_PERF_EVENTS blocks exactly from LTS in 600ffdb50882. Original motivation was Pixel 6 ARM indirect-call CFI failure on __static_call_return0, not an Android userspace API. SDK has HAVE_STATIC_CALL=y and HAVE_STATIC_CALL_INLINE=y: static_call expands to a declared trampoline, x86 trampoline emits direct JMP, and the inline transform replaces return-zero CALL with xor5rax. This is positive architectural implementation evidence, not lack of a consumer. Keep native registration/unregistration GPL interfaces, callback signatures, null-return defaults, optional Intel PT handler and synchronize_rcu. The historical private perf_get_guest_cbs implementation helper is removed along with the workaround; supported registration and perf_guest_* interfaces remain. Native KVM callback provider is present and config-enabled. No CFI disable or type-check bypass is added; native x86 CFI-enabled compilation is being verified in build 147, while callback runtime and ARM behavior are outside this verification.",
+    "evidence": [
+      "evidence/perf-policy-and-guest-review.json",
+      "SECURITY.md: Perf access policy and native guest callbacks"
+    ]
+  },
+  {
+    "commit": "9bb7e0640febd3e2b93bbb0ccdeebb271b8b3fed",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "cef6ed5fe6a4edf0d70962a6dabb1c9204018503"
+    ],
+    "rationale": "Full three-path patch read. Retain emulated metadata-page subtraction, sysctl_perf_event_mlock linkage/header declaration and initcall default 512+reported-page KiB. Positive local simpleperf uses (mmap_pages+1)*sysconf(_SC_PAGE_SIZE) and the kernel data_offset/data_size; SDK goldfish page_shift=14 selects 16 KiB. cef6ed5fe6a4 adds an explicit minimum-size guard before unsigned subtraction and balances unaccounting for all physical metadata pages. Native mmap bounds, power-of-two data requirement, resource/capability checks, event revocation, PMU callbacks and failed-map cleanup remain. Kernel default becomes 528 KiB in 16 KiB mode, but local init-perfetto.rc can later set 516 KiB; no claim of the eventual runtime setting. This candidate does not resolve the separate filemap shared-EOF issue.",
+    "evidence": [
+      "evidence/perf-metadata-review.json",
+      "evidence/perf-metadata-check.json",
+      "SECURITY.md: Perf metadata under emulated page sizes"
+    ]
+  },
+  {
+    "commit": "aff2eb701946b35067d43fd898e97f66bb598c8a",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "cef6ed5fe6a4edf0d70962a6dabb1c9204018503"
+    ],
+    "rationale": "Full three-path patch read. Retain zeroed higher-order metadata allocation/free, reported data_offset, vmalloc sizing/data offset and metadata/data translation for 4/8/16 KiB. Adapt cef6ed5fe6a4: cast user_page to char* before byte arithmetic; otherwise the 1088-byte struct type scales pgoff*4096 into a multi-megabyte displacement outside a 16 KiB metadata allocation, potentially exposing unrelated memory or crashing. Also make the full allocated metadata area writable while data/AUX remain read-only, require AUX to start beyond all metadata and data, and retain LTS PFN lifetime rules by removing obsolete page->mapping clearing. The last change preserves native current struct-page restrictions rather than ACK obsolete cleanup. Allocate/free orders match the boot-only immutable reported page size. Whole regular allocator cleanup is native apart from metadata helpers; full map_range/perf_mmap/lifetime functions equal LTS. No real perf mapping or exploit was executed.",
+    "evidence": [
+      "evidence/perf-metadata-review.json",
+      "evidence/perf-metadata-check.json",
+      "SECURITY.md: Perf metadata under emulated page sizes"
+    ]
+  },
+  {
+    "commit": "482ed74e405128475d5ee5fdc75c44ca83f35dcb",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Full two-path unique remerge diff read, including both include-conflict resolutions. It retains PR_SET_SYSCALL_USER_DISPATCH and the Android PR_SET_VMA constants simultaneously and combines required includes. Both interfaces and constants are now native LTS: entire UAPI header equals LTS, prctl_set_vma equals LTS and the complete prctl syscall equals LTS after the separately audited finished notification. linux/mm.h and syscall_user_dispatch.h are present; obsolete mempolicy include is not needed by native implementation and is not restored. No old VMA-name storage implementation is introduced by this merge decision. Native validation and permissions remain; runtime prctl behavior unverified.",
+    "evidence": [
+      "evidence/prctl-interface-merge-review.json"
+    ]
+  },
+  {
+    "commit": "7881aee5449db959e23f086aa7cfaa037ffd8aae",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Full two-path unique remerge diff read. Preserve both PR_SET/GET_IO_FLUSHER and PR_SET_VMA: entire UAPI header and prctl_set_vma are native LTS; complete prctl body is native after the separately audited finished notification. Native PF_LOCAL_THROTTLE supersedes old PF_LESS_THROTTLE. Do not resurrect old anon-name implementation from the conflict. Native privilege checks, validation and flag handling remain.",
+    "evidence": [
+      "evidence/prctl-uid-history-review.json",
+      "SECURITY.md: Historical prctl and UID statistics"
+    ]
+  },
+  {
+    "commit": "a64320f5b8e452bb095e78bf6b078a6160210a1f",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Full four-path unique remerge diff read, including nonconflicting ion_buffer vm_map_ram-to-vmap change, ion_heap duplicate-body removal and replacement zeroing helpers. Both ION files were explicitly deleted by 0b2a6b913757 and are absent in pinned ACK, LTS and port; this historical allocator implementation is not resurrected. This is positive retirement evidence, not absence of a consumer. ext4 encryption wrapper/signature conflict is superseded by the native LTS read/decrypt flow: whole current file equals LTS apart from separately reviewed cleancache include/hit path which verifies fs-verity before uptodate. Native PR_IO_FLUSHER PF_LOCAL_THROTTLE and current prctl implementation are retained. No stable read, decryption, integrity or privilege check is reversed.",
+    "evidence": [
+      "evidence/prctl-uid-history-review.json",
+      "SECURITY.md: Historical prctl and UID statistics"
+    ]
+  },
+  {
+    "commit": "1da58ab555464122d39b81411f8cb4a562addd3a",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Full two-path patch read. UID conversion actually changed read semaphore acquisition to mmap_write_lock; it was not only a rename. get_full_task_comm and the entire debug call chain were explicitly removed by 671089a20883 after a sleeping-under-spinlock problem, and are absent in final ACK and port. Do not restore that obsolete debug locking. Old prctl implementation was replaced by native set_anon_vma_name/madvise_set_anon_name: the native lock classifier selects killable mmap write locking for anonymous-name changes and paired unlocking. Native address validation remains with separately audited reported-page alignment; a separately retained restricted bypass hook can implement the operation and must supply valid locking, name lifetime and error semantics. No claim that a callback is checked/sandboxed by native fallback.",
+    "evidence": [
+      "evidence/prctl-uid-history-review.json",
+      "SECURITY.md: Historical prctl and UID statistics"
+    ]
+  },
+  {
+    "commit": "ad4b32c45de4bbc39305d6bc230253cc9cb5598a",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full six-path fsync-accounting patch read together with explicit final-ACK revert 6bb63612964c. Do not restore syscfs counter, syscall increment or TASK_XACCT dependency. The three accounting headers equal LTS and whole do_fsync equals LTS; UID source has no syscfs access. Format columns named fsync remain zero, as in pinned ACK. This is a documented removal by final ACK, not an inferred lack of Android readers. The counters are observational; native filesystem sync behavior is retained.",
+    "evidence": [
+      "evidence/prctl-uid-history-review.json",
+      "SECURITY.md: Historical prctl and UID statistics"
+    ]
+  },
+  {
+    "commit": "6bb63612964c8e133221393657c585c1df67f604",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Full six-path revert read. Represent its effective removal of syscfs, inc_syscfs and UID aggregation/dependency while retaining other UID statistics and fixed output format. Native accounting headers and do_fsync are unchanged; the two UID aggregation functions equal final ACK. No syscall or persistence operation is removed, only the reverted observational fsync count. Existing vendor fsync hook is separately audited and not attributed to this revert.",
+    "evidence": [
+      "evidence/prctl-uid-history-review.json",
+      "SECURITY.md: Historical prctl and UID statistics"
+    ]
+  },
+  {
+    "commit": "9b5f1c910c5986dc62ec4f93a1e0da55fe43d056",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Full four-hunk two-path patch read. Keep pde_data for both UID seq-file open callbacks and both xt_quota2 proc callbacks, using native LTS accessor rather than removed PDE_DATA. UID callbacks exactly match final ACK; quota callbacks retain the accessor and separately audited bounds/termination and spinlock behavior. No access control, inode-data ownership or quota semantics is changed by this API conversion.",
+    "evidence": [
+      "evidence/prctl-uid-history-review.json",
+      "SECURITY.md: Historical prctl and UID statistics"
+    ]
+  },
+  {
+    "commit": "9d65b39a50aa240cf65509f6207344da171c63f2",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Full three-path OEM statistics patch and complete current UID implementation read. Retain real u64 OEM state in UID/work objects, four update types and appended-power notification with GPL exports. These are source customization interfaces with live calls, not historical KMI padding. UID storage is kzalloc-initialized; deferred work field is explicitly zeroed before callback and published only after copied task statistics. Callback pointers are borrowed: type 1 receives the exiting task only synchronously; type 0 receives copied work and no task. Types 0/2 run under UID spinlock and type 3 under that lock plus RCU; append hook is under UID lock. Callbacks must not sleep there, retain borrowed pointers or dereference null arguments; disabled OEM data returns null pointers except local aggregate storage. Native task lifetime and UID accounting locks remain, with separately fixed bounded UID removal. Callbacks can alter observational output, not a security quota. No runtime module callback test is claimed.",
+    "evidence": [
+      "evidence/prctl-uid-history-review.json",
+      "SECURITY.md: Historical prctl and UID statistics"
+    ]
+  },
+  {
+    "commit": "72b09c63e40d367e82510cb3f1e98fb637e82346",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full script/documentation revert read. Its removal of reproducible metadata was superseded by 9be46ff3b688 accepting the upstream implementation. Keep current native timestamp handling, owner/group/mode normalization and sorting; native documentation is retained. Reintroducing this temporary revert would worsen provenance/reproducibility without an Android requirement.",
+    "evidence": [
+      "evidence/kheaders-history-review.json",
+      "evidence/kheaders-archive-check.json",
+      "SECURITY.md: Kernel header archive history"
+    ]
+  },
+  {
+    "commit": "9be46ff3b68828fda71c6ef2b793926818a69110",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Full unique merge resolution read: chooses upstream pre-sorted reproducible archive creation over the temporary Android plain-tar revert. Current native GNU tar --sort=name supersedes the older manual sort compatibility workaround; required tool version is native. Owner/group/timestamp normalization remains and actual fixture output is reproducible across changed input metadata.",
+    "evidence": [
+      "evidence/kheaders-history-review.json",
+      "evidence/kheaders-archive-check.json",
+      "SECURITY.md: Kernel header archive history"
+    ]
+  },
+  {
+    "commit": "988af76d525174cfd36ec70b3d22de869310c694",
+    "disposition": "superseded",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Full one-hunk patch read. Historical dereference at final archive creation was reverted and replaced by dereferencing source/object files during copy (9531007d9197). Retain that final placement: headers are materialized before comment stripping. The native-control fixture leaves three symlinks while current port contains regular header bytes.",
+    "evidence": [
+      "evidence/kheaders-history-review.json",
+      "evidence/kheaders-archive-check.json",
+      "SECURITY.md: Kernel header archive history"
+    ]
+  },
+  {
+    "commit": "3ee567fc882cb55bd71fbecd67adb7910babca01",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full one-hunk revert read. This temporary removal of final-tar dereference was reversed by 81ce9a434387 and later replaced with copy-stage dereference. No distinct lasting feature to reapply; current source and object header links become archive contents before comment removal.",
+    "evidence": [
+      "evidence/kheaders-history-review.json",
+      "evidence/kheaders-archive-check.json",
+      "SECURITY.md: Kernel header archive history"
+    ]
+  },
+  {
+    "commit": "81ce9a4343877daf4f346c2add992da04c1d1a9f",
+    "disposition": "superseded",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Full one-hunk reapplication read. Final-tar --dereference placement was subsequently reverted by b0acbba3f489; preserve the same intended materialized header result through final copy-stage implementation 9531007d9197, now before comment stripping.",
+    "evidence": [
+      "evidence/kheaders-history-review.json",
+      "evidence/kheaders-archive-check.json",
+      "SECURITY.md: Kernel header archive history"
+    ]
+  },
+  {
+    "commit": "b0acbba3f489b46e54270948ac38a714ef4b1465",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full one-hunk revert read. It removes the old final-archive dereference option. Current final archive command is native LTS with no dereference; the intended header copy semantics are separately supplied earlier by the final Android implementation. Do not infer that this historical revert forbids following build-input symlinks.",
+    "evidence": [
+      "evidence/kheaders-history-review.json",
+      "evidence/kheaders-archive-check.json",
+      "SECURITY.md: Kernel header archive history"
+    ]
+  },
+  {
+    "commit": "28fa7afc424f3dc53358c0e9b080433d78f0cd54",
+    "disposition": "superseded",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Full two-hunk cpio -L patch read. Native LTS removed cpio copying; retain symlink dereferencing using tar --dereference in both source and object copy pipelines. This is required build-input behavior, not a runtime kernel interface. No cpio dependency is restored.",
+    "evidence": [
+      "evidence/kheaders-history-review.json",
+      "evidence/kheaders-archive-check.json",
+      "SECURITY.md: Kernel header archive history"
+    ]
+  },
+  {
+    "commit": "993dec986d212abb10e36c62ed9e0678bb8d54e6",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Full mode-normalization hunk read. Current native LTS archive command includes --mode=u=rw,go=r,a+X with owner and timestamp normalization, corresponding to native 3bd27a847a3a. Actual built archive regular files are mode 0644; fixture archive stays identical after input permissions/timestamps change. No kernel source adaptation required.",
+    "evidence": [
+      "evidence/kheaders-history-review.json",
+      "evidence/kheaders-archive-check.json",
+      "SECURITY.md: Kernel header archive history"
+    ]
+  },
+  {
+    "commit": "774d4de3b70a346766db4b83f73a676a46fb2414",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Full variable-rename/quoting patch read. Current LTS generator already uses tmpdir and quotes temporary path operations; later native dependency-list implementation replaces the old outdir computation. Keep native script structure, with only Android copy-stage dereference.",
+    "evidence": [
+      "evidence/kheaders-history-review.json",
+      "evidence/kheaders-archive-check.json",
+      "SECURITY.md: Kernel header archive history"
+    ]
+  },
+  {
+    "commit": "32b0477ee52cb039280492bd1fc473e24042d0bd",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Full find/perl race fix read with native 41a00051283e. Current native script snapshots the complete NUL-separated file list before parallel in-place perl processing and removes it afterward. This avoids racing discovery with temporary files. Preserve native fix, not temporary ACK revert 73af86c04716.",
+    "evidence": [
+      "evidence/kheaders-history-review.json",
+      "evidence/kheaders-archive-check.json",
+      "SECURITY.md: Kernel header archive history"
+    ]
+  },
+  {
+    "commit": "0b41594564d3702ec3fd49ceb2c7ac04da81589f",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Full four-path patch read. Native LTS uses tar copying, has no obsolete cpio requirement in build documentation/package metadata and retains dependency-list build rules. Those three metadata files are whole-file equal to LTS. Android --dereference is retained separately in native copy pipelines; no external build dependency change required.",
+    "evidence": [
+      "evidence/kheaders-history-review.json",
+      "evidence/kheaders-archive-check.json",
+      "SECURITY.md: Kernel header archive history"
+    ]
+  },
+  {
+    "commit": "18fa40d374214bd278e1829aa6b7340046d7e9d3",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full four-path revert read. It temporarily restored cpio copying/dependencies before later upstream integration. Current native script uses tar and native docs/packaging omit cpio again. Do not resurrect obsolete copying or dependency metadata; full SDK workflow already successfully generated kheaders.ko with existing manifest tools.",
+    "evidence": [
+      "evidence/kheaders-history-review.json",
+      "evidence/kheaders-archive-check.json",
+      "SECURITY.md: Kernel header archive history"
+    ]
+  },
+  {
+    "commit": "73af86c04716dc4da53d43613590a4bd846f9f47",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full revert read. Do not restore the streaming find-to-perl pipeline: native 41a00051283e now snapshots paths first, preserving its fix for temporary-file discovery races. Entire script apart from copy-stage symlink dereference remains native.",
+    "evidence": [
+      "evidence/kheaders-history-review.json",
+      "evidence/kheaders-archive-check.json",
+      "SECURITY.md: Kernel header archive history"
+    ]
+  },
+  {
+    "commit": "41594648e1e5fc6f2acf02fe3064d1666594478e",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full rename/quoting revert read. It temporarily returned cpio_dir and unquoted temporary-directory expansion. Current native generator uses quoted tmpdir operations and modern dependency lists; no historical variable or quoting regression is restored.",
+    "evidence": [
+      "evidence/kheaders-history-review.json",
+      "evidence/kheaders-archive-check.json",
+      "SECURITY.md: Kernel header archive history"
+    ]
+  },
+  {
+    "commit": "fb3da6267476432bd32d960280768a78092e79f2",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full two-hunk cpio -L removal read. The cpio implementation itself was replaced by native tar copying. Final ACK explicitly reapplies symlink following in both tar pipelines; retain that positive final requirement rather than this obsolete temporary revert.",
+    "evidence": [
+      "evidence/kheaders-history-review.json",
+      "evidence/kheaders-archive-check.json",
+      "SECURITY.md: Kernel header archive history"
+    ]
+  },
+  {
+    "commit": "a345ee7b530359b997b8dc4ccc9ae495e8d6a170",
+    "disposition": "superseded",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Full two-hunk tar dereference patch read. Its source/object copy behavior survives in 9531007d9197 adapted to the native dependency-list/TAR-variable generator. Preserve both copy sites without undoing upstream incremental-build and timestamp fixes.",
+    "evidence": [
+      "evidence/kheaders-history-review.json",
+      "evidence/kheaders-archive-check.json",
+      "SECURITY.md: Kernel header archive history"
+    ]
+  },
+  {
+    "commit": "54568b8fa00c4669c48d53a427f233402ae56c76",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full two-hunk revert read. Final ACK explicitly reverses this temporary removal via 9531007d9197 after upstream build changes. Do not drop symlink-following compatibility: existing Kleaf workflow builds symlinked inputs and fixture demonstrates regular contents only with the retained change.",
+    "evidence": [
+      "evidence/kheaders-history-review.json",
+      "evidence/kheaders-archive-check.json",
+      "SECURITY.md: Kernel header archive history"
+    ]
+  },
+  {
+    "commit": "9531007d919725f1d148c1ae12df280845430f78",
+    "disposition": "adapted-build-metadata",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Full two-hunk patch and complete current generator read. Retain --dereference at both source/object tar-copy sites, the only differences from LTS. Keep native dependency file emission, sub-minute header-change handling, explicit timestamp argument, comment-list snapshot, deterministic metadata and configurable TAR/XZ tools. Build 148 produced a signed kheaders module whose archive contains regular files and no symlink/hardlink members. Source inputs are trusted build inputs; following their symlinks can include target contents, so this is not a sandbox against a malicious checkout. The native read-only sysfs export is unchanged; no runtime module loading was performed.",
+    "evidence": [
+      "evidence/kheaders-history-review.json",
+      "evidence/kheaders-archive-check.json",
+      "SECURITY.md: Kernel header archive history"
+    ]
   }
 ]

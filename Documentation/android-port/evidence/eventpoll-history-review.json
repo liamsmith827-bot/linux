@@ -1,0 +1,255 @@
+{
+  "source_head": "69c25c295ddc6162295d231fd250577d207060e8",
+  "records": [
+    {
+      "commit": "7c6ba364ef8b206ff522adfd52626725035c7db7",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Complete original one-path patch reviewed with d07b0181d651/e2db2cceeb22/ebc7af30ceac history. Initial freezable blocking helper was removed, reintroduced for 5.11, and finally explicitly reverted after its helper disappeared in 6.1. Final ACK and port use native scheduling; whole ep_poll equals 6.18.57. Do not recreate the retired helper or old waitqueue/freezer integration. Historical memory-corruption report in the local message was not independently reproduced or consulted remotely.",
+      "evidence": [
+        "evidence/eventpoll-history-review.json",
+        "evidence/event-name-hook-check.json",
+        "SECURITY.md: Epoll history and bounded event names"
+      ],
+      "patch_sha256": "838cdd82e2a324aaf173451b8e1d92b6f2d547fd43c18ca8cc3fbd648e9b77d2"
+    },
+    {
+      "commit": "d07b0181d651bb5541f3160bb6bcc9227e388885",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [],
+      "rationale": "Full temporary revert read; e2db2cceeb22 reinstated the facility, and ebc7af30ceac removed it again. Final native ep_poll is the selected state, not a replay of this intermediate 2020 scheduling body. Current timeout, wakeup and signal semantics remain LTS.",
+      "evidence": [
+        "evidence/eventpoll-history-review.json",
+        "evidence/event-name-hook-check.json",
+        "SECURITY.md: Epoll history and bounded event names"
+      ],
+      "patch_sha256": "9b3e2ae4658d154061497a133ca510635ac9617068e3793bab3384252d2bace7"
+    },
+    {
+      "commit": "e2db2cceeb223443022ee44001768d8aed273f52",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Full reintroduction and explicit ebc7af30ceac revert read. freezable_schedule_hrtimeout_range is absent from final ACK epoll and native port. Preserve the native LTS wait loop and freeze/signal mechanisms; no assertion that the old optimization is still needed or supported.",
+      "evidence": [
+        "evidence/eventpoll-history-review.json",
+        "evidence/event-name-hook-check.json",
+        "SECURITY.md: Epoll history and bounded event names"
+      ],
+      "patch_sha256": "92dca6c3082764c911999db8b6c87a6c211b3046a1370b7c1230da9461d423b8"
+    },
+    {
+      "commit": "ebc7af30ceaca5d075f68d54aaa71989f87cccf3",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [],
+      "rationale": "Full revert read. Its removal of the obsolete freezable helper is already reflected in native 6.18.57 ep_poll, verified as a whole-function match. No helper recreation or freezer behavior change is necessary for the final ACK API. Suspend runtime was not tested.",
+      "evidence": [
+        "evidence/eventpoll-history-review.json",
+        "evidence/event-name-hook-check.json",
+        "SECURITY.md: Epoll history and bounded event names"
+      ],
+      "patch_sha256": "479a3e4a7c3a0afb48ea1e3069a6e9f2b694d59d52201339e113836e0eb761b4"
+    },
+    {
+      "commit": "b100c090ca79cf73dbe1ed28dbda42f9a27cabc3",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Full temporary timeout revert and 23ced622035e reapply read. Keep native ep_schedule_timeout with d9ec73301099 fix that sets timed_out when a deadline is already expired, instead of skipping the assignment and potentially spinning forever. Both complete functions equal LTS. Do not replay the temporary removal or claim the pre-fix reapply itself solved the hang.",
+      "evidence": [
+        "evidence/eventpoll-history-review.json",
+        "evidence/event-name-hook-check.json",
+        "SECURITY.md: Epoll history and bounded event names"
+      ],
+      "patch_sha256": "3a23651b9a1178f787f69aa0172d4d11c2d89c5c8892f2e8c16b38859a919459"
+    },
+    {
+      "commit": "23ced622035e28690f5d045be935ce2c8123b8e7",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Full reapply read and local native d9ec73301099 fix inspected. Native 6.18.57 contains the timeout helper and corrected !ep_schedule_timeout(to) || !schedule_hrtimeout_range(...) assignment. Preserve the corrected whole ep_poll implementation, avoiding the historical expired-timeout busy loop. No additional code is required; this is final semantic representation rather than patch-context identity.",
+      "evidence": [
+        "evidence/eventpoll-history-review.json",
+        "evidence/event-name-hook-check.json",
+        "SECURITY.md: Epoll history and bounded event names"
+      ],
+      "patch_sha256": "4700bd85877500d920fbe68207ebb8ac11dd57ccd294413eaf1d4bf2969720c1"
+    },
+    {
+      "commit": "0e38da25e3d04fdf2d67a44610be2223d205ab66",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Full one-comment temporary revert read. Native final source restores the ordinary non-kernel-doc comment for ep_get_upwards_depth_proc, and the already audited 27fdbefb8492 reapply restores it in ACK. All eventpoll text outside the naming adaptation matches LTS, so no obsolete warning-generating comment is introduced. Documentation-only change, no runtime security effect.",
+      "evidence": [
+        "evidence/eventpoll-history-review.json",
+        "evidence/event-name-hook-check.json",
+        "SECURITY.md: Epoll history and bounded event names"
+      ],
+      "patch_sha256": "d140c9486a2f6649497fda3d3fc9be9b49f2fdc813a0675ff24e68b58aaa28ef"
+    },
+    {
+      "commit": "dff8cabc741079a355c930c085b25b175a451960",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Full recursion-fix revert and 90eaf9670b5c reapply read. Preserve native downward/upward depth accounting, cached loop_check_depth and total-depth rejection. Do not restore the old traversal merely to accommodate the historical test expectation. Current LTS also uses EP_MAX_NESTS+1 sentinel instead of INT_MAX, preventing the locally documented integer overflow from defeating depth checks.",
+      "evidence": [
+        "evidence/eventpoll-history-review.json",
+        "evidence/event-name-hook-check.json",
+        "SECURITY.md: Epoll history and bounded event names"
+      ],
+      "patch_sha256": "e1f4fd86eb81017f22fad559507df52367352b76d175c4930fd325f0e36d2961"
+    },
+    {
+      "commit": "90eaf9670b5c00c08ceb34d36625a617e507c2c9",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Full reapply and local LTS a80161c20370 integer-overflow fix read. Native complete loop-check functions preserve two-direction depth validation and safe EP_MAX_NESTS+1 sentinel; the original reapply uses INT_MAX and is not copied verbatim. The local message mentions an updated LTP expectation; that external URL was not opened and no LTP run is claimed.",
+      "evidence": [
+        "evidence/eventpoll-history-review.json",
+        "evidence/event-name-hook-check.json",
+        "SECURITY.md: Epoll history and bounded event names"
+      ],
+      "patch_sha256": "123d25825dc4d8858a92fc84d1699c12d429c623d13c3ab5f8cf0483805057e2"
+    },
+    {
+      "commit": "7a436faab71e5871f7ee486c156693699dc3f426",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Full seven-hunk identifier/comment rename and native stable f04166c8677a read. Native 6.18.57 already names the function ep_remove and updates all callers/comments. Whole ep_remove, ep_remove_epi, ep_clear_and_put, ep_insert and do_epoll_ctl match LTS, preserving its newer file-reference and eventpoll lifetime fixes. No old body is copied solely for a rename.",
+      "evidence": [
+        "evidence/eventpoll-history-review.json",
+        "evidence/event-name-hook-check.json",
+        "SECURITY.md: Epoll history and bounded event names"
+      ],
+      "patch_sha256": "28b2ee91a8b63eff22fb4ccc00374b14fd651c6e295582ee30300f0fdb778438"
+    },
+    {
+      "commit": "02b98a9f59c8308f98cf08bbc58263e1226934dc",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "69c25c295ddc6162295d231fd250577d207060e8"
+      ],
+      "rationale": "Full four-path naming-hook patch reviewed. Retain both source hooks, declarations and GPL trace exports. 69c25c295ddc pads buffers before each callback and terminates them afterward; the inactive epoll item hook uses the complete native snapshot name rather than silently truncating every name to 63 bytes. Active hooks retain their original 64-byte epoll/32-byte timerfd capacities. Callback registration/unregistration racing the enabled snapshot may skip the new callback or use a bounded default for that event; callbacks must not retain the borrowed buffer or write beyond len. Actual string consumers copy synchronously. Native CAP_BLOCK_SUSPEND/WAKE_ALARM, flag/clock validation and cleanup remain. Trusted callbacks can intentionally alter diagnostic names; they do not acquire new alarm/wakeup permissions. No particular installed subscriber was established; generic Android source customization is retained conservatively.",
+      "evidence": [
+        "evidence/eventpoll-history-review.json",
+        "evidence/event-name-hook-check.json",
+        "SECURITY.md: Epoll history and bounded event names"
+      ],
+      "patch_sha256": "4d27b33efd15f9fd62cf4b84dd0dbee1a385315b94183bbb1e419f09c2dbb638"
+    }
+  ],
+  "native_witnesses": [
+    {
+      "path": "fs/eventpoll.c",
+      "sha256": "9aa065b40ffff628eda9b6fb0301ea446d9aeb5da79013ab4c5f76e4830d135b",
+      "relationship": "Whole file identical to LTS after replacing the reviewed naming function with its native version and removing its trace-header include. All other native code, declarations, comments and fixes retained."
+    },
+    {
+      "path": "fs/timerfd.c",
+      "sha256": "439edd8c761118a12f8001f032deb010dd947de1ed817f558dc26bb8f9a4dbef",
+      "relationship": "Whole file identical to LTS after removing bounded name preparation, buffer declaration, trace include and restoring native string argument. Clock/flag validation, CAP_WAKE_ALARM, timer/FD cleanup and FMODE_NOWAIT remain native."
+    },
+    {
+      "path": "fs/eventpoll.c",
+      "function": "ep_poll",
+      "relationship": "Whole function identical to pinned LTS",
+      "sha256": "7f09b40d73aa07689c79fcb8dd23740accf8cb64bffa76eaf98e2d3ec9efe475"
+    },
+    {
+      "path": "fs/eventpoll.c",
+      "function": "ep_schedule_timeout",
+      "relationship": "Whole function identical to pinned LTS",
+      "sha256": "2d62d2ea2f91eb92a33e744f7d9c41a7685e2f0e4b5312feaf7008eff2984f7b"
+    },
+    {
+      "path": "fs/eventpoll.c",
+      "function": "ep_loop_check_proc",
+      "relationship": "Whole function identical to pinned LTS",
+      "sha256": "6e888296f76c3dc410c219305a38b757e88bb630ad586ed215544240e7813196"
+    },
+    {
+      "path": "fs/eventpoll.c",
+      "function": "ep_get_upwards_depth_proc",
+      "relationship": "Whole function identical to pinned LTS",
+      "sha256": "b2e052368ce634420def3e118e2fdd14f35052683d352b203715809102831a10"
+    },
+    {
+      "path": "fs/eventpoll.c",
+      "function": "ep_loop_check",
+      "relationship": "Whole function identical to pinned LTS",
+      "sha256": "e5610ce3d1d189b9f98a6c7a88098f7f5448e03236805337ce083111efecfa78"
+    },
+    {
+      "path": "fs/eventpoll.c",
+      "function": "ep_remove",
+      "relationship": "Whole function identical to pinned LTS",
+      "sha256": "2ca5c1f9ea013f68ad283c7cf157ecf9ff1de51155dcecd424832a4864688667"
+    },
+    {
+      "path": "fs/eventpoll.c",
+      "function": "ep_remove_epi",
+      "relationship": "Whole function identical to pinned LTS",
+      "sha256": "31f310bc9aca30c291423796e9514085a29047c4621a7f6cd9e4b42f0edc7929"
+    },
+    {
+      "path": "fs/eventpoll.c",
+      "function": "ep_clear_and_put",
+      "relationship": "Whole function identical to pinned LTS",
+      "sha256": "477c7a4666aab62e0e6c45d7c3017a61a62c29a1d9da5eccf5af670c9a5f64c7"
+    },
+    {
+      "path": "fs/eventpoll.c",
+      "function": "ep_insert",
+      "relationship": "Whole function identical to pinned LTS",
+      "sha256": "bec571369d38cbf899ed128c5124e6ed3a9bab9780bce3222af3de5173022515"
+    },
+    {
+      "path": "fs/eventpoll.c",
+      "function": "do_epoll_ctl",
+      "relationship": "Whole function identical to pinned LTS",
+      "sha256": "096d2d296f643fbdc4d22057ab9d2b3f05a2c5236aaa04eb43dcd9f634d1158d"
+    },
+    {
+      "path": "fs/eventpoll.c",
+      "function": "ep_destroy_wakeup_source",
+      "relationship": "Whole function identical to pinned LTS",
+      "sha256": "90325555731ff70802c8e69e6497940415d9a8507b1667d6f9772bbeeabb9c79"
+    },
+    {
+      "path": "drivers/base/power/wakeup.c",
+      "function": "wakeup_source_create",
+      "relationship": "Native synchronous string consumer preserved; borrowed stack argument need not survive return",
+      "sha256": "946e3f76e250f4d1cb195a77f26ffbd5f399783239832c8b05e7fcb7a9b7a0a9"
+    },
+    {
+      "path": "fs/anon_inodes.c",
+      "function": "__anon_inode_getfile",
+      "relationship": "Native synchronous string consumer preserved; borrowed stack argument need not survive return",
+      "sha256": "04b6de2ffc0d7f8420d2d145713efb114998dff7fd5f1acf4f8fcf8fb600b906"
+    },
+    {
+      "path": "fs/file_table.c",
+      "function": "alloc_path_pseudo",
+      "relationship": "Native synchronous string consumer preserved; borrowed stack argument need not survive return",
+      "sha256": "a8061eda3b255db6c64448475c3ee0800039295c5e1bb23f714e7bb557e78168"
+    }
+  ],
+  "local_fix_evidence": [
+    {
+      "commit": "d9ec73301099ec5975505e1c3effbe768bab9490",
+      "patch_sha256": "8d9b22278124a6b8921d5e12b228f8758102cf7699172bfd44a8e84bc1905f37",
+      "source": "Existing local Linux git object; no embedded message link opened."
+    },
+    {
+      "commit": "a80161c20370df7b03d2bee00b43aa009e299ad7",
+      "patch_sha256": "8d74cfdd9c9a50bc90f093ac11c00bb0e3149a73f33a19918eea73379f6533cf",
+      "source": "Existing local Linux git object; no embedded message link opened."
+    },
+    {
+      "commit": "f04166c8677aac1c33c060e1b15e9ddcc5e9f3ce",
+      "patch_sha256": "2c20b576e4685749eb18d422cde95ee3ec532dafe6bb57ccf06837dfff82edb1",
+      "source": "Existing local Linux git object; no embedded message link opened."
+    }
+  ],
+  "validation": "Host extracted-code test passed 10,270 modeled cases. SDK build 146 completed at 69c25c295ddc with 100 common and 45 virtual-device modules, all signatures and module flag/CRC tables verified. Negative signature control rejected. Source comparison and host checks are not timer/wakeup/suspend runtime validation.",
+  "remote_sources_used": []
+}

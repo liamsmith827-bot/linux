@@ -1,0 +1,176 @@
+{
+  "source_head": "cef6ed5fe6a4edf0d70962a6dabb1c9204018503",
+  "records": [
+    {
+      "commit": "9bb7e0640febd3e2b93bbb0ccdeebb271b8b3fed",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "cef6ed5fe6a4edf0d70962a6dabb1c9204018503"
+      ],
+      "rationale": "Full three-path patch read. Retain emulated metadata-page subtraction, sysctl_perf_event_mlock linkage/header declaration and initcall default 512+reported-page KiB. Positive local simpleperf uses (mmap_pages+1)*sysconf(_SC_PAGE_SIZE) and the kernel data_offset/data_size; SDK goldfish page_shift=14 selects 16 KiB. cef6ed5fe6a4 adds an explicit minimum-size guard before unsigned subtraction and balances unaccounting for all physical metadata pages. Native mmap bounds, power-of-two data requirement, resource/capability checks, event revocation, PMU callbacks and failed-map cleanup remain. Kernel default becomes 528 KiB in 16 KiB mode, but local init-perfetto.rc can later set 516 KiB; no claim of the eventual runtime setting. This candidate does not resolve the separate filemap shared-EOF issue.",
+      "evidence": [
+        "evidence/perf-metadata-review.json",
+        "evidence/perf-metadata-check.json",
+        "SECURITY.md: Perf metadata under emulated page sizes"
+      ],
+      "patch_sha256": "204490a5c3e633e3ba904ad32b152b73acfa56214bd8f783b535453c6b5a98e4"
+    },
+    {
+      "commit": "aff2eb701946b35067d43fd898e97f66bb598c8a",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "cef6ed5fe6a4edf0d70962a6dabb1c9204018503"
+      ],
+      "rationale": "Full three-path patch read. Retain zeroed higher-order metadata allocation/free, reported data_offset, vmalloc sizing/data offset and metadata/data translation for 4/8/16 KiB. Adapt cef6ed5fe6a4: cast user_page to char* before byte arithmetic; otherwise the 1088-byte struct type scales pgoff*4096 into a multi-megabyte displacement outside a 16 KiB metadata allocation, potentially exposing unrelated memory or crashing. Also make the full allocated metadata area writable while data/AUX remain read-only, require AUX to start beyond all metadata and data, and retain LTS PFN lifetime rules by removing obsolete page->mapping clearing. The last change preserves native current struct-page restrictions rather than ACK obsolete cleanup. Allocate/free orders match the boot-only immutable reported page size. Whole regular allocator cleanup is native apart from metadata helpers; full map_range/perf_mmap/lifetime functions equal LTS. No real perf mapping or exploit was executed.",
+      "evidence": [
+        "evidence/perf-metadata-review.json",
+        "evidence/perf-metadata-check.json",
+        "SECURITY.md: Perf metadata under emulated page sizes"
+      ],
+      "patch_sha256": "df5f69e45ae7a36e124cbd54125544f835d9009d928093a5f8f83b67ef9ca08c"
+    }
+  ],
+  "native_witnesses": [
+    {
+      "path": "kernel/events/core.c",
+      "function": "perf_mmap",
+      "sha256": "a25aa736ac2241967f36f6b9ce68fd40378f40cbb3c69c6535eb5781beaca845",
+      "relationship": "Complete native LTS function, including PFN mapping, security, lifetime and cleanup checks"
+    },
+    {
+      "path": "kernel/events/core.c",
+      "function": "map_range",
+      "sha256": "b1d221ece7c2578c0fb0efd6a3109da8adde50e47aec80336fcc17b7adba5120",
+      "relationship": "Complete native LTS function, including PFN mapping, security, lifetime and cleanup checks"
+    },
+    {
+      "path": "kernel/events/core.c",
+      "function": "perf_mmap_close",
+      "sha256": "f8049fbfc6f4905d762e22bb0716bc77a34eb4a5ff02bf6c432c7a3840761415",
+      "relationship": "Complete native LTS function, including PFN mapping, security, lifetime and cleanup checks"
+    },
+    {
+      "path": "kernel/events/core.c",
+      "function": "perf_mmap_open",
+      "sha256": "2700e63187c0e3e5330fba40b9aeba7373d2f9be2af1323fc4b835e6fb091588",
+      "relationship": "Complete native LTS function, including PFN mapping, security, lifetime and cleanup checks"
+    },
+    {
+      "path": "kernel/events/core.c",
+      "function": "perf_mmap_calc_limits",
+      "sha256": "d4101dc417861f89d7805162354f53d484da788bc1443f3694c4c26a47a344f9",
+      "relationship": "Complete native LTS function, including PFN mapping, security, lifetime and cleanup checks"
+    },
+    {
+      "path": "kernel/events/core.c",
+      "function": "perf_mmap_account",
+      "sha256": "9448464a0086e524e94c60cdd3d7d7fddc247b0e2a46b76eb55046ae71018fca",
+      "relationship": "Complete native LTS function, including PFN mapping, security, lifetime and cleanup checks"
+    },
+    {
+      "path": "kernel/events/core.c",
+      "function": "perf_event_init_userpage",
+      "sha256": "6f8434150f4b7b8f6fc4469e15f11ca4cfd204ea8cfcc75b8c6479f740e96698",
+      "relationship": "Complete native function after listed metadata geometry adaptations",
+      "changes": [
+        [
+          "userpg->data_offset = __PAGE_SIZE;",
+          "userpg->data_offset = PAGE_SIZE;"
+        ]
+      ]
+    },
+    {
+      "path": "kernel/events/core.c",
+      "function": "perf_mmap_rb",
+      "sha256": "074699913f7fa4ef42035580cc7194c682b5d281c57b23023c1d88f617909f1b",
+      "relationship": "Complete native function after listed metadata geometry adaptations",
+      "changes": [
+        [
+          "\tif (nr_pages < __PAGE_SIZE / PAGE_SIZE)\n\t\treturn -EINVAL;\n",
+          ""
+        ],
+        [
+          "nr_pages -= (__PAGE_SIZE / PAGE_SIZE);",
+          "nr_pages -= 1;"
+        ]
+      ]
+    },
+    {
+      "path": "kernel/events/core.c",
+      "function": "perf_mmap_aux",
+      "sha256": "f6ee7ff7542e4b0b41ff677ff589e5ad6de074203ca1bf881bd9100ae22bdfc0",
+      "relationship": "Complete native function after listed metadata geometry adaptations",
+      "changes": [
+        [
+          "perf_data_size(rb) + __PAGE_SIZE",
+          "perf_data_size(rb) + PAGE_SIZE"
+        ]
+      ]
+    },
+    {
+      "path": "kernel/events/core.c",
+      "function": "perf_mmap_unaccount",
+      "sha256": "3c95966dde70d780b0cea8396e109dcc71e8320287b09122ff0579613e136941",
+      "relationship": "Complete native function after listed metadata geometry adaptations",
+      "changes": [
+        [
+          "(perf_data_size(rb) >> PAGE_SHIFT) +\n\t\t\t(__PAGE_SIZE / PAGE_SIZE) - rb->mmap_locked",
+          "(perf_data_size(rb) >> PAGE_SHIFT) + 1 - rb->mmap_locked"
+        ]
+      ]
+    },
+    {
+      "path": "kernel/events/ring_buffer.c",
+      "scope": "whole prefix before allocation/mapping branches and whole tail starting perf_mmap_to_page",
+      "relationship": "Exact LTS after page-size definitions include removed from prefix",
+      "prefix_sha256": "411f8ecb685f25337d0c6b55a18b69d6c3585b90e7337dc8c539ed3166c0b308",
+      "tail_sha256": "f89db82cb8f38ff7c014d4401ad00d01fc82ac7a9d417ef724df400415267600"
+    },
+    {
+      "path": "kernel/events/ring_buffer.c",
+      "function": "rb_alloc",
+      "branch": "regular allocator",
+      "sha256": "850dff87864cfcb4aee11cfe4e090f12497b66de59bf0fe950b4441c64253b61",
+      "relationship": "Native allocation/error/free control flow with only metadata allocation/free helper substitution"
+    },
+    {
+      "path": "kernel/events/ring_buffer.c",
+      "function": "rb_free",
+      "branch": "regular allocator",
+      "sha256": "76cc063ce19ab84ecea447981cf575ec5d58969c3b2ecc2a3f820b6de311e5a2",
+      "relationship": "Native allocation/error/free control flow with only metadata allocation/free helper substitution"
+    }
+  ],
+  "local_userspace_evidence": [
+    {
+      "repository": "/home/liamsmith/src/kernel/grapheneos-17/system/extras",
+      "head": "5b8e9ee4f15faa60218b08bb09abae41e1f6bd0e",
+      "files": {
+        "simpleperf/event_fd.cpp": "c812ea1cda6068b69cf4638b26c7f71e981238ca5c2b89ff0ace18bf312ef629"
+      }
+    },
+    {
+      "repository": "/home/liamsmith/src/kernel/grapheneos-17/device/generic/goldfish",
+      "head": "5281db702f36e0e8c0af9e33d70b63d3ba4916ae",
+      "files": {
+        "board/kernel/x86_64_16k_cmdline.txt": "a8df23ba1cec47cf4d8de94467b50a95b8d87e2e9d131e93ead446df8347e1d1"
+      }
+    }
+  ],
+  "configuration_evidence": {
+    "run": "sdk-build-attempt-147",
+    "sha256": "48f19810fd5e10021d64b96e82cdb2b0b587f7cb24b3b4b5660b6732ae05cd09",
+    "PERF_USE_VMALLOC": "not enabled; regular allocation branch is SDK target"
+  },
+  "validation": "Host extracted-code check passed 15,076 cases. Old control produced 32 wrong metadata addresses, 32 write-permission mismatches, 2,430 unbalanced unaccounts and 32 accepted AUX overlaps. No malformed-size mismatch was reproduced; minimum-size check is explicit defensive validation. Initial harness compilation omitted the multiline mapping return type; fixed the harness, not kernel code, and then ran both controls. Build 148 passed, producing the kernel image, 100 common modules and 45 virtual-device modules. All 145 signatures and module flag/CRC tables verified; modified-payload negative control rejected. runtime perf mappings, allocator failure, locking/concurrent teardown and page-table behavior are unverified.",
+  "security": "All expanded writable pages are inside the zeroed metadata allocation, not data/AUX pages. This intentionally adapts the native one-physical-page permission boundary to one reported userspace metadata page. Old accounting retained extra charges after unmap, causing overcharging/resource denial; no accounting bypass exploit is claimed. AUX overlap can select auxiliary pages within the logical normal buffer boundary; runtime impact unverified. Keep native VM_PFNMAP, refcounts, locks and invalidation/cleanup rather than reintroduce page->mapping writes or VM_MIXEDMAP behavior.",
+  "remote_sources_used": [],
+  "stable_fix_review": {
+    "commit": "b07bcdca18fb9437ebc54636db766c44f3f2fc75",
+    "patch_sha256": "aa2cb8a3ebcfd8de2b931de7e508eb14dae9d149b850f808e576598e71ede7d6",
+    "assessment": "Full three-path stable fix read. Native perf_mmap and perf_mmap_close bodies remain exact, including minimal first-exposure cleanup under mmap_mutex and complex close outside that mutex. Native ring_buffer_init and entire internal.h preserve mmap_user lifetime/refcount initialization and RCU free_uid. The only overlap is perf_mmap_unaccount arithmetic: replace one physical metadata page with __PAGE_SIZE/PAGE_SIZE, retaining both atomic decrements and the same helper/call placement. This corrects enlarged-metadata overcharging without reintroducing the mutex recursion or failed-buffer exposure. See perf-metadata-review.json whole-function witnesses and perf-metadata-check.json modeled accounting control.",
+    "local_git_only": true
+  }
+}

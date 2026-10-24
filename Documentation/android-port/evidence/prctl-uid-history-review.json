@@ -1,0 +1,235 @@
+{
+  "source_head": "cef6ed5fe6a4edf0d70962a6dabb1c9204018503",
+  "records": [
+    {
+      "commit": "7881aee5449db959e23f086aa7cfaa037ffd8aae",
+      "disposition": "merge-resolution-reconciled-to-lts",
+      "result_commits": [],
+      "rationale": "Full two-path unique remerge diff read. Preserve both PR_SET/GET_IO_FLUSHER and PR_SET_VMA: entire UAPI header and prctl_set_vma are native LTS; complete prctl body is native after the separately audited finished notification. Native PF_LOCAL_THROTTLE supersedes old PF_LESS_THROTTLE. Do not resurrect old anon-name implementation from the conflict. Native privilege checks, validation and flag handling remain.",
+      "evidence": [
+        "evidence/prctl-uid-history-review.json",
+        "SECURITY.md: Historical prctl and UID statistics"
+      ],
+      "examined_patch_sha256": "7f69d577d3f94ad2e007431963261496ee81cb4d1fc6ced8e4f28d77466a7db6"
+    },
+    {
+      "commit": "a64320f5b8e452bb095e78bf6b078a6160210a1f",
+      "disposition": "merge-resolution-reconciled-to-lts",
+      "result_commits": [],
+      "rationale": "Full four-path unique remerge diff read, including nonconflicting ion_buffer vm_map_ram-to-vmap change, ion_heap duplicate-body removal and replacement zeroing helpers. Both ION files were explicitly deleted by 0b2a6b913757 and are absent in pinned ACK, LTS and port; this historical allocator implementation is not resurrected. This is positive retirement evidence, not absence of a consumer. ext4 encryption wrapper/signature conflict is superseded by the native LTS read/decrypt flow: whole current file equals LTS apart from separately reviewed cleancache include/hit path which verifies fs-verity before uptodate. Native PR_IO_FLUSHER PF_LOCAL_THROTTLE and current prctl implementation are retained. No stable read, decryption, integrity or privilege check is reversed.",
+      "evidence": [
+        "evidence/prctl-uid-history-review.json",
+        "SECURITY.md: Historical prctl and UID statistics"
+      ],
+      "examined_patch_sha256": "77876dc80302c7eb69e022914acb59dab3b149a030101d2efb6955b08cdd638d"
+    },
+    {
+      "commit": "1da58ab555464122d39b81411f8cb4a562addd3a",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [],
+      "rationale": "Full two-path patch read. UID conversion actually changed read semaphore acquisition to mmap_write_lock; it was not only a rename. get_full_task_comm and the entire debug call chain were explicitly removed by 671089a20883 after a sleeping-under-spinlock problem, and are absent in final ACK and port. Do not restore that obsolete debug locking. Old prctl implementation was replaced by native set_anon_vma_name/madvise_set_anon_name: the native lock classifier selects killable mmap write locking for anonymous-name changes and paired unlocking. Native address validation remains with separately audited reported-page alignment; a separately retained restricted bypass hook can implement the operation and must supply valid locking, name lifetime and error semantics. No claim that a callback is checked/sandboxed by native fallback.",
+      "evidence": [
+        "evidence/prctl-uid-history-review.json",
+        "SECURITY.md: Historical prctl and UID statistics"
+      ],
+      "examined_patch_sha256": "ccc085795c5b690a7e0886fcac679aeb6cd686b9910c14f868078c05fe3d4752"
+    },
+    {
+      "commit": "ad4b32c45de4bbc39305d6bc230253cc9cb5598a",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Full six-path fsync-accounting patch read together with explicit final-ACK revert 6bb63612964c. Do not restore syscfs counter, syscall increment or TASK_XACCT dependency. The three accounting headers equal LTS and whole do_fsync equals LTS; UID source has no syscfs access. Format columns named fsync remain zero, as in pinned ACK. This is a documented removal by final ACK, not an inferred lack of Android readers. The counters are observational; native filesystem sync behavior is retained.",
+      "evidence": [
+        "evidence/prctl-uid-history-review.json",
+        "SECURITY.md: Historical prctl and UID statistics"
+      ],
+      "examined_patch_sha256": "91c5aa5e6f26e02e3dd52f9fc21320e2c4a5f0d27ee09f39a377d7bcec192718"
+    },
+    {
+      "commit": "6bb63612964c8e133221393657c585c1df67f604",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full six-path revert read. Represent its effective removal of syscfs, inc_syscfs and UID aggregation/dependency while retaining other UID statistics and fixed output format. Native accounting headers and do_fsync are unchanged; the two UID aggregation functions equal final ACK. No syscall or persistence operation is removed, only the reverted observational fsync count. Existing vendor fsync hook is separately audited and not attributed to this revert.",
+      "evidence": [
+        "evidence/prctl-uid-history-review.json",
+        "SECURITY.md: Historical prctl and UID statistics"
+      ],
+      "examined_patch_sha256": "d02eb605a38300f8d6d30e35b02e32d17152b7f16e0585cdf12281552231dc5e"
+    },
+    {
+      "commit": "9b5f1c910c5986dc62ec4f93a1e0da55fe43d056",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full four-hunk two-path patch read. Keep pde_data for both UID seq-file open callbacks and both xt_quota2 proc callbacks, using native LTS accessor rather than removed PDE_DATA. UID callbacks exactly match final ACK; quota callbacks retain the accessor and separately audited bounds/termination and spinlock behavior. No access control, inode-data ownership or quota semantics is changed by this API conversion.",
+      "evidence": [
+        "evidence/prctl-uid-history-review.json",
+        "SECURITY.md: Historical prctl and UID statistics"
+      ],
+      "examined_patch_sha256": "f1ade4b6b8f1e2e8779bb03df269d57e6cbb5d47771506e295b9028d669a7d93"
+    },
+    {
+      "commit": "9d65b39a50aa240cf65509f6207344da171c63f2",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full three-path OEM statistics patch and complete current UID implementation read. Retain real u64 OEM state in UID/work objects, four update types and appended-power notification with GPL exports. These are source customization interfaces with live calls, not historical KMI padding. UID storage is kzalloc-initialized; deferred work field is explicitly zeroed before callback and published only after copied task statistics. Callback pointers are borrowed: type 1 receives the exiting task only synchronously; type 0 receives copied work and no task. Types 0/2 run under UID spinlock and type 3 under that lock plus RCU; append hook is under UID lock. Callbacks must not sleep there, retain borrowed pointers or dereference null arguments; disabled OEM data returns null pointers except local aggregate storage. Native task lifetime and UID accounting locks remain, with separately fixed bounded UID removal. Callbacks can alter observational output, not a security quota. No runtime module callback test is claimed.",
+      "evidence": [
+        "evidence/prctl-uid-history-review.json",
+        "SECURITY.md: Historical prctl and UID statistics"
+      ],
+      "examined_patch_sha256": "99bf3ff42c7dc44bb39ad1caca4c3eff02c1e8216add1dac67333847fcffb8da"
+    }
+  ],
+  "witnesses": [
+    {
+      "path": "kernel/sys.c",
+      "function": "prctl_set_vma",
+      "sha256": "ce4c56f58f1d44b48301d8d20845a7186b9651232775385f0ffdb7c8159a113e",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "normalizations": []
+    },
+    {
+      "path": "mm/madvise.c",
+      "function": "get_lock_mode",
+      "sha256": "a7d47fddb7bcb5ff52f4fefb359efe037e357e09e75d2f141da0d56a72a4a8f2",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "normalizations": []
+    },
+    {
+      "path": "mm/madvise.c",
+      "function": "madvise_lock",
+      "sha256": "9321d34d7cfe3eff54b551e92edede97416cf70afdb37334a08fac6fbdbdc286",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "normalizations": []
+    },
+    {
+      "path": "mm/madvise.c",
+      "function": "madvise_unlock",
+      "sha256": "4959ee7533a77d00c708ab3dffc64313166addffda8e097cd0ce8a91a874a45f",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "normalizations": []
+    },
+    {
+      "path": "mm/madvise.c",
+      "function": "madvise_set_anon_name",
+      "sha256": "01edfeecebd2bd635ba2c25ce1b728de28ba4225589eda0c369272fc17dabe0b",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "normalizations": [
+        [
+          "__PAGE_MASK",
+          "PAGE_MASK"
+        ]
+      ]
+    },
+    {
+      "path": "fs/ext4/readpage.c",
+      "sha256": "cd032da4303e0c0c564f6f6c392ed31e0affa3b1422ff449d5bff655bb0f066b",
+      "relationship": "Whole native LTS file after removing separately reviewed cleancache include and guarded eight-line hit path"
+    },
+    {
+      "path": "include/linux/sched/xacct.h",
+      "sha256": "5011d633d477449fe51bb648cec5d2c311b978ac45df664d6798a1789b470232",
+      "relationship": "Entire file equals native LTS; reverted syscfs extension absent"
+    },
+    {
+      "path": "include/linux/task_io_accounting.h",
+      "sha256": "b7b280bb0a4b6d0373820ac155b104929711238ca6854e844108dd781c035859",
+      "relationship": "Entire file equals native LTS; reverted syscfs extension absent"
+    },
+    {
+      "path": "include/linux/task_io_accounting_ops.h",
+      "sha256": "74b323a2c49899d7c1a50355909cb1178671a53854272f72ed9641ec77464f01",
+      "relationship": "Entire file equals native LTS; reverted syscfs extension absent"
+    },
+    {
+      "path": "fs/sync.c",
+      "function": "do_fsync",
+      "sha256": "4b28bc3d2cd63ecc056e5bd2785480d3860263e469ddf7af2301572c9bd43ac2",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "normalizations": []
+    },
+    {
+      "path": "drivers/misc/uid_sys_stats.c",
+      "function": "uid_cputime_open",
+      "sha256": "68574d52231e15d103d1c5b446a239b1e47950f3360d93224c9501c0a3fe5db7",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "normalizations": []
+    },
+    {
+      "path": "drivers/misc/uid_sys_stats.c",
+      "function": "uid_io_open",
+      "sha256": "db74c5e969a23431ea7d0a14bcd10d979319f76833364d81730f3448aa9712ff",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "normalizations": []
+    },
+    {
+      "path": "drivers/misc/uid_sys_stats.c",
+      "function": "calc_uid_cputime",
+      "sha256": "54644377793f780626b6277da10268ce06849e826ece674efc601154018873f7",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "normalizations": []
+    },
+    {
+      "path": "drivers/misc/uid_sys_stats.c",
+      "function": "uid_cputime_show",
+      "sha256": "00035a3ac26765f8ecc60619540f407a1478e5a21925413f553ff42bc5ed064e",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "normalizations": []
+    },
+    {
+      "path": "drivers/misc/uid_sys_stats.c",
+      "function": "update_stats_workfn",
+      "sha256": "0c50edfd387cc312c5f506aaaf8c0b911ca2c1be9c9606c06d30e33ce36336ce",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "normalizations": []
+    },
+    {
+      "path": "drivers/misc/uid_sys_stats.c",
+      "function": "process_notifier",
+      "sha256": "1a0acc76801db921ed93419d37c95ba6ff02ec85a2918aedc89167b62eac3055",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "normalizations": []
+    },
+    {
+      "path": "drivers/misc/uid_sys_stats.c",
+      "function": "__add_uid_io_stats",
+      "sha256": "2ea5e9dd1dc622de10722e7b63b3a55e9ac1067423e5e7fbdc34f5f19d99403b",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "normalizations": []
+    },
+    {
+      "path": "drivers/misc/uid_sys_stats.c",
+      "function": "update_io_stats_uid",
+      "sha256": "86758c3cb2291af2016d708d4a0f8878cd31a66dd21fffe5589f4cbcf591082d",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "normalizations": []
+    },
+    {
+      "path": "net/netfilter/xt_quota2.c",
+      "function": "quota_proc_read",
+      "sha256": "15d8ea88c709c52acf7afad0190b38aa32c84c4929d45e2c745ea1c74b026a38",
+      "relationship": "Current native proc-data accessor retained; existing separately reviewed quota bounds remain"
+    },
+    {
+      "path": "net/netfilter/xt_quota2.c",
+      "function": "quota_proc_write",
+      "sha256": "c26e6de1931b34c1fd952f83a02b68c247eecd17f414f846673606dd4d173722",
+      "relationship": "Current native proc-data accessor retained; existing separately reviewed quota bounds remain"
+    }
+  ],
+  "native_prctl_body_sha256": "b303c6c16814299c8c0c41fe615113b1c2aeb6d1dce89f116b342f57064f6b01",
+  "native_prctl_uapi_sha256": "7e85c8d3898ecc05ea4ad5bd634ec114606a6a2f35534057db401de18e280277",
+  "retirement_evidence": {
+    "ion_removal": "0b2a6b9137575eb444aa3f44e52cf1255472ff6a",
+    "ion_scope": "Complete unique merge diff read; later deletion verified by path status. No claim of reviewing every line of the independent whole ION removal commit.",
+    "uid_debug_removal": "671089a2088369ca8bac7e2ef7c98bcf81d7bbaa",
+    "uid_debug_scope": "Entire removal patch read, including Kconfig and all debug call sites"
+  },
+  "validation": "Source inspection and exact native/final-ACK function witnesses. Existing source cef6ed5fe6a4 passed SDK build 148, including signatures and module CRC/flag tables; runtime locking and callbacks unverified.",
+  "remote_sources_used": []
+}

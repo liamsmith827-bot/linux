@@ -6632,3 +6632,157 @@ base outputs in OUT_DIR/objtree, where native BTF processing expects vmlinux;
 MODULE_PAHOLE_FLAGS remains. No historical mixed-build-prefix patch is required.
 Build 145 passed with 145 verified module signatures and tables. Runtime syscall
 behavior and BTF/module loading were not tested. No remote source was accessed.
+
+# Retired sdcardfs and mount permission extensions
+
+`evidence/sdcardfs-retirement-review.json` accounts for thirteen historical
+commits through explicit driver deletion, VFS reverts and final-tree checks.
+No sdcardfs driver, build registration, private mount-data callback, permission2,
+setattr2 or show_options2 API is restored. The driver was reviewed as thirteen
+whole-file additions subsequently deleted, with all other removal hunks read;
+this does not claim a line-by-line security review of the retired driver body.
+
+Local GrapheneOS vold still contains legacy sdcardfs support. It selects that
+path only when the kernel registers sdcardfs and the property allows it. Visible
+emulated storage mounts FUSE independently of that selection. The verified SDK
+configuration compiles FUSE. This positive selection/removal evidence supports
+the retirement; a failed consumer search was not used as proof of irrelevance.
+Actual storage mounting and Android permission behavior remain untested.
+
+Native LTS idmapped permission checks, LSM checks, privilege removal, mount
+allocation/clone/remount and propagation remain. Whole-file/function comparisons
+record the exact scope, including separately audited export annotations and
+post-setattr notification. The NULL-callback fix and its revert are assessed
+together with removal of the callback facility: the temporarily unguarded
+dereference is not recreated. Retired sdcardfs module exports stay absent while
+their native functions remain. No 6.18.y fix is reversed and no remote resource
+was accessed for this review.
+
+# Epoll history and bounded event names
+
+`evidence/eventpoll-history-review.json` resolves eleven candidates. Retired
+freezable scheduling calls and temporary timeout/recursion reverts are not
+reintroduced. All eventpoll code outside the naming function matches LTS. This
+preserves the expired-timeout assignment fix, recursion depth bounds with a
+non-overflowing sentinel, and current removal/reference-lifetime implementation.
+
+`69c25c295ddc` retains vendor naming hooks while padding their stack buffers
+before callbacks and enforcing NUL termination afterward. Without an active
+epoll naming hook, item wakeup sources retain the complete native dentry name.
+With a hook, the historical 64-byte epoll and 32-byte timerfd capacities remain.
+The callback must respect those capacities and cannot keep the borrowed pointer.
+A callback that writes outside the advertised buffer can still corrupt memory;
+these checks do not sandbox trusted kernel modules. Registration races can skip
+a newly installed callback or use a bounded default name for that event.
+
+Native wakeup/alarm capability checks, file/timer setup, cleanup and permissions
+are unchanged. Names are copied synchronously by their native consumers.
+Callbacks can deliberately change diagnostic labels, with no authenticity
+guarantee for those labels. The host extracted-code check covers 10,270 modeled
+cases and rejects the previous unbounded/truncating behavior. Pattern stack
+initialization tests unwritten tails independently of the SDK zero-init config;
+it does not establish an observed SDK information leak. Actual timers, suspend,
+wakeup delivery and concurrent callback registration were not executed. Local
+git messages were read, but none of their remote links was accessed.
+
+# Perf access policy and native guest callbacks
+
+`evidence/perf-policy-and-guest-review.json` resolves five candidates. ACK
+explicitly retired its paranoid-level-3 blanket unprivileged-event ban. The port
+keeps native default 2 and native perf capability/LSM checks. Local GrapheneOS
+init-perfetto.rc explicitly sets paranoid=-1 and relies on SELinux perf controls;
+the local policy provides distinct permissions for profiling domains. A native
+value of 3 is not the retired global ban. SELinux policy permits selected use,
+so this is not a claim of equivalent restriction or of runtime enforcement.
+Whole syscall and SELinux hook comparisons preserve the LTS implementation.
+No GrapheneOS kernel_common hardening was imported.
+
+The GPL perf_event_read_local export remains with its entire native body. Module
+callers must own event lifetime and honor its current-task/CPU and non-inherited
+event constraints. The export itself does not authorize userspace profiling.
+
+`600ffdb50882` restores native guest-perf static calls. The old ACK revert worked
+around a Pixel ARM indirect-call CFI problem. The SDK enables x86 static-call
+trampolines and inline patching: direct branches and the return-zero XOR
+transformation avoid that old indirect return-zero call path. Native callback
+registration, unregistration, signatures, optional Intel PT callback and RCU
+synchronization remain. The workaround's private perf_get_guest_cbs helper is
+removed; registration and perf_guest_* interfaces are preserved. CFI remains
+enabled and nonpermissive. This decision is based on the configured architecture
+and implementation, not a failed caller search. Compilation is required for the
+new source; no guest callback, perf collection or SELinux runtime test is claimed.
+No remote resource was accessed.
+
+# Perf metadata under emulated page sizes
+
+`evidence/perf-metadata-review.json` resolves two commits using the local SDK
+page_shift=14 setting and simpleperf's reported-page-size mapping calculations.
+Retain the enlarged zeroed metadata allocation, matching free order, data offset,
+data buffer geometry and initial free-mlock allowance. GrapheneOS init can later
+overwrite that allowance, so the kernel default is not a verified runtime value.
+
+`cef6ed5fe6a4` corrects ACK's typed-pointer arithmetic: a 4 KiB offset must be
+added as bytes, not multiplied by the 1,088-byte perf metadata structure. The old
+calculation can select pages outside the allocation, potentially exposing other
+memory or crashing. No exploit or live mapping was attempted. The full allocated
+metadata area may be writable; data and AUX remain read-only. This intentionally
+extends the native one-physical-page write boundary to one reported metadata
+page, within its zeroed allocation. AUX mappings must begin beyond the complete
+normal buffer. Unaccounting releases every charged metadata page, preventing the
+old residual charge after unmap. The size check rejects an undersized metadata
+mapping before unsigned subtraction.
+
+The native PFN mapping implementation, event revocation, LSM/resource checks,
+references, locking and failed-mapping cleanup remain. Obsolete ACK clearing of
+page->mapping is removed: native LTS explicitly avoids using that field for
+these mappings. Host tests exercise both allocation-layout translations, with
+15,076 checks and old-source controls. They model addresses/accounting rather
+than allocating kernel pages or testing real VM/PMU behavior. This review does
+not close the separately recorded shared-EOF page-size compatibility question.
+No remote resource was accessed, including links embedded in the commits.
+
+# Historical prctl and UID statistics
+
+`evidence/prctl-uid-history-review.json` records seven historical and merge
+decisions. Native IO-flusher capability checks, current anonymous-name handling,
+killable mmap write locking and ext4 read/decrypt/verity behavior remain. Retired
+ION zeroing helpers and the explicitly removed UID debug task-name collector are
+not reintroduced. The latter had acquired a sleeping mmap lock under a UID
+spinlock; its removal is positive history evidence, not a consumer search.
+
+Keep UID/xt_quota2 native proc-data accessors and actual OEM statistics fields and
+callbacks. Fields are initialized before publication, deferred work copies task
+statistics, and callback arguments are borrowed. Update/append callbacks called
+under spinlocks cannot sleep, and must honor nullable arguments and task/name
+lifetimes. The separate VMA-name bypass callback must implement its own valid
+locking/validation when bypassing native handling. Trusted callbacks are not
+sandboxed. Final ACK explicitly removed fsync syscall counters; retain its zero
+output columns without restoring the removed task-accounting fields. These are
+observational statistics rather than security limits. No runtime verification
+or additional remote source was used.
+
+# Kernel header archive history
+
+`evidence/kheaders-history-review.json` resolves eighteen commits and one merge
+within that count. Preserve the native generator, dependency handling and
+reproducible metadata; the sole source delta follows header symlinks during the
+two copy steps. This materializes build inputs before stripping comments, rather
+than shipping references to build-host paths. Historical cpio and final-tar
+implementations and temporary reverts are superseded. No manifest dependency
+change is needed. The native read-only sysfs export remains unchanged.
+
+The actual generator fixture materializes five headers (three supplied through
+links), preserves SPDX lines, strips ordinary comments and produces an identical
+archive after input timestamp/mode changes. The native control retains three
+links. Build 148's actual embedded kheaders archive also has no links and uses
+normalized ownership/file modes. This does not verify incremental make rebuilds,
+whole-kernel reproducibility, module loading or runtime tracing. Build inputs
+are trusted: dereferencing their symlinks is not a malicious-checkout sandbox.
+No additional remote resource was accessed.
+
+Archive inspection incident: objcopy without a separate ELF output rewrote only
+the distribution kheaders.ko after build 148 verification. Build 149 regenerated
+the complete artifacts through the existing workflow. All 145 signatures and
+module tables were reverified. Repeated extraction used a temporary output ELF,
+verified the signed input bytes unchanged, and matched the initial archive hash.
+No kernel source was changed by the inspection.
