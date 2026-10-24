@@ -22577,5 +22577,240 @@
       "evidence/virtio-loop-review.json",
       "SECURITY.md: Virtio block and loop validation"
     ]
+  },
+  {
+    "commit": "c2928be06c6cdcaed6d5ec805fad5b8a5f92061f",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Omit non-power-of-two zone acceptance, division helpers and equal-capacity requirement as a coordinated feature. Even ACK virtio_blk rejects these geometries at device validation, so this does not enable an SDK storage mode. Keep consistent native power-of-two validation and arithmetic. Pinned SDK uses virtio block storage. ACK and native virtio reject non-power-of-two zone sizes and virtio sets neither ORDERED_HWQ nor ZWOR. ACK stacking clears ORDERED_HWQ when the lower device lacks it. Native generic zoned support and Android metadata encryption remain; no arbitrary future controller equivalence or runtime storage verification is claimed.",
+    "evidence": [
+      "evidence/zoned-storage-review.json",
+      "SECURITY.md: Zoned storage capability gates"
+    ]
+  },
+  {
+    "commit": "70850605bf00018519235262805d426f11be14ba",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Omit DM relaxation of power-of-two zone validation together with the corresponding block geometry feature. Native DM validation remains consistent with native block/virtio geometry and prevents unsupported arithmetic from being reached. Pinned SDK uses virtio block storage. ACK and native virtio reject non-power-of-two zone sizes and virtio sets neither ORDERED_HWQ nor ZWOR. ACK stacking clears ORDERED_HWQ when the lower device lacks it. Native generic zoned support and Android metadata encryption remain; no arbitrary future controller equivalence or runtime storage verification is claimed.",
+    "evidence": [
+      "evidence/zoned-storage-review.json",
+      "SECURITY.md: Zoned storage capability gates"
+    ]
+  },
+  {
+    "commit": "b31993d22c6a3df6c9d38a2628f8013b580d7390",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "NVMe target zone-start helper substitutions belong to the non-power-of-two geometry work. SDK config explicitly disables NVME_TARGET, and the feature serves exporting zoned storage over NVMe, not the configured virtio client disks. Keep native target validation and generic bdev_is_zone_start. Pinned SDK uses virtio block storage. ACK and native virtio reject non-power-of-two zone sizes and virtio sets neither ORDERED_HWQ nor ZWOR. ACK stacking clears ORDERED_HWQ when the lower device lacks it. Native generic zoned support and Android metadata encryption remain; no arbitrary future controller equivalence or runtime storage verification is claimed.",
+    "evidence": [
+      "evidence/zoned-storage-review.json",
+      "SECURITY.md: Zoned storage capability gates"
+    ]
+  },
+  {
+    "commit": "03d92ebe295102a3ac43ac1d0e93318927a4ceb4",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Software-queue insertion and sequential-write predicates activate with BLK_FEAT_ORDERED_HWQ to preserve order for pipelined zoned writes. SDK virtio supplies no such feature. Keep native single-in-flight-per-zone plugging and request dispatch; do not add an unused hardware-order guarantee or new request predicate. Pinned SDK uses virtio block storage. ACK and native virtio reject non-power-of-two zone sizes and virtio sets neither ORDERED_HWQ nor ZWOR. ACK stacking clears ORDERED_HWQ when the lower device lacks it. Native generic zoned support and Android metadata encryption remain; no arbitrary future controller equivalence or runtime storage verification is claimed.",
+    "evidence": [
+      "evidence/zoned-storage-review.json",
+      "SECURITY.md: Zoned storage capability gates"
+    ]
+  },
+  {
+    "commit": "3b6bc79dc75be08cc2399d26b2c8203f9dcbbf47",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Omit ordered zoned requeue flag/helper/export and coordinated BFQ/Kyber/mq-deadline insertions with the absent pipelining feature. The added RQF_DONTPREP nonmerge flag supports routing prepared requests through those new normal queues; native instead retains its explicit RQF_DONTPREP bypass-insert path, avoiding merges without this additional flag. No native prepared-request protection is dropped. Pinned SDK uses virtio block storage. ACK and native virtio reject non-power-of-two zone sizes and virtio sets neither ORDERED_HWQ nor ZWOR. ACK stacking clears ORDERED_HWQ when the lower device lacks it. Native generic zoned support and Android metadata encryption remain; no arbitrary future controller equivalence or runtime storage verification is claimed.",
+    "evidence": [
+      "evidence/zoned-storage-review.json",
+      "SECURITY.md: Zoned storage capability gates"
+    ]
+  },
+  {
+    "commit": "8db1ab531e2d25bb39c2ab2f1d822f9271b904f1",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Omit hardware-queue dispatch mutex, private wrapper allocation and asynchronous dispatch selection tied to ordered zoned pipelining. Keep native hctx allocation/dispatch locking. The private wrapper also avoids historical KMI growth; that layout workaround is not independently needed or retained. Pinned SDK uses virtio block storage. ACK and native virtio reject non-power-of-two zone sizes and virtio sets neither ORDERED_HWQ nor ZWOR. ACK stacking clears ORDERED_HWQ when the lower device lacks it. Native generic zoned support and Android metadata encryption remain; no arbitrary future controller equivalence or runtime storage verification is claimed.",
+    "evidence": [
+      "evidence/zoned-storage-review.json",
+      "SECURITY.md: Zoned storage capability gates"
+    ]
+  },
+  {
+    "commit": "d7b25f1f94b55d957e5599193a905f5069129f02",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "rq_cpu argument prepares CPU-affine ordered zoned pipelining, unsupported by SDK virtio queue features. Keep native two-argument exported blk_zone_plug_bio API and consistent callers. Existing port DM caller uses equivalent short-circuit boolean spelling; this does not add a new protocol or discard a native check. Pinned SDK uses virtio block storage. ACK and native virtio reject non-power-of-two zone sizes and virtio sets neither ORDERED_HWQ nor ZWOR. ACK stacking clears ORDERED_HWQ when the lower device lacks it. Native generic zoned support and Android metadata encryption remain; no arbitrary future controller equivalence or runtime storage verification is claimed.",
+    "evidence": [
+      "evidence/zoned-storage-review.json",
+      "SECURITY.md: Zoned storage capability gates"
+    ]
+  },
+  {
+    "commit": "4cb167e5c18eec8550e75e36c9d1a253f6797282",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Splits an OR into two branches that both jump to plugging, preparing later pipelining edits. Native combined test preserves both NOWAIT and already-plugged conditions. No functional Android API or missing correctness check requires the spelling-only refactor. Pinned SDK uses virtio block storage. ACK and native virtio reject non-power-of-two zone sizes and virtio sets neither ORDERED_HWQ nor ZWOR. ACK stacking clears ORDERED_HWQ when the lower device lacks it. Native generic zoned support and Android metadata encryption remain; no arbitrary future controller equivalence or runtime storage verification is claimed.",
+    "evidence": [
+      "evidence/zoned-storage-review.json",
+      "SECURITY.md: Zoned storage capability gates"
+    ]
+  },
+  {
+    "commit": "dd6e680239173a7332aeee62acc663468aec9bea",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Moves NOWAIT clearing and scheduling/plug-state updates from add_bio into its caller for the ordered pipelining series. Keep native paired helper/caller implementation: NOWAIT bios are cleared and scheduled under the zone plug lock, with native queue reference ownership. Do not mix halves of this refactor. Pinned SDK uses virtio block storage. ACK and native virtio reject non-power-of-two zone sizes and virtio sets neither ORDERED_HWQ nor ZWOR. ACK stacking clears ORDERED_HWQ when the lower device lacks it. Native generic zoned support and Android metadata encryption remain; no arbitrary future controller equivalence or runtime storage verification is claimed.",
+    "evidence": [
+      "evidence/zoned-storage-review.json",
+      "SECURITY.md: Zoned storage capability gates"
+    ]
+  },
+  {
+    "commit": "ff427cbf27407112bf96f84fcde5b416d03aa165",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Intermediate do/while(0) conversion prepares pipelining and replaces the native error retry goto with continue. Keep native retry behavior and serialized worker; importing this preparatory loop alone could stop after an invalid BIO with later BIOs still queued. No current-target optimization needs that change. Pinned SDK uses virtio block storage. ACK and native virtio reject non-power-of-two zone sizes and virtio sets neither ORDERED_HWQ nor ZWOR. ACK stacking clears ORDERED_HWQ when the lower device lacks it. Native generic zoned support and Android metadata encryption remain; no arbitrary future controller equivalence or runtime storage verification is claimed.",
+    "evidence": [
+      "evidence/zoned-storage-review.json",
+      "SECURITY.md: Zoned storage capability gates"
+    ]
+  },
+  {
+    "commit": "ec9ef39a4dc6029d95210cad7944d1d9836892e0",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds a lockdep assertion in scheduling helper as documentation for the pipeline work. Both native callers already hold the zone plug lock: add_bio is reached from the locked write path and unplug_bio acquires it directly. Preserve native locking and reference scheduling without this optional diagnostic-only deviation. Pinned SDK uses virtio block storage. ACK and native virtio reject non-power-of-two zone sizes and virtio sets neither ORDERED_HWQ nor ZWOR. ACK stacking clears ORDERED_HWQ when the lower device lacks it. Native generic zoned support and Android metadata encryption remain; no arbitrary future controller equivalence or runtime storage verification is claimed.",
+    "evidence": [
+      "evidence/zoned-storage-review.json",
+      "SECURITY.md: Zoned storage capability gates"
+    ]
+  },
+  {
+    "commit": "b83a1866b04e6cd1ab6237f320ec19b7806ccd35",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Omit concurrent zoned write submission, from_cpu affinity and queue_work_on scheduling with absent ORDERED_HWQ. Its shared scheduling-reference concern is covered by native 81880f84cb36, which increments before queue_work and drops on already-queued failure. Keep subsequent native DEAD-state/removal fixes, not the older ACK reference/state scheme. Pinned SDK uses virtio block storage. ACK and native virtio reject non-power-of-two zone sizes and virtio sets neither ORDERED_HWQ nor ZWOR. ACK stacking clears ORDERED_HWQ when the lower device lacks it. Native generic zoned support and Android metadata encryption remain; no arbitrary future controller equivalence or runtime storage verification is claimed.",
+    "evidence": [
+      "evidence/zoned-storage-review.json",
+      "SECURITY.md: Zoned storage capability gates"
+    ]
+  },
+  {
+    "commit": "3123e7fba014aa55e7bdf5344897353608106351",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Omit ZWOR capability and bypass of software write-pointer/CPU-order checks. Only ACK UFS sets ZWOR, using advertised device support; virtio does not. Native retains software sequential-write validation and serialization rather than trusting an unavailable hardware restoration facility. Pinned SDK uses virtio block storage. ACK and native virtio reject non-power-of-two zone sizes and virtio sets neither ORDERED_HWQ nor ZWOR. ACK stacking clears ORDERED_HWQ when the lower device lacks it. Native generic zoned support and Android metadata encryption remain; no arbitrary future controller equivalence or runtime storage verification is claimed.",
+    "evidence": [
+      "evidence/zoned-storage-review.json",
+      "SECURITY.md: Zoned storage capability gates"
+    ]
+  },
+  {
+    "commit": "b1a1981d44a51d12e1da65bff237cd52932cd1d6",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "This is a debugfs-only zone-plug formatting change, adding labels around the same five sampled values. It is present in local newer upstream 2b39d4a6c67d, not pinned LTS. Preserve native diagnostic values/locking and output for the current target; no new functional zone support or security check is omitted. Pinned SDK uses virtio block storage. ACK and native virtio reject non-power-of-two zone sizes and virtio sets neither ORDERED_HWQ nor ZWOR. ACK stacking clears ORDERED_HWQ when the lower device lacks it. Native generic zoned support and Android metadata encryption remain; no arbitrary future controller equivalence or runtime storage verification is claimed.",
+    "evidence": [
+      "evidence/zoned-storage-review.json",
+      "SECURITY.md: Zoned storage capability gates"
+    ]
+  },
+  {
+    "commit": "ff9d965f215c912c372a691229853bb7bd1ea7e0",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Comment-only parenthesis correction; local upstream fd0ae4754c7b is not represented as a native-LTS code fix here. Preserve native code and reference ownership; the omitted spelling change has no effect on behavior or security. Pinned SDK uses virtio block storage. ACK and native virtio reject non-power-of-two zone sizes and virtio sets neither ORDERED_HWQ nor ZWOR. ACK stacking clears ORDERED_HWQ when the lower device lacks it. Native generic zoned support and Android metadata encryption remain; no arbitrary future controller equivalence or runtime storage verification is claimed.",
+    "evidence": [
+      "evidence/zoned-storage-review.json",
+      "SECURITY.md: Zoned storage capability gates"
+    ]
+  },
+  {
+    "commit": "0f4f58dd0a9ae6b8f3149dee14a93182dd6b2b75",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Factors ZWOR capability tests into an inline helper and disabled-config stub. Omit with the unsupported hardware capability rather than expose a helper without its dispatch/driver protocol; native zoned APIs and checks remain. Pinned SDK uses virtio block storage. ACK and native virtio reject non-power-of-two zone sizes and virtio sets neither ORDERED_HWQ nor ZWOR. ACK stacking clears ORDERED_HWQ when the lower device lacks it. Native generic zoned support and Android metadata encryption remain; no arbitrary future controller equivalence or runtime storage verification is claimed.",
+    "evidence": [
+      "evidence/zoned-storage-review.json",
+      "SECURITY.md: Zoned storage capability gates"
+    ]
+  },
+  {
+    "commit": "222f69ceb1907bf39a53383ea3b46c101a2b2d4e",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Limits scheduler tags and sysfs queue depth to hardware depth to avoid deadlocks when ZWOR is active. SDK virtio does not advertise ZWOR; native scheduler allocation, its later shared-tag depth fix dc96cefef0d3 and sysfs limits remain. Do not apply the hardware-specific queue restriction to ordinary SDK queues. Pinned SDK uses virtio block storage. ACK and native virtio reject non-power-of-two zone sizes and virtio sets neither ORDERED_HWQ nor ZWOR. ACK stacking clears ORDERED_HWQ when the lower device lacks it. Native generic zoned support and Android metadata encryption remain; no arbitrary future controller equivalence or runtime storage verification is claimed.",
+    "evidence": [
+      "evidence/zoned-storage-review.json",
+      "SECURITY.md: Zoned storage capability gates"
+    ]
+  },
+  {
+    "commit": "1932cdd51d84c3e1ba140f15a2fba8329b4c88d2",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Forces multi-queue plug handling when ordered zoned pipelining is active so dispatch cannot reorder writes. Keep native plug algorithm and serialized zone worker; the new trigger cannot be set by the SDK virtio driver. Pinned SDK uses virtio block storage. ACK and native virtio reject non-power-of-two zone sizes and virtio sets neither ORDERED_HWQ nor ZWOR. ACK stacking clears ORDERED_HWQ when the lower device lacks it. Native generic zoned support and Android metadata encryption remain; no arbitrary future controller equivalence or runtime storage verification is claimed.",
+    "evidence": [
+      "evidence/zoned-storage-review.json",
+      "SECURITY.md: Zoned storage capability gates"
+    ]
+  },
+  {
+    "commit": "6068ed9f050d8dcad145ae9fe2e15b6e6804ac13",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Prevents new pipelined writes bypassing pending bios or running worker. Native never enables this concurrent-per-zone pipeline and keeps BLK_ZONE_WPLUG_PLUGGED until completion, so existing serialization preserves submission order without the new busy/list checks. Pinned SDK uses virtio block storage. ACK and native virtio reject non-power-of-two zone sizes and virtio sets neither ORDERED_HWQ nor ZWOR. ACK stacking clears ORDERED_HWQ when the lower device lacks it. Native generic zoned support and Android metadata encryption remain; no arbitrary future controller equivalence or runtime storage verification is claimed.",
+    "evidence": [
+      "evidence/zoned-storage-review.json",
+      "SECURITY.md: Zoned storage capability gates"
+    ]
+  },
+  {
+    "commit": "d786f86098fb4acc6122634ee4f04244c2d54059",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Adds REQ_ZONE_SERIALIZED and stops pipelining around PREFLUSH/FUA bios, fixing a pipeline-specific requeue ordering risk. Keep native single-in-flight zone serialization and native flush handling, which never exposes this additional concurrent mode. Omit the unused flag rather than change ordinary request flag numbering. Pinned SDK uses virtio block storage. ACK and native virtio reject non-power-of-two zone sizes and virtio sets neither ORDERED_HWQ nor ZWOR. ACK stacking clears ORDERED_HWQ when the lower device lacks it. Native generic zoned support and Android metadata encryption remain; no arbitrary future controller equivalence or runtime storage verification is claimed.",
+    "evidence": [
+      "evidence/zoned-storage-review.json",
+      "SECURITY.md: Zoned storage capability gates"
+    ]
+  },
+  {
+    "commit": "7820f5b6f1ac958b2f11a103730f6902871fcb14",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [
+      "81880f84cb3611914014f90147766a0a435d2144"
+    ],
+    "rationale": "All unique remerge hunks examined: ACK retains its lock-dependent queue_work_on-then-increment scheme over incoming upstream increment-before-queue_work/drop-if-already-queued fix. Keep upstream scheduling implementation in full because the alternate affinity/pipeline machinery is omitted. This retains the stable refcount fix rather than choosing the ACK merge resolution. Pinned SDK uses virtio block storage. ACK and native virtio reject non-power-of-two zone sizes and virtio sets neither ORDERED_HWQ nor ZWOR. ACK stacking clears ORDERED_HWQ when the lower device lacks it. Native generic zoned support and Android metadata encryption remain; no arbitrary future controller equivalence or runtime storage verification is claimed.",
+    "evidence": [
+      "evidence/zoned-storage-review.json",
+      "SECURITY.md: Zoned storage capability gates"
+    ]
+  },
+  {
+    "commit": "e4f5dbb4c4891d3569fe197549b5e4ed6f10acdf",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Temporary DWC3 suspend revert is explicitly undone by ACK 689bd8b402db after native 9cfb31e4c89d fixes access to runtime-suspended registers. Preserve native SUSPHY handling and runtime-suspend guard, not either historical intermediate state.",
+    "evidence": [
+      "evidence/zoned-storage-review.json",
+      "SECURITY.md: Zoned storage capability gates"
+    ]
+  },
+  {
+    "commit": "689bd8b402db416e764af5e0e2a24672dd9013cb",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [
+      "705e3ce37bccdf2ed6f848356ff355f480d51a91",
+      "9cfb31e4c89d200d8ab7cb1e0bb9e6e8d621ca0b"
+    ],
+    "rationale": "Reapplies native TI AM62 SUSPHY suspend handling after the runtime-suspend fault fix. Whole current DWC3 core.c/core.h equal pinned LTS, including guarded register access before core exit and restore on resume. No new platform code is required and no native suspend fix is reversed.",
+    "evidence": [
+      "evidence/zoned-storage-review.json",
+      "SECURITY.md: Zoned storage capability gates"
+    ]
   }
 ]

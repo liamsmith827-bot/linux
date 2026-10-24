@@ -37,6 +37,12 @@ checked-out project, including tools, external modules, build rules and toolchai
 Remote URLs in those inventories identify local repository provenance; they do
 not imply that the remote was contacted during this work.
 
+The local emulator prebuilt was also inspected at
+`d4d262fa07952995d9fa4913d10365d878c8fdcf` while investigating controller
+capabilities. Help-only device queries failed before producing a registry;
+they provide no evidence for excluding a controller. Binary/metadata hashes and
+outputs are in `evidence/sdk-emulator-device-query.json`. No VM was booted.
+
 ## Audit method
 
 Candidates are exactly `git rev-list ACK --not LINUX`, including merges: 11,731

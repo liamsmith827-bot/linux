@@ -608,5 +608,11 @@
     "topic": "Loop direct-I/O alignment compatibility",
     "status": "unresolved necessity; provisional",
     "evidence": "Full ACK revert and native f4774e92aab8 read. ACK still bypasses STATX_DIOALIGN filesystem minimum; native remains intact. Local LTP ioctl_loop05 expects backing-device logical sector size to suffice, which can conflict with filesystem direct-I/O requirements. Android apexd/libdm request 4096-byte loop blocks, but this alone does not settle every offset/filesystem combination. Need a coherent compatibility policy preserving native I/O correctness. No LTP/emulator runtime test performed; see evidence/virtio-loop-review.json."
+  },
+  {
+    "commit": "097816659d76e06a767f1125b26b649b331abc91",
+    "topic": "6.18.32 merge: zoned fix reversal and DWC3 reset hook",
+    "status": "partial review; final disposition pending DWC3 hook necessity",
+    "evidence": "All unique remerge hunks in blk-zoned.c and drivers/usb/dwc3/core.c examined. ACK reverses native d281f3ac0d00 DEAD-state/removal fix; current whole blk-zoned.c retains that fix and later 36a0faaa4e3d reset/revival handling. DWC3 resolution keeps a reset hook with the updated dwc3_readl(dwc,...) API. 9326f2e6e8a3 also adds generic xHCI call sites; SDK compiles both, so compilation gate is not proof of irrelevance. Need finish callback scope decision before finalizing the merge. Evidence/zoned-storage-review.json records full remerge hash. Local emulator help-only registry queries failed before returning a device list; they provide no exclusion evidence. See evidence/sdk-emulator-device-query.json; no VM booted."
   }
 ]

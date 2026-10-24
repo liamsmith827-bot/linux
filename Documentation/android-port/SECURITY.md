@@ -7634,3 +7634,41 @@ not historical binary-layout preservation. All 14 export conversions and five
 imports from a9d144c159d9 are present, without replacing native function bodies.
 A namespace is not a security boundary against kernel code. The SDK module build
 checks import consistency; it does not establish runtime isolation.
+
+## Zoned storage capability gates
+
+The pinned Goldfish ramdisk loads virtio_blk, and its fstab uses conventional
+virtio storage with ext4/EROFS. More specifically, both ACK and native virtio_blk
+reject non-power-of-two zone sizes, and the ACK driver sets neither
+BLK_FEAT_ORDERED_HWQ nor BLK_FEAT_ZWOR. ACK's stacking code clears ORDERED_HWQ
+when a lower device lacks it. Its other producers are UFS and test drivers;
+NULL_BLK, SCSI_DEBUG and NVME_TARGET are disabled by the SDK configuration.
+These positive driver/configuration contracts justify omitting the non-power-of-
+two and ordered-pipeline extensions, even if a different virtio device were to
+negotiate native zoned support. They do not establish equivalence for future UFS
+or arbitrary vendor controllers.
+
+Keep native serialized zone submission, geometry validation, schedulers, flush
+ordering and queue-depth rules. Do not claim hardware write-order restoration
+or replace native serialization with a partially imported pipeline. In
+particular, native prepared-request requeue still bypasses mergeable insertion;
+the ACK pipeline's new ordered-insertion flag and accompanying DONTPREP nonmerge
+flag are not required for that existing path. Generic zoned interfaces and
+dm-default-key's sector-correct append emulation remain available.
+
+Retain LTS 81880f84cb36's reference-before-queue-work and drop-on-already-queued
+handling. Merge 7820f5b6f1ac instead preserves ACK's alternate CPU-affine
+scheduling/reference scheme; its unique resolution is not adopted. The full
+native blk-zoned.c also preserves d281f3ac0d00's delayed plug removal and
+36a0faaa4e3d's handling of a new write immediately after zone reset. The storage
+portion of merge 097816659d76 reverses the former fix and is rejected; that merge
+remains provisional because its separate DWC3 hook resolution needs a decision.
+Optional debugfs formatting, comment and preparatory locking/refactoring changes
+do not require replacing these native algorithms. No storage runtime test is
+claimed. Patch hashes, full native-file comparisons and feature producers are
+recorded in evidence/zoned-storage-review.json.
+
+The separate DWC3 SUSPHY revert/reapply pair is resolved by positive native
+history: 9cfb31e4c89d guards register access when already runtime suspended and
+moves it before core exit. Complete DWC3 core source/header remain native, with
+that correction and later fixes; neither historical intermediate state is used.
