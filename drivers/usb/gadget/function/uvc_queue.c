@@ -184,7 +184,11 @@ int uvcg_alloc_buffers(struct uvc_video_queue *queue,
 
 retry:
 	ret = vb2_reqbufs(&queue->queue, rb);
-	if (ret < 0 && queue->use_sg) {
+	/* Never change allocators while existing buffers still use the old one. */
+	if (ret == -ENOMEM && queue->use_sg && rb->count &&
+	    rb->memory == V4L2_MEMORY_MMAP &&
+	    !vb2_get_num_buffers(&queue->queue) &&
+	    !vb2_is_streaming(&queue->queue)) {
 		uvc_trace(UVC_TRACE_IOCTL,
 			  "failed to alloc buffer with sg enabled, try non-sg mode\n");
 		queue->use_sg = 0;
