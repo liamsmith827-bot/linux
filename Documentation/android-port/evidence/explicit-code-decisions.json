@@ -17207,5 +17207,441 @@
       "evidence/kheaders-archive-check.json",
       "SECURITY.md: Kernel header archive history"
     ]
+  },
+  {
+    "commit": "957b40b3b769bc23db3d6491db267e3166f91316",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "75d587b500e8400bdfd7fedadec60ef7e2cacc56",
+      "00951cd18f1e9f344c92e5dbfc2734ae989728b3"
+    ],
+    "rationale": "Entire eleven-path addition reviewed, including full original notification implementation reconstructed from current file and complete original-to-current diff. Retain Android USB class/state/uevents, instance creation/destruction, native-composite notifications, UDC none alias, Kconfig/build wiring and x86 enablement. Positive local UsbDeviceManager consumes android0/state and USB_STATE events; UDC monitor alternative is not proof legacy compatibility can be dropped. ARM64 defconfig is outside SDK x86 target; documentation-only legacy ABI description is summarized in this audit rather than required for the build. Later ACK b0d655 makes helpers static, d76343 removes library-internal exports, and 31fa66 removes old function-device API; do not resurrect these. 75d587b500e8 fixes duplicate free on function-name allocation failure, same-devt wrong-device unregister, sleeping unregister under spinlock, post-drain work queueing and non-configfs uninitialized work. It reports actual configuration under native cdev lock, clears configured on disconnect and locks state snapshots. 00951cd18f1e holds the ID until unregister removes the old name. No LTS USB control-request, validation or set_config implementation is replaced. Native set_config and reset/disconnect entry functions remain byte-identical; other accessory additions are separate candidates.",
+    "evidence": [
+      "evidence/usb-notification-review.json",
+      "evidence/usb-gadget-lifecycle-check.json",
+      "SECURITY.md: Android USB notification lifecycle"
+    ]
+  },
+  {
+    "commit": "b0d655f2d6095cb947c61f9c913fa9d4f3f8dfc1",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "75d587b500e8400bdfd7fedadec60ef7e2cacc56",
+      "00951cd18f1e9f344c92e5dbfc2734ae989728b3"
+    ],
+    "rationale": "Full two-hunk patch read. Keep internal connected/configured helpers static, as final ACK requires. Their call sites remain in the same compilation unit. Subsequent lifecycle adaptations reject absent/torn-down instances before scheduling; visibility change does not remove public Android events or source customization hooks.",
+    "evidence": [
+      "evidence/usb-notification-review.json",
+      "evidence/usb-gadget-lifecycle-check.json",
+      "SECURITY.md: Android USB notification lifecycle"
+    ]
+  },
+  {
+    "commit": "d76343fd3ae3375976d795f59b5cbbbaa567a237",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Full two-file export-removal patch read. Preserve the explicit final-ACK removal of eight notification and three accessory GPL export markings while retaining the functions and current composite-library call sites. This is not inferred from failure to find a consumer and does not preserve obsolete binary KMI. It reduces external symbol surface without changing calls linked within the existing gadget build. This decision covers symbol visibility, not the separate accessory protocol implementation.",
+    "evidence": [
+      "evidence/usb-notification-review.json",
+      "evidence/usb-gadget-lifecycle-check.json",
+      "SECURITY.md: Android USB notification lifecycle"
+    ]
+  },
+  {
+    "commit": "31fa66a36115af7240096980335694606b916101",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Full two-file removal patch read. Final ACK explicitly deletes android_create_function_device/android_remove_function_device, prototypes and disabled stubs; both implementations and declarations remain absent. Retain real Android instance/state notifications. Do not reintroduce the obsolete singleton-based function-device allocation/lifetime path. No assertion of absence of all historical userspace consumers is needed to follow positive pinned-ACK retirement evidence.",
+    "evidence": [
+      "evidence/usb-notification-review.json",
+      "evidence/usb-gadget-lifecycle-check.json",
+      "SECURITY.md: Android USB notification lifecycle"
+    ]
+  },
+  {
+    "commit": "1f16d824a8bdc832d591373d4981fa7fe50b23e3",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Full original patch or unique remerge diff examined. The old int-returning contaminant callback, debouncing flag and getter were explicitly withdrawn by 3231c334dde8. Preserve newer native 599f008c257d CHECK_CONTAMINANT state/void callback/clean event and 1a4a2df07c1f extra SNK_DEBOUNCED transition. No historical getter or old state algorithm is resurrected; this is replacement evidence, not missing-consumer inference.",
+    "evidence": [
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native Type-C historical reconciliation"
+    ]
+  },
+  {
+    "commit": "d81e9d99d88ba3fc5330abdaf6f5f33a174a8d46",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full original patch or unique remerge diff examined. The reintroduced tcpm_update_sink_capabilities and PDO-copy helper were explicitly deleted by 3231c334dde8, despite that revert title mentioning only contaminant handling. Full removal hunks read. Getter/updater declarations and implementation are absent from final ACK and port; native capabilities handling remains. Do not resurrect an API final ACK removed.",
+    "evidence": [
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native Type-C historical reconciliation"
+    ]
+  },
+  {
+    "commit": "54629410393b616acc1ca8a594021eca41f33241",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Full original patch or unique remerge diff examined. Full two-path unique merge resolution combines native FRS state/callback with old Android debouncing/contaminant callback. Native FRS capability fields and enable callback survive; historical debouncing/int callback was explicitly removed and replaced by native CHECK_CONTAMINANT implementation. Preserve the complete current native state machine and callback types, with no binary KMI obligation.",
+    "evidence": [
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native Type-C historical reconciliation"
+    ]
+  },
+  {
+    "commit": "5a062fa1de08a85d9c6b4f1af4146a8c5b8aedb0",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Full original patch or unique remerge diff examined. Native 8115240c4fbd is patch-equivalent. Current firmware parser reads new-source-frs-typec-current for DRP ports and current FRS negotiation uses new_source_frs_current. Entire implementation/header is native; preserve later bounds, PD-capability and error handling rather than replaying historical context.",
+    "evidence": [
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native Type-C historical reconciliation"
+    ]
+  },
+  {
+    "commit": "6d065abe6e04385da6155d9ebba8a4f993c1bb64",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Full original patch or unique remerge diff examined. Native a30a00e37ceb adds the same FRS sourcing-vbus callbacks and type; full native patch also read because Android header context changes patch ID. Current _tcpm_pd_vbus_on still calls the optional callback at FRS transition states. No Android-only runtime difference remains from this candidate.",
+    "evidence": [
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native Type-C historical reconciliation"
+    ]
+  },
+  {
+    "commit": "c05a6640eabd84981b77d619de8b807c079bc5df",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Full original patch or unique remerge diff examined. Native f321a02caebd implements optional auto-discharge and threshold callbacks plus connection/reset/power-swap transitions. Full native patch read; differing patch ID is not treated as equality. Current native helper additionally passes PPS minimum voltage and uses later enable/disable refactoring. Preserve all current LTS power safety and error handling, not the obsolete helper signature.",
+    "evidence": [
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native Type-C historical reconciliation"
+    ]
+  },
+  {
+    "commit": "dafdf1e8613cc5f0a7413f903a5c0b4a366e09b5",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Full original patch or unique remerge diff examined. Native e4a9378083c5 is patch-equivalent across all five files: negotiated revision reaches transmit callbacks and PD2 versus PD3 retry count selection. All five current files equal LTS; later SOP-prime revision handling remains native. No driver callback ABI rollback is introduced.",
+    "evidence": [
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native Type-C historical reconciliation"
+    ]
+  },
+  {
+    "commit": "79f52095e720adc0ce8b009f7047a5f8a7bfd5a4",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Full original patch or unique remerge diff examined. Native 3bac42f02d41 is patch-equivalent, but the original immediate tcpm_check_send_discover helper has since been replaced by native delayed discovery work and SOP/SOP-prime state. Retain native clearing for ineligible device/PD revisions and current retry handling; do not reintroduce the obsolete helper or assume textual survival of its historical algorithm.",
+    "evidence": [
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native Type-C historical reconciliation"
+    ]
+  },
+  {
+    "commit": "7561e7c29c535ddc8197b9251205dae132ddc826",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Full original patch or unique remerge diff examined. Full original and native 28b43d3d746b patches read. Native code distinguishes VBUS present from VSAFE0V and exposes optional is_vbus_vsafe0v with fallback for controllers lacking it. Current event/transition logic includes later native PR_SWAP and discharge corrections. Entire state machine/header are untouched LTS; no old voltage-transition implementation replaces stable fixes.",
+    "evidence": [
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native Type-C historical reconciliation"
+    ]
+  },
+  {
+    "commit": "6b65d4c6f712209319376b7be4da4518548dcfd0",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Full original patch or unique remerge diff examined. Native 60e998d1c6d9 is patch-equivalent. Current queued source-capability path sends soft reset on send error and arms hard reset after a successful source response, with later native AMS completion. Retain current native retry/deadline behavior; no duplicate state-machine patch is needed.",
+    "evidence": [
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native Type-C historical reconciliation"
+    ]
+  },
+  {
+    "commit": "9be57575bf9ad4b3bab13fe4fef9bc4a00edf243",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Full original patch or unique remerge diff examined. Native 301a633c1b5b is patch-equivalent. Current PR_SWAP_SRC_SNK_SOURCE_OFF_CC_DEBOUNCED enters ERROR_RECOVERY on send failure and timeout; it does not regress to the old conditional SNK_UNATTACHED error path. Native timing refinements remain.",
+    "evidence": [
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native Type-C historical reconciliation"
+    ]
+  },
+  {
+    "commit": "44bd70775a9390f517c04807b0524c0950134041",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Full original patch or unique remerge diff examined. Native fe79d5de7720 is patch-equivalent. PD_T_PS_SOURCE_ON_PRS remains 450ms and is used by the native power-swap timeout, preserving its 30ms margin relative to the older 480ms value. Entire pd.h and state machine equal LTS; no runtime timing measurement is claimed.",
+    "evidence": [
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native Type-C historical reconciliation"
+    ]
+  },
+  {
+    "commit": "c979eb9d818015d7f21188d2a472b8a33cdec016",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Full original patch or unique remerge diff examined. Full three-path unique merge resolution read. Keep native dedicated configfs_composite_reset instead of disconnect and preserve AMS state plus partner-USB-communication callback. Old Android debouncing/int contaminant state is explicitly retired; native newer contamination handling remains. Legacy android_setup wrapper is replaced by separately retained composite Android notification integration, documented in usb-notification-review, while complete current configfs reset/disconnect functions match LTS. No merged-parent feature is assumed reviewed merely from this resolution.",
+    "evidence": [
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native Type-C historical reconciliation"
+    ]
+  },
+  {
+    "commit": "3231c334dde8dc24df775981da02100ec512f81a",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Full original patch or unique remerge diff examined. Full two-path revert read, including the otherwise unmentioned tcpm_update_sink_capabilities removal. Old debouncing getter and updater are absent final ACK/port. Native later contaminant callback intentionally remains with CHECK_CONTAMINANT/clean events and void type; applying the old revert literally would erase current native functionality and is not done.",
+    "evidence": [
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native Type-C historical reconciliation"
+    ]
+  },
+  {
+    "commit": "a09d482bed7e6941c0508b4378a584ca1cf5be6d",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full original patch or unique remerge diff examined. Full one-hunk revert read with later 5032efbbcf31 and b61b6f74f905 resolution. Unconditional CC_OPEN was temporary; native current PORT_RESET uses CC_OPEN for self-powered ports and correct Rd/Rp for externally powered ones. Preserve the native conditional behavior so reset does not unnecessarily remove the power path.",
+    "evidence": [
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native Type-C historical reconciliation"
+    ]
+  },
+  {
+    "commit": "3420cae8dda2f8088c32d52abbce5e9232154d8d",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full original patch or unique remerge diff examined. Full two-hunk revert read together with explicit reapplication 5032efbbcf31. Unconditional charging is not final behavior. Current native sink discovery permits non-PD ports or a nonzero operating current (187fb003c57c correction); hard-reset charging retains its current guard. No power-limit regression from the temporary revert is introduced.",
+    "evidence": [
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native Type-C historical reconciliation"
+    ]
+  },
+  {
+    "commit": "5032efbbcf318c5ddee55a340fc78c2a18352982",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Full original patch or unique remerge diff examined. Full three-hunk reapplication read. Retain native nonzero-current charging controls with later 187fb003c57c non-PD exception. Its unconditional reset Rd/Rp is superseded by the later self_powered conditional resolution visible in b61b6f74f905 and current native tree. No historical charge or CC-role behavior overrides LTS power-state fixes.",
+    "evidence": [
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native Type-C historical reconciliation"
+    ]
+  },
+  {
+    "commit": "2e578056dbc117de3429a60dbb458acb36c78d6f",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full original patch or unique remerge diff examined. Full one-hunk revert read. Its unconditional CC_OPEN was explicitly reconciled by subsequent merge b61b6f74f905 to native self_powered-dependent CC handling. Native whole file unchanged; no future-platform assumption or missing-consumer inference is needed.",
+    "evidence": [
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native Type-C historical reconciliation"
+    ]
+  },
+  {
+    "commit": "ae6b76bff95cdf7670fd03e01198fe41f46fc0ad",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full original patch or unique remerge diff examined. Full three-hunk revert read with exact reapplication bc34ee01810f. Do not remove timeout recovery: native implementation queries source caps before reset for non-self-powered ports and includes the later afb92ad8733e restriction for self-powered ports. This preserves native recovery/power availability.",
+    "evidence": [
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native Type-C historical reconciliation"
+    ]
+  },
+  {
+    "commit": "bc34ee01810f0acf22bbb3a45f4cb146b60a5ed4",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Full original patch or unique remerge diff examined. Full reapplication read. Native 122968f8dda8 provides source-capability query recovery; current native afb92ad8733e limits that timeout transition to non-self-powered ports and allows SNK_READY fallback from both wait states. Preserve later native scope rather than restoring the old broader transition.",
+    "evidence": [
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native Type-C historical reconciliation"
+    ]
+  },
+  {
+    "commit": "648df50489c63e2524aaa6f33d9fb430ffddc055",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Full original patch or unique remerge diff examined. Full one-hunk fix read. Native becac61a771a changes fallback to recognize SNK_WAIT_CAPABILITIES_TIMEOUT; later afb92ad8733e deliberately recognizes both wait states after restricting timeout transition to non-self-powered ports. Keep this complete native later fix rather than blindly replacing its condition with only the older state.",
+    "evidence": [
+      "evidence/tcpm-history-review.json",
+      "SECURITY.md: Native Type-C historical reconciliation"
+    ]
+  },
+  {
+    "commit": "7a160e2b962b3b38dbb3e044ca28232332524c84",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "75d587b500e8400bdfd7fedadec60ef7e2cacc56",
+      "00951cd18f1e9f344c92e5dbfc2734ae989728b3"
+    ],
+    "rationale": "Full original two-path patch read. Preserve state strings, asynchronous Android events, UDC none alias and configured build through final 957b40b3b769 split notification implementation. Old android_setup iteration and singleton/configfs-embedded work were explicitly removed and replaced; current setup/reset/disconnect/suspend/resume/unbind wrappers are native LTS. Accessory pre-configuration handling survives through the separate bounded android_acc_* path. Do not restore old wrapper null/lifetime races or old function-instance traversal. Current notification safety adaptations are documented separately.",
+    "evidence": [
+      "evidence/usb-notification-history-review.json",
+      "evidence/usb-notification-review.json",
+      "evidence/usb-gadget-lifecycle-check.json"
+    ]
+  },
+  {
+    "commit": "429213f5d9eb91cc489b5fc7fc8d7133a07e5541",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "75d587b500e8400bdfd7fedadec60ef7e2cacc56",
+      "00951cd18f1e9f344c92e5dbfc2734ae989728b3"
+    ],
+    "rationale": "Full original patch read. Keep actual Android class creation/destruction and instance-specific event targets via the final replacement implementation. Original global create_function_device and its replacement android_create_function_device were explicitly retired by later ACK removal; no obsolete singleton child-device API or stale global event pointer is resurrected. teardown now destroys the exact live instance and drains work before containing gadget release.",
+    "evidence": [
+      "evidence/usb-notification-history-review.json",
+      "evidence/usb-notification-review.json",
+      "evidence/usb-gadget-lifecycle-check.json"
+    ]
+  },
+  {
+    "commit": "d398ab0ffbf130b402fba1a61d99d2143c42d98e",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "75d587b500e8400bdfd7fedadec60ef7e2cacc56",
+      "00951cd18f1e9f344c92e5dbfc2734ae989728b3"
+    ],
+    "rationale": "Full state-file addition/error-cleanup patch read. Retain the user-visible read-only state attribute through current class dev_groups/state_show, with drvdata pointing to per-gadget options. 75d587b500e8 locks the snapshot and reports real configuration/disconnect state. Class-managed groups and exact-instance unregister supersede manual attribute loops and unsafe post-config_item_put cleanup. Positive UsbDeviceManager state reader is pinned in usb-notification-review.",
+    "evidence": [
+      "evidence/usb-notification-history-review.json",
+      "evidence/usb-notification-review.json",
+      "evidence/usb-gadget-lifecycle-check.json"
+    ]
+  },
+  {
+    "commit": "cc9ba0912d54bf644977a5004febd25c57ea4b91",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "75d587b500e8400bdfd7fedadec60ef7e2cacc56",
+      "00951cd18f1e9f344c92e5dbfc2734ae989728b3"
+    ],
+    "rationale": "Full helper extraction patch read. Preserve instance create/destroy abstraction and config-disabled stubs in the split notification library. Current class attribute groups replace manual loops; native gadget allocation flow plus corrected one-time frees replaces historical error labels. Device teardown precedes config_item_put, and work cannot be enqueued after dev is unpublished. Preserve live state behavior rather than replaying old singleton layout.",
+    "evidence": [
+      "evidence/usb-notification-history-review.json",
+      "evidence/usb-notification-review.json",
+      "evidence/usb-gadget-lifecycle-check.json"
+    ]
+  },
+  {
+    "commit": "2a71bdee3f006d231da9c86f46ca05c91ab65c10",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "75d587b500e8400bdfd7fedadec60ef7e2cacc56",
+      "00951cd18f1e9f344c92e5dbfc2734ae989728b3"
+    ],
+    "rationale": "Full two-hunk unique merge resolution read. Retain native gi spinlock/unbind state and locked setup/disconnect/suspend/resume wrappers. Android events are implemented in separate per-cdev options and composite notifications. Old Android direct setup/disconnect callbacks and direct composite fallback are superseded by these native lifetime gates; all six native wrapper/unbind functions are byte-identical to LTS. Native dedicated reset supersedes the historical reset-as-disconnect binding.",
+    "evidence": [
+      "evidence/usb-notification-history-review.json",
+      "evidence/usb-notification-review.json",
+      "evidence/usb-gadget-lifecycle-check.json"
+    ]
+  },
+  {
+    "commit": "852619242c9449fd2cde7cd7566fcba8a9181de0",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "75d587b500e8400bdfd7fedadec60ef7e2cacc56",
+      "00951cd18f1e9f344c92e5dbfc2734ae989728b3"
+    ],
+    "rationale": "Full multi-instance patch read. Keep distinct androidN devices, per-instance drvdata and event targets using final ACK IDA allocation. Adapt teardown to exact device_unregister rather than same-devt lookup, keep ID reserved until the old sysfs name is removed, and drain before containing gadget release. Old monotonic gadget_index and teardown after config_item_put are superseded. Host two-instance model reproduces old wrong-instance teardown and verifies the adapted path.",
+    "evidence": [
+      "evidence/usb-notification-history-review.json",
+      "evidence/usb-notification-review.json",
+      "evidence/usb-gadget-lifecycle-check.json"
+    ]
+  },
+  {
+    "commit": "43e98b082f9ea3c7daaf14fad32557ee045e7c02",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "Full relocation/conditional-compilation patch read. Its purpose was avoiding unused native wrappers when old android_setup/android_disconnect replaced them. Final ACK removed those wrappers and current code always uses native configfs callbacks with split notifications. No old declaration move or conditional exclusion is needed; all native callback functions remain compiled and unchanged.",
+    "evidence": [
+      "evidence/usb-notification-history-review.json",
+      "evidence/usb-notification-review.json",
+      "evidence/usb-gadget-lifecycle-check.json"
+    ]
+  },
+  {
+    "commit": "36cfd6f81afc6d2eab297f686f00eafd5a807cec",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "75d587b500e8400bdfd7fedadec60ef7e2cacc56",
+      "00951cd18f1e9f344c92e5dbfc2734ae989728b3"
+    ],
+    "rationale": "Full disconnect refactor read. Retain the safety effect through native configfs_composite_disconnect null checks, gi spinlock and unbind check before composite_disconnect. Accessory cleanup and Android disconnected notification now occur in __composite_disconnect reached through that native gate. Do not restore the old callback that derived gi from potentially null cdev or scheduled work without final teardown synchronization. Current source preserves native reset distinction.",
+    "evidence": [
+      "evidence/usb-notification-history-review.json",
+      "evidence/usb-notification-review.json",
+      "evidence/usb-gadget-lifecycle-check.json"
+    ]
+  },
+  {
+    "commit": "849ee75c5c9a7de6f7a2a3a28d24c0bb6bf4d7a4",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Full two-file bounds patch read. Its historical acc_ctrlrequest_composite is replaced by current android_acc_setup_composite with the same EP0 size limit: clamp oversized IN length, reject oversized OUT before __acc_setup. Current native composite_setup also checks the control length before accessory dispatch, providing an earlier guard. Whole current wrapper equals final ACK; no claim of complete accessory protocol review or runtime USB fuzzing is made by this narrowly scoped decision.",
+    "evidence": [
+      "evidence/usb-notification-history-review.json",
+      "evidence/usb-notification-review.json",
+      "evidence/usb-gadget-lifecycle-check.json"
+    ]
+  },
+  {
+    "commit": "370ab92ac2e12b6deba67720365ed20b53ef701f",
+    "disposition": "merge-resolution-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "75d587b500e8400bdfd7fedadec60ef7e2cacc56",
+      "00951cd18f1e9f344c92e5dbfc2734ae989728b3"
+    ],
+    "rationale": "Full unique merge resolution read. Preserve its correction routing failed Android-device creation through name cleanup. Current source also separately owns the function string; 75d587b500e8 orders labels so each allocated name/function/gi is freed once, correcting the later ACK double-free regression. Host allocation-failure model checks all three failure stages. Native successful construction remains unchanged apart from Android instance creation.",
+    "evidence": [
+      "evidence/usb-notification-history-review.json",
+      "evidence/usb-notification-review.json",
+      "evidence/usb-gadget-lifecycle-check.json"
+    ]
+  },
+  {
+    "commit": "cdd23c753171960434cbab3aa08dc567a3732692",
+    "disposition": "superseded",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Full one-line API conversion read. The old dynamic class_create call is replaced by final ACK static android_usb_class plus native class_register/class_unregister. Retain native class API and current class groups; neither old THIS_MODULE argument nor obsolete singleton class creation is required. No class access or lifetime checks are removed.",
+    "evidence": [
+      "evidence/usb-notification-history-review.json",
+      "evidence/usb-notification-review.json",
+      "evidence/usb-gadget-lifecycle-check.json"
+    ]
+  },
+  {
+    "commit": "91eefa68622f7a47cd2d129703cf4c6f9a16004e",
+    "disposition": "merge-resolution-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Full include-resolution diff read. Keep Android notification header and native u_os_desc.h; obsolete u_f.h is removed as upstream requires. Current include block matches this effect and the existing build succeeds. This merge changes declaration wiring only, not request handling or security policy.",
+    "evidence": [
+      "evidence/usb-notification-history-review.json",
+      "evidence/usb-notification-review.json",
+      "evidence/usb-gadget-lifecycle-check.json"
+    ]
   }
 ]

@@ -1,0 +1,146 @@
+{
+  "source_head": "00951cd18f1e9f344c92e5dbfc2734ae989728b3",
+  "records": [
+    {
+      "commit": "957b40b3b769bc23db3d6491db267e3166f91316",
+      "disposition": "partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "75d587b500e8400bdfd7fedadec60ef7e2cacc56",
+        "00951cd18f1e9f344c92e5dbfc2734ae989728b3"
+      ],
+      "rationale": "Entire eleven-path addition reviewed, including full original notification implementation reconstructed from current file and complete original-to-current diff. Retain Android USB class/state/uevents, instance creation/destruction, native-composite notifications, UDC none alias, Kconfig/build wiring and x86 enablement. Positive local UsbDeviceManager consumes android0/state and USB_STATE events; UDC monitor alternative is not proof legacy compatibility can be dropped. ARM64 defconfig is outside SDK x86 target; documentation-only legacy ABI description is summarized in this audit rather than required for the build. Later ACK b0d655 makes helpers static, d76343 removes library-internal exports, and 31fa66 removes old function-device API; do not resurrect these. 75d587b500e8 fixes duplicate free on function-name allocation failure, same-devt wrong-device unregister, sleeping unregister under spinlock, post-drain work queueing and non-configfs uninitialized work. It reports actual configuration under native cdev lock, clears configured on disconnect and locks state snapshots. 00951cd18f1e holds the ID until unregister removes the old name. No LTS USB control-request, validation or set_config implementation is replaced. Native set_config and reset/disconnect entry functions remain byte-identical; other accessory additions are separate candidates.",
+      "evidence": [
+        "evidence/usb-notification-review.json",
+        "evidence/usb-gadget-lifecycle-check.json",
+        "SECURITY.md: Android USB notification lifecycle"
+      ],
+      "patch_sha256": "38d83d9a8c492ba78ad6362e143b5e2e528b987310ff29d58d404863cb2d6924"
+    },
+    {
+      "commit": "b0d655f2d6095cb947c61f9c913fa9d4f3f8dfc1",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "75d587b500e8400bdfd7fedadec60ef7e2cacc56",
+        "00951cd18f1e9f344c92e5dbfc2734ae989728b3"
+      ],
+      "rationale": "Full two-hunk patch read. Keep internal connected/configured helpers static, as final ACK requires. Their call sites remain in the same compilation unit. Subsequent lifecycle adaptations reject absent/torn-down instances before scheduling; visibility change does not remove public Android events or source customization hooks.",
+      "evidence": [
+        "evidence/usb-notification-review.json",
+        "evidence/usb-gadget-lifecycle-check.json",
+        "SECURITY.md: Android USB notification lifecycle"
+      ],
+      "patch_sha256": "c4c5aa539bb8b6df1d91cac438c96e896cdfe2be98837d8decb7b77bb965bb17"
+    },
+    {
+      "commit": "d76343fd3ae3375976d795f59b5cbbbaa567a237",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full two-file export-removal patch read. Preserve the explicit final-ACK removal of eight notification and three accessory GPL export markings while retaining the functions and current composite-library call sites. This is not inferred from failure to find a consumer and does not preserve obsolete binary KMI. It reduces external symbol surface without changing calls linked within the existing gadget build. This decision covers symbol visibility, not the separate accessory protocol implementation.",
+      "evidence": [
+        "evidence/usb-notification-review.json",
+        "evidence/usb-gadget-lifecycle-check.json",
+        "SECURITY.md: Android USB notification lifecycle"
+      ],
+      "patch_sha256": "f8fd5d18a873db111ed6919c7e77bc20cd18db7d8166568bb678c4aaf5614a72"
+    },
+    {
+      "commit": "31fa66a36115af7240096980335694606b916101",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Full two-file removal patch read. Final ACK explicitly deletes android_create_function_device/android_remove_function_device, prototypes and disabled stubs; both implementations and declarations remain absent. Retain real Android instance/state notifications. Do not reintroduce the obsolete singleton-based function-device allocation/lifetime path. No assertion of absence of all historical userspace consumers is needed to follow positive pinned-ACK retirement evidence.",
+      "evidence": [
+        "evidence/usb-notification-review.json",
+        "evidence/usb-gadget-lifecycle-check.json",
+        "SECURITY.md: Android USB notification lifecycle"
+      ],
+      "patch_sha256": "60a164d753535e3f582c46c3459e98eb39e21cc7bba7253c31f5bbe1ee3a0451"
+    }
+  ],
+  "native_and_final_ack_witnesses": [
+    {
+      "path": "drivers/usb/gadget/composite.c",
+      "function": "set_config",
+      "sha256": "44d99224115eb0ff07ee5b98e76a7979ca24e5f17850833ce28396c0acad5a2e",
+      "relationship": "Whole native LTS function"
+    },
+    {
+      "path": "drivers/usb/gadget/composite.c",
+      "function": "composite_reset",
+      "sha256": "d0d29fd4e769a570b9f20e77e655b3a3ba3508b3a8f7a88922b28aef413f36ed",
+      "relationship": "Whole native LTS function"
+    },
+    {
+      "path": "drivers/usb/gadget/composite.c",
+      "function": "composite_disconnect",
+      "sha256": "9255ea060c89055aaaa139e6e16d865675709c1111a1a75a4fc600977de2a406",
+      "relationship": "Whole native LTS function"
+    },
+    {
+      "path": "drivers/usb/gadget/configfs.c",
+      "function": "configfs_composite_reset",
+      "sha256": "400d5e8025763c639ee3b1eedc045f44af29f8d49052987f21d64f5f1dc88080",
+      "relationship": "Whole native LTS function"
+    },
+    {
+      "path": "drivers/usb/gadget/configfs.c",
+      "function": "configfs_composite_disconnect",
+      "sha256": "975d074792e4dde7b55f2e7f998fb4bc5daf3dad38ca999a1492b589d200a48e",
+      "relationship": "Whole native LTS function"
+    },
+    {
+      "path": "drivers/usb/gadget/configfs.c",
+      "function": "gadget_info_attr_release",
+      "sha256": "46b3705e1803273fe386645c8ab3e314eb867675457474ee6d282a2fa9d9d341",
+      "relationship": "Whole native LTS function"
+    },
+    {
+      "path": "drivers/usb/gadget/android_configfs_uevent.h",
+      "sha256": "f64a68ed03615c1fba8603c085710984023252a6e26d9d610b54a1804bff8ead",
+      "relationship": "Whole final ACK header; function-device APIs already explicitly removed upstream in ACK history"
+    },
+    {
+      "path": "include/linux/usb/android_configfs_uevent.h",
+      "sha256": "3f0b05ee7efe69f61881a79459495e851d702c5484757103b99abec5f160a0a1",
+      "relationship": "Whole final ACK header; function-device APIs already explicitly removed upstream in ACK history"
+    },
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "function": "android_acc_disconnect",
+      "sha256": "33fdb09353e075aef5505434627631bcda070bb22f0a6b33b81556e1438d3a8e",
+      "relationship": "Function retained; only the historical external export is absent as explicitly removed by final ACK"
+    },
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "function": "android_acc_req_match_composite",
+      "sha256": "12752820c71990a56fb56ae00bc79d047da9be541a2d658c7a10263f2cd92010",
+      "relationship": "Function retained; only the historical external export is absent as explicitly removed by final ACK"
+    },
+    {
+      "path": "drivers/usb/gadget/function/android_f_accessory.c",
+      "function": "android_acc_setup_composite",
+      "sha256": "d8990e08423bac79668a9999ca53047e81f0fc733dde097b891c4da2ca1ffeae",
+      "relationship": "Function retained; only the historical external export is absent as explicitly removed by final ACK"
+    }
+  ],
+  "local_userspace_evidence": {
+    "repository": "/home/liamsmith/src/kernel/grapheneos-17/frameworks/base",
+    "head": "8304f868f2114c6a35c76e21691f3f54c3ee1c4f",
+    "path": "services/usb/java/com/android/server/usb/UsbDeviceManager.java",
+    "sha256": "28396667655800f5f37a744425ca824c155e69ada399747b581425fe46256c49",
+    "finding": "USB_STATE_MATCH targets /devices/virtual/android_usb/android0; state sysfs path and UEventObserver USB_STATE parsing retained alongside an alternative UDC monitor. No claim which runtime feature flag is selected; retain both compatibility paths."
+  },
+  "configuration": {
+    "run": "sdk-build-attempt-149",
+    "sha256": "48f19810fd5e10021d64b96e82cdb2b0b587f7cb24b3b4b5660b6732ae05cd09",
+    "ANDROID_USB_CONFIGFS_UEVENT": "y"
+  },
+  "security": "Memory allocation failure can double-free the driver name; teardown can unregister another same-devt instance, sleep while holding opts_lock, or allow work to access freed containing opts. Producers now check dev under the same lock as teardown, drain completes before exact device unregister outside that lock, and ID reuse waits for sysfs removal. Callers still own the containing gadget lifetime during synchronous callbacks. No claim of independent protection from a caller using a freed cdev. Native config validation/result is unchanged; notifications reflect cdev->config including delayed status and rejected requests that leave an old configuration intact.",
+  "validation": "16 extracted host lifecycle cases pass. Old source control: 1 duplicate free, 4 modeled sleeping unregister calls under spinlock, 4 wrong-instance removals, 4 post-drain queued updates, 2 uninitialized-work queues and 7 state/cleanup mismatches. These counts can overlap. Simulated interleavings, not real sysfs/USB/concurrency or memory-exploitation tests. Build 150 passed: kernel image, 100 common and 45 virtual-device modules; all 145 signatures and module flag/CRC tables verified, tampered control rejected.",
+  "remote_sources_used": []
+}

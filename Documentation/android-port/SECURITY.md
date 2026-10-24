@@ -6786,3 +6786,43 @@ the complete artifacts through the existing workflow. All 145 signatures and
 module tables were reverified. Repeated extraction used a temporary output ELF,
 verified the signed input bytes unchanged, and matched the initial archive hash.
 No kernel source was changed by the inspection.
+
+# Android USB notification lifecycle
+
+`evidence/usb-notification-review.json` resolves four candidates and documents
+positive UsbDeviceManager state/event consumers. Preserve the Android USB class,
+state file, events, UDC `none` alias and SDK configuration. Native configuration
+validation and request results remain. Later explicit ACK removals of internal
+exports and old singleton function-device APIs remain represented.
+
+`75d587b500e8` fixes an ACK allocation-error double free and teardown hazards.
+Each gadget unregisters its exact device outside the spinlock; all instances use
+devt zero, so lookup by devt could remove a different device. Producers check the
+live device under the teardown lock before queuing. Draining therefore completes
+before unregister and gadget release, and non-configfs callers with no Android
+instance cannot queue uninitialized work. State reads are locked; configuration
+notifications follow actual native cdev configuration under its lock, and
+disconnect clears configured state. `00951cd18f1e` releases the ID only after its
+old sysfs name disappears. Callers must still keep their cdev alive during calls.
+
+The extracted host lifecycle model passes 16 cases with an old-code control
+demonstrating each defect category. It does not test real USB, sysfs locking,
+kernel scheduling or exploitation. Build 150 validation is recorded separately.
+No additional remote source was used.
+
+# Native Type-C historical reconciliation
+
+`evidence/tcpm-history-review.json` resolves 21 commits, including two merge
+resolutions. The TCPM state machine, low-level transmit drivers and headers are
+entirely native LTS. Preserve its FRS callbacks, discharge and VSAFE0V handling,
+negotiated-revision retry counts, AMS cleanup and power-swap timeout fixes.
+The old Android debouncing/getter and sink-capability updater were explicitly
+removed; newer native contaminant checking remains. Temporary charge/CC-role
+and source-capability recovery reverts are superseded by the documented native
+conditional handling, including non-PD and self-powered port distinctions.
+
+TCPM is enabled in the SDK configuration. These decisions follow positive
+upstream implementation/replacement and ACK retirement evidence, not an absent
+consumer or an assertion that USB-C cannot exist on the target. No current LTS
+driver code is changed by these decisions. Later PD additions remain separate.
+No hardware/protocol execution or additional remote source was used.
