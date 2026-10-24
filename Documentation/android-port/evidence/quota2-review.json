@@ -1,0 +1,226 @@
+{
+  "source_head": "7543402b40de6c1e835cee01d6d98bee7c262fd7",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "records": [
+    {
+      "commit": "10cda83af99dd606e19a39bb97cf1d90bf2b0f36",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "7543402b40de6c1e835cee01d6d98bee7c262fd7"
+      ],
+      "rationale": "Retain quota2 revision-3 IPv4/IPv6 matching, shared named counters, proc controls, packet/up counting and NFLOG events used by local netd and iptables. Keep final ACK fixes rather than the original unsafe proc/error/message code. Adapt initialization, destruction and socket cleanup in the result commit. LTS has no quota2 counterpart; native xtables/procfs access checks remain. Global init_net naming is retained, not claimed namespace-isolated.",
+      "evidence": [
+        "evidence/quota2-review.json",
+        "evidence/quota2-lifetime-check.json",
+        "SECURITY.md: Android quota2 accounting and counter lifetime"
+      ],
+      "patch_sha256": "c368ca1f40777ae585cf52d3e0da887f98c4a15f17a906489e81445eef97016d",
+      "changed_paths": [
+        "include/linux/netfilter/xt_quota2.h",
+        "net/netfilter/Kconfig",
+        "net/netfilter/Makefile",
+        "net/netfilter/xt_quota2.c"
+      ]
+    },
+    {
+      "commit": "91e5e077d8df662ec0e84855bc84bf2f11c803ca",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "7543402b40de6c1e835cee01d6d98bee7c262fd7"
+      ],
+      "rationale": "Keep proc removal after releasing the counter-list spinlock because native proc rundown can sleep. Adapt name-only removal to proc_remove of the owned pointer: after failed initial proc creation and a surviving reference, final old-counter destruction must not remove a newly created same-name counter node. NULL-aware removal and initialized ownership pass the injected replacement test; no sleeping operation moves under the lock.",
+      "evidence": [
+        "evidence/quota2-review.json",
+        "evidence/quota2-lifetime-check.json",
+        "SECURITY.md: Android quota2 accounting and counter lifetime"
+      ],
+      "patch_sha256": "9d71830cef9eebc22bcc767b2f08988a93abf1611d1daafeeed8171f6d84e9df",
+      "changed_paths": [
+        "net/netfilter/xt_quota2.c"
+      ]
+    },
+    {
+      "commit": "8a35207f24f085ac39473425def220d84369e53d",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain proc_ops read/write/lseek registration required by current native procfs. Read/write retrieve pde_data through the current API; no obsolete file_operations callback layout is restored. Native procfs rundown protects active callbacks before final counter free.",
+      "evidence": [
+        "evidence/quota2-review.json",
+        "evidence/quota2-lifetime-check.json",
+        "SECURITY.md: Android quota2 accounting and counter lifetime"
+      ],
+      "patch_sha256": "bcab82fdee8390894e6cc565afc7756ebfa0fddf14229a33d19a0a452cfe5274",
+      "changed_paths": [
+        "net/netfilter/xt_quota2.c"
+      ]
+    },
+    {
+      "commit": "b20eacd8ddbd1dbf403df94f5ba6384e6fef0113",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain charge=1 in packet mode and quota>charge threshold comparison so exact exhaustion emits the Android quota notification. Retain no-change/grow behavior exactly as final ACK, including historical grow inversion and no-change-at-threshold semantics; changing those policies is not necessary for this port. Function is byte-identical to pinned ACK; packet runtime was not tested.",
+      "evidence": [
+        "evidence/quota2-review.json",
+        "evidence/quota2-lifetime-check.json",
+        "SECURITY.md: Android quota2 accounting and counter lifetime"
+      ],
+      "patch_sha256": "f7e6de2d2ff8fc7a7591e56c749f0f03667040bdaf70c7d3e8132a56aa622d3a",
+      "changed_paths": [
+        "net/netfilter/xt_quota2.c"
+      ]
+    },
+    {
+      "commit": "ed5cfb1c90da2321e705bb33e56242d9ef8d9ad1",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain NUL at the actual short write length as well as buffer-end termination. This prevents old stack bytes from influencing simple_strtoull quota parsing. Copy length remains capped and copy_from_user failure returns EFAULT before parsing. Current entire function equals pinned ACK; permissive legacy number parsing is preserved.",
+      "evidence": [
+        "evidence/quota2-review.json",
+        "evidence/quota2-lifetime-check.json",
+        "SECURITY.md: Android quota2 accounting and counter lifetime"
+      ],
+      "patch_sha256": "5a3354c1974934e7b8619a798333d495d8ccc8109ad891150136fb6b338a9c49",
+      "changed_paths": [
+        "net/netfilter/xt_quota2.c"
+      ]
+    },
+    {
+      "commit": "cf071a2365ac82f5e1878ed9b33eb3590a3090a1",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain zeroing of the entire transmitted ulog message, including padding/unused fields, before populating bounded names and hook metadata. This prevents disclosure of uninitialized heap content through quota notifications. Native netlink allocation/formatting and final ACK log function remain; wire format is preserved.",
+      "evidence": [
+        "evidence/quota2-review.json",
+        "evidence/quota2-lifetime-check.json",
+        "SECURITY.md: Android quota2 accounting and counter lifetime"
+      ],
+      "patch_sha256": "a86f1a7b9945725a358acab57c969904e8bbff9850cd8255cc1b49153d3c0438",
+      "changed_paths": [
+        "net/netfilter/xt_quota2.c"
+      ]
+    },
+    {
+      "commit": "999706352bab88b8a44b9a239b85abecb7ba9006",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain usersize=offsetof(master) in both IPv4/IPv6 registrations so native xtables user copies exclude the private kernel pointer. This kernel disclosure boundary is separate from the userspace extension comparison boundary before the quota field. Complete registration structure equals final ACK.",
+      "evidence": [
+        "evidence/quota2-review.json",
+        "evidence/quota2-lifetime-check.json",
+        "SECURITY.md: Android quota2 accounting and counter lifetime"
+      ],
+      "patch_sha256": "a72e7a780b49fe3dd6907d7b05166ab84cf0340aafa3c3dcac2599e88b32bd2e",
+      "changed_paths": [
+        "net/netfilter/xt_quota2.c"
+      ]
+    },
+    {
+      "commit": "bc77380243faf687e78a919651ecb5e682155acc",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain strscpy for the quota name and three notification strings, bounding source scans and using an available LTS API after strlcpy removal. Names are terminated by rule validation and copies are bounded; no historical strlcpy dependency is restored.",
+      "evidence": [
+        "evidence/quota2-review.json",
+        "evidence/quota2-lifetime-check.json",
+        "SECURITY.md: Android quota2 accounting and counter lifetime"
+      ],
+      "patch_sha256": "e6b6ce6c8f148a26b92aaf957bb04434a163249f51ffea57ba68c3d334b78951",
+      "changed_paths": [
+        "net/netfilter/xt_quota2.c"
+      ]
+    },
+    {
+      "commit": "550e926637c5bd109f4225e66622d30302cfe59e",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "7543402b40de6c1e835cee01d6d98bee7c262fd7"
+      ],
+      "rationale": "Keep reference-aware proc-create failure cleanup under the list lock; another rule can acquire the published counter before creation fails, so unconditional free is a UAF. Preserve the surviving counter with NULL proc ownership, and complement this with initialized ownership and NULL-aware final removal. Extracted lifecycle test detects the pre-fix heap UAF and passes with this handling. Surviving counters can still lack a proc node until destroyed/recreated; availability under allocation failure is not claimed.",
+      "evidence": [
+        "evidence/quota2-review.json",
+        "evidence/quota2-lifetime-check.json",
+        "SECURITY.md: Android quota2 accounting and counter lifetime"
+      ],
+      "patch_sha256": "98a3ee065461ca433ca698ee54dcaf73efc8978c52627e26e1a404800aef3126",
+      "changed_paths": [
+        "net/netfilter/xt_quota2.c"
+      ]
+    }
+  ],
+  "witnesses": {
+    "net/netfilter/xt_quota2.c": {
+      "port_blob": "5431ab399c45aa2a96c24140c4fb606ca586481d",
+      "ack_blob": "a2cbfa40191161a9dbd45010ef5092d2d707f7d0"
+    },
+    "include/linux/netfilter/xt_quota2.h": {
+      "port_blob": "a3918718cbf8d6c306ba5bb0781de716a6af4907",
+      "ack_blob": "a3918718cbf8d6c306ba5bb0781de716a6af4907"
+    },
+    "net/netfilter/Kconfig": {
+      "port_blob": "2182a09da69de050035a7fd4ebbda65dad17b9a6",
+      "ack_blob": "2182a09da69de050035a7fd4ebbda65dad17b9a6"
+    },
+    "net/netfilter/Makefile": {
+      "port_blob": "1b61280969c5bd4a218e1c4bc0bb44606c30d7ab",
+      "ack_blob": "f6dcf606923dac5ab0330c91670205c3dd569fb3"
+    },
+    "fs/proc/generic.c": {
+      "port_blob": "12b817f4ffcfd72f2a9f47375fcf8aaa6b98beef",
+      "ack_blob": "501889856461b544deb18f81c68fcfb23feece7e"
+    }
+  },
+  "whole_quota2_matches_ack_after_normalizing_four_adapted_functions": true,
+  "local_consumers": {
+    "system/netd": {
+      "commit": "d57ea8dce505948725389d34806af1b5e9998749",
+      "files": {
+        "server/BandwidthController.cpp": "dbe9330c18ad702b780aeac7ca7b1771897815edc3ec01418248f9175fa5b961",
+        "server/NetlinkManager.cpp": "e9009506ac7e5c5a388b721710d92dfdf263f7e9e9c098700f2c7356d2e19bd0"
+      }
+    },
+    "external/iptables": {
+      "commit": "df1a07fd3d0c157a71a4c157cc728062a01032b2",
+      "files": {
+        "extensions/libxt_quota2.c": "8097229e5223e137e91577f689b5e40182b537d3a09ed4697eafd6f0b24d8e58"
+      }
+    }
+  },
+  "configurations": {
+    "../kernel_manifest-6.18/common_dist/kernel_x86_64_dot_config": {
+      "sha256": "48f19810fd5e10021d64b96e82cdb2b0b587f7cb24b3b4b5660b6732ae05cd09",
+      "lines": [
+        "# CONFIG_USER_NS is not set",
+        "CONFIG_NET_NS=y",
+        "CONFIG_NETFILTER_XT_MATCH_QUOTA2=y",
+        "CONFIG_NETFILTER_XT_MATCH_QUOTA2_LOG=y"
+      ]
+    },
+    "../kernel_manifest-6.18/virt_dist/kernel_x86_64_dot_config": {
+      "sha256": "48f19810fd5e10021d64b96e82cdb2b0b587f7cb24b3b4b5660b6732ae05cd09",
+      "lines": [
+        "# CONFIG_USER_NS is not set",
+        "CONFIG_NET_NS=y",
+        "CONFIG_NETFILTER_XT_MATCH_QUOTA2=y",
+        "CONFIG_NETFILTER_XT_MATCH_QUOTA2_LOG=y"
+      ]
+    }
+  },
+  "remote_sources_used": [],
+  "source_note": "All candidate patches and full final file inspected locally. Commit-message URLs were not fetched."
+}

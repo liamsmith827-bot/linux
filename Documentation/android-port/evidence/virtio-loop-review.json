@@ -1,0 +1,302 @@
+{
+  "source_head": "7543402b40de6c1e835cee01d6d98bee7c262fd7",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "187c494456303568b470d2cb05d934f7ec84d2a4",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [
+        "e030759a1ddcbf61d42b6e996bfeb675e0032d8b"
+      ],
+      "rationale": "ACK reverts the historical discard/write-zeroes BUG_ON exception in 67923a060997. Native e030759a1ddc removes the obsolete assertion and sg_elems member after dynamic SGL allocation, addressing the discard-segment mismatch without a per-operation exception. Native request handling and zone-write granularity remain, with separately reviewed queue-pointer lifetime fixes.",
+      "evidence": [
+        "evidence/virtio-loop-review.json",
+        "SECURITY.md: Virtio block and loop validation"
+      ],
+      "patch_sha256": "4a52fcd4847bb98c09e74fb036884405f1148141c2e2f9bc93aecbbdf1f53ccb",
+      "paths": [
+        "drivers/block/virtio_blk.c"
+      ]
+    },
+    {
+      "commit": "67923a0609972b55147e04a25e068e68a1a00457",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Explicitly removes 187c49445630. Do not restore its intermediate unconditional BUG_ON: native e030759a1ddc removes that assertion and obsolete member after dynamic SGL allocation. Final ACK/current/native request processing agrees; positive revert and successor evidence establishes no remaining workaround.",
+      "evidence": [
+        "evidence/virtio-loop-review.json",
+        "SECURITY.md: Virtio block and loop validation"
+      ],
+      "patch_sha256": "46bce6c6902bfc7f9e11d9cfb4309cbdbd06a44f513b3409990d58314f65269b",
+      "paths": [
+        "drivers/block/virtio_blk.c"
+      ]
+    },
+    {
+      "commit": "d734335552a155e97f7cd6f57cbb62b14cca664d",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [
+        "2b17d9f84884a37f1324be5526c6600e97a47fbe"
+      ],
+      "rationale": "Native 2b17d9f84884 has the same one-line suppression-field removal. Native f124034faa91 removes the attempted generic used-length validation infrastructure; suppress_used_validation is absent from current driver/core declarations. Preserve current descriptor checks; no new generic length validation is claimed.",
+      "evidence": [
+        "evidence/virtio-loop-review.json",
+        "SECURITY.md: Virtio block and loop validation"
+      ],
+      "patch_sha256": "c8281fde2d63ae51ffea3381881b977641913ceed408f122286b0dc53b069f93",
+      "paths": [
+        "drivers/block/virtio_blk.c"
+      ]
+    },
+    {
+      "commit": "c58d59e9d494a1e189ebdbcd6aa48ad220bc97d9",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [
+        "afd384f0dbea2229fd11159efb86a5b41051c4a9"
+      ],
+      "rationale": "Upstream afd384f0dbea represents this revert: IRQ path uses blk_mq_complete_request, with poll batching separate, avoiding the reported lost IRQ completion. Retain current native completion/poll routines including later changes. Whole driver differs from LTS only by separately reviewed NULL-after-free queue lifetime handling.",
+      "evidence": [
+        "evidence/virtio-loop-review.json",
+        "SECURITY.md: Virtio block and loop validation"
+      ],
+      "patch_sha256": "ac17396fff26010a6953cef336934655c7e07a2c05b27eaf521dc2268328f5c6",
+      "paths": [
+        "drivers/block/virtio_blk.c"
+      ]
+    },
+    {
+      "commit": "4e548da254b3b1a2f112d3d6b57aff95ad7139d3",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Temporary backing-file-operation validation removal was lost in merge db784abd9523, repeated by c979a6995725 and undone by d2ac2d135f84. Native f5c84eff634b remains with 355341e4359b correcting the loop-open-mode check and 98b7bf54338b dropping file references on error. Do not remove callback validation or restore later-fixed defects.",
+      "evidence": [
+        "evidence/virtio-loop-review.json",
+        "SECURITY.md: Virtio block and loop validation"
+      ],
+      "patch_sha256": "063fc0fa8306b7a83bed0306a54a36ac500e22f00533e336ae1886e541450b9b",
+      "paths": [
+        "drivers/block/loop.c"
+      ]
+    },
+    {
+      "commit": "db784abd952334c3d9990b7e398d070b28059148",
+      "disposition": "merge-resolution-reconciled-to-lts",
+      "result_commits": [
+        "f5c84eff634ba003326aa034c414e2a9dcb7c6a7",
+        "355341e4359b2d5edf0ed5e117f7e9e7a0a5dac0",
+        "98b7bf54338b797e3a11e8178ce0e806060d8fa3"
+      ],
+      "rationale": "All unique remerge hunks examined: restores loop_check_backing_file and change_fd/configure checks, undoing a temporary revert during merge. Native retains these checks with corrected read-only backing-file handling and error fput. Do not recreate the historical extra loop-device-open-mode check or reference leak.",
+      "evidence": [
+        "evidence/virtio-loop-review.json",
+        "SECURITY.md: Virtio block and loop validation"
+      ],
+      "patch_sha256": "ea8fb3a7354f8c3e996c5aab3e5cb12fc18cc85bff8a963f2b72ea225e6a76c2",
+      "paths": [
+        "drivers/block/loop.c"
+      ]
+    },
+    {
+      "commit": "c979a69957258b6ac7513fb1967b60f903412dff",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Explicitly undone by ACK d2ac2d135f84 once native 355341e4359b corrects the loop-open-mode regression. Preserve backing-file read_iter/write_iter validation and 98b7bf54338b reference cleanup. Local apexd opens backing images read-only; native checks backing-file mode, not merely loop device write-open state.",
+      "evidence": [
+        "evidence/virtio-loop-review.json",
+        "SECURITY.md: Virtio block and loop validation"
+      ],
+      "patch_sha256": "063fc0fa8306b7a83bed0306a54a36ac500e22f00533e336ae1886e541450b9b",
+      "paths": [
+        "drivers/block/loop.c"
+      ]
+    },
+    {
+      "commit": "d2ac2d135f84c83a59d8d8d83f1a821b7453a153",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [
+        "f5c84eff634ba003326aa034c414e2a9dcb7c6a7",
+        "355341e4359b2d5edf0ed5e117f7e9e7a0a5dac0",
+        "98b7bf54338b797e3a11e8178ce0e806060d8fa3"
+      ],
+      "rationale": "Restored callback validation is already native. Keep later removal of the inappropriate BLK_OPEN_WRITE check and error-path fput. Final ACK/current validation routines agree. This does not resolve the independent direct-I/O alignment revert, which remains provisional.",
+      "evidence": [
+        "evidence/virtio-loop-review.json",
+        "SECURITY.md: Virtio block and loop validation"
+      ],
+      "patch_sha256": "ea8fb3a7354f8c3e996c5aab3e5cb12fc18cc85bff8a963f2b72ea225e6a76c2",
+      "paths": [
+        "drivers/block/loop.c"
+      ]
+    },
+    {
+      "commit": "a9d144c159d9157be534e99ea7ef8386592cc7a2",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "be6aab8d72f2196accaefd55ff9bc268493e9c31"
+      ],
+      "rationale": "Retain Android VFS namespace: all 14 export conversions and five matching imports in loop, ublk, CCP, DRM leasing and DNS resolver are present. These organize/enforce module source dependencies rather than historical binary layouts. Native function bodies remain beneath annotations, including mntget GPL restriction. Namespaces do not isolate malicious kernel code; SDK module compilation checks import consistency.",
+      "evidence": [
+        "evidence/virtio-loop-review.json",
+        "SECURITY.md: Virtio block and loop validation"
+      ],
+      "patch_sha256": "0830ddb4869b075daa5df0cdf5a25b99c8f91dc4f048ce9eb945aba29fdcd705",
+      "paths": [
+        "drivers/block/loop.c",
+        "drivers/block/ublk_drv.c",
+        "drivers/crypto/ccp/sp-dev.c",
+        "drivers/gpu/drm/drm_lease.c",
+        "fs/dcache.c",
+        "fs/locks.c",
+        "fs/namei.c",
+        "fs/namespace.c",
+        "fs/open.c",
+        "fs/stack.c",
+        "fs/stat.c",
+        "fs/statfs.c",
+        "kernel/cred.c",
+        "net/dns_resolver/dns_key.c"
+      ]
+    }
+  ],
+  "witnesses": {
+    "drivers/block/virtio_blk.c": {
+      "port_blob": "8cb78ab06716ea54728bc2ce6d090110bc59b7ea",
+      "native_blob": "e577b02cf40034941f0eecfff4cb39f0f8749c1f",
+      "only_previously_reviewed_queue_pointer_lifetime_differences": true
+    },
+    "drivers/block/loop.c": {
+      "port_blob": "099598c856f648c8c01ca80f11fb92c5421e661d",
+      "native_blob": "13ce229d450cd308ab96b98f7fc8fd49efe24df9",
+      "native_equal_except_namespace_import": true
+    }
+  },
+  "namespace_checks": [
+    {
+      "path": "drivers/block/loop.c",
+      "line": "MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");",
+      "port_blob": "099598c856f648c8c01ca80f11fb92c5421e661d"
+    },
+    {
+      "path": "drivers/block/ublk_drv.c",
+      "line": "MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");",
+      "port_blob": "0063c0b633872914895aa973378aff618356b65a"
+    },
+    {
+      "path": "drivers/crypto/ccp/sp-dev.c",
+      "line": "MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");",
+      "port_blob": "407359de6de856a8e2aa05abb5736eb3d2f8e258"
+    },
+    {
+      "path": "drivers/gpu/drm/drm_lease.c",
+      "line": "MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");",
+      "port_blob": "dc3ed625fed85497e7a37868ecb79d43a6832c94"
+    },
+    {
+      "path": "fs/dcache.c",
+      "line": "EXPORT_SYMBOL_NS(d_drop, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");",
+      "port_blob": "d468573115d542c91ad980b40c48a0118e4a9f9f"
+    },
+    {
+      "path": "fs/dcache.c",
+      "line": "EXPORT_SYMBOL_NS(dget_parent, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");",
+      "port_blob": "d468573115d542c91ad980b40c48a0118e4a9f9f"
+    },
+    {
+      "path": "fs/dcache.c",
+      "line": "EXPORT_SYMBOL_NS(d_rehash, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");",
+      "port_blob": "d468573115d542c91ad980b40c48a0118e4a9f9f"
+    },
+    {
+      "path": "fs/locks.c",
+      "line": "EXPORT_SYMBOL_NS(__break_lease, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");",
+      "port_blob": "f9f8b85e689cbaca768ae363d2e4d380edb232f0"
+    },
+    {
+      "path": "fs/namei.c",
+      "line": "EXPORT_SYMBOL_NS(path_get, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");",
+      "port_blob": "22c06bf3959e51d1963b7013777218c30002631f"
+    },
+    {
+      "path": "fs/namei.c",
+      "line": "EXPORT_SYMBOL_NS(vfs_path_lookup, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");",
+      "port_blob": "22c06bf3959e51d1963b7013777218c30002631f"
+    },
+    {
+      "path": "fs/namei.c",
+      "line": "EXPORT_SYMBOL_NS(lock_rename, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");",
+      "port_blob": "22c06bf3959e51d1963b7013777218c30002631f"
+    },
+    {
+      "path": "fs/namei.c",
+      "line": "EXPORT_SYMBOL_NS(unlock_rename, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");",
+      "port_blob": "22c06bf3959e51d1963b7013777218c30002631f"
+    },
+    {
+      "path": "fs/namespace.c",
+      "line": "EXPORT_SYMBOL_NS_GPL(mntget, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");",
+      "port_blob": "65b1155e1b481498635aabec79db2d5f9fae17c0"
+    },
+    {
+      "path": "fs/open.c",
+      "line": "EXPORT_SYMBOL_NS(dentry_open, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");",
+      "port_blob": "b5c8a16aad324e5a38ab7d5638338b7d2c066278"
+    },
+    {
+      "path": "fs/stack.c",
+      "line": "EXPORT_SYMBOL_NS_GPL(fsstack_copy_inode_size, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");",
+      "port_blob": "ffb5173cd5fb42086c690d114e6661897e2abf37"
+    },
+    {
+      "path": "fs/stat.c",
+      "line": "EXPORT_SYMBOL_NS(vfs_getattr, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");",
+      "port_blob": "ee99590ff9b5728301cc6bd4508366ebf6af529e"
+    },
+    {
+      "path": "fs/statfs.c",
+      "line": "EXPORT_SYMBOL_NS(vfs_statfs, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");",
+      "port_blob": "34fd015ff5ec9ffc0b7fdcb030ae4eded9a8ccb9"
+    },
+    {
+      "path": "kernel/cred.c",
+      "line": "EXPORT_SYMBOL_NS(prepare_creds, \"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");",
+      "port_blob": "69fc6198727f5c911fb2d3a586f23183f7862983"
+    },
+    {
+      "path": "net/dns_resolver/dns_key.c",
+      "line": "MODULE_IMPORT_NS(\"ANDROID_GKI_VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver\");",
+      "port_blob": "bf10607404e1e308fdf0c9c67900540ab35d7e70"
+    }
+  ],
+  "local_consumers": {
+    "system/apex": {
+      "commit": "ce2bb9f710183c864040401d859874b5723e44d8",
+      "files": {
+        "apexd/apexd_loop.cpp": "3b7de85c1649b4901945d4625f179f558a09d9063408fb33e38af961ddd6ea4b"
+      }
+    },
+    "system/fs/fs_mgr": {
+      "commit": "f2de922569ca66e25406e93efa20d79c0b0d1aed",
+      "files": {
+        "libdm/loop_control.cpp": "900e1901c60c6b22f2d57394a167d8f0114c2eb5e8acda61c3384097c133acc6"
+      }
+    },
+    "external/ltp": {
+      "commit": "3fe7435d5b984b46d1d1528cc9850a48d888d8c8",
+      "files": {
+        "testcases/kernel/syscalls/ioctl/ioctl_loop05.c": "ecb6b9dd800630297c5e46ec51fdeb2f0bb0ab3a0b914c5378cd772d4c44653d"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "commit": "67ecf6fd8bddf24f3c0f9d709a64301e5ea1cd48",
+      "topic": "Loop direct-I/O alignment compatibility",
+      "status": "unresolved necessity; provisional",
+      "evidence": "Full ACK revert and native f4774e92aab8 read. ACK still bypasses STATX_DIOALIGN filesystem minimum; native remains intact. Local LTP ioctl_loop05 expects backing-device logical sector size to suffice, which can conflict with filesystem direct-I/O requirements. Android apexd/libdm request 4096-byte loop blocks, but this alone does not settle every offset/filesystem combination. Need a coherent compatibility policy preserving native I/O correctness. No LTP/emulator runtime test performed; see evidence/virtio-loop-review.json."
+    }
+  ],
+  "remote_sources_used": [],
+  "limitations": "Source review and compilation only. No storage runtime or LTP testing. Commit-message links were not opened."
+}

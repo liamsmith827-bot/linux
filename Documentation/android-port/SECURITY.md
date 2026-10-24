@@ -7605,3 +7605,32 @@ of a replacement node, and the old initialization socket leak. These are host
 control-flow checks, not kernel-thread, real proc rundown, packet, or emulator
 runtime tests. Native LTS has no quota2 implementation; native netfilter/procfs
 security checks are unchanged. Only local source/history was consulted.
+
+## Virtio block and loop validation
+
+Retain native virtio-block request setup, scatterlist handling and IRQ completion.
+The old Android discard BUG_ON exemption was reverted, then upstream removed the
+obsolete assertion/size member after dynamic scatterlist allocation. Native LTS
+also includes the upstream reverts of used-length suppression and IRQ completion
+batching. These decisions retain current descriptor checks and native zoned-write
+granularity; they do not claim generic used-length validation. The only port
+differences in this driver remain the previously reviewed queue-pointer lifetime
+fixes. No storage runtime test was performed.
+
+Retain loop backing-file operation validation. ACK temporarily reverted it twice,
+restored it in a merge, and finally reapplied it after upstream corrected the
+check against the loop device's open mode. Native checks the backing file's mode
+and releases its reference on validation error. These fixes preserve read-only
+APEX image use while preventing invalid callback calls and reference leaks.
+The separate ACK direct-I/O-alignment revert remains provisional: local LTP
+expects backing-device alignment to suffice, while native STATX_DIOALIGN handling
+also enforces filesystem requirements. Android apexd/libdm request 4096-byte
+blocks, but this does not establish every backing-file/offset combination. Native
+alignment handling is kept pending that decision; no LTP success is claimed.
+
+Retain ACK's VFS namespace export annotations and corresponding module imports,
+including mntget's GPL restriction. These are module source dependency rules,
+not historical binary-layout preservation. All 14 export conversions and five
+imports from a9d144c159d9 are present, without replacing native function bodies.
+A namespace is not a security boundary against kernel code. The SDK module build
+checks import consistency; it does not establish runtime isolation.

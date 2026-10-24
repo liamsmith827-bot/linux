@@ -22350,5 +22350,232 @@
       "evidence/input-numbering-review.json",
       "SECURITY.md: Input event numbering"
     ]
+  },
+  {
+    "commit": "10cda83af99dd606e19a39bb97cf1d90bf2b0f36",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "7543402b40de6c1e835cee01d6d98bee7c262fd7"
+    ],
+    "rationale": "Retain quota2 revision-3 IPv4/IPv6 matching, shared named counters, proc controls, packet/up counting and NFLOG events used by local netd and iptables. Keep final ACK fixes rather than the original unsafe proc/error/message code. Adapt initialization, destruction and socket cleanup in the result commit. LTS has no quota2 counterpart; native xtables/procfs access checks remain. Global init_net naming is retained, not claimed namespace-isolated.",
+    "evidence": [
+      "evidence/quota2-review.json",
+      "evidence/quota2-lifetime-check.json",
+      "SECURITY.md: Android quota2 accounting and counter lifetime"
+    ]
+  },
+  {
+    "commit": "91e5e077d8df662ec0e84855bc84bf2f11c803ca",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "7543402b40de6c1e835cee01d6d98bee7c262fd7"
+    ],
+    "rationale": "Keep proc removal after releasing the counter-list spinlock because native proc rundown can sleep. Adapt name-only removal to proc_remove of the owned pointer: after failed initial proc creation and a surviving reference, final old-counter destruction must not remove a newly created same-name counter node. NULL-aware removal and initialized ownership pass the injected replacement test; no sleeping operation moves under the lock.",
+    "evidence": [
+      "evidence/quota2-review.json",
+      "evidence/quota2-lifetime-check.json",
+      "SECURITY.md: Android quota2 accounting and counter lifetime"
+    ]
+  },
+  {
+    "commit": "8a35207f24f085ac39473425def220d84369e53d",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain proc_ops read/write/lseek registration required by current native procfs. Read/write retrieve pde_data through the current API; no obsolete file_operations callback layout is restored. Native procfs rundown protects active callbacks before final counter free.",
+    "evidence": [
+      "evidence/quota2-review.json",
+      "evidence/quota2-lifetime-check.json",
+      "SECURITY.md: Android quota2 accounting and counter lifetime"
+    ]
+  },
+  {
+    "commit": "b20eacd8ddbd1dbf403df94f5ba6384e6fef0113",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain charge=1 in packet mode and quota>charge threshold comparison so exact exhaustion emits the Android quota notification. Retain no-change/grow behavior exactly as final ACK, including historical grow inversion and no-change-at-threshold semantics; changing those policies is not necessary for this port. Function is byte-identical to pinned ACK; packet runtime was not tested.",
+    "evidence": [
+      "evidence/quota2-review.json",
+      "evidence/quota2-lifetime-check.json",
+      "SECURITY.md: Android quota2 accounting and counter lifetime"
+    ]
+  },
+  {
+    "commit": "ed5cfb1c90da2321e705bb33e56242d9ef8d9ad1",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain NUL at the actual short write length as well as buffer-end termination. This prevents old stack bytes from influencing simple_strtoull quota parsing. Copy length remains capped and copy_from_user failure returns EFAULT before parsing. Current entire function equals pinned ACK; permissive legacy number parsing is preserved.",
+    "evidence": [
+      "evidence/quota2-review.json",
+      "evidence/quota2-lifetime-check.json",
+      "SECURITY.md: Android quota2 accounting and counter lifetime"
+    ]
+  },
+  {
+    "commit": "cf071a2365ac82f5e1878ed9b33eb3590a3090a1",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain zeroing of the entire transmitted ulog message, including padding/unused fields, before populating bounded names and hook metadata. This prevents disclosure of uninitialized heap content through quota notifications. Native netlink allocation/formatting and final ACK log function remain; wire format is preserved.",
+    "evidence": [
+      "evidence/quota2-review.json",
+      "evidence/quota2-lifetime-check.json",
+      "SECURITY.md: Android quota2 accounting and counter lifetime"
+    ]
+  },
+  {
+    "commit": "999706352bab88b8a44b9a239b85abecb7ba9006",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain usersize=offsetof(master) in both IPv4/IPv6 registrations so native xtables user copies exclude the private kernel pointer. This kernel disclosure boundary is separate from the userspace extension comparison boundary before the quota field. Complete registration structure equals final ACK.",
+    "evidence": [
+      "evidence/quota2-review.json",
+      "evidence/quota2-lifetime-check.json",
+      "SECURITY.md: Android quota2 accounting and counter lifetime"
+    ]
+  },
+  {
+    "commit": "bc77380243faf687e78a919651ecb5e682155acc",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain strscpy for the quota name and three notification strings, bounding source scans and using an available LTS API after strlcpy removal. Names are terminated by rule validation and copies are bounded; no historical strlcpy dependency is restored.",
+    "evidence": [
+      "evidence/quota2-review.json",
+      "evidence/quota2-lifetime-check.json",
+      "SECURITY.md: Android quota2 accounting and counter lifetime"
+    ]
+  },
+  {
+    "commit": "550e926637c5bd109f4225e66622d30302cfe59e",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "7543402b40de6c1e835cee01d6d98bee7c262fd7"
+    ],
+    "rationale": "Keep reference-aware proc-create failure cleanup under the list lock; another rule can acquire the published counter before creation fails, so unconditional free is a UAF. Preserve the surviving counter with NULL proc ownership, and complement this with initialized ownership and NULL-aware final removal. Extracted lifecycle test detects the pre-fix heap UAF and passes with this handling. Surviving counters can still lack a proc node until destroyed/recreated; availability under allocation failure is not claimed.",
+    "evidence": [
+      "evidence/quota2-review.json",
+      "evidence/quota2-lifetime-check.json",
+      "SECURITY.md: Android quota2 accounting and counter lifetime"
+    ]
+  },
+  {
+    "commit": "187c494456303568b470d2cb05d934f7ec84d2a4",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [
+      "e030759a1ddcbf61d42b6e996bfeb675e0032d8b"
+    ],
+    "rationale": "ACK reverts the historical discard/write-zeroes BUG_ON exception in 67923a060997. Native e030759a1ddc removes the obsolete assertion and sg_elems member after dynamic SGL allocation, addressing the discard-segment mismatch without a per-operation exception. Native request handling and zone-write granularity remain, with separately reviewed queue-pointer lifetime fixes.",
+    "evidence": [
+      "evidence/virtio-loop-review.json",
+      "SECURITY.md: Virtio block and loop validation"
+    ]
+  },
+  {
+    "commit": "67923a0609972b55147e04a25e068e68a1a00457",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Explicitly removes 187c49445630. Do not restore its intermediate unconditional BUG_ON: native e030759a1ddc removes that assertion and obsolete member after dynamic SGL allocation. Final ACK/current/native request processing agrees; positive revert and successor evidence establishes no remaining workaround.",
+    "evidence": [
+      "evidence/virtio-loop-review.json",
+      "SECURITY.md: Virtio block and loop validation"
+    ]
+  },
+  {
+    "commit": "d734335552a155e97f7cd6f57cbb62b14cca664d",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [
+      "2b17d9f84884a37f1324be5526c6600e97a47fbe"
+    ],
+    "rationale": "Native 2b17d9f84884 has the same one-line suppression-field removal. Native f124034faa91 removes the attempted generic used-length validation infrastructure; suppress_used_validation is absent from current driver/core declarations. Preserve current descriptor checks; no new generic length validation is claimed.",
+    "evidence": [
+      "evidence/virtio-loop-review.json",
+      "SECURITY.md: Virtio block and loop validation"
+    ]
+  },
+  {
+    "commit": "c58d59e9d494a1e189ebdbcd6aa48ad220bc97d9",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [
+      "afd384f0dbea2229fd11159efb86a5b41051c4a9"
+    ],
+    "rationale": "Upstream afd384f0dbea represents this revert: IRQ path uses blk_mq_complete_request, with poll batching separate, avoiding the reported lost IRQ completion. Retain current native completion/poll routines including later changes. Whole driver differs from LTS only by separately reviewed NULL-after-free queue lifetime handling.",
+    "evidence": [
+      "evidence/virtio-loop-review.json",
+      "SECURITY.md: Virtio block and loop validation"
+    ]
+  },
+  {
+    "commit": "4e548da254b3b1a2f112d3d6b57aff95ad7139d3",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Temporary backing-file-operation validation removal was lost in merge db784abd9523, repeated by c979a6995725 and undone by d2ac2d135f84. Native f5c84eff634b remains with 355341e4359b correcting the loop-open-mode check and 98b7bf54338b dropping file references on error. Do not remove callback validation or restore later-fixed defects.",
+    "evidence": [
+      "evidence/virtio-loop-review.json",
+      "SECURITY.md: Virtio block and loop validation"
+    ]
+  },
+  {
+    "commit": "db784abd952334c3d9990b7e398d070b28059148",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [
+      "f5c84eff634ba003326aa034c414e2a9dcb7c6a7",
+      "355341e4359b2d5edf0ed5e117f7e9e7a0a5dac0",
+      "98b7bf54338b797e3a11e8178ce0e806060d8fa3"
+    ],
+    "rationale": "All unique remerge hunks examined: restores loop_check_backing_file and change_fd/configure checks, undoing a temporary revert during merge. Native retains these checks with corrected read-only backing-file handling and error fput. Do not recreate the historical extra loop-device-open-mode check or reference leak.",
+    "evidence": [
+      "evidence/virtio-loop-review.json",
+      "SECURITY.md: Virtio block and loop validation"
+    ]
+  },
+  {
+    "commit": "c979a69957258b6ac7513fb1967b60f903412dff",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Explicitly undone by ACK d2ac2d135f84 once native 355341e4359b corrects the loop-open-mode regression. Preserve backing-file read_iter/write_iter validation and 98b7bf54338b reference cleanup. Local apexd opens backing images read-only; native checks backing-file mode, not merely loop device write-open state.",
+    "evidence": [
+      "evidence/virtio-loop-review.json",
+      "SECURITY.md: Virtio block and loop validation"
+    ]
+  },
+  {
+    "commit": "d2ac2d135f84c83a59d8d8d83f1a821b7453a153",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [
+      "f5c84eff634ba003326aa034c414e2a9dcb7c6a7",
+      "355341e4359b2d5edf0ed5e117f7e9e7a0a5dac0",
+      "98b7bf54338b797e3a11e8178ce0e806060d8fa3"
+    ],
+    "rationale": "Restored callback validation is already native. Keep later removal of the inappropriate BLK_OPEN_WRITE check and error-path fput. Final ACK/current validation routines agree. This does not resolve the independent direct-I/O alignment revert, which remains provisional.",
+    "evidence": [
+      "evidence/virtio-loop-review.json",
+      "SECURITY.md: Virtio block and loop validation"
+    ]
+  },
+  {
+    "commit": "a9d144c159d9157be534e99ea7ef8386592cc7a2",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "be6aab8d72f2196accaefd55ff9bc268493e9c31"
+    ],
+    "rationale": "Retain Android VFS namespace: all 14 export conversions and five matching imports in loop, ublk, CCP, DRM leasing and DNS resolver are present. These organize/enforce module source dependencies rather than historical binary layouts. Native function bodies remain beneath annotations, including mntget GPL restriction. Namespaces do not isolate malicious kernel code; SDK module compilation checks import consistency.",
+    "evidence": [
+      "evidence/virtio-loop-review.json",
+      "SECURITY.md: Virtio block and loop validation"
+    ]
   }
 ]
