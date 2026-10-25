@@ -8187,10 +8187,10 @@ enum nl80211_peer_measurement_attrs {
  *	indicating that the device can simultaneously act as initiator and
  *	responder in a multi-peer measurement request. Only valid if
  *	@NL80211_PMSR_FTM_CAPA_ATTR_RSTA_SUPPORT is set.
- * @NL80211_PMSR_FTM_CAPA_ATTR_MAX_NUM_TX_ANTENNAS: u32 attribute indicating
+ * @NL80211_PMSR_FTM_CAPA_ATTR_MAX_NUM_TX_ANTENNAS: u8 attribute indicating
  *	the maximum number of transmit antennas supported for EDCA based ranging
  *	(0 means unknown)
- * @NL80211_PMSR_FTM_CAPA_ATTR_MAX_NUM_RX_ANTENNAS: u32 attribute indicating
+ * @NL80211_PMSR_FTM_CAPA_ATTR_MAX_NUM_RX_ANTENNAS: u8 attribute indicating
  *	the maximum number of receive antennas supported for EDCA based ranging
  *	(0 means unknown)
  * @NL80211_PMSR_FTM_CAPA_ATTR_MIN_INTERVAL_EDCA: u32 attribute indicating
@@ -8353,8 +8353,10 @@ enum nl80211_peer_measurement_ftm_type_capa {
  *	%NL80211_PMSR_FTM_REQ_ATTR_NON_TRIGGER_BASED is set.
  * @NL80211_PMSR_FTM_REQ_ATTR_NOMINAL_TIME: The nominal time field shall be
  *	set to the nominal duration between adjacent Availability Windows in
- *	units of milli seconds (u32). Mandatory if
- *	%NL80211_PMSR_FTM_REQ_ATTR_NON_TRIGGER_BASED is set.
+ *	units of milli seconds (u32). Mandatory for
+ *	%NL80211_PMSR_FTM_REQ_TYPE_PD if
+ *	%NL80211_PMSR_FTM_REQ_ATTR_NON_TRIGGER_BASED is set. Optional for
+ *	infrastructure ranging, with default 0 (no preference).
  * @NL80211_PMSR_FTM_REQ_ATTR_AW_DURATION: (Optional) The AW duration field
  *	shall be set to the duration of the AW in units of 1ms (0-255 ms) (u32).
  *	Only valid if %NL80211_PMSR_FTM_REQ_ATTR_NON_TRIGGER_BASED is set.
@@ -8512,15 +8514,15 @@ enum nl80211_peer_measurement_ftm_failure_reasons {
  *	ISTA, in units of 100 us (u32, optional)
  * @NL80211_PMSR_FTM_RESP_ATTR_NUM_TX_SPATIAL_STREAMS: number of Tx space-time
  *	streams used in NDP frames during the measurement sounding phase
- *	(u32, optional).
+ *	(u8, optional).
  * @NL80211_PMSR_FTM_RESP_ATTR_NUM_RX_SPATIAL_STREAMS: number of Rx space-time
  *	streams used in the NDP frames during the measurement sounding phase
- *	(u32, optional)
+ *	(u8, optional)
  * @NL80211_PMSR_FTM_RESP_ATTR_NOMINAL_TIME: negotiated nominal time used in
  *	this session in milliseconds. (u32, optional)
  * @NL80211_PMSR_FTM_RESP_ATTR_AVAILABILITY_WINDOW: negotiated availability
  *	window time used in this session, in units of milli seconds.
- *	(u32, optional)
+ *	(u8, optional)
  * @NL80211_PMSR_FTM_RESP_ATTR_CHANNEL_WIDTH: u32 attribute indicating channel
  *	width used for measurement, see &enum nl80211_chan_width (optional).
  * @NL80211_PMSR_FTM_RESP_ATTR_PREAMBLE: u32 attribute indicating the preamble
