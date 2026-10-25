@@ -1,7 +1,9 @@
 # Port decisions and security review
 
 This document accompanies the exhaustive candidate ledger. It describes the
-current integration, not a claim of runtime validation. Work is still in progress.
+final source selection, not a claim of runtime validation. All 11,731 candidates
+have final dispositions. Historical in-progress sections remain as review history;
+later final decisions and the README describe the delivered state.
 The fixed source inputs and all repositories used are pinned in README.md and
 inputs/. The only remotely read source so far is the GrapheneOS emulator build
 guide recorded there. Commit-message links were read as local text, not visited.
@@ -11276,3 +11278,96 @@ examined locally; they were not modified. The extracted dispatch checks now
 assert finalizer error propagation, and native-adaptation checks cover eight
 open/create success/error/absent-state combinations (87 total cases). Both
 ASan/UBSan harnesses passed. No live FUSE operation was executed.
+
+## FUSE-BPF foundation final disposition
+
+The final decision for be926e6761d2 is partially-adapted-net-state. Its 34 paths
+are individually recorded in fuse-foundation-review.json, including the ARM64
+configuration omission, removed OWNERS metadata and retained optional selftest
+material. The preceding in-progress section records the corrections made during
+review; this section closes the source-selection decision. It does not turn
+historical or extracted-code evidence into runtime verification.
+
+The feature has positive local consumers. MediaProvider discovers the sysfs
+feature and installs backing/program handles; system/bpfprogs/fuseMedia.c reads
+lookup names/attributes, chooses backing/postfilter/daemon actions and removes
+BPF inheritance in its lookup output. The Rust BPF loader reads the dynamic
+program type from /sys/fs/fuse/bpf_prog_type_fuse for fuse/ sections. Their exact
+project commits and file hashes are in the evidence record. Optional SDK
+property activation is not established; the generic Android interface is
+retained conservatively. No additional remote source was used.
+
+The port preserves native 6.18.57 verifier.c and virtio_fs.c byte for byte.
+Native bpf_prog_load authorization and fuse_init_inode bodies are identical;
+iattr_to_fattr, update_mtime, fuse_time_to_jiffies and convert_fuse_statfs retain
+their native bodies after moving to the shared header. The split args.h keeps
+native fields and flags while adding the Android protocol fields/argument slots.
+The ordinary native header extension length is retained beside the BPF error
+union. These are distinct request modes: simultaneous native extensions and BPF
+error transport is not claimed. The syscall file has separately reviewed Android
+hooks and size validation; it is not falsely described as wholly unchanged.
+
+This integration expands kernel attack surface through backing filesystem
+operations and a privileged BPF program type. It retains native VFS/LSM checks
+where those helpers are called, and does not weaken native program-load checks.
+Those facts are not blanket proof of isolation. The context, copy bounds, cleanup,
+negative length and lock failures identified during review were corrected in
+3d59ee0c246b, 2e6a429a6eb1 and 646b0b7754af; earlier lookup and mixed-I/O changes
+remain in 9e4d89fab8be and 7ad75c4cc44c. Result hashes are recorded in the ledger.
+There are no historical vendor-module layout reservations to preserve here.
+
+Review limits remain explicit. General idmapped backing stacking, dynamic
+backing inode/path replacement under concurrent readers and mixed writable mmap/
+cache coherence are not certified. Atomic exchange alone does not establish
+reader lifetime. Several ACK operations ignore rewritten prefilter inputs;
+write payload exposure covers only a contiguous kernel-vector segment, and
+ioctl/flock/splice/mmap backing paths do not imply a BPF filter for every access.
+Compat backing ioctl returns ENOTTY. The new 64 KiB verified-access ceiling can
+reject programs with larger accesses, while bytes outside real arguments are
+zero and writes there are discarded. These are material semantics for review,
+not claims that missing consumers make behavior unnecessary. Optional no_daemon
+mount behavior and actual SDK feature activation remain unverified.
+
+The selftest sources are retained from final ACK (one trailing-blank-line-only
+loader difference); their build wiring and relevant filter/context usages were
+examined. They were not executed, and every historical fixture body is not
+claimed independently semantically audited. Current production code, native
+deltas, earlier per-commit reviews, host extracted checks and the full original
+emulator build are the evidence for this final selection. No OS build, prebuilt
+replacement, emulator boot, flash, mounted FUSE test or live BPF load was done.
+
+
+## Final delivery verification
+
+The original ARCH=x86_64 common/build_virt.sh workflow exited zero in attempt
+205 for source 646b0b7754af0459256e35294337da454d5253fd. The manifest is
+240814ffe130645ac0509994bd783fd0379e14de and the modified Kleaf dependency is
+2142663d1a266266ec5d42c942ae14172be8dcc0. Both distribution images are identical;
+100 common and 45 virtual-device modules were generated. Each module's detached
+SHA-256 signature verifies with the exact build certificate, and a modified
+payload was rejected. This does not test certificate-chain trust or in-kernel
+module loading. All 145 flag/CRC tables match the generated metadata, and the
+659 protected-export records pass the current-stride check.
+
+All 60 originally inventoried manifest projects were compared with their input
+pins. Only common, .repo/manifests and build/kernel changed; their tracked work
+was clean. All have delivery branch port/android-6.18-sdk-audit. The Linux branch
+adds final audit documentation after the exact compiled source pin; executable
+source and build inputs remain identical. The local manifest remotes require
+replacement with published repository URLs when transporting this workspace.
+
+The completed ledger has 11,731 finalized and zero provisional candidates.
+All 2,623 merges are accounted for, including 511 nonempty resolutions and
+10,450 resolution hunks. The native stable scan examined 1,776 commits touching
+changed paths and all 38 flagged textual overlaps have recorded assessments.
+These mechanical counts validate coverage and record consistency, not semantic
+proof of every fix. Known partial adaptations and unresolved runtime/necessity
+questions remain visible in the ledger, README and supporting evidence.
+
+The successful log retains the already explained hermetic diff -I warnings,
+non-stamped release-format warnings and a missing MODULE_DESCRIPTION warning
+for system_heap; none prevented artifact generation. Embedded warning URLs
+were not opened. The original remote-source log is unchanged: no new remote
+resource was accessed during the final review/build segment. No Android OS
+build, prebuilt replacement, emulator boot, device flash or kernel runtime test
+was performed.

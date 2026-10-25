@@ -1,9 +1,13 @@
 # Android 6.18 SDK emulator port audit
 
-Status: work in progress. The complete emulator workflow succeeded in attempt 203
-at Linux 3d59ee0c246b, including final signing. All 145 generated module signatures
-were cryptographically verified against the build certificate; a modified-payload
-control was rejected. The exhaustive commit audit remains unfinished. No runtime compatibility is claimed.
+Status: all 11,731 ACK candidates have final dispositions (100%), including
+2,623 merges and all 10,450 nonempty-resolution hunks. No provisional ledger rows
+remain. This measures completed source-selection decisions, including justified
+omissions and partial adaptations; it does not mean complete ACK behavior parity.
+The original emulator workflow passed in attempt 205, producing the kernel
+image, 100 common modules and 45 virtual-device modules. All 145 module signatures
+verified against the build certificate; a modified-payload control was rejected.
+No runtime compatibility is claimed.
 
 ## Scope and immutable inputs
 
@@ -50,7 +54,7 @@ establish which controller is selected at runtime.
 
 Candidates are exactly `git rev-list ACK --not LINUX`, including merges: 11,731
 commits, of which 2,623 are merges. The exhaustive ledger is `candidates.jsonl`
-and its tabular rendering is `candidates.tsv`. Rows marked `review_status=draft-net-reconciliation` are not completed
+and its tabular rendering is `candidates.tsv`. In historical checkpoints, rows marked `review_status=draft-net-reconciliation` are not completed
 review even when a provisional disposition is populated. See DECISIONS.md. Each row records parents, subject, changed files and the decision
 evidence; implementations must record resulting commit IDs before completion.
 
@@ -59,7 +63,8 @@ evidence; implementations must record resulting commit IDs before completion.
 Start with this README, DECISIONS.md, candidates.tsv and SECURITY.md. The ledger
 is the commit-by-commit index, but its section-level cross-references are not
 complete: also read the relevant security sections and follow the supporting
-evidence references. Draft rows remain unfinished. The evidence directory mixes
+evidence references. The final ledger has no draft rows; historical reports retain their original
+checkpoint status. The evidence directory mixes
 substantive review records with generated reports; it is not all internal scratch.
 
 | File or family | Purpose and intended use |
@@ -136,3 +141,61 @@ The successful runs' source/dependency pins, artifact hashes and signature
 verification are recorded in `evidence/build-results.json`. This result applies
 to its recorded source commit, not automatically to later changes. Build logs
 are in the workspace root as `sdk-build-attempt-*.log`.
+
+
+## Final review boundaries
+
+Read [SECURITY.md](SECURITY.md) with the ledger; historical checkpoint sections
+are retained and later final decisions supersede their provisional conclusions.
+[evidence/unresolved-feature-questions.json](evidence/unresolved-feature-questions.json)
+collects 52 recorded necessity/runtime questions and their selected source policy.
+A final disposition can retain an optional feature conservatively or document a
+security-driven partial adaptation without establishing every runtime assumption.
+
+Material compatibility differences include shared file EOF-tail faults under
+16 KiB page-size emulation (SIGBUS for whole base pages beyond real EOF), native
+filesystem direct-I/O alignment checks (some older loop test assumptions fail),
+and FUSE-BPF's bounded argument execution and existing incomplete backing/filter
+semantics. See SECURITY.md sections “Final loop alignment and shared EOF
+decisions”, “FUSE-BPF foundation final disposition” and the linked evidence.
+These limits are not hidden by the 100% audit count.
+
+The final build uses Linux source commit
+`646b0b7754af0459256e35294337da454d5253fd`, manifest commit
+`240814ffe130645ac0509994bd783fd0379e14de`, and Kleaf commit
+`2142663d1a266266ec5d42c942ae14172be8dcc0`. All three repositories have branch
+`port/android-6.18-sdk-audit`. Subsequent commits on the Linux branch contain
+only this audit documentation; the manifest's common checkout intentionally
+pins the exact compiled source. Read the latest review files in the Linux
+repository, rather than expecting the pinned build checkout's documentation to
+include reports written after that build.
+
+Only the common kernel, manifest and build/kernel pins differ from the 60
+original checked-out project pins. The virtual-device module project remains
+unchanged at `63ad7b13b89b935fac402976151ffcd3e319ca4f`. Kleaf's two-file change
+retains signed-module export protection when historical KMI trimming is disabled;
+see “Required build dependency adaptation and signing” in SECURITY.md.
+
+
+Run the unchanged workflow from `kernel_manifest-6.18/`:
+
+```sh
+ARCH=x86_64 common/build_virt.sh
+```
+
+| Final generated deliverable (relative to the workspace root) | Result |
+| --- | --- |
+| `kernel_manifest-6.18/common_dist/bzImage` | x86_64 kernel image |
+| `kernel_manifest-6.18/virt_dist/bzImage` | Byte-identical copy of the common image |
+| `kernel_manifest-6.18/common_dist/*.ko` | 100 signed common modules |
+| `kernel_manifest-6.18/virt_dist/*.ko` | 45 signed virtual-device modules |
+| `sdk-build-attempt-205.log` | Complete successful original workflow log |
+
+[evidence/build-results.json](evidence/build-results.json) records exact hashes
+and signature verification for attempt 205 and earlier successful checkpoints.
+[evidence/module-tables-build-205.json](evidence/module-tables-build-205.json)
+checks all 145 module flag/CRC tables and 659 protected exports.
+[evidence/delivery-state.json](evidence/delivery-state.json) records the final
+source/dependency state; [evidence/audit-validation.json](evidence/audit-validation.json)
+records complete inventory/merge/overlap consistency. These checks do not prove
+runtime safety or bootability. The kernel was compiled and packaged only.

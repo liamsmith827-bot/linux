@@ -1,0 +1,396 @@
+{
+  "source_head": "646b0b7754af0459256e35294337da454d5253fd",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "candidate": "be926e6761d28d105ba672242e81e911e0d7e5e0",
+  "original_patch_sha256": "65ee0ebd926d621d8cf4186e17e0c18abec4a52bd7cb878cb6d167d1fb025034",
+  "record": {
+    "commit": "be926e6761d28d105ba672242e81e911e0d7e5e0",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "d1dc0cf821209662fb3a18c5bd72a2ae3792667a",
+      "7ad75c4cc44c230f2cfc0dc93de73ff8575439db",
+      "9e4d89fab8be269cdfa979c81871aff240be829d",
+      "3d59ee0c246b1e66136498c74eaa5e137a5fc09a",
+      "2e6a429a6eb1aa2dba60b47401ad38cdba9d670b",
+      "646b0b7754af0459256e35294337da454d5253fd"
+    ],
+    "rationale": "Retain final generic FUSE-BPF Android protocol/configuration/backing implementation, positively consumed by local MediaProvider, fuseMedia and BPF loader. Adapt the 34-path historical foundation onto native 6.18.57 instead of replaying obsolete FUSE internals; omit ARM64-only config and removed ownership metadata. Native verifier, bpf_prog_load, virtio-fs and moved conversion helpers are preserved; native I/O release, rdev encoding and ordinary idmapped getattr restored. Correct unsafe context/argument exposure with bounded private scratch, full pointer loads, read-only input types and bounded output copyback; add allocation/error cleanup, rename lock handling and ordinary-open rejection release. Keep live userspace UAPI, sysfs discovery and source interfaces without historical KMI wrappers. Explicit limits: 64 KiB maximum verified access per argument (larger returns E2BIG), incomplete iterator/prefilter rewrite coverage, compat backing ioctl ENOTTY, no general backing idmap guarantee, dynamic backing replacement and mixed-cache/mmap concurrency unverified. No claim of complete runtime parity or security certification. Final source selection is complete with these limits; actual SDK property/use and optional no_daemon behavior remain unverified. Optional selftest fixtures retained by final-source comparison, not executed. Supporting earlier FUSE history/local reviews and new extracted-code checks cover the adaptations; final full emulator workflow is recorded separately.",
+    "evidence": [
+      "evidence/fuse-foundation-review.json",
+      "SECURITY.md: FUSE-BPF foundation final disposition",
+      "SECURITY.md: FUSE-BPF context bounds adaptation in progress",
+      "SECURITY.md: FUSE mixed passthrough ownership and access",
+      "SECURITY.md: FUSE-BPF lookup failure and reference cleanup",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "evidence/fuse-history-review.json",
+      "evidence/fuse-bpf-bounds-check.json",
+      "evidence/fuse-native-adaptation-check.json",
+      "evidence/fuse-bpf-lifetime-check.json",
+      "evidence/build-results.json"
+    ]
+  },
+  "path_decisions": [
+    {
+      "path": "Documentation/ABI/testing/sysfs-fs-fuse",
+      "ack_blob": "4e9fe5af05fa17413899889f0c8eccbc9bc09859",
+      "lts_blob": null,
+      "port_blob": "4e9fe5af05fa17413899889f0c8eccbc9bc09859",
+      "rationale": "Retain actual feature/program-type discovery documentation. The dynamic program-type number is consumed by the local Android BPF loader; this is userspace protocol, not historical vendor-module binary KMI.",
+      "disposition": "adapted-net-state"
+    },
+    {
+      "path": "arch/arm64/configs/gki_defconfig",
+      "ack_blob": "a3e1c0d60d5220b6be8b306157a331fc1696afb0",
+      "lts_blob": null,
+      "port_blob": null,
+      "rationale": "Omit this ARM64 configuration addition for the selected x86_64 SDK target. This does not assert that ARM64 Android does not need FUSE-BPF.",
+      "disposition": "omitted-current-target"
+    },
+    {
+      "path": "arch/x86/configs/gki_defconfig",
+      "ack_blob": "180b3166b2cce53f484b656cd70bd9dbe4a5b487",
+      "lts_blob": null,
+      "port_blob": "0a3476699adc33a60f0c42ffb1ca8731b47a31de",
+      "rationale": "Retain CONFIG_FUSE_BPF=y with FUSE_FS/BPF_SYSCALL/BPF_JIT enabled in the actual SDK build. Generic optional Android behavior is retained without requiring proof that the current SDK property enables it at runtime.",
+      "disposition": "adapted-net-state"
+    },
+    {
+      "path": "fs/fuse/Kconfig",
+      "ack_blob": "b21786e2b7c004c4cb7644b147fca015ca914325",
+      "lts_blob": "3a4ae632c94aa8b6f57f8a3dd08fe70f1573c846",
+      "port_blob": "b21786e2b7c004c4cb7644b147fca015ca914325",
+      "rationale": "Retain the FUSE_BPF selection and its FUSE_FS/BPF dependency; the delivered SDK also enables BPF_SYSCALL. No certification of every optional Kconfig combination.",
+      "disposition": "adapted-net-state"
+    },
+    {
+      "path": "fs/fuse/Makefile",
+      "ack_blob": "1181debde1da76580cffda168b50825c8eb67d2e",
+      "lts_blob": "22ad9538dfc4b80c6d9b52235bdfead6a6567ae4",
+      "port_blob": "1181debde1da76580cffda168b50825c8eb67d2e",
+      "rationale": "Add the backing object conditionally and retain native DAX/passthrough/io_uring objects.",
+      "disposition": "adapted-net-state"
+    },
+    {
+      "path": "fs/fuse/control.c",
+      "ack_blob": "afab6365a8190312cef6185dc07dd26e8fb52e40",
+      "lts_blob": "2e300f6d646c311ea13cc1256620b06ad922e466",
+      "port_blob": "e56a0c48e20c2636a629eea8e64236a69c4b6e75",
+      "rationale": "Remove __exit from cleanup because BPF cache initialization can fail after control initialization and must unwind it from the init error path; no control permission change.",
+      "disposition": "adapted-net-state"
+    },
+    {
+      "path": "fs/fuse/dev.c",
+      "ack_blob": "9884f7ce50f208b7b8188553a103779bed56aa88",
+      "lts_blob": "7c884532d9e736df7f715b749b157a7c8180d39f",
+      "port_blob": "aab70f73431517de9216a3ae6910a3bc2e3bbc6d",
+      "rationale": "Retain BPF error transport, zero-nodeid forget suppression and daemon-context acquisition/validation of replacement file/program handles. Preserve native reply bounds, connection/request lifetime and canonical-path checks; prior FUSE review covers reference cleanup and stacking restrictions. Native extension length and BPF error share a protocol union, with distinct ordinary/BPF requests; simultaneous native extensions and BPF error transport is not claimed.",
+      "disposition": "adapted-net-state"
+    },
+    {
+      "path": "fs/fuse/dir.c",
+      "ack_blob": "5f0c97a610e7432beef630efca3c69a622112232",
+      "lts_blob": "a013fad843b2cdbb55827ca1de07f78b2a9ddccc",
+      "port_blob": "528b4d5719463945b9bb357aeb72f6a5433cd0c8",
+      "rationale": "Adapt lookup/create/rename/link/access/attribute/symlink/directory operations to native VFS signatures and existing BPF pre/backing/post dispatch. Preserve native attribute conversion, idmap for ordinary getattr and error behavior; RCU-only calls retry with ECHILD. Hold an alias for internal backing attribute refresh or return ESTALE. Lookup/replacement lifetime and generic idmapped backing remain explicitly limited.",
+      "disposition": "adapted-net-state"
+    },
+    {
+      "path": "fs/fuse/file.c",
+      "ack_blob": "4e20094db4f34d41b7ad855997d3e955e8208905",
+      "lts_blob": "0812eee881519c119b62ea21b2c20615be1d03e0",
+      "port_blob": "9b94eb163158bcf399f92b031fe89a3c897a9223",
+      "rationale": "Retain BPF backing open/read/write/flush/fsync/seek/fallocate/copy/mmap/splice dispatch around native FUSE paths. Restore native final-reference I/O-mode release instead of losing cached/uncached/passthrough accounting. BPF ordinary-open rejection frees backing state before VFS owns it; atomic create retains VFS ownership. Existing mixed-cache and incomplete payload-filtering limitations remain.",
+      "disposition": "adapted-net-state"
+    },
+    {
+      "path": "fs/fuse/fuse_bpf_backing.c",
+      "ack_blob": "25f2dc6ad8aa71a6a12949471f0e80f757902a67",
+      "lts_blob": null,
+      "port_blob": "0c7187e2a617eff4f4a36fbb9ccb2cb14ff43a64",
+      "rationale": "Retain generic Android backing operations, using native VFS permission/LSM helpers and adapted native APIs. Bound BPF buffers through verifier maximum-access metadata, private prefilter copies, exact aliases and bounded output copyback; clean initialization allocations on fallback/errors. Fix lookup/reply references, negative xattr length, statfs extent, rename ERR_PTR/unlock, open failure and RCU symlink cases. Preserve native lower operations rather than import historical implementations. 64 KiB per-argument verified-access ceiling and zero padding are deliberate safety changes. Lower idmapped stacking, dynamic replacement races, full payload filtering and mixed mmap/cache correctness are not certified.",
+      "disposition": "adapted-net-state"
+    },
+    {
+      "path": "fs/fuse/fuse_i.h",
+      "ack_blob": "89fea215e9ac6b44dc525180261bd51cef84132c",
+      "lts_blob": "7d26159af4059ad598f1ddd2907c59585c3267b6",
+      "port_blob": "8f55aa40bfa72553e0c08dd8fb156713ab9c8235",
+      "rationale": "Retain backing state/prototypes and dispatch with native fields, without KABI layout wrappers. Move four native helper bodies without semantic changes; shared attribute finalization preserves caller idmap. Validate argument counts, clean initialized resources on fallback/pre/post errors and retain negative errors through finalization. Adapt request storage to native args.h split.",
+      "disposition": "adapted-net-state"
+    },
+    {
+      "path": "fs/fuse/inode.c",
+      "ack_blob": "ebf09a0728a22e5be4996486d665026d678bf9a5",
+      "lts_blob": "091a375c32a8dcaba370fa58884092feb341975a",
+      "port_blob": "eae215fd7a96cb43de07960094517dc218dc9fd4",
+      "rationale": "Retain discovery sysfs, root backing/program and no_daemon options, inode/dentry reference ownership and BPF cache initialization/unwind. Preserve whole native fuse_init_inode including encoded rdev; encode producer rather than alter native decoder. Validate root options and duplicate replacement ownership; no_daemon disconnects absent request transport before INIT allocation. Ordinary native allocation guards are preserved. No optional no_daemon runtime guarantee.",
+      "disposition": "adapted-net-state"
+    },
+    {
+      "path": "fs/fuse/ioctl.c",
+      "ack_blob": "3f0b7811f5957712fcc0037b09c40516b1d553c2",
+      "lts_blob": "fdc175e93f74743eb4d2e5a4bc688df1c62e64c4",
+      "port_blob": "3f0b7811f5957712fcc0037b09c40516b1d553c2",
+      "rationale": "Retain independent backing ioctl dispatch and native ioctl logic. Compat backing returns ENOTTY as in selected ACK; this is an existing limitation, not proof that compat users do not exist. The backing bypass is not claimed to execute BPF policy on each ioctl.",
+      "disposition": "adapted-net-state"
+    },
+    {
+      "path": "fs/fuse/readdir.c",
+      "ack_blob": "a970ce8003ade4d00e1d8d346bb10142374b6442",
+      "lts_blob": "57a4d6254bc98816884358478a338c2200228281",
+      "port_blob": "744c54e9d6ad272f2f003b806f2e2dcafe97fed8",
+      "rationale": "Retain backing iteration dispatch alongside native directory-cache/readdir implementation; release temporary page centrally on all initialized outcomes. Actual daemon filtering/iteration and races are not runtime-tested.",
+      "disposition": "adapted-net-state"
+    },
+    {
+      "path": "fs/fuse/xattr.c",
+      "ack_blob": "a5c0b2722f97570cbfced6f40be9b5177f839c4b",
+      "lts_blob": "93dfb06b6cea045d6df90c61c900680968bda39f",
+      "port_blob": "a5c0b2722f97570cbfced6f40be9b5177f839c4b",
+      "rationale": "Retain backing get/list/set/remove dispatch, preserving lower VFS/LSM checks and native FUSE fallback. Negative get results remain errors before size conversion. Existing operations that ignore rewritten prefilter arguments are documented rather than claimed fully implemented.",
+      "disposition": "adapted-net-state"
+    },
+    {
+      "path": "include/linux/bpf_types.h",
+      "ack_blob": "7ac2e2dbf5888dd5dead5bb5dc9953c847d341c2",
+      "lts_blob": "fa78f49d4a9a640deb19376eaafe77cfe00420e1",
+      "port_blob": "7ac2e2dbf5888dd5dead5bb5dc9953c847d341c2",
+      "rationale": "Register the custom program type only with FUSE_BPF; preserve existing native type registrations.",
+      "disposition": "adapted-net-state"
+    },
+    {
+      "path": "include/uapi/linux/android_fuse.h",
+      "ack_blob": "58f3d171952d881c7a22346a821bb67c5a276c21",
+      "lts_blob": null,
+      "port_blob": "58f3d171952d881c7a22346a821bb67c5a276c21",
+      "rationale": "Retain ACK argument layout, opcodes/flags and backing/program replacement actions, positively used by MediaProvider and fuseMedia. Context metadata stays read-only; pointer-valued fields receive verified buffer types, unused slots point to zeroed scratch and end_offset remains zero.",
+      "disposition": "adapted-net-state"
+    },
+    {
+      "path": "include/uapi/linux/bpf.h",
+      "ack_blob": "90d6e9bcde718bb3ddd0f8c500205c95d31d8ce2",
+      "lts_blob": "a4250e713112f3c4c7cda559713b51f0b2cdde07",
+      "port_blob": "5983bcd7e5ac699304a4274769a9afdf6cdaf052",
+      "rationale": "Append FUSE program type without renumbering existing upstream types. Android loader discovers its actual value from sysfs; historical fixed numeric compatibility is not imposed.",
+      "disposition": "adapted-net-state"
+    },
+    {
+      "path": "include/uapi/linux/fuse.h",
+      "ack_blob": "79cfec957d3d1680bab0058d71047e522b489b48",
+      "lts_blob": "c13e1f9a2f12bd39f535188cb5466688eba42263",
+      "port_blob": "79cfec957d3d1680bab0058d71047e522b489b48",
+      "rationale": "Retain native protocol additions and use the ACK error_in/total_extlen union, with zero default error for ordinary requests and native extlen assignment for extensions. This preserves live daemon protocol, not obsolete module ABI layout. Canonical-path opcode is separately reviewed.",
+      "disposition": "adapted-net-state"
+    },
+    {
+      "path": "kernel/bpf/Makefile",
+      "ack_blob": "f1682e11ee9da7eb727715c3a396bb4902c4bfd8",
+      "lts_blob": "7fd0badfacb12f46c0d0e496e36892aaed1b09e0",
+      "port_blob": "f1682e11ee9da7eb727715c3a396bb4902c4bfd8",
+      "rationale": "Build custom verifier/attachment support under FUSE_BPF and BPF_SYSCALL; preserve native build rules.",
+      "disposition": "adapted-net-state"
+    },
+    {
+      "path": "kernel/bpf/bpf_fuse.c",
+      "ack_blob": "992eb2dd5aa673e0621430a9674fc3acf753cea4",
+      "lts_blob": null,
+      "port_blob": "a89898715fac0db12202f8a45872a4259ff85de5",
+      "rationale": "Retain restricted helper set and program-file/type validation with consumed file reference on all valid-input paths. Replace unsafe ACK context access check with full bounds/alignment and whole pointer loads; input pointers are read-only. Generic native verifier and native bpf_prog_load authorization are unchanged.",
+      "disposition": "adapted-net-state"
+    },
+    {
+      "path": "kernel/bpf/btf.c",
+      "ack_blob": "4da360a960bfdf43965c8d9554685dc2e721f7cd",
+      "lts_blob": "706b3eefd9ef59968293234518712da7b213495f",
+      "port_blob": "e71c9fd0ba0ffea807a1a3b8bd4e0c8a17eb8ce2",
+      "rationale": "Only include Android context UAPI for the conditional type definition; native BTF implementation otherwise remains unchanged.",
+      "disposition": "adapted-net-state"
+    },
+    {
+      "path": "tools/testing/selftests/filesystems/fuse/.gitignore",
+      "ack_blob": "cfae514d5c0376db25270f654b58357f9ece5424",
+      "lts_blob": "3e72e742d08e8c00fdb05ad340f2f4ea6ab8cff8",
+      "port_blob": "cfae514d5c0376db25270f654b58357f9ece5424",
+      "rationale": "Retain final ACK optional FUSE selftest material (exact blob except trailing blank lines in bpf_loader.c). Inventory, build wiring and relevant filter/context consumers inspected; not every historical fixture body received independent semantic verification. These tests are not kernel image/module code and were not executed or claimed as runtime evidence.",
+      "disposition": "retained-test-material"
+    },
+    {
+      "path": "tools/testing/selftests/filesystems/fuse/Makefile",
+      "ack_blob": "09c525f7eae1db8a1bb820c7635cb039da06c30b",
+      "lts_blob": "612aad69a93aa4f3594b482724dd16632aff7054",
+      "port_blob": "09c525f7eae1db8a1bb820c7635cb039da06c30b",
+      "rationale": "Retain final ACK optional FUSE selftest material (exact blob except trailing blank lines in bpf_loader.c). Inventory, build wiring and relevant filter/context consumers inspected; not every historical fixture body received independent semantic verification. These tests are not kernel image/module code and were not executed or claimed as runtime evidence.",
+      "disposition": "retained-test-material"
+    },
+    {
+      "path": "tools/testing/selftests/filesystems/fuse/OWNERS",
+      "ack_blob": null,
+      "lts_blob": null,
+      "port_blob": null,
+      "rationale": "Historical ownership metadata is absent in both final ACK and LTS; do not resurrect it.",
+      "disposition": "superseded"
+    },
+    {
+      "path": "tools/testing/selftests/filesystems/fuse/bpf_loader.c",
+      "ack_blob": "94f884c64d29d8136c5ed07217085d1c24ba9534",
+      "lts_blob": null,
+      "port_blob": "78149dad6c25539935c01dea00999cd3c83b9aaa",
+      "rationale": "Retain final ACK optional FUSE selftest material (exact blob except trailing blank lines in bpf_loader.c). Inventory, build wiring and relevant filter/context consumers inspected; not every historical fixture body received independent semantic verification. These tests are not kernel image/module code and were not executed or claimed as runtime evidence.",
+      "disposition": "retained-test-material"
+    },
+    {
+      "path": "tools/testing/selftests/filesystems/fuse/fd.txt",
+      "ack_blob": "15ce77180d556cbdd43ab6d1dec588ffe38c78f8",
+      "lts_blob": null,
+      "port_blob": "15ce77180d556cbdd43ab6d1dec588ffe38c78f8",
+      "rationale": "Retain final ACK optional FUSE selftest material (exact blob except trailing blank lines in bpf_loader.c). Inventory, build wiring and relevant filter/context consumers inspected; not every historical fixture body received independent semantic verification. These tests are not kernel image/module code and were not executed or claimed as runtime evidence.",
+      "disposition": "retained-test-material"
+    },
+    {
+      "path": "tools/testing/selftests/filesystems/fuse/fd_bpf.c",
+      "ack_blob": "3cd82d67e759b8077aa73092b2c336dd2efced87",
+      "lts_blob": null,
+      "port_blob": "3cd82d67e759b8077aa73092b2c336dd2efced87",
+      "rationale": "Retain final ACK optional FUSE selftest material (exact blob except trailing blank lines in bpf_loader.c). Inventory, build wiring and relevant filter/context consumers inspected; not every historical fixture body received independent semantic verification. These tests are not kernel image/module code and were not executed or claimed as runtime evidence.",
+      "disposition": "retained-test-material"
+    },
+    {
+      "path": "tools/testing/selftests/filesystems/fuse/fuse_daemon.c",
+      "ack_blob": "1b6f8c2acf2b187210e72479ac9920c7474bc5a4",
+      "lts_blob": null,
+      "port_blob": "1b6f8c2acf2b187210e72479ac9920c7474bc5a4",
+      "rationale": "Retain final ACK optional FUSE selftest material (exact blob except trailing blank lines in bpf_loader.c). Inventory, build wiring and relevant filter/context consumers inspected; not every historical fixture body received independent semantic verification. These tests are not kernel image/module code and were not executed or claimed as runtime evidence.",
+      "disposition": "retained-test-material"
+    },
+    {
+      "path": "tools/testing/selftests/filesystems/fuse/fuse_test.c",
+      "ack_blob": "931332a8454f7f8616962d46c7ad1832d430af0a",
+      "lts_blob": null,
+      "port_blob": "931332a8454f7f8616962d46c7ad1832d430af0a",
+      "rationale": "Retain final ACK optional FUSE selftest material (exact blob except trailing blank lines in bpf_loader.c). Inventory, build wiring and relevant filter/context consumers inspected; not every historical fixture body received independent semantic verification. These tests are not kernel image/module code and were not executed or claimed as runtime evidence.",
+      "disposition": "retained-test-material"
+    },
+    {
+      "path": "tools/testing/selftests/filesystems/fuse/test_bpf.c",
+      "ack_blob": "b8c2cc5133151e65b4e1c5c560ed17a029dc8ec6",
+      "lts_blob": null,
+      "port_blob": "b8c2cc5133151e65b4e1c5c560ed17a029dc8ec6",
+      "rationale": "Retain final ACK optional FUSE selftest material (exact blob except trailing blank lines in bpf_loader.c). Inventory, build wiring and relevant filter/context consumers inspected; not every historical fixture body received independent semantic verification. These tests are not kernel image/module code and were not executed or claimed as runtime evidence.",
+      "disposition": "retained-test-material"
+    },
+    {
+      "path": "tools/testing/selftests/filesystems/fuse/test_framework.h",
+      "ack_blob": "efc6f53ea8035933f583a5968872b3ed12805893",
+      "lts_blob": null,
+      "port_blob": "efc6f53ea8035933f583a5968872b3ed12805893",
+      "rationale": "Retain final ACK optional FUSE selftest material (exact blob except trailing blank lines in bpf_loader.c). Inventory, build wiring and relevant filter/context consumers inspected; not every historical fixture body received independent semantic verification. These tests are not kernel image/module code and were not executed or claimed as runtime evidence.",
+      "disposition": "retained-test-material"
+    },
+    {
+      "path": "tools/testing/selftests/filesystems/fuse/test_fuse.h",
+      "ack_blob": "e62e2ee07713bbb658d6e35f75a4390e71fcb9a2",
+      "lts_blob": null,
+      "port_blob": "e62e2ee07713bbb658d6e35f75a4390e71fcb9a2",
+      "rationale": "Retain final ACK optional FUSE selftest material (exact blob except trailing blank lines in bpf_loader.c). Inventory, build wiring and relevant filter/context consumers inspected; not every historical fixture body received independent semantic verification. These tests are not kernel image/module code and were not executed or claimed as runtime evidence.",
+      "disposition": "retained-test-material"
+    },
+    {
+      "path": "tools/testing/selftests/filesystems/fuse/test_fuse_bpf.h",
+      "ack_blob": "9097626b7c4dcbf2bd11c7d028c5b1ce948d5919",
+      "lts_blob": null,
+      "port_blob": "9097626b7c4dcbf2bd11c7d028c5b1ce948d5919",
+      "rationale": "Retain final ACK optional FUSE selftest material (exact blob except trailing blank lines in bpf_loader.c). Inventory, build wiring and relevant filter/context consumers inspected; not every historical fixture body received independent semantic verification. These tests are not kernel image/module code and were not executed or claimed as runtime evidence.",
+      "disposition": "retained-test-material"
+    }
+  ],
+  "additional_native_split_path": {
+    "path": "fs/fuse/args.h",
+    "port_blob": "05195051cd9dc8b8a0b62a479d4339b5104cd666",
+    "rationale": "Retain all native fields/flags and add Android error, extra args and canonical path completion to the native split header."
+  },
+  "native_function_bodies": [
+    {
+      "native_path": "fs/fuse/dir.c",
+      "port_path": "fs/fuse/fuse_i.h",
+      "function": "iattr_to_fattr",
+      "body_sha256": "409cff5414c6ac0bcd271e3b963db57a230280afe7712793559de0e8cef7bdc6"
+    },
+    {
+      "native_path": "fs/fuse/dir.c",
+      "port_path": "fs/fuse/fuse_i.h",
+      "function": "update_mtime",
+      "body_sha256": "1f9d1d629583c310ffa5ea92f61366cecaac2f4980698c08a135dfbe98c2ba40"
+    },
+    {
+      "native_path": "fs/fuse/dir.c",
+      "port_path": "fs/fuse/fuse_i.h",
+      "function": "fuse_time_to_jiffies",
+      "body_sha256": "643407f3e6b19a73170749dc5c4a5beec5460d84bfe1ec6d033bc04af74a9451"
+    },
+    {
+      "native_path": "fs/fuse/inode.c",
+      "port_path": "fs/fuse/fuse_i.h",
+      "function": "convert_fuse_statfs",
+      "body_sha256": "621e1c00927c2b427e1766562f3f3e4d14fe34d3e7521e0a95d12e2b99ffe534"
+    },
+    {
+      "native_path": "fs/fuse/inode.c",
+      "port_path": "fs/fuse/inode.c",
+      "function": "fuse_init_inode",
+      "body_sha256": "0f1a0ae8c1f330423fca8cbee1d2691388d98ce2e4549115c6abd0f7fd301033"
+    },
+    {
+      "native_path": "kernel/bpf/syscall.c",
+      "port_path": "kernel/bpf/syscall.c",
+      "function": "bpf_prog_load",
+      "body_sha256": "f00f4a6baeae236d9f5d51683d166355552d651112417f1aa32768e09c4e14e1"
+    }
+  ],
+  "native_whole_files": [
+    "kernel/bpf/verifier.c",
+    "fs/fuse/virtio_fs.c"
+  ],
+  "local_consumers": [
+    {
+      "project": "packages/providers/MediaProvider",
+      "commit": "db0779586e2b1b4044d46a848b0f60a93a601ca5",
+      "files": {
+        "jni/FuseDaemon.cpp": "91ec4969c72377bdd7e90d4de38582a899ecd5238a68dd4952cfb35a5de23998"
+      }
+    },
+    {
+      "project": "system/bpfprogs",
+      "commit": "60f086effe11d1afb248ff3c9a2a780b66a34506",
+      "files": {
+        "fuseMedia.c": "e42b2880351cf6b9ed064e89aecc1f48d9920942b3e8a53985a8bb9cf3a4b9ca"
+      }
+    },
+    {
+      "project": "system/bpf",
+      "commit": "d68a263039127dc709114802395e57537a02babf",
+      "files": {
+        "loader/bpfloader.rs": "cced67161745e2bb2382d7cbcd298cf4e48324154abd8dccdc54c177ed62471b"
+      }
+    },
+    {
+      "project": "external/libfuse",
+      "commit": "47f83ca03e9ce8f8dc014605d059e3377ad2eafe",
+      "files": {
+        "lib/fuse_lowlevel.c": "7abde2e5a08cb18cae02122c1ebec7881a5cfd34ce22775fc2895b03f0b4be90",
+        "include/fuse_kernel.h": "6baf2cf8a933895489c2a022c7181479e0d661bddfb52ce25fdabbc88144f2b8"
+      }
+    }
+  ],
+  "production_delta_review": "Current full native-to-port FUSE file/dir/inode/header/transport/ioctl/xattr/readdir/config/UAPI and custom BPF/backend bodies examined, with earlier 54 local and 27 historical FUSE row reviews. Final-code review does not claim every historical intermediate fixture line was independently audited.",
+  "tests": [
+    "fuse-bpf-bounds-check.json",
+    "fuse-native-adaptation-check.json",
+    "fuse-local-review.json",
+    "fuse-history-review.json"
+  ],
+  "limits": "Retain final generic FUSE-BPF Android protocol/configuration/backing implementation, positively consumed by local MediaProvider, fuseMedia and BPF loader. Adapt the 34-path historical foundation onto native 6.18.57 instead of replaying obsolete FUSE internals; omit ARM64-only config and removed ownership metadata. Native verifier, bpf_prog_load, virtio-fs and moved conversion helpers are preserved; native I/O release, rdev encoding and ordinary idmapped getattr restored. Correct unsafe context/argument exposure with bounded private scratch, full pointer loads, read-only input types and bounded output copyback; add allocation/error cleanup, rename lock handling and ordinary-open rejection release. Keep live userspace UAPI, sysfs discovery and source interfaces without historical KMI wrappers. Explicit limits: 64 KiB maximum verified access per argument (larger returns E2BIG), incomplete iterator/prefilter rewrite coverage, compat backing ioctl ENOTTY, no general backing idmap guarantee, dynamic backing replacement and mixed-cache/mmap concurrency unverified. No claim of complete runtime parity or security certification. Final source selection is complete with these limits; actual SDK property/use and optional no_daemon behavior remain unverified. Optional selftest fixtures retained by final-source comparison, not executed. Supporting earlier FUSE history/local reviews and new extracted-code checks cover the adaptations; final full emulator workflow is recorded separately.",
+  "remote_resources_used": []
+}
