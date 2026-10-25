@@ -9027,3 +9027,67 @@ The prior finalized psock assertion decision a755993436b5 was revalidated
 after its file changed: the full native source differs only in the sendto
 argument, and NDEBUG is still undefined before the header includes. This
 refresh adds no new finalized candidate.
+
+## Remaining filesystem and block interfaces
+
+`evidence/fs-block-tail-review.json` records 43 candidate decisions. The four
+exec/read/write/splice revert pairs cancel exactly. Native regular-file/noexec
+checks, NULL-position handling and explicit splice operations remain; the old
+set_fs fallback is not restored. Statmount helper bodies are native, including
+copying results to userspace after releasing the namespace lock. Pidfs remains
+unconditionally built as in LTS; the historical FS_PID default workaround no
+longer applies.
+
+Current ext4 inline encryption and iomap direct I/O already supply the required
+crypto contexts. Both ext4 and F2fs positively use iomap and limit mappings at
+DUN boundaries; retain their current alignment/fallback checks rather than add
+legacy direct-io crypto plumbing for another caller. Native generic casefolding
+retains shortname-store copying for rename races. F2fs still attaches crypto
+contexts to merged bios, stores keyed hashes for encrypted-casefolded recovery,
+and checks recovered filename bounds. The old merge-repair and synchronization
+patches are superseded by these current implementations. Native fsverity lookup
+and verification remain in buffer.c and Btrfs; the alternate lookup-hoisting API
+is unnecessary for the retained interface. No encryption/verity runtime test is
+claimed.
+
+The sole bio.c delta initializes bi_skip_dm_default_key to false. This is required
+for the configured metadata-encryption path: stale skip state must not select
+an unintended bypass. Runtime ELF_MIN_ALIGN/min_coredump initialization is
+retained for the reported 16 KB page size; load_elf_binary itself, including the
+native .bss-to-brk gap, remains exactly LTS.
+
+OEM fields in block cgroups, request queues, requests, disks and tag sets retain
+source-module customization state. All native fields remain, with no layout
+union or historical ABI padding. Module owners must initialize and synchronize
+that private state; this is not a promise of globally reset request storage.
+Actual SDK subscribers and performance effects are unverified, so these shared
+interfaces are retained conservatively. Configfs imports the retained VFS
+namespace, without changing its operations or treating namespaces as kernel
+isolation boundaries.
+
+Native tag-sharing fairness remains. The ACK performance relaxation targets
+single-doorbell UFS logical-unit contention, while the selected SDK uses virtio.
+UFS configuration alone does not establish that controller topology. The
+ORDERED_HWQ/ZWOR pipeline exclusions use the previously recorded positive virtio
+capability gates. The native dispatch, insertion, CPU-dead and tag-allocation
+functions still match LTS byte for byte. Failed requests retain hctx->dispatch,
+its locking and restart handshake. Neither the ACK-only dispatch mutex nor its
+subsequent sleep-under-RCU and requeue-stall fixes is transplanted alone.
+
+The kernfs deletion-notification implementation is retained with its race fix
+and lock-argument documentation. Applying exactly those three patches to the
+pinned LTS reproduces both delivered files, proving that no other native lines
+were replaced by ACK. Directory refresh cannot restore link counts after removal
+starts; removal clears existing inode link counts for VFS notification. Supers
+and node locks are acquired in order and dropped/reacquired while draining.
+Write-triggered removals and unattached fanotify nodes remain documented gaps.
+Exact SDK watchers are unconfirmed; retain the shared notification contract
+without claiming concurrency correctness from compilation alone.
+
+FUSE supports the DONTCACHE read request and forwards its bit through both
+backing paths; it explicitly rejects unsupported writes before DAX/BPF/passthrough
+dispatch. Native backing-file code differs only in that mask bit. Bionic exposes
+the userspace flag, but actual SDK invocation is unverified. Cache eviction is
+best effort and is not an access-control property. This batch changes decisions
+and evidence only; the source remains the kernel successfully built in attempt
+186. Every consulted resource was local.

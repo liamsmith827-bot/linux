@@ -1,0 +1,984 @@
+{
+  "source_head": "a121dd4912a019f892f66c59349891e33a0704ee",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "9d8d0512b8286f5e164ddc00f1fe3d1d1ad2afe0",
+      "disposition": "already-represented-upstream",
+      "rationale": "Retain native ext4 inline encryption: inlinecrypt mount parsing, fscrypt context attachment for buffer-head/read/write bios, mergeability checks and filesystem-layer encryption selection are already present. The native page-io.c and ext4.h match in full, and the changed ext4 inode/readpage/super files retain these native paths alongside separately reviewed verity/cleancache/namespace additions. Do not replay older bio allocation/error APIs over 6.18.57. SDK FS_ENCRYPTION_INLINE_CRYPT is enabled; no encrypted-I/O runtime test is claimed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/buffer.c",
+        "fs/ext4/ext4.h",
+        "fs/ext4/inode.c",
+        "fs/ext4/page-io.c",
+        "fs/ext4/readpage.c",
+        "fs/ext4/super.c"
+      ],
+      "patch_sha256": "caf6edf38dd284ba8e153d5d240f9452a2d4b7328762b09ce7cb47cbc1c2fb81"
+    },
+    {
+      "commit": "141f59b911eb3418cd1f67871d0b7e91dd07198c",
+      "disposition": "superseded",
+      "rationale": "Both selected encrypted filesystems now use iomap direct I/O, which natively attaches crypto contexts to zeroing and data bios. ext4_should_use_dio uses ext4_dio_alignment; f2fs_force_buffered_io checks fscrypt_dio_supported and f2fs_should_use_dio enforces filesystem alignment. Both iomap producers limit runs with fscrypt_limit_io_blocks. These current positive call paths replace the old blanket encrypted-file rejection and legacy __blockdev_direct_IO approach; retain them and the newer native checks without importing an unused legacy crypto implementation.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/direct-io.c",
+        "fs/ext4/file.c",
+        "fs/f2fs/f2fs.h",
+        "fs/iomap/direct-io.c"
+      ],
+      "patch_sha256": "ac0b4ae4802e469c16ffd1574aeb75671326d569b868b23b55eba00b9690616e"
+    },
+    {
+      "commit": "6ea0a439a15ba42b6c5f81618e53d5c61f89e4ac",
+      "disposition": "superseded",
+      "rationale": "Native generic_ci_d_compare/generic_ci_d_hash and superblock encoding fields implement current casefolding. Keep the exact native functions, including shortname-store copying under RCU and current encoding/strictness handling. The historical exported needs_casefold helper and key-dependent intermediate design were later replaced; do not restore that internal API or older dentry race handling. This preserves current encrypted/casefolded filesystem behavior, not historical vendor binary ABI.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/libfs.c",
+        "include/linux/fs.h"
+      ],
+      "patch_sha256": "326940d831d7495897f806c6060f218847719fd136251860fec9715ff920db3a"
+    },
+    {
+      "commit": "2b4c70da98fecc4ba622a4d24fa05e7f73d2155a",
+      "disposition": "superseded",
+      "rationale": "The merge repair is represented by current code: f2fs_merge_page_bio still sets its crypto context before submission; init_dent_inode stores the encrypted-casefold hash or marks LOST_PINO; f2fs_hash_filename uses keyed fscrypt hashing; recovery reads the saved hash with bounds checks. The first three functions exactly match LTS. Generic comparison uses the newer native shortname-store/RCU implementation instead of the old length-based temporary buffer. Preserve separately reviewed recovery corruption checks and current folio APIs; do not replay the 2020 merge state.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/f2fs/data.c",
+        "fs/f2fs/dir.c",
+        "fs/f2fs/f2fs.h",
+        "fs/f2fs/hash.c",
+        "fs/f2fs/recovery.c",
+        "fs/libfs.c"
+      ],
+      "patch_sha256": "971bd6779da2f29a1d644f1130605f494d5822b8720e409a08c6ee24653e8a4e"
+    },
+    {
+      "commit": "29298d156e951f03fdbb3f82079a142fb4b6f8d3",
+      "disposition": "reverted",
+      "rationale": "The exec S_ISREG revert/reapply pair has exactly inverse changed lines across exec.c, namei.c and open.c. Keep native may_open and do_open_execat exactly, including rejection of nonregular executable files and noexec mounts. The remaining open.c Android hooks are separately reviewed, not this transient error-order experiment. Do not resurrect the temporary FMODE_EXEC test in f_flags.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/exec.c",
+        "fs/namei.c",
+        "fs/open.c"
+      ],
+      "patch_sha256": "f87302d10caa6e92b0bc78db1f9a9be2257baf7df5eeb06fdc6a7814667a71f0"
+    },
+    {
+      "commit": "af494fd94baf91d4f5e0803161d9d837f629dd51",
+      "disposition": "reverted",
+      "rationale": "The exec S_ISREG revert/reapply pair has exactly inverse changed lines across exec.c, namei.c and open.c. Keep native may_open and do_open_execat exactly, including rejection of nonregular executable files and noexec mounts. The remaining open.c Android hooks are separately reviewed, not this transient error-order experiment. Do not resurrect the temporary FMODE_EXEC test in f_flags.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/exec.c",
+        "fs/namei.c",
+        "fs/open.c"
+      ],
+      "patch_sha256": "412f7fa7aafffd20e9d75861c6a6e0109c39927d61afca44013394bc8df980d3"
+    },
+    {
+      "commit": "aeffda3c613cd8b29dc8454e154eb94f0c21cb36",
+      "disposition": "reverted",
+      "rationale": "The __kernel_read/__kernel_write NULL-position reverts were exactly undone by a01c54a90076/a3cb2e4ce470. Both current function bodies match native LTS, using position zero when pos is NULL and updating it only when supplied. Retain native file-mode/iterator checks and notifications; no NULL dereference regression is reintroduced. Separately reviewed GPL export annotations do not change these bodies.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/read_write.c"
+      ],
+      "patch_sha256": "9d704e033e6fa9ccd65c22bff563ff5e4aa155e8f014edccf209fd85187f204e"
+    },
+    {
+      "commit": "e4a15e8dacfecc02abd4d6bf0012307cee686ad3",
+      "disposition": "reverted",
+      "rationale": "The __kernel_read/__kernel_write NULL-position reverts were exactly undone by a01c54a90076/a3cb2e4ce470. Both current function bodies match native LTS, using position zero when pos is NULL and updating it only when supplied. Retain native file-mode/iterator checks and notifications; no NULL dereference regression is reintroduced. Separately reviewed GPL export annotations do not change these bodies.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/read_write.c"
+      ],
+      "patch_sha256": "843b675d61196a92a8707358552c74422c1d06f1b8f8f8ae09cde91d900b4a63"
+    },
+    {
+      "commit": "a3cb2e4ce470cbaef81b472d4134b965d4166a65",
+      "disposition": "reverted",
+      "rationale": "The __kernel_read/__kernel_write NULL-position reverts were exactly undone by a01c54a90076/a3cb2e4ce470. Both current function bodies match native LTS, using position zero when pos is NULL and updating it only when supplied. Retain native file-mode/iterator checks and notifications; no NULL dereference regression is reintroduced. Separately reviewed GPL export annotations do not change these bodies.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/read_write.c"
+      ],
+      "patch_sha256": "57e85aac8c7129d6c85f307c79d609bbd422b8159fb421c77248c19e89bed0d1"
+    },
+    {
+      "commit": "a01c54a900767863f894d3013343997b7ddca6ce",
+      "disposition": "reverted",
+      "rationale": "The __kernel_read/__kernel_write NULL-position reverts were exactly undone by a01c54a90076/a3cb2e4ce470. Both current function bodies match native LTS, using position zero when pos is NULL and updating it only when supplied. Retain native file-mode/iterator checks and notifications; no NULL dereference regression is reintroduced. Separately reviewed GPL export annotations do not change these bodies.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/read_write.c"
+      ],
+      "patch_sha256": "a1ece855371ea6124b7e919c11ae3555660186c13eebbd4a914a66eef6bd6741"
+    },
+    {
+      "commit": "6a0e0ecdd4b27a73d289a5ca24e580d804a2cb5a",
+      "disposition": "reverted",
+      "rationale": "The splice fallback revert/reapply pair has exactly inverse changed lines in read_write.c, splice.c and fs.h. Keep native explicit splice operation requirements and current pipe validation; do not restore the set_fs(KERNEL_DS) fallback. Whole read_write.c and splice.c differ from native only in separately reviewed export annotations, so the old fallback/security model has no residual implementation.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/read_write.c",
+        "fs/splice.c",
+        "include/linux/fs.h"
+      ],
+      "patch_sha256": "8cee529446fe49b378d74db2e9538e0a0efefa84873a28b4fc3699ee4470038e"
+    },
+    {
+      "commit": "fb5c9b8aacef5b3ad1ece9aa73df2b87e36442d8",
+      "disposition": "reverted",
+      "rationale": "The splice fallback revert/reapply pair has exactly inverse changed lines in read_write.c, splice.c and fs.h. Keep native explicit splice operation requirements and current pipe validation; do not restore the set_fs(KERNEL_DS) fallback. Whole read_write.c and splice.c differ from native only in separately reviewed export annotations, so the old fallback/security model has no residual implementation.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/read_write.c",
+        "fs/splice.c",
+        "include/linux/fs.h"
+      ],
+      "patch_sha256": "de97ca131c2a6a4dd607b8a8c190cf9f793849e3d503e8cef42b1b8260f4f40c"
+    },
+    {
+      "commit": "76bfcb2dc2f3bf6bc5d5d15f73c756f58e0d2892",
+      "disposition": "superseded",
+      "rationale": "Keep native generic casefolding and strict-encoding names instead of this intermediate 2020 synchronization. Generic compare/hash, current ext4 hashing and Unicode utf8-core are native. Later native comparison first performs a safe exact match and copies d_shortname as a shortname_store when needed; encrypted filenames/recovery retain keyed hash handling. This supersedes the helper/export reshuffle while preserving later rename-race fixes. The port does not promise historical internal helper signatures.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/ext4/hash.c",
+        "fs/ext4/namei.c",
+        "fs/f2fs/dir.c",
+        "fs/libfs.c",
+        "fs/unicode/utf8-core.c",
+        "include/linux/fs.h"
+      ],
+      "patch_sha256": "0b8fd8a3bd11d257e0d6d82feb5931fcfa6a2ce4b11c27c05fb25d209443ffbc"
+    },
+    {
+      "commit": "c3d61b03ade984b9f69965964437ae8d8c04bcd5",
+      "disposition": "superseded",
+      "rationale": "The entire patch removes one blank line between old casefold helper declarations. Current native declarations/implementation have since evolved; no behavior, ABI or security property depends on this whitespace. Keep the current header with separately reviewed Android APIs.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "include/linux/fs.h"
+      ],
+      "patch_sha256": "dc51d7d1676316c9603abcf43b765028e4df776f158de2736e40210f6a6e2667"
+    },
+    {
+      "commit": "1aa65ee10dff5306aa000e977c1856039957a34d",
+      "disposition": "omitted-current-target",
+      "rationale": "The patch extends legacy fs/direct-io.c with crypto contexts and DUN-continuity checks. The current encrypted ext4 and f2fs paths positively use iomap direct I/O and limit mappings with fscrypt_limit_io_blocks; iomap attaches contexts natively. Keep the legacy direct-I/O implementation native apart from the separately reviewed statistics hook/export namespace. Adding a second crypto implementation serves a different/future caller, not the current SDK encrypted-filesystem path; this is not based solely on failure to find a consumer.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/direct-io.c"
+      ],
+      "patch_sha256": "909c0337fc94cac3e5de24bc4dfec22901b286b4ace22c8a1d4c15969c1c50a8"
+    },
+    {
+      "commit": "89d89a958062dd4e5145835fd8e24197a5597c62",
+      "disposition": "already-represented-upstream",
+      "rationale": "Native iomap sets crypto contexts for zeroing and data I/O; ext4/f2fs mapping producers use fscrypt_limit_io_blocks to respect DUN boundaries. The sole iomap direct-io.c delta from LTS is the separately reviewed statistics hook/include. Keep native allocations, error handling and all later DIO fixes instead of replaying old bio interfaces.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/iomap/direct-io.c"
+      ],
+      "patch_sha256": "912d26df69f8067f8978797637112377c83bb484efcf1a614cc83a192fe18de4"
+    },
+    {
+      "commit": "8607779ccb46a72a81175c824484930b444a38da",
+      "disposition": "applied",
+      "rationale": "Retain explicit false initialization of bi_skip_dm_default_key in bio_init under BLK_INLINE_ENCRYPTION and DM_DEFAULT_KEY. This is the entire native bio.c delta. Both options are enabled in the SDK; uninitialized skip state could bypass the metadata-encryption decision. Preserve native allocation/reset behavior and separately reviewed clone propagation.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "block/bio.c"
+      ],
+      "patch_sha256": "802b1f16ec8b39e2f257c42e865e9d9058b389faa79d14453194b0dc840edfe2"
+    },
+    {
+      "commit": "fdc62011685ebce140ffd08d15fdcc4f0ebd5666",
+      "disposition": "already-represented-upstream",
+      "rationale": "The shared show_path helper is called by proc mountinfo and statmount, using the filesystem callback or escaped seq_dentry fallback. All affected helper bodies match native LTS, and the commit-message upstream reference is a native ancestor. Keep later namespace lookup, capability checks and allocation cleanup. In particular, do not restore copy_to_user under the namespace lock, which can stall other namespace users on faults.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/internal.h",
+        "fs/namespace.c",
+        "fs/proc_namespace.c"
+      ],
+      "patch_sha256": "ff8c997ed18842f23e77cda579594883f30b634dcce8454cc0ffb7dd24b5cd55"
+    },
+    {
+      "commit": "7591f315f1c66ea4ad49ff0a4d1c4fe1d4952e06",
+      "disposition": "already-represented-upstream",
+      "rationale": "Current numeric helpers directly fill and mark their result fields; statmount_numeric indirection is gone. All affected helper bodies match native LTS, and the commit-message upstream reference is a native ancestor. Keep later namespace lookup, capability checks and allocation cleanup. In particular, do not restore copy_to_user under the namespace lock, which can stall other namespace users on faults.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/namespace.c"
+      ],
+      "patch_sha256": "bc6b772dea97396176573cb72410963a34efe6435928d39bc282f54973894af2"
+    },
+    {
+      "commit": "8ad13e317987304a3085816f6b51a73f7ee53060",
+      "disposition": "already-represented-upstream",
+      "rationale": "Current statmount_string uses explicit dispatch and bounds/overflow checks, and statmount copies results to userspace after the namespace_shared guard has ended. All affected helper bodies match native LTS, and the commit-message upstream reference is a native ancestor. Keep later namespace lookup, capability checks and allocation cleanup. In particular, do not restore copy_to_user under the namespace lock, which can stall other namespace users on faults.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/namespace.c"
+      ],
+      "patch_sha256": "b5e2c5a76b3d794818d4f788031c1733a4f3b4aadbbc8bda9605729c21e72a14"
+    },
+    {
+      "commit": "2b36095031e34d0a6c0e055d96213002381a0224",
+      "disposition": "superseded",
+      "rationale": "FS_PID is no longer a configurable filesystem in pinned LTS: fs/Makefile unconditionally builds pidfs.o. The port retains that native design; its only fs/Kconfig delta is IncFS selection. Do not recreate the obsolete default-n workaround or remove current pidfd features to match an old presubmit failure. This preserves native process-descriptor handling and fixes.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/Kconfig"
+      ],
+      "patch_sha256": "541b88525d185e91f992c35899b250f0dad0b18bf46bceab5bf7a748ac650df4"
+    },
+    {
+      "commit": "6d0c450cd2af99ccc26fff0d808260c973ea5d7d",
+      "disposition": "already-represented-upstream",
+      "rationale": "The native .bss-to-brk gap is present in load_elf_binary, whose complete function matches LTS; upstream 2a5eb9995528 is a native ancestor. Preserve this guard against a linear .bss overflow reaching a zero-random-offset brk allocation. Runtime page-size initialization is separately adapted and does not delete the native gap.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/binfmt_elf.c"
+      ],
+      "patch_sha256": "5483cdaea8cb697c02876c32c6e27376c1ce183f5481fac067c528c0a3efd0b0"
+    },
+    {
+      "commit": "166712c6a7d027de9471006e1d9d61f2fc6236f1",
+      "disposition": "applied",
+      "rationale": "Retain ANDROID_OEM_DATA storage in blkcg and blkcg_gq for current source-module I/O scheduling/customization contracts. The exact additions are present, and native struct fields/algorithms remain; the complete header deltas consist only of these storage additions and their vendor header include. These are functional per-object private state, not historical size/offset padding. No vendor binary KMI or pre-read/priority performance guarantee is made. Actual SDK subscribers are unconfirmed, so compatibility takes priority; owners must initialize and synchronize private data before use, and it is not exposed as userspace state.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "block/blk-cgroup.h"
+      ],
+      "patch_sha256": "071082844b7b13570814254569f84929b0d3d284109d94532c7e172682c2b8e9"
+    },
+    {
+      "commit": "facba20831c6cc4165583c5a3b2e1c9b127d364c",
+      "disposition": "applied",
+      "rationale": "Retain ANDROID_OEM_DATA storage in request_queue for current source-module I/O scheduling/customization contracts. The exact additions are present, and native struct fields/algorithms remain; the complete header deltas consist only of these storage additions and their vendor header include. These are functional per-object private state, not historical size/offset padding. No vendor binary KMI or pre-read/priority performance guarantee is made. Actual SDK subscribers are unconfirmed, so compatibility takes priority; owners must initialize and synchronize private data before use, and it is not exposed as userspace state.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "include/linux/blkdev.h"
+      ],
+      "patch_sha256": "497af31f75b154c62057eade5f4886c0d055e3441bef506681d6658fe1a1f805"
+    },
+    {
+      "commit": "dc4e42719245b23a7e2d1b681293ddfd2d442181",
+      "disposition": "applied",
+      "rationale": "Retain ANDROID_OEM_DATA storage in request for current source-module I/O scheduling/customization contracts. The exact additions are present, and native struct fields/algorithms remain; the complete header deltas consist only of these storage additions and their vendor header include. These are functional per-object private state, not historical size/offset padding. No vendor binary KMI or pre-read/priority performance guarantee is made. Actual SDK subscribers are unconfirmed, so compatibility takes priority; owners must initialize and synchronize private data before use, and it is not exposed as userspace state.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "include/linux/blk-mq.h"
+      ],
+      "patch_sha256": "dca64523cb030fdb64bef08891518b7782ce7893cd0f33a5d7f35e36d76c3b0b"
+    },
+    {
+      "commit": "cb734ff3f3a1f6559c90e81ee063f6b2f20a0f48",
+      "disposition": "applied",
+      "rationale": "Retain ANDROID_OEM_DATA storage in gendisk for current source-module I/O scheduling/customization contracts. The exact additions are present, and native struct fields/algorithms remain; the complete header deltas consist only of these storage additions and their vendor header include. These are functional per-object private state, not historical size/offset padding. No vendor binary KMI or pre-read/priority performance guarantee is made. Actual SDK subscribers are unconfirmed, so compatibility takes priority; owners must initialize and synchronize private data before use, and it is not exposed as userspace state.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "include/linux/blkdev.h"
+      ],
+      "patch_sha256": "571a6423042f88631f9a76cabaf9e6cf02f6a905baf296dbed4af34425f479f9"
+    },
+    {
+      "commit": "fdefd938095e2cbe5cb3dad10f2c03ae862e7665",
+      "disposition": "applied",
+      "rationale": "Retain ANDROID_OEM_DATA storage in blk_mq_tags for current source-module I/O scheduling/customization contracts. The exact additions are present, and native struct fields/algorithms remain; the complete header deltas consist only of these storage additions and their vendor header include. These are functional per-object private state, not historical size/offset padding. No vendor binary KMI or pre-read/priority performance guarantee is made. Actual SDK subscribers are unconfirmed, so compatibility takes priority; owners must initialize and synchronize private data before use, and it is not exposed as userspace state.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "include/linux/blk-mq.h"
+      ],
+      "patch_sha256": "58d1ab3d599f0ca2862d6318ade75b290cc38a44db622db74634b05fc6f1fe0f"
+    },
+    {
+      "commit": "e921fa6fa7bf4a2dcdea5dfc46306a2cba0634e0",
+      "disposition": "omitted-current-target",
+      "rationale": "Keep native hctx_may_queue fair tag-sharing checks in both allocation paths. The ACK removal is a performance-policy change motivated by single-doorbell UFS logical units; the selected SDK disk path is virtio, not that controller topology. No Android ABI/source hook requires relaxing fairness, and doing so could change contention/starvation behavior. Native tag allocation functions and blk-mq.h are preserved; no UFS performance equivalence is claimed, and UFS being configured does not prove that hardware is present.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "block/blk-mq-tag.c",
+        "block/blk-mq.c",
+        "block/blk-mq.h"
+      ],
+      "patch_sha256": "98fbc4a5d818ff25f07cc9c48000a909c9a44f3ec784d561b1a44c9f9bb2f05a"
+    },
+    {
+      "commit": "5076a3b736ca7791a9625f9decb4dcad17d1b3c8",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit BLK_FEAT_ORDERED_HWQ and its stacking rule together with the separately reviewed ordered zoned-write pipeline. ACK virtio_blk does not advertise this capability, and ACK stacking explicitly clears it when a lower device lacks it. Keep native zone serialization/geometry and source hooks; do not claim a hardware ordering guarantee for the SDK storage path. Evidence/zoned-storage-review.json records the positive device/configuration contracts.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "block/blk-settings.c",
+        "include/linux/blkdev.h"
+      ],
+      "patch_sha256": "651a5643ef6bd0194717794d7dafd1d5ac173720e50354159c88dbb746d611f6"
+    },
+    {
+      "commit": "12bcd97605ff29820860cfbd2916d424c5bdbdb0",
+      "disposition": "omitted-current-target",
+      "rationale": "This exempts ZWOR-capable queues from the ACK-only zoned pipeline dispatch mutex. The coordinated pipeline is excluded by the positive virtio ORDERED_HWQ/ZWOR capability gate already recorded in zoned-storage-review.json. Native blk-mq.h and the affected dispatch, insertion, CPU-dead and driver-tag functions are byte-identical to LTS; native failed requests still reach hctx->dispatch under its lock and retain the restart barrier. No sleep-under-RCU path from the omitted mutex or ordinary-queue stall from the omitted rerouting is introduced. Generic hooks remain separately retained.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "block/blk-mq.h"
+      ],
+      "patch_sha256": "50aa81e25137366a69494db7f27100910aa854f55382f83fd7cd6a2798009866"
+    },
+    {
+      "commit": "30e6361d3553f1fff5279c388b65841b4daa4cab",
+      "disposition": "omitted-current-target",
+      "rationale": "This avoids applying that same ACK-only mutex to conventional devices. The coordinated pipeline is excluded by the positive virtio ORDERED_HWQ/ZWOR capability gate already recorded in zoned-storage-review.json. Native blk-mq.h and the affected dispatch, insertion, CPU-dead and driver-tag functions are byte-identical to LTS; native failed requests still reach hctx->dispatch under its lock and retain the restart barrier. No sleep-under-RCU path from the omitted mutex or ordinary-queue stall from the omitted rerouting is introduced. Generic hooks remain separately retained.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "block/blk-mq.h"
+      ],
+      "patch_sha256": "d84909b2089e7e7def602f8039112b77cd0c2495398015953b235fbb23b3d445"
+    },
+    {
+      "commit": "fa10f27bdbe73da20c58e7e06cac8e219fdced9c",
+      "disposition": "omitted-current-target",
+      "rationale": "This selects asynchronous dispatch when the ACK-only pipeline mutex could otherwise sleep under an RCU read lock. The coordinated pipeline is excluded by the positive virtio ORDERED_HWQ/ZWOR capability gate already recorded in zoned-storage-review.json. Native blk-mq.h and the affected dispatch, insertion, CPU-dead and driver-tag functions are byte-identical to LTS; native failed requests still reach hctx->dispatch under its lock and retain the restart barrier. No sleep-under-RCU path from the omitted mutex or ordinary-queue stall from the omitted rerouting is introduced. Generic hooks remain separately retained.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "block/blk-mq.c"
+      ],
+      "patch_sha256": "ce3ea02bdfc7113b0afc88f5d1bc7020ac035de3f77592c6ac7b48fe2b819b94"
+    },
+    {
+      "commit": "deb8325d90975a37960283cb5f27aed7c275d10c",
+      "disposition": "omitted-current-target",
+      "rationale": "This removes a native warning to allow already-prepared requests into the ACK ordered requeue insertion path. The coordinated pipeline is excluded by the positive virtio ORDERED_HWQ/ZWOR capability gate already recorded in zoned-storage-review.json. Native blk-mq.h and the affected dispatch, insertion, CPU-dead and driver-tag functions are byte-identical to LTS; native failed requests still reach hctx->dispatch under its lock and retain the restart barrier. No sleep-under-RCU path from the omitted mutex or ordinary-queue stall from the omitted rerouting is introduced. Generic hooks remain separately retained.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "block/blk-mq.c"
+      ],
+      "patch_sha256": "3c1713f15d418f8d3a59c745c41c8816be92f52423814cd480e78e31616b79fa"
+    },
+    {
+      "commit": "214bde60b2957c7917a639ee9669ea7a57bdd0f7",
+      "disposition": "omitted-current-target",
+      "rationale": "This initially reroutes dispatch failures and CPU-dead requests through the ACK ordered-insertion path. The coordinated pipeline is excluded by the positive virtio ORDERED_HWQ/ZWOR capability gate already recorded in zoned-storage-review.json. Native blk-mq.h and the affected dispatch, insertion, CPU-dead and driver-tag functions are byte-identical to LTS; native failed requests still reach hctx->dispatch under its lock and retain the restart barrier. No sleep-under-RCU path from the omitted mutex or ordinary-queue stall from the omitted rerouting is introduced. Generic hooks remain separately retained.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "block/blk-mq.c"
+      ],
+      "patch_sha256": "d3c2ef862270d9b4be2caf645ad62a2a884d964364eb90cc469835b4425e2341"
+    },
+    {
+      "commit": "457d90c479104ba0368c2ee8a9e04c0f9d239ed3",
+      "disposition": "omitted-current-target",
+      "rationale": "This fixes that rerouting for ordinary requests by restoring hctx->dispatch and its restart handshake. The coordinated pipeline is excluded by the positive virtio ORDERED_HWQ/ZWOR capability gate already recorded in zoned-storage-review.json. Native blk-mq.h and the affected dispatch, insertion, CPU-dead and driver-tag functions are byte-identical to LTS; native failed requests still reach hctx->dispatch under its lock and retain the restart barrier. No sleep-under-RCU path from the omitted mutex or ordinary-queue stall from the omitted rerouting is introduced. Generic hooks remain separately retained.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "block/blk-mq.c"
+      ],
+      "patch_sha256": "61b64ac894f8cd49d3f830e22e6206d16877fff7cd7b65490c07dbf1abab0af6"
+    },
+    {
+      "commit": "7964dc9503054b0e617a38f92e9751a60c6ce975",
+      "disposition": "applied",
+      "rationale": "Retain runtime ELF_MIN_ALIGN and min_coredump initialization because x86 ELF_EXEC_PAGESIZE now uses __PAGE_SIZE for the configured page_shift=14 compatibility mode. A runtime value cannot initialize the static field or be compared in #if. The entire binfmt_elf.c delta is this patch; load_elf_binary and its native security checks/gap remain unchanged. min_coredump exists regardless of CONFIG_COREDUMP, so the unconditional init assignment is valid. Native-mode size remains hardware PAGE_SIZE; no core-dump runtime test is claimed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/binfmt_elf.c"
+      ],
+      "patch_sha256": "33380b51f4285b1262ce71ae452a96d82db206117ef437da6f829fcfd8144071"
+    },
+    {
+      "commit": "0310379ec2c6a08bdb2bcfa9e97e5aa87b03246d",
+      "disposition": "omitted-current-target",
+      "rationale": "This hoists fsverity_info lookup into the buffer I/O context for an ACK accessor/API refactor. Keep the native inline inode lookup and verifier interface instead: every buffer.c function remains native, and the only file changes are export namespace annotations. fsverity verification and decrypt-then-verify workqueue ordering remain enabled; no cache/lookup performance claim is needed for Android compatibility. Do not replace native verification paths merely to share the alternative internal storage layout.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/buffer.c"
+      ],
+      "patch_sha256": "f6cbbb5d7b5acebcad47920b6dc16663407f6d19c8eed4bb24da5ae3919b7cec"
+    },
+    {
+      "commit": "c608acb71c0eedf6c375bb97753f0ec307312f01",
+      "disposition": "omitted-current-target",
+      "rationale": "This adapts Btrfs buffered-read verification to the alternative explicit fsverity_info API, hoisting inode lookups into bio/readahead contexts. Keep the entire native Btrfs extent_io.c and native verifier API, preserving its per-folio EOF/uptodate verification gates and later fixes. The API/storage refactor is not needed for the retained SDK fsverity contract; no Btrfs verifier is disabled and no historical ABI layout is preserved.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/btrfs/extent_io.c"
+      ],
+      "patch_sha256": "04e3c04ec22bec1630aac33bc03c151842dcfcfc64fa83cb4b76b1386b5f1386"
+    },
+    {
+      "commit": "9b8ba9dad50a8444686e410a1afb682b2d2644c2",
+      "disposition": "applied",
+      "rationale": "Retain the configfs import of the already retained Android VFS export namespace. CONFIGFS_FS is enabled in the SDK; this keeps its source dependency annotations consistent with iunique/d_drop/generic_read_dir and permits module builds without namespace errors. It does not change configfs operations or enforce an isolation boundary against kernel modules. The entire file delta is this import.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/configfs/mount.c"
+      ],
+      "patch_sha256": "a8733e31700ee4f4f9a2da6be95122bd4fc881670d3216b5cfd1a4cfbc63154f"
+    },
+    {
+      "commit": "7615c984026cbde6d0b199effb3563a6ff33428c",
+      "disposition": "applied",
+      "rationale": "Retain the iattr-rwsem synchronization when marking nodes KERNFS_REMOVING, paired with refusing to reset directory i_nlink during refresh once removal starts. This prevents refreshing the link count after the deletion-notification path clears it. The whole kernfs overlay is exactly the three reviewed patches applied to LTS, preserving every native change rather than choosing the ACK file. CGROUPS is enabled; actual concurrent runtime notification coverage remains unverified.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/kernfs/dir.c",
+        "fs/kernfs/inode.c"
+      ],
+      "patch_sha256": "1af3d2d57a8348a16b8c4bdf26b4f27e2cda59f63ef519fea1a7eb79d1c2fb9c"
+    },
+    {
+      "commit": "d05d941c20c9dbdbf19c7935bed9b00eb5b44eaa",
+      "disposition": "applied",
+      "rationale": "Retain clearing existing kernfs inode link counts across mounted superblocks so VFS rmdir emits IN_DELETE_SELF/IN_IGNORED and retires watches. Keep supers-rwsem before kernfs-rwsem lock ordering, and drop/reacquire the former with the latter while draining/waiting; the paired iattr locking prevents refresh races. Exact composition of the three reviewed patches atop LTS reproduces both port files. This is shared Android cgroup/sysfs notification behavior; exact SDK watchers are unconfirmed, so retain the interface. Removals triggered by writes such as cgroup.subtree_control and unattached fanotify nodes remain limitations explicitly documented by the code; no complete notification/runtime guarantee is claimed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/kernfs/dir.c"
+      ],
+      "patch_sha256": "6cafd8fda83a10ca733b882dea894ac61b56904217b06626f47e6bd7cbc7be3b"
+    },
+    {
+      "commit": "54c5f9bd025a2d51e594f4130faf80e416ac6960",
+      "disposition": "applied",
+      "rationale": "Retain FOP_DONTCACHE for FUSE reads and propagate IOCB_DONTCACHE through both backing-file and FUSE-BPF masks. Reject DONTCACHE writes with EOPNOTSUPP before DAX/BPF/passthrough dispatch, matching the read-only support rather than silently accepting unsupported writes. Bionic exposes RWF_DONTCACHE; actual SDK calls are unconfirmed, so retain this generic userspace contract. Native backing-file implementation differs only in the mask bit, and later native FUSE fixes remain separately preserved. Cache dropping is best-effort behavior, not an access-control boundary.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/backing-file.c",
+        "fs/fuse/file.c",
+        "fs/fuse/fuse_bpf_backing.c"
+      ],
+      "patch_sha256": "fe060fdcdbd6ea3fb664d5bb680f5e04c9f5f5479c235e08ee76fee2e933dfd8"
+    },
+    {
+      "commit": "5bad8dd40de83e6964e1b0544e3939e339c04c83",
+      "disposition": "applied",
+      "rationale": "Retain the kernfs_drain drop_supers argument documentation with the locking extension. Although the subject names kernfs_put_active, the actual hunk documents kernfs_drain. The comment changes no executable behavior and accurately identifies the held supers-rwsem precondition. It is part of the exact three-patch LTS overlay.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/fs-block-tail-review.json",
+        "SECURITY.md: Remaining filesystem and block interfaces"
+      ],
+      "paths": [
+        "fs/kernfs/dir.c"
+      ],
+      "patch_sha256": "7505f86322ff6bc28f80783e3a40aed821839c24b398765ffc0987e7e352330f"
+    }
+  ],
+  "proofs": [
+    {
+      "path": "fs/kernfs/dir.c",
+      "comparison": "entire file equals the three reviewed patches composed on pinned LTS",
+      "sha256": "516640a3bb0e131343b4f847547a18af0a9dc1773f2fcdd8dd7bc42c708045f5"
+    },
+    {
+      "path": "fs/kernfs/inode.c",
+      "comparison": "entire file equals the three reviewed patches composed on pinned LTS",
+      "sha256": "a6834033dd2de9f0dc829118f4888048b251b93fe94ca9a939e21354acd79fd5"
+    },
+    {
+      "path": "block/blk-mq.h",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact file",
+      "blob": "c4fccdeb54412978665f54ca44d8456095335009"
+    },
+    {
+      "path": "block/blk-settings.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact file",
+      "blob": "f2c1940fe6f1aedbe1e6cdb5511d8d541b332263"
+    },
+    {
+      "path": "fs/btrfs/extent_io.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact file",
+      "blob": "f808134f60f5552d4a9bf3b97035acf60e9b02f3"
+    },
+    {
+      "path": "fs/ext4/file.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact file",
+      "blob": "149a7fe5a0962949fcc5f5c204f2360cf2f2792a"
+    },
+    {
+      "path": "fs/ext4/page-io.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact file",
+      "blob": "0a3ef9bd6803043c085d818534a11f1bf0d53863"
+    },
+    {
+      "path": "fs/ext4/ext4.h",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact file",
+      "blob": "da6428312c36b5c0591084a1d7805392f70e2433"
+    },
+    {
+      "path": "fs/ext4/hash.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact file",
+      "blob": "33cd5b6b02d59fb749844fe481022f5f44244bb6"
+    },
+    {
+      "path": "fs/unicode/utf8-core.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact file",
+      "blob": "6fc9ab8667e6545dafea1cb51e1c809734da666a"
+    },
+    {
+      "path": "fs/f2fs/hash.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact file",
+      "blob": "049ce50cec9b097bf0f184f8e6086cda0d15b01b"
+    },
+    {
+      "path": "fs/proc_namespace.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact file",
+      "blob": "5c555db68aa2129576aa7c545b7b0294b87e1e5e"
+    },
+    {
+      "path": "fs/libfs.c",
+      "function": "generic_ci_d_compare",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "cda54fce9804a65ba7b1bc32aab42eb3845916af991d46785f452b7462f287a6"
+    },
+    {
+      "path": "fs/libfs.c",
+      "function": "generic_ci_d_hash",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "d87b07353440a77195522777c831330c8ee468f3ceb02392eba19530b25b79f1"
+    },
+    {
+      "path": "fs/f2fs/dir.c",
+      "function": "init_dent_inode",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "f8aa60d8d6fd98ac5b45a50761bc9f1ff9d4da02ea59a58faf0a7424c710b34f"
+    },
+    {
+      "path": "fs/f2fs/hash.c",
+      "function": "f2fs_hash_filename",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "24ce2e58a45bff37a2448118d4d2d13639adb84ebcb3610a718fe834191e4c7a"
+    },
+    {
+      "path": "fs/f2fs/data.c",
+      "function": "f2fs_merge_page_bio",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "1c8351211135e66b93796e32fef57683bea9803073ab2cb7353f3b053b8568a0"
+    },
+    {
+      "path": "fs/ext4/file.c",
+      "function": "ext4_should_use_dio",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "b19ecf57fe31c3a5c4b412a9dd18c60dc48d8b703dad4e2395474310910d5f49"
+    },
+    {
+      "path": "fs/namespace.c",
+      "function": "show_path",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "f95715c2745e5d24e1f47d7b7ce7ac3ce205d664c529dd9088965ba09466a037"
+    },
+    {
+      "path": "fs/namespace.c",
+      "function": "statmount_sb_basic",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "35ec55aa6dd8487a07f05853b28a0a13f4b0f80b08903603ae589cbc8254ba13"
+    },
+    {
+      "path": "fs/namespace.c",
+      "function": "statmount_mnt_basic",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "4b3b76329990378305ce1626880c656888ff67d608a5a6c454717aad4fff2356"
+    },
+    {
+      "path": "fs/namespace.c",
+      "function": "statmount_propagate_from",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "2aefdd8431acdbb77f0fa6551651434d1ecd77055028a496e9e29e248c1e10bc"
+    },
+    {
+      "path": "fs/namespace.c",
+      "function": "statmount_string",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "99dbb69e966c8ba6a68b6ebf7e139f64e0e545b07f26dfd859dad110b73c4c85"
+    },
+    {
+      "path": "fs/namespace.c",
+      "function": "do_statmount",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "6a69095460b753a67cea9dc31624bad570c2f8bbc4836e02d0b24b90866bc188"
+    },
+    {
+      "path": "fs/namespace.c",
+      "function": "copy_statmount_to_user",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "26ae3ee588bf2567c9a5a5a392fa366f26f67a14461af711cfb363e383f160e4"
+    },
+    {
+      "path": "fs/exec.c",
+      "function": "do_open_execat",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "173cd09a33e5ed2ceb5508b1e546d969ab86610768d1c0d47ec34efedc9beaa3"
+    },
+    {
+      "path": "fs/namei.c",
+      "function": "may_open",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "79f37fde5e1d2585717e97b0c3fa147069223c9865c8fc03826e9cab424199b7"
+    },
+    {
+      "path": "fs/read_write.c",
+      "function": "__kernel_read",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "60fb577b75b310ce6ef9844ac33f1fd7c90ac2f470f97429452f896a80ed806f"
+    },
+    {
+      "path": "fs/read_write.c",
+      "function": "__kernel_write",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "26509f906eb6f9453d8c3be2bd65f2ab42a2b727fffe2f74a4731df8c1f26865"
+    },
+    {
+      "path": "block/blk-mq.c",
+      "function": "__blk_mq_alloc_driver_tag",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "84bbbf443170a5334076a88c420e18f3fab26e606ab61900164111695de485e2"
+    },
+    {
+      "path": "block/blk-mq.c",
+      "function": "blk_mq_dispatch_rq_list",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "66a4e97051cf295245e4d373f9276decf27a77e025ecde955341e8669cbc0e72"
+    },
+    {
+      "path": "block/blk-mq.c",
+      "function": "blk_mq_hctx_notify_dead",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "1cb96e1f6a5f8e900e007d83d5dd51fd8a0bb9074e3999bbce334a67949732ba"
+    },
+    {
+      "path": "block/blk-mq.c",
+      "function": "blk_mq_insert_request",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "a91957c1baf298fab5fbe0563abf9a8bc80751c357440aa886573707a2a06541"
+    },
+    {
+      "path": "block/blk-mq.c",
+      "function": "blk_mq_try_issue_list_directly",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "2337a1b8038fed00462d08335460e1fe4644a9918e54853a94959e33dbfbd480"
+    },
+    {
+      "path": "block/blk-mq-tag.c",
+      "function": "__blk_mq_get_tag",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "84f87281ea56177405dfa48ccba795334d6ab695f51702742b65cce550a70b82"
+    },
+    {
+      "path": "fs/binfmt_elf.c",
+      "function": "load_elf_binary",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "sha256": "d7b48c4a2e22c7561bf7820b4ad84e2356d7858edf6ae36c398346310d8fe8f9"
+    },
+    {
+      "original": "29298d156e951f03fdbb3f82079a142fb4b6f8d3",
+      "revert": "af494fd94baf91d4f5e0803161d9d837f629dd51",
+      "comparison": "exact inverse changed lines"
+    },
+    {
+      "original": "aeffda3c613cd8b29dc8454e154eb94f0c21cb36",
+      "revert": "a01c54a900767863f894d3013343997b7ddca6ce",
+      "comparison": "exact inverse changed lines"
+    },
+    {
+      "original": "e4a15e8dacfecc02abd4d6bf0012307cee686ad3",
+      "revert": "a3cb2e4ce470cbaef81b472d4134b965d4166a65",
+      "comparison": "exact inverse changed lines"
+    },
+    {
+      "original": "6a0e0ecdd4b27a73d289a5ca24e580d804a2cb5a",
+      "revert": "fb5c9b8aacef5b3ad1ece9aa73df2b87e36442d8",
+      "comparison": "exact inverse changed lines"
+    },
+    {
+      "path": "block/bio.c",
+      "candidate": "8607779ccb46a72a81175c824484930b444a38da",
+      "comparison": "entire native-file delta equals patch changed lines"
+    },
+    {
+      "path": "fs/binfmt_elf.c",
+      "candidate": "7964dc9503054b0e617a38f92e9751a60c6ce975",
+      "comparison": "entire native-file delta equals patch changed lines"
+    },
+    {
+      "path": "fs/configfs/mount.c",
+      "candidate": "9b8ba9dad50a8444686e410a1afb682b2d2644c2",
+      "comparison": "entire native-file delta equals patch changed lines"
+    },
+    {
+      "path": "fs/buffer.c",
+      "comparison": "exact native after stripping only export annotation differences"
+    },
+    {
+      "path": "fs/libfs.c",
+      "comparison": "exact native after stripping only export annotation differences"
+    },
+    {
+      "path": "fs/read_write.c",
+      "comparison": "exact native after stripping only export annotation differences"
+    },
+    {
+      "path": "fs/splice.c",
+      "comparison": "exact native after stripping only export annotation differences"
+    },
+    {
+      "candidate": "fdc62011685ebce140ffd08d15fdcc4f0ebd5666",
+      "upstream_ancestor": "56c94c626785001dbb683312725b7d87c6ec6a91"
+    },
+    {
+      "candidate": "7591f315f1c66ea4ad49ff0a4d1c4fe1d4952e06",
+      "upstream_ancestor": "6971beb4ec52ad7b26f5b5eedf19d4963be7df1b"
+    },
+    {
+      "candidate": "8ad13e317987304a3085816f6b51a73f7ee53060",
+      "upstream_ancestor": "68385d77c05b401f748acecc0e0a8eff10489334"
+    },
+    {
+      "candidate": "6d0c450cd2af99ccc26fff0d808260c973ea5d7d",
+      "upstream_ancestor": "2a5eb9995528441447d33838727f6ec1caf08139"
+    },
+    {
+      "path": "block/blk-cgroup.h",
+      "comparison": "exact LTS structure content after removing only OEM data additions/include",
+      "candidates": [
+        "166712c6a7d027de9471006e1d9d61f2fc6236f1"
+      ]
+    },
+    {
+      "path": "include/linux/blkdev.h",
+      "comparison": "exact LTS structure content after removing only OEM data additions/include",
+      "candidates": [
+        "facba20831c6cc4165583c5a3b2e1c9b127d364c",
+        "cb734ff3f3a1f6559c90e81ee063f6b2f20a0f48"
+      ]
+    },
+    {
+      "path": "include/linux/blk-mq.h",
+      "comparison": "exact LTS structure content after removing only OEM data additions/include",
+      "candidates": [
+        "dc4e42719245b23a7e2d1b681293ddfd2d442181",
+        "fdefd938095e2cbe5cb3dad10f2c03ae862e7665"
+      ]
+    },
+    {
+      "path": "fs/backing-file.c",
+      "comparison": "sole native delta is backing mask DONTCACHE bit"
+    }
+  ],
+  "related_evidence": [
+    "zoned-storage-review.json",
+    "build-results.json"
+  ],
+  "remote_resources_used": [],
+  "validation_limit": "Static source/patch composition and prior compilation only; no kernel runtime, concurrency or storage test."
+}
