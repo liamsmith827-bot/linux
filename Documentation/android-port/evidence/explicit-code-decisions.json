@@ -25220,5 +25220,299 @@
       "evidence/hwsim-nan-review.json",
       "SECURITY.md: Hwsim NAN radio scheduling"
     ]
+  },
+  {
+    "commit": "38537e482fb9634b0d16ca14947d408c82a44868",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "fcebd27a0c593914be366b678b7038cfbf8b933e",
+      "2c7e4c663821578498be0c267de27f6a2c1499de"
+    ],
+    "rationale": "Retain local NAN schedules, driver callbacks and common channel-context iterator as prerequisites of the optional NAN path in the already configured hwsim driver. Bound three channels, 32 slots and 54-byte availability blob, retain rollback and deferred-update exclusion; later heap-backup change replaces stack backup. Adapt iterator call sites to retain native matching reservations, paired-context lifetime and explicit-link bandwidth fixes. Correct SMPS aggregation in fcebd27a0c59: maximize receive chains over all NAN and ordinary users instead of overwriting/breaking. Extend native paired-context lifetime to NAN removal in 2c7e4c663821. An incidental ieee80211_eml_params declaration has no in-tree use in examined include/net, net/mac80211 and wireless drivers; preserve this public source declaration conservatively, with external consumer necessity unresolved, rather than infer dispensability. It allocates no objects and enables no platform.",
+    "evidence": [
+      "evidence/nan-mac-review.json",
+      "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+    ]
+  },
+  {
+    "commit": "94f1b8313a1a2e3ae6f1bd1c1c882fe15990346a",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain NAN_DATA open/close with RCU NMI relation, requirement for a running NMI, initially-off carrier and teardown clearing the relation. Common cfg80211 closes dependent NDIs before NAN stop; driver callbacks and pending-work cleanup remain. Preserve native AP_VLAN queue/free ordering, interface unlisting and crypto-tailroom reset instead of copying ACK iface.c wholesale.",
+    "evidence": [
+      "evidence/nan-mac-review.json",
+      "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+    ]
+  },
+  {
+    "commit": "7cace2e3d24fa4b8cd82e8220a69bb6c28dfe892",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "88b3864adac470403220c5a8f1f5760627f3374d"
+    ],
+    "rationale": "Retain restart ordering: start NAN, notify local schedule, restore running NDIs, restore uploaded NMI stations/peer schedules and then NDI stations. 88b3864adac4 adds the missing running check so down NDIs are not reactivated. Preserve LTS 6fb64029457c warning/error behavior in outer reconfig: do not restore ACK handle_reconfig_failure(), which clears driver-state flags before actual cleanup and risks dangling driver pointers for other interfaces. Offloaded discovery retains its separate path.",
+    "evidence": [
+      "evidence/nan-mac-review.json",
+      "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+    ]
+  },
+  {
+    "commit": "9481c6e5e4458b9c043dfe623c6a93f88397a881",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain explicit own-capability HT/VHT/HE helpers for band-agnostic NAN station capabilities. Ordinary wrappers still use their real band and own interface caps; HE length/has_he checks and 6-GHz-only cap dispatch remain. Optional NULL sband is confined to NAN VHT processing, avoiding a fictitious band scan. Final HT/HE/VHT files equal pinned ACK; this is a source API prerequisite for retained NAN station setup, not a physical-device enablement.",
+    "evidence": [
+      "evidence/nan-mac-review.json",
+      "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+    ]
+  },
+  {
+    "commit": "e3e95bc3fbd5fdb87e4a7b4f8cb28824454a391e",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain management TXQ allocation/initialization for the non-netdev NAN vif and NDI, with aligned storage, management TID/VO AC, upload checks, purge on stop/remove and wake outside fq lock. hwsim discovery-window scheduling consumes this queue. Existing ordinary data TX queues and native TX skb lifetime/AQL fixes remain; slot gating is availability control, not authentication.",
+    "evidence": [
+      "evidence/nan-mac-review.json",
+      "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+    ]
+  },
+  {
+    "commit": "b593c29f6c76807c7f33ebf2506973b03aea0958",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain discovery-offload capability distinction and early guards on add/delete/function notifications before touching the offload IDR. Registration rejects conflicting offloaded-DE callbacks when userspace DE is selected. Offload function restoration remains separate from userspace-DE local/peer schedule state. Prevents using uninitialized offload state for userspace-driven discovery without disabling existing offloaded drivers.",
+    "evidence": [
+      "evidence/nan-mac-review.json",
+      "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+    ]
+  },
+  {
+    "commit": "3e04b4de70c8196af16024697c0fde6af91e4bb6",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain per-peer flexible schedule allocation, deep-copied ULW data, existing-station requirement, compatible-channel narrowing and minimum RX NSS. Install new schedule for driver callback, restore old schedule on failure and free the displaced allocation on success. Channel removal compacts channels while rewriting map pointers and notifies affected peers. Station teardown frees schedules after dependent stations. This is the concrete mac80211-to-hwsim consumer of retained cfg80211 peer scheduling; callback lifetime/concurrency remains a runtime contract.",
+    "evidence": [
+      "evidence/nan-mac-review.json",
+      "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+    ]
+  },
+  {
+    "commit": "a7687f46deaa4728a0f2440880ee96963c1cbd83",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain NDI carrier determination from an authorized NDI peer plus a peer/local common scheduled channel with an active context. Re-evaluate on station authorization/insertion, local/peer schedule updates, evacuation and deferred completion. Carrier denotes usable scheduling and does not replace native frame decryption or peer authorization. Native receive check, decrypt and fragment functions remain exactly LTS.",
+    "evidence": [
+      "evidence/nan-mac-review.json",
+      "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+    ]
+  },
+  {
+    "commit": "2683d4259ae3a8b0d8dc315a4c66e7f1a3d0611f",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain bandwidth-capability handling for a NAN station with no single current chandef: use the capability ceiling without WARN while explicit-channel users still constrain the actual width. Preserve LTS 7f52d554c4c8 passing each real link chandef during channel-context minimum-width computation. This does not unconditionally configure the widest transmit channel.",
+    "evidence": [
+      "evidence/nan-mac-review.json",
+      "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+    ]
+  },
+  {
+    "commit": "3beba955f2189eeeffebdcdebe831720dcec55f1",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain NDI TX header/peer handling, cluster identity, DS=0 header layout and multi-band NUM_NL80211_BANDS sentinel. Missing NMI or invalid peer is rejected; multicast lookup retains its explicit error contract. Integrate with native skb-sharing/ACK-ID cleanup, AQL multicast and offload/multicast fixes rather than ACK whole-file replacement. Does not bypass existing key/authorization decisions.",
+    "evidence": [
+      "evidence/nan-mac-review.json",
+      "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+    ]
+  },
+  {
+    "commit": "3582e1b75c23679e398933ffa2a812b4c8f51c40",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain NDI receive address/cluster and DS=0 filtering, NAN action group acceptance and robust unicast management handling. Preserve native S1G early parsing and bounds, named drop reasons, decrypt/fragment checks and fast-RX lifetime/statistics. NAN address acceptance is not cryptographic authentication; all actual crypto/replay validation continues through native handlers.",
+    "evidence": [
+      "evidence/nan-mac-review.json",
+      "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+    ]
+  },
+  {
+    "commit": "dc212487467c5a6c91968a6d29fecfd9aa5e84c1",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain driver cluster-join notification validating a started NAN interface and copying actual cluster ID before cfg80211 event. TX/RX and restart use the reported cluster rather than assuming requested cluster won. Existing hwsim cluster selection supplies a concrete producer. Atomic-call API contract is retained; this review does not establish a race-free live cluster transition.",
+    "evidence": [
+      "evidence/nan-mac-review.json",
+      "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+    ]
+  },
+  {
+    "commit": "7c2bc02166a013db5396769800256e80d947a0e7",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain userspace NDI action-frame registration/TX, rejection of multicast management TX and NAN schedule/channel sentinel treatment. Preserve the ordinary native offchannel worker scanning guard exactly. Userspace-devised schedule availability does not authorize arbitrary keys or peers; existing command permission and MAC validation remain.",
+    "evidence": [
+      "evidence/nan-mac-review.json",
+      "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+    ]
+  },
+  {
+    "commit": "bc0195dee729450eec10cd9f8dcebe42f7a1f82d",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain protected NAN management receive admission excluding disassociation, with NAN/NDI cluster and DS checks. This permits required management frames to reach the normal crypto path; it does not skip decryption, replay, fragmentation or station checks. Exact native receive-handler equivalence and ACK-to-port RX deltas provide the preservation evidence.",
+    "evidence": [
+      "evidence/nan-mac-review.json",
+      "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+    ]
+  },
+  {
+    "commit": "692848cd86fc029116362efbb22abb2e679709e7",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain valid-unicast user-supplied MAC address when creating non-netdev NAN or P2P-device interfaces, otherwise retaining permanent-address fallback. This matches existing netdev interface customization without changing creation permissions or live-interface MAC mutation. Relevant shared interface code retains native teardown and validation.",
+    "evidence": [
+      "evidence/nan-mac-review.json",
+      "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+    ]
+  },
+  {
+    "commit": "991d47be93026c78e71da6ad4742b06b5f68c41e",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "2c7e4c663821578498be0c267de27f6a2c1499de"
+    ],
+    "rationale": "Retain NAN evacuation: detach local context, update peer references, notify driver/userspace, update carrier and release only unused contexts. Automatic selection prefers fewest slots, NAN-only contexts, and leaves at least one usable NAN channel; explicit replacement may detach a shared context. 2c7e4c663821 extends LTS replacement-partner lifetime protection to this new free path. Paired contexts are excluded from automatic freeing but allowed for explicit replacement-driven detachment. Existing unreserve/finalization owns their later release; host actual-body test reproduces the old premature-free decision.",
+    "evidence": [
+      "evidence/nan-mac-review.json",
+      "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+    ]
+  },
+  {
+    "commit": "8cb949ccf51d777b6e0a660253fcd687a63e8712",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "2c7e4c663821578498be0c267de27f6a2c1499de"
+    ],
+    "rationale": "Retain separating evacuation candidate selection from mutation, and finding the running NAN interface under wiphy lock, enabling combination preflight. Preserve explicit-context detachment semantics while 2c7e4c663821 prevents automatic selection of a paired context that cannot actually be released. Driver ULW publication remains a contract; hwsim does not prove that event delivery occurs.",
+    "evidence": [
+      "evidence/nan-mac-review.json",
+      "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+    ]
+  },
+  {
+    "commit": "b0acf11a909d3c0c764aaef09a4431179d60d245",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "2c7e4c663821578498be0c267de27f6a2c1499de"
+    ],
+    "rationale": "Retain evacuation only after interface-combination failure: simulate excluding the candidate context, require that to pass, then evacuate and recheck. Avoid destructive evacuation merely because an allocation failed. Normal regulatory/radar/combination rules remain. Exclude replacement-paired contexts from automatic selection, since detaching their NAN user cannot release the context while its partner exists.",
+    "evidence": [
+      "evidence/nan-mac-review.json",
+      "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+    ]
+  },
+  {
+    "commit": "22888422a069cea9a20e41b3bfd36eea126295ff",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain external min-def wrapper fixing final arguments to NULL/false while internal callers retain full reserved-link parameters. This is source refactoring needed by the common NAN schedule path; native channel-width and paired-context protections survive. No historical binary symbol signature compatibility is required.",
+    "evidence": [
+      "evidence/nan-mac-review.json",
+      "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+    ]
+  },
+  {
+    "commit": "4ad9c848ff147fac5ec210b0ebda82283fdd87fb",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain link-independent chanctx lookup and will_be_used temporary reference until assignment, covering NAN as well as ordinary links. Refcount includes this state, and success/error paths clear it. Preserve native replacement-partner checks separately: temporary assignment protection is not a substitute for lifetime of a paired context.",
+    "evidence": [
+      "evidence/nan-mac-review.json",
+      "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+    ]
+  },
+  {
+    "commit": "5ac49c0f8e0611c503400033cca23d193f35176a",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain optional context filter for non-mutating combination preflight before NAN evacuation. Existing ordinary wrapper passes NULL and preserves native limits, radar and radio selection. The filter is not an unconditional bypass: actual change is followed by the normal combination recheck.",
+    "evidence": [
+      "evidence/nan-mac-review.json",
+      "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+    ]
+  },
+  {
+    "commit": "815b9fdac2e3906163d61f574d37bbbee2d9382d",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain GPL export of RX timestamp normalization and hw rather than internal-local argument. Existing hwsim synchronization concretely consumes it. Algorithm equals native LTS after exactly the argument/local->hw substitution; ordinary IBSS/mesh/scan/radiotap callers pass &local->hw. This exposes existing calculation to module source without weakening timestamp input validation or preserving binary KMI.",
+    "evidence": [
+      "evidence/nan-mac-review.json",
+      "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+    ]
+  },
+  {
+    "commit": "fb3a01c3dadf73cb83974e430cc504bbc3229698",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain removal of the unused bitrate parser width argument and reuse of already-fetched sband. Actual parser body equals native LTS; native MLE defragmentation container bounds and missing non-transmitted-profile reporting remain in parse.c. Needed source-signature coherence for NAN station rate setup, with no radio feature enablement.",
+    "evidence": [
+      "evidence/nan-mac-review.json",
+      "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+    ]
+  },
+  {
+    "commit": "364c2eaa1cbf5344aa91116903f35e260a8207e0",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain heap-allocated local-schedule backup with automatic kfree on every exit. Allocation failure returns ENOMEM before mutation, and rollback uses the saved schedule/channels/blob. Avoids a large kernel stack frame in the retained schedule path while preserving state restoration and ownership.",
+    "evidence": [
+      "evidence/nan-mac-review.json",
+      "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+    ]
   }
 ]

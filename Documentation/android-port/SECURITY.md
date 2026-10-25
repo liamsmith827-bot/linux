@@ -8507,3 +8507,61 @@ DW contention mitigation. The schedule checks model availability and do not
 replace key/peer authorization. Neither compilation nor the focused tests
 establish full Wi-Fi Aware conformance, multicast delivery or real-time behavior.
 No external specification or remote source was accessed for this review.
+## NAN mac80211 lifecycle and shared channel contexts
+
+Twenty-four additional candidate decisions and complete ACK-to-port deltas for
+the affected common paths are in `evidence/nan-mac-review.json`. Retain local and
+peer scheduling, NDI lifecycle/carrier/TX/RX, management queues, capability helpers,
+cluster tracking and channel evacuation for the optional NAN path of the existing
+SDK hwsim driver. Default Goldfish radio creation does not enable NAN. The inherited
+optional userspace draft-number mismatch remains documented; no full NAN runtime
+compatibility is claimed. Public source APIs are retained without historical KMI
+padding. An incidental `ieee80211_eml_params` declaration has no consumer in the
+examined in-tree areas; external necessity is unresolved and the declaration is
+conservatively retained. It creates no object or enabled platform.
+
+Keep LTS `03525b632908` matching-reservation checks, `1c82d0c5d509` paired-context
+lifetime and `7f52d554c4c8` explicit-link bandwidth calculation through the new
+NAN-aware iterator. Native decrypt, fragment, frame-check and fast-RX functions
+remain exactly LTS, as does the offchannel worker scanning guard. Normal bitrate
+parser and RX-timestamp algorithms equal LTS after the documented parameter
+changes. ACK receive admission does not bypass encryption, replay or authorization.
+Native TX skb/ACK-ID cleanup, AQL multicast behavior, S1G bounds, MLE container
+bounds, interface teardown and replacement handling remain in the recorded deltas.
+
+`88b3864adac4` restores only running NDIs during NAN restart. Retain LTS
+`6fb64029457c` warning behavior instead of ACK's broad failure cleanup, which can
+clear driver-state flags before driver cleanup and leave other interfaces' driver
+pointers dangling. No real restart was executed.
+
+`fcebd27a0c59` fixes receive-chain aggregation for shared NAN/ordinary contexts:
+take the maximum for every user and continue iteration. ACK overwrote accumulated
+requirements and stopped at NAN. Actual-function host tests under ASan/UBSan pass
+11,520 mixed-user cases and 720 ordinary-user cases; ACK loses requirements in
+1,568 mixed cases. This demonstrates aggregation, not radio reception or the
+real channel iterator's concurrency behavior.
+
+`2c7e4c663821` extends the native paired-context lifetime rule to NAN channel
+removal and evacuation. Reservation fallback can select a NAN-only context;
+removing its final NAN user must not free it while a replacement points back.
+The existing unreserve/finalization paths release it after breaking the pair.
+Automatic evacuation skips paired contexts that cannot actually be released;
+explicit replacement-driven evacuation may still detach their NAN user. The
+actual removal/evacuation bodies pass 36 synthetic lifetime cases and four
+selection cases; ACK makes two premature-free decisions. No live use-after-free,
+exploit, RCU or concurrent reservation scenario was executed.
+
+Local scheduling retains bounded arrays, deferred-update exclusion, allocation
+before mutation, rollback and automatic backup cleanup. Peer scheduling retains
+deep copies, driver-error rollback and pointer updates when channels are removed.
+Carrier requires an authorized NDI peer with a common usable slot; it is neither
+a delivery guarantee nor a replacement for key checks. Channel evacuation first
+tests whether removing a context can satisfy combinations, then mutates and
+rechecks. Driver notification/ULW publication and live schedule timing remain
+runtime contracts, not outcomes established by compilation.
+
+Build 176 completed at `88b3864adac4` with image, 100 common modules and 45
+virtual-device modules, all signatures verified and modified-payload control
+rejected. Build 177 also passed at `2c7e4c663821`, including the later chain/lifetime
+fixes, all 145 signature checks and all export/CRC table checks. All sources examined
+for this batch were local; commit-message URLs were not opened.

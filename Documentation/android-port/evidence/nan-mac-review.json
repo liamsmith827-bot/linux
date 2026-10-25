@@ -1,0 +1,625 @@
+{
+  "source_head": "2c7e4c663821578498be0c267de27f6a2c1499de",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "records": [
+    {
+      "commit": "38537e482fb9634b0d16ca14947d408c82a44868",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "fcebd27a0c593914be366b678b7038cfbf8b933e",
+        "2c7e4c663821578498be0c267de27f6a2c1499de"
+      ],
+      "rationale": "Retain local NAN schedules, driver callbacks and common channel-context iterator as prerequisites of the optional NAN path in the already configured hwsim driver. Bound three channels, 32 slots and 54-byte availability blob, retain rollback and deferred-update exclusion; later heap-backup change replaces stack backup. Adapt iterator call sites to retain native matching reservations, paired-context lifetime and explicit-link bandwidth fixes. Correct SMPS aggregation in fcebd27a0c59: maximize receive chains over all NAN and ordinary users instead of overwriting/breaking. Extend native paired-context lifetime to NAN removal in 2c7e4c663821. An incidental ieee80211_eml_params declaration has no in-tree use in examined include/net, net/mac80211 and wireless drivers; preserve this public source declaration conservatively, with external consumer necessity unresolved, rather than infer dispensability. It allocates no objects and enables no platform.",
+      "evidence": [
+        "evidence/nan-mac-review.json",
+        "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+      ],
+      "patch_sha256": "b82c5073c4a7fed4b717a271d2291752fe634b4287f22b37029321df382ebb19",
+      "changed_paths": [
+        "include/net/mac80211.h",
+        "net/mac80211/Makefile",
+        "net/mac80211/cfg.c",
+        "net/mac80211/chan.c",
+        "net/mac80211/ieee80211_i.h",
+        "net/mac80211/iface.c",
+        "net/mac80211/nan.c",
+        "net/mac80211/util.c"
+      ]
+    },
+    {
+      "commit": "94f1b8313a1a2e3ae6f1bd1c1c882fe15990346a",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain NAN_DATA open/close with RCU NMI relation, requirement for a running NMI, initially-off carrier and teardown clearing the relation. Common cfg80211 closes dependent NDIs before NAN stop; driver callbacks and pending-work cleanup remain. Preserve native AP_VLAN queue/free ordering, interface unlisting and crypto-tailroom reset instead of copying ACK iface.c wholesale.",
+      "evidence": [
+        "evidence/nan-mac-review.json",
+        "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+      ],
+      "patch_sha256": "715100e0d25ccd50a8931371dde605deeea035c4c322cabc64eea2267f552ec4",
+      "changed_paths": [
+        "net/mac80211/ieee80211_i.h",
+        "net/mac80211/iface.c"
+      ]
+    },
+    {
+      "commit": "7cace2e3d24fa4b8cd82e8220a69bb6c28dfe892",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "88b3864adac470403220c5a8f1f5760627f3374d"
+      ],
+      "rationale": "Retain restart ordering: start NAN, notify local schedule, restore running NDIs, restore uploaded NMI stations/peer schedules and then NDI stations. 88b3864adac4 adds the missing running check so down NDIs are not reactivated. Preserve LTS 6fb64029457c warning/error behavior in outer reconfig: do not restore ACK handle_reconfig_failure(), which clears driver-state flags before actual cleanup and risks dangling driver pointers for other interfaces. Offloaded discovery retains its separate path.",
+      "evidence": [
+        "evidence/nan-mac-review.json",
+        "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+      ],
+      "patch_sha256": "205865a21cbedf47ce7892bf9a66870b1374e3fe2e854895e89bb99506c53d30",
+      "changed_paths": [
+        "net/mac80211/util.c"
+      ]
+    },
+    {
+      "commit": "9481c6e5e4458b9c043dfe623c6a93f88397a881",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain explicit own-capability HT/VHT/HE helpers for band-agnostic NAN station capabilities. Ordinary wrappers still use their real band and own interface caps; HE length/has_he checks and 6-GHz-only cap dispatch remain. Optional NULL sband is confined to NAN VHT processing, avoiding a fictitious band scan. Final HT/HE/VHT files equal pinned ACK; this is a source API prerequisite for retained NAN station setup, not a physical-device enablement.",
+      "evidence": [
+        "evidence/nan-mac-review.json",
+        "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+      ],
+      "patch_sha256": "654ac0441347f193b3c95ba9cd362c3460c9bee5a5107ecdd681d782f2ae8175",
+      "changed_paths": [
+        "net/mac80211/cfg.c",
+        "net/mac80211/he.c",
+        "net/mac80211/ht.c",
+        "net/mac80211/ibss.c",
+        "net/mac80211/ieee80211_i.h",
+        "net/mac80211/mesh_plink.c",
+        "net/mac80211/mlme.c",
+        "net/mac80211/vht.c"
+      ]
+    },
+    {
+      "commit": "e3e95bc3fbd5fdb87e4a7b4f8cb28824454a391e",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain management TXQ allocation/initialization for the non-netdev NAN vif and NDI, with aligned storage, management TID/VO AC, upload checks, purge on stop/remove and wake outside fq lock. hwsim discovery-window scheduling consumes this queue. Existing ordinary data TX queues and native TX skb lifetime/AQL fixes remain; slot gating is availability control, not authentication.",
+      "evidence": [
+        "evidence/nan-mac-review.json",
+        "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+      ],
+      "patch_sha256": "3a6fd03e35d2a0076465d71ecac551e3e60081114c36771602c61f0f2bb1f5d5",
+      "changed_paths": [
+        "include/net/mac80211.h",
+        "net/mac80211/iface.c",
+        "net/mac80211/tx.c",
+        "net/mac80211/util.c"
+      ]
+    },
+    {
+      "commit": "b593c29f6c76807c7f33ebf2506973b03aea0958",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain discovery-offload capability distinction and early guards on add/delete/function notifications before touching the offload IDR. Registration rejects conflicting offloaded-DE callbacks when userspace DE is selected. Offload function restoration remains separate from userspace-DE local/peer schedule state. Prevents using uninitialized offload state for userspace-driven discovery without disabling existing offloaded drivers.",
+      "evidence": [
+        "evidence/nan-mac-review.json",
+        "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+      ],
+      "patch_sha256": "5be5a673811aad9bd920863c20c95521b39afd82717526887a244371eebd6673",
+      "changed_paths": [
+        "net/mac80211/cfg.c",
+        "net/mac80211/ieee80211_i.h",
+        "net/mac80211/iface.c",
+        "net/mac80211/main.c",
+        "net/mac80211/util.c"
+      ]
+    },
+    {
+      "commit": "3e04b4de70c8196af16024697c0fde6af91e4bb6",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain per-peer flexible schedule allocation, deep-copied ULW data, existing-station requirement, compatible-channel narrowing and minimum RX NSS. Install new schedule for driver callback, restore old schedule on failure and free the displaced allocation on success. Channel removal compacts channels while rewriting map pointers and notifies affected peers. Station teardown frees schedules after dependent stations. This is the concrete mac80211-to-hwsim consumer of retained cfg80211 peer scheduling; callback lifetime/concurrency remains a runtime contract.",
+      "evidence": [
+        "evidence/nan-mac-review.json",
+        "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+      ],
+      "patch_sha256": "88896fbbf0c1a0d0c56d2b7cd721f4824f23c48a16f99400999267884d721b4a",
+      "changed_paths": [
+        "include/net/mac80211.h",
+        "net/mac80211/cfg.c",
+        "net/mac80211/driver-ops.h",
+        "net/mac80211/ieee80211_i.h",
+        "net/mac80211/nan.c",
+        "net/mac80211/sta_info.c",
+        "net/mac80211/trace.h",
+        "net/mac80211/util.c"
+      ]
+    },
+    {
+      "commit": "a7687f46deaa4728a0f2440880ee96963c1cbd83",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain NDI carrier determination from an authorized NDI peer plus a peer/local common scheduled channel with an active context. Re-evaluate on station authorization/insertion, local/peer schedule updates, evacuation and deferred completion. Carrier denotes usable scheduling and does not replace native frame decryption or peer authorization. Native receive check, decrypt and fragment functions remain exactly LTS.",
+      "evidence": [
+        "evidence/nan-mac-review.json",
+        "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+      ],
+      "patch_sha256": "bbe243fef39d20235cfead36890c92cd4b3ab58fc6a25d9dbb36f5646a850284",
+      "changed_paths": [
+        "net/mac80211/cfg.c",
+        "net/mac80211/ieee80211_i.h",
+        "net/mac80211/nan.c",
+        "net/mac80211/sta_info.c"
+      ]
+    },
+    {
+      "commit": "2683d4259ae3a8b0d8dc315a4c66e7f1a3d0611f",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain bandwidth-capability handling for a NAN station with no single current chandef: use the capability ceiling without WARN while explicit-channel users still constrain the actual width. Preserve LTS 7f52d554c4c8 passing each real link chandef during channel-context minimum-width computation. This does not unconditionally configure the widest transmit channel.",
+      "evidence": [
+        "evidence/nan-mac-review.json",
+        "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+      ],
+      "patch_sha256": "96668def94418d0818cffa6310a63e2a77667af8c1b14ca7edaa88adf22cef4e",
+      "changed_paths": [
+        "net/mac80211/he.c",
+        "net/mac80211/vht.c"
+      ]
+    },
+    {
+      "commit": "3beba955f2189eeeffebdcdebe831720dcec55f1",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain NDI TX header/peer handling, cluster identity, DS=0 header layout and multi-band NUM_NL80211_BANDS sentinel. Missing NMI or invalid peer is rejected; multicast lookup retains its explicit error contract. Integrate with native skb-sharing/ACK-ID cleanup, AQL multicast and offload/multicast fixes rather than ACK whole-file replacement. Does not bypass existing key/authorization decisions.",
+      "evidence": [
+        "evidence/nan-mac-review.json",
+        "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+      ],
+      "patch_sha256": "59c06e6fdb5fe6b8af026621fcab52ebbac090cea4caa50cadefc65ad9d5158e",
+      "changed_paths": [
+        "net/mac80211/tx.c"
+      ]
+    },
+    {
+      "commit": "3582e1b75c23679e398933ffa2a812b4c8f51c40",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain NDI receive address/cluster and DS=0 filtering, NAN action group acceptance and robust unicast management handling. Preserve native S1G early parsing and bounds, named drop reasons, decrypt/fragment checks and fast-RX lifetime/statistics. NAN address acceptance is not cryptographic authentication; all actual crypto/replay validation continues through native handlers.",
+      "evidence": [
+        "evidence/nan-mac-review.json",
+        "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+      ],
+      "patch_sha256": "6d42c9267d7f6556c22fc78f9b6e9483466921ced2e198ce33bec8d936ab300b",
+      "changed_paths": [
+        "net/mac80211/rx.c"
+      ]
+    },
+    {
+      "commit": "dc212487467c5a6c91968a6d29fecfd9aa5e84c1",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain driver cluster-join notification validating a started NAN interface and copying actual cluster ID before cfg80211 event. TX/RX and restart use the reported cluster rather than assuming requested cluster won. Existing hwsim cluster selection supplies a concrete producer. Atomic-call API contract is retained; this review does not establish a race-free live cluster transition.",
+      "evidence": [
+        "evidence/nan-mac-review.json",
+        "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+      ],
+      "patch_sha256": "dc1b7dd6f7546f84b6ab6dc090bee1b1fb16ad3e947108ce8bc6f8df27d89082",
+      "changed_paths": [
+        "include/net/mac80211.h",
+        "net/mac80211/cfg.c",
+        "net/mac80211/rx.c",
+        "net/mac80211/tx.c"
+      ]
+    },
+    {
+      "commit": "7c2bc02166a013db5396769800256e80d947a0e7",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain userspace NDI action-frame registration/TX, rejection of multicast management TX and NAN schedule/channel sentinel treatment. Preserve the ordinary native offchannel worker scanning guard exactly. Userspace-devised schedule availability does not authorize arbitrary keys or peers; existing command permission and MAC validation remain.",
+      "evidence": [
+        "evidence/nan-mac-review.json",
+        "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+      ],
+      "patch_sha256": "09b8eade3dc85e51a5ecc9c4351521c1368f2ceeef60c4fa9c9b840740b53ce0",
+      "changed_paths": [
+        "net/mac80211/main.c",
+        "net/mac80211/offchannel.c",
+        "net/mac80211/tx.c"
+      ]
+    },
+    {
+      "commit": "bc0195dee729450eec10cd9f8dcebe42f7a1f82d",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain protected NAN management receive admission excluding disassociation, with NAN/NDI cluster and DS checks. This permits required management frames to reach the normal crypto path; it does not skip decryption, replay, fragmentation or station checks. Exact native receive-handler equivalence and ACK-to-port RX deltas provide the preservation evidence.",
+      "evidence": [
+        "evidence/nan-mac-review.json",
+        "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+      ],
+      "patch_sha256": "83080b1d328bbecc1b2515a07259252e4e7c61d4df882e79a1368d050c92c7be",
+      "changed_paths": [
+        "net/mac80211/rx.c"
+      ]
+    },
+    {
+      "commit": "692848cd86fc029116362efbb22abb2e679709e7",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain valid-unicast user-supplied MAC address when creating non-netdev NAN or P2P-device interfaces, otherwise retaining permanent-address fallback. This matches existing netdev interface customization without changing creation permissions or live-interface MAC mutation. Relevant shared interface code retains native teardown and validation.",
+      "evidence": [
+        "evidence/nan-mac-review.json",
+        "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+      ],
+      "patch_sha256": "e566676d0a697d8bf04575461ea499fc5713e8f429e1d8a397b7e15d91045a38",
+      "changed_paths": [
+        "net/mac80211/iface.c"
+      ]
+    },
+    {
+      "commit": "991d47be93026c78e71da6ad4742b06b5f68c41e",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "2c7e4c663821578498be0c267de27f6a2c1499de"
+      ],
+      "rationale": "Retain NAN evacuation: detach local context, update peer references, notify driver/userspace, update carrier and release only unused contexts. Automatic selection prefers fewest slots, NAN-only contexts, and leaves at least one usable NAN channel; explicit replacement may detach a shared context. 2c7e4c663821 extends LTS replacement-partner lifetime protection to this new free path. Paired contexts are excluded from automatic freeing but allowed for explicit replacement-driven detachment. Existing unreserve/finalization owns their later release; host actual-body test reproduces the old premature-free decision.",
+      "evidence": [
+        "evidence/nan-mac-review.json",
+        "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+      ],
+      "patch_sha256": "b7100b990eabb46cc86656658a3f9729eb7f05d55e6959bb6e66f73f91aa5e71",
+      "changed_paths": [
+        "include/net/mac80211.h",
+        "net/mac80211/chan.c",
+        "net/mac80211/nan.c"
+      ]
+    },
+    {
+      "commit": "8cb949ccf51d777b6e0a660253fcd687a63e8712",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "2c7e4c663821578498be0c267de27f6a2c1499de"
+      ],
+      "rationale": "Retain separating evacuation candidate selection from mutation, and finding the running NAN interface under wiphy lock, enabling combination preflight. Preserve explicit-context detachment semantics while 2c7e4c663821 prevents automatic selection of a paired context that cannot actually be released. Driver ULW publication remains a contract; hwsim does not prove that event delivery occurs.",
+      "evidence": [
+        "evidence/nan-mac-review.json",
+        "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+      ],
+      "patch_sha256": "22f9d7fe2c3c69f8a3ccb04635f21ce6d5a82425342460bac1f5936ef871acd2",
+      "changed_paths": [
+        "net/mac80211/ieee80211_i.h",
+        "net/mac80211/nan.c"
+      ]
+    },
+    {
+      "commit": "b0acf11a909d3c0c764aaef09a4431179d60d245",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "2c7e4c663821578498be0c267de27f6a2c1499de"
+      ],
+      "rationale": "Retain evacuation only after interface-combination failure: simulate excluding the candidate context, require that to pass, then evacuate and recheck. Avoid destructive evacuation merely because an allocation failed. Normal regulatory/radar/combination rules remain. Exclude replacement-paired contexts from automatic selection, since detaching their NAN user cannot release the context while its partner exists.",
+      "evidence": [
+        "evidence/nan-mac-review.json",
+        "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+      ],
+      "patch_sha256": "2bee4e45dc1f07872a194fe184ebeb5100c2ddfdf1a61bd2e05d9b53ee5e63d9",
+      "changed_paths": [
+        "net/mac80211/chan.c",
+        "net/mac80211/ieee80211_i.h",
+        "net/mac80211/nan.c"
+      ]
+    },
+    {
+      "commit": "22888422a069cea9a20e41b3bfd36eea126295ff",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain external min-def wrapper fixing final arguments to NULL/false while internal callers retain full reserved-link parameters. This is source refactoring needed by the common NAN schedule path; native channel-width and paired-context protections survive. No historical binary symbol signature compatibility is required.",
+      "evidence": [
+        "evidence/nan-mac-review.json",
+        "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+      ],
+      "patch_sha256": "fba975befd0979515589fa86ac51c803f6744dbeda321719d1fd4d64f327e889",
+      "changed_paths": [
+        "net/mac80211/chan.c",
+        "net/mac80211/he.c",
+        "net/mac80211/ieee80211_i.h",
+        "net/mac80211/util.c"
+      ]
+    },
+    {
+      "commit": "4ad9c848ff147fac5ec210b0ebda82283fdd87fb",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain link-independent chanctx lookup and will_be_used temporary reference until assignment, covering NAN as well as ordinary links. Refcount includes this state, and success/error paths clear it. Preserve native replacement-partner checks separately: temporary assignment protection is not a substitute for lifetime of a paired context.",
+      "evidence": [
+        "evidence/nan-mac-review.json",
+        "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+      ],
+      "patch_sha256": "dc814dd4bb8dfba04c9a0602a8d20bbf60383b70dec1a52d9da1da2e92af8ba2",
+      "changed_paths": [
+        "net/mac80211/chan.c",
+        "net/mac80211/ieee80211_i.h"
+      ]
+    },
+    {
+      "commit": "5ac49c0f8e0611c503400033cca23d193f35176a",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain optional context filter for non-mutating combination preflight before NAN evacuation. Existing ordinary wrapper passes NULL and preserves native limits, radar and radio selection. The filter is not an unconditional bypass: actual change is followed by the normal combination recheck.",
+      "evidence": [
+        "evidence/nan-mac-review.json",
+        "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+      ],
+      "patch_sha256": "c3aee56845605fd9a9f9c26cc2ceeabfaa53753a48afc7c5182cac15eca131a3",
+      "changed_paths": [
+        "net/mac80211/ieee80211_i.h",
+        "net/mac80211/util.c"
+      ]
+    },
+    {
+      "commit": "815b9fdac2e3906163d61f574d37bbbee2d9382d",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain GPL export of RX timestamp normalization and hw rather than internal-local argument. Existing hwsim synchronization concretely consumes it. Algorithm equals native LTS after exactly the argument/local->hw substitution; ordinary IBSS/mesh/scan/radiotap callers pass &local->hw. This exposes existing calculation to module source without weakening timestamp input validation or preserving binary KMI.",
+      "evidence": [
+        "evidence/nan-mac-review.json",
+        "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+      ],
+      "patch_sha256": "aa3081e06525e1c66ce8b32c92422b30a848919ed92a3679c7418678415925a0",
+      "changed_paths": [
+        "include/net/mac80211.h",
+        "net/mac80211/ibss.c",
+        "net/mac80211/ieee80211_i.h",
+        "net/mac80211/mesh_sync.c",
+        "net/mac80211/rx.c",
+        "net/mac80211/scan.c",
+        "net/mac80211/util.c"
+      ]
+    },
+    {
+      "commit": "fb3a01c3dadf73cb83974e430cc504bbc3229698",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain removal of the unused bitrate parser width argument and reuse of already-fetched sband. Actual parser body equals native LTS; native MLE defragmentation container bounds and missing non-transmitted-profile reporting remain in parse.c. Needed source-signature coherence for NAN station rate setup, with no radio feature enablement.",
+      "evidence": [
+        "evidence/nan-mac-review.json",
+        "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+      ],
+      "patch_sha256": "bca0629cbc744f0f2592aa316515ead0ac5681af4355e631dbf0f4bf9c37942b",
+      "changed_paths": [
+        "net/mac80211/cfg.c",
+        "net/mac80211/ieee80211_i.h",
+        "net/mac80211/mlme.c",
+        "net/mac80211/parse.c"
+      ]
+    },
+    {
+      "commit": "364c2eaa1cbf5344aa91116903f35e260a8207e0",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain heap-allocated local-schedule backup with automatic kfree on every exit. Allocation failure returns ENOMEM before mutation, and rollback uses the saved schedule/channels/blob. Avoids a large kernel stack frame in the retained schedule path while preserving state restoration and ownership.",
+      "evidence": [
+        "evidence/nan-mac-review.json",
+        "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
+      ],
+      "patch_sha256": "0d2778b73d0f43fe7641f7786c10602e7738e5e18bacebca5492ea39381fd085",
+      "changed_paths": [
+        "net/mac80211/nan.c"
+      ]
+    }
+  ],
+  "equivalence": [
+    {
+      "path": "net/mac80211/ht.c",
+      "equals": "ACK entire file",
+      "sha256": "7598d8aebc179028a78540355a856e1ea2a4ea49c55b5ff13ed50ed6070d22dc"
+    },
+    {
+      "path": "net/mac80211/he.c",
+      "equals": "ACK entire file",
+      "sha256": "12d946b4b7abe57115e46888f08aaeafe602b6f2ebd7513a6fececabae9c42f2"
+    },
+    {
+      "path": "net/mac80211/vht.c",
+      "equals": "ACK entire file",
+      "sha256": "9b0a2ae68ea47bd29dae06f9e504b696ff8074c16638ea976f6fd7c04c5a5b2b"
+    },
+    {
+      "path": "net/mac80211/nan.c",
+      "equals": "ACK except three documented paired-context lifetime adaptations",
+      "sha256": "6c515ac784ae9e9d353b2f20f9f9cbe2f9b71057eb2aa79f4d2402b5a70ba3dc"
+    },
+    {
+      "path": "net/mac80211/chan.c",
+      "function": "ieee80211_chanctx_has_replace_partner",
+      "equals": "LTS",
+      "sha256": "a29bbef781cf9b0a55e76f5d3525183b69a03791644133cc2a2ac2081c04e856"
+    },
+    {
+      "path": "net/mac80211/chan.c",
+      "function": "ieee80211_link_has_in_place_reservation",
+      "equals": "LTS",
+      "sha256": "a7ccd58a7709b945eb72646283e5af2fa75c42f55156fe59a01f53b78dcd09fa"
+    },
+    {
+      "path": "net/mac80211/chan.c",
+      "function": "ieee80211_get_sta_bw",
+      "equals": "LTS",
+      "sha256": "c951e2e891aaf89c6ab9d0ae89a53087e0229610031ab44e6e5b746bd33f6dd5"
+    },
+    {
+      "path": "net/mac80211/chan.c",
+      "function": "ieee80211_get_max_required_bw",
+      "equals": "LTS",
+      "sha256": "86edcb65dcade9f5c4d3f200daeb90c3d08989eea8314dcf3e0783188cf580e8"
+    },
+    {
+      "path": "net/mac80211/chan.c",
+      "function": "ieee80211_link_unreserve_chanctx",
+      "equals": "LTS",
+      "sha256": "81be45877e78993ae0c14cd5e25306eb8e2b189f1d8f4bd85abd109105c6cecc"
+    },
+    {
+      "path": "net/mac80211/chan.c",
+      "function": "__ieee80211_link_release_channel",
+      "equals": "LTS",
+      "sha256": "9264cc87d5f1a694c3ba917ea25a3b96196361e25859961475df055890e6920f"
+    },
+    {
+      "path": "net/mac80211/rx.c",
+      "function": "ieee80211_rx_h_decrypt",
+      "equals": "LTS",
+      "sha256": "e2d4c8cc42d557f6ce0d6442a07875636fbc36f0baced0171bc3d0a4db1ec21f"
+    },
+    {
+      "path": "net/mac80211/rx.c",
+      "function": "ieee80211_rx_h_defragment",
+      "equals": "LTS",
+      "sha256": "d7faa411f61cc7438a752585223cff19f9c7b6e23b6f00865eae26b9269327be"
+    },
+    {
+      "path": "net/mac80211/rx.c",
+      "function": "ieee80211_rx_h_check",
+      "equals": "LTS",
+      "sha256": "7120697d2bb343a20c653f4e688aa1e52bc1606092b5a5b683cb5f22a9284de3"
+    },
+    {
+      "path": "net/mac80211/rx.c",
+      "function": "ieee80211_invoke_fast_rx",
+      "equals": "LTS",
+      "sha256": "0930f8d37ab9e66da87b10d884d4184a2c3f15cd16f145aa90e0b32f1854553d"
+    },
+    {
+      "path": "net/mac80211/offchannel.c",
+      "function": "__ieee80211_roc_work",
+      "equals": "LTS",
+      "sha256": "56b1ac61e09e6630ad811cddd3f0b3ad2300e3ef5a37a5c06ecdfff2d1ec6b51"
+    },
+    {
+      "path": "net/mac80211/chan.c",
+      "function": "ieee80211_link_use_reserved_reassign",
+      "equals": "LTS except min-def wrapper API",
+      "sha256": "f9ea6774f3007bf9c1061b2f61f580895e89c5bf8489caeb82061e9f355e4edb"
+    },
+    {
+      "path": "net/mac80211/parse.c",
+      "function": "ieee80211_parse_bitrates",
+      "equals": "LTS body, unused parameter removed",
+      "sha256": "850edeedba45e6384b917cc2cf25c8b6af98582e032bcfc2cb033af17b13bc5a"
+    },
+    {
+      "path": "net/mac80211/util.c",
+      "function": "ieee80211_calculate_rx_timestamp",
+      "equals": "LTS except exact hw argument replacement",
+      "sha256": "740027e7710caba6797febfe677d350c2b8fb0a3132198a45c270542ee294646"
+    }
+  ],
+  "deltas": [
+    {
+      "path": "net/mac80211/chan.c",
+      "reference": "ACK full file",
+      "diff": "--- \n+++ \n@@ -231,6 +231,13 @@\n \treturn num;\n }\n \n+bool\n+ieee80211_chanctx_has_replace_partner(struct ieee80211_chanctx *ctx)\n+{\n+\treturn ctx->replace_state == IEEE80211_CHANCTX_WILL_BE_REPLACED &&\n+\t       ctx->replace_ctx;\n+}\n+\n static int ieee80211_num_chanctx(struct ieee80211_local *local, int radio_idx)\n {\n \tstruct ieee80211_chanctx *ctx;\n@@ -417,11 +424,12 @@\n \treturn NULL;\n }\n \n-static enum nl80211_chan_width ieee80211_get_sta_bw(struct sta_info *sta,\n-\t\t\t\t\t\t    unsigned int link_id)\n+static enum nl80211_chan_width\n+ieee80211_get_sta_bw(struct sta_info *sta, struct ieee80211_link_data *link)\n {\n \tenum ieee80211_sta_rx_bandwidth width;\n \tstruct link_sta_info *link_sta;\n+\tint link_id = link->link_id;\n \n \tlink_sta = wiphy_dereference(sta->local->hw.wiphy, sta->link[link_id]);\n \n@@ -436,7 +444,7 @@\n \t * capabilities here. Calling it RX bandwidth capability is a bit\n \t * wrong though, since capabilities are in fact symmetric.\n \t */\n-\twidth = ieee80211_sta_cap_rx_bw(link_sta);\n+\twidth = _ieee80211_sta_cap_rx_bw(link_sta, &link->conf->chanreq.oper);\n \n \tswitch (width) {\n \tcase IEEE80211_STA_RX_BW_20:\n@@ -471,7 +479,6 @@\n ieee80211_get_max_required_bw(struct ieee80211_link_data *link)\n {\n \tstruct ieee80211_sub_if_data *sdata = link->sdata;\n-\tunsigned int link_id = link->link_id;\n \tenum nl80211_chan_width max_bw = NL80211_CHAN_WIDTH_20_NOHT;\n \tstruct sta_info *sta;\n \n@@ -482,7 +489,7 @@\n \t\t    !(sta->sdata->bss && sta->sdata->bss == sdata->bss))\n \t\t\tcontinue;\n \n-\t\tmax_bw = max(max_bw, ieee80211_get_sta_bw(sta, link_id));\n+\t\tmax_bw = max(max_bw, ieee80211_get_sta_bw(sta, link));\n \t}\n \n \treturn max_bw;\n@@ -1230,9 +1237,11 @@\n \t\t}\n \n \t\tif (iter.nan_channel) {\n-\t\t\trx_chains_dynamic = rx_chains_static =\n-\t\t\t\titer.nan_channel->needed_rx_chains;\n-\t\t\tbreak;\n+\t\t\trx_chains_static = max(rx_chains_static,\n+\t\t\t\t\t       iter.nan_channel->needed_rx_chains);\n+\t\t\trx_chains_dynamic = max(rx_chains_dynamic,\n+\t\t\t\t\t\titer.nan_channel->needed_rx_chains);\n+\t\t\tcontinue;\n \t\t}\n \n \t\tif (!iter.link)\n@@ -1331,6 +1340,7 @@\n {\n \tstruct ieee80211_sub_if_data *sdata = link->sdata;\n \tstruct ieee80211_chanctx *ctx = link->reserved_chanctx;\n+\tstruct ieee80211_chanctx *old_ctx = NULL;\n \n \tlockdep_assert_wiphy(sdata->local->hw.wiphy);\n \n@@ -1345,6 +1355,7 @@\n \t\t\tif (WARN_ON(!ctx->replace_ctx))\n \t\t\t\treturn;\n \n+\t\t\told_ctx = ctx->replace_ctx;\n \t\t\tWARN_ON(ctx->replace_ctx->replace_state !=\n \t\t\t        IEEE80211_CHANCTX_WILL_BE_REPLACED);\n \t\t\tWARN_ON(ctx->replace_ctx->replace_ctx != ctx);\n@@ -1355,6 +1366,11 @@\n \n \t\t\tlist_del_rcu(&ctx->list);\n \t\t\tkfree_rcu(ctx, rcu_head);\n+\n+\t\t\tif (ieee80211_chanctx_refcount(sdata->local,\n+\t\t\t\t\t\t       old_ctx) == 0)\n+\t\t\t\tieee80211_free_chanctx(sdata->local, old_ctx,\n+\t\t\t\t\t\t       false);\n \t\t} else {\n \t\t\tieee80211_free_chanctx(sdata->local, ctx, false);\n \t\t}\n@@ -1633,7 +1649,8 @@\n \n \tieee80211_check_fast_xmit_iface(sdata);\n \n-\tif (ieee80211_chanctx_refcount(local, old_ctx) == 0)\n+\tif (ieee80211_chanctx_refcount(local, old_ctx) == 0 &&\n+\t    !ieee80211_chanctx_has_replace_partner(old_ctx))\n \t\tieee80211_free_chanctx(local, old_ctx, false);\n \n \tieee80211_recalc_chanctx_min_def(local, new_ctx);\n@@ -1699,7 +1716,8 @@\n }\n \n static bool\n-ieee80211_link_has_in_place_reservation(struct ieee80211_link_data *link)\n+ieee80211_link_has_in_place_reservation(struct ieee80211_link_data *link,\n+\t\t\t\t\tstruct ieee80211_chanctx *ctx)\n {\n \tstruct ieee80211_sub_if_data *sdata = link->sdata;\n \tstruct ieee80211_chanctx *old_ctx, *new_ctx;\n@@ -1709,6 +1727,9 @@\n \tnew_ctx = link->reserved_chanctx;\n \told_ctx = ieee80211_link_get_chanctx(link);\n \n+\tif (new_ctx != ctx)\n+\t\treturn false;\n+\n \tif (!old_ctx)\n \t\treturn false;\n \n@@ -1719,6 +1740,12 @@\n \t\treturn false;\n \n \tif (new_ctx->replace_state != IEEE80211_CHANCTX_REPLACES_OTHER)\n+\t\treturn false;\n+\n+\tif (new_ctx->replace_ctx != old_ctx)\n+\t\treturn false;\n+\n+\tif (old_ctx->replace_ctx != new_ctx)\n \t\treturn false;\n \n \treturn true;\n@@ -1750,7 +1777,7 @@\n \n \t\tlist_for_each_entry(link, &ctx->reserved_links,\n \t\t\t\t    reserved_chanctx_list) {\n-\t\t\tif (!ieee80211_link_has_in_place_reservation(link))\n+\t\t\tif (!ieee80211_link_has_in_place_reservation(link, ctx))\n \t\t\t\tcontinue;\n \n \t\t\told_ctx = ieee80211_link_get_chanctx(link);\n@@ -1852,7 +1879,7 @@\n \n \t\tfor_each_chanctx_user_assigned(local, ctx->replace_ctx, &iter) {\n \t\t\tn_assigned++;\n-\t\t\tif (iter.link && iter.link->reserved_chanctx) {\n+\t\t\tif (iter.link && ieee80211_link_has_in_place_reservation(iter.link, ctx)) {\n \t\t\t\tn_reserved++;\n \t\t\t\tif (iter.link->reserved_ready)\n \t\t\t\t\tn_ready++;\n@@ -1877,7 +1904,7 @@\n use_reserved:\n \t\tctx->conf.radar_enabled = false;\n \t\tfor_each_chanctx_user_reserved(local, ctx, &iter) {\n-\t\t\tif (ieee80211_link_has_in_place_reservation(iter.link) &&\n+\t\t\tif (ieee80211_link_has_in_place_reservation(iter.link, ctx) &&\n \t\t\t    !iter.link->reserved_ready)\n \t\t\t\treturn -EAGAIN;\n \n@@ -1918,7 +1945,7 @@\n \t\t}\n \n \t\tfor_each_chanctx_user_reserved(local, ctx, &iter) {\n-\t\t\tif (!ieee80211_link_has_in_place_reservation(iter.link))\n+\t\t\tif (!ieee80211_link_has_in_place_reservation(iter.link, ctx))\n \t\t\t\tcontinue;\n \n \t\t\tieee80211_chan_bw_change(local,\n@@ -1967,7 +1994,7 @@\n \t\t\tstruct ieee80211_bss_conf *link_conf = link->conf;\n \t\t\tu64 changed = 0;\n \n-\t\t\tif (!ieee80211_link_has_in_place_reservation(link))\n+\t\t\tif (!ieee80211_link_has_in_place_reservation(link, ctx))\n \t\t\t\tcontinue;\n \n \t\t\trcu_assign_pointer(link_conf->chanctx_conf,\n@@ -2018,7 +2045,7 @@\n \t\tfor_each_chanctx_user_reserved(local, ctx, &iter) {\n \t\t\tstruct ieee80211_link_data *link = iter.link;\n \n-\t\t\tif (WARN_ON(ieee80211_link_has_in_place_reservation(link)))\n+\t\t\tif (WARN_ON(ieee80211_link_has_in_place_reservation(link, ctx)))\n \t\t\t\tcontinue;\n \n \t\t\tif (!link->reserved_ready)\n@@ -2103,7 +2130,8 @@\n \t}\n \n \tieee80211_assign_link_chanctx(link, NULL, false);\n-\tif (ieee80211_chanctx_refcount(local, ctx) == 0)\n+\tif (ieee80211_chanctx_refcount(local, ctx) == 0 &&\n+\t    !ieee80211_chanctx_has_replace_partner(ctx))\n \t\tieee80211_free_chanctx(local, ctx, skip_idle_recalc);\n \n \tlink->radar_required = false;\n"
+    },
+    {
+      "path": "net/mac80211/nan.c",
+      "reference": "ACK full file",
+      "diff": "--- \n+++ \n@@ -216,7 +216,8 @@\n \t\tieee80211_recalc_chanctx_min_def(sdata->local, ctx);\n \t}\n \n-\tif (ieee80211_chanctx_refcount(sdata->local, ctx) == 0)\n+\tif (ieee80211_chanctx_refcount(sdata->local, ctx) == 0 &&\n+\t    !ieee80211_chanctx_has_replace_partner(ctx))\n \t\tieee80211_free_chanctx(sdata->local, ctx, false);\n }\n \n@@ -753,7 +754,8 @@\n \t\tieee80211_recalc_chanctx_min_def(sdata->local, ctx);\n \t}\n \n-\tif (ieee80211_chanctx_refcount(sdata->local, ctx) == 0)\n+\tif (ieee80211_chanctx_refcount(sdata->local, ctx) == 0 &&\n+\t    !ieee80211_chanctx_has_replace_partner(ctx))\n \t\tieee80211_free_chanctx(sdata->local, ctx, false);\n }\n \n@@ -796,8 +798,9 @@\n \t\t\tcontinue;\n \t\t}\n \n-\t\t/* Can only evacuate channels whose chanctx is NAN-only */\n-\t\tif (ieee80211_chanctx_refcount(local, chan_ctx) > 1)\n+\t\t/* Automatic evacuation must release a NAN-only context. */\n+\t\tif (ieee80211_chanctx_has_replace_partner(chan_ctx) ||\n+\t\t    ieee80211_chanctx_refcount(local, chan_ctx) > 1)\n \t\t\tcontinue;\n \n \t\t/* Count how many time slots use this channel */\n"
+    },
+    {
+      "path": "net/mac80211/util.c",
+      "reference": "ACK full file",
+      "diff": "--- \n+++ \n@@ -72,6 +72,9 @@\n \n \tif (ieee80211_is_s1g_beacon(fc)) {\n \t\tstruct ieee80211_ext *ext = (void *) hdr;\n+\n+\t\tif (len < offsetofend(struct ieee80211_ext, u.s1g_beacon.sa))\n+\t\t\treturn NULL;\n \n \t\treturn ext->u.s1g_beacon.sa;\n \t}\n@@ -1737,7 +1740,8 @@\n \n \t/* Now we can add all the NDIs to the driver */\n \tlist_for_each_entry(ndi_sdata, &local->interfaces, list) {\n-\t\tif (ndi_sdata->vif.type == NL80211_IFTYPE_NAN_DATA) {\n+\t\tif (ndi_sdata->vif.type == NL80211_IFTYPE_NAN_DATA &&\n+\t\t    ieee80211_sdata_running(ndi_sdata)) {\n \t\t\tres = drv_add_interface(local, ndi_sdata);\n \t\t\tif (WARN_ON(res))\n \t\t\t\treturn res;\n@@ -2141,11 +2145,7 @@\n \t\t\t}\n \t\t\tbreak;\n \t\tcase NL80211_IFTYPE_NAN:\n-\t\t\tres = ieee80211_reconfig_nan(sdata);\n-\t\t\tif (res < 0) {\n-\t\t\t\tieee80211_handle_reconfig_failure(local);\n-\t\t\t\treturn res;\n-\t\t\t}\n+\t\t\tWARN_ON(ieee80211_reconfig_nan(sdata));\n \t\t\tbreak;\n \t\tcase NL80211_IFTYPE_NAN_DATA:\n \t\tcase NL80211_IFTYPE_AP_VLAN:\n@@ -2294,9 +2294,10 @@\n \t\t}\n \t}\n \n+\t/* Passing NULL means an interface is picked for configuration */\n \tif (local->virt_monitors > 0 &&\n \t    local->virt_monitors == local->open_count)\n-\t\tieee80211_add_virtual_monitor(local);\n+\t\tieee80211_add_virtual_monitor(local, NULL);\n \n \tif (!suspended)\n \t\treturn 0;\n"
+    },
+    {
+      "path": "net/mac80211/main.c",
+      "reference": "ACK full file",
+      "diff": "--- \n+++ \n@@ -988,6 +988,7 @@\n \tspin_lock_init(&local->rx_path_lock);\n \tspin_lock_init(&local->queue_stop_reason_lock);\n \n+\tlocal->aql_txq_limit_mc = IEEE80211_DEFAULT_AQL_TXQ_LIMIT_MC;\n \tfor (i = 0; i < IEEE80211_NUM_ACS; i++) {\n \t\tINIT_LIST_HEAD(&local->active_txqs[i]);\n \t\tspin_lock_init(&local->active_txq_lock[i]);\n@@ -1437,6 +1438,10 @@\n \t\t\tsizeof(struct ieee80211_he_mcs_nss_supp) +\n \t\t\tIEEE80211_HE_PPE_THRES_MAX_LEN;\n \n+\t\tif (local->hw.wiphy->bands[NL80211_BAND_6GHZ])\n+\t\t\tlocal->scan_ies_len +=\n+\t\t\t\t3 + sizeof(struct ieee80211_he_6ghz_capa);\n+\n \t\tif (supp_eht)\n \t\t\tlocal->scan_ies_len +=\n \t\t\t\t3 + sizeof(struct ieee80211_eht_cap_elem) +\n@@ -1581,7 +1586,7 @@\n \t\tsband = kmemdup(sband, sizeof(*sband), GFP_KERNEL);\n \t\tif (!sband) {\n \t\t\tresult = -ENOMEM;\n-\t\t\tgoto fail_rate;\n+\t\t\tgoto fail_band;\n \t\t}\n \n \t\twiphy_dbg(hw->wiphy, \"copying sband (band %d) due to VHT EXT NSS BW flag\\n\",\n@@ -1648,6 +1653,7 @@\n #endif\n \twiphy_unregister(local->hw.wiphy);\n  fail_wiphy_register:\n+ fail_band:\n \trtnl_lock();\n \trate_control_deinitialize(local);\n \tieee80211_remove_interfaces(local);\n"
+    },
+    {
+      "path": "net/mac80211/offchannel.c",
+      "reference": "ACK full file",
+      "diff": "--- \n+++ \n@@ -462,6 +462,13 @@\n \t\treturn;\n \n \tif (!roc->started) {\n+\t\t/*\n+\t\t * The work can be started by a previous ROC work, but a scan\n+\t\t * can get between things; scan finish will retrigger us.\n+\t\t */\n+\t\tif (local->scanning)\n+\t\t\treturn;\n+\n \t\tWARN_ON(!local->emulate_chanctx);\n \t\t_ieee80211_start_next_roc(local);\n \t} else {\n"
+    },
+    {
+      "path": "net/mac80211/tx.c",
+      "reference": "ACK full file",
+      "diff": "--- \n+++ \n@@ -2096,8 +2096,29 @@\n \treturn true;\n }\n \n+static bool ieee80211_rate_bw_usable(u16 rate_flags,\n+\t\t\t\t     const struct cfg80211_chan_def *chandef)\n+{\n+\tint width;\n+\n+\tif (!chandef)\n+\t\treturn true;\n+\n+\tif (rate_flags & IEEE80211_TX_RC_160_MHZ_WIDTH)\n+\t\twidth = 160;\n+\telse if (rate_flags & IEEE80211_TX_RC_80_MHZ_WIDTH)\n+\t\twidth = 80;\n+\telse if (rate_flags & IEEE80211_TX_RC_40_MHZ_WIDTH)\n+\t\twidth = 40;\n+\telse\n+\t\treturn true;\n+\n+\treturn width <= cfg80211_chandef_get_width(chandef);\n+}\n+\n bool ieee80211_parse_tx_radiotap(struct sk_buff *skb,\n-\t\t\t\t struct net_device *dev)\n+\t\t\t\t struct net_device *dev,\n+\t\t\t\t const struct cfg80211_chan_def *chandef)\n {\n \tstruct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);\n \tstruct ieee80211_radiotap_iterator iterator;\n@@ -2181,7 +2202,9 @@\n \n \t\tcase IEEE80211_RADIOTAP_ANTENNA:\n \t\t\t/* this can appear multiple times, keep a bitmap */\n-\t\t\tinfo->control.antennas |= BIT(*iterator.this_arg);\n+\t\t\t/* control.antennas is only a 2-bit bitmap */\n+\t\t\tif (*iterator.this_arg < 2)\n+\t\t\t\tinfo->control.antennas |= BIT(*iterator.this_arg);\n \t\t\tbreak;\n \n \t\tcase IEEE80211_RADIOTAP_DATA_RETRIES:\n@@ -2268,6 +2291,9 @@\n \tif (rate_found) {\n \t\tstruct ieee80211_supported_band *sband =\n \t\t\tlocal->hw.wiphy->bands[info->band];\n+\n+\t\tif (!ieee80211_rate_bw_usable(rate_flags, chandef))\n+\t\t\treturn false;\n \n \t\tinfo->control.flags |= IEEE80211_TX_CTRL_RATE_INJECT;\n \n@@ -2458,7 +2484,7 @@\n \t * selected chandef above to accurately set injection rates and\n \t * retransmissions.\n \t */\n-\tif (!ieee80211_parse_tx_radiotap(skb, dev))\n+\tif (!ieee80211_parse_tx_radiotap(skb, dev, chandef))\n \t\tgoto fail_rcu;\n \n \t/* remove the injection radiotap header */\n@@ -2487,7 +2513,7 @@\n \n int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,\n \t\t\t    struct sk_buff *skb,\n-\t\t\t    struct sta_info **sta_out)\n+\t\t\t    struct sta_info **sta_out, bool bss)\n {\n \tstruct sta_info *sta;\n \n@@ -2508,7 +2534,10 @@\n \t\t\t*sta_out = ERR_PTR(-ENOENT);\n \t\t\treturn 0;\n \t\t}\n-\t\tsta = sta_info_get_bss(sdata, skb->data);\n+\t\tif (bss)\n+\t\t\tsta = sta_info_get_bss(sdata, skb->data);\n+\t\telse\n+\t\t\tsta = sta_info_get(sdata, skb->data);\n \t\tbreak;\n #ifdef CONFIG_MAC80211_MESH\n \tcase NL80211_IFTYPE_MESH_POINT:\n@@ -2593,6 +2622,18 @@\n \t}\n \n \treturn info_id;\n+}\n+\n+static void ieee80211_remove_ack_skb(struct ieee80211_local *local, u16 info_id)\n+{\n+\tstruct sk_buff *ack_skb;\n+\tunsigned long flags;\n+\n+\tspin_lock_irqsave(&local->ack_status_lock, flags);\n+\tack_skb = idr_remove(&local->ack_status_frames, info_id);\n+\tspin_unlock_irqrestore(&local->ack_status_lock, flags);\n+\n+\tkfree_skb(ack_skb);\n }\n \n /**\n@@ -2926,9 +2967,22 @@\n \t */\n \tskb = skb_share_check(skb, GFP_ATOMIC);\n \tif (unlikely(!skb)) {\n-\t\tret = -ENOMEM;\n-\t\tgoto free;\n-\t}\n+\t\t/* skb_share_check() already freed the skb */\n+\t\tif (info_id)\n+\t\t\tieee80211_remove_ack_skb(local, info_id);\n+\t\treturn ERR_PTR(-ENOMEM);\n+\t}\n+\n+\t/* set this up so failure paths can clean up ack skb */\n+\tinfo = IEEE80211_SKB_CB(skb);\n+\tmemset(info, 0, sizeof(*info));\n+\n+\tinfo->flags = info_flags;\n+\tif (info_id) {\n+\t\tinfo->status_data = info_id;\n+\t\tinfo->status_data_idr = 1;\n+\t}\n+\tinfo->band = band;\n \n \thdr.frame_control = fc;\n \thdr.duration_id = 0;\n@@ -2968,9 +3022,8 @@\n \t\thead_need += local->tx_headroom;\n \t\thead_need = max_t(int, 0, head_need);\n \t\tif (ieee80211_skb_resize(sdata, skb, head_need, ENCRYPT_DATA)) {\n-\t\t\tieee80211_free_txskb(&local->hw, skb);\n-\t\t\tskb = NULL;\n-\t\t\treturn ERR_PTR(-ENOMEM);\n+\t\t\tret = -ENOMEM;\n+\t\t\tgoto free_txskb;\n \t\t}\n \t}\n \n@@ -2997,16 +3050,6 @@\n \n \tskb_reset_mac_header(skb);\n \n-\tinfo = IEEE80211_SKB_CB(skb);\n-\tmemset(info, 0, sizeof(*info));\n-\n-\tinfo->flags = info_flags;\n-\tif (info_id) {\n-\t\tinfo->status_data = info_id;\n-\t\tinfo->status_data_idr = 1;\n-\t}\n-\tinfo->band = band;\n-\n \tif (likely(!cookie)) {\n \t\tctrl_flags |= u32_encode_bits(link_id,\n \t\t\t\t\t      IEEE80211_TX_CTRL_MLO_LINK);\n@@ -3030,13 +3073,16 @@\n \t\t\t\t\t     pre_conf_link_id, link_id);\n #endif\n \t\t\tret = -EINVAL;\n-\t\t\tgoto free;\n+\t\t\tgoto free_txskb;\n \t\t}\n \t}\n \n \tinfo->control.flags = ctrl_flags;\n \n \treturn skb;\n+ free_txskb:\n+\tieee80211_free_txskb(&local->hw, skb);\n+\treturn ERR_PTR(ret);\n  free:\n \tkfree_skb(skb);\n \treturn ERR_PTR(ret);\n@@ -4027,20 +4073,20 @@\n encap_out:\n \tinfo->control.vif = vif;\n \n-\tif (tx.sta &&\n-\t    wiphy_ext_feature_isset(local->hw.wiphy, NL80211_EXT_FEATURE_AQL)) {\n-\t\tbool ampdu = txq->ac != IEEE80211_AC_VO;\n+\tif (wiphy_ext_feature_isset(local->hw.wiphy, NL80211_EXT_FEATURE_AQL)) {\n+\t\tbool ampdu = txq->sta && txq->ac != IEEE80211_AC_VO;\n \t\tu32 airtime;\n \n \t\tairtime = ieee80211_calc_expected_tx_airtime(hw, vif, txq->sta,\n \t\t\t\t\t\t\t     skb->len, ampdu);\n-\t\tif (airtime) {\n-\t\t\tairtime = ieee80211_info_set_tx_time_est(info, airtime);\n-\t\t\tieee80211_sta_update_pending_airtime(local, tx.sta,\n-\t\t\t\t\t\t\t     txq->ac,\n-\t\t\t\t\t\t\t     airtime,\n-\t\t\t\t\t\t\t     false);\n-\t\t}\n+\t\tif (!airtime)\n+\t\t\treturn skb;\n+\n+\t\tairtime = ieee80211_info_set_tx_time_est(info, airtime);\n+\t\tinfo->tx_time_mc = !tx.sta;\n+\t\tieee80211_sta_update_pending_airtime(local, tx.sta, txq->ac,\n+\t\t\t\t\t\t     airtime, false,\n+\t\t\t\t\t\t     info->tx_time_mc);\n \t}\n \n \treturn skb;\n@@ -4092,6 +4138,7 @@\n \tstruct ieee80211_txq *ret = NULL;\n \tstruct txq_info *txqi = NULL, *head = NULL;\n \tbool found_eligible_txq = false;\n+\tbool aql_check;\n \n \tspin_lock_bh(&local->active_txq_lock[ac]);\n \n@@ -4115,24 +4162,26 @@\n \tif (!head)\n \t\thead = txqi;\n \n+\taql_check = ieee80211_txq_airtime_check(hw, &txqi->txq);\n+\tif (aql_check)\n+\t\tfound_eligible_txq = true;\n+\n \tif (txqi->txq.sta) {\n \t\tstruct sta_info *sta = container_of(txqi->txq.sta,\n \t\t\t\t\t\t    struct sta_info, sta);\n-\t\tbool aql_check = ieee80211_txq_airtime_check(hw, &txqi->txq);\n-\t\ts32 deficit = ieee80211_sta_deficit(sta, txqi->txq.ac);\n-\n-\t\tif (aql_check)\n-\t\t\tfound_eligible_txq = true;\n-\n-\t\tif (deficit < 0)\n+\n+\t\tif (ieee80211_sta_deficit(sta, txqi->txq.ac) < 0) {\n \t\t\tsta->airtime[txqi->txq.ac].deficit +=\n \t\t\t\tsta->airtime_weight;\n \n-\t\tif (deficit < 0 || !aql_check) {\n-\t\t\tlist_move_tail(&txqi->schedule_order,\n-\t\t\t\t       &local->active_txqs[txqi->txq.ac]);\n-\t\t\tgoto begin;\n-\t\t}\n+\t\t\taql_check = false;\n+\t\t}\n+\t}\n+\n+\tif (!aql_check) {\n+\t\tlist_move_tail(&txqi->schedule_order,\n+\t\t\t\t   &local->active_txqs[txqi->txq.ac]);\n+\t\tgoto begin;\n \t}\n \n \tif (txqi->schedule_round == local->schedule_round[ac])\n@@ -4201,7 +4250,8 @@\n \t\treturn true;\n \n \tif (!txq->sta)\n-\t\treturn true;\n+\t\treturn atomic_read(&local->aql_mc_pending_airtime) <\n+\t\t       local->aql_txq_limit_mc;\n \n \tif (unlikely(txq->tid == IEEE80211_NUM_TIDS))\n \t\treturn true;\n@@ -4221,6 +4271,24 @@\n }\n EXPORT_SYMBOL(ieee80211_txq_airtime_check);\n \n+u32 ieee80211_txq_aql_pending(struct ieee80211_hw *hw,\n+\t\t\t      struct ieee80211_txq *txq)\n+{\n+\tstruct ieee80211_local *local = hw_to_local(hw);\n+\tstruct sta_info *sta;\n+\n+\tif (unlikely(txq->tid == IEEE80211_NUM_TIDS))\n+\t\treturn 0;\n+\n+\tif (!txq->sta)\n+\t\treturn atomic_read(&local->aql_mc_pending_airtime);\n+\n+\tsta = container_of(txq->sta, struct sta_info, sta);\n+\n+\treturn atomic_read(&sta->airtime[txq->ac].aql_tx_pending);\n+}\n+EXPORT_SYMBOL(ieee80211_txq_aql_pending);\n+\n static bool\n ieee80211_txq_schedule_airtime_check(struct ieee80211_local *local, u8 ac)\n {\n@@ -4250,13 +4318,13 @@\n \n \tspin_lock_bh(&local->active_txq_lock[ac]);\n \n-\tif (!txqi->txq.sta)\n-\t\tgoto out;\n-\n \tif (list_empty(&txqi->schedule_order))\n \t\tgoto out;\n \n \tif (!ieee80211_txq_schedule_airtime_check(local, ac))\n+\t\tgoto out;\n+\n+\tif (!txqi->txq.sta)\n \t\tgoto out;\n \n \tlist_for_each_entry_safe(iter, tmp, &local->active_txqs[ac],\n@@ -4337,7 +4405,8 @@\n \t    ieee80211_mesh_xmit_fast(sdata, skb, ctrl_flags))\n \t\tgoto out;\n \n-\tif (ieee80211_lookup_ra_sta(sdata, skb, &sta))\n+\tif (ieee80211_lookup_ra_sta(sdata, skb, &sta,\n+\t\t\t\t    skb->protocol == sdata->control_port_protocol))\n \t\tgoto out_free;\n \n \tif (IS_ERR(sta))\n@@ -4650,7 +4719,8 @@\n {\n \tstruct ieee80211_tx_info *info;\n \tstruct ieee80211_local *local = sdata->local;\n-\tstruct tid_ampdu_tx *tid_tx;\n+\tstruct ieee80211_chanctx_conf *chanctx_conf;\n+\tstruct tid_ampdu_tx *tid_tx = NULL;\n \tstruct sk_buff *seg, *next;\n \tunsigned int skbs = 0, len = 0;\n \tu16 queue;\n@@ -4670,7 +4740,9 @@\n \tieee80211_aggr_check(sdata, sta, skb);\n \n \ttid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;\n-\ttid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[tid]);\n+\n+\tif (sta)\n+\t\ttid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[tid]);\n \tif (tid_tx) {\n \t\tif (!test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state)) {\n \t\t\t/* fall back to non-offload slow path */\n@@ -4697,6 +4769,16 @@\n \t\tsdata = container_of(sdata->bss,\n \t\t\t\t     struct ieee80211_sub_if_data, u.ap);\n \n+\t/* MLD transmissions must not rely on the band */\n+\tif (!ieee80211_vif_is_mld(&sdata->vif)) {\n+\t\tchanctx_conf = rcu_dereference(sdata->vif.bss_conf.chanctx_conf);\n+\t\tif (unlikely(!chanctx_conf)) {\n+\t\t\tkfree_skb_list(skb);\n+\t\t\treturn;\n+\t\t}\n+\t\tinfo->band = chanctx_conf->def.chan->band;\n+\t}\n+\n \tinfo->flags |= IEEE80211_TX_CTL_HW_80211_ENCAP;\n \tinfo->control.vif = &sdata->vif;\n \n@@ -4718,8 +4800,11 @@\n \t}\n \n \tdev_sw_netstats_tx_add(dev, skbs, len);\n-\tsta->deflink.tx_stats.packets[queue] += skbs;\n-\tsta->deflink.tx_stats.bytes[queue] += len;\n+\n+\tif (sta) {\n+\t\tsta->deflink.tx_stats.packets[queue] += skbs;\n+\t\tsta->deflink.tx_stats.bytes[queue] += len;\n+\t}\n \n \tieee80211_tpt_led_trig_tx(local, len);\n \n@@ -4731,34 +4816,68 @@\n \tkfree_skb(skb);\n }\n \n-netdev_tx_t ieee80211_subif_start_xmit_8023(struct sk_buff *skb,\n-\t\t\t\t\t    struct net_device *dev)\n+static bool ieee80211_check_mcast_offload(struct ieee80211_sub_if_data *sdata,\n+\t\t\t\t\t  struct sk_buff *skb)\n+{\n+\tstruct ethhdr *ehdr = (struct ethhdr *)skb->data;\n+\n+\tif ((ieee80211_vif_is_mld(&sdata->vif) &&\n+\t     (sdata->vif.type == NL80211_IFTYPE_AP &&\n+\t      !ieee80211_hw_check(&sdata->local->hw, MLO_MCAST_MULTI_LINK_TX))) ||\n+\t    (sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&\n+\t     !sdata->wdev.use_4addr))\n+\t\treturn false;\n+\n+\tif (!is_multicast_ether_addr(skb->data) ||\n+\t    !(sdata->vif.offload_flags & IEEE80211_OFFLOAD_ENCAP_MCAST) ||\n+\t    sdata->control_port_protocol == ehdr->h_proto)\n+\t\treturn false;\n+\n+\treturn true;\n+}\n+\n+static void __ieee80211_subif_start_xmit_8023(struct sk_buff *skb,\n+\t\t\t\t\t      struct net_device *dev)\n {\n \tstruct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);\n \tstruct ethhdr *ehdr = (struct ethhdr *)skb->data;\n+\tstruct ieee80211_link_data *link;\n \tstruct ieee80211_key *key;\n \tstruct sta_info *sta;\n \n-\tif (unlikely(!ieee80211_sdata_running(sdata) || skb->len < ETH_HLEN)) {\n-\t\tkfree_skb(skb);\n-\t\treturn NETDEV_TX_OK;\n-\t}\n-\n \trcu_read_lock();\n \n-\tif (ieee80211_lookup_ra_sta(sdata, skb, &sta)) {\n+\tif (unlikely(sdata->control_port_protocol == ehdr->h_proto))\n+\t\tgoto skip_offload;\n+\n+\tif (ieee80211_lookup_ra_sta(sdata, skb, &sta, false)) {\n \t\tkfree_skb(skb);\n \t\tgoto out;\n \t}\n \n-\tif (unlikely(IS_ERR_OR_NULL(sta) || !sta->uploaded ||\n-\t    !test_sta_flag(sta, WLAN_STA_AUTHORIZED) ||\n-\t    sdata->control_port_protocol == ehdr->h_proto))\n+\t/*\n+\t * If STA is invalid, use the multicast offload path when applicable.\n+\t * In AP mode, drop the frame if there are no associated stations;\n+\t * otherwise use the default link and multicast key for transmission.\n+\t */\n+\tif (unlikely(IS_ERR_OR_NULL(sta) &&\n+\t\t     ieee80211_check_mcast_offload(sdata, skb))) {\n+\t\tsta = NULL;\n+\t\tif (ieee80211_vif_get_num_mcast_if(sdata) <= 0) {\n+\t\t\t/* No associated STAs - no need to send multicast frames. */\n+\t\t\tkfree_skb(skb);\n+\t\t\tgoto out;\n+\t\t}\n+\t\tlink = &sdata->deflink;\n+\t\tkey = rcu_dereference(link->default_multicast_key);\n+\t} else if (unlikely(IS_ERR_OR_NULL(sta) || !sta->uploaded ||\n+\t\t   !test_sta_flag(sta, WLAN_STA_AUTHORIZED))) {\n \t\tgoto skip_offload;\n-\n-\tkey = rcu_dereference(sta->ptk[sta->ptk_idx]);\n-\tif (!key)\n-\t\tkey = rcu_dereference(sdata->default_unicast_key);\n+\t} else {\n+\t\tkey = rcu_dereference(sta->ptk[sta->ptk_idx]);\n+\t\tif (!key)\n+\t\t\tkey = rcu_dereference(sdata->default_unicast_key);\n+\t}\n \n \tif (key && (!(key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) ||\n \t\t    key->conf.cipher == WLAN_CIPHER_SUITE_TKIP))\n@@ -4772,6 +4891,30 @@\n \tieee80211_subif_start_xmit(skb, dev);\n out:\n \trcu_read_unlock();\n+}\n+\n+netdev_tx_t ieee80211_subif_start_xmit_8023(struct sk_buff *skb,\n+\t\t\t\t\t    struct net_device *dev)\n+{\n+\tstruct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);\n+\tstruct ethhdr *ehdr = (struct ethhdr *)skb->data;\n+\n+\tif (unlikely(!ieee80211_sdata_running(sdata) || skb->len < ETH_HLEN)) {\n+\t\tkfree_skb(skb);\n+\t\treturn NETDEV_TX_OK;\n+\t}\n+\n+\tif (unlikely(is_multicast_ether_addr(ehdr->h_dest) &&\n+\t\t     ieee80211_multicast_to_unicast(skb, dev))) {\n+\t\tstruct sk_buff_head queue;\n+\n+\t\t__skb_queue_head_init(&queue);\n+\t\tieee80211_convert_to_unicast(skb, dev, &queue);\n+\t\twhile ((skb = __skb_dequeue(&queue)))\n+\t\t\t__ieee80211_subif_start_xmit_8023(skb, dev);\n+\t} else {\n+\t\t__ieee80211_subif_start_xmit_8023(skb, dev);\n+\t}\n \n \treturn NETDEV_TX_OK;\n }\n@@ -4789,7 +4932,7 @@\n \n \trcu_read_lock();\n \n-\tif (ieee80211_lookup_ra_sta(sdata, skb, &sta)) {\n+\tif (ieee80211_lookup_ra_sta(sdata, skb, &sta, false)) {\n \t\tkfree_skb(skb);\n \t\tskb = ERR_PTR(-EINVAL);\n \t\tgoto out;\n@@ -4860,7 +5003,7 @@\n \t\t}\n \t\tresult = ieee80211_tx(sdata, NULL, skb, true);\n \t} else if (info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP) {\n-\t\tif (ieee80211_lookup_ra_sta(sdata, skb, &sta)) {\n+\t\tif (ieee80211_lookup_ra_sta(sdata, skb, &sta, true)) {\n \t\t\tdev_kfree_skb(skb);\n \t\t\treturn true;\n \t\t}\n@@ -4975,9 +5118,17 @@\n  */\n static void ieee80211_s1g_beacon_add_tim_pvb(struct ps_data *ps,\n \t\t\t\t\t     struct sk_buff *skb,\n-\t\t\t\t\t     bool mcast_traffic)\n+\t\t\t\t\t     bool mcast_traffic,\n+\t\t\t\t\t     bool ucast_traffic)\n {\n \tint blk;\n+\n+\t/*\n+\t * if no unicast and multicast traffic don't emit a bitmap control\n+\t * or pvb\n+\t */\n+\tif (!mcast_traffic && !ucast_traffic)\n+\t\treturn;\n \n \t/*\n \t * Emit a bitmap control block with a page slice number of 31 and a\n@@ -4987,6 +5138,10 @@\n \t */\n \tskb_put_u8(skb, mcast_traffic | (31 << 1));\n \n+\t/* If there's no unicast traffic we don't need to include a PVB. */\n+\tif (!ucast_traffic)\n+\t\treturn;\n+\n \t/* Emit an encoded block for each non-zero sub-block */\n \tfor (blk = 0; blk < IEEE80211_MAX_SUPPORTED_S1G_TIM_BLOCKS; blk++) {\n \t\tu8 blk_bmap = 0;\n@@ -5068,25 +5223,16 @@\n \n \tps->dtim_bc_mc = mcast_traffic;\n \n-\tif (have_bits) {\n-\t\tif (s1g)\n-\t\t\tieee80211_s1g_beacon_add_tim_pvb(ps, skb,\n-\t\t\t\t\t\t\t mcast_traffic);\n-\t\telse\n-\t\t\tieee80211_beacon_add_tim_pvb(ps, skb, mcast_traffic);\n+\tif (s1g) {\n+\t\tieee80211_s1g_beacon_add_tim_pvb(ps, skb, mcast_traffic,\n+\t\t\t\t\t\t have_bits);\n+\t} else if (have_bits) {\n+\t\tieee80211_beacon_add_tim_pvb(ps, skb, mcast_traffic);\n \t} else {\n-\t\t/*\n-\t\t * If there is no buffered unicast traffic for an S1G\n-\t\t * interface, we can exclude the bitmap control. This is in\n-\t\t * contrast to other phy types as they do include the bitmap\n-\t\t * control and pvb even when there is no buffered traffic.\n-\t\t */\n-\t\tif (!s1g) {\n-\t\t\t/* Bitmap control */\n-\t\t\tskb_put_u8(skb, mcast_traffic);\n-\t\t\t/* Part Virt Bitmap */\n-\t\t\tskb_put_u8(skb, 0);\n-\t\t}\n+\t\t/* Bitmap control */\n+\t\tskb_put_u8(skb, mcast_traffic);\n+\t\t/* Part Virt Bitmap */\n+\t\tskb_put_u8(skb, 0);\n \t}\n \n \ttim->datalen = skb_tail_pointer(skb) - tim->data;\n@@ -5161,7 +5307,8 @@\n \t\tif (sdata->vif.type == NL80211_IFTYPE_AP && resp) {\n \t\t\tu16 *resp_offsets = resp->cntdwn_counter_offsets;\n \n-\t\t\tresp->data[resp_offsets[i]] = count;\n+\t\t\tif (resp_offsets[i])\n+\t\t\t\tresp->data[resp_offsets[i]] = count;\n \t\t}\n \t}\n }\n@@ -6443,7 +6590,7 @@\n \t * AF_PACKET\n \t */\n \trcu_read_lock();\n-\terr = ieee80211_lookup_ra_sta(sdata, skb, &sta);\n+\terr = ieee80211_lookup_ra_sta(sdata, skb, &sta, true);\n \tif (err) {\n \t\tdev_kfree_skb(skb);\n \t\trcu_read_unlock();\n"
+    },
+    {
+      "path": "net/mac80211/rx.c",
+      "reference": "ACK full file",
+      "diff": "--- \n+++ \n@@ -6,7 +6,7 @@\n  * Copyright 2007-2010\tJohannes Berg <johannes@sipsolutions.net>\n  * Copyright 2013-2014  Intel Mobile Communications GmbH\n  * Copyright(c) 2015 - 2017 Intel Deutschland GmbH\n- * Copyright (C) 2018-2025 Intel Corporation\n+ * Copyright (C) 2018-2026 Intel Corporation\n  */\n \n #include <linux/jiffies.h>\n@@ -1056,14 +1056,14 @@\n \t\tif (is_multicast_ether_addr(hdr->addr1)) {\n \t\t\tif (ieee80211_has_tods(hdr->frame_control) ||\n \t\t\t    !ieee80211_has_fromds(hdr->frame_control))\n-\t\t\t\treturn RX_DROP;\n+\t\t\t\treturn RX_DROP_U_MESH_DS_BITS;\n \t\t\tif (ether_addr_equal(hdr->addr3, dev_addr))\n-\t\t\t\treturn RX_DROP;\n+\t\t\t\treturn RX_DROP_U_MESH_A3_MISMATCH;\n \t\t} else {\n \t\t\tif (!ieee80211_has_a4(hdr->frame_control))\n-\t\t\t\treturn RX_DROP;\n+\t\t\t\treturn RX_DROP_U_MESH_NO_A4;\n \t\t\tif (ether_addr_equal(hdr->addr4, dev_addr))\n-\t\t\t\treturn RX_DROP;\n+\t\t\t\treturn RX_DROP_U_MESH_A4_MISMATCH;\n \t\t}\n \t}\n \n@@ -1075,20 +1075,20 @@\n \t\tstruct ieee80211_mgmt *mgmt;\n \n \t\tif (!ieee80211_is_mgmt(hdr->frame_control))\n-\t\t\treturn RX_DROP;\n+\t\t\treturn RX_DROP_U_MESH_UNEXP_DATA;\n \n \t\tif (ieee80211_is_action(hdr->frame_control)) {\n \t\t\tu8 category;\n \n \t\t\t/* make sure category field is present */\n \t\t\tif (rx->skb->len < IEEE80211_MIN_ACTION_SIZE)\n-\t\t\t\treturn RX_DROP;\n+\t\t\t\treturn RX_DROP_U_RUNT_ACTION;\n \n \t\t\tmgmt = (struct ieee80211_mgmt *)hdr;\n \t\t\tcategory = mgmt->u.action.category;\n \t\t\tif (category != WLAN_CATEGORY_MESH_ACTION &&\n \t\t\t    category != WLAN_CATEGORY_SELF_PROTECTED)\n-\t\t\t\treturn RX_DROP;\n+\t\t\t\treturn RX_DROP_U_MESH_WRONG_ACTION;\n \t\t\treturn RX_CONTINUE;\n \t\t}\n \n@@ -1098,7 +1098,7 @@\n \t\t    ieee80211_is_auth(hdr->frame_control))\n \t\t\treturn RX_CONTINUE;\n \n-\t\treturn RX_DROP;\n+\t\treturn RX_DROP_U_MESH_UNEXP_MGMT;\n \t}\n \n \treturn RX_CONTINUE;\n@@ -1443,6 +1443,9 @@\n \tif (status->flag & RX_FLAG_DUP_VALIDATED)\n \t\treturn RX_CONTINUE;\n \n+\tif (ieee80211_is_ext(hdr->frame_control))\n+\t\treturn RX_CONTINUE;\n+\n \t/*\n \t * Drop duplicate 802.11 retransmissions\n \t * (IEEE 802.11-2012: 9.3.2.10 \"Duplicate detection and recovery\")\n@@ -1524,7 +1527,7 @@\n \t\t\thdrlen = ieee80211_hdrlen(hdr->frame_control);\n \n \t\t\tif (rx->skb->len < hdrlen + 8)\n-\t\t\t\treturn RX_DROP;\n+\t\t\t\treturn RX_DROP_U_RUNT_DATA;\n \n \t\t\tskb_copy_bits(rx->skb, hdrlen + 6, &ethertype, 2);\n \t\t\tif (ethertype == rx->sdata->control_port_protocol)\n@@ -1534,9 +1537,9 @@\n \t\tif (rx->sdata->vif.type == NL80211_IFTYPE_AP &&\n \t\t    cfg80211_rx_spurious_frame(rx->sdata->dev, hdr->addr2,\n \t\t\t\t\t       rx->link_id, GFP_ATOMIC))\n-\t\t\treturn RX_DROP_U_SPURIOUS;\n-\n-\t\treturn RX_DROP;\n+\t\t\treturn RX_DROP_U_SPURIOUS_NOTIF;\n+\n+\t\treturn RX_DROP_U_SPURIOUS;\n \t}\n \n \treturn RX_CONTINUE;\n@@ -1612,6 +1615,8 @@\n \t\telse\n \t\t\tclear_bit(tid, &sta->txq_buffered_tids);\n \t}\n+\n+\tsta_info_recalc_tim(sta);\n }\n \n static void sta_ps_end(struct sta_info *sta)\n@@ -2025,7 +2030,7 @@\n \t\tif (rx->link_sta) {\n \t\t\tif (ieee80211_is_group_privacy_action(skb) &&\n \t\t\t    test_sta_flag(rx->sta, WLAN_STA_MFP))\n-\t\t\t\treturn RX_DROP;\n+\t\t\t\treturn RX_DROP_U_UNPROTECTED;\n \n \t\t\trx->key = rcu_dereference(rx->link_sta->gtk[mmie_keyidx]);\n \t\t}\n@@ -2110,11 +2115,11 @@\n \n \tif (rx->key) {\n \t\tif (unlikely(rx->key->flags & KEY_FLAG_TAINTED))\n-\t\t\treturn RX_DROP;\n+\t\t\treturn RX_DROP_U_KEY_TAINTED;\n \n \t\t/* TODO: add threshold stuff again */\n \t} else {\n-\t\treturn RX_DROP;\n+\t\treturn RX_DROP_U_UNPROTECTED;\n \t}\n \n \tswitch (rx->key->conf.cipher) {\n@@ -2288,7 +2293,7 @@\n \t\tgoto out;\n \n \tif (is_multicast_ether_addr(hdr->addr1))\n-\t\treturn RX_DROP;\n+\t\treturn RX_DROP_U_MCAST_FRAGMENT;\n \n \tI802_DEBUG_INC(rx->local->rx_handlers_fragments);\n \n@@ -2343,7 +2348,7 @@\n \t\t\t\t\t  rx->seqno_idx, hdr);\n \tif (!entry) {\n \t\tI802_DEBUG_INC(rx->local->rx_handlers_drop_defrag);\n-\t\treturn RX_DROP;\n+\t\treturn RX_DROP_U_DEFRAG_MISMATCH;\n \t}\n \n \t/* \"The receiver shall discard MSDUs and MMPDUs whose constituent\n@@ -2390,6 +2395,12 @@\n \t}\n \n \tskb_pull(rx->skb, ieee80211_hdrlen(fc));\n+\tif (unlikely((u32)entry->extra_len + rx->skb->len > U16_MAX)) {\n+\t\tI802_DEBUG_INC(rx->local->rx_handlers_drop_defrag);\n+\t\t__skb_queue_purge(&entry->skb_list);\n+\t\treturn RX_DROP_U_DEFRAG_OVERFLOW;\n+\t}\n+\n \t__skb_queue_tail(&entry->skb_list, rx->skb);\n \tentry->last_frag = frag;\n \tentry->extra_len += rx->skb->len;\n@@ -2865,25 +2876,25 @@\n \t\treturn RX_CONTINUE;\n \n \tif (!pskb_may_pull(skb, sizeof(*eth) + 6))\n-\t\treturn RX_DROP;\n+\t\treturn RX_DROP_U_RUNT_MESH_DATA;\n \n \tmesh_hdr = (struct ieee80211s_hdr *)(skb->data + sizeof(*eth));\n \tmesh_hdrlen = ieee80211_get_mesh_hdrlen(mesh_hdr);\n \n \tif (!pskb_may_pull(skb, sizeof(*eth) + mesh_hdrlen))\n-\t\treturn RX_DROP;\n+\t\treturn RX_DROP_U_RUNT_MESH_DATA;\n \n \teth = (struct ethhdr *)skb->data;\n \tmulticast = is_multicast_ether_addr(eth->h_dest);\n \n \tmesh_hdr = (struct ieee80211s_hdr *)(eth + 1);\n \tif (!mesh_hdr->ttl)\n-\t\treturn RX_DROP;\n+\t\treturn RX_DROP_U_MESH_NO_TTL;\n \n \t/* frame is in RMC, don't forward */\n \tif (is_multicast_ether_addr(eth->h_dest) &&\n \t    mesh_rmc_check(sdata, eth->h_source, mesh_hdr))\n-\t\treturn RX_DROP;\n+\t\treturn RX_DROP_U_MESH_RMC;\n \n \t/* forward packet */\n \tif (sdata->crypto_tx_tailroom_needed_cnt)\n@@ -2900,7 +2911,7 @@\n \t\t\t/* has_a4 already checked in ieee80211_rx_mesh_check */\n \t\t\tproxied_addr = mesh_hdr->eaddr2;\n \t\telse\n-\t\t\treturn RX_DROP;\n+\t\t\treturn RX_DROP_U_MESH_BAD_AE;\n \n \t\trcu_read_lock();\n \t\tmppath = mpp_path_lookup(sdata, proxied_addr);\n@@ -2932,14 +2943,14 @@\n \t\t\tgoto rx_accept;\n \n \t\tIEEE80211_IFSTA_MESH_CTR_INC(ifmsh, dropped_frames_ttl);\n-\t\treturn RX_DROP;\n+\t\treturn RX_DROP_U_MESH_TTL_EXPIRED;\n \t}\n \n \tif (!ifmsh->mshcfg.dot11MeshForwarding) {\n \t\tif (is_multicast_ether_addr(eth->h_dest))\n \t\t\tgoto rx_accept;\n \n-\t\treturn RX_DROP;\n+\t\treturn RX_DROP_U_MESH_NOT_FORWARDING;\n \t}\n \n \tskb_set_queue_mapping(skb, ieee802_1d_to_ac[skb->priority]);\n@@ -3125,7 +3136,7 @@\n \t\treturn RX_CONTINUE;\n \n \tif (unlikely(!ieee80211_is_data_present(fc)))\n-\t\treturn RX_DROP;\n+\t\treturn RX_DROP_U_AMSDU_WITHOUT_DATA;\n \n \tif (unlikely(ieee80211_has_a4(hdr->frame_control))) {\n \t\tswitch (rx->sdata->vif.type) {\n@@ -3182,7 +3193,7 @@\n \t\treturn RX_CONTINUE;\n \n \tif (unlikely(!ieee80211_is_data_present(hdr->frame_control)))\n-\t\treturn RX_DROP;\n+\t\treturn RX_DROP_U_NULL_DATA;\n \n \t/* Send unexpected-4addr-frame event to hostapd */\n \tif (ieee80211_has_a4(hdr->frame_control) &&\n@@ -3192,7 +3203,7 @@\n \t\t\tcfg80211_rx_unexpected_4addr_frame(\n \t\t\t\trx->sdata->dev, rx->sta->sta.addr, rx->link_id,\n \t\t\t\tGFP_ATOMIC);\n-\t\treturn RX_DROP;\n+\t\treturn RX_DROP_U_UNEXPECTED_4ADDR;\n \t}\n \n \tres = __ieee80211_data_to_8023(rx, &port_control);\n@@ -3204,7 +3215,7 @@\n \t\treturn res;\n \n \tif (!ieee80211_frame_allowed(rx, fc))\n-\t\treturn RX_DROP;\n+\t\treturn RX_DROP_U_PORT_CONTROL;\n \n \t/* directly handle TDLS channel switch requests/responses */\n \tif (unlikely(((struct ethhdr *)rx->skb->data)->h_proto ==\n@@ -3269,11 +3280,11 @@\n \t\t};\n \n \t\tif (!rx->sta)\n-\t\t\treturn RX_DROP;\n+\t\t\treturn RX_DROP_U_UNKNOWN_STA;\n \n \t\tif (skb_copy_bits(skb, offsetof(struct ieee80211_bar, control),\n \t\t\t\t  &bar_data, sizeof(bar_data)))\n-\t\t\treturn RX_DROP;\n+\t\t\treturn RX_DROP_U_RUNT_BAR;\n \n \t\ttid = le16_to_cpu(bar_data.control) >> 12;\n \n@@ -3285,7 +3296,7 @@\n \n \t\ttid_agg_rx = rcu_dereference(rx->sta->ampdu_mlme.tid_rx[tid]);\n \t\tif (!tid_agg_rx)\n-\t\t\treturn RX_DROP;\n+\t\t\treturn RX_DROP_U_BAR_OUTSIDE_SESSION;\n \n \t\tstart_seq_num = le16_to_cpu(bar_data.start_seq_num) >> 4;\n \t\tevent.u.ba.tid = tid;\n@@ -3309,7 +3320,7 @@\n \t\treturn RX_QUEUED;\n \t}\n \n-\treturn RX_DROP;\n+\treturn RX_DROP_U_CTRL_FRAME;\n }\n \n static void ieee80211_process_sa_query_req(struct ieee80211_sub_if_data *sdata,\n@@ -3418,10 +3429,10 @@\n \t * and unknown (reserved) frames are useless.\n \t */\n \tif (rx->skb->len < 24)\n-\t\treturn RX_DROP;\n+\t\treturn RX_DROP_U_RUNT_MGMT;\n \n \tif (!ieee80211_is_mgmt(mgmt->frame_control))\n-\t\treturn RX_DROP;\n+\t\treturn RX_DROP_U_EXPECTED_MGMT;\n \n \t/* drop too small action frames */\n \tif (ieee80211_is_action(mgmt->frame_control) &&\n@@ -3431,7 +3442,7 @@\n \t/* Drop non-broadcast Beacon frames */\n \tif (ieee80211_is_beacon(mgmt->frame_control) &&\n \t    !is_broadcast_ether_addr(mgmt->da))\n-\t\treturn RX_DROP;\n+\t\treturn RX_DROP_U_NONBCAST_BEACON;\n \n \tif (rx->sdata->vif.type == NL80211_IFTYPE_AP &&\n \t    ieee80211_is_beacon(mgmt->frame_control) &&\n@@ -3960,10 +3971,10 @@\n \tif (!(status->rx_flags & IEEE80211_RX_MALFORMED_ACTION_FRM) &&\n \t    (sdata->vif.type == NL80211_IFTYPE_AP ||\n \t     sdata->vif.type == NL80211_IFTYPE_AP_VLAN))\n-\t\treturn RX_DROP;\n+\t\treturn RX_DROP_U_MALFORMED_ACTION;\n \n \tif (is_multicast_ether_addr(mgmt->da))\n-\t\treturn RX_DROP;\n+\t\treturn RX_DROP_U_UNKNOWN_MCAST_ACTION;\n \n \t/* do not return rejected action frames */\n \tif (mgmt->u.action.category & 0x80)\n@@ -4008,7 +4019,7 @@\n \t\treturn RX_CONTINUE;\n \n \tif (sdata->vif.type != NL80211_IFTYPE_STATION)\n-\t\treturn RX_DROP;\n+\t\treturn RX_DROP_U_UNEXPECTED_EXT_FRAME;\n \n \t/* for now only beacons are ext, so queue them */\n \tieee80211_queue_skb_to_iface(sdata, rx->link_id, rx->sta, rx->skb);\n@@ -4029,7 +4040,7 @@\n \t    sdata->vif.type != NL80211_IFTYPE_ADHOC &&\n \t    sdata->vif.type != NL80211_IFTYPE_OCB &&\n \t    sdata->vif.type != NL80211_IFTYPE_STATION)\n-\t\treturn RX_DROP;\n+\t\treturn RX_DROP_U_UNHANDLED_MGMT;\n \n \tswitch (stype) {\n \tcase cpu_to_le16(IEEE80211_STYPE_AUTH):\n@@ -4040,32 +4051,32 @@\n \tcase cpu_to_le16(IEEE80211_STYPE_DEAUTH):\n \t\tif (is_multicast_ether_addr(mgmt->da) &&\n \t\t    !is_broadcast_ether_addr(mgmt->da))\n-\t\t\treturn RX_DROP;\n+\t\t\treturn RX_DROP_U_MCAST_DEAUTH;\n \n \t\t/* process only for station/IBSS */\n \t\tif (sdata->vif.type != NL80211_IFTYPE_STATION &&\n \t\t    sdata->vif.type != NL80211_IFTYPE_ADHOC)\n-\t\t\treturn RX_DROP;\n+\t\t\treturn RX_DROP_U_UNHANDLED_DEAUTH;\n \t\tbreak;\n \tcase cpu_to_le16(IEEE80211_STYPE_ASSOC_RESP):\n \tcase cpu_to_le16(IEEE80211_STYPE_REASSOC_RESP):\n \tcase cpu_to_le16(IEEE80211_STYPE_DISASSOC):\n \t\tif (is_multicast_ether_addr(mgmt->da) &&\n \t\t    !is_broadcast_ether_addr(mgmt->da))\n-\t\t\treturn RX_DROP;\n+\t\t\treturn RX_DROP_U_MCAST_DISASSOC;\n \n \t\t/* process only for station */\n \t\tif (sdata->vif.type != NL80211_IFTYPE_STATION)\n-\t\t\treturn RX_DROP;\n+\t\t\treturn RX_DROP_U_UNHANDLED_DISASSOC;\n \t\tbreak;\n \tcase cpu_to_le16(IEEE80211_STYPE_PROBE_REQ):\n \t\t/* process only for ibss and mesh */\n \t\tif (sdata->vif.type != NL80211_IFTYPE_ADHOC &&\n \t\t    sdata->vif.type != NL80211_IFTYPE_MESH_POINT)\n-\t\t\treturn RX_DROP;\n+\t\t\treturn RX_DROP_U_UNHANDLED_PREQ;\n \t\tbreak;\n \tdefault:\n-\t\treturn RX_DROP;\n+\t\treturn RX_DROP_U_UNHANDLED_MGMT_STYPE;\n \t}\n \n \tieee80211_queue_skb_to_iface(sdata, rx->link_id, rx->sta, rx->skb);\n@@ -4093,7 +4104,7 @@\n static void ieee80211_rx_handlers(struct ieee80211_rx_data *rx,\n \t\t\t\t  struct sk_buff_head *frames)\n {\n-\tieee80211_rx_result res = RX_DROP;\n+\tieee80211_rx_result res;\n \tstruct sk_buff *skb;\n \n #define CALL_RXH(rxh)\t\t\t\\\n@@ -4119,8 +4130,10 @@\n \t\t */\n \t\trx->skb = skb;\n \n-\t\tif (WARN_ON_ONCE(!rx->link))\n+\t\tif (WARN_ON_ONCE(!rx->link)) {\n+\t\t\tres = RX_DROP_U_NO_LINK;\n \t\t\tgoto rxh_next;\n+\t\t}\n \n \t\tCALL_RXH(ieee80211_rx_h_check_more_data);\n \t\tCALL_RXH(ieee80211_rx_h_uapsd_and_pspoll);\n@@ -4157,7 +4170,7 @@\n static void ieee80211_invoke_rx_handlers(struct ieee80211_rx_data *rx)\n {\n \tstruct sk_buff_head reorder_release;\n-\tieee80211_rx_result res = RX_DROP;\n+\tieee80211_rx_result res;\n \n \t__skb_queue_head_init(&reorder_release);\n \n@@ -4377,11 +4390,15 @@\n \tstruct ieee80211_hdr *hdr = (void *)skb->data;\n \tstruct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);\n \tu8 *bssid = ieee80211_get_bssid(hdr, skb->len, sdata->vif.type);\n-\tbool multicast = is_multicast_ether_addr(hdr->addr1) ||\n-\t\t\t ieee80211_is_s1g_beacon(hdr->frame_control);\n+\tbool multicast;\n \tstatic const u8 nan_network_id[ETH_ALEN] __aligned(2) = {\n \t\t0x51, 0x6F, 0x9A, 0x01, 0x00, 0x00\n \t};\n+\n+\tif (ieee80211_is_s1g_beacon(hdr->frame_control))\n+\t\treturn sdata->vif.type == NL80211_IFTYPE_STATION && bssid;\n+\n+\tmulticast = is_multicast_ether_addr(hdr->addr1);\n \n \tswitch (sdata->vif.type) {\n \tcase NL80211_IFTYPE_STATION:\n@@ -4889,6 +4906,7 @@\n \t\tu8 sa[ETH_ALEN];\n \t} addrs __aligned(2);\n \tstruct ieee80211_sta_rx_stats *stats;\n+\tu32 encoded_rate;\n \n \t/* for parallel-rx, we need to have DUP_VALIDATED, otherwise we write\n \t * to a common data structure; drivers can implement that per queue\n@@ -4960,6 +4978,11 @@\n \n \t/* after this point, don't punt to the slowpath! */\n \n+\tif (fast_rx->uses_rss)\n+\t\tstats = this_cpu_ptr(rx->link_sta->pcpu_rx_stats);\n+\telse\n+\t\tstats = &rx->link_sta->rx_stats;\n+\n \tif (rx->key && !(status->flag & RX_FLAG_MIC_STRIPPED) &&\n \t    pskb_trim(skb, skb->len - fast_rx->icv_len))\n \t\tgoto drop;\n@@ -4991,9 +5014,14 @@\n \t/* push the addresses in front */\n \tmemcpy(skb_push(skb, sizeof(addrs)), &addrs, sizeof(addrs));\n \n+\t/* capture before mesh forward may memset or free skb->cb */\n+\tencoded_rate = sta_stats_encode_rate(status);\n+\n \tres = ieee80211_rx_mesh_data(rx->sdata, rx->sta, rx->skb);\n \tswitch (res) {\n \tcase RX_QUEUED:\n+\t\tstats->last_rx = jiffies;\n+\t\tstats->last_rate = encoded_rate;\n \t\treturn true;\n \tcase RX_CONTINUE:\n \t\tbreak;\n@@ -5006,11 +5034,6 @@\n \treturn true;\n  drop:\n \tdev_kfree_skb(skb);\n-\n-\tif (fast_rx->uses_rss)\n-\t\tstats = this_cpu_ptr(rx->link_sta->pcpu_rx_stats);\n-\telse\n-\t\tstats = &rx->link_sta->rx_stats;\n \n \tstats->dropped++;\n \treturn true;\n@@ -5071,6 +5094,11 @@\n \n \t\t/* Update the hdr pointer to the new skb for translation below */\n \t\thdr = (struct ieee80211_hdr *)rx->skb->data;\n+\t}\n+\n+\tif (ieee80211_is_s1g_beacon(hdr->frame_control)) {\n+\t\tieee80211_invoke_rx_handlers(rx);\n+\t\treturn true;\n \t}\n \n \tif (unlikely(rx->sta && rx->sta->sta.mlo) &&\n@@ -5157,6 +5185,13 @@\n \tstruct sta_info *sta;\n \tint link_id = -1;\n \n+\tif (ieee80211_is_s1g_beacon(hdr->frame_control)) {\n+\t\tif (!ieee80211_rx_data_set_sta(rx, NULL, -1))\n+\t\t\treturn false;\n+\n+\t\treturn ieee80211_prepare_and_rx_handle(rx, skb, consume);\n+\t}\n+\n \t/*\n \t * Look up link station first, in case there's a\n \t * chance that they might have a link address that\n@@ -5232,6 +5267,17 @@\n \t\t\terr = -ENOBUFS;\n \t\telse\n \t\t\terr = skb_linearize(skb);\n+\t} else if (ieee80211_is_s1g_beacon(fc)) {\n+\t\tsize_t s1g_hdr_len = offsetof(struct ieee80211_ext,\n+\t\t\t\t\t      u.s1g_beacon.variable) +\n+\t\t\t\t     ieee80211_s1g_optional_len(fc);\n+\n+\t\tif (skb->len < s1g_hdr_len)\n+\t\t\terr = -ENOBUFS;\n+\t\telse\n+\t\t\terr = skb_linearize(skb);\n+\t} else if (ieee80211_is_ext(fc)) {\n+\t\terr = -EINVAL;\n \t} else {\n \t\terr = !pskb_may_pull(skb, ieee80211_hdrlen(fc));\n \t}\n"
+    },
+    {
+      "path": "net/mac80211/iface.c",
+      "reference": "ACK full file",
+      "diff": "--- \n+++ \n@@ -595,6 +595,7 @@\n \t\tWARN_ON(!list_empty(&sdata->u.ap.vlans));\n \t} else if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {\n \t\t/* remove all packets in parent bc_buf pointing to this dev */\n+\t\t__skb_queue_head_init(&freeq);\n \t\tps = &sdata->bss->ps;\n \n \t\tspin_lock_irqsave(&ps->bc_buf.lock, flags);\n@@ -602,10 +603,15 @@\n \t\t\tif (skb->dev == sdata->dev) {\n \t\t\t\t__skb_unlink(skb, &ps->bc_buf);\n \t\t\t\tlocal->total_ps_buffered--;\n-\t\t\t\tieee80211_free_txskb(&local->hw, skb);\n+\t\t\t\t__skb_queue_tail(&freeq, skb);\n \t\t\t}\n \t\t}\n \t\tspin_unlock_irqrestore(&ps->bc_buf.lock, flags);\n+\n+\t\tskb_queue_walk_safe(&freeq, skb, tmp) {\n+\t\t\t__skb_unlink(skb, &freeq);\n+\t\t\tieee80211_free_txskb(&local->hw, skb);\n+\t\t}\n \t}\n \n \tif (going_down)\n@@ -617,6 +623,8 @@\n \t\tRCU_INIT_POINTER(sdata->vif.bss_conf.chanctx_conf, NULL);\n \t\t/* see comment in the default case below */\n \t\tieee80211_free_keys(sdata, true);\n+\t\t/* increased by AP value on ifup, so reset on ifdown */\n+\t\tsdata->crypto_tx_tailroom_needed_cnt = 0;\n \t\t/* no need to tell driver */\n \t\tbreak;\n \tcase NL80211_IFTYPE_MONITOR:\n@@ -776,8 +784,9 @@\n \tieee80211_configure_filter(local);\n \tieee80211_hw_config(local, -1, hw_reconf_flags);\n \n+\t/* Passing NULL means an interface is picked for configuration */\n \tif (local->virt_monitors == local->open_count)\n-\t\tieee80211_add_virtual_monitor(local);\n+\t\tieee80211_add_virtual_monitor(local, NULL);\n }\n \n void ieee80211_stop_mbssid(struct ieee80211_sub_if_data *sdata)\n@@ -918,9 +927,33 @@\n \t}\n }\n \n+/*\n+ * The netdev can be unregistered without mac80211 doing it, e.g. by the netdev\n+ * core when cfg80211 couldn't move it out of a network namespace that's being\n+ * destroyed. Drop it from the interface list either way.\n+ */\n+static void ieee80211_unlist_sdata(struct ieee80211_sub_if_data *sdata)\n+{\n+\tstruct ieee80211_local *local = sdata->local;\n+\tstruct ieee80211_sub_if_data *iter;\n+\n+\tASSERT_RTNL();\n+\n+\tlist_for_each_entry(iter, &local->interfaces, list) {\n+\t\tif (iter != sdata)\n+\t\t\tcontinue;\n+\t\tguard(mutex)(&local->iflist_mtx);\n+\t\tlist_del_rcu(&sdata->list);\n+\t\treturn;\n+\t}\n+}\n+\n static void ieee80211_uninit(struct net_device *dev)\n {\n-\tieee80211_teardown_sdata(IEEE80211_DEV_TO_SUB_IF(dev));\n+\tstruct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);\n+\n+\tieee80211_unlist_sdata(sdata);\n+\tieee80211_teardown_sdata(sdata);\n }\n \n static int ieee80211_netdev_setup_tc(struct net_device *dev,\n@@ -928,6 +961,9 @@\n {\n \tstruct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);\n \tstruct ieee80211_local *local = sdata->local;\n+\n+\tif (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)\n+\t\treturn -EOPNOTSUPP;\n \n \treturn drv_net_setup_tc(local, sdata, dev, type, type_data);\n }\n@@ -958,7 +994,7 @@\n \t/* reset flags and info before parsing radiotap header */\n \tmemset(info, 0, sizeof(*info));\n \n-\tif (!ieee80211_parse_tx_radiotap(skb, dev))\n+\tif (!ieee80211_parse_tx_radiotap(skb, dev, NULL))\n \t\treturn 0; /* doesn't matter, frame will be dropped */\n \n \tlen_rthdr = ieee80211_get_radiotap_len(skb->data);\n@@ -1219,7 +1255,8 @@\n \tieee80211_link_init(sdata, -1, &sdata->deflink, &sdata->vif.bss_conf);\n }\n \n-int ieee80211_add_virtual_monitor(struct ieee80211_local *local)\n+int ieee80211_add_virtual_monitor(struct ieee80211_local *local,\n+\t\t\t\t  struct ieee80211_sub_if_data *creator_sdata)\n {\n \tstruct ieee80211_sub_if_data *sdata;\n \tint ret;\n@@ -1227,9 +1264,13 @@\n \tASSERT_RTNL();\n \tlockdep_assert_wiphy(local->hw.wiphy);\n \n-\tif (local->monitor_sdata ||\n-\t    ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))\n+\tif (ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))\n \t\treturn 0;\n+\n+\t/* Already have a monitor set up, configure it */\n+\tsdata = wiphy_dereference(local->hw.wiphy, local->monitor_sdata);\n+\tif (sdata)\n+\t\tgoto configure_monitor;\n \n \tsdata = kzalloc(sizeof(*sdata) + local->hw.vif_data_size, GFP_KERNEL);\n \tif (!sdata)\n@@ -1282,6 +1323,32 @@\n \tskb_queue_head_init(&sdata->skb_queue);\n \tskb_queue_head_init(&sdata->status_queue);\n \twiphy_work_init(&sdata->work, ieee80211_iface_work);\n+\n+configure_monitor:\n+\t/* Copy in the MU-MIMO configuration if set */\n+\tif (!creator_sdata) {\n+\t\tstruct ieee80211_sub_if_data *other;\n+\n+\t\tlist_for_each_entry_rcu(other, &local->mon_list, u.mntr.list) {\n+\t\t\tif (!other->vif.bss_conf.mu_mimo_owner)\n+\t\t\t\tcontinue;\n+\n+\t\t\tcreator_sdata = other;\n+\t\t\tbreak;\n+\t\t}\n+\t}\n+\n+\tif (creator_sdata && creator_sdata->vif.bss_conf.mu_mimo_owner) {\n+\t\tsdata->vif.bss_conf.mu_mimo_owner = true;\n+\t\tmemcpy(&sdata->vif.bss_conf.mu_group,\n+\t\t       &creator_sdata->vif.bss_conf.mu_group,\n+\t\t       sizeof(sdata->vif.bss_conf.mu_group));\n+\t\tmemcpy(&sdata->u.mntr.mu_follow_addr,\n+\t\t       creator_sdata->u.mntr.mu_follow_addr, ETH_ALEN);\n+\n+\t\tieee80211_link_info_change_notify(sdata, &sdata->deflink,\n+\t\t\t\t\t\t  BSS_CHANGED_MU_GROUPS);\n+\t}\n \n \treturn 0;\n }\n@@ -1444,11 +1511,13 @@\n \t\t\tif (res)\n \t\t\t\tgoto err_stop;\n \t\t} else {\n-\t\t\tif (local->virt_monitors == 0 && local->open_count == 0) {\n-\t\t\t\tres = ieee80211_add_virtual_monitor(local);\n+\t\t\t/* add/configure if there is no non-monitor interface */\n+\t\t\tif (local->virt_monitors == local->open_count) {\n+\t\t\t\tres = ieee80211_add_virtual_monitor(local, sdata);\n \t\t\t\tif (res)\n \t\t\t\t\tgoto err_stop;\n \t\t\t}\n+\n \t\t\tlocal->virt_monitors++;\n \n \t\t\t/* must be before the call to ieee80211_configure_filter */\n"
+    },
+    {
+      "path": "net/mac80211/parse.c",
+      "reference": "ACK full file",
+      "diff": "--- \n+++ \n@@ -34,6 +34,13 @@\n #include \"led.h\"\n #include \"wep.h\"\n \n+struct ieee80211_elem_defrag {\n+\tconst struct element *elem;\n+\t/* container start/len */\n+\tconst u8 *start;\n+\tsize_t len;\n+};\n+\n struct ieee80211_elems_parse {\n \t/* must be first for kfree to work */\n \tstruct ieee802_11_elems elems;\n@@ -41,11 +48,7 @@\n \t/* The basic Multi-Link element in the original elements */\n \tconst struct element *ml_basic_elem;\n \n-\t/* The reconfiguration Multi-Link element in the original elements */\n-\tconst struct element *ml_reconf_elem;\n-\n-\t/* The EPCS Multi-Link element in the original elements */\n-\tconst struct element *ml_epcs_elem;\n+\tstruct ieee80211_elem_defrag ml_reconf, ml_epcs;\n \n \tbool multi_link_inner;\n \tbool skip_vendor;\n@@ -162,10 +165,14 @@\n \t\t\t\t}\n \t\t\t\tbreak;\n \t\t\tcase IEEE80211_ML_CONTROL_TYPE_RECONF:\n-\t\t\t\telems_parse->ml_reconf_elem = elem;\n+\t\t\t\telems_parse->ml_reconf.elem = elem;\n+\t\t\t\telems_parse->ml_reconf.start = params->start;\n+\t\t\t\telems_parse->ml_reconf.len = params->len;\n \t\t\t\tbreak;\n \t\t\tcase IEEE80211_ML_CONTROL_TYPE_PRIO_ACCESS:\n-\t\t\t\telems_parse->ml_epcs_elem = elem;\n+\t\t\t\telems_parse->ml_epcs.elem = elem;\n+\t\t\t\telems_parse->ml_epcs.start = params->start;\n+\t\t\t\telems_parse->ml_epcs.len = params->len;\n \t\t\t\tbreak;\n \t\t\tdefault:\n \t\t\t\tbreak;\n@@ -950,46 +957,27 @@\n \t\t\t\t      sub->start, sub->len);\n }\n \n-static void\n-ieee80211_mle_defrag_reconf(struct ieee80211_elems_parse *elems_parse)\n+static const void *\n+ieee80211_mle_defrag(struct ieee80211_elems_parse *elems_parse,\n+\t\t     struct ieee80211_elem_defrag *defrag,\n+\t\t     size_t *out_len)\n {\n-\tstruct ieee802_11_elems *elems = &elems_parse->elems;\n+\tconst void *ret;\n \tssize_t ml_len;\n \n-\tml_len = cfg80211_defragment_element(elems_parse->ml_reconf_elem,\n-\t\t\t\t\t     elems->ie_start,\n-\t\t\t\t\t     elems->total_len,\n+\tml_len = cfg80211_defragment_element(defrag->elem,\n+\t\t\t\t\t     defrag->start, defrag->len,\n \t\t\t\t\t     elems_parse->scratch_pos,\n \t\t\t\t\t     elems_parse->scratch +\n \t\t\t\t\t\telems_parse->scratch_len -\n \t\t\t\t\t\telems_parse->scratch_pos,\n \t\t\t\t\t     WLAN_EID_FRAGMENT);\n \tif (ml_len < 0)\n-\t\treturn;\n-\telems->ml_reconf = (void *)elems_parse->scratch_pos;\n-\telems->ml_reconf_len = ml_len;\n+\t\treturn NULL;\n+\tret = elems_parse->scratch_pos;\n+\t*out_len = ml_len;\n \telems_parse->scratch_pos += ml_len;\n-}\n-\n-static void\n-ieee80211_mle_defrag_epcs(struct ieee80211_elems_parse *elems_parse)\n-{\n-\tstruct ieee802_11_elems *elems = &elems_parse->elems;\n-\tssize_t ml_len;\n-\n-\tml_len = cfg80211_defragment_element(elems_parse->ml_epcs_elem,\n-\t\t\t\t\t     elems->ie_start,\n-\t\t\t\t\t     elems->total_len,\n-\t\t\t\t\t     elems_parse->scratch_pos,\n-\t\t\t\t\t     elems_parse->scratch +\n-\t\t\t\t\t\telems_parse->scratch_len -\n-\t\t\t\t\t\telems_parse->scratch_pos,\n-\t\t\t\t\t     WLAN_EID_FRAGMENT);\n-\tif (ml_len < 0)\n-\t\treturn;\n-\telems->ml_epcs = (void *)elems_parse->scratch_pos;\n-\telems->ml_epcs_len = ml_len;\n-\telems_parse->scratch_pos += ml_len;\n+\treturn ret;\n }\n \n struct ieee802_11_elems *\n@@ -1044,6 +1032,10 @@\n \t\tsub.action = params->action;\n \t\tsub.link_id = params->link_id;\n \n+\t\t/* indicate to consumer whether or not profile was found */\n+\t\tif (params->bss->transmitted_bss && !nontx_len)\n+\t\t\telems->mbssid_nontx_profile_missing = true;\n+\n \t\t/* consume the space used for non-transmitted profile */\n \t\telems_parse->scratch_pos += nontx_len;\n \n@@ -1069,9 +1061,12 @@\n \t\t_ieee802_11_parse_elems_full(&sub, elems_parse, NULL);\n \t}\n \n-\tieee80211_mle_defrag_reconf(elems_parse);\n-\n-\tieee80211_mle_defrag_epcs(elems_parse);\n+\telems->ml_reconf = ieee80211_mle_defrag(elems_parse,\n+\t\t\t\t\t\t&elems_parse->ml_reconf,\n+\t\t\t\t\t\t&elems->ml_reconf_len);\n+\telems->ml_epcs = ieee80211_mle_defrag(elems_parse,\n+\t\t\t\t\t      &elems_parse->ml_epcs,\n+\t\t\t\t\t      &elems->ml_epcs_len);\n \n \tif (elems->tim && !elems->parse_error) {\n \t\tconst struct ieee80211_tim_ie *tim_ie = elems->tim;\n"
+    }
+  ],
+  "native_fixes_preserved": [
+    "03525b632908b049f4d04cc8a71cdff2329589cf",
+    "1c82d0c5d509179ba2a4edfa096f516aebf960b0",
+    "7f52d554c4c8a1db7da82063fc68f61e833a9a11",
+    "6fb64029457cdcd77be546daf4c7c7cf04891857"
+  ],
+  "tests": [
+    "evidence/nan-rx-chains-test.json",
+    "evidence/nan-chanctx-lifetime-test.json"
+  ],
+  "target_evidence": "Retained common mac80211 APIs feed the configured SDK hwsim driver. Optional NAN is not enabled by pinned Goldfish radio construction. See nan-supplicant-uapi.json for the inherited optional-protocol draft mismatch. Android/runtime/module source compatibility motivates preserving this path; no future platform is enabled.",
+  "limitations": [
+    "Focused tests use actual functions with synthetic references/iterator callbacks, not real locks, RCU, reservations, hardware, boot or network traffic.",
+    "No live schedule rollback, carrier timing, cluster-transition race, restart or key exchange verified. Default SDK NAN use is not asserted; optional userspace header incompatibility remains documented.",
+    "Incidental public ieee80211_eml_params external consumer necessity unresolved; retained declaration creates no instance, ABI padding or feature enablement.",
+    "No additional dependency change, external specification or remote source was used."
+  ],
+  "remote_sources_used": []
+}
