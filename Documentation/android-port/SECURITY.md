@@ -9816,3 +9816,39 @@ pages. Emulation size is boot-time read-only and capped at 16 KiB, and queue
 depth is capped at 4096, avoiding an unbounded descriptor-size multiplication.
 This is source analysis, not execution of ublk, swapped processes, memory-daemon
 services or a 16 KiB emulator. No additional remote resources were used.
+
+## Intel NPU provider tail
+
+The 17 candidates in evidence/ivpu-tail-review.json were read in full, including
+the firmware split, warm-boot state machine and multi-file logging patch. All 22
+affected paths remain exactly Linux 6.18.57 or absent in both trees. The SDK
+enables the generic accelerator framework but disables DRM_ACCEL_IVPU, a separate
+PCI/MSI and firmware-dependent Intel CPU-integrated NPU driver. Goldfish selects
+the sample neural-network APEX; its sample-all and canonical sample execution
+paths use CpuExecutor. The third sample shim uses an architecture-selected sample
+support-library prebuilt; its build mapping was inspected, but the binary was
+not exhaustively disassembled. This is positive target/provider evidence, not
+an inference that Android never needs an NPU from unsuccessful consumer searches.
+
+Omit the new Nova Lake PCI ID, IP generation and firmware, ECC capability
+signalling, NPU6 scheduler selection, power-down register polling, clock stepping
+workaround and warm-boot protocol with that physical provider. Keep the native
+boot, memory-layout and cleanup implementations as a coherent unit. The follow-up
+removal of retention MMIO does not cause the superseded write to be imported.
+Private statistics, fdinfo, resident-buffer accounting, PM call cleanup and BO
+diagnostics do not alter generic DRM, dma-buf, procfs, PM or Android hook APIs.
+The job-description patch also moves bo_count next to a flexible array; it is
+not classified as comments-only or historical KMI preservation.
+
+There are substantive security-related changes in this omitted series. The
+logging patch also bounds a metric-streamer allocation; the firmware follow-up
+adds alignment and image-size checks for the new split runtime layout; the PRIME
+wrapper prohibits re-exporting imported GEM objects with balanced references.
+These checks are not claimed to be present or equivalent in native LTS. Their
+provider is disabled in this SDK kernel, and the newer object/layout features
+are omitted together. Existing native firmware range, size and entry-point
+checks and all other 6.18.y code remain exactly intact. These choices require
+reassessment before enabling this driver or adding physical NPU support; they
+do not weaken an existing LTS fix for the delivered target. No NPU or neural-
+network workload, emulator boot or Android build was executed. All evidence was
+local; no additional remote resources were accessed.
