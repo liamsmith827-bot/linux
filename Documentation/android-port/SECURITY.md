@@ -8163,3 +8163,81 @@ loads. Final headers all omit the historical driver_init declaration. All
 other serial/serdev implementation files in this review are native LTS.
 No serial I/O, hotplug, DCC or EL2 example runtime is claimed. Only local sources
 were used.
+
+## Wireless ranging and proximity interfaces
+
+Sixteen decisions are recorded in `evidence/pmsr-interface-review.json`.
+Retain the generic cfg80211/mac80211 PMSR/FTM and proximity interfaces in the
+configured SDK wireless stack. Goldfish explicitly creates a hwsim radio for
+VirtIO Wi-Fi and starts wpa_supplicant using nl80211; ACK hwsim concretely
+parses the new role/type/antenna/PD bitmap fields. These establish relevant
+configured interfaces, not shipping use of every optional capability. Limited
+searches of pinned wpa_supplicant, Goldfish and frameworks/opt/net/wifi did
+not establish new PD callers. Exact necessity remains unconfirmed and the
+interfaces are retained conservatively for Android runtime and module source
+compatibility, with no new physical platform enabled.
+
+Preserve appended netlink attribute numbers and actual wire encodings. The
+single RSTA capability is superseded by per-mode capabilities while keeping
+the old userspace bit. EDCA RSTA does not require LMR feedback; TB/NTB RSTA
+does. Per-role peer limits supplement the total pre-allocation bound. PD
+requests use distinct bandwidth/preamble capabilities, reject TB and limit
+NTB FTMs per burst to four. Threshold and suppression inputs are passed to
+drivers: this is not central enforcement of event filtering. Advertised
+minimum intervals and concurrent-role support also lack central enforcement
+in pmsr.c; driver protocol behavior is unverified. The original periodic
+parameter prose does not override native policy bounds retained in the code.
+
+The audit found an ACK null dereference reachable through infrastructure NTB
+requests without NOMINAL_TIME. Result commit 18287885bb0e reads it only when
+present, retains mandatory presence for PD NTB, and preserves zero/default
+behavior for legacy infrastructure requests. Rejecting every old request
+would break compatibility; dereferencing the missing attribute permits a
+kernel crash through the capability-gated, namespace-administrative PMSR
+command. Also read FTMS_PER_BURST as its policy u8 and AW_DURATION as its
+policy u32, bounded at 255 before assignment. The first width mismatch also
+exists in native LTS; correcting it does not remove an LTS protection. These
+reads avoid using padding or the wrong byte on other byte orders; only the
+x86 host is tested. Correct misleading antenna, spatial-stream and result
+availability-window comments to their existing u8 wire format, without
+changing serialized data.
+
+Accepting zero FTMs with a nonzero maximum deliberately differs from native
+LTS's nonzero requirement: ACK defines zero as driver/firmware auto-selection.
+Keep that Android behavior, the advertised upper limit, and PD/EDCA limits;
+drivers remain responsible for choosing supported counts. This is a bounded
+compatibility relaxation, not a claim that arbitrary driver auto-selection
+has been validated. No other native request protection is dropped: retain
+cfbda103aeae preamble range checks, fbaa8c31ef94 unsupported LCI/civic errors,
+0caf6416bfbb exactly-one measurement validation, and native chandef parsing.
+Native wiphy_work initialization, cancellation and abort ownership preserve
+133684982dd0/a1b7a843f12a deadlock and teardown fixes, without KMI work aliases.
+
+PD start/stop are administrative and use wiphy/RTNL locking, rfkill and driver
+callback checks. Registration rejects a PD provider lacking start/stop;
+current mac80211/hwsim supplies neither callback, so retaining the interface
+cases does not claim a working PD interface. Secure-RTT checks guard PD
+management operations. Addressed authentication-only RX keeps newer native
+frame-length checks. Optional ROC MAC filtering requires advertised support;
+current mac80211 does not implement/advertise it. Physical-driver signature
+updates merely keep the common callback source interface coherent.
+
+Secure LTF seed installation requires both SECURE_LTF and SET_KEY_LTF_SEED,
+existing cipher/key validation and a pairwise key. Its binary policy allows
+at most 48 bytes, including zero length; cipher-specific requirements remain
+with the driver. Key-add tracing contains metadata, not seed bytes. Retaining
+these APIs does not supply PHY security or establish accurate/trustworthy
+ranging. No historical KABI reserves are retained.
+
+`check_pmsr_parser.py` exercises the actual extracted FTM parser and structures
+with prevalidated-attribute shims under ASan/UBSan. The port passes 1,033
+cases and a separate missing-nominal probe; the ACK control passes 981 safe
+cases, records 976 getter/payload-width mismatches, and reproduces the null
+dereference in its separate probe. The test covers roles/modes/feedback,
+PD restrictions, timing fields, thresholds and native location capability
+checks. It does not exercise netlink policy traversal, peer-list allocation,
+radio I/O, concurrency or big-endian execution. Build 170 passed the existing emulator workflow and
+produced the kernel image, 100 common and 45 virtual-device modules. All 145
+signatures verified against the exact certificate; a tampered payload was
+rejected, and generated export/CRC tables passed inspection. All
+sources used here are local; commit-message URLs were not accessed.

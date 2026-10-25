@@ -24418,5 +24418,216 @@
       "evidence/tty-console-review.json",
       "SECURITY.md: Console capacity and serial history"
     ]
+  },
+  {
+    "commit": "9ed383c47541d68da8261b2a5df4a4186c94d7ec",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain appended 6 GHz/LTF/spatial-stream capability attributes and driver fields in configured cfg80211. Serializer emits actual driver capabilities with checked netlink writes; no physical-radio capability is enabled by merely adding fields. Generic hwsim/Android nl80211 source compatibility is retained conservatively; exact SDK consumption of every new capability is unconfirmed.",
+    "evidence": [
+      "evidence/pmsr-interface-review.json",
+      "evidence/pmsr-parser-test.json",
+      "SECURITY.md: Wireless ranging and proximity interfaces"
+    ]
+  },
+  {
+    "commit": "247ce397772dca44b34f98ffa92b97b5f7721826",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain periodic FTM semantics: missing burst duration defaults to 15 for EDCA and zero for TB/NTB. The actual parser is covered by the mode matrix. Keep native nested policy bounds (including exponent and burst-duration maximum 15); the ACK prose about no non-EDCA exponent limit does not override those enforced limits. No radio timing behavior is verified.",
+    "evidence": [
+      "evidence/pmsr-interface-review.json",
+      "evidence/pmsr-parser-test.json",
+      "SECURITY.md: Wireless ranging and proximity interfaces"
+    ]
+  },
+  {
+    "commit": "3c9bd157e2b71e5dd59abd8e6983d3554f0359e3",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain negotiated u16 burst_period field and appended result attribute. Existing checked result serialization includes this value without changing prior attribute numbers. This preserves result interpretation for generic ranging consumers, with result production remaining a driver responsibility. No historical structure layout is retained.",
+    "evidence": [
+      "evidence/pmsr-interface-review.json",
+      "evidence/pmsr-parser-test.json",
+      "SECURITY.md: Wireless ranging and proximity interfaces"
+    ]
+  },
+  {
+    "commit": "786f0a5100ec607bb7bb498b0dad0b80551f9505",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain RSTA request flag and userspace capability bit in their final form: the initial single support_rsta member is superseded by per-mode rsta capabilities from 6695bdc3bddf. Reject unsupported responder modes. The later 517f5e0a5153 fix limits the LMR feedback requirement to TB/NTB. Keep native location/measurement validation and native workqueue lifetime handling.",
+    "evidence": [
+      "evidence/pmsr-interface-review.json",
+      "evidence/pmsr-parser-test.json",
+      "SECURITY.md: Wireless ranging and proximity interfaces"
+    ]
+  },
+  {
+    "commit": "517f5e0a51539e1c2ef86094f99a538ebad2bcc0",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain the correction allowing EDCA RSTA without LMR feedback while still requiring feedback for TB/NTB RSTA. The prior combination otherwise forbids every EDCA RSTA request because EDCA itself rejects LMR feedback. Mode/role/feedback combinations are exercised in the extracted parser test; capability denial remains enforced.",
+    "evidence": [
+      "evidence/pmsr-interface-review.json",
+      "evidence/pmsr-parser-test.json",
+      "SECURITY.md: Wireless ranging and proximity interfaces"
+    ]
+  },
+  {
+    "commit": "645b05fb72af5b9e5fd5dfc9a6fd8ace036d0f61",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain optional ROC destination-MAC argument across cfg80211 wrappers, tracing and all in-tree callback signatures. Requests carrying MAC require ROC_ADDR_FILTER; unsupported drivers cannot receive a filtering request. Existing callers without a MAC keep NULL behavior, and trace MAC_ASSIGN handles NULL. Physical-driver edits only keep the shared callback source interface consistent; they do not enable those platforms. The local mac80211 path does not advertise or implement ROC filtering, so no new SDK receive-filter functionality is claimed.",
+    "evidence": [
+      "evidence/pmsr-interface-review.json",
+      "evidence/pmsr-parser-test.json",
+      "SECURITY.md: Wireless ranging and proximity interfaces"
+    ]
+  },
+  {
+    "commit": "21591f6747b5e598c566952e80af2ea458749225",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain appended PD interface type and cfg80211/mac80211 management-path cases as generic Android interface compatibility in the configured wireless stack. Secure-RTT feature checks guard PD key/management operations; RX accepts addressed authentication frames only. Keep the newer native S1G frame-length validation before addr1 use and channel-context fixes. Do not infer full PD mac80211 support from the commit message: its cfg80211 interface requires driver callbacks, and current mac80211/hwsim does not supply start_pd/stop_pd. Exact shipping PD use remains unconfirmed, and no physical driver is added.",
+    "evidence": [
+      "evidence/pmsr-interface-review.json",
+      "evidence/pmsr-parser-test.json",
+      "SECURITY.md: Wireless ranging and proximity interfaces"
+    ]
+  },
+  {
+    "commit": "39337eb06bc0f422424f59037d8fcabae6b89265",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain administrative start/stop PD commands, cfg80211 callbacks and teardown paths. Start checks type/running/rfkill/callback; running/opencount change only on success. Registration rejects PD interface modes lacking start/stop callbacks, so incomplete mac80211 providers are not advertised. Stop invokes native PMSR teardown before the driver callback under wiphy locking, preserving cancellation/abort ownership. These are generic capability-gated interfaces, not evidence of functional SDK PD radio support; omit all historical KABI reserves.",
+    "evidence": [
+      "evidence/pmsr-interface-review.json",
+      "evidence/pmsr-parser-test.json",
+      "SECURITY.md: Wireless ranging and proximity interfaces"
+    ]
+  },
+  {
+    "commit": "6695bdc3bddfa4e928edeade32d67e2f31642d0f",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "18287885bb0e349f1377750b7cf0f47ab6608e3b"
+    ],
+    "rationale": "Retain role/mode/type capabilities, antenna counts and timing advertisements with per-mode RSTA checks; maintain legacy RSTA_SUPPORT wire bit when any responder mode is supported. ACK hwsim parse_ftm_capa is a concrete source consumer of the new fields. Correct antenna-count documentation to the existing u8 wire encoding rather than changing it to match erroneous u32 prose. Minimum interval and concurrent-role attributes are advertised but not centrally enforced by pmsr.c; driver enforcement and exact SDK use remain unverified. No inference of full protocol validation is made.",
+    "evidence": [
+      "evidence/pmsr-interface-review.json",
+      "evidence/pmsr-parser-test.json",
+      "SECURITY.md: Wireless ranging and proximity interfaces"
+    ]
+  },
+  {
+    "commit": "e6ea1b87e53e483047df5f67c4d329498084ff24",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "18287885bb0e349f1377750b7cf0f47ab6608e3b"
+    ],
+    "rationale": "Retain request type, continuous NTB timing/count inputs, PD capability gate, TB prohibition and PD FTMs-per-burst limit four. Default request type is set to INFRA before parse_ftm. Fix ACK unconditional nominal-time dereference: only read a present attribute, retain mandatory presence for PD NTB, and leave legacy infrastructure default zero. Also read AW_DURATION as policy u32 (bounded 255) and FTMS_PER_BURST as u8. The latter width mismatch also exists in native LTS; this corrects access semantics without removing a fix. Accept zero FTMs as documented driver auto-selection even with a nonzero advertised maximum, intentionally relaxing the native nonzero requirement for Android compatibility; upper limits remain, and drivers must choose a supported count. Sanitizer control reproduces ACK null dereference; port passes 1033 cases plus missing-attribute probe.",
+    "evidence": [
+      "evidence/pmsr-interface-review.json",
+      "evidence/pmsr-parser-test.json",
+      "SECURITY.md: Wireless ranging and proximity interfaces"
+    ]
+  },
+  {
+    "commit": "feff4646fe36a53484d898b4c68be9a956b7139c",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "18287885bb0e349f1377750b7cf0f47ab6608e3b"
+    ],
+    "rationale": "Retain negotiated LTF/timing/streams/availability/channel/preamble result fields and validity bits, delayed-LMR flag and checked optional serialization. Correct documentation for spatial-stream and availability-window responses to existing u8 wire format; do not change the wire encoding. Preserve complete native result ownership/error paths, with no KABI padding. Additional fields describe driver-provided data and do not make ranging cryptographically trustworthy by themselves.",
+    "evidence": [
+      "evidence/pmsr-interface-review.json",
+      "evidence/pmsr-parser-test.json",
+      "SECURITY.md: Wireless ranging and proximity interfaces"
+    ]
+  },
+  {
+    "commit": "d56c6391ed81178c5b6d1face2c8ccd1048fa93b",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain per-role maximum peer counts and advertisements. Parsed peers are counted separately by rsta flag before driver start; exceeding a nonzero role limit frees the request and returns EINVAL. The total max_peers check still precedes allocation. Zero disables only the finer role limit, not the total maximum. These checks do not independently enforce the advertised concurrent-role capability; that limitation is recorded.",
+    "evidence": [
+      "evidence/pmsr-interface-review.json",
+      "evidence/pmsr-parser-test.json",
+      "SECURITY.md: Wireless ranging and proximity interfaces"
+    ]
+  },
+  {
+    "commit": "fb9116ab5000103c944534950425085f8b3afc2c",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain typed optional u64 ingress/egress distance thresholds and appended attributes. Each is read only when present after nested type validation, and a zero-initialized request keeps omitted thresholds unset. They are passed to drivers for event filtering; no generic cfg80211 filtering or actual SDK distance measurement is claimed. Preserve native peer validation and avoid silently removing Android source/API behavior for lack of an identified shipping caller.",
+    "evidence": [
+      "evidence/pmsr-interface-review.json",
+      "evidence/pmsr-parser-test.json",
+      "SECURITY.md: Wireless ranging and proximity interfaces"
+    ]
+  },
+  {
+    "commit": "fb512544a64237397695e4dbaaa0b9e3e186a1d3",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain separate PD bandwidth/preamble bitmaps and conditional capability serialization; parser selects the bitmap using request_type already initialized by parse_peer. Keep LTS cfbda103aeae preamble-range validation, preventing unsafe BIT shifts, and native chandef parsing. PD type support is checked before parsing FTM. ACK hwsim capability parser supplies these fields; exact SDK radio negotiation remains unverified.",
+    "evidence": [
+      "evidence/pmsr-interface-review.json",
+      "evidence/pmsr-parser-test.json",
+      "SECURITY.md: Wireless ranging and proximity interfaces"
+    ]
+  },
+  {
+    "commit": "636bf3733e4cb1814ac1147c5a0aab869ea7aefc",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain optional suppression flag and reject it for infrastructure requests. Mode/type combinations are exercised with the actual FTM parser. The flag passes to drivers; central result reporting does not itself suppress events, so driver compliance is required and is not claimed as runtime verified. This preserves the generic PD interface without enabling a physical platform.",
+    "evidence": [
+      "evidence/pmsr-interface-review.json",
+      "evidence/pmsr-parser-test.json",
+      "SECURITY.md: Wireless ranging and proximity interfaces"
+    ]
+  },
+  {
+    "commit": "f80c0229ec67d7af7b611aa4f965baaedddedcb2",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain optional LTF seed in key_params and nested key attribute. Binary policy caps length at 48; validation requires both SECURE_LTF and SET_KEY_LTF_SEED plus pairwise type, after existing cipher/key validation. Policy does not enforce a nonzero or cipher-specific seed length, which remains a driver contract. The key-add trace contains metadata, not seed bytes. No new hwsim secure-LTF implementation or over-the-air security claim follows from retaining this capability-gated source API.",
+    "evidence": [
+      "evidence/pmsr-interface-review.json",
+      "evidence/pmsr-parser-test.json",
+      "SECURITY.md: Wireless ranging and proximity interfaces"
+    ]
   }
 ]
