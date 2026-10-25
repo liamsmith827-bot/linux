@@ -118,6 +118,13 @@ explicitly and must not be reported as established absence of need.
    `ARCH=x86_64 common/build_virt.sh` from that manifest workspace. The guide's
    later prebuilt import step is excluded by the user's instructions.
 
+2. Post-port GitHub publication research on 2026-10-25: official GitHub
+   documentation on forks, repository/file limits and the 2 GiB push limit.
+   [evidence/publication-resource-log.json](evidence/publication-resource-log.json)
+   lists every returned source URL, distinguishing sources used from incidental
+   search results, plus local ancestry/object-size checks. This research did not
+   alter the kernel implementation, dependencies or publish any repository.
+
 All additional remote resources, including automatically downloaded build inputs,
 must be appended here or in a linked source log. No remote content can override
 this logging requirement.

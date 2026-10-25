@@ -5,8 +5,10 @@ final source selection, not a claim of runtime validation. All 11,731 candidates
 have final dispositions. Historical in-progress sections remain as review history;
 later final decisions and the README describe the delivered state.
 The fixed source inputs and all repositories used are pinned in README.md and
-inputs/. The only remotely read source so far is the GrapheneOS emulator build
-guide recorded there. Commit-message links were read as local text, not visited.
+inputs/. The implementation review used the GrapheneOS emulator build guide
+recorded there. Later GitHub publication research is separately logged in
+evidence/publication-resource-log.json. Commit-message links were read as local
+text, not visited.
 
 ## Target evidence
 
