@@ -9250,3 +9250,68 @@ preserving the complete native hda.c and its fixes. This needs reconsideration
 when targeting those devices. No media runtime test, SCS runtime test or additional
 remote lookup was performed; URLs appearing in local commit messages were not
 opened.
+
+## Shared build and profiling interfaces
+
+The 15 decisions in `evidence/build-shared-review.json` preserve current LTS CFI
+configuration and C/Rust compiler flags exactly, including current toolchain gates
+and nonpermissive checking. Normalizing equal-width, equal-signedness integer types
+is the native C/Rust interoperability policy; the historical commit's type-hash
+percentage is not a measurement of this build. Old LTO merge artifacts, duplicated
+USB objects and duplicate watermark resets are not restored. The current watermark
+function differs from LTS only by its separately retained Android notification.
+
+External module UAPI export is retained and corrected in `a5031acbef99`. The ACK
+replacement target reported success while exporting 1,017 kernel headers instead
+of the external module's header. Its default install destination also pointed into
+the kernel output tree. The adaptation uses srcroot for source headers, the module
+output for generated headers, and that output's usr directory as the default
+destination. The kernel objtree still locates the built unifdef sanitizer.
+`check_external_uapi.py` verified separate and in-source module output, custom and
+default install paths, architecture and generated headers, source precedence,
+kernel-output isolation, removal of kernel-only content, and rejection of leaked
+CONFIG references. Normal kernel installation exported 1,035 headers including
+architecture syscall and generated version headers. These are host build tests,
+not kernel runtime tests. Native header sanitization and licensing checks remain.
+
+The legacy vendor build variables remain supported: EXTRA_AFLAGS maps to
+asflags-y, EXTRA_CFLAGS to ccflags-y, EXTRA_CPPFLAGS to cppflags-y, and EXTRA_LDFLAGS
+to ldflags-y. Native standalone checkpatch and upstream build documentation remain
+unchanged; the optional historical deprecation diagnostic is omitted. No active
+SDK module consumer was established, which is not treated as proof that this
+generic source-module interface is dispensable. These are trusted build inputs,
+not a binary KMI promise. Current native Clang target selection supersedes the
+retired Android-specific target-triple detector and GNU-prefix workaround.
+
+The task-exit and munmap profile notifiers remain. UID_SYS_STATS positively
+registers its exit callback, and do_exit dispatches it. The munmap path calls its
+notifier after the separately reviewed argument normalization and before native
+unmap. No specific SDK munmap subscriber was established; the generic exported
+registration interface is retained conservatively. Callbacks must obey the
+blocking-notifier context and preserve caller state. Runtime accounting and
+notifier behavior remain unverified.
+
+Current x86 KUnit modules are built with the GKI target and all 20 entries are
+packaged in tests.zip. This supersedes the old standalone build.config.kunit
+layouts. Final ACK's x86 list excludes KFENCE and the clock-test pair, but retains
+the clock helper; historical common tests otherwise remain selected. Module
+signing stays enabled. No KUnit test was executed. Separate Microdroid/crashdump
+image-only targets and their reduced configurations are outside the SDK workflow.
+Their omission does not remove independently retained generic guest interfaces.
+
+The temporary RockPi DT-rule rollback was exactly undone; current native split
+DT rules remain. ARM command-line extension history is omitted for this x86 target
+while native x86 builtin/bootloader combination and generic OF support remain.
+`339284930a26` removes an orphan comment that described the omitted ARM extension;
+all shared DT parser/header and ARM parsing files now match LTS. No ARM runtime or
+future platform compatibility is claimed. No additional remote source was used.
+
+Build 188 completed `ARCH=x86_64 common/build_virt.sh` at Linux `a5031acbef99`
+and manifest `7d9a8e4`, producing bzImage, 100 common modules and 45 virtual-device
+modules. All 145 signatures verified against the output certificate and the
+tampered control was rejected; protected-export and flag/CRC table checks passed.
+The Makefile change invalidated 61 whole-file witnesses. Each was refreshed only
+after proving its other paths unchanged and isolating the single external-header
+default-destination line; two textual-presence decisions also passed reverse-patch
+checks again against both LTS and current HEAD. This refresh finalizes no new
+candidate and is recorded in `evidence/makefile-uapi-witness-refresh.json`.

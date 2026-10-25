@@ -1,0 +1,627 @@
+{
+  "source_head": "a5031acbef992fbaac0b73a8c72a007d0d7a0c7c",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "d9a2a3f2c2c41d0a550d8643aac683840f6e1843",
+      "disposition": "superseded",
+      "rationale": "The historical DT command-line extension was reverted and later reintroduced for ARM. Preserve native early DT parsing and the native x86 builtin/bootloader combination used by the SDK. The port header had a stale comment describing the omitted extension; 339284930a26 removes it so declarations document the delivered LTS implementation. Generic OF remains enabled; this is not an assertion that the SDK cannot use any device tree.",
+      "result_commits": [
+        "339284930a2656e9b9db29dc6ffe7ea6650f5230"
+      ],
+      "evidence": [
+        "evidence/build-shared-review.json",
+        "SECURITY.md: Shared build and profiling interfaces"
+      ],
+      "paths": [
+        "drivers/of/fdt.c",
+        "include/linux/of_fdt.h"
+      ],
+      "patch_sha256": "e951c5a780129e35fb08deafe6cbbf4f9282eefbe16382571d1a3a1fae331102"
+    },
+    {
+      "commit": "570a470112db11aa816f279f459b0d43877d4189",
+      "disposition": "superseded",
+      "rationale": "Keep current native LTO/CFI build architecture rather than replay 5.8 merge cleanup. ARM vdso Makefile, USB host Makefile, scripts/Makefile and link-vmlinux.sh equal LTS; module-lto.lds.S and update_lto_symversions are absent. The current watermark function equals native except its separately retained vendor hook and resets boost once. Do not reintroduce duplicated USB objects, duplicate watermark reset or obsolete LTO metadata/linker scripts.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/build-shared-review.json",
+        "SECURITY.md: Shared build and profiling interfaces"
+      ],
+      "paths": [
+        "arch/Kconfig",
+        "arch/arm64/kernel/vdso/Makefile",
+        "drivers/usb/host/Makefile",
+        "mm/page_alloc.c",
+        "scripts/Makefile",
+        "scripts/Makefile.build",
+        "scripts/link-vmlinux.sh",
+        "scripts/module-lto.lds.S"
+      ],
+      "patch_sha256": "ff376a077e03618d2a49d802a85955d88a8bd66e9461a5ea56c88af773325133"
+    },
+    {
+      "commit": "280812bec8d2885ef259aa7a9130393a7281f55e",
+      "disposition": "superseded",
+      "rationale": "The first out-of-tree headers layout and its later revert are superseded by the separate external-module target in 7b65a6d404ec. Retain the capability through the current LTS build machinery plus a5031acbef99, which corrects an observed silent wrong-tree export; do not restore old extmod-prefix plumbing or obsolete documentation. Normal kernel header installation remains tested.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "a5031acbef992fbaac0b73a8c72a007d0d7a0c7c"
+      ],
+      "evidence": [
+        "evidence/build-shared-review.json",
+        "SECURITY.md: Shared build and profiling interfaces"
+      ],
+      "paths": [
+        "Documentation/kbuild/modules.rst",
+        "Makefile"
+      ],
+      "patch_sha256": "504368a8c1c15d870ccc4bfc91af7839b9d6a570ab88145a8bcde0abaf279191"
+    },
+    {
+      "commit": "2c71673913c12528c77bd0f75ce2c6adc9ac5059",
+      "disposition": "superseded",
+      "rationale": "ACK explicitly retired the Android-specific CLANG_TRIPLE probe and old androidkernel GNU prefix workaround. Keep exact native scripts/Makefile.clang target selection and current Kleaf toolchain integration. The old detector and allmodconfig script are absent from final ACK; per-architecture legacy shell configs are superseded by the delivered x86 Kleaf target, not restored for ARM.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/build-shared-review.json",
+        "SECURITY.md: Shared build and profiling interfaces"
+      ],
+      "paths": [
+        "Makefile",
+        "build.config.aarch64",
+        "build.config.allmodconfig",
+        "build.config.arm",
+        "build.config.x86_64",
+        "scripts/clang-android.sh"
+      ],
+      "patch_sha256": "5acb612290c7985e987fcda5dd526d179611db31e08d8bd1fc22d9f698440bc8"
+    },
+    {
+      "commit": "68cf9989a1fff78fe0700c051a202b6e2a7c9fe4",
+      "disposition": "superseded",
+      "rationale": "This temporary removal was itself superseded by 4c1e5ba41863. For the SDK retain exact native ARM/DT code and native x86 command-line combination. No historical ARM defconfig or id-register override is imported. The stale shared-header description was removed in 339284930a26; no effective x86 command-line behavior changes.",
+      "result_commits": [
+        "339284930a2656e9b9db29dc6ffe7ea6650f5230"
+      ],
+      "evidence": [
+        "evidence/build-shared-review.json",
+        "SECURITY.md: Shared build and profiling interfaces"
+      ],
+      "paths": [
+        "arch/arm64/Kconfig",
+        "arch/arm64/configs/gki_defconfig",
+        "arch/arm64/kernel/idreg-override.c",
+        "drivers/of/fdt.c",
+        "include/linux/of_fdt.h"
+      ],
+      "patch_sha256": "5ce83c4be9d9d25e070b3b3b8ecb6170e4babb75fbe72320578868dd09ad8fb6"
+    },
+    {
+      "commit": "8a3c247822937e4122345ec234537b4d35d56c7a",
+      "disposition": "adapted",
+      "rationale": "Keep x86 KUnit compilation and packaging through the current common_kernel definition and final ACK module lists rather than old standalone build.config.kunit targets. All 20 current x86 KUnit modules are in tests.zip. Historical common tests remain enabled except KFENCE, already excluded in the final ACK list; x86 does not select the ARM clock-test pair but retains clk_kunit_helpers. Keep MODULE_SIG_ALL=y rather than the old fragment disabling signing. ARM/RISC-V targets and redundant fragments are outside this target; no tests were executed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/build-shared-review.json",
+        "SECURITY.md: Shared build and profiling interfaces"
+      ],
+      "paths": [
+        "BUILD.bazel",
+        "build.config.kunit.aarch64",
+        "build.config.kunit.riscv64",
+        "build.config.kunit.x86_64",
+        "tools/testing/kunit/configs/android/kunit_clk_defconfig",
+        "tools/testing/kunit/configs/android/kunit_defconfig"
+      ],
+      "patch_sha256": "c5eb0f94ff39043cc4b03a0a4c32dcd844e39ebe0865d3d47aa500ebc4bdfc56"
+    },
+    {
+      "commit": "9c5ef7c1d46d06cfb5bdb28fc10deba88b19c1b5",
+      "disposition": "omitted-current-target",
+      "rationale": "This introduces separate size-reduced Microdroid and crashdump kernels, their own defconfigs and image-only build targets; it does not enable an interface in the SDK GKI kernel. The authorized workflow builds kernel_x86_64 and virtual_device_x86_64, and those separate target files are absent. Do not import stripped crashdump hardening or protected-guest configuration into the SDK. Generic shared interfaces such as open-dice are assessed separately and are not removed by this decision.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/build-shared-review.json",
+        "SECURITY.md: Shared build and profiling interfaces"
+      ],
+      "paths": [
+        "BUILD.bazel",
+        "arch/arm64/configs/crashdump_defconfig",
+        "arch/arm64/configs/microdroid_defconfig",
+        "arch/x86/configs/crashdump_defconfig",
+        "arch/x86/configs/microdroid_defconfig",
+        "build.config.crashdump",
+        "build.config.crashdump.aarch64",
+        "build.config.crashdump.x86_64",
+        "build.config.microdroid",
+        "build.config.microdroid.aarch64",
+        "build.config.microdroid.x86_64"
+      ],
+      "patch_sha256": "100d59cbbbf909bd11ada71747318449fbdd93162460b356dbadb84c68fe05e6"
+    },
+    {
+      "commit": "3936c80525bbc80ad40546a24ffe0d9604e57ca1",
+      "disposition": "adapted",
+      "rationale": "Retain Android profile task-exit and munmap notifier APIs: UID_SYS_STATS positively registers the exit callback, do_exit dispatches it, and the munmap syscall invokes the notifier before native unmap after the separately reviewed emulation argument normalization. Current profile implementation/header equal final ACK, with native surrounding exit/unmap behavior preserved. No specific SDK PROFILE_MUNMAP subscriber is established; retain this generic source-module interface conservatively. Callbacks run with the existing blocking-notifier context and must not invalidate caller state; runtime notifier behavior is unverified.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/build-shared-review.json",
+        "SECURITY.md: Shared build and profiling interfaces"
+      ],
+      "paths": [
+        "include/linux/profile.h",
+        "kernel/exit.c",
+        "kernel/profile.c",
+        "mm/mmap.c"
+      ],
+      "patch_sha256": "6d46ef409b3e4b7037d86cac86a93162a2aa997ace98bccb8b44738abdce971d"
+    },
+    {
+      "commit": "b42bc19c79b701114ec66ad24dac8eb8ab27ef19",
+      "disposition": "already-represented-upstream",
+      "rationale": "Current native LTS has the CFI integer-normalization option, C compiler flag and Rust KCFI flags plus modern toolchain gates. These blocks compare exactly to the port and the generated configuration enables CFI, Rust and normalization while permissive mode stays off. Preserve the native same-width/signedness type treatment needed at C/Rust boundaries. Do not rely on the historical commit message percentage of type-hash reduction as a measurement of this build.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/build-shared-review.json",
+        "SECURITY.md: Shared build and profiling interfaces"
+      ],
+      "paths": [
+        "Makefile",
+        "arch/Kconfig"
+      ],
+      "patch_sha256": "48b3530019e1aa9464f689b1b5f64640dc7f2f3d8e83cc1debfad288409f1fb7"
+    },
+    {
+      "commit": "245273f9bfcab36853fd28513b76b95081ec2e68",
+      "disposition": "reverted",
+      "rationale": "The temporary RockPi DT build-rule rollback and reapply have exact inverse changed lines. Keep exact native current scripts/Makefile.dtbs, drivers/of/fdt.c and unittest.c; do not restore old duplicate DT rules in Makefile.lib or Makefile.build. Other generic build additions are reviewed separately. No RockPi target or DT runtime verification is claimed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/build-shared-review.json",
+        "SECURITY.md: Shared build and profiling interfaces"
+      ],
+      "paths": [
+        "drivers/of/fdt.c",
+        "drivers/of/unittest.c",
+        "scripts/Makefile.build",
+        "scripts/Makefile.dtbs",
+        "scripts/Makefile.lib"
+      ],
+      "patch_sha256": "3120e37d28175d67a6b4605875336fc89b4de59cf9e5c587ed074f52d9767c6e"
+    },
+    {
+      "commit": "ac2ea0bb91a3b5f5e71eba66c441e58beca6767e",
+      "disposition": "reverted",
+      "rationale": "The temporary RockPi rollback was exactly undone; preserve the current native split DT rule layout and existing x86 workflow. Exact inverse changed lines and exact native DT rule/source files establish the result, without treating the old build failure as an SDK requirement.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/build-shared-review.json",
+        "SECURITY.md: Shared build and profiling interfaces"
+      ],
+      "paths": [
+        "drivers/of/fdt.c",
+        "drivers/of/unittest.c",
+        "scripts/Makefile.build",
+        "scripts/Makefile.dtbs",
+        "scripts/Makefile.lib"
+      ],
+      "patch_sha256": "f7fdf7118804d079b21dd595dc7bbf319c248fac616a0c272cf5e9d61bbcd346"
+    },
+    {
+      "commit": "1e42b2a2840f8b6044dc87b3298006a73842c2b0",
+      "disposition": "superseded",
+      "rationale": "The removal of the original external-header target was transitional; its current replacement is retained with the wrong-tree export correction a5031acbef99. Native module documentation remains exact. The port supports real external header export without restoring the old interleaved kernel/external rule layout.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "a5031acbef992fbaac0b73a8c72a007d0d7a0c7c"
+      ],
+      "evidence": [
+        "evidence/build-shared-review.json",
+        "SECURITY.md: Shared build and profiling interfaces"
+      ],
+      "paths": [
+        "Documentation/kbuild/modules.rst",
+        "Makefile"
+      ],
+      "patch_sha256": "cec1779b05a32e0817ae791f408a88077f1b33f68d0ef01dea405ac9458dcb45"
+    },
+    {
+      "commit": "7b65a6d404ec082697bd8150d890e65b9e24164c",
+      "disposition": "adapted",
+      "rationale": "Retain external-module headers_install and kernel-output unifdef lookup, but fix the observed ACK bug: M=/module exported 1017 kernel headers and omitted the module header while reporting success. a5031acbef99 selects srcroot for source UAPI, the module output tree for generated UAPI, and a module-local default installation directory; kernel objtree remains the sanitizer location. Tests cover custom/default destinations, separate/in-source module output, generic/arch/generated headers, source precedence, kernel-output isolation, CONFIG leak rejection and normal kernel export. This avoids contaminating an external UAPI archive or overwriting the kernel header output.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "a5031acbef992fbaac0b73a8c72a007d0d7a0c7c"
+      ],
+      "evidence": [
+        "evidence/build-shared-review.json",
+        "SECURITY.md: Shared build and profiling interfaces"
+      ],
+      "paths": [
+        "Makefile",
+        "scripts/headers_install.sh"
+      ],
+      "patch_sha256": "5fdc4df0275ce0e0c53120e4b65480e38cb4fa8ee295f4964d69e15fd38b1f35"
+    },
+    {
+      "commit": "695728b4bd38592f0876d915d227b47139275aee",
+      "disposition": "partially-adapted",
+      "rationale": "Retain the four EXTRA_*FLAGS reset/append interfaces for vendor source-module compatibility. All functional build additions remain on top of current native rules; keep the native standalone checkpatch and upstream documentation rather than importing an optional style warning. The supported legacy-variable mappings are documented in this port audit. The SDK module sources examined do not establish an active consumer, which is not grounds to remove this generic supported ACK source interface. Build flags remain trusted source/build inputs; this does not preserve a binary KMI or alter native compiler hardening defaults by itself.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/build-shared-review.json",
+        "SECURITY.md: Shared build and profiling interfaces"
+      ],
+      "paths": [
+        "Documentation/dev-tools/checkpatch.rst",
+        "Documentation/kbuild/makefiles.rst",
+        "scripts/Makefile.build",
+        "scripts/Makefile.lib",
+        "scripts/checkpatch.pl"
+      ],
+      "patch_sha256": "f2580e954ce0e982981a5e9c608c13473ea88e26ff2be2de7f5b887a4ba68931"
+    },
+    {
+      "commit": "4c1e5ba41863ad1a30b818751a91c121185f9c0f",
+      "disposition": "omitted-current-target",
+      "rationale": "The final extension changes ARM Kconfig/id-register parsing and DT bootargs ordering for ARM protected/Microdroid boot contracts. The SDK uses the native x86 builtin/bootloader command-line combination, verified unchanged, with native DT parser retained. Keep all ARM and shared parser files native; remove only the stale imported description in 339284930a26. This must be reconsidered for future ARM targets rather than inferred unnecessary there.",
+      "result_commits": [
+        "339284930a2656e9b9db29dc6ffe7ea6650f5230"
+      ],
+      "evidence": [
+        "evidence/build-shared-review.json",
+        "SECURITY.md: Shared build and profiling interfaces"
+      ],
+      "paths": [
+        "arch/arm64/Kconfig",
+        "arch/arm64/configs/gki_defconfig",
+        "arch/arm64/kernel/pi/idreg-override.c",
+        "drivers/of/fdt.c",
+        "include/linux/of_fdt.h"
+      ],
+      "patch_sha256": "e6191c5cd04ecdfa28887f207b5b701de15daed68a433688efaa356bfae661c2"
+    }
+  ],
+  "proofs": [
+    {
+      "path": "drivers/of/fdt.c",
+      "comparison": "exact native file",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "blob": "3851ce24458586c2702915e7982758cde257063e"
+    },
+    {
+      "path": "include/linux/of_fdt.h",
+      "comparison": "exact native file",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "blob": "51dadbaa3d63a393792b5b0b154d8153a9d32bcb"
+    },
+    {
+      "path": "arch/arm64/Kconfig",
+      "comparison": "exact native file",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "blob": "2e567a7d89c9b62cd0161160be0c40f834f8af50"
+    },
+    {
+      "path": "arch/arm64/kernel/pi/idreg-override.c",
+      "comparison": "exact native file",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "blob": "bc57b290e5e7bab51a9de90d23fe36e1640e4b6b"
+    },
+    {
+      "path": "arch/x86/kernel/devicetree.c",
+      "comparison": "exact native file",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "blob": "dd8748c45529a8dfa13382c3b75f8f42f4b5c3f0"
+    },
+    {
+      "path": "arch/arm64/kernel/vdso/Makefile",
+      "comparison": "exact native file",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "blob": "f6619e1cb2ce7636451f712414ed16abff5e83e7"
+    },
+    {
+      "path": "drivers/usb/host/Makefile",
+      "comparison": "exact native file",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "blob": "4df946c05ba0ee3fa28ca58d4d81a8d90e51ff18"
+    },
+    {
+      "path": "scripts/Makefile",
+      "comparison": "exact native file",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "blob": "46f860529df5e15fde81782a4f8092438bedfbb8"
+    },
+    {
+      "path": "scripts/link-vmlinux.sh",
+      "comparison": "exact native file",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "blob": "433849ff7529e1fb8bb24e01163455844c8a4c88"
+    },
+    {
+      "path": "scripts/Makefile.dtbs",
+      "comparison": "exact native file",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "blob": "2d321b813600e910c34c9bc446b808fb68f93bf2"
+    },
+    {
+      "path": "drivers/of/unittest.c",
+      "comparison": "exact native file",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "blob": "729813d54c22de440884f95f13bf67c6695f4830"
+    },
+    {
+      "path": "scripts/Makefile.clang",
+      "comparison": "exact native file",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "blob": "b67636b28c35dd1e9ce46197edc9107aa9070370"
+    },
+    {
+      "path": "Documentation/kbuild/modules.rst",
+      "comparison": "exact native file",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "blob": "d0703605bfa4dd13ba1ba6a0bfcbcf4e53190885"
+    },
+    {
+      "path": "scripts/module-lto.lds.S",
+      "comparison": "absent from current ACK and port"
+    },
+    {
+      "path": "scripts/clang-android.sh",
+      "comparison": "absent from current ACK and port"
+    },
+    {
+      "path": "mm/page_alloc.c",
+      "function": "__setup_per_zone_wmarks",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native after only existing vendor notification hook; one boost reset"
+    },
+    {
+      "path": "arch/x86/kernel/setup.c",
+      "comparison": "exact native builtin/bootloader command-line combination",
+      "snippet": "#ifdef CONFIG_CMDLINE_BOOL\n#ifdef CONFIG_CMDLINE_OVERRIDE\n\tstrscpy(boot_command_line, builtin_cmdline, COMMAND_LINE_SIZE);\n#else\n\tif (builtin_cmdline[0]) {\n\t\t/* append boot loader cmdline to builtin */\n\t\tstrlcat(builtin_cmdline, \" \", COMMAND_LINE_SIZE);\n\t\tstrlcat(builtin_cmdline, boot_command_line, COMMAND_LINE_SIZE);\n\t\tstrscpy(boot_command_line, builtin_cmdline, COMMAND_LINE_SIZE);\n\t}\n#endif\n\tbuiltin_cmdline_added = true;\n#endif\n"
+    },
+    {
+      "path": "Makefile",
+      "comparison": "exact native CFI C and Rust flag block",
+      "snippet": "ifdef CONFIG_CFI\nCC_FLAGS_CFI\t:= -fsanitize=kcfi\nifdef CONFIG_CFI_ICALL_NORMALIZE_INTEGERS\n\tCC_FLAGS_CFI\t+= -fsanitize-cfi-icall-experimental-normalize-integers\nendif\nifdef CONFIG_FINEIBT_BHI\n\tCC_FLAGS_CFI\t+= -fsanitize-kcfi-arity\nendif\nifdef CONFIG_RUST\n\t# Always pass -Zsanitizer-cfi-normalize-integers as CONFIG_RUST selects\n\t# CONFIG_CFI_ICALL_NORMALIZE_INTEGERS.\n\tRUSTC_FLAGS_CFI   := -Zsanitizer=kcfi -Zsanitizer-cfi-normalize-integers\n\tKBUILD_RUSTFLAGS += $(RUSTC_FLAGS_CFI)\n\texport RUSTC_FLAGS_CFI\nendif\nKBUILD_CFLAGS\t+= $(CC_FLAGS_CFI)\nexport CC_FLAGS_CFI\nendif\n"
+    },
+    {
+      "path": "arch/Kconfig",
+      "config": "CFI",
+      "comparison": "exact native config",
+      "sha256": "0228842fa1a641eca17dd51b64cb86d1078f656d971fe08b33d2b6ae4ddd935f"
+    },
+    {
+      "path": "arch/Kconfig",
+      "config": "CFI_ICALL_NORMALIZE_INTEGERS",
+      "comparison": "exact native config",
+      "sha256": "858b7ba01da86d7c0a70a035b19c0921a6b43c82025019019f5e4eea6b12edb7"
+    },
+    {
+      "path": "arch/Kconfig",
+      "config": "HAVE_CFI_ICALL_NORMALIZE_INTEGERS",
+      "comparison": "exact native config",
+      "sha256": "51244180a415dec8dda7b3a01abdb274d293f299baa4f749ea6cebafedea83a4"
+    },
+    {
+      "path": "arch/Kconfig",
+      "config": "HAVE_CFI_ICALL_NORMALIZE_INTEGERS_RUSTC",
+      "comparison": "exact native config",
+      "sha256": "d4b4022be936954d983cfe19e7b3ea8d547a2a49e8efa30b824866cec0ef506d"
+    },
+    {
+      "original": "245273f9bfcab36853fd28513b76b95081ec2e68",
+      "revert": "ac2ea0bb91a3b5f5e71eba66c441e58beca6767e",
+      "comparison": "exact inverse changed lines"
+    },
+    {
+      "path": "arch/arm64/configs/crashdump_defconfig",
+      "comparison": "separate crashdump/Microdroid target file absent from port",
+      "ack_blob": "100644 blob 65433fe244e159e023c0055a9d66e7ff3b1b58db\tarch/arm64/configs/crashdump_defconfig"
+    },
+    {
+      "path": "arch/arm64/configs/microdroid_defconfig",
+      "comparison": "separate crashdump/Microdroid target file absent from port",
+      "ack_blob": "100644 blob 8654125feb4d93cffb1d257163a47596f07fbe93\tarch/arm64/configs/microdroid_defconfig"
+    },
+    {
+      "path": "arch/x86/configs/crashdump_defconfig",
+      "comparison": "separate crashdump/Microdroid target file absent from port",
+      "ack_blob": "100644 blob 675c7333f9e6992b628da31dda9222b4e909a19e\tarch/x86/configs/crashdump_defconfig"
+    },
+    {
+      "path": "arch/x86/configs/microdroid_defconfig",
+      "comparison": "separate crashdump/Microdroid target file absent from port",
+      "ack_blob": "100644 blob 2b8046785e8858b8fda2957bc015086c43635151\tarch/x86/configs/microdroid_defconfig"
+    },
+    {
+      "path": "build.config.crashdump",
+      "comparison": "separate crashdump/Microdroid target file absent from port",
+      "ack_blob": ""
+    },
+    {
+      "path": "build.config.crashdump.aarch64",
+      "comparison": "separate crashdump/Microdroid target file absent from port",
+      "ack_blob": ""
+    },
+    {
+      "path": "build.config.crashdump.x86_64",
+      "comparison": "separate crashdump/Microdroid target file absent from port",
+      "ack_blob": ""
+    },
+    {
+      "path": "build.config.microdroid",
+      "comparison": "separate crashdump/Microdroid target file absent from port",
+      "ack_blob": ""
+    },
+    {
+      "path": "build.config.microdroid.aarch64",
+      "comparison": "separate crashdump/Microdroid target file absent from port",
+      "ack_blob": ""
+    },
+    {
+      "path": "build.config.microdroid.x86_64",
+      "comparison": "separate crashdump/Microdroid target file absent from port",
+      "ack_blob": ""
+    },
+    {
+      "path": "build.config.kunit.aarch64",
+      "comparison": "old standalone KUnit build/config fragment omitted; current GKI includes x86 tests",
+      "ack_blob": ""
+    },
+    {
+      "path": "build.config.kunit.riscv64",
+      "comparison": "old standalone KUnit build/config fragment omitted; current GKI includes x86 tests",
+      "ack_blob": ""
+    },
+    {
+      "path": "build.config.kunit.x86_64",
+      "comparison": "old standalone KUnit build/config fragment omitted; current GKI includes x86 tests",
+      "ack_blob": ""
+    },
+    {
+      "path": "tools/testing/kunit/configs/android/kunit_clk_defconfig",
+      "comparison": "old standalone KUnit build/config fragment omitted; current GKI includes x86 tests",
+      "ack_blob": "100644 blob 83c4aa764b7dc6e78ff08ab404c3d2c1a77b66f4\ttools/testing/kunit/configs/android/kunit_clk_defconfig"
+    },
+    {
+      "path": "tools/testing/kunit/configs/android/kunit_defconfig",
+      "comparison": "old standalone KUnit build/config fragment omitted; current GKI includes x86 tests",
+      "ack_blob": "100644 blob f3a96fcf5ade2506279ef7f4bead2943affeda07\ttools/testing/kunit/configs/android/kunit_defconfig"
+    },
+    {
+      "path": "../kernel_manifest-6.18/common_dist/tests.zip",
+      "artifact_build": "sdk-build-attempt-187",
+      "sha256": "3f073f91beec2bf98c1e7328bb85c5b75f7409decf9bbd2b8206fbf892579f31",
+      "packaged_kunit_modules": [
+        "testcases/kunit/x86_64/binder_alloc_kunit.ko",
+        "testcases/kunit/x86_64/clk_kunit_helpers.ko",
+        "testcases/kunit/x86_64/dev_addr_lists_test.ko",
+        "testcases/kunit/x86_64/ext4-inode-test.ko",
+        "testcases/kunit/x86_64/fat_test.ko",
+        "testcases/kunit/x86_64/hid-uclogic-test.ko",
+        "testcases/kunit/x86_64/iio-test-format.ko",
+        "testcases/kunit/x86_64/input_test.ko",
+        "testcases/kunit/x86_64/kunit-example-test.ko",
+        "testcases/kunit/x86_64/kunit-test.ko",
+        "testcases/kunit/x86_64/kunit.ko",
+        "testcases/kunit/x86_64/of_kunit_helpers.ko",
+        "testcases/kunit/x86_64/platform-test.ko",
+        "testcases/kunit/x86_64/regmap-kunit.ko",
+        "testcases/kunit/x86_64/regmap-ram.ko",
+        "testcases/kunit/x86_64/regmap-raw-ram.ko",
+        "testcases/kunit/x86_64/soc-topology-test.ko",
+        "testcases/kunit/x86_64/soc-utils-test.ko",
+        "testcases/kunit/x86_64/test_rtc_lib.ko",
+        "testcases/kunit/x86_64/time_test.ko"
+      ],
+      "observation": "all current common+x86 KUnit module entries packaged; tests not executed"
+    },
+    {
+      "path": "../kernel_manifest-6.18/common_dist/kernel_x86_64_dot_config",
+      "artifact_build": "sdk-build-attempt-187",
+      "sha256": "48f19810fd5e10021d64b96e82cdb2b0b587f7cb24b3b4b5660b6732ae05cd09",
+      "historical_kunit_option_values": {
+        "CONFIG_TIME_KUNIT_TEST": "CONFIG_TIME_KUNIT_TEST=m",
+        "CONFIG_NETDEV_ADDR_LIST_TEST": "CONFIG_NETDEV_ADDR_LIST_TEST=m",
+        "CONFIG_REGMAP_KUNIT": "CONFIG_REGMAP_KUNIT=m",
+        "CONFIG_INPUT_KUNIT_TEST": "CONFIG_INPUT_KUNIT_TEST=m",
+        "CONFIG_SND_SOC_TOPOLOGY_KUNIT_TEST": "CONFIG_SND_SOC_TOPOLOGY_KUNIT_TEST=m",
+        "CONFIG_SND_SOC_UTILS_KUNIT_TEST": "CONFIG_SND_SOC_UTILS_KUNIT_TEST=m",
+        "CONFIG_HID_KUNIT_TEST": "CONFIG_HID_KUNIT_TEST=m",
+        "CONFIG_RTC_LIB_KUNIT_TEST": "CONFIG_RTC_LIB_KUNIT_TEST=m",
+        "CONFIG_IIO_FORMAT_KUNIT_TEST": "CONFIG_IIO_FORMAT_KUNIT_TEST=m",
+        "CONFIG_EXT4_KUNIT_TESTS": "CONFIG_EXT4_KUNIT_TESTS=m",
+        "CONFIG_FAT_KUNIT_TEST": "CONFIG_FAT_KUNIT_TEST=m",
+        "CONFIG_KFENCE_KUNIT_TEST": "# CONFIG_KFENCE_KUNIT_TEST is not set",
+        "CONFIG_KUNIT_TEST": "CONFIG_KUNIT_TEST=m",
+        "CONFIG_KUNIT_EXAMPLE_TEST": "CONFIG_KUNIT_EXAMPLE_TEST=m",
+        "CONFIG_CLK_KUNIT_TEST": "# CONFIG_CLK_KUNIT_TEST is not set",
+        "CONFIG_CLK_GATE_KUNIT_TEST": "# CONFIG_CLK_GATE_KUNIT_TEST is not set"
+      },
+      "observation": "final ACK x86 list excludes KFENCE and clock test modules, retains clk helper; signing enabled"
+    },
+    {
+      "path": "kernel/profile.c",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "comparison": "exact final ACK notifier implementation/declarations",
+      "blob": "13dd4fdac5d1b2722dd917b4d30a775a4970a1a5"
+    },
+    {
+      "path": "include/linux/profile.h",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "comparison": "exact final ACK notifier implementation/declarations",
+      "blob": "0ca3ee578b0243d5b5ea33832fa1b80385c448ef"
+    },
+    {
+      "path": "kernel/exit.c",
+      "observations": [
+        "profile_task_exit(tsk);"
+      ],
+      "blob": "818395a946adf0cd41871c138016fa3751d2d61c"
+    },
+    {
+      "path": "mm/mmap.c",
+      "observations": [
+        "profile_munmap(addr);",
+        "return __vm_munmap(addr, len, true);"
+      ],
+      "blob": "cd4eec926fb29cd48c53f6d1b4c1184c859b0e2b"
+    },
+    {
+      "path": "drivers/misc/uid_sys_stats.c",
+      "observations": [
+        "profile_event_register(PROFILE_TASK_EXIT, &process_notifier_block);"
+      ],
+      "blob": "74a8258d24b90373edad499975dce4069d5ab5f6"
+    },
+    {
+      "path": "Documentation/dev-tools/checkpatch.rst",
+      "comparison": "exact native documentation/style checker; extra deprecation warning omitted",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692"
+    },
+    {
+      "path": "Documentation/kbuild/makefiles.rst",
+      "comparison": "exact native documentation/style checker; extra deprecation warning omitted",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692"
+    },
+    {
+      "path": "scripts/checkpatch.pl",
+      "comparison": "exact native documentation/style checker; extra deprecation warning omitted",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692"
+    },
+    {
+      "path": "scripts/Makefile.build",
+      "comparison": "all nonblank additions from EXTRA flags restoration retained",
+      "added_lines": [
+        "EXTRA_AFLAGS   :=",
+        "EXTRA_CFLAGS   :=",
+        "EXTRA_CPPFLAGS :=",
+        "EXTRA_LDFLAGS  :="
+      ]
+    },
+    {
+      "path": "scripts/Makefile.lib",
+      "comparison": "all nonblank additions from EXTRA flags restoration retained",
+      "added_lines": [
+        "# Backward compatibility",
+        "asflags-y  += $(EXTRA_AFLAGS)",
+        "ccflags-y  += $(EXTRA_CFLAGS)",
+        "cppflags-y += $(EXTRA_CPPFLAGS)",
+        "ldflags-y  += $(EXTRA_LDFLAGS)"
+      ]
+    }
+  ],
+  "additional_checks": [
+    "evidence/external-uapi-check.json"
+  ],
+  "remote_resources_used": []
+}

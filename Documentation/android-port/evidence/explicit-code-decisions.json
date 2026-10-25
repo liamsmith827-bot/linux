@@ -30027,5 +30027,176 @@
       "evidence/revert-interface-review.json",
       "SECURITY.md: Retired proc and media interfaces"
     ]
+  },
+  {
+    "commit": "d9a2a3f2c2c41d0a550d8643aac683840f6e1843",
+    "disposition": "superseded",
+    "rationale": "The historical DT command-line extension was reverted and later reintroduced for ARM. Preserve native early DT parsing and the native x86 builtin/bootloader combination used by the SDK. The port header had a stale comment describing the omitted extension; 339284930a26 removes it so declarations document the delivered LTS implementation. Generic OF remains enabled; this is not an assertion that the SDK cannot use any device tree.",
+    "result_commits": [
+      "339284930a2656e9b9db29dc6ffe7ea6650f5230"
+    ],
+    "evidence": [
+      "evidence/build-shared-review.json",
+      "SECURITY.md: Shared build and profiling interfaces"
+    ]
+  },
+  {
+    "commit": "570a470112db11aa816f279f459b0d43877d4189",
+    "disposition": "superseded",
+    "rationale": "Keep current native LTO/CFI build architecture rather than replay 5.8 merge cleanup. ARM vdso Makefile, USB host Makefile, scripts/Makefile and link-vmlinux.sh equal LTS; module-lto.lds.S and update_lto_symversions are absent. The current watermark function equals native except its separately retained vendor hook and resets boost once. Do not reintroduce duplicated USB objects, duplicate watermark reset or obsolete LTO metadata/linker scripts.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/build-shared-review.json",
+      "SECURITY.md: Shared build and profiling interfaces"
+    ]
+  },
+  {
+    "commit": "280812bec8d2885ef259aa7a9130393a7281f55e",
+    "disposition": "superseded",
+    "rationale": "The first out-of-tree headers layout and its later revert are superseded by the separate external-module target in 7b65a6d404ec. Retain the capability through the current LTS build machinery plus a5031acbef99, which corrects an observed silent wrong-tree export; do not restore old extmod-prefix plumbing or obsolete documentation. Normal kernel header installation remains tested.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "a5031acbef992fbaac0b73a8c72a007d0d7a0c7c"
+    ],
+    "evidence": [
+      "evidence/build-shared-review.json",
+      "SECURITY.md: Shared build and profiling interfaces"
+    ]
+  },
+  {
+    "commit": "2c71673913c12528c77bd0f75ce2c6adc9ac5059",
+    "disposition": "superseded",
+    "rationale": "ACK explicitly retired the Android-specific CLANG_TRIPLE probe and old androidkernel GNU prefix workaround. Keep exact native scripts/Makefile.clang target selection and current Kleaf toolchain integration. The old detector and allmodconfig script are absent from final ACK; per-architecture legacy shell configs are superseded by the delivered x86 Kleaf target, not restored for ARM.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/build-shared-review.json",
+      "SECURITY.md: Shared build and profiling interfaces"
+    ]
+  },
+  {
+    "commit": "68cf9989a1fff78fe0700c051a202b6e2a7c9fe4",
+    "disposition": "superseded",
+    "rationale": "This temporary removal was itself superseded by 4c1e5ba41863. For the SDK retain exact native ARM/DT code and native x86 command-line combination. No historical ARM defconfig or id-register override is imported. The stale shared-header description was removed in 339284930a26; no effective x86 command-line behavior changes.",
+    "result_commits": [
+      "339284930a2656e9b9db29dc6ffe7ea6650f5230"
+    ],
+    "evidence": [
+      "evidence/build-shared-review.json",
+      "SECURITY.md: Shared build and profiling interfaces"
+    ]
+  },
+  {
+    "commit": "8a3c247822937e4122345ec234537b4d35d56c7a",
+    "disposition": "adapted",
+    "rationale": "Keep x86 KUnit compilation and packaging through the current common_kernel definition and final ACK module lists rather than old standalone build.config.kunit targets. All 20 current x86 KUnit modules are in tests.zip. Historical common tests remain enabled except KFENCE, already excluded in the final ACK list; x86 does not select the ARM clock-test pair but retains clk_kunit_helpers. Keep MODULE_SIG_ALL=y rather than the old fragment disabling signing. ARM/RISC-V targets and redundant fragments are outside this target; no tests were executed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/build-shared-review.json",
+      "SECURITY.md: Shared build and profiling interfaces"
+    ]
+  },
+  {
+    "commit": "9c5ef7c1d46d06cfb5bdb28fc10deba88b19c1b5",
+    "disposition": "omitted-current-target",
+    "rationale": "This introduces separate size-reduced Microdroid and crashdump kernels, their own defconfigs and image-only build targets; it does not enable an interface in the SDK GKI kernel. The authorized workflow builds kernel_x86_64 and virtual_device_x86_64, and those separate target files are absent. Do not import stripped crashdump hardening or protected-guest configuration into the SDK. Generic shared interfaces such as open-dice are assessed separately and are not removed by this decision.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/build-shared-review.json",
+      "SECURITY.md: Shared build and profiling interfaces"
+    ]
+  },
+  {
+    "commit": "3936c80525bbc80ad40546a24ffe0d9604e57ca1",
+    "disposition": "adapted",
+    "rationale": "Retain Android profile task-exit and munmap notifier APIs: UID_SYS_STATS positively registers the exit callback, do_exit dispatches it, and the munmap syscall invokes the notifier before native unmap after the separately reviewed emulation argument normalization. Current profile implementation/header equal final ACK, with native surrounding exit/unmap behavior preserved. No specific SDK PROFILE_MUNMAP subscriber is established; retain this generic source-module interface conservatively. Callbacks run with the existing blocking-notifier context and must not invalidate caller state; runtime notifier behavior is unverified.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/build-shared-review.json",
+      "SECURITY.md: Shared build and profiling interfaces"
+    ]
+  },
+  {
+    "commit": "b42bc19c79b701114ec66ad24dac8eb8ab27ef19",
+    "disposition": "already-represented-upstream",
+    "rationale": "Current native LTS has the CFI integer-normalization option, C compiler flag and Rust KCFI flags plus modern toolchain gates. These blocks compare exactly to the port and the generated configuration enables CFI, Rust and normalization while permissive mode stays off. Preserve the native same-width/signedness type treatment needed at C/Rust boundaries. Do not rely on the historical commit message percentage of type-hash reduction as a measurement of this build.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/build-shared-review.json",
+      "SECURITY.md: Shared build and profiling interfaces"
+    ]
+  },
+  {
+    "commit": "245273f9bfcab36853fd28513b76b95081ec2e68",
+    "disposition": "reverted",
+    "rationale": "The temporary RockPi DT build-rule rollback and reapply have exact inverse changed lines. Keep exact native current scripts/Makefile.dtbs, drivers/of/fdt.c and unittest.c; do not restore old duplicate DT rules in Makefile.lib or Makefile.build. Other generic build additions are reviewed separately. No RockPi target or DT runtime verification is claimed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/build-shared-review.json",
+      "SECURITY.md: Shared build and profiling interfaces"
+    ]
+  },
+  {
+    "commit": "ac2ea0bb91a3b5f5e71eba66c441e58beca6767e",
+    "disposition": "reverted",
+    "rationale": "The temporary RockPi rollback was exactly undone; preserve the current native split DT rule layout and existing x86 workflow. Exact inverse changed lines and exact native DT rule/source files establish the result, without treating the old build failure as an SDK requirement.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/build-shared-review.json",
+      "SECURITY.md: Shared build and profiling interfaces"
+    ]
+  },
+  {
+    "commit": "1e42b2a2840f8b6044dc87b3298006a73842c2b0",
+    "disposition": "superseded",
+    "rationale": "The removal of the original external-header target was transitional; its current replacement is retained with the wrong-tree export correction a5031acbef99. Native module documentation remains exact. The port supports real external header export without restoring the old interleaved kernel/external rule layout.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "a5031acbef992fbaac0b73a8c72a007d0d7a0c7c"
+    ],
+    "evidence": [
+      "evidence/build-shared-review.json",
+      "SECURITY.md: Shared build and profiling interfaces"
+    ]
+  },
+  {
+    "commit": "7b65a6d404ec082697bd8150d890e65b9e24164c",
+    "disposition": "adapted",
+    "rationale": "Retain external-module headers_install and kernel-output unifdef lookup, but fix the observed ACK bug: M=/module exported 1017 kernel headers and omitted the module header while reporting success. a5031acbef99 selects srcroot for source UAPI, the module output tree for generated UAPI, and a module-local default installation directory; kernel objtree remains the sanitizer location. Tests cover custom/default destinations, separate/in-source module output, generic/arch/generated headers, source precedence, kernel-output isolation, CONFIG leak rejection and normal kernel export. This avoids contaminating an external UAPI archive or overwriting the kernel header output.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "a5031acbef992fbaac0b73a8c72a007d0d7a0c7c"
+    ],
+    "evidence": [
+      "evidence/build-shared-review.json",
+      "SECURITY.md: Shared build and profiling interfaces"
+    ]
+  },
+  {
+    "commit": "695728b4bd38592f0876d915d227b47139275aee",
+    "disposition": "partially-adapted",
+    "rationale": "Retain the four EXTRA_*FLAGS reset/append interfaces for vendor source-module compatibility. All functional build additions remain on top of current native rules; keep the native standalone checkpatch and upstream documentation rather than importing an optional style warning. The supported legacy-variable mappings are documented in this port audit. The SDK module sources examined do not establish an active consumer, which is not grounds to remove this generic supported ACK source interface. Build flags remain trusted source/build inputs; this does not preserve a binary KMI or alter native compiler hardening defaults by itself.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/build-shared-review.json",
+      "SECURITY.md: Shared build and profiling interfaces"
+    ]
+  },
+  {
+    "commit": "4c1e5ba41863ad1a30b818751a91c121185f9c0f",
+    "disposition": "omitted-current-target",
+    "rationale": "The final extension changes ARM Kconfig/id-register parsing and DT bootargs ordering for ARM protected/Microdroid boot contracts. The SDK uses the native x86 builtin/bootloader command-line combination, verified unchanged, with native DT parser retained. Keep all ARM and shared parser files native; remove only the stale imported description in 339284930a26. This must be reconsidered for future ARM targets rather than inferred unnecessary there.",
+    "result_commits": [
+      "339284930a2656e9b9db29dc6ffe7ea6650f5230"
+    ],
+    "evidence": [
+      "evidence/build-shared-review.json",
+      "SECURITY.md: Shared build and profiling interfaces"
+    ]
   }
 ]
