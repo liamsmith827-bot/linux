@@ -33929,5 +33929,121 @@
       "evidence/tools-tail-review.json",
       "SECURITY.md: Android test-build history review"
     ]
+  },
+  {
+    "commit": "6c0a7d6c549910373c9531d79fbc0a56edd152c6",
+    "disposition": "superseded",
+    "rationale": "Native fw_devlink/fwnode graph implementation supersedes the historical direct-device-link algorithm and of_devlink parameter. Native binding table covers clocks/interconnects/regulators plus later suppliers, optional/strict flags and reference cleanup. Preserve native x86 early return in of_fwnode_add_links, current signatures, cycle handling and atomic flags. OF property file is exactly LTS except separately reviewed u8 helper; parameters.rst is native and the only txt delta is separately reviewed DPM watchdog documentation. No old of_devlink path is restored.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/native-interface-tail-review.json",
+      "SECURITY.md: Native interface and timer review"
+    ]
+  },
+  {
+    "commit": "0ae0cdca4d07306648ed53ef31efbb6f93283434",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the paired physical Bay Trail DTS/INT3401 enumeration redesign: SDK disables INTEL_SOC_DTS_THERMAL. 8c395ddaf3b7 removes the accidentally retained Kconfig half, restoring entire native Kconfig alongside already-native ACPI handler. This preserves coherent native IRQ enumeration rather than mixing the two implementations; no physical thermal capability is enabled and no native security fix is removed.",
+    "result_commits": [
+      "8c395ddaf3b7a4cc10d4f29cc29b0331da2dc289"
+    ],
+    "evidence": [
+      "evidence/native-interface-tail-review.json",
+      "SECURITY.md: Native interface and timer review"
+    ]
+  },
+  {
+    "commit": "edb455d019a93c484f9d1be6ea13451f7ef6e22f",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit lifetime/export conversion of timer-of helpers for loadable physical SoC timer drivers. SDK has no CONFIG_TIMER_OF selection; drivers/clocksource/Makefile gates timer-of.o on it. Examined local callers are physical ARM/SoC timers. Keep both timer-of files entirely native, with init section lifetimes and native clock cleanup; no new platform timer is introduced. This does not omit generic OF module source helpers selected separately.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/native-interface-tail-review.json",
+      "SECURITY.md: Native interface and timer review"
+    ]
+  },
+  {
+    "commit": "bc49d27a2930bf9b78369f0a5c76f2e0ef381661",
+    "disposition": "adapted",
+    "rationale": "Complete the already-declared generic of_property_read_u8_index source API for configured OF and vendor modules in 0e1e2683ed4e. Adapt ACK to compare index against validated property length before indexing; original (index+1) wraps at U32_MAX and can bypass minimum-size checking. Preserve native property errors and leave output unchanged on failure. No exact SDK caller was established; conservative configured source-interface retention, not evidence of runtime need. Extracted-code sanitizer tests cover bounds/errors and reject original overflow; all other property.c code remains native.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "0e1e2683ed4e0205549b4e0a795296bcc7883c95"
+    ],
+    "evidence": [
+      "evidence/native-interface-tail-review.json",
+      "SECURITY.md: Native interface and timer review"
+    ]
+  },
+  {
+    "commit": "94f4c2cf43ff18fc5d3d8b91d9b79734882b662c",
+    "disposition": "adapted",
+    "rationale": "Complete declared/exported generic root match/data helpers in 0e1e2683ed4e using exact ACK function bodies atop native base.c. Hold and release the root node reference; returned data belongs to caller match table, not the released node. CONFIG_OF=n stubs/declarations remain. Retain for configured OF/module source compatibility while exact SDK use remains unknown; no additional DT platform enabled. Extracted-function reference tests pass, not a live device-tree test.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "0e1e2683ed4e0205549b4e0a795296bcc7883c95"
+    ],
+    "evidence": [
+      "evidence/native-interface-tail-review.json",
+      "SECURITY.md: Native interface and timer review"
+    ]
+  },
+  {
+    "commit": "9eb4466c612722e1301cea6dfa66e68b01f19602",
+    "disposition": "already-represented-upstream",
+    "rationale": "The race fix is already native LTS: work_in_progress is an independent bool, preventing shared-bitfield RMW corruption during parallel suspend. Whole pm.h differs only by three blank lines. Preserve native representation and omit both generated STG inventories, which describe historical layout/type IDs rather than executable behavior. Do not classify the actual concurrency fix as KMI-only or restore the unsafe bitfield.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/native-interface-tail-review.json",
+      "SECURITY.md: Native interface and timer review"
+    ]
+  },
+  {
+    "commit": "bc52656e4600060e1b02a0b090442c7719709213",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit ARM/ARM64-only kernel NEON guard API migration; Makefile selects these two implementations only with KERNEL_MODE_NEON, absent in SDK x86 configuration, whose raid6 selection uses x86 SSE/AVX code. Keep both files byte-identical to native LTS and preserve native arithmetic/NEON bracketing. No claim of an upstream equivalent and no other-architecture build verified.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/native-interface-tail-review.json",
+      "SECURITY.md: Native interface and timer review"
+    ]
+  },
+  {
+    "commit": "51933e2fd6d3ebdaa7984a53d89b2d86019758d4",
+    "disposition": "applied",
+    "rationale": "Retain shared V4L2 capacity increase from 256 to 512 in 3188544c95fb. It affects the common video/subdevice registry, not only one physical camera. All bitmap/array/search/chrdev bounds use same constant, and native locking/lifetime code is unchanged; SDK disables fixed minor ranges. This preserves configured Android driver capacity with extra static storage and possible nodes. Exact SDK requirement above 256 is unconfirmed; conservative common-interface compatibility rather than an assertion of a found consumer.",
+    "result_commits": [
+      "3188544c95fbdfb3de7d22c5ebcdfc8130fe363b"
+    ],
+    "evidence": [
+      "evidence/native-interface-tail-review.json",
+      "SECURITY.md: Native interface and timer review"
+    ]
+  },
+  {
+    "commit": "3404b079c4b8232cbc00e8c217c0230c403e539d",
+    "disposition": "applied",
+    "rationale": "Retain stream API enablement in 3188544c95fb: exact candidate delta atop native subdev code. This lifts the LTS experimental hard gate and expands reachable ioctl behavior; it is a compatibility tradeoff, not a security fix. Native driver stream flag, client capability mask, readonly checks, stream/pad/type/route bounds and reserved-field clearing remain. Configured V4L2_SUBDEV_API supports vendor source interfaces; exact SDK multistream use is unconfirmed. No physical camera or driver capability is added, and runtime ioctl behavior is unverified.",
+    "result_commits": [
+      "3188544c95fbdfb3de7d22c5ebcdfc8130fe363b"
+    ],
+    "evidence": [
+      "evidence/native-interface-tail-review.json",
+      "SECURITY.md: Native interface and timer review"
+    ]
+  },
+  {
+    "commit": "062cbc4876f9654c650ebe738922cfd353b6fe06",
+    "disposition": "adapted",
+    "rationale": "Adapt timer arithmetic in b707484227a8 because the existing SDK workflow packages both 32-bit and 64-bit userspace tests. Widen multiplication before evaluation and 5/10-second constants. Keep native b-minus-a timespec helpers and caller order; original ACK common helpers reverse convention without updating nsleep-lat calls, so helpers.h and its BUILD dependency are omitted. Preserve prior LONG_MIN/MAX guards and native timekeeping fixes. Extracted signed ILP32 arithmetic covers 441 cases for each helper with old-overflow negative control; no timer, clock-change or suspend test executed.",
+    "result_commits": [
+      "b707484227a882fe3d08b5ed1cdf198fb2b97eca",
+      "ce995d281cc8e80ad94995f60b99577e85ca90b2",
+      "29bc8be5e229369d99d8bacbcc32b71f640abdb6"
+    ],
+    "evidence": [
+      "evidence/native-interface-tail-review.json",
+      "SECURITY.md: Native interface and timer review"
+    ]
   }
 ]

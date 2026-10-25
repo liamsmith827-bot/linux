@@ -10248,3 +10248,77 @@ and enabled KUnit modules exist. Compilation and artifact presence are the only
 claims: no selftest, preparer, kernel module, emulator or device was run. No
 remote resource was accessed; embedded license/documentation URLs remain local
 source text.
+
+# Native interface and timer review
+
+Ten original changes are resolved in `evidence/native-interface-tail-review.json`.
+The two generic OF source files now retain all native LTS code, adding only three
+ACK helper implementations in `0e1e2683ed4e`. Their declarations had previously
+been retained without implementations. The earlier claim that these helpers
+could be omitted based on the SDK device model was too strong: configured OF
+and vendor module source compatibility justify retaining the generic interface,
+while scoped local searches did not establish exact SDK callers. No additional
+DT platform is enabled. The previous omission rationale is preserved and
+superseded in the evidence, not silently erased.
+
+Root matching holds and releases its node reference on each path. The returned
+match data belongs to the caller's match table. The new u8-index helper compares
+index with property length before reading: ACK's `(index + 1)` minimum size can
+wrap at U32_MAX and allow an out-of-bounds read. Missing/empty/short property
+errors leave the output unchanged. Host extracted-function tests check those
+bounds and root-reference cases with shims; an original-ACK overflow negative
+control is rejected by ASan. This is not a live device-tree or module test.
+Reports record original pre-commit checkout HEAD and bind exact tested file
+hashes to the resulting source commit.
+
+Native fw_devlink supersedes the historical direct-device algorithm and
+of_devlink parameter. The modern supplier parsers, optional/strict flags,
+reference cleanup, cycle handling and atomic fwnode changes remain. The native
+x86 early return in of_fwnode_add_links also remains; helper retention does not
+imply enabling DT dependency probing on SDK. Nineteen earlier OF decisions,
+including two merge resolutions, were revalidated by deleting only the new
+helper blocks and reproducing their entire earlier native file witnesses.
+
+`8c395ddaf3b7` restores native Intel DTS Kconfig to match the already-native ACPI
+enumeration handler. The selected SDK disables that physical thermal driver;
+keeping only half of ACK's paired redesign was unnecessary. Timer-of module
+conversion and ARM/ARM64 RAID6 NEON guard migration are omitted under explicit
+build gates; both implementations remain entirely native. The PM
+work_in_progress independent-bool race fix is already in LTS and is retained;
+only generated historical ABI layout inventories are omitted. This concurrency
+fix must not be confused with KMI-only changes.
+
+The common V4L2 registry capacity and stream API changes in `3188544c95fb` remain.
+The capacity increase affects all common video/subdevice slots, with native
+array/bitmap/search/chrdev ranges consistently using the same limit; it uses
+additional static memory and allows additional nodes. Stream enablement lifts
+an experimental LTS gate, increasing reachable ioctl behavior. Native driver
+capability requirements, readonly restrictions, client masks, stream/pad/type/
+route bounds, active-route limit and reserved-field clearing remain byte-for-byte
+outside the exact candidate gate removal. This is an explicit compatibility
+tradeoff, not a security fix. Exact SDK use of more than 256 nodes or multiple
+streams remains unconfirmed in `unresolved-feature-questions.json`. These are
+configured shared APIs; no new physical camera driver is selected.
+
+`b707484227a8` adapts the timer-test overflow correction because the existing
+SDK build packages 32-bit as well as 64-bit userspace binaries. Multiplication
+is widened before evaluation, including 5/10-second limits. Native b-minus-a
+helper semantics and caller order remain: ACK's proposed shared helper changes
+the sign without consistently changing nsleep-lat calls. Its helpers.h and build
+dependency are therefore omitted. Earlier libc LONG_MIN/MAX guards and native
+kernel timekeeping are preserved. The extracted arithmetic check covers 441
+signed ILP32 cases per helper and rejects native unadapted overflow with UBSan;
+it never calls timers, changes a clock or suspends the system.
+
+Build 196 was interrupted with exit 130 after it was launched before the local
+common checkout fast-forward had settled. Its manifest update had seen the old
+commit and made no change. No successful artifact result is claimed for it;
+`evidence/interrupted-build-196.json` preserves the reason and raw log hash.
+After waiting for the checkout and committing the correct manifest pin, build
+197 succeeded at `8c395ddaf3b7` with 100 common and 45 virtual-device modules and
+both kernel images. All 145 signatures verified against the exact build
+certificate; modified payload rejection passed. Protected-export lookup found
+all 659 entries, while the obsolete stride missed 330; native symbol/CRC/flag
+counts also passed. Pins, artifact hashes and checks are in build-results.json
+and module-tables-build-197.json. No emulator, device or kernel test was run.
+All sources examined were local; no additional remote resource was accessed.
