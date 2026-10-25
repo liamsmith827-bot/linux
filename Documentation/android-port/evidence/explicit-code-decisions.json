@@ -23336,5 +23336,97 @@
       "evidence/module-early-history-review.json",
       "SECURITY.md: Early module protection, CFI and boot history"
     ]
+  },
+  {
+    "commit": "9326f2e6e8a3a96d802f0997f42803cb02922090",
+    "disposition": "partially-adapted",
+    "result_commits": [
+      "f4b1c885269e6bc6876100b15059082df6defeb4"
+    ],
+    "rationale": "Retain generic xHCI callback declaration, phase enum, GPL export and three common reset call sites. SDK enables xHCI PCI/platform, and the pinned emulator binary contains qemu-xhci/nec-usb-xhci model strings; runtime use and a vendor callback consumer remain unverified, so retention is conservative generic source-customization compatibility. Omit the separate DWC3 core/PHY-array callback for the documented physical Synopsys reset-domain/PLL workaround, outside the SDK virtual-controller target; native DWC3 is still compiled. Adapt INIT notification to follow the native Intel 1ms register-access delay, preserving that safety condition before a callback can inspect registers. PRE follows accessible/halted checks; POST follows the first handshake even on error, before CNR readiness. Callbacks can run under host spinlock/IRQ-off, must not sleep or retain hcd, and cannot assume probe allocations exist. Native function code, results and register order are otherwise unchanged. Host shims pass ten port/native cases and detect three premature callback accesses with actual ACK placement; no hardware/boot/runtime compatibility proof.",
+    "evidence": [
+      "evidence/xhci-reset-review.json",
+      "evidence/xhci-reset-hooks-check.json",
+      "SECURITY.md: Generic xHCI reset customization"
+    ]
+  },
+  {
+    "commit": "097816659d76e06a767f1125b26b649b331abc91",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [
+      "d281f3ac0d00d7ae9d409537b1a28f6957701e72",
+      "36a0faaa4e3d2dc15cf98ac9467542c64ed85b4c"
+    ],
+    "rationale": "Every unique remerge hunk in block/blk-zoned.c and drivers/usb/dwc3/core.c examined. Reject ACK reversal of native delayed zone-plug removal/DEAD-state fix; retain that fix and later new-write-after-reset revival handling. Keep native dwc3_readl(dwc, ...) API and native core-reset code; the unique DWC3 core-hook conflict is omitted with its physical PHY workaround, separately scoped in 9326f2e6e8a3. The generic xHCI portion of that parent is retained separately, not misclassified as a DWC3-only callback. Both unique-resolution files remain byte-identical to LTS; failed device-help queries were not used as exclusion evidence.",
+    "evidence": [
+      "evidence/xhci-reset-review.json",
+      "evidence/xhci-reset-hooks-check.json",
+      "SECURITY.md: Generic xHCI reset customization"
+    ]
+  },
+  {
+    "commit": "310afefe71d480d563f3691b74bff61a53ba81ca",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [
+      "dc5723b02e523b2c4a68667f7e28c65018f7202f"
+    ],
+    "rationale": "Full eight-path legacy Clang LTO patch reviewed. Explicit removal 3330492ef15f and later native dc5723b02e52 supersede its separate .lto module objects, temporary symversions scripts, symbol suffix stripping and old Kconfig choices. Retain current native LTO selections, flags, link scripts and modpost paths. SDK build165 selects LTO_NONE, so it verifies the normal workflow, not alternate LTO modes. Separate Rust-inline-helper adaptations remain accounted in their prior review; they are not justification to restore obsolete C LTO machinery.",
+    "evidence": [
+      "evidence/lto-module-replacement-review.json",
+      "SECURITY.md: Native LTO and module-protection replacements"
+    ]
+  },
+  {
+    "commit": "3330492ef15f4635f9403888a3a6dc1450a26750",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [
+      "dc5723b02e523b2c4a68667f7e28c65018f7202f"
+    ],
+    "rationale": "Full eight-path removal reviewed, including differences from an exact inverse caused by intervening native build refactors. Preserve current native LTO implementation, not the temporary removal made to resolve 5.8-rc1 merges. Native compiler/toolchain gates and current module linkage remain. No historical ThinLTO cache or symversions layout is required for this SDK workflow; alternate LTO builds remain unverified.",
+    "evidence": [
+      "evidence/lto-module-replacement-review.json",
+      "SECURITY.md: Native LTO and module-protection replacements"
+    ]
+  },
+  {
+    "commit": "48c3dc597988cb8e68ee28a4fcbe02980227ec40",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "dc5723b02e523b2c4a68667f7e28c65018f7202f"
+    ],
+    "rationale": "All unique remerge hunks across ten paths examined. Preserve native SCS declarations/annotations and ARM64/vDSO files, native EFI-stub LTO/SCS/CFI filtering, and modern native LTO/KCFI replacements for the old Android blocks. Retain the independently reviewed cpufreq_task_times_exit alongside native scs_release in free_task, with current native release_user_cpus_ptr ordering. These are separate ownership cleanups, not competing alternatives. No ARM64 implementation is ported or tested, and no historical __nocfi/__norecordmcount merge scaffolding is restored.",
+    "evidence": [
+      "evidence/lto-module-replacement-review.json",
+      "SECURITY.md: Native LTO and module-protection replacements"
+    ]
+  },
+  {
+    "commit": "452678e272b3b0ee7f238bb12a00da8540b6684b",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "b9307c13e253ae50776dcbd06ae5476832f5d8f3",
+      "f08e12b0ed1a675de6f61e0ed8c5989173b517ee"
+    ],
+    "rationale": "Entire eight-path removal examined. It retires the first generated-string-array module-protection implementation immediately before e9669eeb2f45 installs its replacement. Keep old placeholders/gki_module.c absent, but retain final SDK signing and list-based protected exports. Do not apply its temporary configuration removal to the final source. The later native signature-state guard and corrected export-table lookup are preserved; see module-early-history-review.json and build165 table checks.",
+    "evidence": [
+      "evidence/lto-module-replacement-review.json",
+      "SECURITY.md: Native LTO and module-protection replacements"
+    ]
+  },
+  {
+    "commit": "e9669eeb2f4580e44226cf1b582340f4b6388387",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "b9307c13e253ae50776dcbd06ae5476832f5d8f3",
+      "f08e12b0ed1a675de6f61e0ed8c5989173b517ee"
+    ],
+    "rationale": "Full nine-path replacement reviewed, including its generator, owner/import checks and signing.c bypasses. Preserve x86 signing/protection configuration and final list/flag-based module infrastructure; old generated gki_module.c/header code is explicitly removed later by aed989847402. Omit historical KMI import allowlisting and ARM64 config. Reject this patch's suppression of sig_enforce and unconditional success instead of lockdown: whole current signing.c equals native LTS, retaining caller-selected signature enforcement and lockdown policy. This can reject an unsigned module under those policies, intentionally preserving native security controls; normal SDK source-built modules are signed. Preserve native conditional sig_ok layout, current diagnostic text and corrected protected-export bounds/stride. Build165 verifies 145 signatures and tables, not runtime loader enforcement.",
+    "evidence": [
+      "evidence/lto-module-replacement-review.json",
+      "SECURITY.md: Native LTO and module-protection replacements"
+    ]
   }
 ]

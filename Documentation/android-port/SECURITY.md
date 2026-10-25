@@ -7661,8 +7661,9 @@ handling. Merge 7820f5b6f1ac instead preserves ACK's alternate CPU-affine
 scheduling/reference scheme; its unique resolution is not adopted. The full
 native blk-zoned.c also preserves d281f3ac0d00's delayed plug removal and
 36a0faaa4e3d's handling of a new write immediately after zone reset. The storage
-portion of merge 097816659d76 reverses the former fix and is rejected; that merge
-remains provisional because its separate DWC3 hook resolution needs a decision.
+portion of merge 097816659d76 reverses the former fix and is rejected. Its
+initially provisional DWC3 hook resolution is resolved in the later generic xHCI
+reset customization review below.
 Optional debugfs formatting, comment and preparatory locking/refactoring changes
 do not require replacing these native algorithms. No storage runtime test is
 claimed. Patch hashes, full native-file comparisons and feature producers are
@@ -7786,4 +7787,28 @@ failures, Intel delay and ASMedia flow control under ASan/UBSan. Port results,
 register-operation order and bus state match native. A callback that reads a
 register during INIT exposes premature access in three ACK-control cases and
 none in the port. These are host shims, not real MMIO, locking or USB tests.
-The complete emulator workflow must validate the new code separately.
+The complete emulator workflow succeeded in build165 at f4b1c885269e, producing
+the kernel, 100 common modules and 45 virtual-device modules. All 145 signatures
+verify against that build's certificate, the tampered-payload control is rejected,
+and all module flag/CRC tables match. This verifies compilation and artifacts.
+
+## Native LTO and module-protection replacements
+
+Five decisions in `evidence/lto-module-replacement-review.json` close the older
+LTO add/revert and mixed SCS merge history, plus the subsequent module-protection
+replacement. Keep native LTO selections/flags and link scripts instead of the
+old separate .lto objects and temporary symversions machinery. Preserve native
+SCS annotations, EFI-stub instrumentation exclusions and ARM64/vDSO sources.
+The mixed fork resolution retains both Android frequency-accounting cleanup
+and native SCS release, including native CPU-mask cleanup between them. The
+existing SDK workflow uses LTO_NONE; alternate LTO and ARM64 builds are untested.
+
+The old generated module-protection arrays were explicitly removed in later ACK
+history and replaced by current list/flag-based machinery. Keep its applicable
+SDK configuration and protected exports. In particular, reject e9669eeb2f45's
+sig_enforce suppression and lockdown bypass: native signing.c remains unchanged.
+This intentionally permits native policy to reject unsigned modules when
+enforcement or lockdown requires it. The actual SDK modules are rebuilt and
+signed; historical unsigned-binary behavior and KMI import allowlists are not
+preserved. Build165 verifies signatures and table structure, without executing
+the loader or claiming runtime enforcement tests. No remote source was used.

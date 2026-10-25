@@ -1,7 +1,7 @@
 # Android 6.18 SDK emulator port audit
 
-Status: work in progress. The complete emulator workflow succeeded in attempt 164
-at Linux 7543402b40de, including final signing. All 145 generated module signatures
+Status: work in progress. The complete emulator workflow succeeded in attempt 165
+at Linux f4b1c885269e, including final signing. All 145 generated module signatures
 were cryptographically verified against the build certificate; a modified-payload
 control was rejected. The exhaustive commit audit remains unfinished. No runtime compatibility is claimed.
 
@@ -42,6 +42,9 @@ The local emulator prebuilt was also inspected at
 capabilities. Help-only device queries failed before producing a registry;
 they provide no evidence for excluding a controller. Binary/metadata hashes and
 outputs are in `evidence/sdk-emulator-device-query.json`. No VM was booted.
+The later xHCI review also examined model-name strings in that same pinned
+binary, recorded in `evidence/xhci-reset-review.json`. Those strings do not
+establish which controller is selected at runtime.
 
 ## Audit method
 
