@@ -9889,6 +9889,27 @@ This does not assert that arbitrary host hardware passthrough is impossible.
 No physical audio, firmware, UCM or runtime workload was tested. URLs printed in
 local patches were not opened; no additional remote resource was used.
 
+## Cirrus amplifier factory calibration
+
+The six full patches in evidence/cirrus-calibration-review.json retain all seven
+affected files exactly as Linux 6.18.57. The actual virtual-device configuration
+disables the CS35L56 I2C/SPI drivers, SoundWire and HDA Intel; the Cirrus amplifier
+library/provider/tests and CS DSP firmware are not enabled. Goldfish's selected
+ranchu audio path is recorded separately. This is an explicit physical provider
+boundary, not a conclusion from failing to find a consumer.
+
+Omit the new manufacturing/calibration feature as a whole: probe-time silicon
+UID caching, DSP coefficient reads and ambient writes, timestamps, calibration
+mailbox/state polling, debugfs controls, status mixer controls, and optional
+ALSA restore/readback. The shared headers and exports are genuine source APIs
+but specific to those disabled physical amplifiers; they are not KMI padding.
+Input sizing, UID matching, power/lock operations, debugfs permissions and the
+new test cases were read. No partial debugfs or restore interface is exposed,
+and no claim is made that all new error/state paths have been validated for
+future hardware. Native firmware, EFI calibration, PM and tests remain intact.
+The KUnit additions were not executed. No physical calibration, Android build
+or runtime audio test was performed; no additional remote resources were used.
+
 ## Audio loopback, reverted hostless DAI and SDCA interfaces
 
 Thirteen candidates are recorded in evidence/audio-interface-tail-review.json.
