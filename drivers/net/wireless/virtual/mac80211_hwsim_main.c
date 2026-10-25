@@ -1853,7 +1853,8 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
 		 * Set mactime early since NAN RX filtering relies on it
 		 * for slot calculation
 		 */
-		rx_status.mactime = sim_tsf + data2->tsf_offset;
+		scoped_guard(spinlock_bh, &data2->tsf_offset_lock)
+			rx_status.mactime = sim_tsf + data2->tsf_offset;
 
 		if (!hwsim_chans_compat(chan, data2->tmp_chan) &&
 		    !hwsim_chans_compat(chan, data2->channel)) {

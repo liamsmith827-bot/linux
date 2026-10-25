@@ -921,6 +921,7 @@ int mac80211_hwsim_nan_start(struct ieee80211_hw *hw,
 	/* set this before starting the timer, as preemption might occur */
 	data->nan.device_vif = vif;
 	data->nan.bands = conf->bands;
+	data->nan.notify_dw = conf->enable_dw_notification;
 
 	scoped_guard(spinlock_bh, &data->nan.state_lock) {
 		/* Start in the "scan" phase and stay there for a little bit */
@@ -934,16 +935,13 @@ int mac80211_hwsim_nan_start(struct ieee80211_hw *hw,
 		memset(&data->nan.last_ami, 0, sizeof(data->nan.last_ami));
 		data->nan.current_ami.master_rank =
 			cpu_to_le64(hwsim_nan_get_master_rank(data));
+		ether_addr_copy(data->nan.cluster_id, conf->cluster_id);
 	}
 
 	/* Just run this "soon" and start in a random schedule position */
 	hrtimer_start(&data->nan.slot_timer,
 		      ns_to_ktime(10 * NSEC_PER_USEC),
 		      HRTIMER_MODE_REL_SOFT);
-
-	ether_addr_copy(data->nan.cluster_id, conf->cluster_id);
-
-	data->nan.notify_dw = conf->enable_dw_notification;
 
 	return 0;
 }
