@@ -12,6 +12,7 @@ def nonblank_blob(oid):
   blob_cache[oid]=b'\n'.join(line.rstrip() for line in content.splitlines() if line.strip())
  return blob_cache[oid]
 def omitted(p):
+ if p in ('include/linux/intel-ish-client-if.h','include/linux/platform_data/cros_ec_sensorhub.h'):return 'physical-device'
  if p in ('drivers/thermal/intel/int340x_thermal/processor_thermal_device_pci.c','drivers/thermal/intel/intel_tcc_cooling.c'):return 'physical-device'
  if p in ('kernel/dma/direct.h','kernel/dma/mapping.c','kernel/dma/coherent.c'):return 'lts-native-source-api'
  if p=='drivers/usb/gadget/function/f_fs.c':return 'lts-native-source-api'
@@ -79,6 +80,8 @@ for p,x in out.items():
   x['review_record']='SECURITY.md: historical KMI and module compatibility'
 # Reviewed specific evidence prevents broad policy names from hiding source differences.
 notes={
+ 'include/linux/intel-ish-client-if.h':'Exact LTS after 3c092b1cd7a2; remove orphan declaration of the unported physical ISH getter. SDK disables INTEL_ISH_HID and selects Goldfish sensor transport. Native existing APIs remain; see evidence/hid-mei-tail-review.json.',
+ 'include/linux/platform_data/cros_ec_sensorhub.h':'Exact LTS after 3c092b1cd7a2; remove suspend_time field belonging to omitted Chrome EC timestamp logic. SDK disables CHROME_PLATFORMS and selects Goldfish sensor transport. No partial new timestamp state retained; see evidence/hid-mei-tail-review.json.',
  'drivers/thermal/intel/int340x_thermal/processor_thermal_device_pci.c':'Exact LTS after 2d16122c8e8e; omit only new Wildcat Lake physical-controller power-slider capability. Native Panther Lake support remains. SDK disables INT340X_THERMAL and positively selects example thermal service; see evidence/platform-tail-review.json.',
  'drivers/thermal/intel/intel_tcc_cooling.c':'Exact LTS after 2d16122c8e8e; omit four new physical CPU/MSR-controller matches. SDK disables INTEL_TCC_COOLING and selects example thermal service; native existing support and safe MSR/lock checks remain. See evidence/platform-tail-review.json.',
  'kernel/dma/coherent.c':'Exact native LTS after 9d5f5cbffd00. The only ACK delta was two allocation-log unit/format changes, with no Android ABI, configuration or source-interface effect. Retain native allocation, cleanup and diagnostics; see evidence/mm-tail-review.json for candidate 23bb0f66e0a0.',

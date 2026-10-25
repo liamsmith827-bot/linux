@@ -1,0 +1,470 @@
+{
+  "source_head": "3c092b1cd7a22909cc27f0c1b7c6727f59f2a93d",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "b8ed6629a340b94a1aaea0215b2182fc1ce0837b",
+      "disposition": "superseded",
+      "rationale": "Temporary revert of MEI dependency rework is superseded by b32a813da596 and later native Kconfig. Preserve native if INTEL_MEI scope, ME default y and dependency-based subdrivers, including evolved X86_64||MATOM root default. The two historical patches differ in root-default evolution and are not falsely called exact inverses.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/hid-mei-tail-review.json",
+        "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+      ],
+      "paths": [
+        "drivers/misc/mei/Kconfig",
+        "drivers/misc/mei/gsc_proxy/Kconfig",
+        "drivers/misc/mei/hdcp/Kconfig",
+        "drivers/misc/mei/pxp/Kconfig"
+      ],
+      "patch_sha256": "56f330d8206cb2f56497994497843f0c9e83aee11cf69e0685623130c834e1ea",
+      "comparison_kind": "full ordinary patch"
+    },
+    {
+      "commit": "b32a813da596c3f735d1ea20e8fcaded8e796ec6",
+      "disposition": "already-represented-upstream",
+      "rationale": "Effective reapplication is represented by native if INTEL_MEI scope, ME default y and depends-on rather than select for GSC/HDCP/PXP, with native Xe support. All four Kconfig files are exactly LTS. Preserve configured MEI/ME and later native defaults instead of replaying an older Kconfig snapshot.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/hid-mei-tail-review.json",
+        "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+      ],
+      "paths": [
+        "drivers/misc/mei/Kconfig",
+        "drivers/misc/mei/gsc_proxy/Kconfig",
+        "drivers/misc/mei/hdcp/Kconfig",
+        "drivers/misc/mei/pxp/Kconfig"
+      ],
+      "patch_sha256": "7c4324cfdff3beb1f173401c1e7b371b4a1f98c4119b8a76d85c327aa40656fb",
+      "comparison_kind": "full ordinary patch"
+    },
+    {
+      "commit": "927940929dcd456a554690c84f803b1b73a61816",
+      "disposition": "omitted-current-target",
+      "rationale": "Adds actual exported ISHTP connection-state getter and declaration for physical Intel sensor hub resume. Provider disabled; Goldfish uses qemud sensors. Remove orphan declaration from initial header integration in 3c092b1cd7a2, matching native driver without getter. This is a source API, not KMI-only; existing native ISHTP interfaces remain.",
+      "result_commits": [
+        "3c092b1cd7a22909cc27f0c1b7c6727f59f2a93d"
+      ],
+      "evidence": [
+        "evidence/hid-mei-tail-review.json",
+        "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+      ],
+      "paths": [
+        "drivers/hid/intel-ish-hid/ishtp/client.c",
+        "include/linux/intel-ish-client-if.h"
+      ],
+      "patch_sha256": "90291e382900e5ab8aceb8c3c5880e01c06bacd7903f732243c33a6f0bf2a426",
+      "comparison_kind": "full ordinary patch"
+    },
+    {
+      "commit": "946254165837aefabc3ed0a8ae4e0800c55f5eaa",
+      "disposition": "omitted-current-target",
+      "rationale": "Clears physical ISH suspended state/wakes resume waiters only after connection is established, using preceding getter. Omit with disabled ISH provider and getter; retain native driver in full. This is a real physical resume-order fix, not a claim that native affected hardware is equivalent.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/hid-mei-tail-review.json",
+        "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+      ],
+      "paths": [
+        "drivers/hid/intel-ish-hid/ishtp-hid-client.c"
+      ],
+      "patch_sha256": "b9c9eafd9cd3fc16fb594b6ee459cb840793daf653e864ea02c37971aabc55da",
+      "comparison_kind": "full ordinary patch"
+    },
+    {
+      "commit": "396b5f67d26af7796e381fa21f6edeca7b0bba93",
+      "disposition": "omitted-current-target",
+      "rationale": "Moves ISH firmware/suspend predicates into leave-D0i3 helper and resets clients synchronously before queued resume when returning from D3. Omit physical power/firmware protocol change with disabled provider; native PCI/PM core remains untouched.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/hid-mei-tail-review.json",
+        "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+      ],
+      "paths": [
+        "drivers/hid/intel-ish-hid/ipc/pci-ish.c"
+      ],
+      "patch_sha256": "e4c1d81de3c52cbd8f538e4830bb4983518816e98826ff4b7a1545bb83d64498",
+      "comparison_kind": "full ordinary patch"
+    },
+    {
+      "commit": "125587d491ad7ba811f6353f58593c4d7733aa4d",
+      "disposition": "omitted-current-target",
+      "rationale": "Reorders ISH reset ACK, hardware-ready notification and reset work, initializes global device earlier and schedules work for both RESET_NOTIFY and ACK. Full lifetime/work-order diff read. Keep native physical provider rather than partially importing a new reset sequence; no generic workqueue or HID-core change occurs.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/hid-mei-tail-review.json",
+        "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+      ],
+      "paths": [
+        "drivers/hid/intel-ish-hid/ipc/ipc.c"
+      ],
+      "patch_sha256": "57fbb43b2e5329766f1912ebdadbdcce18c4747cfba091bfc08538fbf321858c",
+      "comparison_kind": "full ordinary patch"
+    },
+    {
+      "commit": "6eaae4208b5f4995bc69d815c2bb84228836b867",
+      "disposition": "omitted-current-target",
+      "rationale": "Replaces ISH wakeup void doorbell with IPC reset, propagates errors and centralizes longer ready timeout. Omit with physical reset-protocol series; preserve native complete startup and timeout behavior for this disabled provider. No claim of tested firmware recovery.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/hid-mei-tail-review.json",
+        "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+      ],
+      "paths": [
+        "drivers/hid/intel-ish-hid/ipc/ipc.c"
+      ],
+      "patch_sha256": "b65c86da820356c726bac6ee9aed10de4af23f96dab59bf7bb3c09e4408a1af6",
+      "comparison_kind": "full ordinary patch"
+    },
+    {
+      "commit": "aa354022ce0812d9747cf4a2a5fd4501178d8252",
+      "disposition": "omitted-current-target",
+      "rationale": "Separates ISH hibernation freeze/save-PCI-state from suspend/poweroff and resume/restore callbacks. This is physical device lifecycle support, not general Android suspend semantics. Omit with disabled ISH provider, retaining native generic PM behavior.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/hid-mei-tail-review.json",
+        "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+      ],
+      "paths": [
+        "drivers/hid/intel-ish-hid/ipc/pci-ish.c"
+      ],
+      "patch_sha256": "0afd829b90c6bae74def2485c1762b7605123136f7635e92a8b679dfee487070",
+      "comparison_kind": "full ordinary patch"
+    },
+    {
+      "commit": "4dddbb301438f59c56c3298cc0488ba232f29f80",
+      "disposition": "omitted-current-target",
+      "rationale": "Removes X86 dependency to allow physical Intel ME devices on other CPU architectures. Current SDK is x86_64, so native dependency already permits its compiled MEI/ME configuration. Keep native gate; no non-x86 build or future platform support is added.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/hid-mei-tail-review.json",
+        "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+      ],
+      "paths": [
+        "drivers/misc/mei/Kconfig"
+      ],
+      "patch_sha256": "71d0b1006c25ef1cca37795b7c781af8258a07736bfbc23ebd8c3f6c150aa039",
+      "comparison_kind": "full ordinary patch"
+    },
+    {
+      "commit": "55c9f9dc9fd7f931351f0566f00780dea253b226",
+      "disposition": "omitted-current-target",
+      "rationale": "Changes MEI graphics-interface dependencies to boolean !=n tests so their tristate can differ from i915/Xe linkage. This is real configuration/module flexibility, not KMI-only. Both physical graphics providers are disabled for SDK; native MEI and other interfaces remain enabled/coherent. Omit new combinations solely for those excluded providers.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/hid-mei-tail-review.json",
+        "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+      ],
+      "paths": [
+        "drivers/misc/mei/Kconfig",
+        "drivers/misc/mei/gsc_proxy/Kconfig",
+        "drivers/misc/mei/hdcp/Kconfig",
+        "drivers/misc/mei/pxp/Kconfig"
+      ],
+      "patch_sha256": "bbefe68c99082e71458a7c14a2b0d38cac1eb54da731b9212e46a298b14a2b62",
+      "comparison_kind": "full ordinary patch"
+    },
+    {
+      "commit": "c02ec800ba90b276bb739be46429825e8ff6b834",
+      "disposition": "omitted-current-target",
+      "rationale": "Adds COMPILE_TEST alternatives for graphics-related MEI interfaces. SDK is not a compile-test configuration and uses neither i915 nor Xe. Keep native dependencies for the existing build, without claiming every allmod/other-provider combination has been validated.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/hid-mei-tail-review.json",
+        "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+      ],
+      "paths": [
+        "drivers/misc/mei/Kconfig",
+        "drivers/misc/mei/gsc_proxy/Kconfig",
+        "drivers/misc/mei/hdcp/Kconfig",
+        "drivers/misc/mei/pxp/Kconfig"
+      ],
+      "patch_sha256": "0f26bbf1a2c6c80262adb986eef6dddafcff106632b4e5243d44afcdf4ac267d",
+      "comparison_kind": "full ordinary patch"
+    },
+    {
+      "commit": "55112b3229846a0b130efe4a3d7ce20f4ec046b4",
+      "disposition": "omitted-current-target",
+      "rationale": "Allows GSC proxy with Xe as well as i915/COMPILE_TEST. This adds an alternative physical GPU provider outside current target; preserve native proxy dependency and compiled base MEI. It is not a generic Android graphics interface.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/hid-mei-tail-review.json",
+        "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+      ],
+      "paths": [
+        "drivers/misc/mei/gsc_proxy/Kconfig"
+      ],
+      "patch_sha256": "2c8baa2a44e53b3968e313318c708c8a6aa6563af8fc3436882773366e50d104",
+      "comparison_kind": "full ordinary patch"
+    },
+    {
+      "commit": "75e61860c9302a8fb8b50f8cef821e963a44fd96",
+      "disposition": "reconciled-to-lts",
+      "rationale": "Patch adds 20 exact Bluetooth IDs. MX Master 4 0xb042 is already in native LTS and retained; remaining 19 identify additional physical Logitech keyboards and are omitted for current SDK virtio input target. Keep the entire native HID++ driver and its LTS fixes; generic HID/Bluetooth support is not removed. No claim that physical passthrough can never be used.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/hid-mei-tail-review.json",
+        "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+      ],
+      "paths": [
+        "drivers/hid/hid-logitech-hidpp.c"
+      ],
+      "patch_sha256": "6828fd603a256b204f08c965cc34708956acead566ad50341e9be0f5b63dc63b",
+      "comparison_kind": "full ordinary patch"
+    },
+    {
+      "commit": "5a1fe336329ea0a076d43e01872a89d8fea0903e",
+      "disposition": "merge-resolution-reconciled-to-lts",
+      "rationale": "All unique remerge changes examined in three paths: native ARM SME erratum defaults y and keeps cpumask batch tracking; omit ANDROID_KABI_RESERVE and duplicate include cleanup is native. Logitech new physical IDs follow 75e61860c930 target decision while existing native MX Master ID remains. Whole three files exactly LTS; no stable erratum fix is weakened and no merge-specific code is hidden by parent disposition.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/hid-mei-tail-review.json",
+        "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+      ],
+      "paths": [
+        "arch/arm64/Kconfig",
+        "arch/arm64/include/asm/tlbbatch.h",
+        "drivers/hid/hid-logitech-hidpp.c"
+      ],
+      "patch_sha256": "765933457b09007dfca05873cbff3e0891d6cac8fae4f5dba34f055eb1755616",
+      "comparison_kind": "full unique remerge diff"
+    },
+    {
+      "commit": "f69fa581ca90e6c6bf3a8a7537e585f861f4c0de",
+      "disposition": "merge-resolution-reconciled-to-lts",
+      "rationale": "Reverse-direction merge resolves the same three areas. Full remerge diff read: keep native default-y SME fix/cpumask, omit historical KMI reserve regardless of conditional placement, and retain native HID++ IDs without the new physical keyboard list. All three files native; distinct merge resolution recorded even though code outcome matches the other merge.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/hid-mei-tail-review.json",
+        "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+      ],
+      "paths": [
+        "arch/arm64/Kconfig",
+        "arch/arm64/include/asm/tlbbatch.h",
+        "drivers/hid/hid-logitech-hidpp.c"
+      ],
+      "patch_sha256": "72d5f6070a3e7a271a88f70cad1304fabd0a031a56608566fab3865446b3082f",
+      "comparison_kind": "full unique remerge diff"
+    },
+    {
+      "commit": "3ca2a7e9079a77de426219c7a1e488d2aa0a46cd",
+      "disposition": "omitted-current-target",
+      "rationale": "Adds ELAN SB974D 04f3:0400 I2C-HID match and constant for a new physical touchpad. Omit additional peripheral support for the SDK virtio input target; retain complete native HID-ELAN and shared ID header, with no generic HID event ABI change.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/hid-mei-tail-review.json",
+        "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+      ],
+      "paths": [
+        "drivers/hid/hid-elan.c",
+        "drivers/hid/hid-ids.h"
+      ],
+      "patch_sha256": "61f3af06f8f878e3a80bc2bfc628bbf5e25197a3cd29b7f9294718334e2e8ee5",
+      "comparison_kind": "full ordinary patch"
+    },
+    {
+      "commit": "c18fbf69dd7bf67dcb8fcda0146286ffa394c7b3",
+      "disposition": "omitted-current-target",
+      "rationale": "Full timestamp patch reviewed: stores suspend boottime, injects whole 32-bit EC wrap periods into two trackers, changes overflow correction to forward-only, and includes whitespace cleanup. This is Chrome EC firmware clock protocol, while Goldfish sensors use qemud and Chrome platform provider is disabled. Remove its orphan suspend_time header field in 3c092b1cd7a2. Keep all three native files; do not treat local patch comments claiming exact resynchronization as proof of correctness or claim long-suspend CTS was run.",
+      "result_commits": [
+        "3c092b1cd7a22909cc27f0c1b7c6727f59f2a93d"
+      ],
+      "evidence": [
+        "evidence/hid-mei-tail-review.json",
+        "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+      ],
+      "paths": [
+        "drivers/platform/chrome/cros_ec_sensorhub.c",
+        "drivers/platform/chrome/cros_ec_sensorhub_ring.c",
+        "include/linux/platform_data/cros_ec_sensorhub.h"
+      ],
+      "patch_sha256": "86f496409b2b676c3837f698dc867ff6539359107a60664eb1d800c3af5b3697",
+      "comparison_kind": "full ordinary patch"
+    }
+  ],
+  "proofs": [
+    {
+      "path": "arch/arm64/Kconfig",
+      "comparison": "whole file exact LTS",
+      "blob": "2e567a7d89c9b62cd0161160be0c40f834f8af50"
+    },
+    {
+      "path": "arch/arm64/include/asm/tlbbatch.h",
+      "comparison": "whole file exact LTS",
+      "blob": "6297631532e59f49de44d53ecdeb22944c39d0b3"
+    },
+    {
+      "path": "drivers/hid/hid-elan.c",
+      "comparison": "whole file exact LTS",
+      "blob": "76d93fc48f6a283d2bf49e49143bc9d02ca311ba"
+    },
+    {
+      "path": "drivers/hid/hid-ids.h",
+      "comparison": "whole file exact LTS",
+      "blob": "a9db2b30be9bdf5b49f18d3b4c127149995f73b9"
+    },
+    {
+      "path": "drivers/hid/hid-logitech-hidpp.c",
+      "comparison": "whole file exact LTS",
+      "blob": "a2bb7d8b15b69aaef0e1d826969ad381ed369ee9"
+    },
+    {
+      "path": "drivers/hid/intel-ish-hid/ipc/ipc.c",
+      "comparison": "whole file exact LTS",
+      "blob": "3692d1db3bc7645a88dc0810bbc587635221a9f1"
+    },
+    {
+      "path": "drivers/hid/intel-ish-hid/ipc/pci-ish.c",
+      "comparison": "whole file exact LTS",
+      "blob": "51a41a28541c561e53154c0f545393738a0435ad"
+    },
+    {
+      "path": "drivers/hid/intel-ish-hid/ishtp-hid-client.c",
+      "comparison": "whole file exact LTS",
+      "blob": "12a43c64e81560f6ca1f1b246355ee16d43ba0a0"
+    },
+    {
+      "path": "drivers/hid/intel-ish-hid/ishtp/client.c",
+      "comparison": "whole file exact LTS",
+      "blob": "21a2c0773cc2ab1e767b0187f8c6fef97602b54d"
+    },
+    {
+      "path": "drivers/misc/mei/Kconfig",
+      "comparison": "whole file exact LTS",
+      "blob": "f4eb307cd35ed0af59b091882257f27a6b46e452"
+    },
+    {
+      "path": "drivers/misc/mei/gsc_proxy/Kconfig",
+      "comparison": "whole file exact LTS",
+      "blob": "ac78b9d1eccd11a0514cc5095a2fa3e779bb48e3"
+    },
+    {
+      "path": "drivers/misc/mei/hdcp/Kconfig",
+      "comparison": "whole file exact LTS",
+      "blob": "631dd9651d7c9dbc0f812725f1537f367c82300c"
+    },
+    {
+      "path": "drivers/misc/mei/pxp/Kconfig",
+      "comparison": "whole file exact LTS",
+      "blob": "aa2dece4a927a570c1e325fad8607424b935434c"
+    },
+    {
+      "path": "drivers/platform/chrome/cros_ec_sensorhub.c",
+      "comparison": "whole file exact LTS",
+      "blob": "f938c3fc84e4f8c1da8c7864ae55bcf2b965fce1"
+    },
+    {
+      "path": "drivers/platform/chrome/cros_ec_sensorhub_ring.c",
+      "comparison": "whole file exact LTS",
+      "blob": "b5970e8620bf0eb8d0e9934d318749b47958842d"
+    },
+    {
+      "path": "include/linux/intel-ish-client-if.h",
+      "comparison": "whole file exact LTS",
+      "blob": "b235fd84f4780469590df9d8f69f2aa42c350e90"
+    },
+    {
+      "path": "include/linux/platform_data/cros_ec_sensorhub.h",
+      "comparison": "whole file exact LTS",
+      "blob": "0ecce6aa69d5e3a1ade4ef14b12b1141b5e4be69"
+    },
+    {
+      "path": "../kernel_manifest-6.18/out/bazel/output_user_root/961789292c522f6ecd25a5ebbdd4dcbc/execroot/_main/bazel-out/k8-fastbuild/bin/common-modules/virtual-device/virtual_device_x86_64_config/out_dir/.config",
+      "sha256": "a40bb32adc46c30db3166865fa9bdf72f65d1c9f73c0aa2e8b737520729b3cfc",
+      "observation": "Actual virtual-device configuration: MEI/ME compiled; graphics providers, ISH, Chrome platforms and COMPILE_TEST disabled; virtio input selected. The containing MEI infrastructure is not claimed unused."
+    },
+    {
+      "path": "../grapheneos-17/device/generic/goldfish/product/generic.mk",
+      "sha256": "7962bdd2efbbf6bc3c6a76bc904b8c03645e2445c9ff25022a98a1441722e47f",
+      "observation": "Selects sensor HAL configuration and virtio input device configuration files."
+    },
+    {
+      "path": "../grapheneos-17/device/generic/goldfish/hals/sensors/hals.conf",
+      "sha256": "7741af522666333e2bbdb3104855b1e935b5a7a8cc2cbb7cb9742c6e6815ea55",
+      "observation": "Selects sensors.ranchu sub-HAL."
+    },
+    {
+      "path": "../grapheneos-17/device/generic/goldfish/hals/sensors/Android.bp",
+      "sha256": "7717b3a0d381ca56e5e5776d19ab3a6ea51bd3bc377aa901837806f3106dc4e9",
+      "observation": "Builds selected sensor implementation and links libqemud.ranchu."
+    },
+    {
+      "path": "../grapheneos-17/device/generic/goldfish/hals/sensors/entry.cpp",
+      "sha256": "4432571cb2125e9569fb145c17bac8916794d2aec7cd89b5bca4f6809d2cae94",
+      "observation": "Selected sensor transport opens qemud sensors channel and sends/receives messages."
+    },
+    {
+      "path": "../grapheneos-17/device/generic/goldfish/hals/sensors/multihal_sensors_qemu.cpp",
+      "sha256": "1e8747be7d9419a1093627f8e244d10ee0f1846298e4f771d23ff14a671831dc",
+      "observation": "Implements QEMU sensor reporting/time/message transport rather than ISH or Chrome EC firmware protocol."
+    },
+    {
+      "path": "drivers/hid/intel-ish-hid/Kconfig",
+      "sha256": "189930a633f73f2643290bd369879db8b0fedec04f44bb538ebcf08ea538ca9a",
+      "observation": "ISH provider requires x86 PCI chipset integrated sensor hub."
+    },
+    {
+      "path": "drivers/virtio/virtio_input.c",
+      "sha256": "1ae427087b5f4505cf9bdc98905277a627c5cf006215fe8878dcb90cacdf4d86",
+      "observation": "Configured input provider uses virtqueue events and configuration, independent of exact Logitech Bluetooth/ELAN I2C IDs."
+    },
+    {
+      "path": "drivers/hid/hid-logitech-hidpp.c",
+      "candidate_added_ids": [
+        "0xb042",
+        "0xb36f",
+        "0xb370",
+        "0xb377",
+        "0xb371",
+        "0xb374",
+        "0xb383",
+        "0xb384",
+        "0xb386",
+        "0xb388",
+        "0xb378",
+        "0xb380",
+        "0xb38c",
+        "0xb38f",
+        "0xb369",
+        "0xb36e",
+        "0xb394",
+        "0xb397",
+        "0xb39c",
+        "0xb39d"
+      ],
+      "native_retained_ids": [
+        "0xb042"
+      ],
+      "omitted_new_physical_ids": [
+        "0xb36f",
+        "0xb370",
+        "0xb377",
+        "0xb371",
+        "0xb374",
+        "0xb383",
+        "0xb384",
+        "0xb386",
+        "0xb388",
+        "0xb378",
+        "0xb380",
+        "0xb38c",
+        "0xb38f",
+        "0xb369",
+        "0xb36e",
+        "0xb394",
+        "0xb397",
+        "0xb39c",
+        "0xb39d"
+      ]
+    },
+    {
+      "path": "arch/arm64/Kconfig",
+      "native_commit": "c6c87a23de4bdf5a8a8a26d9d269f4026e35afef",
+      "config": "config ARM64_ERRATUM_4193714\n\tbool \"C1-Pro: 4193714: SME DVMSync early acknowledgement\"\n\tdepends on ARM64_SME\n\tdefault y\n\thelp\n\t  Enable workaround for C1-Pro acknowledging the DVMSync before\n\t  the SME memory accesses are complete. This will cause TLB\n\t  maintenance for processes using SME to also issue an IPI to\n\t  the affected CPUs.\n\n\t  If unsure, say Y.\n\n",
+      "observation": "Native LTS workaround already defaults on; no stable SME erratum protection removed. tlbbatch header exactly LTS, including cpumask but no Android historical KMI reservation."
+    }
+  ],
+  "remote_resources_used": [],
+  "limits": "All 17 candidate patches/remerge diffs read locally. No physical sensor, suspend/hibernate, Bluetooth, touchpad, graphics firmware or emulator runtime test performed. New source headers await build 193."
+}

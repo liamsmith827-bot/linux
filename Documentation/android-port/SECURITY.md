@@ -9910,6 +9910,44 @@ future hardware. Native firmware, EFI calibration, PM and tests remain intact.
 The KUnit additions were not executed. No physical calibration, Android build
 or runtime audio test was performed; no additional remote resources were used.
 
+## Sensor providers, MEI dependencies and HID merge resolutions
+
+Seventeen candidates, including two merges, are recorded in
+evidence/hid-mei-tail-review.json. All affected files are exactly LTS after
+3c092b1cd7a2 removes two remnants of features whose implementations were omitted:
+the ISHTP connection-state getter declaration and Chrome EC suspend_time field.
+These are not historical KMI artifacts. Keep native headers coherent with their
+native implementations rather than advertising an unavailable function.
+
+Goldfish selects the ranchu sensor HAL, whose entry point opens the qemud sensors
+channel. Actual SDK configuration disables Intel ISH and Chrome platform drivers.
+The six ISH changes concern its PCI sensor firmware connection, D3/reset ordering,
+ready notifications, timeouts and hibernation callbacks. The Chrome EC change
+injects whole timestamp-wrap periods after sleep and makes overflow correction
+forward-only. Both are specific physical protocols and remain omitted with
+their providers; native implementations and generic PM/input code stay intact.
+The local timestamp patch's assertions about exact resynchronization are not
+taken as proof, and no long-suspend CTS or physical firmware workload was run.
+
+MEI and ME are compiled, so their containing infrastructure is not described as
+unused. Its historical temporary dependency revert is superseded by the reapply
+and native Kconfig, including the evolved root default. Native if-scope and
+dependency-based subdrivers remain. New non-x86 availability, graphics-dependent
+tristate freedom, standalone COMPILE_TEST and Xe proxy choices are omitted for
+this x86_64 target, which disables i915, Xe and COMPILE_TEST. These are functional
+configuration/source-module choices, not KMI preservation.
+
+The Logitech candidate adds 20 IDs: native LTS already includes MX Master 4
+0xb042, which remains. The other 19 keyboard IDs and the separate ELAN SB974D
+I2C ID add physical peripherals outside the SDK virtio-input target. Generic
+HID/Bluetooth and all existing driver fixes remain; arbitrary physical-device
+passthrough is not claimed impossible. The two full remerge diffs also resolve
+ARM SME erratum and TLB batch layout: retain native default-y workaround and
+cpumask tracking, omit historical ANDROID_KABI_RESERVE, and keep native HID IDs.
+All three merge-resolution files are exact LTS, preserving its erratum fix.
+Build 193 is verifying the source-header cleanup; this review adds no runtime
+compatibility claim. No additional remote sources were used.
+
 ## Audio loopback, reverted hostless DAI and SDCA interfaces
 
 Thirteen candidates are recorded in evidence/audio-interface-tail-review.json.

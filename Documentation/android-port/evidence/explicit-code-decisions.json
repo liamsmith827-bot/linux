@@ -32901,5 +32901,179 @@
       "evidence/cirrus-calibration-review.json",
       "SECURITY.md: Cirrus amplifier factory calibration"
     ]
+  },
+  {
+    "commit": "b8ed6629a340b94a1aaea0215b2182fc1ce0837b",
+    "disposition": "superseded",
+    "rationale": "Temporary revert of MEI dependency rework is superseded by b32a813da596 and later native Kconfig. Preserve native if INTEL_MEI scope, ME default y and dependency-based subdrivers, including evolved X86_64||MATOM root default. The two historical patches differ in root-default evolution and are not falsely called exact inverses.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/hid-mei-tail-review.json",
+      "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+    ]
+  },
+  {
+    "commit": "b32a813da596c3f735d1ea20e8fcaded8e796ec6",
+    "disposition": "already-represented-upstream",
+    "rationale": "Effective reapplication is represented by native if INTEL_MEI scope, ME default y and depends-on rather than select for GSC/HDCP/PXP, with native Xe support. All four Kconfig files are exactly LTS. Preserve configured MEI/ME and later native defaults instead of replaying an older Kconfig snapshot.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/hid-mei-tail-review.json",
+      "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+    ]
+  },
+  {
+    "commit": "927940929dcd456a554690c84f803b1b73a61816",
+    "disposition": "omitted-current-target",
+    "rationale": "Adds actual exported ISHTP connection-state getter and declaration for physical Intel sensor hub resume. Provider disabled; Goldfish uses qemud sensors. Remove orphan declaration from initial header integration in 3c092b1cd7a2, matching native driver without getter. This is a source API, not KMI-only; existing native ISHTP interfaces remain.",
+    "result_commits": [
+      "3c092b1cd7a22909cc27f0c1b7c6727f59f2a93d"
+    ],
+    "evidence": [
+      "evidence/hid-mei-tail-review.json",
+      "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+    ]
+  },
+  {
+    "commit": "946254165837aefabc3ed0a8ae4e0800c55f5eaa",
+    "disposition": "omitted-current-target",
+    "rationale": "Clears physical ISH suspended state/wakes resume waiters only after connection is established, using preceding getter. Omit with disabled ISH provider and getter; retain native driver in full. This is a real physical resume-order fix, not a claim that native affected hardware is equivalent.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/hid-mei-tail-review.json",
+      "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+    ]
+  },
+  {
+    "commit": "396b5f67d26af7796e381fa21f6edeca7b0bba93",
+    "disposition": "omitted-current-target",
+    "rationale": "Moves ISH firmware/suspend predicates into leave-D0i3 helper and resets clients synchronously before queued resume when returning from D3. Omit physical power/firmware protocol change with disabled provider; native PCI/PM core remains untouched.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/hid-mei-tail-review.json",
+      "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+    ]
+  },
+  {
+    "commit": "125587d491ad7ba811f6353f58593c4d7733aa4d",
+    "disposition": "omitted-current-target",
+    "rationale": "Reorders ISH reset ACK, hardware-ready notification and reset work, initializes global device earlier and schedules work for both RESET_NOTIFY and ACK. Full lifetime/work-order diff read. Keep native physical provider rather than partially importing a new reset sequence; no generic workqueue or HID-core change occurs.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/hid-mei-tail-review.json",
+      "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+    ]
+  },
+  {
+    "commit": "6eaae4208b5f4995bc69d815c2bb84228836b867",
+    "disposition": "omitted-current-target",
+    "rationale": "Replaces ISH wakeup void doorbell with IPC reset, propagates errors and centralizes longer ready timeout. Omit with physical reset-protocol series; preserve native complete startup and timeout behavior for this disabled provider. No claim of tested firmware recovery.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/hid-mei-tail-review.json",
+      "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+    ]
+  },
+  {
+    "commit": "aa354022ce0812d9747cf4a2a5fd4501178d8252",
+    "disposition": "omitted-current-target",
+    "rationale": "Separates ISH hibernation freeze/save-PCI-state from suspend/poweroff and resume/restore callbacks. This is physical device lifecycle support, not general Android suspend semantics. Omit with disabled ISH provider, retaining native generic PM behavior.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/hid-mei-tail-review.json",
+      "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+    ]
+  },
+  {
+    "commit": "4dddbb301438f59c56c3298cc0488ba232f29f80",
+    "disposition": "omitted-current-target",
+    "rationale": "Removes X86 dependency to allow physical Intel ME devices on other CPU architectures. Current SDK is x86_64, so native dependency already permits its compiled MEI/ME configuration. Keep native gate; no non-x86 build or future platform support is added.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/hid-mei-tail-review.json",
+      "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+    ]
+  },
+  {
+    "commit": "55c9f9dc9fd7f931351f0566f00780dea253b226",
+    "disposition": "omitted-current-target",
+    "rationale": "Changes MEI graphics-interface dependencies to boolean !=n tests so their tristate can differ from i915/Xe linkage. This is real configuration/module flexibility, not KMI-only. Both physical graphics providers are disabled for SDK; native MEI and other interfaces remain enabled/coherent. Omit new combinations solely for those excluded providers.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/hid-mei-tail-review.json",
+      "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+    ]
+  },
+  {
+    "commit": "c02ec800ba90b276bb739be46429825e8ff6b834",
+    "disposition": "omitted-current-target",
+    "rationale": "Adds COMPILE_TEST alternatives for graphics-related MEI interfaces. SDK is not a compile-test configuration and uses neither i915 nor Xe. Keep native dependencies for the existing build, without claiming every allmod/other-provider combination has been validated.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/hid-mei-tail-review.json",
+      "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+    ]
+  },
+  {
+    "commit": "55112b3229846a0b130efe4a3d7ce20f4ec046b4",
+    "disposition": "omitted-current-target",
+    "rationale": "Allows GSC proxy with Xe as well as i915/COMPILE_TEST. This adds an alternative physical GPU provider outside current target; preserve native proxy dependency and compiled base MEI. It is not a generic Android graphics interface.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/hid-mei-tail-review.json",
+      "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+    ]
+  },
+  {
+    "commit": "75e61860c9302a8fb8b50f8cef821e963a44fd96",
+    "disposition": "reconciled-to-lts",
+    "rationale": "Patch adds 20 exact Bluetooth IDs. MX Master 4 0xb042 is already in native LTS and retained; remaining 19 identify additional physical Logitech keyboards and are omitted for current SDK virtio input target. Keep the entire native HID++ driver and its LTS fixes; generic HID/Bluetooth support is not removed. No claim that physical passthrough can never be used.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/hid-mei-tail-review.json",
+      "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+    ]
+  },
+  {
+    "commit": "5a1fe336329ea0a076d43e01872a89d8fea0903e",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "rationale": "All unique remerge changes examined in three paths: native ARM SME erratum defaults y and keeps cpumask batch tracking; omit ANDROID_KABI_RESERVE and duplicate include cleanup is native. Logitech new physical IDs follow 75e61860c930 target decision while existing native MX Master ID remains. Whole three files exactly LTS; no stable erratum fix is weakened and no merge-specific code is hidden by parent disposition.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/hid-mei-tail-review.json",
+      "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+    ]
+  },
+  {
+    "commit": "f69fa581ca90e6c6bf3a8a7537e585f861f4c0de",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "rationale": "Reverse-direction merge resolves the same three areas. Full remerge diff read: keep native default-y SME fix/cpumask, omit historical KMI reserve regardless of conditional placement, and retain native HID++ IDs without the new physical keyboard list. All three files native; distinct merge resolution recorded even though code outcome matches the other merge.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/hid-mei-tail-review.json",
+      "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+    ]
+  },
+  {
+    "commit": "3ca2a7e9079a77de426219c7a1e488d2aa0a46cd",
+    "disposition": "omitted-current-target",
+    "rationale": "Adds ELAN SB974D 04f3:0400 I2C-HID match and constant for a new physical touchpad. Omit additional peripheral support for the SDK virtio input target; retain complete native HID-ELAN and shared ID header, with no generic HID event ABI change.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/hid-mei-tail-review.json",
+      "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+    ]
+  },
+  {
+    "commit": "c18fbf69dd7bf67dcb8fcda0146286ffa394c7b3",
+    "disposition": "omitted-current-target",
+    "rationale": "Full timestamp patch reviewed: stores suspend boottime, injects whole 32-bit EC wrap periods into two trackers, changes overflow correction to forward-only, and includes whitespace cleanup. This is Chrome EC firmware clock protocol, while Goldfish sensors use qemud and Chrome platform provider is disabled. Remove its orphan suspend_time header field in 3c092b1cd7a2. Keep all three native files; do not treat local patch comments claiming exact resynchronization as proof of correctness or claim long-suspend CTS was run.",
+    "result_commits": [
+      "3c092b1cd7a22909cc27f0c1b7c6727f59f2a93d"
+    ],
+    "evidence": [
+      "evidence/hid-mei-tail-review.json",
+      "SECURITY.md: Sensor providers, MEI dependencies and HID merge resolutions"
+    ]
   }
 ]
