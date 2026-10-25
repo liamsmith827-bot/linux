@@ -70,6 +70,8 @@ static const char * const POWER_SUPPLY_USB_TYPE_TEXT[] = {
 	[POWER_SUPPLY_USB_TYPE_PD]		= "PD",
 	[POWER_SUPPLY_USB_TYPE_PD_DRP]		= "PD_DRP",
 	[POWER_SUPPLY_USB_TYPE_PD_PPS]		= "PD_PPS",
+	[POWER_SUPPLY_USB_TYPE_PD_SPR_AVS]	= "PD_SPR_AVS",
+	[POWER_SUPPLY_USB_TYPE_PD_PPS_SPR_AVS]	= "PD_PPS_SPR_AVS",
 	[POWER_SUPPLY_USB_TYPE_APPLE_BRICK_ID]	= "BrickID",
 };
 
@@ -91,6 +93,7 @@ static const char * const POWER_SUPPLY_CHARGE_TYPE_TEXT[] = {
 	[POWER_SUPPLY_CHARGE_TYPE_CUSTOM]	= "Custom",
 	[POWER_SUPPLY_CHARGE_TYPE_LONGLIFE]	= "Long Life",
 	[POWER_SUPPLY_CHARGE_TYPE_BYPASS]	= "Bypass",
+	[POWER_SUPPLY_CHARGE_TYPE_TAPER_EXT]	= "Taper",
 };
 
 static const char * const POWER_SUPPLY_HEALTH_TEXT[] = {
@@ -253,17 +256,17 @@ static void power_supply_escape_spaces(const char *str, char *buf, size_t bufsiz
 
 static int power_supply_match_string(const char * const *array, size_t n, const char *s)
 {
-	int ret;
-
-	/* First try an exact match */
-	ret = __sysfs_match_string(array, n, s);
-	if (ret >= 0)
-		return ret;
+	/* First try an exact match, including entries after sparse enum holes. */
+	for (size_t i = 0; i < n; i++)
+		if (array[i] && sysfs_streq(array[i], s))
+			return i;
 
 	/* Second round, try matching with spaces replaced by '_' */
 	for (size_t i = 0; i < n; i++) {
 		char buf[32];
 
+		if (!array[i])
+			continue;
 		power_supply_escape_spaces(array[i], buf, sizeof(buf));
 		if (sysfs_streq(buf, s))
 			return i;
@@ -281,7 +284,9 @@ static ssize_t power_supply_show_enum_with_available(
 	ssize_t count = 0;
 	int i;
 
-	for (i = 0; i < label_count; i++) {
+	for (i = 0; i < label_count && i < BITS_PER_TYPE(available_values); i++) {
+		if (!labels[i])
+			continue;
 		available = available_values & BIT(i);
 		active = i == value;
 		power_supply_escape_spaces(labels[i], escaped_label, sizeof(escaped_label));
@@ -400,7 +405,8 @@ static ssize_t power_supply_format_property(struct device *dev,
 	default:
 default_format:
 		if (ps_attr->text_values_len > 0 &&
-				value.intval < ps_attr->text_values_len && value.intval >= 0) {
+				value.intval < ps_attr->text_values_len && value.intval >= 0 &&
+				ps_attr->text_values[value.intval]) {
 			ret = sysfs_emit(buf, "%s\n", ps_attr->text_values[value.intval]);
 		} else {
 			ret = sysfs_emit(buf, "%d\n", value.intval);
@@ -644,6 +650,9 @@ int power_supply_charge_types_parse(unsigned int available_types, const char *bu
 
 	if (i < 0)
 		return i;
+
+	if (i >= BITS_PER_TYPE(available_types))
+		return -EINVAL;
 
 	if (available_types & BIT(i))
 		return i;
