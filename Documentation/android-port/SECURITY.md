@@ -7920,3 +7920,28 @@ The port has neither result. This verifies routing and control flow with fixed
 masks, not real tracefs, dynamic-debug callsite instrumentation, concurrent mask
 updates or a running display. The SDK build enables TRACING. Full workflow
 verification for the updated source is pending build166.
+
+## Thermal PM hook decisions are local to each zone
+
+Retain the generic thermal wakeability hook from 238d0b4a83d8, but initialize
+its output for each zone in both PM traversals. ACK initializes the value once
+before the loop, allowing a callback that sets it for one zone and ignores
+others to skip unrelated zones. A fresh zero preserves native preparation and
+completion for every zone without its own affirmative callback decision.
+The single-zone registration path already initializes its output locally.
+
+The hook intentionally lets trusted vendor code bypass native suspension,
+polling cancellation and resume scheduling for a zone whose interrupts and
+controller remain usable. That decision must stay consistent across prepare
+and complete; this change does not validate the hardware assertion or freeze
+callback policy across the PM cycle. Incorrect policy can touch unavailable
+hardware or disrupt thermal management. Native zone locking, resume completion
+waits, global-list locking and workqueue flushing remain. No callback restores
+the native behavior, and the default is never inherited from another zone.
+
+`check_thermal_pm_hook.py` extracts both traversals from port, ACK and LTS.
+Thirty host cases under ASan/UBSan cover no selected zone, each individual zone,
+and all zones in both phases. ACK skips six unselected zone operations across
+the cases; the port skips none and passes zero initially to every callback.
+These are traversal shims, not thermal hardware, workqueue or suspend tests.
+The updated kernel will be verified by the existing workflow in build167.

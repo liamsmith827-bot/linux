@@ -1831,13 +1831,14 @@ static void thermal_zone_pm_prepare(struct thermal_zone_device *tz)
 static void thermal_pm_notify_prepare(void)
 {
 	struct thermal_zone_device *tz;
-	int irq_wakeable = 0;
 
 	guard(mutex)(&thermal_list_lock);
 
 	thermal_pm_suspended = true;
 
 	list_for_each_entry(tz, &thermal_tz_list, node) {
+		int irq_wakeable = 0;
+
 		trace_android_vh_thermal_pm_notify_suspend(tz, &irq_wakeable);
 		if (irq_wakeable)
 			continue;
@@ -1865,13 +1866,14 @@ static void thermal_zone_pm_complete(struct thermal_zone_device *tz)
 static void thermal_pm_notify_complete(void)
 {
 	struct thermal_zone_device *tz;
-	int irq_wakeable = 0;
 
 	guard(mutex)(&thermal_list_lock);
 
 	thermal_pm_suspended = false;
 
 	list_for_each_entry(tz, &thermal_tz_list, node) {
+		int irq_wakeable = 0;
+
 		trace_android_vh_thermal_pm_notify_suspend(tz, &irq_wakeable);
 		if (irq_wakeable)
 			continue;
