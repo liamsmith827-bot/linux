@@ -1237,9 +1237,11 @@ void ieee80211_recalc_smps_chanctx(struct ieee80211_local *local,
 		}
 
 		if (iter.nan_channel) {
-			rx_chains_dynamic = rx_chains_static =
-				iter.nan_channel->needed_rx_chains;
-			break;
+			rx_chains_static = max(rx_chains_static,
+					       iter.nan_channel->needed_rx_chains);
+			rx_chains_dynamic = max(rx_chains_dynamic,
+						iter.nan_channel->needed_rx_chains);
+			continue;
 		}
 
 		if (!iter.link)
