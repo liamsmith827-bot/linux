@@ -1,0 +1,349 @@
+{
+  "source_head": "e26a8023bbbfc119fd816bc8fb4ffcc328ddf01c",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "records": [
+    {
+      "commit": "5600111da67def9651d22e2fbbd91c4d67864b43",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain grouped hwsim NAN state as the dependency of the final emulator radio implementation. Intermediate band/timer fields are subsequently replaced by slot scheduling, locking and per-radio cluster state. No binary layout preservation is required. This is common configured simulator code, not physical-platform enablement.",
+      "evidence": [
+        "evidence/hwsim-nan-review.json",
+        "SECURITY.md: Hwsim NAN radio scheduling"
+      ],
+      "patch_sha256": "ed96f5cafd9663260107df65311d265554dd04f4fe950ab2e55b0a4af7c3a80c",
+      "changed_paths": [
+        "drivers/net/wireless/virtual/mac80211_hwsim.c"
+      ]
+    },
+    {
+      "commit": "f9786fc9115ea36bbdcfe7228778aaf16ce19377",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain source split, internal header and composite module Makefile, preserving mac80211_hwsim.ko and its existing build entry. Retain channel/rate/cipher array compile-time consistency checks. Source movement includes native radar/background fields and subsequent stable fixes in renamed main source; do not replace native receive validation, stop serialization or virtio length checks with older ACK bodies. Historical global cluster state is superseded by final per-radio synchronization.",
+      "evidence": [
+        "evidence/hwsim-nan-review.json",
+        "SECURITY.md: Hwsim NAN radio scheduling"
+      ],
+      "patch_sha256": "6a36101e110fbf5098c2f89d91556e02b3bcd0c4a0a0e134f7eac95f0031945d",
+      "changed_paths": [
+        "MAINTAINERS",
+        "drivers/net/wireless/virtual/Makefile",
+        "drivers/net/wireless/virtual/mac80211_hwsim.c",
+        "drivers/net/wireless/virtual/mac80211_hwsim_i.h",
+        "drivers/net/wireless/virtual/mac80211_hwsim_main.c",
+        "drivers/net/wireless/virtual/mac80211_hwsim_nan.c",
+        "drivers/net/wireless/virtual/mac80211_hwsim_nan.h"
+      ]
+    },
+    {
+      "commit": "c58276ca923cbe429363e04ed3bb0b927566f819",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain late beacon/probe/S1G timestamp writing with explicit minimum-length checks and monitor delivery after timestamp population. This supports the actual hwsim radio and external medium path without the old shared abs_bcn_ts field. Native TX feedback lookup, rate validation, netgroup/radio isolation and skb cleanup remain. Final locked timestamp helpers supersede the initial unprotected offset reads. Native function deltas are recorded.",
+      "evidence": [
+        "evidence/hwsim-nan-review.json",
+        "SECURITY.md: Hwsim NAN radio scheduling"
+      ],
+      "patch_sha256": "6b39d2b2d4540b8dc73946ee92aeb1025454466ae2acf3afe6cd683db23c30cb",
+      "changed_paths": [
+        "drivers/net/wireless/virtual/mac80211_hwsim_i.h",
+        "drivers/net/wireless/virtual/mac80211_hwsim_main.c"
+      ]
+    },
+    {
+      "commit": "3c0a9baf8c25e95339911bfdc3c14df9e976dae4",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "e26a8023bbbfc119fd816bc8fb4ffcc328ddf01c"
+      ],
+      "rationale": "Retain absolute next-TBTT calculation to avoid cumulative drift, but correct the inherited clock-domain mismatch: the deadline is boottime while the ordinary beacon timer was monotonic. e26a8023bbbf selects CLOCK_BOOTTIME to match the converter and NAN timers. Existing positive beacon-interval setup and native stop/cancellation are retained. Host actual-callback tests verify 9000 interval/offset/suspend scenarios; old clock causes suspend-duration delay in 6000. No live suspend test.",
+      "evidence": [
+        "evidence/hwsim-nan-review.json",
+        "SECURITY.md: Hwsim NAN radio scheduling"
+      ],
+      "patch_sha256": "31b55510dc1fdd9a99af2b368459ba0428a4de95ff354e79e8caba22fc4b4491",
+      "changed_paths": [
+        "drivers/net/wireless/virtual/mac80211_hwsim_i.h",
+        "drivers/net/wireless/virtual/mac80211_hwsim_main.c"
+      ]
+    },
+    {
+      "commit": "7d8be2fafdba6def466db5a01a9d4ac4f4ccc092",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain 16-TU slot scheduling across 512-TU discovery-window periods, band/window notifications and boottime timer basis. Subsequent changes replace cached current-channel state and add per-slot TX/RX/synchronization. The initial boottime conversion unit error is superseded by 5d69369e0920. Current slots are bounded 0..31 by mask/division; next-slot 32 deliberately advances the period. Role handling is supplied by the later synchronization commit.",
+      "evidence": [
+        "evidence/hwsim-nan-review.json",
+        "SECURITY.md: Hwsim NAN radio scheduling"
+      ],
+      "patch_sha256": "28d7f772c610b6350a51930fa5bc4294443e9fde163fd92617872c6767996f78",
+      "changed_paths": [
+        "drivers/net/wireless/virtual/mac80211_hwsim_i.h",
+        "drivers/net/wireless/virtual/mac80211_hwsim_main.c",
+        "drivers/net/wireless/virtual/mac80211_hwsim_nan.c",
+        "drivers/net/wireless/virtual/mac80211_hwsim_nan.h"
+      ]
+    },
+    {
+      "commit": "7b0494a5c7d010856d44e6ddca1626584f9b5d65",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain discovery-window TX gating, 256-us boundary quiet time, randomized deferred queue wake and synchronous cancellation of the resume timer before clearing the vif. Later peer/data scheduling extends the initial management-only implementation. This models radio availability for the configured emulator driver; it is not a cryptographic access check and no real-time scheduling guarantee is claimed.",
+      "evidence": [
+        "evidence/hwsim-nan-review.json",
+        "SECURITY.md: Hwsim NAN radio scheduling"
+      ],
+      "patch_sha256": "753046cacfe6a2feafdd025b1b89d0f8a0a96e142ee27fe13634030a69666722",
+      "changed_paths": [
+        "drivers/net/wireless/virtual/mac80211_hwsim_i.h",
+        "drivers/net/wireless/virtual/mac80211_hwsim_main.c",
+        "drivers/net/wireless/virtual/mac80211_hwsim_nan.c",
+        "drivers/net/wireless/virtual/mac80211_hwsim_nan.h"
+      ]
+    },
+    {
+      "commit": "fc0ee32d26dd3c3c8d44d7df89fb7a805b0a9029",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain deriving NAN transmit channel from current TSF instead of the last timer update, superseded in final code by get_tx_chandef handling DW and further availability windows. Invalid channel yields skb release/drop. The quiet-time guard reduces but does not prove absence of scheduling races; no hardware or live-medium timing claim.",
+      "evidence": [
+        "evidence/hwsim-nan-review.json",
+        "SECURITY.md: Hwsim NAN radio scheduling"
+      ],
+      "patch_sha256": "50a0f14708e5ff963185f3edc7617401e1fcdb35cbc42a9e41d0d764b94ef653",
+      "changed_paths": [
+        "drivers/net/wireless/virtual/mac80211_hwsim_main.c",
+        "drivers/net/wireless/virtual/mac80211_hwsim_nan.c",
+        "drivers/net/wireless/virtual/mac80211_hwsim_nan.h"
+      ]
+    },
+    {
+      "commit": "446e05f6bd9f6662e16edb56e7c2246379eab5f1",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "796fec2fadb186d618cfd2a749af5559042cafce"
+      ],
+      "rationale": "Retain receive gating by slot/channel and RX timestamps, including external-medium fallback; later synchronization fixes the historical rx_flags-versus-flag typo and adds initial scanning, and data-path support adds scheduled bandwidth checks. Supply the missed tsf_offset_lock around the no-netlink RX timestamp sample in 796fec2fadb1. Preserve native network-group isolation, frame bounds and userspace receive/stop mutex serialization.",
+      "evidence": [
+        "evidence/hwsim-nan-review.json",
+        "SECURITY.md: Hwsim NAN radio scheduling"
+      ],
+      "patch_sha256": "476a7c7f3c8534659d3185b8b1255935bf19d1045138be78f3fc064209c335a2",
+      "changed_paths": [
+        "drivers/net/wireless/virtual/mac80211_hwsim_main.c",
+        "drivers/net/wireless/virtual/mac80211_hwsim_nan.c",
+        "drivers/net/wireless/virtual/mac80211_hwsim_nan.h"
+      ]
+    },
+    {
+      "commit": "5d69369e0920cb9282f3398066c0a93fec8129d8",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "796fec2fadb186d618cfd2a749af5559042cafce"
+      ],
+      "rationale": "Retain initialized spinlock around TSF-offset conversions, updates and timestamp writing, including the boottime nanoseconds-to-microseconds correction. Complete its missing RX sample coverage in 796fec2fadb1. The added lock surrounds only a scalar read and releases before state-lock/receive processing, retaining the sampled common simulation time and avoiding a new reverse state-lock nesting. All offset accesses were inspected; no KCSAN or concurrent runtime claim.",
+      "evidence": [
+        "evidence/hwsim-nan-review.json",
+        "SECURITY.md: Hwsim NAN radio scheduling"
+      ],
+      "patch_sha256": "b33e6e7c450ad79861f532052c546218b5df06cfee7e1404e7b43e5cf1e2c15d",
+      "changed_paths": [
+        "drivers/net/wireless/virtual/mac80211_hwsim_i.h",
+        "drivers/net/wireless/virtual/mac80211_hwsim_main.c"
+      ]
+    },
+    {
+      "commit": "4f3358ce833afeb429864a2552dc33fdc55c1458",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "796fec2fadb186d618cfd2a749af5559042cafce"
+      ],
+      "rationale": "Retain per-radio NAN cluster selection, synchronization/beacon generation, bounded vendor-element/attribute parsing, scan/warmup phases, state/TSF locks and cluster-join notifications. This replaces the globally shared cluster shortcut and supports hwsim external medium simulation. Correct timer publication order in 796fec2fadb1: cluster ID and DW notification setting are initialized before slot timer activation. Host immediate-timer tests expose both old successful-start cases. Existing simulation limitations remain: only 2.4-GHz synchronization, approximate external-medium timestamps, limited scanning and no old-schedule sync beacon after merge or DW contention mitigation. Do not claim full Wi-Fi Aware conformance or RX/teardown concurrency verification.",
+      "evidence": [
+        "evidence/hwsim-nan-review.json",
+        "SECURITY.md: Hwsim NAN radio scheduling"
+      ],
+      "patch_sha256": "cfbc5c09174a1ca78fec09d04a86709fd8b73f7e7db2240b07aabe33e0b81eb0",
+      "changed_paths": [
+        "drivers/net/wireless/virtual/mac80211_hwsim_i.h",
+        "drivers/net/wireless/virtual/mac80211_hwsim_main.c",
+        "drivers/net/wireless/virtual/mac80211_hwsim_nan.c",
+        "drivers/net/wireless/virtual/mac80211_hwsim_nan.h"
+      ]
+    },
+    {
+      "commit": "f9d01a9efea7f26e0838bcb56c712f4f892687cb",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain conditional allowance for two NAN_DATA interfaces and enlarge private if_limits storage to five entries. This is needed for the optional NAN path in the already configured hwsim driver; it does not enable NAN in the pinned Goldfish constructor or add a new platform. Five entries cover base, ADHOC, P2P-device, NAN and NAN_DATA limit categories.",
+      "evidence": [
+        "evidence/hwsim-nan-review.json",
+        "SECURITY.md: Hwsim NAN radio scheduling"
+      ],
+      "patch_sha256": "4f79dfd2798a605b2fef7f9d0f1066e068858fcd7a7a8aa0518b5bb2a14ce9d2",
+      "changed_paths": [
+        "drivers/net/wireless/virtual/mac80211_hwsim_i.h",
+        "drivers/net/wireless/virtual/mac80211_hwsim_main.c"
+      ]
+    },
+    {
+      "commit": "a1f5a56c0e2678adbdfe1520d516fd86b016299c",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain local/peer schedule callbacks, bounded fixed-size slot/map arrays and private copies under initialized state/peer locks. Missing channels are cleared and absent peer schedules reset state; copying channel definitions avoids retaining transient cfg80211 parser storage. This supplies the driver consumer for retained common schedule APIs. Source lock and ownership contracts were inspected; concurrent update correctness is not dynamically verified.",
+      "evidence": [
+        "evidence/hwsim-nan-review.json",
+        "SECURITY.md: Hwsim NAN radio scheduling"
+      ],
+      "patch_sha256": "c960f54d5f27d09a6610817bc36ab62035d629003323b80c9b1c32fd6911d9a8",
+      "changed_paths": [
+        "drivers/net/wireless/virtual/mac80211_hwsim_i.h",
+        "drivers/net/wireless/virtual/mac80211_hwsim_main.c",
+        "drivers/net/wireless/virtual/mac80211_hwsim_nan.c",
+        "drivers/net/wireless/virtual/mac80211_hwsim_nan.h"
+      ]
+    },
+    {
+      "commit": "0d4397a4d90e986ea5d95dbc21e7df05e31d40fe",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain NAN_DATA TX/RX, DW/further-availability channel definitions, committed-DW peer checks, NDI-to-NMI RCU relation and local/peer schedule matching. Data is withheld during DW; outside DW it requires compatible local/peer channels. RX rejects unsupported bandwidth indices and wider-than-scheduled frames. Driver queue wake remains gated; this is simulated availability rather than authentication. Existing MAC/key authorization paths are separate and retain native validation.",
+      "evidence": [
+        "evidence/hwsim-nan-review.json",
+        "SECURITY.md: Hwsim NAN radio scheduling"
+      ],
+      "patch_sha256": "e3e6f15ff85e7ba36583fec56347aa485b2654bc218d1bcd75502dd0bb55b3a1",
+      "changed_paths": [
+        "drivers/net/wireless/virtual/mac80211_hwsim_main.c",
+        "drivers/net/wireless/virtual/mac80211_hwsim_nan.c",
+        "drivers/net/wireless/virtual/mac80211_hwsim_nan.h"
+      ]
+    },
+    {
+      "commit": "086d13bb428ab6e343804c56cfcb4a9e4391e4b5",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain multicast data availability requiring at least one peer and all peers on this vif to be available. Reuse per-peer schedule gating under atomic station iteration, excluding other vifs and missing TXQs. Prevents unconditional multicast on an unscheduled NAN data interface. It does not guarantee delivery or replace encryption/authorization checks; no multicast runtime test.",
+      "evidence": [
+        "evidence/hwsim-nan-review.json",
+        "SECURITY.md: Hwsim NAN radio scheduling"
+      ],
+      "patch_sha256": "822fd2d04d8c322cd8fd8dda31cad4385306222152a2981319de4ef5dc638b37",
+      "changed_paths": [
+        "drivers/net/wireless/virtual/mac80211_hwsim_nan.c"
+      ]
+    }
+  ],
+  "equivalence": [
+    {
+      "path": "drivers/net/wireless/virtual/mac80211_hwsim_nan.h",
+      "equals": "ACK",
+      "sha256": "e0255f858bf8df67386da2a01b08b1b17ff0ed2e6edd75dfa32be9237171c5b8"
+    },
+    {
+      "path": "drivers/net/wireless/virtual/mac80211_hwsim_i.h",
+      "equals": "ACK",
+      "sha256": "aff6e5d008363ea1ebecd7fa125e8fcb2294aeb60d3a0cacc770bdc2c1b63651"
+    },
+    {
+      "path": "drivers/net/wireless/virtual/Makefile",
+      "equals": "ACK",
+      "sha256": "1e349c78995450efe3d21991fd083b8fb3e7a176c84f2cac8f102c070bb95b05"
+    },
+    {
+      "path": "drivers/net/wireless/virtual/mac80211_hwsim_nan.c",
+      "equals": "ACK except start publication ordering",
+      "sha256": "bf9554d98fdce79b50c4cebd2a0f2568656939e20ae1d4db30f2988b87dcbc86"
+    },
+    {
+      "path": "drivers/net/wireless/virtual/mac80211_hwsim_main.c",
+      "function": "mac80211_hwsim_stop",
+      "equals": "LTS",
+      "sha256": "6b6d77dd519dada70d73eb6ff1a7ef7ebbdb35c6ddb671150ce8f06bfebe475a"
+    },
+    {
+      "path": "drivers/net/wireless/virtual/mac80211_hwsim_main.c",
+      "function": "hwsim_virtio_rx_work",
+      "equals": "LTS",
+      "sha256": "3c9fcfc8703524e109cde0266be1d754f8f30d14aa12a252fab24fca4900062b"
+    }
+  ],
+  "deltas": [
+    {
+      "path": "drivers/net/wireless/virtual/mac80211_hwsim_nan.c",
+      "diff": "--- \n+++ \n@@ -921,6 +921,7 @@\n \t/* set this before starting the timer, as preemption might occur */\n \tdata->nan.device_vif = vif;\n \tdata->nan.bands = conf->bands;\n+\tdata->nan.notify_dw = conf->enable_dw_notification;\n \n \tscoped_guard(spinlock_bh, &data->nan.state_lock) {\n \t\t/* Start in the \"scan\" phase and stay there for a little bit */\n@@ -934,16 +935,13 @@\n \t\tmemset(&data->nan.last_ami, 0, sizeof(data->nan.last_ami));\n \t\tdata->nan.current_ami.master_rank =\n \t\t\tcpu_to_le64(hwsim_nan_get_master_rank(data));\n+\t\tether_addr_copy(data->nan.cluster_id, conf->cluster_id);\n \t}\n \n \t/* Just run this \"soon\" and start in a random schedule position */\n \thrtimer_start(&data->nan.slot_timer,\n \t\t      ns_to_ktime(10 * NSEC_PER_USEC),\n \t\t      HRTIMER_MODE_REL_SOFT);\n-\n-\tether_addr_copy(data->nan.cluster_id, conf->cluster_id);\n-\n-\tdata->nan.notify_dw = conf->enable_dw_notification;\n \n \treturn 0;\n }\n"
+    },
+    {
+      "path": "drivers/net/wireless/virtual/mac80211_hwsim_main.c",
+      "function": "mac80211_hwsim_tx_frame_no_nl",
+      "reference": "LTS renamed source",
+      "diff": "--- \n+++ \n@@ -7,7 +7,11 @@\n \tstruct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;\n \tstruct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);\n \tstruct ieee80211_rx_status rx_status;\n-\tu64 now;\n+\tu64 sim_tsf = mac80211_hwsim_get_sim_tsf();\n+\n+\tmac80211_hwsim_write_tsf(data, skb, sim_tsf);\n+\n+\tmac80211_hwsim_monitor_rx(hw, skb, chan);\n \n \tmemset(&rx_status, 0, sizeof(rx_status));\n \trx_status.flag |= RX_FLAG_MACTIME_START;\n@@ -50,20 +54,9 @@\n \tskb_ext_reset(skb);\n \tnf_reset_ct(skb);\n \n-\t/*\n-\t * Get absolute mactime here so all HWs RX at the \"same time\", and\n-\t * absolute TX time for beacon mactime so the timestamp matches.\n-\t * Giving beacons a different mactime than non-beacons looks messy, but\n-\t * it helps the Toffset be exact and a ~10us mactime discrepancy\n-\t * probably doesn't really matter.\n-\t */\n \tif (ieee80211_is_beacon(hdr->frame_control) ||\n-\t    ieee80211_is_probe_resp(hdr->frame_control)) {\n+\t    ieee80211_is_probe_resp(hdr->frame_control))\n \t\trx_status.boottime_ns = ktime_get_boottime_ns();\n-\t\tnow = data->abs_bcn_ts;\n-\t} else {\n-\t\tnow = mac80211_hwsim_get_tsf_raw();\n-\t}\n \n \t/* Copy skb to all enabled radios that are on the current frequency */\n \tspin_lock(&hwsim_radio_lock);\n@@ -71,7 +64,9 @@\n \t\tstruct sk_buff *nskb;\n \t\tstruct tx_iter_data tx_iter_data = {\n \t\t\t.receive = false,\n+\t\t\t.hw = data2->hw,\n \t\t\t.channel = chan,\n+\t\t\t.rx_status = &rx_status,\n \t\t};\n \n \t\tif (data == data2)\n@@ -86,6 +81,13 @@\n \n \t\tif (data->netgroup != data2->netgroup)\n \t\t\tcontinue;\n+\n+\t\t/*\n+\t\t * Set mactime early since NAN RX filtering relies on it\n+\t\t * for slot calculation\n+\t\t */\n+\t\tscoped_guard(spinlock_bh, &data2->tsf_offset_lock)\n+\t\t\trx_status.mactime = sim_tsf + data2->tsf_offset;\n \n \t\tif (!hwsim_chans_compat(chan, data2->tmp_chan) &&\n \t\t    !hwsim_chans_compat(chan, data2->channel)) {\n@@ -123,8 +125,6 @@\n \t\tif (mac80211_hwsim_addr_match(data2, hdr->addr1))\n \t\t\tack = true;\n \n-\t\trx_status.mactime = now + data2->tsf_offset;\n-\n \t\tmac80211_hwsim_rx(data2, &rx_status, nskb);\n \t}\n \tspin_unlock(&hwsim_radio_lock);\n"
+    },
+    {
+      "path": "drivers/net/wireless/virtual/mac80211_hwsim_main.c",
+      "function": "hwsim_tx_info_frame_received_nl",
+      "reference": "LTS renamed source",
+      "diff": "--- \n+++ \n@@ -58,6 +58,8 @@\n \tif (!found)\n \t\tgoto out;\n \n+\tmac80211_hwsim_monitor_rx(data2->hw, skb, data2->channel);\n+\n \t/* Tx info received because the frame was broadcasted on user space,\n \t so we get all the necessary info: tx attempts and skb control buff */\n \n"
+    },
+    {
+      "path": "drivers/net/wireless/virtual/mac80211_hwsim_main.c",
+      "function": "hwsim_cloned_frame_received_nl",
+      "reference": "LTS renamed source",
+      "diff": "--- \n+++ \n@@ -67,7 +67,10 @@\n \t/* A frame is received from user space */\n \tmemset(&rx_status, 0, sizeof(rx_status));\n \tif (info->attrs[HWSIM_ATTR_FREQ]) {\n-\t\tstruct tx_iter_data iter_data = {};\n+\t\tstruct tx_iter_data iter_data = {\n+\t\t\t.hw = data2->hw,\n+\t\t\t.rx_status = &rx_status,\n+\t\t};\n \n \t\t/* throw away off-channel packets, but allow both the temporary\n \t\t * (\"hw\" scan/remain-on-channel), regular channels and links,\n"
+    },
+    {
+      "path": "drivers/net/wireless/virtual/mac80211_hwsim_main.c",
+      "function": "mac80211_hwsim_beacon",
+      "reference": "LTS renamed source",
+      "diff": "--- \n+++ \n@@ -6,7 +6,9 @@\n \t\tcontainer_of(link_data, struct mac80211_hwsim_data,\n \t\t\t     link_data[link_data->link_id]);\n \tstruct ieee80211_hw *hw = data->hw;\n-\tu64 bcn_int = link_data->beacon_int;\n+\tu32 remainder;\n+\tu64 tsf_now;\n+\tu64 tbtt;\n \n \tif (!data->started)\n \t\treturn HRTIMER_NORESTART;\n@@ -15,12 +17,18 @@\n \t\thw, IEEE80211_IFACE_ITER_NORMAL,\n \t\tmac80211_hwsim_beacon_tx, link_data);\n \n-\t/* beacon at new TBTT + beacon interval */\n-\tif (data->bcn_delta) {\n-\t\tbcn_int -= data->bcn_delta;\n-\t\tdata->bcn_delta = 0;\n-\t}\n-\thrtimer_forward_now(&link_data->beacon_timer,\n-\t\t\t    ns_to_ktime(bcn_int * NSEC_PER_USEC));\n+\t/* TSF is the same for all VIFs, parameter is unused */\n+\ttsf_now = mac80211_hwsim_get_tsf(hw, NULL);\n+\n+\t/* Wrap value to be after the next TBTT */\n+\ttbtt = tsf_now + link_data->beacon_int;\n+\n+\t/* Round TBTT down to the correct time */\n+\tdiv_u64_rem(tbtt, link_data->beacon_int, &remainder);\n+\ttbtt = tbtt - remainder;\n+\n+\thrtimer_set_expires(&link_data->beacon_timer,\n+\t\t\t    mac80211_hwsim_tsf_to_boottime(data, tbtt));\n+\n \treturn HRTIMER_RESTART;\n }\n"
+    },
+    {
+      "path": "drivers/net/wireless/virtual/mac80211_hwsim_main.c",
+      "reference": "ACK full file",
+      "diff": "--- \n+++ \n@@ -842,9 +842,9 @@\n \t[HWSIM_ATTR_FLAGS] = { .type = NLA_U32 },\n \t[HWSIM_ATTR_RX_RATE] = { .type = NLA_U32 },\n \t[HWSIM_ATTR_SIGNAL] = { .type = NLA_U32 },\n-\t[HWSIM_ATTR_TX_INFO] = { .type = NLA_BINARY,\n-\t\t\t\t .len = IEEE80211_TX_MAX_RATES *\n-\t\t\t\t\tsizeof(struct hwsim_tx_rate)},\n+\t[HWSIM_ATTR_TX_INFO] =\n+\t\tNLA_POLICY_EXACT_LEN(IEEE80211_TX_MAX_RATES *\n+\t\t\t\t     sizeof(struct hwsim_tx_rate)),\n \t[HWSIM_ATTR_COOKIE] = { .type = NLA_U64 },\n \t[HWSIM_ATTR_CHANNELS] = { .type = NLA_U32 },\n \t[HWSIM_ATTR_RADIO_ID] = { .type = NLA_U32 },\n@@ -1853,7 +1853,8 @@\n \t\t * Set mactime early since NAN RX filtering relies on it\n \t\t * for slot calculation\n \t\t */\n-\t\trx_status.mactime = sim_tsf + data2->tsf_offset;\n+\t\tscoped_guard(spinlock_bh, &data2->tsf_offset_lock)\n+\t\t\trx_status.mactime = sim_tsf + data2->tsf_offset;\n \n \t\tif (!hwsim_chans_compat(chan, data2->tmp_chan) &&\n \t\t    !hwsim_chans_compat(chan, data2->channel)) {\n@@ -2144,15 +2145,21 @@\n static void mac80211_hwsim_stop(struct ieee80211_hw *hw, bool suspend)\n {\n \tstruct mac80211_hwsim_data *data = hw->priv;\n+\tstruct sk_buff *skb;\n \tint i;\n \n-\tdata->started = false;\n+\t/*\n+\t * Serialise against wmediumd userspace, so no more frames\n+\t * can be handed to mac80211 after this returns.\n+\t */\n+\tscoped_guard(mutex, &data->mutex)\n+\t\tdata->started = false;\n \n \tfor (i = 0; i < ARRAY_SIZE(data->link_data); i++)\n \t\thrtimer_cancel(&data->link_data[i].beacon_timer);\n \n-\twhile (!skb_queue_empty(&data->pending))\n-\t\tieee80211_free_txskb(hw, skb_dequeue(&data->pending));\n+\twhile ((skb = skb_dequeue(&data->pending)))\n+\t\tieee80211_free_txskb(hw, skb);\n \n \twiphy_dbg(hw->wiphy, \"%s\\n\", __func__);\n }\n@@ -5842,7 +5849,7 @@\n \n \tfor (i = 0; i < ARRAY_SIZE(data->link_data); i++) {\n \t\thrtimer_setup(&data->link_data[i].beacon_timer, mac80211_hwsim_beacon,\n-\t\t\t      CLOCK_MONOTONIC, HRTIMER_MODE_ABS_SOFT);\n+\t\t\t      CLOCK_BOOTTIME, HRTIMER_MODE_ABS_SOFT);\n \t\tdata->link_data[i].link_id = i;\n \t}\n \n@@ -6178,12 +6185,12 @@\n \n \tif (frame_data_len < sizeof(struct ieee80211_hdr_3addr) ||\n \t    frame_data_len > IEEE80211_MAX_DATA_LEN)\n-\t\tgoto err;\n+\t\tgoto out;\n \n \t/* Allocate new skb here */\n \tskb = alloc_skb(frame_data_len, GFP_KERNEL);\n \tif (skb == NULL)\n-\t\tgoto err;\n+\t\tgoto out;\n \n \t/* Copy the data */\n \tskb_put_data(skb, frame_data, frame_data_len);\n@@ -6208,10 +6215,17 @@\n \t\t\tgoto out;\n \t}\n \n+\t/*\n+\t * Serialise against mac80211_hwsim_stop() - mac80211 doesn't allow\n+\t * frames reported while the HW is down, hence the ->started check\n+\t * must be under mutex.\n+\t */\n+\tmutex_lock(&data2->mutex);\n+\n \t/* check if radio is configured properly */\n \n \tif ((data2->idle && !data2->tmp_chan) || !data2->started)\n-\t\tgoto out;\n+\t\tgoto out_unlock;\n \n \t/* A frame is received from user space */\n \tmemset(&rx_status, 0, sizeof(rx_status));\n@@ -6230,22 +6244,18 @@\n \t\titer_data.channel = ieee80211_get_channel(data2->hw->wiphy,\n \t\t\t\t\t\t\t  rx_status.freq);\n \t\tif (!iter_data.channel)\n-\t\t\tgoto out;\n+\t\t\tgoto out_unlock;\n \t\trx_status.band = iter_data.channel->band;\n \n-\t\tmutex_lock(&data2->mutex);\n \t\tif (!hwsim_chans_compat(iter_data.channel, channel)) {\n \t\t\tieee80211_iterate_active_interfaces_atomic(\n \t\t\t\tdata2->hw, IEEE80211_IFACE_ITER_NORMAL,\n \t\t\t\tmac80211_hwsim_tx_iter, &iter_data);\n-\t\t\tif (!iter_data.receive) {\n-\t\t\t\tmutex_unlock(&data2->mutex);\n-\t\t\t\tgoto out;\n-\t\t\t}\n+\t\t\tif (!iter_data.receive)\n+\t\t\t\tgoto out_unlock;\n \t\t}\n-\t\tmutex_unlock(&data2->mutex);\n \t} else if (!channel) {\n-\t\tgoto out;\n+\t\tgoto out_unlock;\n \t} else {\n \t\trx_status.freq = channel->center_freq;\n \t\trx_status.band = channel->band;\n@@ -6253,7 +6263,7 @@\n \n \trx_status.rate_idx = nla_get_u32(info->attrs[HWSIM_ATTR_RX_RATE]);\n \tif (rx_status.rate_idx >= data2->hw->wiphy->bands[rx_status.band]->n_bitrates)\n-\t\tgoto out;\n+\t\tgoto out_unlock;\n \trx_status.signal = nla_get_u32(info->attrs[HWSIM_ATTR_SIGNAL]);\n \n \thdr = (void *)skb->data;\n@@ -6263,10 +6273,11 @@\n \t\trx_status.boottime_ns = ktime_get_boottime_ns();\n \n \tmac80211_hwsim_rx(data2, &rx_status, skb);\n+\tmutex_unlock(&data2->mutex);\n \n \treturn 0;\n-err:\n-\tpr_debug(\"mac80211_hwsim: error occurred in %s\\n\", __func__);\n+out_unlock:\n+\tmutex_unlock(&data2->mutex);\n out:\n \tdev_kfree_skb(skb);\n \treturn -EINVAL;\n@@ -6554,6 +6565,10 @@\n \t\tparam.iftypes |= BIT(NL80211_IFTYPE_P2P_DEVICE);\n \t\tparam.p2p_device = true;\n \t}\n+\n+\t/* Honor both the flag and the interface-type request. */\n+\tif (param.iftypes & BIT(NL80211_IFTYPE_NAN))\n+\t\tparam.nan_device = true;\n \n \tif (param.nan_device) {\n \t\tif (param.multi_radio) {\n@@ -7023,6 +7038,7 @@\n \n \tskb->data = skb->head;\n \tskb_reset_tail_pointer(skb);\n+\tlen = min(len, skb_end_offset(skb));\n \tskb_put(skb, len);\n \thwsim_virtio_handle_cmd(skb);\n \n"
+    }
+  ],
+  "native_fixes_preserved": [
+    "5c79ef616aa16af582fb2cb93b0f750975a0004f",
+    "13edd8ea7ff2ce6a964b290ef2034cd8cbed96c7",
+    "e7fccad2c8e6ef6bbafe509c95869d161d0f466b",
+    "6dc76371a9a360c29de00df5b11563102d9d675a"
+  ],
+  "tests": [
+    "evidence/hwsim-nan-start-test.json",
+    "evidence/hwsim-beacon-clock-test.json"
+  ],
+  "target_evidence": "Configured MAC80211_HWSIM=m and Goldfish mac80211_create_radios/main.cpp are existing SDK radio consumers. Its buildCreateRadioMessage does not enable NAN; optional NAN interfaces are retained in the same driver to preserve common Android/runtime/vendor source contracts, not justified by an assertion that default SDK radios use them. See nan-supplicant-uapi.json for old draft userspace mismatch.",
+  "limitations": [
+    "Kernel compilation does not validate synchronization conformance, RX/stop concurrency, peer lifetime, queue timing, external-medium behavior or live suspend.",
+    "No proof of an exploit is inferred from the corrected initialization/locking/clock defects. Role algorithms intentionally approximate NAN behavior; no external standard was accessed.",
+    "No future platform, new dependency modification or historical vendor binary layout is required."
+  ],
+  "remote_sources_used": []
+}

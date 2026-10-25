@@ -25022,5 +25022,203 @@
       "evidence/nan-interfaces-review.json",
       "SECURITY.md: NAN data interfaces and schedule contracts"
     ]
+  },
+  {
+    "commit": "3741ffb0100e494190654b4309d38c19ae726744",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "0e85d743ea86ffc4cc14fa9b8e105d7cd8b008b5"
+    ],
+    "rationale": "Retain station callbacks/notifications on wireless_dev, WDEV reply identifiers and optional IFINDEX, allowing netdev-less NAN management stations while preserving ordinary netdev wrappers, locking, allocation cleanup and station validation. Retain caller/signature adjustments in all affected in-tree drivers for common module source consistency, without enabling new hardware platforms or preserving binary KMI. Subsequent NAN creation/change/delete support supersedes intermediate guards. Adapt GET_STATION to admit NAN just as existing dump does; all other non-netdev types remain rejected. Existing station-read permissions remain, administrative mutations retain admin checks. Actual command-body host tests cover allocation/callback/serialization failures, not real netlink or runtime. Native serializer and cleanup differ only by wdev arguments/identifiers, with function deltas recorded.",
+    "evidence": [
+      "evidence/nan-api-review.json",
+      "SECURITY.md: NAN station and key callback conversions"
+    ]
+  },
+  {
+    "commit": "bd03458d3f2e8cd632e17f449c575f325933797f",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "b0ccbc005e38482a6db700469180b936093d25d9"
+    ],
+    "rationale": "Retain add/get/delete/default-management/default-beacon key callbacks on wireless_dev, affected driver/caller/trace conversions and netlink WDEV identifiers. Ordinary default data keys remain netdev-only. Preserve admin permissions, secret skb clearing for SET/NEW, link/cipher/length/index validation and key lifetime/reinstall protection. Final hwsim advertises SECURE_NAN only when NAN is enabled, so the original commit comment that nobody advertises it is no longer true. Correct the inherited mac80211 NAN WARN/absent management-key flag using local upstream 014eec318fc0; preserve PD rejection when resolving its adjacent context conflict. RX_MGMT is set only for a present MFP peer, as for AP peers. No new cipher or security-feature advertisement and no removal of an LTS fix. Native command-body differences are argument/identifier adaptation plus separately reviewed NAN key-validation context. Host flag-dispatch tests verify unchanged non-NAN behavior with/without mesh; no cryptographic runtime claim.",
+    "evidence": [
+      "evidence/nan-api-review.json",
+      "SECURITY.md: NAN station and key callback conversions"
+    ]
+  },
+  {
+    "commit": "5600111da67def9651d22e2fbbd91c4d67864b43",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain grouped hwsim NAN state as the dependency of the final emulator radio implementation. Intermediate band/timer fields are subsequently replaced by slot scheduling, locking and per-radio cluster state. No binary layout preservation is required. This is common configured simulator code, not physical-platform enablement.",
+    "evidence": [
+      "evidence/hwsim-nan-review.json",
+      "SECURITY.md: Hwsim NAN radio scheduling"
+    ]
+  },
+  {
+    "commit": "f9786fc9115ea36bbdcfe7228778aaf16ce19377",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain source split, internal header and composite module Makefile, preserving mac80211_hwsim.ko and its existing build entry. Retain channel/rate/cipher array compile-time consistency checks. Source movement includes native radar/background fields and subsequent stable fixes in renamed main source; do not replace native receive validation, stop serialization or virtio length checks with older ACK bodies. Historical global cluster state is superseded by final per-radio synchronization.",
+    "evidence": [
+      "evidence/hwsim-nan-review.json",
+      "SECURITY.md: Hwsim NAN radio scheduling"
+    ]
+  },
+  {
+    "commit": "c58276ca923cbe429363e04ed3bb0b927566f819",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain late beacon/probe/S1G timestamp writing with explicit minimum-length checks and monitor delivery after timestamp population. This supports the actual hwsim radio and external medium path without the old shared abs_bcn_ts field. Native TX feedback lookup, rate validation, netgroup/radio isolation and skb cleanup remain. Final locked timestamp helpers supersede the initial unprotected offset reads. Native function deltas are recorded.",
+    "evidence": [
+      "evidence/hwsim-nan-review.json",
+      "SECURITY.md: Hwsim NAN radio scheduling"
+    ]
+  },
+  {
+    "commit": "3c0a9baf8c25e95339911bfdc3c14df9e976dae4",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "e26a8023bbbfc119fd816bc8fb4ffcc328ddf01c"
+    ],
+    "rationale": "Retain absolute next-TBTT calculation to avoid cumulative drift, but correct the inherited clock-domain mismatch: the deadline is boottime while the ordinary beacon timer was monotonic. e26a8023bbbf selects CLOCK_BOOTTIME to match the converter and NAN timers. Existing positive beacon-interval setup and native stop/cancellation are retained. Host actual-callback tests verify 9000 interval/offset/suspend scenarios; old clock causes suspend-duration delay in 6000. No live suspend test.",
+    "evidence": [
+      "evidence/hwsim-nan-review.json",
+      "SECURITY.md: Hwsim NAN radio scheduling"
+    ]
+  },
+  {
+    "commit": "7d8be2fafdba6def466db5a01a9d4ac4f4ccc092",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain 16-TU slot scheduling across 512-TU discovery-window periods, band/window notifications and boottime timer basis. Subsequent changes replace cached current-channel state and add per-slot TX/RX/synchronization. The initial boottime conversion unit error is superseded by 5d69369e0920. Current slots are bounded 0..31 by mask/division; next-slot 32 deliberately advances the period. Role handling is supplied by the later synchronization commit.",
+    "evidence": [
+      "evidence/hwsim-nan-review.json",
+      "SECURITY.md: Hwsim NAN radio scheduling"
+    ]
+  },
+  {
+    "commit": "7b0494a5c7d010856d44e6ddca1626584f9b5d65",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain discovery-window TX gating, 256-us boundary quiet time, randomized deferred queue wake and synchronous cancellation of the resume timer before clearing the vif. Later peer/data scheduling extends the initial management-only implementation. This models radio availability for the configured emulator driver; it is not a cryptographic access check and no real-time scheduling guarantee is claimed.",
+    "evidence": [
+      "evidence/hwsim-nan-review.json",
+      "SECURITY.md: Hwsim NAN radio scheduling"
+    ]
+  },
+  {
+    "commit": "fc0ee32d26dd3c3c8d44d7df89fb7a805b0a9029",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain deriving NAN transmit channel from current TSF instead of the last timer update, superseded in final code by get_tx_chandef handling DW and further availability windows. Invalid channel yields skb release/drop. The quiet-time guard reduces but does not prove absence of scheduling races; no hardware or live-medium timing claim.",
+    "evidence": [
+      "evidence/hwsim-nan-review.json",
+      "SECURITY.md: Hwsim NAN radio scheduling"
+    ]
+  },
+  {
+    "commit": "446e05f6bd9f6662e16edb56e7c2246379eab5f1",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "796fec2fadb186d618cfd2a749af5559042cafce"
+    ],
+    "rationale": "Retain receive gating by slot/channel and RX timestamps, including external-medium fallback; later synchronization fixes the historical rx_flags-versus-flag typo and adds initial scanning, and data-path support adds scheduled bandwidth checks. Supply the missed tsf_offset_lock around the no-netlink RX timestamp sample in 796fec2fadb1. Preserve native network-group isolation, frame bounds and userspace receive/stop mutex serialization.",
+    "evidence": [
+      "evidence/hwsim-nan-review.json",
+      "SECURITY.md: Hwsim NAN radio scheduling"
+    ]
+  },
+  {
+    "commit": "5d69369e0920cb9282f3398066c0a93fec8129d8",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "796fec2fadb186d618cfd2a749af5559042cafce"
+    ],
+    "rationale": "Retain initialized spinlock around TSF-offset conversions, updates and timestamp writing, including the boottime nanoseconds-to-microseconds correction. Complete its missing RX sample coverage in 796fec2fadb1. The added lock surrounds only a scalar read and releases before state-lock/receive processing, retaining the sampled common simulation time and avoiding a new reverse state-lock nesting. All offset accesses were inspected; no KCSAN or concurrent runtime claim.",
+    "evidence": [
+      "evidence/hwsim-nan-review.json",
+      "SECURITY.md: Hwsim NAN radio scheduling"
+    ]
+  },
+  {
+    "commit": "4f3358ce833afeb429864a2552dc33fdc55c1458",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "796fec2fadb186d618cfd2a749af5559042cafce"
+    ],
+    "rationale": "Retain per-radio NAN cluster selection, synchronization/beacon generation, bounded vendor-element/attribute parsing, scan/warmup phases, state/TSF locks and cluster-join notifications. This replaces the globally shared cluster shortcut and supports hwsim external medium simulation. Correct timer publication order in 796fec2fadb1: cluster ID and DW notification setting are initialized before slot timer activation. Host immediate-timer tests expose both old successful-start cases. Existing simulation limitations remain: only 2.4-GHz synchronization, approximate external-medium timestamps, limited scanning and no old-schedule sync beacon after merge or DW contention mitigation. Do not claim full Wi-Fi Aware conformance or RX/teardown concurrency verification.",
+    "evidence": [
+      "evidence/hwsim-nan-review.json",
+      "SECURITY.md: Hwsim NAN radio scheduling"
+    ]
+  },
+  {
+    "commit": "f9d01a9efea7f26e0838bcb56c712f4f892687cb",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain conditional allowance for two NAN_DATA interfaces and enlarge private if_limits storage to five entries. This is needed for the optional NAN path in the already configured hwsim driver; it does not enable NAN in the pinned Goldfish constructor or add a new platform. Five entries cover base, ADHOC, P2P-device, NAN and NAN_DATA limit categories.",
+    "evidence": [
+      "evidence/hwsim-nan-review.json",
+      "SECURITY.md: Hwsim NAN radio scheduling"
+    ]
+  },
+  {
+    "commit": "a1f5a56c0e2678adbdfe1520d516fd86b016299c",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain local/peer schedule callbacks, bounded fixed-size slot/map arrays and private copies under initialized state/peer locks. Missing channels are cleared and absent peer schedules reset state; copying channel definitions avoids retaining transient cfg80211 parser storage. This supplies the driver consumer for retained common schedule APIs. Source lock and ownership contracts were inspected; concurrent update correctness is not dynamically verified.",
+    "evidence": [
+      "evidence/hwsim-nan-review.json",
+      "SECURITY.md: Hwsim NAN radio scheduling"
+    ]
+  },
+  {
+    "commit": "0d4397a4d90e986ea5d95dbc21e7df05e31d40fe",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain NAN_DATA TX/RX, DW/further-availability channel definitions, committed-DW peer checks, NDI-to-NMI RCU relation and local/peer schedule matching. Data is withheld during DW; outside DW it requires compatible local/peer channels. RX rejects unsupported bandwidth indices and wider-than-scheduled frames. Driver queue wake remains gated; this is simulated availability rather than authentication. Existing MAC/key authorization paths are separate and retain native validation.",
+    "evidence": [
+      "evidence/hwsim-nan-review.json",
+      "SECURITY.md: Hwsim NAN radio scheduling"
+    ]
+  },
+  {
+    "commit": "086d13bb428ab6e343804c56cfcb4a9e4391e4b5",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain multicast data availability requiring at least one peer and all peers on this vif to be available. Reuse per-peer schedule gating under atomic station iteration, excluding other vifs and missing TXQs. Prevents unconditional multicast on an unscheduled NAN data interface. It does not guarantee delivery or replace encryption/authorization checks; no multicast runtime test.",
+    "evidence": [
+      "evidence/hwsim-nan-review.json",
+      "SECURITY.md: Hwsim NAN radio scheduling"
+    ]
   }
 ]

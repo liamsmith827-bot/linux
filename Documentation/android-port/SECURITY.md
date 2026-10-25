@@ -8434,3 +8434,76 @@ Build 173 passed the existing workflow at e95eaf3986b6, producing the kernel ima
 tampered control was rejected, and export/CRC tables matched. All review sources
 were local. No remote
 resource was accessed and no Android OS build, boot or flashing was performed.
+# NAN station and key callback conversions
+
+Candidates `3741ffb0100e` and `bd03458d3f2e` retain common wireless-device
+station/key source APIs and their in-tree callers, including the mechanical
+signature changes in physical drivers. This keeps module source interfaces
+coherent; it does not enable another hardware target or preserve binary KMI.
+The native station serializer/cleanup and key command validation remain, with
+per-function native/ACK comparisons in `evidence/nan-api-review.json`.
+
+`0e85d743ea86` fixes the inherited GET_STATION guard which rejected a netdev-less
+NAN management interface although station dumping already accepted it. It keeps
+the rejection for every other non-netdev type. Existing namespace lookup, locking
+and read permissions are unchanged. Administrative station mutations and every
+key command retain their admin checks; SET/NEW_KEY retain secret skb clearing.
+Ordinary default data keys remain netdev-only. Key traces expose metadata, not
+the secret key bytes. The actual GET_STATION command-body test covers 17,280
+cases under host ASan/UBSan and checks cleanup on each simulated failure. Its
+serialization and driver shims do not verify real netlink, concurrency or runtime.
+
+`b0ccbc005e38` supplies a missing NAN key-handling fix from the already pinned
+local upstream repository, commit `014eec318fc00f0b497bffa04f1a45255ba7ff5e`.
+The ACK's final hwsim can advertise SECURE_NAN, but mac80211 still warned when
+installing NAN keys and omitted the RX_MGMT driver flag. NAN and NAN_DATA now
+use the AP-style peer MFP check. That flag lets a driver select suitable software
+decryption when its hardware cannot handle management frames. No cipher,
+permission, capability advertisement or native reinstall protection is relaxed.
+The sole cherry-pick conflict was adjacent PD rejection; that rejection was
+preserved. A host test executes the actual interface dispatch with and without
+mesh support (128 cases each), verifies the corrected warning/flag behavior, and
+checks all non-NAN types remain equivalent. It does not test cryptography or
+driver offload. The rest of add_key is byte-identical to final ACK; its native
+deltas are recorded. No remote URL was accessed for this fix.
+## Hwsim NAN radio scheduling
+
+Fourteen hwsim candidates have explicit decisions in `evidence/hwsim-nan-review.json`.
+The source split keeps the existing `mac80211_hwsim.ko` build target. Final code
+retains slot/channel gating, local and peer schedule copies, multicast availability,
+per-radio cluster synchronization and protected TSF adjustment. This is the
+already configured SDK simulator driver. The pinned Goldfish constructor does
+not enable NAN by default; retaining its optional implementation preserves the
+common Android and module-source contract without adding a future platform.
+The inherited supplicant numeric-API mismatch remains separately documented.
+
+Native `5c79ef616aa1` receive/stop serialization, `13edd8ea7ff2` exact TX-info
+length validation, `e7fccad2c8e6` safe queue drain and `6dc76371a9a3` virtio RX
+length clamp survive the source rename. Stop and virtio RX functions equal LTS;
+native receive function deltas are recorded and preserve namespace/radio-group,
+frame-size, rate-index, mutex and cleanup checks. The complete ACK-to-port main
+source delta is also included in the evidence, so source movement cannot hide
+replacement of newer native implementations.
+
+`796fec2fadb1` completes TSF locking around the remaining receive timestamp
+sample and initializes NAN cluster identity/notification state before the slot
+timer can run. The scalar-read lock is released before receive/state processing.
+A host test invoking the timer immediately from the actual start routine passes
+60 cases; both successful ACK starts expose an uninitialized cluster to that
+simulated timer. This is a publication-order demonstration, not a concurrency or
+exploitation test. Existing RX/teardown and peer-lifetime contracts still require
+runtime validation.
+
+`e26a8023bbbf` aligns ordinary beacon timers with the retained absolute
+boottime-based TBTT calculation. Keeping CLOCK_MONOTONIC would delay beacons by
+the accumulated suspend duration. A host test of the actual callback verifies
+9,000 interval/TSF/suspend combinations; 6,000 demonstrate the old delay. Native
+stop serialization/cancellation remain. No kernel was suspended or booted.
+
+The retained synchronization simulation is intentionally incomplete: it tracks
+2.4-GHz synchronization, approximates timestamps for external media, scans only
+initially, and does not implement old-schedule beaconing after cluster merge or
+DW contention mitigation. The schedule checks model availability and do not
+replace key/peer authorization. Neither compilation nor the focused tests
+establish full Wi-Fi Aware conformance, multicast delivery or real-time behavior.
+No external specification or remote source was accessed for this review.
