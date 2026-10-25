@@ -10553,3 +10553,52 @@ and destroys the IDA after work cancellation. Those later LTS effects remain
 exactly. Only the independently reviewed null-connection timeout guard differs
 in the whole L2CAP C file. No remote resources were accessed; embedded commit
 message URLs were not contacted.
+
+# Mixed filesystem and platform merge resolutions
+
+Ten further merges are recorded in `evidence/mixed-merge-tail-review.json`, with
+all unique hunks read, including the dm-bow rename, non-conflict I/O edits and
+the entire deleted Cirrus test. The report records 68 scoped comparisons. No
+executable/configuration change or new build/runtime verification is introduced.
+
+The old dm-bow .txt rename is represented by the corrected admin-guide .rst
+document from 25f97fccb3ca. UID statistics and per-thread time_in_state remain
+alongside native build/proc entries. Final ACK's PREEMPT selection supersedes
+the temporary voluntary configuration. Retired perf >=3 blanket restrictions,
+PROC_UID and extra_free_kbytes are not revived; the previous explicit retirement
+reviews apply, not an inference that Android has no consumers.
+
+ION allocation/heap/header resolutions are retired with the entire driver in
+final ACK. Native FDT scanning retains entropy ingestion/seed erasure and
+command-line handling. Native ext4 post-read decrypt/verity processing and
+F2FS iomap DUN-contiguity bounds remain. The old Android filesystem tracepoints,
+including those moved to file.c by the merge, were explicitly removed by
+d04d4bc9e984. Current native events and independent Android statistics callbacks
+remain; no equivalence to the old event ABI or timing is claimed.
+
+Native DM wrapped-key derivation supersedes the historical keyslot-manager API.
+The old slab traversal API was explicitly reverted; current vendor traversal
+and tracking interfaces remain alongside native validation. Native device
+declarations, XFRM compat translation, networking initialization and allocation
+profiling remain. The historical merge's deletion of lockdown reason reporting
+is not applied: complete native lsm_audit.c retains that audit output. Compiler
+warning rules and the relocated native Cirrus test/build rule remain intact;
+the test was not executed.
+
+SDM845 board descriptions, QCOM controller call-site changes, ARM64 DMA and
+generic topology extensions stay outside the selected x86 SDK scope. Whole
+native files remain, including the AX88179 PHY-aware reset logic. Native ARM64
+pKVM retains acquire/release vCPU publication, not ACK's alternate lifecycle.
+The FEC merge's region_blocks expression belongs to its omitted multi-region
+algorithm: current rounds-based geometry and all native device-size checks
+remain together. Only the previously reviewed corrected-block counter differs
+in the complete FEC file, after successful verification/copy.
+
+The network-device layout exception is historical KMI scaffolding. Current
+native wireless_handlers remains available under WIRELESS_EXT, enabled in the
+SDK build; the removed wireless_data field is not restored. Native HID's actual
+buffer-length argument, size_t formats and pre-fill bounds checks remain in all
+nine merge-resolution files. The old binary-signature wrapper is omitted as
+required; source modules must use the native API. This preserves the security
+fix while dropping the wrapper, not the underlying bounds protection. No remote
+resources were used, including URLs quoted in local merge messages.
