@@ -1,0 +1,132 @@
+{
+  "source_head": "9a7c5d1e20a626a8db1d0f461d0a0a513e1f26ab",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "records": [
+    {
+      "commit": "156b58543560782fded68ccebbf252314d2d9ba7",
+      "disposition": "adapted",
+      "rationale": "Replace ACK generic offset division with mapping-specific compatibility code. Blindly dividing aligned offsets loses whether a caller requested hardware-page or emulated-page layout and does not insert the metadata gap expected by libbpf. Remove the sole call/helper/classifier, leaving all other MM bytes unchanged. Current Android separate mappings retain their hardware offsets. Current libbpf combined producer/data requests use the emulated page offset and exact rounded combined length; map the producer hardware page at the start and data at the emulated page boundary. No unrelated file offset is rewritten. The combined compatibility case is outside the valid native hardware-offset extent, so it does not change an otherwise valid native mapping. Byte identity checks preserve every unrelated MM source line. Host tests cover 21888 native/8KB/16KB mapping combinations, page identity, permission selection, padding and failures; they do not boot the SDK. Full arbitrary emulated-offset conventions beyond the two locally observed calling styles are not promised; the old divider did not supply such an ABI either. No LTS fix is reversed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "8a6b444d431543cdd75021087291353679ef17c5",
+        "9a7c5d1e20a626a8db1d0f461d0a0a513e1f26ab"
+      ],
+      "evidence": [
+        "evidence/bpf-ring-layout-review.json",
+        "evidence/bpf-mmap-bounds-test.json",
+        "SECURITY.md: BPF ring layout adaptation"
+      ],
+      "patch_sha256": "31fc5cc84910823abf5bc1c57fb3a86a07e022108d917b31c5de2a490b53d8c9"
+    },
+    {
+      "commit": "ac40f53b8686a18a713f9ee22d8e96d9ca5da30c",
+      "disposition": "adapted",
+      "rationale": "Adapt the ACK enlarged consumer VMA while preserving LTS consumer-only write permissions. Map just the hardware consumer page, and leave padding unmapped. Current Android separate metadata/data mappings and current libbpf combined mapping are both represented; combined producer/data handling also supports user-produced rings. Preserve native write checks, read-only VM_MAYWRITE clearing and VM_DONTEXPAND. Bound trailing padding by emulated alignment without exposing memory outside the ring. 8a6b444d4315 fixes writable producer exposure; 9a7c5d1e20a6 handles the observed userspace layouts. The combined compatibility case is outside the valid native hardware-offset extent, so it does not change an otherwise valid native mapping. Byte identity checks preserve every unrelated MM source line. Host tests cover 21888 native/8KB/16KB mapping combinations, page identity, permission selection, padding and failures; they do not boot the SDK. Full arbitrary emulated-offset conventions beyond the two locally observed calling styles are not promised; the old divider did not supply such an ABI either. No LTS fix is reversed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "8a6b444d431543cdd75021087291353679ef17c5",
+        "9a7c5d1e20a626a8db1d0f461d0a0a513e1f26ab"
+      ],
+      "evidence": [
+        "evidence/bpf-ring-layout-review.json",
+        "evidence/bpf-mmap-bounds-test.json",
+        "SECURITY.md: BPF ring layout adaptation"
+      ],
+      "patch_sha256": "94508ec6b77b13fe6b354f3b2539ef79f44884922eceee2f4db0d013abd66e4a"
+    }
+  ],
+  "proofs": [
+    {
+      "path": "include/linux/page_size_compat.h",
+      "previous_blob": "090a2f369dff8c84f3cf353ff0151f3d10afb85d",
+      "current_blob": "1bf3eb184198d7050b5c234f218e025df6e7729f",
+      "exact_removed_text": "bool bpf_is_ringbuf_file(struct file *file);\n\nstatic inline unsigned long __bpf_pgoff_fixup(struct file *file, unsigned long pgoff)\n{\n\tif (file && bpf_is_ringbuf_file(file)) {\n\t\tunsigned int nr_subpages = __PAGE_SIZE / PAGE_SIZE;\n\n\t\tif (nr_subpages > 1 && pgoff > 0 && (pgoff & (nr_subpages - 1)) == 0)\n\t\t\tpgoff /= nr_subpages;\n\t}\n\n\treturn pgoff;\n}\n\n",
+      "comparison": "sole change is removal of obsolete global BPF offset conversion/classification; every other byte unchanged"
+    },
+    {
+      "path": "mm/mmap.c",
+      "previous_blob": "fee85f0375e4fccb9106823dfd66f83b688897f7",
+      "current_blob": "cd4eec926fb29cd48c53f6d1b4c1184c859b0e2b",
+      "exact_removed_text": "\tpgoff = __bpf_pgoff_fixup(file, pgoff);\n\n",
+      "comparison": "sole change is removal of obsolete global BPF offset conversion/classification; every other byte unchanged"
+    },
+    {
+      "path": "mm/page_size_compat.c",
+      "previous_blob": "d76fb34b589da94923e833cccef387d756e57fce",
+      "current_blob": "1c3b5db09f754da76852ee18839c62e7e3dd5652",
+      "exact_removed_text": "#ifdef CONFIG_BPF_SYSCALL\nbool bpf_is_ringbuf_file(struct file *file)\n{\n\tif (file->f_op != &bpf_map_fops)\n\t\treturn false;\n\n\tstruct bpf_map *map = file->private_data;\n\n\treturn map->map_type == BPF_MAP_TYPE_RINGBUF ||\n\t\tmap->map_type == BPF_MAP_TYPE_USER_RINGBUF;\n}\n#else\nbool bpf_is_ringbuf_file(struct file *file)\n{\n\treturn false;\n}\n#endif\n\n",
+      "comparison": "sole change is removal of obsolete global BPF offset conversion/classification; every other byte unchanged"
+    }
+  ],
+  "previous_path_reviews": {
+    "include/linux/page_size_compat.h": {
+      "review_head": "c476769367dd9ec44abeb0483606f530d43b18dc",
+      "status": "reviewed-source-selection",
+      "rationale": "Reviewed the full final helper header. Retain emulated alignment/logging, extra-alignment space, BPF ring offset scaling and cachestat count conversion. Native mode leaves alignment/counts unchanged. Ring offsets divide only for recognized ring-map files with aligned positive offsets; matching libbpf maps at getpagesize(). d65b1b963b41 eliminates the pread-specific pagemap declaration; c0cbe76ff03a removes the cache-rewriting swap helper declaration. c476769367dd uses native rate-limited printk for diagnostics reachable by unprivileged invalid requests. Maximum supported emulation is now accurately documented as 16 KiB. These are functional source interfaces, not historical KMI shims; full consumer integrations remain separate reviews.",
+      "port_blob": "090a2f369dff8c84f3cf353ff0151f3d10afb85d",
+      "lts_to_port_sha256": "dfc2d519c95d1aa20fe574d12b76ac00e6358422adc3956e1fd323094db234f5",
+      "normalized_ack_to_port_sha256": "d7dda5f84c4e3ee8fe565f27923eeb46a69cf2d8d00ffb6c254b2c8354436205"
+    },
+    "mm/mmap.c": {
+      "review_head": "623c51beadea8fe7dcc1d0cad8f555b5bb9b6f58",
+      "status": "reviewed-source-selection-with-explicit-EOF-and-DMA-accounting-exclusions",
+      "rationale": "Full LTS and normalized-ACK deltas reviewed with x86 address selection, page-size initialization, BPF ring classification, profiling notifiers, native security and VMA setup. Retain reported-page brk/mmap-hint/munmap lengths and alignment for the positively configured Goldfish page_shift=14 target. ASLR limits are writable only during boot then read-only; native-mode values remain and the documented emulation tradeoff preserves byte span with fewer aligned placements. BPF pgoff adjustment is limited to a genuine bpf_map_fops file with kernel/user ring map type; ordinary files retain offsets and all native bounds/permission/seal checks. Keep default-no-op mapping-count/swap teardown hooks and native trace/helper exports for source-built vendor customization. A gather bypass callback must itself release the native swap entries; default native release remains. Preserve native MAP_DROPPABLE EOPNOTSUPP, MAP_FIXED_NOREPLACE, mmap_min_addr/LSM, file access and mapping cleanup. The generic profile_munmap notifier has a separately reviewed blocking chain. VM_NO_REMAP_FILE_PAGES positively protects local wrapfd read-only VMAs from deprecated remap_file_pages restoring VM_MAYWRITE; its kernel check is retained. Related unresolved shared EOF-tail semantics are not certified by this path review. No real syscall or SDK runtime test performed.",
+      "port_blob": "fee85f0375e4fccb9106823dfd66f83b688897f7",
+      "lts_to_port_sha256": "a8f4248a45cd25065541dc843ba64109e241aa63f13e339351ffba89e2cecc63",
+      "normalized_ack_to_port_sha256": "b0c3ab1fbe685722d8ed4877c6c7c566f5b56265bd096b42b915d54793c27a0c"
+    },
+    "mm/page_size_compat.c": {
+      "review_head": "c476769367dd9ec44abeb0483606f530d43b18dc",
+      "status": "reviewed-source-selection",
+      "rationale": "Reviewed the entire added implementation and normalized-ACK residual. Retain positive Goldfish page_shift=14 support. dbae496171a5 validates a temporary before publishing the boot parameter and caps it at the actual x86 vDSO maximum of 16 KiB. Keep read-only-after-init shift and GPL source exports. ASLR random-page bit counts decrease by the page-shift difference while x86 arch_rnd shifts by the emulated size: the byte span is preserved, with two fewer placement bits in 16 KiB mode; this explicit security tradeoff is documented in SECURITY.md. Native 4 KiB behavior remains. BPF ring-file classification checks the real bpf_map_fops and ring map type, matching local libbpf ringbuf.c getpagesize-based offsets. Perf mlock allowance retains 512 KiB plus one emulated metadata page. c0cbe76ff03a moves swap translation into the native swapfile validation/ownership path using a private copy; no stale cache-rewriting helper remains. Extracted parser and swap checks cover adaptations; other mapping/BPF/perf consumers are separately reviewed. No whole-feature runtime claim.",
+      "port_blob": "d76fb34b589da94923e833cccef387d756e57fce",
+      "lts_to_port_sha256": "628ddd9c61f991a9b80e318aaa3acc93578efaca09a624e23b8e528000cf047b",
+      "normalized_ack_to_port_sha256": "083452c615dcac30725b1bc5327575dabc8a6e0e860cc5704cd6c40b63ec004a"
+    }
+  },
+  "refreshed_decisions": [
+    "b2fbe891159f51ef7d3daab823395f887fcae0b3",
+    "77d3e9d92ecf9996549aef5029271ea78bf32bcd",
+    "742782da72a941e94a2563b7227e070ff0dc33de",
+    "46be4689c6bd68595324fff5bd1070a7a87af8f0",
+    "c9e3101f7cdb8ccbf4fd3e4e1ae0867b63ca4207",
+    "6312e8d3e0d6f3752e85a62e6437b4c863cf83b8",
+    "c565a0417dfa12fbc3a50bfb9bf1e9f7cadf297d",
+    "4b174c72b5dd58cf9d447af145f4545359e43235",
+    "928f064787cd0d2c3f8f8597ab488e779da327c0",
+    "759c908260ec95ce9769d0edca752a4971f2886a",
+    "546b723466bb89fea369f7f4e379bf0d4e033104",
+    "1c86a99f468f69288ea48da22964f7469aab62cd",
+    "7df9282d8ecb5308401613deb5cfbe77beab9d6f",
+    "0291c4ad9365e13d1ab4efeb6126d84f983bfb1d",
+    "cfad673cfe8da2521fe1b93c6ae6bca668e05417",
+    "2527b21f3323b457872a633a3554ec9579438387",
+    "a4904ab5c898a7ef72f03d048bde084091b94c5b",
+    "d6f122ec7fee70d4e8c01f3170fe4204f2ca0173",
+    "534aabfc706539ba8aa5bb0d077142dcc9e802d8",
+    "c0982b96e5451404cbe1ae5e4621a9edeca16427",
+    "696875cf6ccb6c1afe51e03b1468a53d67aacf1f",
+    "52ace503ecf894ec2f63b8137f181868ea61d95a",
+    "72afa0e11e9cdb223822894b8196988d1e917495",
+    "2f709c8d65a4a74b137de50d2fd78da707e5b3ea",
+    "afde2def980a3afbc97d6979abc4b79f26c65a24",
+    "aa5b9c9a2145b4f2cb5f46eae4ceb390401320a9",
+    "56b8579d286f9eb0db5eb9614e74f567ca01a153",
+    "c638dbbd0c02e6db7e6ce8ac1bd518669c835315",
+    "eb9a5dbb6b26caf7d5e9e07af52ec80554be796f",
+    "c01538721e3f3724ea4d2bd7fca6755808e32941",
+    "91ad589144335687ef46a1e6cdb72ea77a5393d0",
+    "1b4b3f84dd61b8a073a6eaa3a160acc7755aee9f",
+    "c4c06a47ac6b4e6251ea7414c288459e3e15e364",
+    "ae06aea9a2628c3e76584fddfe233eb831ba025b"
+  ],
+  "interface_evidence": [
+    "grapheneos-17/packages/modules/Connectivity/bpf/headers/include/bpf/BpfRingbuf.h: separate hardware-offset producer/data mappings on x86",
+    "grapheneos-17/external/libbpf/src/ringbuf.c: combined producer+data mappings at getpagesize for both ring map types",
+    "grapheneos-17/packages/modules/Connectivity/bpf/progs/netd.c: 4KB/8KB/32KB rings"
+  ],
+  "bounds_argument": "For compatibility case offset=P>p and request length >=P+2D, native available extent would be 2p+2D-P. Since P>p, requested extent exceeds native by at least 2(P-p), hence an otherwise valid hardware-offset mapping cannot enter this case. The first physical metadata page and doubled data are mapped with separate remaps, leaving the emulated gap and trailing rounding unpopulated. The map callback checks the original offset and exact combined length before any remap.",
+  "validation": "check_bpf_mmap_bounds.py executes actual functions with mapping stubs, verifies page identities, permission checks, 21888 mapping cases, 2040 dispatch-size cases, two pre-fix negative controls and two injected remap failures. Build 183 uses original emulator workflow. Kernel runtime and arbitrary extra userspace layout conventions are not tested.",
+  "remote_resources_used": []
+}

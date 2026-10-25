@@ -27501,5 +27501,35 @@
       "evidence/bpf-final-review.json",
       "SECURITY.md: BPF history, attribute bounds and emulated mappings"
     ]
+  },
+  {
+    "commit": "156b58543560782fded68ccebbf252314d2d9ba7",
+    "disposition": "adapted",
+    "rationale": "Replace ACK generic offset division with mapping-specific compatibility code. Blindly dividing aligned offsets loses whether a caller requested hardware-page or emulated-page layout and does not insert the metadata gap expected by libbpf. Remove the sole call/helper/classifier, leaving all other MM bytes unchanged. Current Android separate mappings retain their hardware offsets. Current libbpf combined producer/data requests use the emulated page offset and exact rounded combined length; map the producer hardware page at the start and data at the emulated page boundary. No unrelated file offset is rewritten. The combined compatibility case is outside the valid native hardware-offset extent, so it does not change an otherwise valid native mapping. Byte identity checks preserve every unrelated MM source line. Host tests cover 21888 native/8KB/16KB mapping combinations, page identity, permission selection, padding and failures; they do not boot the SDK. Full arbitrary emulated-offset conventions beyond the two locally observed calling styles are not promised; the old divider did not supply such an ABI either. No LTS fix is reversed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "8a6b444d431543cdd75021087291353679ef17c5",
+      "9a7c5d1e20a626a8db1d0f461d0a0a513e1f26ab"
+    ],
+    "evidence": [
+      "evidence/bpf-ring-layout-review.json",
+      "evidence/bpf-mmap-bounds-test.json",
+      "SECURITY.md: BPF ring layout adaptation"
+    ]
+  },
+  {
+    "commit": "ac40f53b8686a18a713f9ee22d8e96d9ca5da30c",
+    "disposition": "adapted",
+    "rationale": "Adapt the ACK enlarged consumer VMA while preserving LTS consumer-only write permissions. Map just the hardware consumer page, and leave padding unmapped. Current Android separate metadata/data mappings and current libbpf combined mapping are both represented; combined producer/data handling also supports user-produced rings. Preserve native write checks, read-only VM_MAYWRITE clearing and VM_DONTEXPAND. Bound trailing padding by emulated alignment without exposing memory outside the ring. 8a6b444d4315 fixes writable producer exposure; 9a7c5d1e20a6 handles the observed userspace layouts. The combined compatibility case is outside the valid native hardware-offset extent, so it does not change an otherwise valid native mapping. Byte identity checks preserve every unrelated MM source line. Host tests cover 21888 native/8KB/16KB mapping combinations, page identity, permission selection, padding and failures; they do not boot the SDK. Full arbitrary emulated-offset conventions beyond the two locally observed calling styles are not promised; the old divider did not supply such an ABI either. No LTS fix is reversed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "8a6b444d431543cdd75021087291353679ef17c5",
+      "9a7c5d1e20a626a8db1d0f461d0a0a513e1f26ab"
+    ],
+    "evidence": [
+      "evidence/bpf-ring-layout-review.json",
+      "evidence/bpf-mmap-bounds-test.json",
+      "SECURITY.md: BPF ring layout adaptation"
+    ]
   }
 ]

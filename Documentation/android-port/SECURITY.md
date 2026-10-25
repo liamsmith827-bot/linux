@@ -1400,9 +1400,11 @@ possible placement bits than 4 KiB mode. The pinned SDK's page_shift=14 requires
 16 KiB-aligned mappings; native 4 KiB mode is unchanged. This is not a claim of
 unchanged ASLR entropy. Perf's default free mlock allowance also grows from
 512+4 KiB to 512+16 KiB to accommodate one reported metadata page; native
-capability/resource checks remain. The matching BPF ring-buffer offset helper
-has a positive local libbpf/src/ringbuf.c consumer using getpagesize() for producer
-mapping offsets. Other BPF/perf integration files remain separate reviews.
+capability/resource checks remain. Local libbpf/src/ringbuf.c uses getpagesize()
+for producer mapping offsets, but the original offset-only helper did not cover
+its combined data layout. The later BPF ring layout adaptation replaces that
+helper and documents both observed consumers. Other BPF/perf integrations have
+separate reviews.
 
 Build 43 completed at c0cbe76ff03a with 145 verified signatures and matching
 protected-export/module-flag tables. It includes atomic padding and swap format
@@ -8860,3 +8862,39 @@ examined together before resolving this compatibility question. The observed
 userspace code is evidence of an interface to preserve, not an absence-based
 exclusion. Build 182 compiles the current corrections. All evidence in this
 review is local; embedded links in commit messages were not accessed.
+
+## BPF ring layout adaptation
+
+`9a7c5d1e20a6` resolves the preceding ring-buffer question for both locally observed
+calling styles. Android BpfRingbuf passes hardware metadata offsets and maps the
+producer and data separately. External libbpf passes the userspace page size as
+the offset and maps producer plus doubled data together, expecting data after
+that larger metadata page. The callback recognizes this combined request by its
+original offset and exact rounded length, maps the producer hardware page first,
+then maps data at the emulated page boundary. The intervening gap and trailing
+rounding remain unmapped. This applies to both kernel-produced and user-produced
+rings, with the existing opposing write permissions enforced before remapping.
+
+Remove the generic MM offset division: it loses the distinction between these
+interfaces and cannot insert the necessary metadata gap. The separate hardware
+offsets now pass through unchanged. For the combined compatibility case, offset
+P and requested length at least P+2D exceed the native available extent
+2p+2D-P when emulated P is larger than hardware p. Therefore the special case
+does not reinterpret an otherwise valid native hardware-offset mapping. This
+supports the local Android and libbpf conventions without asserting a general ABI
+for arbitrary emulated offsets. The former divider did not implement one either.
+
+`evidence/bpf-ring-layout-review.json` contains exact deletion proofs for all
+three MM paths: every unrelated byte is unchanged. It corrects the earlier
+offset-only reasoning, updates 34 reviewed MM witnesses and gives explicit final
+decisions for `156b58543560` and `ac40f53b8686`. The existing shared EOF-tail and
+DMA accounting questions remain separately provisional. The historical pending
+entry in bpf-final-review.json links this subsequent resolution.
+
+Host checks execute the actual three mapping functions over 21,888 combinations
+of page size, ring size, offset, extent, permissions and map direction. They
+verify each mapped source page and every padding hole, plus both remap failure
+paths and the two pre-fix negative controls. The 2,040 attribute-size cases still
+pass. These are stubbed host checks, not kernel runtime tests. Build 182 passed
+the original workflow with all 145 modules/signatures and flag/CRC tables verified;
+build 183 checks the completed layout adaptation. All resources were local.

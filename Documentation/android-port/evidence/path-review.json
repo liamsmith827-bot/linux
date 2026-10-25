@@ -27838,10 +27838,11 @@
   "include/linux/page_size_compat.h": {
     "ack_blob": "cfcf6f73d521f50753cc461289c9a0f806772eda",
     "lts_blob": null,
-    "port_blob": "090a2f369dff8c84f3cf353ff0151f3d10afb85d",
+    "port_blob": "1bf3eb184198d7050b5c234f218e025df6e7729f",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "9a7c5d1e20a626a8db1d0f461d0a0a513e1f26ab",
       "c476769367dd9ec44abeb0483606f530d43b18dc",
       "c0cbe76ff03a57d2411941ab0009e9c424968ccd",
       "d65b1b963b41a4833eab058c8f825742ba3b1614",
@@ -27850,7 +27851,7 @@
     ],
     "normalized_ack_blob": "cfcf6f73d521f50753cc461289c9a0f806772eda",
     "common_ancestor_blob": null,
-    "specific_evidence": "Reviewed the full final helper header. Retain emulated alignment/logging, extra-alignment space, BPF ring offset scaling and cachestat count conversion. Native mode leaves alignment/counts unchanged. Ring offsets divide only for recognized ring-map files with aligned positive offsets; matching libbpf maps at getpagesize(). d65b1b963b41 eliminates the pread-specific pagemap declaration; c0cbe76ff03a removes the cache-rewriting swap helper declaration. c476769367dd uses native rate-limited printk for diagnostics reachable by unprivileged invalid requests. Maximum supported emulation is now accurately documented as 16 KiB. These are functional source interfaces, not historical KMI shims; full consumer integrations remain separate reviews.",
+    "specific_evidence": "Reviewed the full final helper header. Retain emulated alignment/logging, extra-alignment space, cachestat count conversion. Native mode leaves alignment/counts unchanged. The former generic BPF offset divider is replaced in 9a7c5d1e20a6 by ring-map-specific handling of the actual separate and combined mappings. The earlier statement that offset division matched libbpf was incomplete: it did not account for data starting after an emulated metadata page. d65b1b963b41 eliminates the pread-specific pagemap declaration; c0cbe76ff03a removes the cache-rewriting swap helper declaration. c476769367dd uses native rate-limited printk for diagnostics reachable by unprivileged invalid requests. Maximum supported emulation is now accurately documented as 16 KiB. These are functional source interfaces, not historical KMI shims; full consumer integrations remain separate reviews. See evidence/bpf-ring-layout-review.json and SECURITY.md: BPF ring layout adaptation. All other previously reviewed source in this file is byte-identical.",
     "review_record": "evidence/generic-source-review.json"
   },
   "include/linux/page_size_compat_defs.h": {
@@ -32037,10 +32038,11 @@
   "kernel/bpf/ringbuf.c": {
     "ack_blob": "c44fbb2fd59e2d1f10143c3f6ccd0c0d6d1cfb65",
     "lts_blob": "bdc524c8ed798a0219b8b251719addcb3df22732",
-    "port_blob": "db7ca503c35bbc29ce2f994bc8764cb7cb98dab9",
+    "port_blob": "637b3ffe9d71319b511f1e46a0710f95a33e8085",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "9a7c5d1e20a626a8db1d0f461d0a0a513e1f26ab",
       "8a6b444d431543cdd75021087291353679ef17c5",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
@@ -35176,15 +35178,16 @@
   "mm/mmap.c": {
     "ack_blob": "8b82c8d3910f186017f8a066f980c169d9c9aa43",
     "lts_blob": "b29b31a29ef662b618e70b47ccec6dd998033428",
-    "port_blob": "fee85f0375e4fccb9106823dfd66f83b688897f7",
+    "port_blob": "cd4eec926fb29cd48c53f6d1b4c1184c859b0e2b",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "9a7c5d1e20a626a8db1d0f461d0a0a513e1f26ab",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "8b82c8d3910f186017f8a066f980c169d9c9aa43",
     "common_ancestor_blob": "5fd3b80fda1d5151c230321cb3228e935e4fa84b",
-    "specific_evidence": "Full LTS and normalized-ACK deltas reviewed with x86 address selection, page-size initialization, BPF ring classification, profiling notifiers, native security and VMA setup. Retain reported-page brk/mmap-hint/munmap lengths and alignment for the positively configured Goldfish page_shift=14 target. ASLR limits are writable only during boot then read-only; native-mode values remain and the documented emulation tradeoff preserves byte span with fewer aligned placements. BPF pgoff adjustment is limited to a genuine bpf_map_fops file with kernel/user ring map type; ordinary files retain offsets and all native bounds/permission/seal checks. Keep default-no-op mapping-count/swap teardown hooks and native trace/helper exports for source-built vendor customization. A gather bypass callback must itself release the native swap entries; default native release remains. Preserve native MAP_DROPPABLE EOPNOTSUPP, MAP_FIXED_NOREPLACE, mmap_min_addr/LSM, file access and mapping cleanup. The generic profile_munmap notifier has a separately reviewed blocking chain. VM_NO_REMAP_FILE_PAGES positively protects local wrapfd read-only VMAs from deprecated remap_file_pages restoring VM_MAYWRITE; its kernel check is retained. Related unresolved shared EOF-tail semantics are not certified by this path review. No real syscall or SDK runtime test performed.",
+    "specific_evidence": "Full LTS and normalized-ACK deltas reviewed with x86 address selection, page-size initialization, BPF ring classification, profiling notifiers, native security and VMA setup. Retain reported-page brk/mmap-hint/munmap lengths and alignment for the positively configured Goldfish page_shift=14 target. ASLR limits are writable only during boot then read-only; native-mode values remain and the documented emulation tradeoff preserves byte span with fewer aligned placements. 9a7c5d1e20a6 removes the generic BPF pgoff rewrite and implements the two observed ring mapping styles in kernel/bpf/ringbuf.c. All mmap offsets now reach their map implementation unchanged; native bounds/permission/seal checks remain. The former positive libbpf matching claim covered offset alone and was incomplete for combined metadata/data layouts. Keep default-no-op mapping-count/swap teardown hooks and native trace/helper exports for source-built vendor customization. A gather bypass callback must itself release the native swap entries; default native release remains. Preserve native MAP_DROPPABLE EOPNOTSUPP, MAP_FIXED_NOREPLACE, mmap_min_addr/LSM, file access and mapping cleanup. The generic profile_munmap notifier has a separately reviewed blocking chain. VM_NO_REMAP_FILE_PAGES positively protects local wrapfd read-only VMAs from deprecated remap_file_pages restoring VM_MAYWRITE; its kernel check is retained. Related unresolved shared EOF-tail semantics are not certified by this path review. No real syscall or SDK runtime test performed. See evidence/bpf-ring-layout-review.json and SECURITY.md: BPF ring layout adaptation. All other previously reviewed source in this file is byte-identical.",
     "review_record": "evidence/generic-source-review.json"
   },
   "mm/mmap_lock.c": {
@@ -35427,17 +35430,18 @@
   "mm/page_size_compat.c": {
     "ack_blob": "886b3f6a7eaae46ae82dcb3bb8391d0ec7ea0d39",
     "lts_blob": null,
-    "port_blob": "d76fb34b589da94923e833cccef387d756e57fce",
+    "port_blob": "1c3b5db09f754da76852ee18839c62e7e3dd5652",
     "policy": "ported-net-source",
     "rationale": "Reconcile this historical change through the final selected ACK subsystem state, adapted onto LTS. This records net code, not an assertion that the original intermediate patch is reproduced verbatim. Retain Android interfaces/configuration/source-module hooks, remove historical KMI machinery, and preserve LTS fixes as detailed in SECURITY.md and the conflict/restoration evidence.",
     "result_commits": [
+      "9a7c5d1e20a626a8db1d0f461d0a0a513e1f26ab",
       "c0cbe76ff03a57d2411941ab0009e9c424968ccd",
       "dbae496171a5711dafd95eda5aefa1de86cf76bf",
       "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
     ],
     "normalized_ack_blob": "886b3f6a7eaae46ae82dcb3bb8391d0ec7ea0d39",
     "common_ancestor_blob": null,
-    "specific_evidence": "Reviewed the entire added implementation and normalized-ACK residual. Retain positive Goldfish page_shift=14 support. dbae496171a5 validates a temporary before publishing the boot parameter and caps it at the actual x86 vDSO maximum of 16 KiB. Keep read-only-after-init shift and GPL source exports. ASLR random-page bit counts decrease by the page-shift difference while x86 arch_rnd shifts by the emulated size: the byte span is preserved, with two fewer placement bits in 16 KiB mode; this explicit security tradeoff is documented in SECURITY.md. Native 4 KiB behavior remains. BPF ring-file classification checks the real bpf_map_fops and ring map type, matching local libbpf ringbuf.c getpagesize-based offsets. Perf mlock allowance retains 512 KiB plus one emulated metadata page. c0cbe76ff03a moves swap translation into the native swapfile validation/ownership path using a private copy; no stale cache-rewriting helper remains. Extracted parser and swap checks cover adaptations; other mapping/BPF/perf consumers are separately reviewed. No whole-feature runtime claim.",
+    "specific_evidence": "Reviewed the entire added implementation and normalized-ACK residual. Retain positive Goldfish page_shift=14 support. dbae496171a5 validates a temporary before publishing the boot parameter and caps it at the actual x86 vDSO maximum of 16 KiB. Keep read-only-after-init shift and GPL source exports. ASLR random-page bit counts decrease by the page-shift difference while x86 arch_rnd shifts by the emulated size: the byte span is preserved, with two fewer placement bits in 16 KiB mode; this explicit security tradeoff is documented in SECURITY.md. Native 4 KiB behavior remains. The BPF ring-file classifier is removed with its sole generic offset-conversion caller in 9a7c5d1e20a6. Ring-specific mapping code now handles the current libbpf combined layout and Android separate layout, correcting the previous incomplete offset-only reasoning. Perf mlock allowance retains 512 KiB plus one emulated metadata page. c0cbe76ff03a moves swap translation into the native swapfile validation/ownership path using a private copy; no stale cache-rewriting helper remains. Extracted parser and swap checks cover adaptations; other mapping/BPF/perf consumers are separately reviewed. No whole-feature runtime claim. See evidence/bpf-ring-layout-review.json and SECURITY.md: BPF ring layout adaptation. All other previously reviewed source in this file is byte-identical.",
     "review_record": "evidence/generic-source-review.json"
   },
   "mm/pagewalk.c": {
