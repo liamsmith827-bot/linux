@@ -8898,3 +8898,66 @@ paths and the two pre-fix negative controls. The 2,040 attribute-size cases stil
 pass. These are stubbed host checks, not kernel runtime tests. Build 182 passed
 the original workflow with all 145 modules/signatures and flag/CRC tables verified;
 build 183 checks the completed layout adaptation. All resources were local.
+
+Build 183 subsequently passed with the layout adaptation: 100 common and 45
+virtual-device modules, all signatures verified, modified payload rejected and
+all module flag/CRC tables matched.
+
+## Remaining memory interfaces and DMA diagnostics
+
+`evidence/mm-tail-review.json` records sixteen final candidate decisions with
+patch hashes, exact source comparisons and local consumers. Vendor/OEM task
+storage is reset before the new-task callback, and initial task storage remains
+explicitly initialized. These fields support source-module state; they do not
+preserve a historical binary task layout. The generic PCP THP order knob retains
+validated boot-only bounds and consistent admission/index conversion, with the
+previously tested separate high-order CMA list. Nondefault performance effects
+and actual SDK vendor registrations remain unmeasured.
+
+Both memfd/ashmem dispatch patches are represented by the single Rust ASHMEM
+configuration. Native and compat shmem ioctls reach the Rust implementation only
+for SHMEM_FL_MEMFD files; ordinary tmpfs does not gain the ioctl. Native seals and
+the previously reviewed Rust checks remain. `bbc9b0705c30` removes an obsolete
+Makefile line for the absent C shim/configuration. This does not change the
+userspace ioctl contract used by local libcutils.
+
+Stack expansion retains the emulated alignment mask and every other byte of the
+native function, including locking, address, guard-gap and resource checks. The
+page-migration sysfs switch has a positive bionic linker consumer. Its native ACK
+show/store/init handlers remain, with the separately reviewed atomic padding
+updates. Map-files enumeration and lookup consistently accept displayed data
+ranges; original full VMA names remain valid. Native access checks and references
+remain, and empty/arbitrary subranges are rejected. The page helper introduction
+is adapted to the final header split and actual page_shift=14 SDK configuration,
+including the previously fixed parser publication, 16 KB maximum and documented
+ASLR placement-bit tradeoff. This does not resolve shared EOF-tail semantics.
+
+Proc page counters retain the initial integration's correction to ACK's original
+double-scaling of shared pages in statm. Convert shared and anonymous counts once
+each; their separate rounding can overestimate the combined count by at most one
+reported page. Native 4 KB counts remain exact. Local Perfetto multiplies stat RSS
+by its reported page size. Extracted-code checks cover 98,304 counter combinations
+and demonstrate 65,008 underreports in the original ACK candidate. They do not
+exercise concurrent proc reads. The readahead KMI overlay/revert pair cancels;
+native short mmap_miss and the full native file_ra_state layout remain, avoiding
+the overlay's documented overlap with prev_pos.
+
+Keep the FUSE-BPF output-pointer write rejection from `5c7556339e29` in the built
+FUSE_BPF configuration. The verifier function equals final ACK; host checks reject
+964 write offset/size cases, preserve the three pointer reads and demonstrate the
+pre-fix write bypass. This checks that specific fix, not the entire verifier, JIT
+or context-bounds model.
+
+The native SWIOTLB implementation gains only the GPL source export under its
+current __swiotlb_find_pool name. The restricted encrypted DT pool feature is
+omitted: its explicit DMA_RESTRICTED_POOL gate is disabled for this ordinary SDK
+guest, which does not provision that reserved-memory/device contract. DMA partial
+cache-sync diagnostics permit smaller sync nents while still rejecting larger
+ones; this can also hide accidental under-sync mistakes, a documented diagnostic
+tradeoff for the retained partial-sync source interface. Native direction/range
+checks and DMA operations remain; DMA_API_DEBUG is disabled in the verified build.
+Runtime partial-sync subscribers are unconfirmed, so the generic interface is
+retained conservatively. `9d5f5cbffd00` restores native coherent-pool diagnostics:
+the KiB-formatting-only change provides no required Android ABI or behavior.
+coherent.c now equals LTS in full. Build 184 checks these small cleanups using the
+original workflow. All resources used for these decisions were local.

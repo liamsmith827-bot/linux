@@ -12,7 +12,7 @@ def nonblank_blob(oid):
   blob_cache[oid]=b'\n'.join(line.rstrip() for line in content.splitlines() if line.strip())
  return blob_cache[oid]
 def omitted(p):
- if p in ('kernel/dma/direct.h','kernel/dma/mapping.c'):return 'lts-native-source-api'
+ if p in ('kernel/dma/direct.h','kernel/dma/mapping.c','kernel/dma/coherent.c'):return 'lts-native-source-api'
  if p=='drivers/usb/gadget/function/f_fs.c':return 'lts-native-source-api'
  if p in ('mm/mm_init.c','include/linux/memblock.h'):return 'sdk-memsize-report'
  if p.startswith('drivers/android/debug_kinfo'):return 'physical-device'
@@ -78,6 +78,7 @@ for p,x in out.items():
   x['review_record']='SECURITY.md: historical KMI and module compatibility'
 # Reviewed specific evidence prevents broad policy names from hiding source differences.
 notes={
+ 'kernel/dma/coherent.c':'Exact native LTS after 9d5f5cbffd00. The only ACK delta was two allocation-log unit/format changes, with no Android ABI, configuration or source-interface effect. Retain native allocation, cleanup and diagnostics; see evidence/mm-tail-review.json for candidate 23bb0f66e0a0.',
  'kernel/dma/direct.h':'Native synchronous internal DMA helpers after eb47f4db3c60. ACK batching completion is empty on x86; retain public DMA interfaces and native cache completion. See evidence/intel-hypercalls-dma-review.json for f880f0340afa/5bef17dd8878 architecture gates and whole-file equality.',
  'kernel/dma/mapping.c':'Exact native LTS after eb47f4db3c60; only the unused internal batching arguments were removed. Public DMA API and all later native mapping fixes remain. See evidence/intel-hypercalls-dma-review.json.',
  'drivers/usb/gadget/function/f_fs.c':'Whole-file native LTS after 0ab54d1e2660. Native SS/SSP descriptor sharing, get_alt and separate disable supersede the historical ACK sequence. Preserve native alternate-setting validation order, reset-work initialization and endpoint state locking. See evidence/ffs-uvc-review.json for all seven reviewed candidate patches and native replacement history.',

@@ -27531,5 +27531,197 @@
       "evidence/bpf-mmap-bounds-test.json",
       "SECURITY.md: BPF ring layout adaptation"
     ]
+  },
+  {
+    "commit": "a2f67957845c522a6a381f9041e545cdd94dbe76",
+    "disposition": "adapted",
+    "rationale": "Retain zero initialization of vendor/OEM task storage. Final init_task initializers are gated by ANDROID_VENDOR_OEM_DATA; dup_task_struct uses the corresponding zeroing helpers before the vendor callback. Dynamic task storage is separately initialized too. This prevents inherited parent private state from appearing as new-task vendor data and supports current source-module customization. Static storage itself was already zero-initialized by C; the fork reset is the functional requirement. Keep native task init/cleanup and the independently reviewed dynamic-data limits; no historical task layout or vendor binary KMI is promised.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/mm-tail-review.json",
+      "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+    ]
+  },
+  {
+    "commit": "5c5a86e82d6d97341d69cf25f412b73dc5793ec2",
+    "disposition": "applied",
+    "rationale": "Retain the diagnostic adjustment for the retained DMA-buf partial cache-sync interface: permit sync nents smaller than map nents, and still warn when it is larger. The full LTS delta is exactly this condition/comment/message change. Direction/range/mapping checks and the actual DMA operation remain native. This weakens a diagnostic by also silencing accidental under-sync mistakes; it does not authorize DMA or validate arbitrary partial tables. Retention serves source-module partial-sync compatibility, whose SDK runtime registrations are unconfirmed. DMA_API_DEBUG is disabled in the selected build, so this diagnostic itself is not exercised.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/mm-tail-review.json",
+      "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+    ]
+  },
+  {
+    "commit": "878e51a94adefe4c1ff4998f8c12ff8c88abe480",
+    "disposition": "adapted",
+    "rationale": "Retain the GPL export under the current native name __swiotlb_find_pool. The entire swiotlb.c LTS delta is this export; function implementation, RCU traversal, lookup semantics and newer native fixes remain. It is a source-module interface for the configured SWIOTLB/DYNAMIC implementation, not historical binary symbol/layout preservation. Exact module consumer necessity remains unconfirmed, so keep the shared source interface under the compatibility priority.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/mm-tail-review.json",
+      "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+    ]
+  },
+  {
+    "commit": "d4b2b0e4053b5fd06e1dac14291cda861060d212",
+    "disposition": "omitted-current-target",
+    "rationale": "The entire patch adds a no-decrypt property to Device Tree reserved restricted-dma-pool initialization, using a temporary tagged reserved_mem private pointer and skipping set_memory_decrypted only for that property. The selected x86 SDK configuration disables DMA_RESTRICTED_POOL, and its ordinary ACPI/virtio guest does not provision the DT reserved-memory encrypted-device contract. Keep native restricted-pool initialization exactly; do not add this separate platform feature for future protected/device platforms. This is a target/configuration gate, not a failed consumer search; generic SWIOTLB source export is retained separately.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/mm-tail-review.json",
+      "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+    ]
+  },
+  {
+    "commit": "23bb0f66e0a065ca4776a74296d588c50c749ba1",
+    "disposition": "omitted-current-target",
+    "rationale": "This patch changes only two coherent-pool diagnostic units/format specifiers, improving display of sub-MiB reservations. It changes neither allocation results nor source APIs, configuration, userspace ABI or security checks; it is not needed for SDK compatibility. 9d5f5cbffd00 restores the entire coherent.c file to native LTS, minimizing an unrelated diagnostic-only delta. Native allocation/error cleanup remains. No claim that every generic coherent-pool caller is absent.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/mm-tail-review.json",
+      "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+    ]
+  },
+  {
+    "commit": "5c7556339e29dd5f140bcd61b505922ecd180b10",
+    "disposition": "applied",
+    "rationale": "Retain the explicit BPF_READ-only requirement for out_args[i].value, closing ACK pointer-write verifier bypass. The full verifier function equals final ACK, and the whole bpf_fuse.c differs only in trailing blank lines. Actual extracted function checks reject 964 write offset/size cases and retain all three output-pointer reads; the pre-fix function admits those pointer writes as a negative control. FUSE_BPF=y is built for this SDK. This is evidence for the specific pointer-write fix, not proof of complete context bounds, verifier or JIT correctness.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/mm-tail-review.json",
+      "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+    ]
+  },
+  {
+    "commit": "fb5ff65c37d543f1fc0a7c612f6c2cd325e18166",
+    "disposition": "adapted",
+    "rationale": "Both copies select the memfd ioctl implementation to match C versus Rust ashmem. This port uses a single Rust ASHMEM configuration depending on SHMEM and RUST, with ashmem_memfd_ioctl used by both native and compat shmem dispatch. The wrapper requires SHMEM_FL_MEMFD, so ordinary tmpfs files do not gain the compatibility ioctl. Preserve native seal handling and the separately reviewed Rust ioctl implementation. Old C ASHMEM_C/MEMFD_ASHMEM_SHIM configuration is not delivered; bbc9b0705c30 removes the leftover Makefile entry pointing to a nonexistent C shim. Current libcutils chooses memfd/ashmem and uses the shared ioctl contract; no obsolete internal implementation is needed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "bbc9b0705c307c8491b306fd50bc17bc44244341"
+    ],
+    "evidence": [
+      "evidence/mm-tail-review.json",
+      "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+    ]
+  },
+  {
+    "commit": "543d87eb8513dd1b5fe9cba2b28703110b47e62f",
+    "disposition": "adapted",
+    "rationale": "Both copies select the memfd ioctl implementation to match C versus Rust ashmem. This port uses a single Rust ASHMEM configuration depending on SHMEM and RUST, with ashmem_memfd_ioctl used by both native and compat shmem dispatch. The wrapper requires SHMEM_FL_MEMFD, so ordinary tmpfs files do not gain the compatibility ioctl. Preserve native seal handling and the separately reviewed Rust ioctl implementation. Old C ASHMEM_C/MEMFD_ASHMEM_SHIM configuration is not delivered; bbc9b0705c30 removes the leftover Makefile entry pointing to a nonexistent C shim. Current libcutils chooses memfd/ashmem and uses the shared ioctl contract; no obsolete internal implementation is needed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "bbc9b0705c307c8491b306fd50bc17bc44244341"
+    ],
+    "evidence": [
+      "evidence/mm-tail-review.json",
+      "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+    ]
+  },
+  {
+    "commit": "7edb637501a8f635dda1322076cd4e0bbe6c818b",
+    "disposition": "applied",
+    "rationale": "Retain downward-stack alignment to __PAGE_MASK for the positively configured page_shift=14 SDK. The entire expand_downwards function equals native LTS after this one mask substitution. mmap locking, minimum address, guard-gap/resource/security checks and native expansion accounting remain; alignment can charge extra hardware pages and still passes the existing limits. Native mode uses PAGE_MASK. No unrelated stack behavior is replaced.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/mm-tail-review.json",
+      "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+    ]
+  },
+  {
+    "commit": "41e6913a9dfa3c8dc9ae3e0a80a0975d671db22d",
+    "disposition": "adapted",
+    "rationale": "Retain the root-writable 0644 page-size migration switch and default-enabled behavior on 64-bit 4KB kernels. Pinned bionic linker_phdr.cpp reads this exact sysfs path before ELF padding hints. Final show/store/init handlers equal ACK, and the object is built through mm/Makefile. Native LTS has no corresponding interface. Later separately reviewed atomic padding-field update aa723abf2d05 preserves concurrent native flags; the switch is a compatibility control, not a security authorization mechanism. No Android OS build or runtime validation performed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "aa723abf2d0547fdddee6cc7e806da55cbd19d7b"
+    ],
+    "evidence": [
+      "evidence/mm-tail-review.json",
+      "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+    ]
+  },
+  {
+    "commit": "e5fa727415e327821f453db8eb62bb5127be61bd",
+    "disposition": "adapted",
+    "rationale": "Retain shortened map_files directory names matching the data range in maps/smaps, and adapt lookup/revalidation/link resolution through find_map_files_vma in 20063c97d296. Accept only the exact original start plus either full VMA end or current displayed padding boundary; reject empty/arbitrary subranges. Omit wholly padded entries from enumeration. Native ptrace/CAP checks, file/path references, mmap lock and read access remain. The original one-line directory-only patch would generate names that native exact-range lookup rejects. Existing extracted map-files checks cover both names and invalid ranges; runtime symbolization is not verified.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "20063c97d296302d8cbabf1c1b39daf3ebbe6b7b"
+    ],
+    "evidence": [
+      "evidence/mm-tail-review.json",
+      "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+    ]
+  },
+  {
+    "commit": "b43dbce8f063ae10076564335ddd0b1102479cf8",
+    "disposition": "adapted",
+    "rationale": "Retain proc stat RSS and statm size/shared/text/data/resident conversion to the reported page size. Correct the original patch double-scaling bug: shared pages are converted once, then separately converted anonymous pages are added; do not divide the already converted shared count again. Current statm can overestimate ceil(total pages/group) by at most one reported page due to separate rounding, and native 4KB counts remain exact. Local Perfetto watchdog multiplies stat RSS by GetSysPageSize, and libmeminfo consumes proc memory data. Actual extracted checks cover 98304 counter cases and demonstrate 65008 original underreports. Native access checks and PMD/PSS fixes remain independently reviewed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/mm-tail-review.json",
+      "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+    ]
+  },
+  {
+    "commit": "0199438a86afe953be3786c2f70afb29e2a6c570",
+    "disposition": "adapted",
+    "rationale": "Retain the emulated-page helpers, static key, read-only-after-init shift and build integration for Goldfish page_shift=14. Follow the final ACK header split into page_size_compat_defs.h and current page_shift boot parameter. dbae496171a5 validates a temporary before publishing and restricts the maximum to implemented x86/vDSO 16KB, correcting the original advertised 64KB range; c476769367dd updates documentation/rate-limited diagnostics. Native mode remains hardware size. Generic BPF offset conversion added later is separately replaced by 9a7c5d1e20a6. The explicit ASLR placement-bit tradeoff remains documented; this candidate does not finalize unresolved shared EOF-tail behavior.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "dbae496171a5711dafd95eda5aefa1de86cf76bf",
+      "c476769367dd9ec44abeb0483606f530d43b18dc",
+      "9a7c5d1e20a626a8db1d0f461d0a0a513e1f26ab"
+    ],
+    "evidence": [
+      "evidence/mm-tail-review.json",
+      "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+    ]
+  },
+  {
+    "commit": "446cb382db8e437fc8b3c008d3cec87ad68fc89d",
+    "disposition": "reverted",
+    "rationale": "The KMI-motivated readahead overlay is reverted exactly by 470d5d31c24a; inverse changed lines match. Native file_ra_state already has the short mmap_miss field and native readahead accesses it directly. The overlay would place a different field over adjacent prev_pos storage, as the local revert explains. Keep the entire native structure and native direct accesses; do not recreate ABI padding or cast overlays. Local upstream f5e8b140cd13 is already an ancestor of pinned LTS.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/mm-tail-review.json",
+      "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+    ]
+  },
+  {
+    "commit": "470d5d31c24a814a91b799e4a3ebfa4fa39cfd35",
+    "disposition": "reverted",
+    "rationale": "The KMI-motivated readahead overlay is reverted exactly by 470d5d31c24a; inverse changed lines match. Native file_ra_state already has the short mmap_miss field and native readahead accesses it directly. The overlay would place a different field over adjacent prev_pos storage, as the local revert explains. Keep the entire native structure and native direct accesses; do not recreate ABI padding or cast overlays. Local upstream f5e8b140cd13 is already an ancestor of pinned LTS.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/mm-tail-review.json",
+      "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+    ]
+  },
+  {
+    "commit": "5dd501ee74c1fbf06bb9eec50ef4c6d1f6061d97",
+    "disposition": "adapted",
+    "rationale": "Retain the boot-only pcp_thp_order knob for generic vendor allocator customization. Parsing accepts only orders above PAGE_ALLOC_COSTLY_ORDER and at most HPAGE_PMD_ORDER; default remains native. Admission, index conversion and inverse conversion all use the same chosen order, with later 38e13dcb4814 separating the CMA high-order list. Existing extracted CMA/THP checks cover accepted orders and list/fallback correctness. A nondefault setting changes caching/performance and is not claimed to improve SDK performance; source-module configurability is retained without a required runtime consumer.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "38e13dcb4814ef2e6f800c1a7e3bd439740a7838"
+    ],
+    "evidence": [
+      "evidence/mm-tail-review.json",
+      "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+    ]
   }
 ]

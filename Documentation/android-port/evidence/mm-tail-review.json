@@ -1,0 +1,381 @@
+{
+  "source_head": "bbc9b0705c307c8491b306fd50bc17bc44244341",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "records": [
+    {
+      "commit": "a2f67957845c522a6a381f9041e545cdd94dbe76",
+      "disposition": "adapted",
+      "rationale": "Retain zero initialization of vendor/OEM task storage. Final init_task initializers are gated by ANDROID_VENDOR_OEM_DATA; dup_task_struct uses the corresponding zeroing helpers before the vendor callback. Dynamic task storage is separately initialized too. This prevents inherited parent private state from appearing as new-task vendor data and supports current source-module customization. Static storage itself was already zero-initialized by C; the fork reset is the functional requirement. Keep native task init/cleanup and the independently reviewed dynamic-data limits; no historical task layout or vendor binary KMI is promised.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/mm-tail-review.json",
+        "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+      ],
+      "paths": [
+        "init/init_task.c",
+        "kernel/fork.c"
+      ],
+      "patch_sha256": "9a63e21e9f5359eea04c9a122cb6745e1cfc0913a3abe178221c83897f1ebda7"
+    },
+    {
+      "commit": "5c5a86e82d6d97341d69cf25f412b73dc5793ec2",
+      "disposition": "applied",
+      "rationale": "Retain the diagnostic adjustment for the retained DMA-buf partial cache-sync interface: permit sync nents smaller than map nents, and still warn when it is larger. The full LTS delta is exactly this condition/comment/message change. Direction/range/mapping checks and the actual DMA operation remain native. This weakens a diagnostic by also silencing accidental under-sync mistakes; it does not authorize DMA or validate arbitrary partial tables. Retention serves source-module partial-sync compatibility, whose SDK runtime registrations are unconfirmed. DMA_API_DEBUG is disabled in the selected build, so this diagnostic itself is not exercised.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/mm-tail-review.json",
+        "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+      ],
+      "paths": [
+        "kernel/dma/debug.c"
+      ],
+      "patch_sha256": "3436809aa0e3e375714a4eee69b8b77ebce6bf43c1ef82f14eaa8353105f7ac8"
+    },
+    {
+      "commit": "878e51a94adefe4c1ff4998f8c12ff8c88abe480",
+      "disposition": "adapted",
+      "rationale": "Retain the GPL export under the current native name __swiotlb_find_pool. The entire swiotlb.c LTS delta is this export; function implementation, RCU traversal, lookup semantics and newer native fixes remain. It is a source-module interface for the configured SWIOTLB/DYNAMIC implementation, not historical binary symbol/layout preservation. Exact module consumer necessity remains unconfirmed, so keep the shared source interface under the compatibility priority.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/mm-tail-review.json",
+        "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+      ],
+      "paths": [
+        "kernel/dma/swiotlb.c"
+      ],
+      "patch_sha256": "75a7a06b1768e6c0cd5d8e5616fb3c64c38eb109001814e80edbeb71c44da186"
+    },
+    {
+      "commit": "d4b2b0e4053b5fd06e1dac14291cda861060d212",
+      "disposition": "omitted-current-target",
+      "rationale": "The entire patch adds a no-decrypt property to Device Tree reserved restricted-dma-pool initialization, using a temporary tagged reserved_mem private pointer and skipping set_memory_decrypted only for that property. The selected x86 SDK configuration disables DMA_RESTRICTED_POOL, and its ordinary ACPI/virtio guest does not provision the DT reserved-memory encrypted-device contract. Keep native restricted-pool initialization exactly; do not add this separate platform feature for future protected/device platforms. This is a target/configuration gate, not a failed consumer search; generic SWIOTLB source export is retained separately.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/mm-tail-review.json",
+        "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+      ],
+      "paths": [
+        "kernel/dma/swiotlb.c"
+      ],
+      "patch_sha256": "0b7236871358f747ba853724a2d1fee64f49b4572e39951afc5c5b6680f73e2b"
+    },
+    {
+      "commit": "23bb0f66e0a065ca4776a74296d588c50c749ba1",
+      "disposition": "omitted-current-target",
+      "rationale": "This patch changes only two coherent-pool diagnostic units/format specifiers, improving display of sub-MiB reservations. It changes neither allocation results nor source APIs, configuration, userspace ABI or security checks; it is not needed for SDK compatibility. 9d5f5cbffd00 restores the entire coherent.c file to native LTS, minimizing an unrelated diagnostic-only delta. Native allocation/error cleanup remains. No claim that every generic coherent-pool caller is absent.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/mm-tail-review.json",
+        "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+      ],
+      "paths": [
+        "kernel/dma/coherent.c"
+      ],
+      "patch_sha256": "3020ebd8a1afbb3272bacc06a446f48c39f978c1591e4d422aa7e0f40574af39"
+    },
+    {
+      "commit": "5c7556339e29dd5f140bcd61b505922ecd180b10",
+      "disposition": "applied",
+      "rationale": "Retain the explicit BPF_READ-only requirement for out_args[i].value, closing ACK pointer-write verifier bypass. The full verifier function equals final ACK, and the whole bpf_fuse.c differs only in trailing blank lines. Actual extracted function checks reject 964 write offset/size cases and retain all three output-pointer reads; the pre-fix function admits those pointer writes as a negative control. FUSE_BPF=y is built for this SDK. This is evidence for the specific pointer-write fix, not proof of complete context bounds, verifier or JIT correctness.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/mm-tail-review.json",
+        "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+      ],
+      "paths": [
+        "kernel/bpf/bpf_fuse.c"
+      ],
+      "patch_sha256": "1f6290488f2fe069de0a9697829093d7ddbffbac9197555274201bf2f45d0467"
+    },
+    {
+      "commit": "fb5ff65c37d543f1fc0a7c612f6c2cd325e18166",
+      "disposition": "adapted",
+      "rationale": "Both copies select the memfd ioctl implementation to match C versus Rust ashmem. This port uses a single Rust ASHMEM configuration depending on SHMEM and RUST, with ashmem_memfd_ioctl used by both native and compat shmem dispatch. The wrapper requires SHMEM_FL_MEMFD, so ordinary tmpfs files do not gain the compatibility ioctl. Preserve native seal handling and the separately reviewed Rust ioctl implementation. Old C ASHMEM_C/MEMFD_ASHMEM_SHIM configuration is not delivered; bbc9b0705c30 removes the leftover Makefile entry pointing to a nonexistent C shim. Current libcutils chooses memfd/ashmem and uses the shared ioctl contract; no obsolete internal implementation is needed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "bbc9b0705c307c8491b306fd50bc17bc44244341"
+      ],
+      "evidence": [
+        "evidence/mm-tail-review.json",
+        "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+      ],
+      "paths": [
+        "mm/Kconfig",
+        "mm/shmem.c"
+      ],
+      "patch_sha256": "d9d9bad6953bfa92d98a5bcb1694e6eca22a40d308cc9e89563e440f33a46424"
+    },
+    {
+      "commit": "543d87eb8513dd1b5fe9cba2b28703110b47e62f",
+      "disposition": "adapted",
+      "rationale": "Both copies select the memfd ioctl implementation to match C versus Rust ashmem. This port uses a single Rust ASHMEM configuration depending on SHMEM and RUST, with ashmem_memfd_ioctl used by both native and compat shmem dispatch. The wrapper requires SHMEM_FL_MEMFD, so ordinary tmpfs files do not gain the compatibility ioctl. Preserve native seal handling and the separately reviewed Rust ioctl implementation. Old C ASHMEM_C/MEMFD_ASHMEM_SHIM configuration is not delivered; bbc9b0705c30 removes the leftover Makefile entry pointing to a nonexistent C shim. Current libcutils chooses memfd/ashmem and uses the shared ioctl contract; no obsolete internal implementation is needed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "bbc9b0705c307c8491b306fd50bc17bc44244341"
+      ],
+      "evidence": [
+        "evidence/mm-tail-review.json",
+        "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+      ],
+      "paths": [
+        "mm/Kconfig",
+        "mm/shmem.c"
+      ],
+      "patch_sha256": "064c9079f52d08d40b90cab7f94c5e33b269533b951ee5bf58b10d398e6af5c9"
+    },
+    {
+      "commit": "7edb637501a8f635dda1322076cd4e0bbe6c818b",
+      "disposition": "applied",
+      "rationale": "Retain downward-stack alignment to __PAGE_MASK for the positively configured page_shift=14 SDK. The entire expand_downwards function equals native LTS after this one mask substitution. mmap locking, minimum address, guard-gap/resource/security checks and native expansion accounting remain; alignment can charge extra hardware pages and still passes the existing limits. Native mode uses PAGE_MASK. No unrelated stack behavior is replaced.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/mm-tail-review.json",
+        "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+      ],
+      "paths": [
+        "mm/vma.c"
+      ],
+      "patch_sha256": "b6a7efcb6f9145b9db082c29a627f3bf12e835167c91ef71893bd0fb79ae2401"
+    },
+    {
+      "commit": "41e6913a9dfa3c8dc9ae3e0a80a0975d671db22d",
+      "disposition": "adapted",
+      "rationale": "Retain the root-writable 0644 page-size migration switch and default-enabled behavior on 64-bit 4KB kernels. Pinned bionic linker_phdr.cpp reads this exact sysfs path before ELF padding hints. Final show/store/init handlers equal ACK, and the object is built through mm/Makefile. Native LTS has no corresponding interface. Later separately reviewed atomic padding-field update aa723abf2d05 preserves concurrent native flags; the switch is a compatibility control, not a security authorization mechanism. No Android OS build or runtime validation performed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "aa723abf2d0547fdddee6cc7e806da55cbd19d7b"
+      ],
+      "evidence": [
+        "evidence/mm-tail-review.json",
+        "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+      ],
+      "paths": [
+        "mm/Makefile",
+        "mm/pgsize_migration.c"
+      ],
+      "patch_sha256": "9ac5a6a6a1561ed2bd442789e5b18f94f9430b563dfa9464d3a598731ec4d55d"
+    },
+    {
+      "commit": "e5fa727415e327821f453db8eb62bb5127be61bd",
+      "disposition": "adapted",
+      "rationale": "Retain shortened map_files directory names matching the data range in maps/smaps, and adapt lookup/revalidation/link resolution through find_map_files_vma in 20063c97d296. Accept only the exact original start plus either full VMA end or current displayed padding boundary; reject empty/arbitrary subranges. Omit wholly padded entries from enumeration. Native ptrace/CAP checks, file/path references, mmap lock and read access remain. The original one-line directory-only patch would generate names that native exact-range lookup rejects. Existing extracted map-files checks cover both names and invalid ranges; runtime symbolization is not verified.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "20063c97d296302d8cbabf1c1b39daf3ebbe6b7b"
+      ],
+      "evidence": [
+        "evidence/mm-tail-review.json",
+        "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+      ],
+      "paths": [
+        "fs/proc/base.c"
+      ],
+      "patch_sha256": "20511f1dbc71480b565dd81a89e99a423c1fb7ae03472a5a13202581c847bdbe"
+    },
+    {
+      "commit": "b43dbce8f063ae10076564335ddd0b1102479cf8",
+      "disposition": "adapted",
+      "rationale": "Retain proc stat RSS and statm size/shared/text/data/resident conversion to the reported page size. Correct the original patch double-scaling bug: shared pages are converted once, then separately converted anonymous pages are added; do not divide the already converted shared count again. Current statm can overestimate ceil(total pages/group) by at most one reported page due to separate rounding, and native 4KB counts remain exact. Local Perfetto watchdog multiplies stat RSS by GetSysPageSize, and libmeminfo consumes proc memory data. Actual extracted checks cover 98304 counter cases and demonstrate 65008 original underreports. Native access checks and PMD/PSS fixes remain independently reviewed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/mm-tail-review.json",
+        "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+      ],
+      "paths": [
+        "fs/proc/array.c",
+        "fs/proc/task_mmu.c",
+        "include/linux/page_size_compat_defs.h"
+      ],
+      "patch_sha256": "57bdbc59b61e8a181f6b4297d8ce44bda1ed8cb5c3300cfd11d49258a1421c63"
+    },
+    {
+      "commit": "0199438a86afe953be3786c2f70afb29e2a6c570",
+      "disposition": "adapted",
+      "rationale": "Retain the emulated-page helpers, static key, read-only-after-init shift and build integration for Goldfish page_shift=14. Follow the final ACK header split into page_size_compat_defs.h and current page_shift boot parameter. dbae496171a5 validates a temporary before publishing and restricts the maximum to implemented x86/vDSO 16KB, correcting the original advertised 64KB range; c476769367dd updates documentation/rate-limited diagnostics. Native mode remains hardware size. Generic BPF offset conversion added later is separately replaced by 9a7c5d1e20a6. The explicit ASLR placement-bit tradeoff remains documented; this candidate does not finalize unresolved shared EOF-tail behavior.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "dbae496171a5711dafd95eda5aefa1de86cf76bf",
+        "c476769367dd9ec44abeb0483606f530d43b18dc",
+        "9a7c5d1e20a626a8db1d0f461d0a0a513e1f26ab"
+      ],
+      "evidence": [
+        "evidence/mm-tail-review.json",
+        "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+      ],
+      "paths": [
+        "include/linux/page_size_compat.h",
+        "mm/Makefile",
+        "mm/page_size_compat.c"
+      ],
+      "patch_sha256": "4c228cd55b920f6c8388b59edf986e76e87930df958fb2a3d5f74e1fa6dbb857"
+    },
+    {
+      "commit": "446cb382db8e437fc8b3c008d3cec87ad68fc89d",
+      "disposition": "reverted",
+      "rationale": "The KMI-motivated readahead overlay is reverted exactly by 470d5d31c24a; inverse changed lines match. Native file_ra_state already has the short mmap_miss field and native readahead accesses it directly. The overlay would place a different field over adjacent prev_pos storage, as the local revert explains. Keep the entire native structure and native direct accesses; do not recreate ABI padding or cast overlays. Local upstream f5e8b140cd13 is already an ancestor of pinned LTS.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/mm-tail-review.json",
+        "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+      ],
+      "paths": [
+        "include/linux/fs.h",
+        "mm/filemap.c"
+      ],
+      "patch_sha256": "8fffc8126b246eb02d6f35eb16f1cd8622a5b59200ddec8e4dbb0aa1829697e7"
+    },
+    {
+      "commit": "470d5d31c24a814a91b799e4a3ebfa4fa39cfd35",
+      "disposition": "reverted",
+      "rationale": "The KMI-motivated readahead overlay is reverted exactly by 470d5d31c24a; inverse changed lines match. Native file_ra_state already has the short mmap_miss field and native readahead accesses it directly. The overlay would place a different field over adjacent prev_pos storage, as the local revert explains. Keep the entire native structure and native direct accesses; do not recreate ABI padding or cast overlays. Local upstream f5e8b140cd13 is already an ancestor of pinned LTS.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/mm-tail-review.json",
+        "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+      ],
+      "paths": [
+        "include/linux/fs.h",
+        "mm/filemap.c"
+      ],
+      "patch_sha256": "89b7a50cafd6d2b410c1ee2397074c32505540d4442ad2b9d0c20fd82788e195"
+    },
+    {
+      "commit": "5dd501ee74c1fbf06bb9eec50ef4c6d1f6061d97",
+      "disposition": "adapted",
+      "rationale": "Retain the boot-only pcp_thp_order knob for generic vendor allocator customization. Parsing accepts only orders above PAGE_ALLOC_COSTLY_ORDER and at most HPAGE_PMD_ORDER; default remains native. Admission, index conversion and inverse conversion all use the same chosen order, with later 38e13dcb4814 separating the CMA high-order list. Existing extracted CMA/THP checks cover accepted orders and list/fallback correctness. A nondefault setting changes caching/performance and is not claimed to improve SDK performance; source-module configurability is retained without a required runtime consumer.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "38e13dcb4814ef2e6f800c1a7e3bd439740a7838"
+      ],
+      "evidence": [
+        "evidence/mm-tail-review.json",
+        "SECURITY.md: Remaining memory interfaces and DMA diagnostics"
+      ],
+      "paths": [
+        "Documentation/admin-guide/kernel-parameters.txt",
+        "mm/page_alloc.c"
+      ],
+      "patch_sha256": "5d919161e36dd2b6960f407c53946f9cdd3ff82ced68955435646941507878ed"
+    }
+  ],
+  "proofs": [
+    {
+      "path": "kernel/dma/coherent.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact whole file",
+      "blob": "87f2f02e921a609d145f9642cfb4792f4d3c1bdc"
+    },
+    {
+      "path": "kernel/bpf/bpf_fuse.c",
+      "function": "fuse_prog_is_valid_access",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "comparison": "exact function",
+      "sha256": "43391278496ce7688d4af3b04b3ef6f1d61ff8938e2d60cf6fb2b7b535840d24"
+    },
+    {
+      "path": "mm/pgsize_migration.c",
+      "function": "show_pgsize_migration_enabled",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "comparison": "exact function",
+      "sha256": "978e435d91b62e5fc7b0a311cc803b05bf8e03afc25e5b98701aeb78925a439b"
+    },
+    {
+      "path": "mm/pgsize_migration.c",
+      "function": "store_pgsize_migration_enabled",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "comparison": "exact function",
+      "sha256": "e0703133aed1e1cefed731e19997a00f4956708d67a196340db73f43ea27d924"
+    },
+    {
+      "path": "mm/pgsize_migration.c",
+      "function": "init_pgsize_migration",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "comparison": "exact function",
+      "sha256": "a20a79199d297ee992b43bcc2849f468e572eac1ea36cf0c0dd6d32ca536ba59"
+    },
+    {
+      "path": "kernel/dma/swiotlb.c",
+      "function": "rmem_swiotlb_device_init",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact function",
+      "sha256": "cc115c172bf19a4d0be6ed075c96503cb03829ae0d774fc38f904548d01825bf"
+    },
+    {
+      "path": "kernel/dma/swiotlb.c",
+      "function": "rmem_swiotlb_setup",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact function",
+      "sha256": "0368bf521d05d8271d0010f2faa3b8c3db64c8aaa114b44f10a3433c343275b3"
+    },
+    {
+      "path": "mm/page_alloc.c",
+      "function": "parse_pcp_thp_order",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "comparison": "exact function",
+      "sha256": "ea045eb1ad37385804d51fd93a6ee08d472a684306cb03ab9d744da44a18ebe0"
+    },
+    {
+      "path": "mm/vma.c",
+      "function": "expand_downwards",
+      "comparison": "exact LTS function after sole reviewed page-mask substitution",
+      "sha256": "2397f54000054a16beddf55a192861ba3563384fa46a410ce7596543d2a190c3"
+    },
+    {
+      "path": "kernel/dma/debug.c",
+      "lts_delta": "diff --git a/kernel/dma/debug.c b/kernel/dma/debug.c\nindex 03780f39613c..867494a949ee 100644\n--- a/kernel/dma/debug.c\n+++ b/kernel/dma/debug.c\n@@ -1175,10 +1175,11 @@ static void check_sync(struct device *dev,\n \t\t\t\tdir2name[entry->direction],\n \t\t\t\tdir2name[ref->direction]);\n \n+\t/* sg list count can be less than map count when partial cache sync */\n \tif (ref->sg_call_ents && ref->type == dma_debug_sg &&\n-\t    ref->sg_call_ents != entry->sg_call_ents) {\n+\t    ref->sg_call_ents > entry->sg_call_ents) {\n \t\terr_printk(ref->dev, entry, \"device driver syncs \"\n-\t\t\t   \"DMA sg list with different entry count \"\n+\t\t\t   \"DMA sg list count larger than map count \"\n \t\t\t   \"[map count=%d] [sync count=%d]\\n\",\n \t\t\t   entry->sg_call_ents, ref->sg_call_ents);\n \t}\n"
+    },
+    {
+      "path": "kernel/dma/swiotlb.c",
+      "lts_delta": "diff --git a/kernel/dma/swiotlb.c b/kernel/dma/swiotlb.c\nindex 8e4732545f1c..8c68cf7a2515 100644\n--- a/kernel/dma/swiotlb.c\n+++ b/kernel/dma/swiotlb.c\n@@ -801,6 +801,7 @@ struct io_tlb_pool *__swiotlb_find_pool(struct device *dev, phys_addr_t paddr)\n \trcu_read_unlock();\n \treturn pool;\n }\n+EXPORT_SYMBOL_GPL(__swiotlb_find_pool);\n \n /**\n  * swiotlb_del_pool() - remove an IO TLB pool from a device\n"
+    },
+    {
+      "readahead_original": "446cb382db8e437fc8b3c008d3cec87ad68fc89d",
+      "revert": "470d5d31c24a814a91b799e4a3ebfa4fa39cfd35",
+      "comparison": "inverse changed lines identical; native file_ra_state and short mmap_miss retained",
+      "native_ancestor": "f5e8b140cd1324cf2c9c17487b8f444098624797"
+    }
+  ],
+  "local_consumers": [
+    {
+      "path": "grapheneos-17/device/generic/goldfish/board/kernel/x86_64_16k_cmdline.txt",
+      "sha256": "a8df23ba1cec47cf4d8de94467b50a95b8d87e2e9d131e93ead446df8347e1d1"
+    },
+    {
+      "path": "grapheneos-17/bionic/linker/linker_phdr.cpp",
+      "sha256": "dd03b8f0705ce49e7695535aea6aadd9cc1dce6dc5b8ed9bc2c13d330a3fa4fc"
+    },
+    {
+      "path": "grapheneos-17/external/perfetto/src/base/watchdog_posix.cc",
+      "sha256": "bd72447784243b23351dcaafd00bdad3cc2aa23948aa8be30ebafd7ad2daa9dd"
+    },
+    {
+      "path": "grapheneos-17/system/memory/libmeminfo/procmeminfo.cpp",
+      "sha256": "9802512eb4f65612d6c6d63b3f94d0c2f55725f0fa82a0b3aaab3f9623279a66"
+    },
+    {
+      "path": "grapheneos-17/system/core/libcutils/ashmem-dev.cpp",
+      "sha256": "df16f5fa6f9f9b333a63adcc6e96abe2c7417f6de6cfe3635e9edc0a0e50db48"
+    }
+  ],
+  "config_evidence": "Build 183: ASHMEM=y, FUSE_BPF=y, DMA_DECLARE_COHERENT=y, SWIOTLB=y, SWIOTLB_DYNAMIC=y; DMA_RESTRICTED_POOL and DMA_API_DEBUG disabled.",
+  "checks": [
+    "mm-tail-interface-check.json",
+    "page-emulation-check.json",
+    "cma-pcp-check.json",
+    "padding-flags-check.json"
+  ],
+  "remote_resources_used": []
+}
