@@ -9639,6 +9639,54 @@ UFS code and binding remain. No ARM/protected-host, documentation-renderer,
 crypto-certification or physical-device execution is claimed. No additional
 remote resources were used.
 
+## Single-path core and networking merge resolutions
+
+evidence/single-path-merge-review.json records 23 complete unique merge deltas,
+including the 282-line wireless header resolution. These decisions concern the
+unique resolutions; they do not substitute for review of their parent commits.
+No executable changes were needed for this batch.
+
+Native bpf_prog_load and its token capability helper already implement the
+evolved network/admin authorization with namespace and LSM checks. Native
+xfrm_user_policy retains translator-absence cleanup and later alignment-specific
+handling. The BPF observation-hook merge preserves the current security_bpf
+signature and kernel-pointer indicator; the LSM and command checks still run
+after the trusted callback, seeing its potentially modified copied attributes.
+The packet-list hook likewise coexists with exact native namespace/device
+selection, but an override can replace that result and must preserve list
+ownership and isolation. See the existing networking-hook tradeoffs.
+
+The three historical encrypted-DIO merge resolutions are represented by native
+iterator-aware allocation and encryption contexts for both zeroing and ordinary
+data. The entire current iomap DIO file equals LTS apart from the separately
+reviewed statistics hook. L2CAP listener cleanup likewise has identical native
+executable code: child locking/pinning, deferred close under the proper connection
+lock order, and balanced references. The conflicting historical direct-close
+branch is not restored. Its surviving difference is an expanded comment.
+
+Retain the Android per-interface IPv6 RA routing table behavior with native VRF
+precedence, positively configured by local netd. Retain the networking, jiffies,
+vendor-storage and CPU-frequency-accounting includes alongside native topology,
+kmap, runtime-verification, KSM, process-connector and unwind definitions. Current
+Framework readers consume time_in_state; native stack-depth metrics use the new
+KSTACK_ERASE_METRICS name. The jiffies function is exact LTS after removing its
+update callback and necessary braces, retaining the newer CPU snapshot and
+stalled-timekeeper handling. Empty-DMA32 predicates remain the only changes in
+dma/direct.c; native address-limit checks, fallback and freeing remain intact.
+
+The obsolete virtio packet-size parameter stays removed, while native close-work
+handling and the separately justified bounded transmit policy remain. Preserve
+all 19 native timer-test results with the existing narrow Bionic cancellation
+skip. The older futex ENOSYS skip was explicitly reverted in ACK; retain the
+native current wouldblock test for the FUTEX-enabled SDK. Neither test was run.
+
+The wireless resolution removes duplicate S1G/P2P/NAN definitions from the
+monolithic header while retaining the included split headers. The S1G header is
+exact native LTS, and native P2P/NAN definition blocks remain in their new files.
+EHT, UHR, mesh and the native TIM dispatch remain. This is preservation of source
+interfaces, not a claim about an emulated radio's runtime capabilities. All
+evidence was local; no additional remote resource was used.
+
 ## Zram ioctl history, documentation and ublk page-size ABI
 
 The six remaining zram/ublk candidates are reviewed in
