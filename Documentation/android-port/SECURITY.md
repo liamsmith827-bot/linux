@@ -8615,3 +8615,51 @@ native allocation/receive fixes remain. More packetization/CPU work is possible.
 This adds no future platform and does not claim the SDK uses an old Cuttlefish
 host. Build 177 already compiled this code; no additional code change occurred in
 this batch. All review sources were local, and no remote URL was opened.
+## Networking vendor hooks and socket lifetime
+
+Sixteen candidate decisions are in `evidence/net-hooks-review.json`. Retain
+functional allocation/clone/free, socket/TCP/UDP, packet-list, classification,
+skb-build and page-pool hooks, plus network/reset/MSS/retransmit exports. They
+preserve the requested module-source customization of common SDK networking.
+Absence of a proprietary callback is not used to exclude an interface. Omit the
+separate net_device layout-preservation change and historical ABI dump/symbol-list
+updates; actual configuration guards and current source types remain.
+
+Twenty-nine function comparisons preserve native LTS code after removing the
+recorded hook calls and inet-create null-local handling. The complete LTS deltas
+are recorded, including the deliberate override paths. Native TCP state/timer
+accounting, skb initialization, security clone checks, permission checks and
+socket cleanup remain. Newer native `tcp_send_active_reset` signature is retained;
+modules rebuild against it. The retired duplicate kfree_skb hook stays absent,
+while later hooks legitimately require the net.h includes again.
+
+`fedf7b36bd95` clears the local socket pointer after `sk_common_release` in both
+inet creation paths. The common exit callback now receives NULL and its existing
+boolean error flag, matching early allocation failures, instead of a potentially
+freed socket. Success callbacks retain the live socket. The actual cleanup-label
+test passes sixteen cases and demonstrates two old notifications with logically
+released objects. Its release marker does not free memory; this is not an exploit,
+real protocol-creation, RCU or concurrency test.
+
+Registered callbacks remain trusted kernel code. The packet-list override runs
+before native namespace/device choice and must maintain valid list ownership and
+isolation. The restricted BPF copy override can return before native bounds checks
+and error-buffer clearing, so callbacks must validate and initialize output; a
+bad callback can expose stale data or corrupt memory. The page-pool validation hook
+can approve module ops outside core rodata, weakening the native origin check.
+It does not independently prove module read-only storage or keep the module alive;
+callback/provider ownership must ensure both. With no override, the native checks
+and cleanup still run. These are explicit compatibility/security tradeoffs, not
+claims that callback registration is harmless.
+
+Both receive-window hooks retain ACK placement. The restricted callback runs
+after storing `tp->rcv_wnd`, but before clamping/scaling the advertised result;
+vendor policy can therefore make the two differ. Classid callbacks can change
+traffic classification, and exported reset/MSS APIs can disrupt connections.
+Runtime policy consistency and module correctness are unverified. No hypothetical
+consumer is asserted, and no future physical platform is added. Build 178 passed
+at `fedf7b36bd95` using the original workflow, producing the kernel image, 100
+common modules and 45 virtual-device modules. All 145 signatures and module
+flag/CRC tables passed verification; the modified-payload control was rejected.
+All evidence was local;
+no remote resource or Android OS build/boot/flash was used.

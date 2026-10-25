@@ -25809,5 +25809,194 @@
       "evidence/net-compat-review.json",
       "SECURITY.md: Networking compatibility and retired workarounds"
     ]
+  },
+  {
+    "commit": "1da7910c1d7d29b8bf38ba3870ceb05036e1706f",
+    "disposition": "partially-adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain ptype_head declaration/export/callback as a common vendor source extension for packet-handler lists. Keep native namespace/device selection when no override is supplied; a callback override precedes those checks and must itself supply a valid, properly isolated list with correct lifetime. This is a trusted-module contract, not an unprivileged interface. Do not restore the historical kfree_skb hook explicitly removed by c1e292ea7c7c; native skb tracing remains.",
+    "evidence": [
+      "evidence/net-hooks-review.json",
+      "SECURITY.md: Networking vendor hooks and socket lifetime"
+    ]
+  },
+  {
+    "commit": "c1e292ea7c7c3ae2c92066d7e349a64ad3b6d90d",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Retain final deletion of the duplicate android_vh_kfree_skb callback, declaration and export. The name is absent from final hook headers/exports/call sites; native skb lifecycle tracepoints remain. The surviving ptype_head hook is independent. No obsolete callback is preserved for binary compatibility.",
+    "evidence": [
+      "evidence/net-hooks-review.json",
+      "SECURITY.md: Networking vendor hooks and socket lifetime"
+    ]
+  },
+  {
+    "commit": "449d8c616f8a6977d85d145ce14362fdbcbf7c06",
+    "disposition": "superseded",
+    "result_commits": [],
+    "rationale": "The historical removal of now-unused net hook includes after kfree_skb retirement is superseded by later retained TCP and skb-build hooks. Current tcp_input.c/skbuff.c legitimately need net.h for those callbacks; keeping the include does not resurrect kfree_skb. Final call sites and native post-hook function bodies were examined.",
+    "evidence": [
+      "evidence/net-hooks-review.json",
+      "SECURITY.md: Networking vendor hooks and socket lifetime"
+    ]
+  },
+  {
+    "commit": "af940f9c675fe93b1b54a429ad1ef272cbea160d",
+    "disposition": "omitted-kmi-only",
+    "result_commits": [
+      "989123cde71e577085e3d0c513ccce5e66155cf0"
+    ],
+    "rationale": "Omit unconditional wireless fields and removal of CFG80211/WIRELESS_EXT guards whose purpose was preserving net_device layout across independently configured binaries. Rebuilt modules use the delivered configuration; SDK CFG80211 is enabled and functional pointers remain. Native guarded cfg80211 unregister, batman detection and sysfs helper bodies are retained exactly, including removal of obsolete wireless_data. No functional wireless API is dropped from this target.",
+    "evidence": [
+      "evidence/net-hooks-review.json",
+      "SECURITY.md: Networking vendor hooks and socket lifetime"
+    ]
+  },
+  {
+    "commit": "7792436bb11e0a6bd3db695d793b5694af7b911b",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain socket allocation/free hooks and exports around live objects for source-compatible vendor per-socket metadata. Allocation callback follows memcg initialization; free callback precedes security/protocol object free. Full functions equal LTS after removing callback calls. Callbacks must obey existing atomic/locking constraints and ownership, including failure cleanup; no particular vendor module is asserted present.",
+    "evidence": [
+      "evidence/net-hooks-review.json",
+      "SECURITY.md: Networking vendor hooks and socket lifetime"
+    ]
+  },
+  {
+    "commit": "5ce1842cd12dbf6fb8c0373e4b727073ef0d2e3b",
+    "disposition": "partially-adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain inet_csk_clone_lock callback after security clone processing and its GPL export for vendor per-connection state. Full function is native LTS plus callback. Omit historical arm64/x86 ABI dump CRC updates, which do not implement behavior and are absent from delivered tree. Rebuilt modules use actual types; no binary layout guarantee.",
+    "evidence": [
+      "evidence/net-hooks-review.json",
+      "SECURITY.md: Networking vendor hooks and socket lifetime"
+    ]
+  },
+  {
+    "commit": "dbeed11d7c8bc0adba93929f9265fad2e5cebe30",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain sk_clone_lock callback immediately after sock_copy so modules can replace aliased per-socket metadata before later success/failure cleanup. Native initialization and unwinding remain unchanged after removing the hook. This helps avoid double ownership of copied pointers but does not automatically validate vendor allocations or make callback code safe.",
+    "evidence": [
+      "evidence/net-hooks-review.json",
+      "SECURITY.md: Networking vendor hooks and socket lifetime"
+    ]
+  },
+  {
+    "commit": "85c6c0ade48db2d17737036f409eeb2d99d1cb2b",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain GPL exports of netdev_get_name and tcp_send_active_reset for module source customization. Both implementations equal native LTS; notably retain the newer native reset signature without the obsolete priority argument. Kernel modules rebuild against current headers. Exporting reset permits trusted module policy to disrupt connections and is not an unprivileged socket permission bypass.",
+    "evidence": [
+      "evidence/net-hooks-review.json",
+      "SECURITY.md: Networking vendor hooks and socket lifetime"
+    ]
+  },
+  {
+    "commit": "e646af4b7a3e5a69bb74ae42c82481fcb196f5ec",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain TCP state/retransmission/RTT/error and receive-window hooks plus reason enum/exports. Preserve call placement after valid RTT check and native state/timer accounting. Ordinary window hook can alter new_win before no-shrink handling; normal maximum/scaling checks remain. Full affected functions equal LTS after callback removal. Raw socket pointers still let trusted modules alter state; vendor policy correctness and runtime timing are not verified.",
+    "evidence": [
+      "evidence/net-hooks-review.json",
+      "SECURITY.md: Networking vendor hooks and socket lifetime"
+    ]
+  },
+  {
+    "commit": "36ea81e60d50d27984a028e7ea2d03b2eb9af96e",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "fedf7b36bd957783f80da777791975349595289a"
+    ],
+    "rationale": "Retain socket-create, inet-create and uplink notifications for common vendor policy. Preserve native protocol/security/BPF checks. Correct the inherited error path in fedf7b36bd95: after sk_common_release both inet families clear local sk, so the shared exit hook gets NULL/error rather than a released object. Keep existing bool error-flag API. Remove duplicate net.h include in IPv6. Actual cleanup-tail tests cover success, preallocation/RCU errors and release errors; no real socket creation or exploit test.",
+    "evidence": [
+      "evidence/net-hooks-review.json",
+      "SECURITY.md: Networking vendor hooks and socket lifetime"
+    ]
+  },
+  {
+    "commit": "9cdc05b1c58ef92a03ae4abc4b68e23ef9886051",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain restricted inet-create/release and window hooks, RTT/UDP enqueue observers and skb-build initialization hooks. Callbacks preserve vendor metadata/policy source contracts on existing common networking code. Default bodies are exactly LTS after hook removal. Restricted window hook follows tp->rcv_wnd update but precedes advertised-window clamping, so a module may deliberately make advertisement differ from stored window; preserve ACK placement and explicitly leave policy consistency to trusted callbacks. Build hooks run after skb finalization; no new public packet format or hardware platform.",
+    "evidence": [
+      "evidence/net-hooks-review.json",
+      "SECURITY.md: Networking vendor hooks and socket lifetime"
+    ]
+  },
+  {
+    "commit": "ffd7b22096bd5719b0f3e1e9a7eec79be33535c6",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain restricted BPF skb-load override for module traffic-accounting extensions. With handled=0, the complete original LTS bounds/copy/error-zeroing path runs; handled!=0 returns callback status before native checks. This deliberately delegates output initialization, length/offset handling and error clearing to a trusted registered module, which can otherwise expose stale bytes or corrupt memory if incorrect. No consumer absence is inferred and no safety guarantee is made for vendor callbacks; common source-hook compatibility is the reason for retaining this override.",
+    "evidence": [
+      "evidence/net-hooks-review.json",
+      "SECURITY.md: Networking vendor hooks and socket lifetime"
+    ]
+  },
+  {
+    "commit": "b9fba77170c41b1cf1355f172e52b6c10e99ecb7",
+    "disposition": "partially-adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain GPL tcp_retransmit_skb tracepoint export for rebuilt network-policy modules. The native tracepoint implementation/signature remains and actual build provides it. Omit historical arm64 ABI dump and Vivo symbol-list refresh, including metadata-only skb_orphan_partial entry. Functional skb_orphan_partial support is independently present in native source. No CRC/layout snapshot is needed.",
+    "evidence": [
+      "evidence/net-hooks-review.json",
+      "SECURITY.md: Networking vendor hooks and socket lifetime"
+    ]
+  },
+  {
+    "commit": "08f03bbb4584dc6411f3333f4290111f1a295924",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain receive-socket and task-classid hooks plus GPL wrapper so modules can preserve classification across SCM_RIGHTS transfer or network-thread context. Full default functions equal native after removing hooks. Classid override changes classification and must honor intended cgroup isolation; it does not change credential checks on descriptor transfer. Wrapper retains configuration guards and does not require historical binary struct layouts.",
+    "evidence": [
+      "evidence/net-hooks-review.json",
+      "SECURITY.md: Networking vendor hooks and socket lifetime"
+    ]
+  },
+  {
+    "commit": "4375852ff7fa502c72bf484693f6b38fed05c09e",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain unconditional tcp_sync_mss export instead of EXPORT_IPV6_MOD because the SDK has IPV6=y and rebuilt vendor modules may adjust TCP MSS. Entire native implementation remains identical. This is a real module source interface, not ABI padding; callers retain locking/input responsibilities and can influence transport behavior.",
+    "evidence": [
+      "evidence/net-hooks-review.json",
+      "SECURITY.md: Networking vendor hooks and socket lifetime"
+    ]
+  },
+  {
+    "commit": "13db2a799cf3b9737e77054c94a0ab3ba656e1c6",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain page_pool memory-provider validation hook for const ops residing in module rodata. Default validated=false preserves native is_kernel_rodata check, DMA-map/sync prerequisites, init error handling and cleanup; registered callbacks may explicitly bypass the core-rodata test. This weakens that defensive origin check when used: kernel code does not independently establish read-only module storage or module lifetime. Trusted callbacks must validate both and must not approve writable/dangling ops. Retained for source module customization in common configured page-pool infrastructure, not a new physical platform; actual provider/runtime use is unverified.",
+    "evidence": [
+      "evidence/net-hooks-review.json",
+      "SECURITY.md: Networking vendor hooks and socket lifetime"
+    ]
   }
 ]

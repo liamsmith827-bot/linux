@@ -1,0 +1,575 @@
+{
+  "source_head": "fedf7b36bd957783f80da777791975349595289a",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "records": [
+    {
+      "commit": "1da7910c1d7d29b8bf38ba3870ceb05036e1706f",
+      "disposition": "partially-adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain ptype_head declaration/export/callback as a common vendor source extension for packet-handler lists. Keep native namespace/device selection when no override is supplied; a callback override precedes those checks and must itself supply a valid, properly isolated list with correct lifetime. This is a trusted-module contract, not an unprivileged interface. Do not restore the historical kfree_skb hook explicitly removed by c1e292ea7c7c; native skb tracing remains.",
+      "evidence": [
+        "evidence/net-hooks-review.json",
+        "SECURITY.md: Networking vendor hooks and socket lifetime"
+      ],
+      "patch_sha256": "4308638e7659d3c10f3eebb39614fd641470a2b2625cc562afc8a667787dd944",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/net.h",
+        "net/core/dev.c",
+        "net/core/skbuff.c",
+        "net/ipv4/tcp_input.c"
+      ]
+    },
+    {
+      "commit": "c1e292ea7c7c3ae2c92066d7e349a64ad3b6d90d",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Retain final deletion of the duplicate android_vh_kfree_skb callback, declaration and export. The name is absent from final hook headers/exports/call sites; native skb lifecycle tracepoints remain. The surviving ptype_head hook is independent. No obsolete callback is preserved for binary compatibility.",
+      "evidence": [
+        "evidence/net-hooks-review.json",
+        "SECURITY.md: Networking vendor hooks and socket lifetime"
+      ],
+      "patch_sha256": "201a560935bf8e90c80f406718fadf8a83ac66c2a7e92b1e170c2e7f8274f7a5",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/net.h",
+        "net/core/skbuff.c",
+        "net/ipv4/tcp_input.c"
+      ]
+    },
+    {
+      "commit": "449d8c616f8a6977d85d145ce14362fdbcbf7c06",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "The historical removal of now-unused net hook includes after kfree_skb retirement is superseded by later retained TCP and skb-build hooks. Current tcp_input.c/skbuff.c legitimately need net.h for those callbacks; keeping the include does not resurrect kfree_skb. Final call sites and native post-hook function bodies were examined.",
+      "evidence": [
+        "evidence/net-hooks-review.json",
+        "SECURITY.md: Networking vendor hooks and socket lifetime"
+      ],
+      "patch_sha256": "f76c11648255584211226a81525d8d6304df9d09f80695cd683c17ee087514d5",
+      "changed_paths": [
+        "net/core/skbuff.c",
+        "net/ipv4/tcp_input.c"
+      ]
+    },
+    {
+      "commit": "af940f9c675fe93b1b54a429ad1ef272cbea160d",
+      "disposition": "omitted-kmi-only",
+      "result_commits": [
+        "989123cde71e577085e3d0c513ccce5e66155cf0"
+      ],
+      "rationale": "Omit unconditional wireless fields and removal of CFG80211/WIRELESS_EXT guards whose purpose was preserving net_device layout across independently configured binaries. Rebuilt modules use the delivered configuration; SDK CFG80211 is enabled and functional pointers remain. Native guarded cfg80211 unregister, batman detection and sysfs helper bodies are retained exactly, including removal of obsolete wireless_data. No functional wireless API is dropped from this target.",
+      "evidence": [
+        "evidence/net-hooks-review.json",
+        "SECURITY.md: Networking vendor hooks and socket lifetime"
+      ],
+      "patch_sha256": "45b03d56808ed658b61555477aeaadaaa14f73f7603736089ee8b07026938db9",
+      "changed_paths": [
+        "include/linux/netdevice.h",
+        "include/net/cfg80211.h",
+        "net/batman-adv/hard-interface.c",
+        "net/core/net-sysfs.c"
+      ]
+    },
+    {
+      "commit": "7792436bb11e0a6bd3db695d793b5694af7b911b",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain socket allocation/free hooks and exports around live objects for source-compatible vendor per-socket metadata. Allocation callback follows memcg initialization; free callback precedes security/protocol object free. Full functions equal LTS after removing callback calls. Callbacks must obey existing atomic/locking constraints and ownership, including failure cleanup; no particular vendor module is asserted present.",
+      "evidence": [
+        "evidence/net-hooks-review.json",
+        "SECURITY.md: Networking vendor hooks and socket lifetime"
+      ],
+      "patch_sha256": "b89eb37e1e366f78467547d2844e3a104de32b549626a44a3d3a92dc1c1807e4",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/net.h",
+        "net/core/sock.c"
+      ]
+    },
+    {
+      "commit": "5ce1842cd12dbf6fb8c0373e4b727073ef0d2e3b",
+      "disposition": "partially-adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain inet_csk_clone_lock callback after security clone processing and its GPL export for vendor per-connection state. Full function is native LTS plus callback. Omit historical arm64/x86 ABI dump CRC updates, which do not implement behavior and are absent from delivered tree. Rebuilt modules use actual types; no binary layout guarantee.",
+      "evidence": [
+        "evidence/net-hooks-review.json",
+        "SECURITY.md: Networking vendor hooks and socket lifetime"
+      ],
+      "patch_sha256": "89454e035d0309d8a1f93e345a781737b6aaf9641c5c56351057f551aa28dcd6",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "gki/aarch64/abi.stg",
+        "gki/x86_64/abi.stg",
+        "include/trace/hooks/net.h",
+        "net/ipv4/inet_connection_sock.c"
+      ]
+    },
+    {
+      "commit": "dbeed11d7c8bc0adba93929f9265fad2e5cebe30",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain sk_clone_lock callback immediately after sock_copy so modules can replace aliased per-socket metadata before later success/failure cleanup. Native initialization and unwinding remain unchanged after removing the hook. This helps avoid double ownership of copied pointers but does not automatically validate vendor allocations or make callback code safe.",
+      "evidence": [
+        "evidence/net-hooks-review.json",
+        "SECURITY.md: Networking vendor hooks and socket lifetime"
+      ],
+      "patch_sha256": "1fc44cf3d501e356f1078269a014e4a9d2a56a9472b03abc0dc096de7b93f29c",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/net.h",
+        "net/core/sock.c"
+      ]
+    },
+    {
+      "commit": "85c6c0ade48db2d17737036f409eeb2d99d1cb2b",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain GPL exports of netdev_get_name and tcp_send_active_reset for module source customization. Both implementations equal native LTS; notably retain the newer native reset signature without the obsolete priority argument. Kernel modules rebuild against current headers. Exporting reset permits trusted module policy to disrupt connections and is not an unprivileged socket permission bypass.",
+      "evidence": [
+        "evidence/net-hooks-review.json",
+        "SECURITY.md: Networking vendor hooks and socket lifetime"
+      ],
+      "patch_sha256": "4ecc3f60d7594ba31b7d7c662b3071148d5843637a2215f1f7828d421e5cfc72",
+      "changed_paths": [
+        "net/core/dev.c",
+        "net/ipv4/tcp_output.c"
+      ]
+    },
+    {
+      "commit": "e646af4b7a3e5a69bb74ae42c82481fcb196f5ec",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain TCP state/retransmission/RTT/error and receive-window hooks plus reason enum/exports. Preserve call placement after valid RTT check and native state/timer accounting. Ordinary window hook can alter new_win before no-shrink handling; normal maximum/scaling checks remain. Full affected functions equal LTS after callback removal. Raw socket pointers still let trusted modules alter state; vendor policy correctness and runtime timing are not verified.",
+      "evidence": [
+        "evidence/net-hooks-review.json",
+        "SECURITY.md: Networking vendor hooks and socket lifetime"
+      ],
+      "patch_sha256": "d63ebb5e4550e13d98901aaa5667277cec008d3c8240425f8b9ce0ee835223c4",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/net.h",
+        "net/ipv4/tcp.c",
+        "net/ipv4/tcp_input.c",
+        "net/ipv4/tcp_output.c",
+        "net/ipv4/tcp_timer.c"
+      ]
+    },
+    {
+      "commit": "36ea81e60d50d27984a028e7ea2d03b2eb9af96e",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "fedf7b36bd957783f80da777791975349595289a"
+      ],
+      "rationale": "Retain socket-create, inet-create and uplink notifications for common vendor policy. Preserve native protocol/security/BPF checks. Correct the inherited error path in fedf7b36bd95: after sk_common_release both inet families clear local sk, so the shared exit hook gets NULL/error rather than a released object. Keep existing bool error-flag API. Remove duplicate net.h include in IPv6. Actual cleanup-tail tests cover success, preallocation/RCU errors and release errors; no real socket creation or exploit test.",
+      "evidence": [
+        "evidence/net-hooks-review.json",
+        "SECURITY.md: Networking vendor hooks and socket lifetime"
+      ],
+      "patch_sha256": "180047ac3694a41f8508535d0b925def9f54a36b4c5767599d48f4e76a040ddc",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/net.h",
+        "net/ipv4/af_inet.c",
+        "net/ipv4/tcp.c",
+        "net/ipv4/udp.c",
+        "net/ipv6/af_inet6.c",
+        "net/socket.c"
+      ]
+    },
+    {
+      "commit": "9cdc05b1c58ef92a03ae4abc4b68e23ef9886051",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain restricted inet-create/release and window hooks, RTT/UDP enqueue observers and skb-build initialization hooks. Callbacks preserve vendor metadata/policy source contracts on existing common networking code. Default bodies are exactly LTS after hook removal. Restricted window hook follows tp->rcv_wnd update but precedes advertised-window clamping, so a module may deliberately make advertisement differ from stored window; preserve ACK placement and explicitly leave policy consistency to trusted callbacks. Build hooks run after skb finalization; no new public packet format or hardware platform.",
+      "evidence": [
+        "evidence/net-hooks-review.json",
+        "SECURITY.md: Networking vendor hooks and socket lifetime"
+      ],
+      "patch_sha256": "4a77cce782c03fd166a3826b30f123a055746c5ea428b6b798ec87fc7e8a08f4",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/net.h",
+        "net/core/skbuff.c",
+        "net/ipv4/af_inet.c",
+        "net/ipv4/tcp_input.c",
+        "net/ipv4/tcp_output.c",
+        "net/ipv4/udp.c",
+        "net/ipv6/af_inet6.c"
+      ]
+    },
+    {
+      "commit": "ffd7b22096bd5719b0f3e1e9a7eec79be33535c6",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain restricted BPF skb-load override for module traffic-accounting extensions. With handled=0, the complete original LTS bounds/copy/error-zeroing path runs; handled!=0 returns callback status before native checks. This deliberately delegates output initialization, length/offset handling and error clearing to a trusted registered module, which can otherwise expose stale bytes or corrupt memory if incorrect. No consumer absence is inferred and no safety guarantee is made for vendor callbacks; common source-hook compatibility is the reason for retaining this override.",
+      "evidence": [
+        "evidence/net-hooks-review.json",
+        "SECURITY.md: Networking vendor hooks and socket lifetime"
+      ],
+      "patch_sha256": "7281cd83867e0f007e002387b0f22f2e20cc41e2b93808164cbfb283987621ec",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/net.h",
+        "net/core/filter.c"
+      ]
+    },
+    {
+      "commit": "b9fba77170c41b1cf1355f172e52b6c10e99ecb7",
+      "disposition": "partially-adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain GPL tcp_retransmit_skb tracepoint export for rebuilt network-policy modules. The native tracepoint implementation/signature remains and actual build provides it. Omit historical arm64 ABI dump and Vivo symbol-list refresh, including metadata-only skb_orphan_partial entry. Functional skb_orphan_partial support is independently present in native source. No CRC/layout snapshot is needed.",
+      "evidence": [
+        "evidence/net-hooks-review.json",
+        "SECURITY.md: Networking vendor hooks and socket lifetime"
+      ],
+      "patch_sha256": "ad82bafd54ecd8913e716c8c4db379df9b7e6941b0a07f3e7049f2a3b2b66b61",
+      "changed_paths": [
+        "gki/aarch64/abi.stg",
+        "gki/aarch64/symbols/vivo",
+        "net/core/net-traces.c"
+      ]
+    },
+    {
+      "commit": "08f03bbb4584dc6411f3333f4290111f1a295924",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain receive-socket and task-classid hooks plus GPL wrapper so modules can preserve classification across SCM_RIGHTS transfer or network-thread context. Full default functions equal native after removing hooks. Classid override changes classification and must honor intended cgroup isolation; it does not change credential checks on descriptor transfer. Wrapper retains configuration guards and does not require historical binary struct layouts.",
+      "evidence": [
+        "evidence/net-hooks-review.json",
+        "SECURITY.md: Networking vendor hooks and socket lifetime"
+      ],
+      "patch_sha256": "16aa4959cdd1873c67e685d953ad06ebc1b0ccbc487a4f2d3beef1978087a2f2",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/net/cls_cgroup.h",
+        "include/trace/hooks/net.h",
+        "net/core/netclassid_cgroup.c",
+        "net/core/sock.c"
+      ]
+    },
+    {
+      "commit": "4375852ff7fa502c72bf484693f6b38fed05c09e",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain unconditional tcp_sync_mss export instead of EXPORT_IPV6_MOD because the SDK has IPV6=y and rebuilt vendor modules may adjust TCP MSS. Entire native implementation remains identical. This is a real module source interface, not ABI padding; callers retain locking/input responsibilities and can influence transport behavior.",
+      "evidence": [
+        "evidence/net-hooks-review.json",
+        "SECURITY.md: Networking vendor hooks and socket lifetime"
+      ],
+      "patch_sha256": "a6ca07775eff03f6303464e77ead2781dc5cebcd98ed392f58c589d3af510c56",
+      "changed_paths": [
+        "net/ipv4/tcp_output.c"
+      ]
+    },
+    {
+      "commit": "13db2a799cf3b9737e77054c94a0ab3ba656e1c6",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain page_pool memory-provider validation hook for const ops residing in module rodata. Default validated=false preserves native is_kernel_rodata check, DMA-map/sync prerequisites, init error handling and cleanup; registered callbacks may explicitly bypass the core-rodata test. This weakens that defensive origin check when used: kernel code does not independently establish read-only module storage or module lifetime. Trusted callbacks must validate both and must not approve writable/dangling ops. Retained for source module customization in common configured page-pool infrastructure, not a new physical platform; actual provider/runtime use is unverified.",
+      "evidence": [
+        "evidence/net-hooks-review.json",
+        "SECURITY.md: Networking vendor hooks and socket lifetime"
+      ],
+      "patch_sha256": "9690386f81d7f90107b9609ea47203d7cf00a6c61b89b43d7654382e909ca624",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "include/trace/hooks/net.h",
+        "net/core/page_pool.c"
+      ]
+    }
+  ],
+  "equivalence": [
+    {
+      "path": "net/core/sock.c",
+      "function": "sk_prot_free",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "92e4d932768ec88baf31b271fc5db821f9e4d8f6d5296bc961790b3b6aa620d3"
+    },
+    {
+      "path": "net/core/sock.c",
+      "function": "sk_alloc",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "78e017558e32e320ac0a1aba909864531007e2a44a377e61762ce5cb7816105e"
+    },
+    {
+      "path": "net/core/sock.c",
+      "function": "sk_clone_lock",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "f20c4262ab3d3d636e2cc06af2a2e74a565603e7ae0d58782e0b52cb52097eea"
+    },
+    {
+      "path": "net/core/sock.c",
+      "function": "__receive_sock",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "9c150bc50821fb69ce15892ed069e663f03b0a18f0ee3c6bb0eccd1736138179"
+    },
+    {
+      "path": "net/ipv4/inet_connection_sock.c",
+      "function": "inet_csk_clone_lock",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "e4986377f0d93a441f0f84dd69cc06234a161b2075280d6e07095a7649c25ddc"
+    },
+    {
+      "path": "net/ipv4/tcp.c",
+      "function": "tcp_set_state",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "7dcfc6a743185634b3416514a180cee38bfba01d20fda7a920651beb42fa2b87"
+    },
+    {
+      "path": "net/ipv4/tcp.c",
+      "function": "tcp_sendmsg_locked",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "2d6fcaf31882327c0f951d38d05dec5d96557664a2bfee4d2978e56c9de36c23"
+    },
+    {
+      "path": "net/ipv4/tcp_input.c",
+      "function": "tcp_ack_update_rtt",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "414b20913a41f71996eaba3feb73836d1fbaead3932b30e382ec060bcf4dd1bf"
+    },
+    {
+      "path": "net/ipv4/tcp_input.c",
+      "function": "tcp_fin",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "47da8558c6ad803e1c00d2f80d33ac3db028b7ff7d22538cbff66c94bb7367e1"
+    },
+    {
+      "path": "net/ipv4/tcp_input.c",
+      "function": "tcp_rcv_synsent_state_process",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "f9134e71c592a0ba72ceeb1d296d353f351552d05e1a0647017cf826b733e5a7"
+    },
+    {
+      "path": "net/ipv4/tcp_input.c",
+      "function": "tcp_rtt_estimator",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "4e1c6f170116ca0d514e01b2cc69ce22f5c851e57be0794c9a161406786ee2f2"
+    },
+    {
+      "path": "net/ipv4/tcp_output.c",
+      "function": "tcp_select_window",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "842c5100f1ab3086b9769b9a82c32abf091da10f843868e22832708e81003eb8"
+    },
+    {
+      "path": "net/ipv4/tcp_output.c",
+      "function": "tcp_sync_mss",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "566f328c99386bb27a825152c5edf876fe03521b1ca9ec8b105c4b06eaee7106"
+    },
+    {
+      "path": "net/ipv4/tcp_output.c",
+      "function": "tcp_send_active_reset",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "c411d70fe0762d23e6b3e147a4fe4471139516ea48756b9e1d966efb1d695136"
+    },
+    {
+      "path": "net/ipv4/tcp_timer.c",
+      "function": "tcp_write_timeout",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "a93ce9a3ee9c9e3a35330c73688b87af2de61aeb7c4056572a78c261a75f950b"
+    },
+    {
+      "path": "net/ipv4/tcp_timer.c",
+      "function": "tcp_retransmit_timer",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "f75c6deaf721d005a264daf6753947f2828ed29e1bed3736e57addeb94c09638"
+    },
+    {
+      "path": "net/core/dev.c",
+      "function": "netdev_get_name",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "ea02e3cf9a8aa34a015a3773aa9c3c57d1d17acee49564818aa0ad59b3e43d8c"
+    },
+    {
+      "path": "net/core/skbuff.c",
+      "function": "slab_build_skb",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "00615ffdffcc732053763f04e57c498a00e645e546d8923c7bf411c959c82094"
+    },
+    {
+      "path": "net/core/skbuff.c",
+      "function": "__build_skb_around",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "7ec7994fe2ca540438f884c88c498a3757efaf14d88b65072cc8c88f30549bbb"
+    },
+    {
+      "path": "net/ipv4/af_inet.c",
+      "function": "inet_create",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "4137fab6dbda297b9ef84769b7477c0e8ae363f6927a876cc3c1495936f1c3f6"
+    },
+    {
+      "path": "net/ipv4/af_inet.c",
+      "function": "inet_release",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "466da28ed21ed5370c84a8db410fedb213889cc5af3f0ca3c9b1d3671f7d22cb"
+    },
+    {
+      "path": "net/ipv6/af_inet6.c",
+      "function": "inet6_create",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "640834f9a2db7a379ddfdfe5a8879828bf09e74c06c49ee90fb8e6b94eb80d64"
+    },
+    {
+      "path": "net/ipv4/udp.c",
+      "function": "udp_sendmsg",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "05d58eb69f8462746c0932a4fc5c0868e8acb3ca984367786796d97f868d99b6"
+    },
+    {
+      "path": "net/ipv4/udp.c",
+      "function": "__udp_enqueue_schedule_skb",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "6e78ad43bdb276aff4d1b10af1e22857313211f9fec3babf3fb2c17c4d397139"
+    },
+    {
+      "path": "net/socket.c",
+      "function": "__sock_create",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "7f2e656a6ed90eae7c9d2e3d1044d08df6d7e2633a4435c36a8a13ac9647c9b5"
+    },
+    {
+      "path": "include/net/cls_cgroup.h",
+      "function": "task_get_classid",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "0aed81c13f71e2ed739efa05698cca47cba37ce0a497178a5a343b8250149ba0"
+    },
+    {
+      "path": "net/batman-adv/hard-interface.c",
+      "function": "batadv_is_cfg80211_netdev",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "9c671a0a752c69b24ab1ba3ec3bddd4e1ce4f30258a851cd16849baf708d6e8f"
+    },
+    {
+      "path": "net/core/net-sysfs.c",
+      "function": "wireless_group_needed",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "e0091b2faffd5d894e5024d14ae7ae57ca2f6d5cd210fd9702bd17e0674e64e4"
+    },
+    {
+      "path": "include/net/cfg80211.h",
+      "function": "cfg80211_unregister_netdevice",
+      "equals": "LTS after removing hook calls, whitespace, and documented null-local handling for inet creation",
+      "sha256": "2a2a00d137f6143a8a0232961b6920e025c8d8e7aeee9cdc8b8ecc0ee6f17418"
+    },
+    {
+      "path": "include/trace/hooks/net.h",
+      "equals": "ACK full hook header",
+      "sha256": "6f8434bc4876b4563c09b1102295eb89423f56c15f9de24d660904dc35c0a3f3"
+    }
+  ],
+  "deltas": [
+    {
+      "path": "net/core/dev.c",
+      "reference": "LTS full file",
+      "diff": "--- \n+++ \n@@ -163,6 +163,7 @@\n #include <net/page_pool/memory_provider.h>\n #include <net/rps.h>\n #include <linux/phy_link_topology.h>\n+#include <trace/hooks/net.h>\n \n #include \"dev.h\"\n #include \"devmem.h\"\n@@ -593,6 +594,12 @@\n \n static inline struct list_head *ptype_head(const struct packet_type *pt)\n {\n+\tstruct list_head vendor_pt = { .next  = NULL, };\n+\n+\ttrace_android_vh_ptype_head(pt, &vendor_pt);\n+\tif (vendor_pt.next)\n+\t\treturn vendor_pt.next;\n+\n \tif (pt->type == htons(ETH_P_ALL)) {\n \t\tif (!pt->af_packet_net && !pt->dev)\n \t\t\treturn NULL;\n@@ -1209,6 +1216,7 @@\n \trcu_read_unlock();\n \treturn ret;\n }\n+EXPORT_SYMBOL_GPL(netdev_get_name);\n \n static bool dev_addr_cmp(struct net_device *dev, unsigned short type,\n \t\t\t const char *ha)\n"
+    },
+    {
+      "path": "net/core/page_pool.c",
+      "reference": "LTS full file",
+      "diff": "--- \n+++ \n@@ -26,6 +26,7 @@\n #include <linux/netdevice.h>\n \n #include <trace/events/page_pool.h>\n+#include <trace/hooks/net.h>\n \n #include \"dev.h\"\n #include \"mp_dmabuf_devmem.h\"\n@@ -283,12 +284,16 @@\n \t}\n \n \tif (pool->mp_ops) {\n+\t\tbool mp_ops_validated = false;\n+\n \t\tif (!pool->dma_map || !pool->dma_sync) {\n \t\t\terr = -EOPNOTSUPP;\n \t\t\tgoto free_ptr_ring;\n \t\t}\n \n-\t\tif (WARN_ON(!is_kernel_rodata((unsigned long)pool->mp_ops))) {\n+\t\ttrace_android_vh_page_pool_validate_mp_ops(pool, &mp_ops_validated);\n+\t\tif (!mp_ops_validated &&\n+\t\t    WARN_ON(!is_kernel_rodata((unsigned long)pool->mp_ops))) {\n \t\t\terr = -EFAULT;\n \t\t\tgoto free_ptr_ring;\n \t\t}\n"
+    },
+    {
+      "path": "net/core/filter.c",
+      "reference": "LTS full file",
+      "diff": "--- \n+++ \n@@ -91,6 +91,8 @@\n /* Keep the struct bpf_fib_lookup small so that it fits into a cacheline */\n static_assert(sizeof(struct bpf_fib_lookup) == 64, \"struct bpf_fib_lookup size check\");\n \n+#include <trace/hooks/net.h>\n+\n static const struct bpf_func_proto *\n bpf_sk_base_func_proto(enum bpf_func_id func_id, const struct bpf_prog *prog);\n \n@@ -1764,6 +1766,12 @@\n \t   void *, to, u32, len)\n {\n \tvoid *ptr;\n+\tint handled = 0;\n+\tint err = 0;\n+\n+\ttrace_android_rvh_bpf_skb_load_bytes(skb, offset, to, len, &handled, &err);\n+\tif (handled)\n+\t\treturn err;\n \n \tif (unlikely(offset > INT_MAX))\n \t\tgoto err_clear;\n"
+    },
+    {
+      "path": "net/core/sock.c",
+      "reference": "LTS full file",
+      "diff": "--- \n+++ \n@@ -141,6 +141,8 @@\n #include <net/bpf_sk_storage.h>\n \n #include <trace/events/sock.h>\n+#include <trace/hooks/sched.h>\n+#include <trace/hooks/net.h>\n \n #include <net/psp.h>\n #include <net/tcp.h>\n@@ -2265,6 +2267,7 @@\n \n \tcgroup_sk_free(&sk->sk_cgrp_data);\n \tmem_cgroup_sk_free(sk);\n+\ttrace_android_vh_sk_free(sk);\n \tsecurity_sk_free(sk);\n \n \tsk_owner_put(sk);\n@@ -2313,6 +2316,7 @@\n \t\trefcount_set(&sk->sk_wmem_alloc, 1);\n \n \t\tmem_cgroup_sk_alloc(sk);\n+\t\ttrace_android_vh_sk_alloc(sk);\n \t\tcgroup_sk_alloc(&sk->sk_cgrp_data);\n \t\tsock_update_classid(&sk->sk_cgrp_data);\n \t\tsock_update_netprioidx(&sk->sk_cgrp_data);\n@@ -2466,6 +2470,7 @@\n \t\tgoto out;\n \n \tsock_copy(newsk, sk);\n+\ttrace_android_vh_sk_clone_lock(newsk);\n \n \tnewsk->sk_prot_creator = prot;\n #ifdef CONFIG_BPF_SYSCALL\n@@ -3519,6 +3524,7 @@\n \tif (sock) {\n \t\tsock_update_netprioidx(&sock->sk->sk_cgrp_data);\n \t\tsock_update_classid(&sock->sk->sk_cgrp_data);\n+\t\ttrace_android_vh_receive_sock(sock->sk);\n \t}\n }\n \n@@ -3557,9 +3563,19 @@\n \n \trcu_read_lock();\n \twq = rcu_dereference(sk->sk_wq);\n-\tif (skwq_has_sleeper(wq))\n+\n+\tif (skwq_has_sleeper(wq)) {\n+\t\tint done = 0;\n+\n+\t\ttrace_android_vh_do_wake_up_sync(&wq->wait, &done, sk);\n+\t\tif (done)\n+\t\t\tgoto out;\n+\n \t\twake_up_interruptible_sync_poll(&wq->wait, EPOLLIN | EPOLLPRI |\n \t\t\t\t\t\tEPOLLRDNORM | EPOLLRDBAND);\n+\t}\n+\n+out:\n \tsk_wake_async_rcu(sk, SOCK_WAKE_WAITD, POLL_IN);\n \trcu_read_unlock();\n }\n"
+    },
+    {
+      "path": "net/core/skbuff.c",
+      "reference": "LTS full file",
+      "diff": "--- \n+++ \n@@ -90,6 +90,8 @@\n #include <linux/indirect_call_wrapper.h>\n #include <linux/textsearch.h>\n \n+#include <trace/hooks/net.h>\n+\n #include \"dev.h\"\n #include \"devmem.h\"\n #include \"netmem_priv.h\"\n@@ -421,6 +423,8 @@\n \tdata = __slab_build_skb(data, &size);\n \t__finalize_skb_around(skb, data, size);\n \n+\ttrace_android_vh_build_skb_around(skb);\n+\n \treturn skb;\n }\n EXPORT_SYMBOL(slab_build_skb);\n@@ -438,6 +442,8 @@\n \t\tdata = __slab_build_skb(data, &size);\n \n \t__finalize_skb_around(skb, data, size);\n+\n+\ttrace_android_vh_build_skb_around(skb);\n }\n \n /**\n"
+    },
+    {
+      "path": "net/ipv4/af_inet.c",
+      "reference": "LTS full file",
+      "diff": "--- \n+++ \n@@ -123,6 +123,7 @@\n #include <net/rps.h>\n \n #include <trace/events/sock.h>\n+#include <trace/hooks/net.h>\n \n /* The inetsw table contains everything that inet_create needs to\n  * build a new socket.\n@@ -254,7 +255,7 @@\n static int inet_create(struct net *net, struct socket *sock, int protocol,\n \t\t       int kern)\n {\n-\tstruct sock *sk;\n+\tstruct sock *sk = NULL;\n \tstruct inet_protosw *answer;\n \tstruct inet_sock *inet;\n \tstruct proto *answer_prot;\n@@ -393,7 +394,11 @@\n \t\tif (err)\n \t\t\tgoto out_sk_release;\n \t}\n+\n+\ttrace_android_rvh_inet_sock_create(sk);\n+\n out:\n+\ttrace_android_vh_inet_create(sk, err);\n \treturn err;\n out_rcu_unlock:\n \trcu_read_unlock();\n@@ -401,6 +406,7 @@\n out_sk_release:\n \tsk_common_release(sk);\n \tsock->sk = NULL;\n+\tsk = NULL;\n \tgoto out;\n }\n \n@@ -419,6 +425,8 @@\n \n \t\tif (!sk->sk_kern_sock)\n \t\t\tBPF_CGROUP_RUN_PROG_INET_SOCK_RELEASE(sk);\n+\n+\t\ttrace_android_rvh_inet_sock_release(sk);\n \n \t\t/* Applications forget to leave groups before exiting */\n \t\tip_mc_drop_socket(sk);\n"
+    },
+    {
+      "path": "net/ipv6/af_inet6.c",
+      "reference": "LTS full file",
+      "diff": "--- \n+++ \n@@ -68,6 +68,7 @@\n \n #include <linux/uaccess.h>\n #include <linux/mroute6.h>\n+#include <trace/hooks/net.h>\n \n #include \"ip6_offload.h\"\n \n@@ -122,7 +123,7 @@\n {\n \tstruct inet_sock *inet;\n \tstruct ipv6_pinfo *np;\n-\tstruct sock *sk;\n+\tstruct sock *sk = NULL;\n \tstruct inet_protosw *answer;\n \tstruct proto *answer_prot;\n \tunsigned char answer_flags;\n@@ -266,7 +267,11 @@\n \t\tif (err)\n \t\t\tgoto out_sk_release;\n \t}\n+\n+\ttrace_android_rvh_inet_sock_create(sk);\n+\n out:\n+\ttrace_android_vh_inet_create(sk, err);\n \treturn err;\n out_rcu_unlock:\n \trcu_read_unlock();\n@@ -274,6 +279,7 @@\n out_sk_release:\n \tsk_common_release(sk);\n \tsock->sk = NULL;\n+\tsk = NULL;\n \tgoto out;\n }\n \n"
+    },
+    {
+      "path": "net/ipv4/tcp.c",
+      "reference": "LTS full file",
+      "diff": "--- \n+++ \n@@ -288,6 +288,7 @@\n #include <net/hotdata.h>\n #include <trace/events/tcp.h>\n #include <net/rps.h>\n+#include <trace/hooks/net.h>\n \n #include \"../core/devmem.h\"\n \n@@ -1180,6 +1181,8 @@\n \t\tgoto out_err;\n \t}\n \n+\ttrace_android_vh_uplink_send_msg(sk);\n+\n \t/* This should be in poll */\n \tsk_clear_bit(SOCKWQ_ASYNC_NOSPACE, sk);\n \n@@ -1410,6 +1413,7 @@\n {\n \tint ret;\n \n+\ttrace_android_rvh_tcp_sendmsg(sk, msg, size);\n \tlock_sock(sk);\n \tret = tcp_sendmsg_locked(sk, msg, size);\n \trelease_sock(sk);\n@@ -2938,6 +2942,9 @@\n \t\t\t\t\t sizeof(msg->msg_inq), &msg->msg_inq);\n \t\t}\n \t}\n+\n+\ttrace_android_rvh_tcp_recvmsg(sk, msg, len, flags, &msg->msg_namelen);\n+\n \treturn ret;\n }\n EXPORT_IPV6_MOD(tcp_recvmsg);\n@@ -2945,6 +2952,8 @@\n void tcp_set_state(struct sock *sk, int state)\n {\n \tint oldstate = sk->sk_state;\n+\n+\ttrace_android_vh_tcp_state_change(sk, TCP_STATE_CHANGE_REASON_NORMAL, state);\n \n \t/* We defined a new enum for TCP states that are exported in BPF\n \t * so as not force the internal TCP states to be frozen. The\n"
+    },
+    {
+      "path": "net/ipv4/tcp_input.c",
+      "reference": "LTS full file",
+      "diff": "--- \n+++ \n@@ -83,6 +83,7 @@\n #include <linux/jump_label_ratelimit.h>\n #include <net/busy_poll.h>\n #include <net/mptcp.h>\n+#include <trace/hooks/net.h>\n \n int sysctl_tcp_max_orphans __read_mostly = NR_FILE;\n \n@@ -814,6 +815,8 @@\n \tu32 new_sample, old_sample = tp->rcv_rtt_est.rtt_us;\n \tlong m = sample << 3;\n \n+\ttrace_android_vh_tcp_rcv_rtt_update(tp, sample, win_dep);\n+\n \tif (old_sample == 0 || m < old_sample) {\n \t\tnew_sample = m;\n \t} else {\n@@ -1039,6 +1042,8 @@\n \tstruct tcp_sock *tp = tcp_sk(sk);\n \tlong m = mrtt_us; /* RTT */\n \tu32 srtt = tp->srtt_us;\n+\n+\ttrace_android_vh_tcp_rtt_estimator(sk, mrtt_us);\n \n \t/*\tThe following amusing code comes from Jacobson's\n \t *\tarticle in SIGCOMM '88.  Note that rtt and mdev\n@@ -3266,6 +3271,8 @@\n \tif (seq_rtt_us < 0)\n \t\treturn false;\n \n+\ttrace_android_vh_tcp_update_rtt(sk, seq_rtt_us);\n+\n \t/* ca_rtt_us >= 0 is counting on the invariant that ca_rtt_us is\n \t * always taken together with ACK, SACK, or TS-opts. Any negative\n \t * values will be skipped with the seq_rtt_us < 0 check above.\n@@ -3511,6 +3518,7 @@\n \t\tsack_rtt_us = tcp_stamp_us_delta(tp->tcp_mstamp, sack->first_sackt);\n \t\tca_rtt_us = tcp_stamp_us_delta(tp->tcp_mstamp, sack->last_sackt);\n \t}\n+\ttrace_android_vh_tcp_clean_rtx_queue(sk, flag, seq_rtt_us);\n \trtt_update = tcp_ack_update_rtt(sk, flag, seq_rtt_us, sack_rtt_us,\n \t\t\t\t\tca_rtt_us, sack->rate);\n \n@@ -4780,6 +4788,8 @@\n \t\ttcp_sack_reset(&tp->rx_opt);\n \n \tif (!sock_flag(sk, SOCK_DEAD)) {\n+\t\ttrace_android_vh_tcp_sock_error(sk);\n+\n \t\tsk->sk_state_change(sk);\n \n \t\t/* Do not send POLL_HUP for half duplex close. */\n@@ -4844,6 +4854,8 @@\n \t * repathing due to our own RTO, then rehash the socket to repath our\n \t * packets.\n \t */\n+\t trace_android_rvh_tcp_rcv_spurious_retrans(sk);\n+\n #if IS_ENABLED(CONFIG_IPV6)\n \tif (inet_csk(sk)->icsk_ca_state != TCP_CA_Loss &&\n \t    skb->protocol == htons(ETH_P_IPV6) &&\n@@ -6449,6 +6461,7 @@\n \n \t\t\t__tcp_ack_snd_check(sk, 0);\n no_ack:\n+\t\t\ttrace_android_vh_tcp_rcv_established_fast_path(sk);\n \t\t\tif (eaten)\n \t\t\t\tkfree_skb_partial(skb, fragstolen);\n \t\t\ttcp_data_ready(sk);\n@@ -6490,6 +6503,8 @@\n \n \ttcp_data_snd_check(sk);\n \ttcp_ack_snd_check(sk);\n+\n+\ttrace_android_vh_tcp_rcv_established_slow_path(sk);\n \treturn;\n \n csum_error:\n@@ -6702,6 +6717,8 @@\n \n \t\tif (th->rst) {\n \t\t\ttcp_reset(sk, skb);\n+\n+\t\t\ttrace_android_vh_tcp_state_change(sk, TCP_STATE_CHANGE_REASON_SYN_RST, 0);\n consume:\n \t\t\t__kfree_skb(skb);\n \t\t\treturn 0;\n@@ -6729,6 +6746,7 @@\n \t\t\ttcp_ecn_rcv_synack(sk, skb, th,\n \t\t\t\t\t   TCP_SKB_CB(skb)->ip_dsfield);\n \n+\t\ttrace_android_vh_tcp_rcv_synack(icsk);\n \t\ttcp_init_wl(tp, TCP_SKB_CB(skb)->seq);\n \t\ttcp_try_undo_spurious_syn(sk);\n \t\ttcp_ack(sk, skb, FLAG_SLOWPATH);\n"
+    },
+    {
+      "path": "net/ipv4/tcp_output.c",
+      "reference": "LTS full file",
+      "diff": "--- \n+++ \n@@ -50,6 +50,7 @@\n #include <linux/skbuff_ref.h>\n \n #include <trace/events/tcp.h>\n+#include <trace/hooks/net.h>\n \n /* Refresh clocks of a TCP socket,\n  * ensuring monotically increasing values.\n@@ -278,6 +279,9 @@\n \n \tcur_win = tcp_receive_window(tp);\n \tnew_win = __tcp_select_window(sk);\n+\n+\ttrace_android_vh_tcp_select_window(sk, &new_win);\n+\n \tif (new_win < cur_win) {\n \t\t/* Danger Will Robinson!\n \t\t * Don't update rcv_wup/rcv_wnd here or else\n@@ -296,6 +300,8 @@\n \n \ttp->rcv_wnd = new_win;\n \ttp->rcv_wup = tp->rcv_nxt;\n+\n+\ttrace_android_rvh_tcp_select_window(sk, &new_win);\n \n \t/* Make sure we do not exceed the maximum possible\n \t * scaled window.\n@@ -2011,7 +2017,7 @@\n \n \treturn mss_now;\n }\n-EXPORT_IPV6_MOD(tcp_sync_mss);\n+EXPORT_SYMBOL(tcp_sync_mss);\n \n /* Compute the current effective MSS, taking SACKs and IP options,\n  * and even PMTU discovery events into account.\n@@ -3812,6 +3818,7 @@\n \t */\n \ttrace_tcp_send_reset(sk, NULL, reason);\n }\n+EXPORT_SYMBOL_GPL(tcp_send_active_reset);\n \n /* Send a crossed SYN-ACK during socket establishment.\n  * WARNING: This routine must only be called when we have already sent\n"
+    },
+    {
+      "path": "net/ipv4/tcp_timer.c",
+      "reference": "LTS full file",
+      "diff": "--- \n+++ \n@@ -23,6 +23,7 @@\n #include <linux/gfp.h>\n #include <net/tcp.h>\n #include <net/rstreason.h>\n+#include <trace/hooks/net.h>\n \n static u32 tcp_clamp_rto_to_user_timeout(const struct sock *sk)\n {\n@@ -263,6 +264,7 @@\n \t\tif (retransmits_timed_out(sk, READ_ONCE(net->ipv4.sysctl_tcp_retries1), 0)) {\n \t\t\t/* Black hole detection */\n \t\t\ttcp_mtu_probing(icsk, sk);\n+\t\t\ttrace_android_vh_tcp_write_timeout_estab_retrans(sk);\n \n \t\t\t__dst_negative_advice(sk);\n \t\t}\n@@ -292,9 +294,14 @@\n \n \tif (expired) {\n \t\t/* Has it gone just too far? */\n+\n+\t\ttrace_android_vh_tcp_state_change(sk, TCP_STATE_CHANGE_REASON_SYN_TIMEOUT, 0);\n+\n \t\ttcp_write_err(sk);\n \t\treturn 1;\n \t}\n+\n+\ttrace_android_vh_tcp_state_change(sk, TCP_STATE_CHANGE_REASON_RETRANSMIT, 0);\n \n \tif (sk_rethink_txhash(sk)) {\n \t\tWRITE_ONCE(tp->timeout_rehash, tp->timeout_rehash + 1);\n@@ -679,6 +686,8 @@\n \t\t */\n \t\ticsk->icsk_backoff++;\n \t\ticsk->icsk_rto = min(icsk->icsk_rto << 1, tcp_rto_max(sk));\n+\n+\t\ttrace_android_vh_tcp_fastsyn(sk);\n \t}\n \ttcp_reset_xmit_timer(sk, ICSK_TIME_RETRANS,\n \t\t\t     tcp_clamp_rto_to_user_timeout(sk), false);\n"
+    },
+    {
+      "path": "net/ipv4/udp.c",
+      "reference": "LTS full file",
+      "diff": "--- \n+++ \n@@ -121,8 +121,10 @@\n #include <net/ipv6_stubs.h>\n #endif\n #include <net/rps.h>\n+#include <trace/hooks/net.h>\n \n struct udp_table udp_table __read_mostly;\n+EXPORT_SYMBOL(udp_table);\n \n long sysctl_udp_mem[3] __read_mostly;\n EXPORT_IPV6_MOD(sysctl_udp_mem);\n@@ -1298,6 +1300,8 @@\n \tstruct ip_options_data opt_copy;\n \tint uc_index;\n \n+\ttrace_android_rvh_udp_sendmsg(sk, msg, len);\n+\n \tif (len > 0xFFFF)\n \t\treturn -EMSGSIZE;\n \n@@ -1307,6 +1311,8 @@\n \n \tif (msg->msg_flags & MSG_OOB) /* Mirror BSD error message compatibility */\n \t\treturn -EOPNOTSUPP;\n+\n+\ttrace_android_vh_uplink_send_msg(sk);\n \n \tgetfrag = is_udplite ? udplite_getfrag : ip_generic_getfrag;\n \n@@ -1353,6 +1359,8 @@\n \t\t */\n \t\tconnected = 1;\n \t}\n+\n+\ttrace_android_vh_udp_v4_connect(sk, daddr, dport, AF_INET);\n \n \tipcm_init_sk(&ipc, inet);\n \tipc.gso_size = READ_ONCE(up->gso_size);\n@@ -1718,6 +1726,8 @@\n \tint dropcount;\n \tint nb = 0;\n \n+\ttrace_android_vh_udp_enqueue_schedule_skb(sk, skb);\n+\n \trmem = atomic_read(&sk->sk_rmem_alloc);\n \trcvbuf = READ_ONCE(sk->sk_rcvbuf);\n \tsize = skb->truesize;\n@@ -2158,6 +2168,8 @@\n \terr = copied;\n \tif (flags & MSG_TRUNC)\n \t\terr = ulen;\n+\n+\ttrace_android_rvh_udp_recvmsg(sk, msg, len, flags, &msg->msg_namelen);\n \n \tskb_consume_udp(sk, skb, peeking ? -err : err);\n \treturn err;\n@@ -2691,6 +2703,7 @@\n \tif (inet_get_convert_csum(sk) && uh->check && !IS_UDPLITE(sk))\n \t\tskb_checksum_try_convert(skb, IPPROTO_UDP, inet_compute_pseudo);\n \n+\ttrace_android_vh_udp_unicast_rcv_skb(skb, sk);\n \tret = udp_queue_rcv_skb(sk, skb);\n \n \t/* a return value > 0 means to resubmit the input, but\n"
+    },
+    {
+      "path": "net/socket.c",
+      "reference": "LTS full file",
+      "diff": "--- \n+++ \n@@ -109,6 +109,7 @@\n #include <linux/errqueue.h>\n #include <linux/ptp_clock_kernel.h>\n #include <trace/events/sock.h>\n+#include <trace/hooks/net.h>\n \n #include \"core/dev.h\"\n \n@@ -1630,6 +1631,8 @@\n \tif (err)\n \t\tgoto out_sock_release;\n \t*res = sock;\n+\n+\ttrace_android_vh_sock_create(sock->sk);\n \n \treturn 0;\n \n"
+    },
+    {
+      "path": "net/core/netclassid_cgroup.c",
+      "reference": "LTS full file",
+      "diff": "--- \n+++ \n@@ -12,6 +12,13 @@\n \n #include <net/cls_cgroup.h>\n #include <net/sock.h>\n+#include <trace/hooks/net.h>\n+\n+void _trace_android_vh_task_get_classid(const struct sk_buff *skb, u32 *classid)\n+{\n+\ttrace_android_vh_task_get_classid(skb, classid);\n+}\n+EXPORT_SYMBOL_GPL(_trace_android_vh_task_get_classid);\n \n static inline struct cgroup_cls_state *css_cls_state(struct cgroup_subsys_state *css)\n {\n"
+    },
+    {
+      "path": "include/net/cls_cgroup.h",
+      "reference": "LTS full file",
+      "diff": "--- \n+++ \n@@ -19,6 +19,8 @@\n \tstruct cgroup_subsys_state css;\n \tu32 classid;\n };\n+\n+void _trace_android_vh_task_get_classid(const struct sk_buff *skb, u32 *classid);\n \n struct cgroup_cls_state *task_cls_state(struct task_struct *p);\n \n@@ -73,6 +75,8 @@\n \t\tclassid = sock_cgroup_classid(&sk->sk_cgrp_data);\n \t}\n \n+\t_trace_android_vh_task_get_classid(skb, &classid);\n+\n \treturn classid;\n }\n #else /* !CONFIG_CGROUP_NET_CLASSID */\n"
+    }
+  ],
+  "test": "evidence/inet-create-hook-test.json",
+  "target_evidence": "Networking stack, TCP/UDP, CFG80211 and page-pool infrastructure are common SDK build paths. Vendor callbacks and exports are retained as explicitly requested module-source/runtime customization, without requiring a discovered proprietary consumer or enabling a future platform. Historical KMI fields and dumps are separately omitted.",
+  "limitations": [
+    "Callbacks can intentionally override native validation/policy. Specific BPF copy, page-pool origin/lifetime, packet-list isolation and TCP-window risks are explicit per candidate.",
+    "Default-path source equality does not prove callback behavior, concurrency, memory ownership, security policy or runtime performance.",
+    "Focused cleanup test executes final labels with release marker, not real sockets or deallocation.",
+    "All inputs are local. No external specification, remote resource, Android OS build, boot or flash."
+  ],
+  "remote_sources_used": []
+}
