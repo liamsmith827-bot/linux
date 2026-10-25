@@ -35685,5 +35685,171 @@
       "evidence/generic-hooks-last-tail-review.json",
       "SECURITY.md: Folio, RCU and process-integrity hook review"
     ]
+  },
+  {
+    "commit": "553536e5db263326d9315c640275ab087fc2204b",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit IVPU firmware/user preemption-buffer extension: user size is checked against firmware and guarded size limits, with kernel allocation fallback. This is an actual new device API, not KMI. CONFIG_DRM_ACCEL_IVPU is explicitly disabled in the generated SDK configuration; all seven driver/UAPI files are whole native LTS. Enabling Intel VPU later requires revisiting this ioctl and firmware contract.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-last-tail-review.json",
+      "SECURITY.md: Remaining platform, USB and architecture decisions"
+    ]
+  },
+  {
+    "commit": "c024260a14b34a8f2a51d74c7a431e51d0e120d4",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit IVPU userptr GEM extension with its new DMA mapping, FOLL_LONGTERM pins, read-only/write flags and unwind paths. Generated SDK configuration disables DRM_ACCEL_IVPU; whole driver/header files are native and new ivpu_gem_userptr.c is absent. Do not expose a UAPI without its matching pin/lifetime implementation. This is a target omission, not a conclusion that DMA pinning is unnecessary on Android.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-last-tail-review.json",
+      "SECURITY.md: Remaining platform, USB and architecture decisions"
+    ]
+  },
+  {
+    "commit": "34bc70f8a493ab86de9985f8288a377f56b5a0f2",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit xHCI Debug Capability serial-string sysfs extension and its documentation together. Driver requires an XHCI_EXT_CAPS_DEBUG endpoint; this is the debug-target USB descriptor, not Android serial identity or the ADB protocol. Goldfish explicitly sets ro.adb.has_usb=0 and documents its emulator/vsock transport. Native DbC remains compiled (USB_XHCI_DBGCAP=y). Full patch has 1..126-byte/disabled-state checks; no new descriptor setter is exposed. Optional DbC hardware/pass-through use is unconfirmed, not disproved by search.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-last-tail-review.json",
+      "SECURITY.md: Remaining platform, USB and architecture decisions"
+    ]
+  },
+  {
+    "commit": "d54fb6cb1777c36bcdca64aeb4f17b12967c7a20",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit xHCI DbC product-string setter and matching ABI text for the same debug-target hardware boundary as 34bc70f8a493. Native compiled DbC remains intact, including existing fixed descriptor handling. Patch checks DS_DISABLED, bounded length and stores a terminated string. Goldfish ADB setup does not use this debug-target descriptor contract. Optional hardware use remains unconfirmed; future physical products must reassess.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-last-tail-review.json",
+      "SECURITY.md: Remaining platform, USB and architecture decisions"
+    ]
+  },
+  {
+    "commit": "63aea4913f4441d6698d01f11cd816ba0ccbfa8f",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit xHCI DbC manufacturer-string setter and matching ABI text for the same debug-target hardware boundary as 34bc70f8a493. Retain the entire native compiled driver; bounded disabled-state setter is a new hardware feature, not generic module infrastructure or Android identity plumbing. No claim that no Android vendor consumes this interface; optional SDK hardware use remains unconfirmed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-last-tail-review.json",
+      "SECURITY.md: Remaining platform, USB and architecture decisions"
+    ]
+  },
+  {
+    "commit": "ffff165883d1dd1754a9370a48a1e13b6ad4e483",
+    "disposition": "omitted-current-target",
+    "rationale": "Retain native xHCI DbC PM/state machine; omit the added 15-second enabled-but-disconnected autosuspend, pending_rpm_put bookkeeping and suspended sysfs state. SDK product evidence places debug-target hardware outside the required virtual transport. The patch also repairs enable_mutex/runtime-resume recursion introduced by 520058b73ba3: neither that mutex nor its locking sequence exists in native LTS/port, so this omission does not retain that introduced deadlock. Native PM references and later LTS fixes remain. No runtime PM test or optional-hardware compatibility assertion.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-last-tail-review.json",
+      "SECURITY.md: Remaining platform, USB and architecture decisions"
+    ]
+  },
+  {
+    "commit": "7b75d0871dea4bfe999cfea3f428b002691536bd",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit Qualcomm-specific interconnect five-bucket/PWR_ST/performance tags. Despite generic wording in the subject, definitions are in qcom,icc.h and alter its provider bucket count from three to five. Actual SDK lacks ARCH_QCOM/INTERCONNECT_QCOM and its provider Kconfig depends on ARCH_QCOM. Whole native header remains; the generic interconnect infrastructure is a separate decision. No claim that all vendor tags are KMI.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-last-tail-review.json",
+      "SECURITY.md: Remaining platform, USB and architecture decisions"
+    ]
+  },
+  {
+    "commit": "eab8521166331fae218508981af3d331beb6ed41",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit physical USB PD sink electrical-property bindings/macros and the MAX33359 example. These encode droop/load/overload, compliance and charging-adapter wattage for a real powered connector. Goldfish selects the example USB HAL, declares its emulator USB transport situation, and creates an explicitly unused gadget for sysfs testing. TYPEC/TCPM are compiled and the HAL can enumerate sysfs ports, so neither is called absent; whole native binding/header files remain. Optional physical connector pass-through is unverified and outside the required current platform.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-last-tail-review.json",
+      "SECURITY.md: Remaining platform, USB and architecture decisions"
+    ]
+  },
+  {
+    "commit": "391db60031196a3463ad0675fb06336928b7f2f5",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit PD SPR AVS sink APDO macros/documentation paired with the excluded physical power-negotiation extension. The macros encode two 10mA current ranges for 9-15V/15-20V supplies; they do not implement a generic Android protocol. Native Type-C/TCPM and HAL sysfs contracts remain. Positive Goldfish virtual-product evidence bounds scope; optional hardware is unverified and not disproved by failed consumer searches.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-last-tail-review.json",
+      "SECURITY.md: Remaining platform, USB and architecture decisions"
+    ]
+  },
+  {
+    "commit": "2bd9018af9c3c6153a74607d366fb927f13c7e95",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit MediaTek INFRACFG modularization and three platform-private exports. Patch converts bool to tristate and removes postcore_initcall in favor of an exported explicit init routine, so it is functional lifecycle work, not KMI-only. Native MediaTek menu requires ARCH_MEDIATEK or COMPILE_TEST; both are unselected in this x86 SDK build, and MTK_INFRACFG is absent. All three files remain native, retaining native initialization for supported platforms.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-last-tail-review.json",
+      "SECURITY.md: Remaining platform, USB and architecture decisions"
+    ]
+  },
+  {
+    "commit": "8885ae38068f9715c6183693b3c0041f0898fea9",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit new ARM SI L1 erratum 4311569 workaround and its config/capability/documentation. It changes ARM cache/coherency maintenance by adding a second non-CVAU cache-maintenance loop, enabled through a boot-parameter-controlled capability and can matter for affected ARM safety; x86 SDK cannot execute that architecture implementation. All five files are native LTS and its existing errata fixes stay intact. Must reassess before any ARM target; not claimed redundant upstream.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-last-tail-review.json",
+      "SECURITY.md: Remaining platform, USB and architecture decisions"
+    ]
+  },
+  {
+    "commit": "7693c170c44ac8919c2d475b61f8d63bd97c6d1f",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native Linux c6c87a23de4b already supplies the complete functional C1-Pro 4193714 SME/CME DVMSync workaround: all added/deleted nonblank lines match this ACK patch per file. Preserve whole LTS files, including per-mm CPU tracking, barriers, IPI fallback, task-mask allocation/free and user-entry state tracking. ACK context has unrelated KABI reservation; no reservation is needed. This security/coherency fix is present, not omitted because ARM is outside the target.",
+    "result_commits": [
+      "c6c87a23de4bdf5a8a8a26d9d269f4026e35afef"
+    ],
+    "evidence": [
+      "evidence/platform-last-tail-review.json",
+      "SECURITY.md: Remaining platform, USB and architecture decisions"
+    ]
+  },
+  {
+    "commit": "ce27db898285aa869aa4910ba8f7f31b4d9ee94d",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the ARM-only performance revision that replaces per-mm reclaim-batch tracking with a global SME-active CPU mask, plus KABI replacement/STG changes. Native 4193714 workaround remains whole and functional, including allocation-failure immediate IPI fallback; no security fix is removed. x86 SDK does not execute this ARM optimization. Global-mask scalability/IPI behavior would need reassessment on affected ARM hardware; no runtime result claimed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-last-tail-review.json",
+      "SECURITY.md: Remaining platform, USB and architecture decisions"
+    ]
+  },
+  {
+    "commit": "7716114d95113ded54d86fc6536b0a48c7f5bc48",
+    "disposition": "partially-adapted",
+    "rationale": "Retain the generic POLYVAL key-power explanatory comment within the already adapted generic/x86 library (e859afda9a8a). Omit ARM64 PMULL assembly relocation, new ARM wrapper, h_powers architecture branch and associated config/object selection. Native ARM crypto implementation remains whole, while the separately reviewed x86 library and generic fallback satisfy selected HCTR2 configuration. No ARM FIPS claim or ARM runtime validation. Shared files are not blanket-omitted.",
+    "result_commits": [
+      "e859afda9a8a40f54320ba62bf4633a6db3c40ec"
+    ],
+    "evidence": [
+      "evidence/platform-last-tail-review.json",
+      "SECURITY.md: Remaining platform, USB and architecture decisions"
+    ]
+  },
+  {
+    "commit": "b5f3d941d76df609ad8fca73e6f714dc7b136e11",
+    "disposition": "omitted-kmi-only",
+    "rationale": "Entire change hides an already-existing UFS from_dt member from symbol CRCs using ANDROID_KABI_IGNORE and updates STG/allowed-break metadata. It adds no TX equalization behavior. Omit this historical binary-compatibility machinery; whole native ufshcd.h remains. The underlying static-TX-EQ device feature was reviewed separately, so omission here does not pretend to implement its field.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-last-tail-review.json",
+      "SECURITY.md: Remaining platform, USB and architecture decisions"
+    ]
+  },
+  {
+    "commit": "cf1aafb82db1c197ddc15dfa9764afe6c828caf2",
+    "disposition": "partially-adapted",
+    "rationale": "Retain the architecture-independent GPL export of signal_generate in kernel/signal.c via the integration commit. Omit only vivo symbol allowlist and ARM STG ABI descriptions. This mixed commit is not KMI-only: source modules can subscribe to generic signal events and must honor tracepoint context and task lifetimes. Existing signal permission/delivery implementation is unchanged by this export.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/platform-last-tail-review.json",
+      "SECURITY.md: Remaining platform, USB and architecture decisions"
+    ]
   }
 ]

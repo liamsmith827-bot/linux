@@ -10763,3 +10763,42 @@ can still mutate kernel state and must obey security and lifetime contracts.
 All twelve patches were read in full. Native comparisons, final signatures and
 current callers/configuration are recorded; no new source change or runtime
 execution occurred in this group. All resources were local.
+
+## Remaining platform, USB and architecture decisions
+
+`evidence/platform-last-tail-review.json` resolves sixteen complete patches. The
+IVPU user-managed preemption/userptr interfaces are omitted with the explicitly
+disabled driver, preserving all native files and avoiding a partial DMA-pinning
+API. Qualcomm interconnect bucket tags and MediaTek INFRACFG modularization are
+platform-specific functional changes, not KMI-only; their positive architecture
+and configuration gates are recorded. The separate UFS KABI_IGNORE change is
+solely CRC/layout-description machinery and is omitted. The vivo symbol-list
+commit also exports signal_generate: that generic source-module export remains.
+
+The USB decision is narrower than a claim that USB code is unused. Actual SDK
+configuration enables DbC and Type-C/TCPM. Goldfish sets ro.adb.has_usb=0, documents
+its virtual ADB/vsock transport, selects the example USB HAL, and explicitly
+creates an unused gadget for sysfs testing. The HAL can enumerate Type-C ports.
+Native drivers remain intact; the excluded new features are physical DbC target
+descriptor setters/autosuspend and physical PD sink electrical/supply bindings.
+Optional controller/pass-through use was not demonstrated or disproved. Those
+questions remain recorded and must be reassessed for physical targets. Failed
+searches were not evidence of absence. DbC still requires XHCI_EXT_CAPS_DEBUG.
+Its omitted PM patch fixes a mutex recursion introduced by another feature that
+is absent from native LTS; whole native code has no enable_mutex. Thus this
+decision does not discard a fix for that introduced native bug. No power or USB
+runtime test was performed. The remaining ABI documentation change only removes
+the previously reviewed nonexistent stalled state.
+
+Linux c6c87a23de4b already contains the complete C1-Pro 4193714 DVMSync workaround.
+Every added/deleted nonblank line matches the ACK candidate across eleven files,
+and all current files are whole LTS. Preserve the per-mm CPU mask, barriers, IPI
+fallback and task/user-entry tracking. The separate global SME-active CPU mask
+optimization is omitted for this x86 target, as is new SI L1 4311569 support;
+these are not blanket claims that ARM errata are unnecessary. Reassess both for
+any affected ARM product. The native coherency workaround is not weakened.
+
+The ARM64 POLYVAL migration is excluded from architecture-private files and
+config/object wiring. Its generic key-power explanation remains in the adapted
+x86/generic library. Native ARM crypto is preserved and no ARM FIPS validation is
+claimed. All project evidence is local and pinned; no remote source was accessed.

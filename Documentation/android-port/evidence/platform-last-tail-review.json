@@ -1,0 +1,544 @@
+{
+  "source_head": "c28725b2b638f31da94ac99fbc5a1e264e84a070",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "553536e5db263326d9315c640275ab087fc2204b",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit IVPU firmware/user preemption-buffer extension: user size is checked against firmware and guarded size limits, with kernel allocation fallback. This is an actual new device API, not KMI. CONFIG_DRM_ACCEL_IVPU is explicitly disabled in the generated SDK configuration; all seven driver/UAPI files are whole native LTS. Enabling Intel VPU later requires revisiting this ioctl and firmware contract.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-last-tail-review.json",
+        "SECURITY.md: Remaining platform, USB and architecture decisions"
+      ],
+      "patch_sha256": "6276e3e534f36d3855cdd446fbe6cd2cef96afa33f969c7d0ec0a0c4f63453e3",
+      "path_entries": {
+        "drivers/accel/ivpu/ivpu_drv.c": "100644 blob 3289751b475733584b0c965133c9e68885749e51\tdrivers/accel/ivpu/ivpu_drv.c",
+        "drivers/accel/ivpu/ivpu_fw.c": "100644 blob 9db741695401e7e6a608ff105cdeeac35afda90e\tdrivers/accel/ivpu/ivpu_fw.c",
+        "drivers/accel/ivpu/ivpu_fw.h": "100644 blob 7081913fb0ddea3f37692d66a425b91ba16151c4\tdrivers/accel/ivpu/ivpu_fw.h",
+        "drivers/accel/ivpu/ivpu_gem.h": "100644 blob 57c9c2db020697494c9fb4c93c81185e28ccfd5d\tdrivers/accel/ivpu/ivpu_gem.h",
+        "drivers/accel/ivpu/ivpu_job.c": "100644 blob dcae72a79e72c74afe2508902675566924e6a14d\tdrivers/accel/ivpu/ivpu_job.c",
+        "drivers/accel/ivpu/ivpu_job.h": "100644 blob 2e301c2eea7b9e8b380cce858a83a800d048ada9\tdrivers/accel/ivpu/ivpu_job.h",
+        "include/uapi/drm/ivpu_accel.h": "100644 blob 160ee1411d4a080034d1bf8590e093cf34d1a862\tinclude/uapi/drm/ivpu_accel.h"
+      }
+    },
+    {
+      "commit": "c024260a14b34a8f2a51d74c7a431e51d0e120d4",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit IVPU userptr GEM extension with its new DMA mapping, FOLL_LONGTERM pins, read-only/write flags and unwind paths. Generated SDK configuration disables DRM_ACCEL_IVPU; whole driver/header files are native and new ivpu_gem_userptr.c is absent. Do not expose a UAPI without its matching pin/lifetime implementation. This is a target omission, not a conclusion that DMA pinning is unnecessary on Android.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-last-tail-review.json",
+        "SECURITY.md: Remaining platform, USB and architecture decisions"
+      ],
+      "patch_sha256": "79b357b8f8454683b298d80d19b368afebc0a695fe9841ddc36506555bff84e2",
+      "path_entries": {
+        "drivers/accel/ivpu/Makefile": "100644 blob 1029e0bab0615f359ebf5d78c0d4b0b22815a705\tdrivers/accel/ivpu/Makefile",
+        "drivers/accel/ivpu/ivpu_drv.c": "100644 blob 3289751b475733584b0c965133c9e68885749e51\tdrivers/accel/ivpu/ivpu_drv.c",
+        "drivers/accel/ivpu/ivpu_gem.c": "100644 blob fda0a18e6d639bba508131e99658f8923abeb56c\tdrivers/accel/ivpu/ivpu_gem.c",
+        "drivers/accel/ivpu/ivpu_gem.h": "100644 blob 57c9c2db020697494c9fb4c93c81185e28ccfd5d\tdrivers/accel/ivpu/ivpu_gem.h",
+        "drivers/accel/ivpu/ivpu_gem_userptr.c": "",
+        "drivers/accel/ivpu/ivpu_mmu_context.c": "100644 blob f0267efa55aa84381d5c4286ab08b3999445be9a\tdrivers/accel/ivpu/ivpu_mmu_context.c",
+        "drivers/accel/ivpu/ivpu_mmu_context.h": "100644 blob f255310968cfe1fa47e22a0a8046560e9c542a88\tdrivers/accel/ivpu/ivpu_mmu_context.h",
+        "include/uapi/drm/ivpu_accel.h": "100644 blob 160ee1411d4a080034d1bf8590e093cf34d1a862\tinclude/uapi/drm/ivpu_accel.h"
+      }
+    },
+    {
+      "commit": "34bc70f8a493ab86de9985f8288a377f56b5a0f2",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit xHCI Debug Capability serial-string sysfs extension and its documentation together. Driver requires an XHCI_EXT_CAPS_DEBUG endpoint; this is the debug-target USB descriptor, not Android serial identity or the ADB protocol. Goldfish explicitly sets ro.adb.has_usb=0 and documents its emulator/vsock transport. Native DbC remains compiled (USB_XHCI_DBGCAP=y). Full patch has 1..126-byte/disabled-state checks; no new descriptor setter is exposed. Optional DbC hardware/pass-through use is unconfirmed, not disproved by search.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-last-tail-review.json",
+        "SECURITY.md: Remaining platform, USB and architecture decisions"
+      ],
+      "patch_sha256": "a785036bb5b1aff1893606e4b59ffb21669644fd5ff714f9e2912701609bc82d",
+      "path_entries": {
+        "Documentation/ABI/testing/sysfs-bus-pci-drivers-xhci_hcd": "100644 blob b088ac6352214933719c6ea9e4bd027bc17161a9\tDocumentation/ABI/testing/sysfs-bus-pci-drivers-xhci_hcd",
+        "drivers/usb/host/xhci-dbgcap.c": "100644 blob e2e0694d0c22a8144dad5e78fdfd865d65828ebd\tdrivers/usb/host/xhci-dbgcap.c"
+      }
+    },
+    {
+      "commit": "d54fb6cb1777c36bcdca64aeb4f17b12967c7a20",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit xHCI DbC product-string setter and matching ABI text for the same debug-target hardware boundary as 34bc70f8a493. Native compiled DbC remains intact, including existing fixed descriptor handling. Patch checks DS_DISABLED, bounded length and stores a terminated string. Goldfish ADB setup does not use this debug-target descriptor contract. Optional hardware use remains unconfirmed; future physical products must reassess.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-last-tail-review.json",
+        "SECURITY.md: Remaining platform, USB and architecture decisions"
+      ],
+      "patch_sha256": "b8e9e8b2ad2239e2a5d186f56edcd4b7ab0f0f2c6cf416499699c1c1da5242b5",
+      "path_entries": {
+        "Documentation/ABI/testing/sysfs-bus-pci-drivers-xhci_hcd": "100644 blob b088ac6352214933719c6ea9e4bd027bc17161a9\tDocumentation/ABI/testing/sysfs-bus-pci-drivers-xhci_hcd",
+        "drivers/usb/host/xhci-dbgcap.c": "100644 blob e2e0694d0c22a8144dad5e78fdfd865d65828ebd\tdrivers/usb/host/xhci-dbgcap.c"
+      }
+    },
+    {
+      "commit": "63aea4913f4441d6698d01f11cd816ba0ccbfa8f",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit xHCI DbC manufacturer-string setter and matching ABI text for the same debug-target hardware boundary as 34bc70f8a493. Retain the entire native compiled driver; bounded disabled-state setter is a new hardware feature, not generic module infrastructure or Android identity plumbing. No claim that no Android vendor consumes this interface; optional SDK hardware use remains unconfirmed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-last-tail-review.json",
+        "SECURITY.md: Remaining platform, USB and architecture decisions"
+      ],
+      "patch_sha256": "418239332eee6fc2ba6615ccbdda218189bae2d126c9a0143db5c03eef03d445",
+      "path_entries": {
+        "Documentation/ABI/testing/sysfs-bus-pci-drivers-xhci_hcd": "100644 blob b088ac6352214933719c6ea9e4bd027bc17161a9\tDocumentation/ABI/testing/sysfs-bus-pci-drivers-xhci_hcd",
+        "drivers/usb/host/xhci-dbgcap.c": "100644 blob e2e0694d0c22a8144dad5e78fdfd865d65828ebd\tdrivers/usb/host/xhci-dbgcap.c"
+      }
+    },
+    {
+      "commit": "ffff165883d1dd1754a9370a48a1e13b6ad4e483",
+      "disposition": "omitted-current-target",
+      "rationale": "Retain native xHCI DbC PM/state machine; omit the added 15-second enabled-but-disconnected autosuspend, pending_rpm_put bookkeeping and suspended sysfs state. SDK product evidence places debug-target hardware outside the required virtual transport. The patch also repairs enable_mutex/runtime-resume recursion introduced by 520058b73ba3: neither that mutex nor its locking sequence exists in native LTS/port, so this omission does not retain that introduced deadlock. Native PM references and later LTS fixes remain. No runtime PM test or optional-hardware compatibility assertion.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-last-tail-review.json",
+        "SECURITY.md: Remaining platform, USB and architecture decisions"
+      ],
+      "patch_sha256": "63140fda6d1984a0e8965509d7cade79c247ff7e3305073133f24407e8172158",
+      "path_entries": {
+        "Documentation/ABI/testing/sysfs-bus-pci-drivers-xhci_hcd": "100644 blob b088ac6352214933719c6ea9e4bd027bc17161a9\tDocumentation/ABI/testing/sysfs-bus-pci-drivers-xhci_hcd",
+        "drivers/usb/host/xhci-dbgcap.c": "100644 blob e2e0694d0c22a8144dad5e78fdfd865d65828ebd\tdrivers/usb/host/xhci-dbgcap.c",
+        "drivers/usb/host/xhci-dbgcap.h": "100644 blob 5426c971d2d39db681287d1a3df0fb12e32e690f\tdrivers/usb/host/xhci-dbgcap.h"
+      }
+    },
+    {
+      "commit": "7b75d0871dea4bfe999cfea3f428b002691536bd",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit Qualcomm-specific interconnect five-bucket/PWR_ST/performance tags. Despite generic wording in the subject, definitions are in qcom,icc.h and alter its provider bucket count from three to five. Actual SDK lacks ARCH_QCOM/INTERCONNECT_QCOM and its provider Kconfig depends on ARCH_QCOM. Whole native header remains; the generic interconnect infrastructure is a separate decision. No claim that all vendor tags are KMI.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-last-tail-review.json",
+        "SECURITY.md: Remaining platform, USB and architecture decisions"
+      ],
+      "patch_sha256": "2c2e8696fa6631639c262593c2d57a510dceb8ec747e755d1d9b0d799b829180",
+      "path_entries": {
+        "include/dt-bindings/interconnect/qcom,icc.h": "100644 blob cd34f36daaaa6eed399f41e617764e8d01195159\tinclude/dt-bindings/interconnect/qcom,icc.h"
+      }
+    },
+    {
+      "commit": "eab8521166331fae218508981af3d331beb6ed41",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit physical USB PD sink electrical-property bindings/macros and the MAX33359 example. These encode droop/load/overload, compliance and charging-adapter wattage for a real powered connector. Goldfish selects the example USB HAL, declares its emulator USB transport situation, and creates an explicitly unused gadget for sysfs testing. TYPEC/TCPM are compiled and the HAL can enumerate sysfs ports, so neither is called absent; whole native binding/header files remain. Optional physical connector pass-through is unverified and outside the required current platform.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-last-tail-review.json",
+        "SECURITY.md: Remaining platform, USB and architecture decisions"
+      ],
+      "patch_sha256": "648ac1508193762d02172cd46da169ddbc48d5c67902b6d1b6e7d24d6346c18e",
+      "path_entries": {
+        "Documentation/devicetree/bindings/connector/usb-connector.yaml": "100644 blob d97b29e49bf55b8f9bb560d74908757b2d62e0c3\tDocumentation/devicetree/bindings/connector/usb-connector.yaml",
+        "Documentation/devicetree/bindings/usb/maxim,max33359.yaml": "100644 blob 3de4dc40b79192b60443421b557bd2fb18683bf7\tDocumentation/devicetree/bindings/usb/maxim,max33359.yaml",
+        "include/dt-bindings/usb/pd.h": "100644 blob e6526b13817452abd7ec74bc64e94183feddd39e\tinclude/dt-bindings/usb/pd.h"
+      }
+    },
+    {
+      "commit": "391db60031196a3463ad0675fb06336928b7f2f5",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit PD SPR AVS sink APDO macros/documentation paired with the excluded physical power-negotiation extension. The macros encode two 10mA current ranges for 9-15V/15-20V supplies; they do not implement a generic Android protocol. Native Type-C/TCPM and HAL sysfs contracts remain. Positive Goldfish virtual-product evidence bounds scope; optional hardware is unverified and not disproved by failed consumer searches.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-last-tail-review.json",
+        "SECURITY.md: Remaining platform, USB and architecture decisions"
+      ],
+      "patch_sha256": "c4ad15e2e12f591de10c8651080bb08fd7584a00bc536f4eda2eee1d472b2419",
+      "path_entries": {
+        "Documentation/devicetree/bindings/connector/usb-connector.yaml": "100644 blob d97b29e49bf55b8f9bb560d74908757b2d62e0c3\tDocumentation/devicetree/bindings/connector/usb-connector.yaml",
+        "include/dt-bindings/usb/pd.h": "100644 blob e6526b13817452abd7ec74bc64e94183feddd39e\tinclude/dt-bindings/usb/pd.h"
+      }
+    },
+    {
+      "commit": "2bd9018af9c3c6153a74607d366fb927f13c7e95",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit MediaTek INFRACFG modularization and three platform-private exports. Patch converts bool to tristate and removes postcore_initcall in favor of an exported explicit init routine, so it is functional lifecycle work, not KMI-only. Native MediaTek menu requires ARCH_MEDIATEK or COMPILE_TEST; both are unselected in this x86 SDK build, and MTK_INFRACFG is absent. All three files remain native, retaining native initialization for supported platforms.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-last-tail-review.json",
+        "SECURITY.md: Remaining platform, USB and architecture decisions"
+      ],
+      "patch_sha256": "58ce71c24912801ba52c2603ef0df1e3da05ab0e6885ba1cc61cad2cd9aa7b26",
+      "path_entries": {
+        "drivers/soc/mediatek/Kconfig": "100644 blob d7293977f06e80c98b482a1398afb83b7de7c2c7\tdrivers/soc/mediatek/Kconfig",
+        "drivers/soc/mediatek/mtk-infracfg.c": "100644 blob 2acf19676af27d92ee6d221e554a45bd3f7f95a5\tdrivers/soc/mediatek/mtk-infracfg.c",
+        "include/linux/soc/mediatek/infracfg.h": "100644 blob 9956e18c5ffa93a6b7f03df8f7c30b63bef0488f\tinclude/linux/soc/mediatek/infracfg.h"
+      }
+    },
+    {
+      "commit": "8885ae38068f9715c6183693b3c0041f0898fea9",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit new ARM SI L1 erratum 4311569 workaround and its config/capability/documentation. It changes ARM cache/coherency maintenance by adding a second non-CVAU cache-maintenance loop, enabled through a boot-parameter-controlled capability and can matter for affected ARM safety; x86 SDK cannot execute that architecture implementation. All five files are native LTS and its existing errata fixes stay intact. Must reassess before any ARM target; not claimed redundant upstream.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-last-tail-review.json",
+        "SECURITY.md: Remaining platform, USB and architecture decisions"
+      ],
+      "patch_sha256": "6ef22db21cb0ec13b94f16f35e6c8ccb0f326c7bc54f74654701943de39f7a18",
+      "path_entries": {
+        "Documentation/arch/arm64/silicon-errata.rst": "100644 blob 75c6ba532c20ce5d308b918161b253a33384f863\tDocumentation/arch/arm64/silicon-errata.rst",
+        "arch/arm64/Kconfig": "100644 blob 2e567a7d89c9b62cd0161160be0c40f834f8af50\tarch/arm64/Kconfig",
+        "arch/arm64/include/asm/assembler.h": "100644 blob 23be85d933485001c00a084f1aa0bdbc0457cf47\tarch/arm64/include/asm/assembler.h",
+        "arch/arm64/kernel/cpu_errata.c": "100644 blob 516a1e37a51fe017af24cf06413f8b0e66e00b89\tarch/arm64/kernel/cpu_errata.c",
+        "arch/arm64/tools/cpucaps": "100644 blob 3e2c5c1914d88be5a1744956f4d280d13f36b0b3\tarch/arm64/tools/cpucaps"
+      }
+    },
+    {
+      "commit": "7693c170c44ac8919c2d475b61f8d63bd97c6d1f",
+      "disposition": "already-represented-upstream",
+      "rationale": "Native Linux c6c87a23de4b already supplies the complete functional C1-Pro 4193714 SME/CME DVMSync workaround: all added/deleted nonblank lines match this ACK patch per file. Preserve whole LTS files, including per-mm CPU tracking, barriers, IPI fallback, task-mask allocation/free and user-entry state tracking. ACK context has unrelated KABI reservation; no reservation is needed. This security/coherency fix is present, not omitted because ARM is outside the target.",
+      "result_commits": [
+        "c6c87a23de4bdf5a8a8a26d9d269f4026e35afef"
+      ],
+      "evidence": [
+        "evidence/platform-last-tail-review.json",
+        "SECURITY.md: Remaining platform, USB and architecture decisions"
+      ],
+      "patch_sha256": "0cb623f72841ae8d433bfd7fccfaa649d7310383c25eaca6c29e24ac63f49975",
+      "path_entries": {
+        "Documentation/arch/arm64/silicon-errata.rst": "100644 blob 75c6ba532c20ce5d308b918161b253a33384f863\tDocumentation/arch/arm64/silicon-errata.rst",
+        "arch/arm64/Kconfig": "100644 blob 2e567a7d89c9b62cd0161160be0c40f834f8af50\tarch/arm64/Kconfig",
+        "arch/arm64/include/asm/cpucaps.h": "100644 blob 121210b7ffd0ba269f97db67f7a625bb9eabe293\tarch/arm64/include/asm/cpucaps.h",
+        "arch/arm64/include/asm/fpsimd.h": "100644 blob 0fa8d1d5722e0aa4a7c7967a5fff367fde24f9de\tarch/arm64/include/asm/fpsimd.h",
+        "arch/arm64/include/asm/tlbbatch.h": "100644 blob 6297631532e59f49de44d53ecdeb22944c39d0b3\tarch/arm64/include/asm/tlbbatch.h",
+        "arch/arm64/include/asm/tlbflush.h": "100644 blob f53ab3ba0c48bd259a566f66c82b56a0ed2c8538\tarch/arm64/include/asm/tlbflush.h",
+        "arch/arm64/kernel/cpu_errata.c": "100644 blob 516a1e37a51fe017af24cf06413f8b0e66e00b89\tarch/arm64/kernel/cpu_errata.c",
+        "arch/arm64/kernel/entry-common.c": "100644 blob 5b97dfcf796d98c91f8fd516040c9dc43a7de4df\tarch/arm64/kernel/entry-common.c",
+        "arch/arm64/kernel/fpsimd.c": "100644 blob ca18214ce2abec525bc17234e14d18e0ccf16787\tarch/arm64/kernel/fpsimd.c",
+        "arch/arm64/kernel/process.c": "100644 blob 4c328b7c79ba3a470f4ab096c1f61e9fd60162f7\tarch/arm64/kernel/process.c",
+        "arch/arm64/tools/cpucaps": "100644 blob 3e2c5c1914d88be5a1744956f4d280d13f36b0b3\tarch/arm64/tools/cpucaps"
+      }
+    },
+    {
+      "commit": "ce27db898285aa869aa4910ba8f7f31b4d9ee94d",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the ARM-only performance revision that replaces per-mm reclaim-batch tracking with a global SME-active CPU mask, plus KABI replacement/STG changes. Native 4193714 workaround remains whole and functional, including allocation-failure immediate IPI fallback; no security fix is removed. x86 SDK does not execute this ARM optimization. Global-mask scalability/IPI behavior would need reassessment on affected ARM hardware; no runtime result claimed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-last-tail-review.json",
+        "SECURITY.md: Remaining platform, USB and architecture decisions"
+      ],
+      "patch_sha256": "bad6fb8979384128b7f1a2f299786adeaf2e37af6103c9b0b40404c9b7115457",
+      "path_entries": {
+        "arch/arm64/include/asm/tlbbatch.h": "100644 blob 6297631532e59f49de44d53ecdeb22944c39d0b3\tarch/arm64/include/asm/tlbbatch.h",
+        "arch/arm64/include/asm/tlbflush.h": "100644 blob f53ab3ba0c48bd259a566f66c82b56a0ed2c8538\tarch/arm64/include/asm/tlbflush.h",
+        "arch/arm64/kernel/fpsimd.c": "100644 blob ca18214ce2abec525bc17234e14d18e0ccf16787\tarch/arm64/kernel/fpsimd.c",
+        "arch/arm64/kernel/process.c": "100644 blob 4c328b7c79ba3a470f4ab096c1f61e9fd60162f7\tarch/arm64/kernel/process.c",
+        "gki/aarch64/abi.stg": "",
+        "gki/aarch64/abi.stg.allowed_breaks": ""
+      }
+    },
+    {
+      "commit": "7716114d95113ded54d86fc6536b0a48c7f5bc48",
+      "disposition": "partially-adapted",
+      "rationale": "Retain the generic POLYVAL key-power explanatory comment within the already adapted generic/x86 library (e859afda9a8a). Omit ARM64 PMULL assembly relocation, new ARM wrapper, h_powers architecture branch and associated config/object selection. Native ARM crypto implementation remains whole, while the separately reviewed x86 library and generic fallback satisfy selected HCTR2 configuration. No ARM FIPS claim or ARM runtime validation. Shared files are not blanket-omitted.",
+      "result_commits": [
+        "e859afda9a8a40f54320ba62bf4633a6db3c40ec"
+      ],
+      "evidence": [
+        "evidence/platform-last-tail-review.json",
+        "SECURITY.md: Remaining platform, USB and architecture decisions"
+      ],
+      "patch_sha256": "8f9499d65fd3353f75bacd6d6ea0fa2d0531881417597fe8a2e7485493ecd584",
+      "path_entries": {
+        "arch/arm64/crypto/Kconfig": "100644 blob 91f3093eee6ab51c5259c9ec1fb33c00c0a40799\tarch/arm64/crypto/Kconfig",
+        "arch/arm64/crypto/Makefile": "100644 blob a8b2cdbe202c16befaf1ebd8a97406fea0cf9a34\tarch/arm64/crypto/Makefile",
+        "arch/arm64/crypto/polyval-ce-core.S": "100644 blob b5326540d2e348997ae73dc68a26696293c4754c\tarch/arm64/crypto/polyval-ce-core.S",
+        "arch/arm64/crypto/polyval-ce-glue.c": "100644 blob c4e653688ea0538db72cbae5094fcb5702bc6f26\tarch/arm64/crypto/polyval-ce-glue.c",
+        "include/crypto/polyval.h": "100644 blob bf7e924b376b2c553b26847f8f8a0835b61c49d2\tinclude/crypto/polyval.h",
+        "lib/crypto/Kconfig": "100644 blob 12c448ec7086232af2b6fa8ceb5278335888f001\tlib/crypto/Kconfig",
+        "lib/crypto/Makefile": "100644 blob 9135532caf76d0a8b58b282bbc005a6bb5e590f3\tlib/crypto/Makefile",
+        "lib/crypto/arm64/polyval-ce-core.S": "",
+        "lib/crypto/arm64/polyval.h": ""
+      }
+    },
+    {
+      "commit": "b5f3d941d76df609ad8fca73e6f714dc7b136e11",
+      "disposition": "omitted-kmi-only",
+      "rationale": "Entire change hides an already-existing UFS from_dt member from symbol CRCs using ANDROID_KABI_IGNORE and updates STG/allowed-break metadata. It adds no TX equalization behavior. Omit this historical binary-compatibility machinery; whole native ufshcd.h remains. The underlying static-TX-EQ device feature was reviewed separately, so omission here does not pretend to implement its field.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-last-tail-review.json",
+        "SECURITY.md: Remaining platform, USB and architecture decisions"
+      ],
+      "patch_sha256": "b557abc0ddd54a781a42c4498a6fd296736b0c791a696acacc066be30d375568",
+      "path_entries": {
+        "gki/aarch64/abi.stg": "",
+        "gki/aarch64/abi.stg.allowed_breaks": "",
+        "include/ufs/ufshcd.h": "100644 blob a829db5510808fab19fa0773f1db9f60c971769c\tinclude/ufs/ufshcd.h"
+      }
+    },
+    {
+      "commit": "cf1aafb82db1c197ddc15dfa9764afe6c828caf2",
+      "disposition": "partially-adapted",
+      "rationale": "Retain the architecture-independent GPL export of signal_generate in kernel/signal.c via the integration commit. Omit only vivo symbol allowlist and ARM STG ABI descriptions. This mixed commit is not KMI-only: source modules can subscribe to generic signal events and must honor tracepoint context and task lifetimes. Existing signal permission/delivery implementation is unchanged by this export.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/platform-last-tail-review.json",
+        "SECURITY.md: Remaining platform, USB and architecture decisions"
+      ],
+      "patch_sha256": "488ceed1a309c702bce41d75c7beff152ba979fc2b40115820e664296b1b20a5",
+      "path_entries": {
+        "gki/aarch64/abi.stg": "",
+        "gki/aarch64/symbols/vivo": "",
+        "kernel/signal.c": "100644 blob dbfd435932d3d6526eb7542cbc37ae98a51652b9\tkernel/signal.c"
+      }
+    }
+  ],
+  "proofs": [
+    {
+      "path": "Documentation/arch/arm64/silicon-errata.rst",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob 75c6ba532c20ce5d308b918161b253a33384f863\tDocumentation/arch/arm64/silicon-errata.rst"
+    },
+    {
+      "path": "Documentation/devicetree/bindings/connector/usb-connector.yaml",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob d97b29e49bf55b8f9bb560d74908757b2d62e0c3\tDocumentation/devicetree/bindings/connector/usb-connector.yaml"
+    },
+    {
+      "path": "Documentation/devicetree/bindings/usb/maxim,max33359.yaml",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob 3de4dc40b79192b60443421b557bd2fb18683bf7\tDocumentation/devicetree/bindings/usb/maxim,max33359.yaml"
+    },
+    {
+      "path": "arch/arm64/Kconfig",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob 2e567a7d89c9b62cd0161160be0c40f834f8af50\tarch/arm64/Kconfig"
+    },
+    {
+      "path": "arch/arm64/crypto/Kconfig",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob 91f3093eee6ab51c5259c9ec1fb33c00c0a40799\tarch/arm64/crypto/Kconfig"
+    },
+    {
+      "path": "arch/arm64/crypto/Makefile",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob a8b2cdbe202c16befaf1ebd8a97406fea0cf9a34\tarch/arm64/crypto/Makefile"
+    },
+    {
+      "path": "arch/arm64/crypto/polyval-ce-core.S",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob b5326540d2e348997ae73dc68a26696293c4754c\tarch/arm64/crypto/polyval-ce-core.S"
+    },
+    {
+      "path": "arch/arm64/crypto/polyval-ce-glue.c",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob c4e653688ea0538db72cbae5094fcb5702bc6f26\tarch/arm64/crypto/polyval-ce-glue.c"
+    },
+    {
+      "path": "arch/arm64/include/asm/assembler.h",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob 23be85d933485001c00a084f1aa0bdbc0457cf47\tarch/arm64/include/asm/assembler.h"
+    },
+    {
+      "path": "arch/arm64/include/asm/cpucaps.h",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob 121210b7ffd0ba269f97db67f7a625bb9eabe293\tarch/arm64/include/asm/cpucaps.h"
+    },
+    {
+      "path": "arch/arm64/include/asm/fpsimd.h",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob 0fa8d1d5722e0aa4a7c7967a5fff367fde24f9de\tarch/arm64/include/asm/fpsimd.h"
+    },
+    {
+      "path": "arch/arm64/include/asm/tlbbatch.h",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob 6297631532e59f49de44d53ecdeb22944c39d0b3\tarch/arm64/include/asm/tlbbatch.h"
+    },
+    {
+      "path": "arch/arm64/include/asm/tlbflush.h",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob f53ab3ba0c48bd259a566f66c82b56a0ed2c8538\tarch/arm64/include/asm/tlbflush.h"
+    },
+    {
+      "path": "arch/arm64/kernel/cpu_errata.c",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob 516a1e37a51fe017af24cf06413f8b0e66e00b89\tarch/arm64/kernel/cpu_errata.c"
+    },
+    {
+      "path": "arch/arm64/kernel/entry-common.c",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob 5b97dfcf796d98c91f8fd516040c9dc43a7de4df\tarch/arm64/kernel/entry-common.c"
+    },
+    {
+      "path": "arch/arm64/kernel/fpsimd.c",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob ca18214ce2abec525bc17234e14d18e0ccf16787\tarch/arm64/kernel/fpsimd.c"
+    },
+    {
+      "path": "arch/arm64/kernel/process.c",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob 4c328b7c79ba3a470f4ab096c1f61e9fd60162f7\tarch/arm64/kernel/process.c"
+    },
+    {
+      "path": "arch/arm64/tools/cpucaps",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob 3e2c5c1914d88be5a1744956f4d280d13f36b0b3\tarch/arm64/tools/cpucaps"
+    },
+    {
+      "path": "drivers/accel/ivpu/Makefile",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob 1029e0bab0615f359ebf5d78c0d4b0b22815a705\tdrivers/accel/ivpu/Makefile"
+    },
+    {
+      "path": "drivers/accel/ivpu/ivpu_drv.c",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob 3289751b475733584b0c965133c9e68885749e51\tdrivers/accel/ivpu/ivpu_drv.c"
+    },
+    {
+      "path": "drivers/accel/ivpu/ivpu_fw.c",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob 9db741695401e7e6a608ff105cdeeac35afda90e\tdrivers/accel/ivpu/ivpu_fw.c"
+    },
+    {
+      "path": "drivers/accel/ivpu/ivpu_fw.h",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob 7081913fb0ddea3f37692d66a425b91ba16151c4\tdrivers/accel/ivpu/ivpu_fw.h"
+    },
+    {
+      "path": "drivers/accel/ivpu/ivpu_gem.c",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob fda0a18e6d639bba508131e99658f8923abeb56c\tdrivers/accel/ivpu/ivpu_gem.c"
+    },
+    {
+      "path": "drivers/accel/ivpu/ivpu_gem.h",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob 57c9c2db020697494c9fb4c93c81185e28ccfd5d\tdrivers/accel/ivpu/ivpu_gem.h"
+    },
+    {
+      "path": "drivers/accel/ivpu/ivpu_gem_userptr.c",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": ""
+    },
+    {
+      "path": "drivers/accel/ivpu/ivpu_job.c",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob dcae72a79e72c74afe2508902675566924e6a14d\tdrivers/accel/ivpu/ivpu_job.c"
+    },
+    {
+      "path": "drivers/accel/ivpu/ivpu_job.h",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob 2e301c2eea7b9e8b380cce858a83a800d048ada9\tdrivers/accel/ivpu/ivpu_job.h"
+    },
+    {
+      "path": "drivers/accel/ivpu/ivpu_mmu_context.c",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob f0267efa55aa84381d5c4286ab08b3999445be9a\tdrivers/accel/ivpu/ivpu_mmu_context.c"
+    },
+    {
+      "path": "drivers/accel/ivpu/ivpu_mmu_context.h",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob f255310968cfe1fa47e22a0a8046560e9c542a88\tdrivers/accel/ivpu/ivpu_mmu_context.h"
+    },
+    {
+      "path": "drivers/soc/mediatek/Kconfig",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob d7293977f06e80c98b482a1398afb83b7de7c2c7\tdrivers/soc/mediatek/Kconfig"
+    },
+    {
+      "path": "drivers/soc/mediatek/mtk-infracfg.c",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob 2acf19676af27d92ee6d221e554a45bd3f7f95a5\tdrivers/soc/mediatek/mtk-infracfg.c"
+    },
+    {
+      "path": "drivers/usb/host/xhci-dbgcap.c",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob e2e0694d0c22a8144dad5e78fdfd865d65828ebd\tdrivers/usb/host/xhci-dbgcap.c"
+    },
+    {
+      "path": "drivers/usb/host/xhci-dbgcap.h",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob 5426c971d2d39db681287d1a3df0fb12e32e690f\tdrivers/usb/host/xhci-dbgcap.h"
+    },
+    {
+      "path": "gki/aarch64/abi.stg",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": ""
+    },
+    {
+      "path": "gki/aarch64/abi.stg.allowed_breaks",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": ""
+    },
+    {
+      "path": "gki/aarch64/symbols/vivo",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": ""
+    },
+    {
+      "path": "include/dt-bindings/interconnect/qcom,icc.h",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob cd34f36daaaa6eed399f41e617764e8d01195159\tinclude/dt-bindings/interconnect/qcom,icc.h"
+    },
+    {
+      "path": "include/dt-bindings/usb/pd.h",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob e6526b13817452abd7ec74bc64e94183feddd39e\tinclude/dt-bindings/usb/pd.h"
+    },
+    {
+      "path": "include/linux/soc/mediatek/infracfg.h",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob 9956e18c5ffa93a6b7f03df8f7c30b63bef0488f\tinclude/linux/soc/mediatek/infracfg.h"
+    },
+    {
+      "path": "include/uapi/drm/ivpu_accel.h",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob 160ee1411d4a080034d1bf8590e093cf34d1a862\tinclude/uapi/drm/ivpu_accel.h"
+    },
+    {
+      "path": "include/ufs/ufshcd.h",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": "100644 blob a829db5510808fab19fa0773f1db9f60c971769c\tinclude/ufs/ufshcd.h"
+    },
+    {
+      "path": "lib/crypto/arm64/polyval-ce-core.S",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": ""
+    },
+    {
+      "path": "lib/crypto/arm64/polyval.h",
+      "comparison": "whole native LTS tree entry, including mutual absence",
+      "entry": ""
+    },
+    {
+      "path": "Documentation/ABI/testing/sysfs-bus-pci-drivers-xhci_hcd",
+      "comparison": "only previously reviewed removal of nonexistent stalled state; no descriptor-string or suspended-state ABI claim"
+    },
+    {
+      "commit": "7693c170c44ac8919c2d475b61f8d63bd97c6d1f",
+      "native_commit": "c6c87a23de4bdf5a8a8a26d9d269f4026e35afef",
+      "comparison": "all added/deleted nonblank lines identical per path across all eleven paths; context differs for unrelated ACK/KABI state. Entire port files remain native LTS."
+    },
+    {
+      "path": "include/crypto/polyval.h",
+      "comparison": "generic H^i explanation retained by e859afda9a8a; ARM64 powers/config/object wiring omitted; generic/x86 library and native ARM crypto retained separately"
+    }
+  ],
+  "generated_config_sha256": "5eb9df697a47e51c48fc154d7c5c9de503407ea3d7789c1d3cd3c6185088ba8e",
+  "additional_local_projects": [
+    {
+      "repository": "device/generic/goldfish",
+      "commit": "5281db702f36e0e8c0af9e33d70b63d3ba4916ae",
+      "paths": {
+        "product/generic.mk": "7962bdd2efbbf6bc3c6a76bc904b8c03645e2445c9ff25022a98a1441722e47f",
+        "init/init.ranchu.rc": "bfeb43c134806d7f33fbc64b3c160f2a389663c944fa7a663e77596b27ffb691",
+        "init/init.adb-setup.ranchu.sh": "63e619713a9ad479a9d7906676d0b13ccc281f828f03840614781e07b1bcf660",
+        "init/init.adb-start.ranchu.sh": "e131b1491dedf075a09b43c632644b051b749565cfba9ddc44ee1d59ceb0afa7"
+      }
+    },
+    {
+      "repository": "hardware/interfaces",
+      "commit": "10f50d727929257755d4bc3fb59758dc10e7a37b",
+      "paths": {
+        "usb/aidl/default/Usb.cpp": "9b79f25d0d45879fc7b45bc80424f97516c0e804b44a7904abc8e56ecf5f427b"
+      }
+    }
+  ],
+  "method": "All sixteen complete candidate patches read, with current/native comparisons and generated configuration gates. Local source ancestry and nonblank changed-line proof establish DVMSync representation. No target runtime was executed.",
+  "unresolved": "Optional SDK physical USB/DbC pass-through availability and use unconfirmed. Goldfish product transport and unused-gadget statements support the current target boundary, not universal absence of USB or source consumers. Native compiled DbC/Type-C/TCPM remain; these feature omissions must be reconsidered for physical targets. Earlier searches of nonexistent Goldfish hals/usb and root init paths supplied no evidence; actual product/HAL/init paths are pinned above.",
+  "remote_resources_used": []
+}
