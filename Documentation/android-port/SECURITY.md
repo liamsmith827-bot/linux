@@ -9091,3 +9091,45 @@ the userspace flag, but actual SDK invocation is unverified. Cache eviction is
 best effort and is not an access-control property. This batch changes decisions
 and evidence only; the source remains the kernel successfully built in attempt
 186. Every consulted resource was local.
+
+## ARM virtualization and shared header contracts
+
+The 22 decisions in `evidence/arm-kvm-shared-review.json` distinguish ARM EL2
+implementations from shared-header effects. The selected workflow compiles
+X86_64, with native Intel/AMD KVM and IOMMU support. ARM PSCI, SMCCC, FF-A,
+TrustZone and physical-device assignment implementations are outside that image.
+The SMC template explicitly depends on ARM64/KVM/module mode; the hyp trace test
+explicitly requires ARM64 and its protected-hypervisor testing option. These
+positive architecture contracts support exclusion without inferring absence of
+need from an unsuccessful consumer search. AVF runtime parity remains unverified.
+
+`9b04584c27f3` restores the native IOMMU gathering function, removing the macro
+extraction whose extra caller is ARM hyp. Disjoint-range and page-granularity
+flushes and range accounting remain exactly native. The independent two-u64
+Android iommu_domain vendor-data field is retained for source-module fault
+handlers; its particular SDK subscriber is unresolved. The owner must initialize
+and synchronize that private state. Historical layout reservation is not retained.
+
+The same commit restores the complete native FF-A header paired with the native
+firmware driver. This removes orphan ARM protected-guest constants/helpers and
+the duplicated errno-table relocation from the initial integration. The later
+complete descriptor-offset fix, native b39b08e6bee8 / ACK 84048f33e713, remains in
+both files. The earlier incomplete patch and revert have inverse changed lines.
+The separate ARM hyp descriptor-bounds fix 85870f0d74cd is not represented in
+native hyp code: it is excluded solely by the current architecture target and
+must be revisited before enabling an ARM target. No claim is made that an unused
+header size macro alone implements that bounds check.
+
+The omitted ARM device ownership, reset and power-lock changes are functional
+security safeguards for the excluded assignment backend. They are not dismissed
+as ABI maintenance. Likewise, direct-message endpoint authentication accompanies
+its omitted forwarding operation, and trace reset repair accompanies its omitted
+hyp tracing implementation. The host-stage2 module-ownership extension permits
+a specific host-visible protected-guest sharing contract; that contract is not
+advertised by this x86 SDK port. Associated ABI dumps and reserved fields are
+independently omitted as historical KMI machinery. These decisions do not alter
+the retained Linux vendor hooks, module signing or native x86 virtualization.
+
+Validation here is static source/patch comparison and the separately recorded
+SDK compilation. No ARM build, runtime selftest, device assignment or protected-VM
+operation was executed. No additional remote resource was accessed.

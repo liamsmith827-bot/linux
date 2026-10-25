@@ -1,0 +1,647 @@
+{
+  "source_head": "9b04584c27f3eb4efae60460b2c8657e127bbf46",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "f02d784fa2a7dc0d119745ebe9fa3a2d8a1c3325",
+      "disposition": "omitted-current-target",
+      "rationale": "Keep native PSCI functions in psci.c and the native arm_psci.h. The change relocates affinity and argument-narrowing helpers for ARM hyp reuse without a behavioral fix; its ARM register/MPIDR interfaces do not supply an x86 module API. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-kvm-shared-review.json",
+        "SECURITY.md: ARM virtualization and shared header contracts"
+      ],
+      "paths": [
+        "arch/arm64/kvm/psci.c",
+        "include/kvm/arm_psci.h"
+      ],
+      "patch_sha256": "6bb8663ccf9ba78fdfff60948a1e2d8d2be1841705aed1fbae858486aad5b924"
+    },
+    {
+      "commit": "642b8b22019d52943520fb7c4c5a84c8f36fae48",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit ARM protected VM type bit 31 and the generic-named ARM KVM_VM_TYPE_MASK along with the ARM creation/IPA validation changes. Preserve the exact native UAPI header and x86 VM-type validation. Advertising this definition would not implement an ARM protected VM on x86. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-kvm-shared-review.json",
+        "SECURITY.md: ARM virtualization and shared header contracts"
+      ],
+      "paths": [
+        "arch/arm64/include/asm/kvm_pkvm.h",
+        "arch/arm64/kvm/arm.c",
+        "arch/arm64/kvm/mmu.c",
+        "arch/arm64/kvm/pkvm.c",
+        "include/uapi/linux/kvm.h"
+      ],
+      "patch_sha256": "5643624388984ff9f1e635ae24e078dcc077ced0dea2ea711e4e8b1eca905584"
+    },
+    {
+      "commit": "a63908e12821bf8763a4ab4bc5c5029afca44876",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the ARM-only firmware capability 0xffbadab1, ARM firmware-info struct and SET_FW_IPA/INFO dispatcher together. The code requires ARM protected KVM and firmware-reserved memory; native x86 KVM and its capability handling remain. No successful protected firmware setup is advertised. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-kvm-shared-review.json",
+        "SECURITY.md: ARM virtualization and shared header contracts"
+      ],
+      "paths": [
+        "arch/arm64/include/asm/kvm_pkvm.h",
+        "arch/arm64/include/uapi/asm/kvm.h",
+        "arch/arm64/kvm/arm.c",
+        "arch/arm64/kvm/hyp/nvhe/pkvm.c",
+        "arch/arm64/kvm/pkvm.c",
+        "include/uapi/linux/kvm.h"
+      ],
+      "patch_sha256": "eb3671400331b6f921f4efb35566b95551451cfc173fdf1e29fe96224410d272"
+    },
+    {
+      "commit": "6088d6a0918c1b204b6b22b3e207d4c3cf45c00c",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the ARM hyp selftest event HVC, tracefs trigger, Kconfig and shell test together. Its config explicitly requires ARM64 and PROTECTED_NVHE_TESTING; the SDK selftest rule selects a separate explicit suite. The test is not run or claimed passed. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-kvm-shared-review.json",
+        "SECURITY.md: ARM virtualization and shared header contracts"
+      ],
+      "paths": [
+        "arch/arm64/include/asm/kvm_asm.h",
+        "arch/arm64/include/asm/kvm_hypevents.h",
+        "arch/arm64/kvm/Kconfig",
+        "arch/arm64/kvm/hyp/nvhe/hyp-main.c",
+        "arch/arm64/kvm/hyp_trace.c",
+        "tools/testing/selftests/hyp-trace/Makefile",
+        "tools/testing/selftests/hyp-trace/config",
+        "tools/testing/selftests/hyp-trace/hyp-trace-test"
+      ],
+      "patch_sha256": "5606b7984b81785ddc98cbd608f69ff4a9021c88968aa28adf720a1c0271c78c"
+    },
+    {
+      "commit": "c5596e7e83e5a816cd63f7402be6161ef6036e5f",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the ARM EL2 module event-section automatic registration and its pkvm-smc call-site removal as a unit. The SMC filter Kconfig depends on ARM64/KVM/module mode; this is a separate hypervisor loader, not the retained Linux vendor-module registration/signing mechanism. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-kvm-shared-review.json",
+        "SECURITY.md: ARM virtualization and shared header contracts"
+      ],
+      "paths": [
+        "arch/arm64/include/asm/kvm_pkvm_module.h",
+        "arch/arm64/kvm/hyp/include/nvhe/trace/trace.h",
+        "arch/arm64/kvm/hyp/nvhe/events.c",
+        "arch/arm64/kvm/hyp/nvhe/module.lds.S",
+        "arch/arm64/kvm/hyp/nvhe/modules.c",
+        "drivers/misc/pkvm-smc/pkvm/pkvm-smc.c"
+      ],
+      "patch_sha256": "a22d5a78b6385f002dd4f2225374007465ce67165671411eda741a1ddfb869a8"
+    },
+    {
+      "commit": "9f7d684f3a6442722fae9deb88676f618693bec1",
+      "disposition": "omitted-current-target",
+      "rationale": "The head/tail pointer, lost-event and timestamp reset fix is security-relevant to the ACK ARM hyp ring buffer, which is omitted together with its tracefs interface and test. Do not import a detached test or imply the unfixed ACK implementation remains executable; native Linux tracing is separately retained. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-kvm-shared-review.json",
+        "SECURITY.md: ARM virtualization and shared header contracts"
+      ],
+      "paths": [
+        "arch/arm64/kvm/hyp/nvhe/trace.c",
+        "tools/testing/selftests/hyp-trace/hyp-trace-test"
+      ],
+      "patch_sha256": "07011b8d119e413a696f9f78e8caf543f7e4f303a89f363e5988ab1bd7a6f023"
+    },
+    {
+      "commit": "dafce300db7fa45f7260e124b624c0d5300ac38e",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit ARM guest FF-A version/feature negotiation, mailbox sharing and map-fault host request handling. Remove the orphan reverse errno helper from the shared ARM header; its positive caller is this excluded dispatcher. Retain the native firmware driver/header as a pair. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+      "result_commits": [
+        "9b04584c27f3eb4efae60460b2c8657e127bbf46"
+      ],
+      "evidence": [
+        "evidence/arm-kvm-shared-review.json",
+        "SECURITY.md: ARM virtualization and shared header contracts"
+      ],
+      "paths": [
+        "arch/arm64/kvm/hyp/include/nvhe/ffa.h",
+        "arch/arm64/kvm/hyp/include/nvhe/pkvm.h",
+        "arch/arm64/kvm/hyp/nvhe/ffa.c",
+        "arch/arm64/kvm/hyp/nvhe/pkvm.c",
+        "include/linux/arm_ffa.h"
+      ],
+      "patch_sha256": "a5539d342868f0674febd382dca196b71ba640c4fade7e33b3bcb4e6f4704f4c"
+    },
+    {
+      "commit": "2eaa5d4ac3af113edeacea48bad2aefea299d38d",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit ARM guest/host direct-message forwarding and its source-endpoint mask together. The endpoint check prevents guest impersonation in that dispatcher; omitting the entire forwarding feature does not leave an unchecked forwarding path in the SDK. Remove the orphan header mask. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+      "result_commits": [
+        "9b04584c27f3eb4efae60460b2c8657e127bbf46"
+      ],
+      "evidence": [
+        "evidence/arm-kvm-shared-review.json",
+        "SECURITY.md: ARM virtualization and shared header contracts"
+      ],
+      "paths": [
+        "arch/arm64/kvm/hyp/nvhe/ffa.c",
+        "include/linux/arm_ffa.h"
+      ],
+      "patch_sha256": "b8010a103e4bc7d9b2bb54cec48ac036df1e59ac9a8cd924f289991ffb115d2c"
+    },
+    {
+      "commit": "221fdaa6f1cdb051a206821a06bcc401fe7f63d6",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit ARM TrustZone secure-partition VM-availability notifications, state/retry tracking and guest-VM handle retention, plus their header flags. This establishes a secure-world lifecycle protocol for ARM FF-A, not a generic Linux VM notifier. Keep native ARM code; no protected-VM availability guarantee is claimed. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+      "result_commits": [
+        "9b04584c27f3eb4efae60460b2c8657e127bbf46"
+      ],
+      "evidence": [
+        "evidence/arm-kvm-shared-review.json",
+        "SECURITY.md: ARM virtualization and shared header contracts"
+      ],
+      "paths": [
+        "arch/arm64/include/asm/kvm_asm.h",
+        "arch/arm64/kvm/hyp/include/nvhe/ffa.h",
+        "arch/arm64/kvm/hyp/include/nvhe/pkvm.h",
+        "arch/arm64/kvm/hyp/nvhe/ffa.c",
+        "arch/arm64/kvm/hyp/nvhe/hyp-main.c",
+        "arch/arm64/kvm/hyp/nvhe/pkvm.c",
+        "arch/arm64/kvm/pkvm.c",
+        "include/linux/arm_ffa.h"
+      ],
+      "patch_sha256": "6c15ddc287db40065c6c66b19d789ebd143f2ea3702cf47af0dfa0a651189eda"
+    },
+    {
+      "commit": "79d71eb85cabe2ead0eb44549977cfbd5b4a4147",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the ARM hyp include-path change and matching SMC template include fixes with the excluded ARM EL2 module build. The Linux module interface is unaffected; no historical hyp-module include compatibility is promised. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-kvm-shared-review.json",
+        "SECURITY.md: ARM virtualization and shared header contracts"
+      ],
+      "paths": [
+        "arch/arm64/kvm/hyp/nvhe/Makefile.module",
+        "drivers/misc/pkvm-smc/pkvm/events.h",
+        "drivers/misc/pkvm-smc/pkvm/pkvm-smc.c"
+      ],
+      "patch_sha256": "8ecaf249ea3f3259a102d42820485d8fb65d252ffff3674b31edae55c377f3c8"
+    },
+    {
+      "commit": "2a7420897c91635045c2799146a90e90c52bd83b",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the ARM hyp IOMMU gather implementation and undo its shared macro extraction. The positive extra caller is the ARM hyp implementation; native iommu_iotlb_gather_add_page retains exactly its disjoint-range/granularity flush and range accounting. Preserve the independent Android iommu_domain vendor field. This is not removal of native IOMMU TLB invalidation. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+      "result_commits": [
+        "9b04584c27f3eb4efae60460b2c8657e127bbf46"
+      ],
+      "evidence": [
+        "evidence/arm-kvm-shared-review.json",
+        "SECURITY.md: ARM virtualization and shared header contracts"
+      ],
+      "paths": [
+        "arch/arm64/kvm/hyp/include/nvhe/iommu.h",
+        "arch/arm64/kvm/hyp/nvhe/iommu/iommu.c",
+        "include/linux/iommu.h"
+      ],
+      "patch_sha256": "e6bdf0fb6d73069de5f68cf52127628a927c78657b15690da624f86ea34f0d86"
+    },
+    {
+      "commit": "5bfadd596c9a6644eaebb21ad12fa409c804624d",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit ARM host-HVC power-domain registration/dispatch and its shared data type. The implementation requires firmware/IOMMU reset behavior that blocks DMA and an ARM EL2 HVC path, rather than the selected SDK virtio device contract. No unsupported power-isolation guarantee is introduced. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-kvm-shared-review.json",
+        "SECURITY.md: ARM virtualization and shared header contracts"
+      ],
+      "paths": [
+        "arch/arm64/include/asm/kvm_asm.h",
+        "arch/arm64/kvm/hyp/include/nvhe/pkvm.h",
+        "arch/arm64/kvm/hyp/nvhe/Makefile",
+        "arch/arm64/kvm/hyp/nvhe/hyp-main.c",
+        "arch/arm64/kvm/hyp/nvhe/power/hvc.c",
+        "include/kvm/power_domain.h"
+      ],
+      "patch_sha256": "28459cedf1b8dddf9a42b35fbf78bdcb67e76a4cf593f89be400b130d3bef855"
+    },
+    {
+      "commit": "bc52873bb1f3e2c554e2648f2fb9ebf50a5cddc5",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the ARM hyp assignable-device registry, resources/IOMMU descriptors and device.h together. These describe trusted boot-time physical MMIO assignment; they do not implement SDK virtio devices or generic source-module hooks. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-kvm-shared-review.json",
+        "SECURITY.md: ARM virtualization and shared header contracts"
+      ],
+      "paths": [
+        "arch/arm64/kvm/hyp/nvhe/Makefile",
+        "arch/arm64/kvm/hyp/nvhe/device/device.c",
+        "include/kvm/device.h"
+      ],
+      "patch_sha256": "0ca30176e5ce639296bf3cb92ae6399b9e26a1d0ffd2c3d643a1d52db447762e"
+    },
+    {
+      "commit": "286f12ecf9f2bfe58ac609d8451a547c437b0c4b",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the ARM hyp IOMMU host-ownership checks/refcount field with the excluded device-assignment implementation. The checks prevent a host from altering a protected guest device and must accompany any future import of that feature; native x86 IOMMU and KVM isolation remain intact. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-kvm-shared-review.json",
+        "SECURITY.md: ARM virtualization and shared header contracts"
+      ],
+      "paths": [
+        "arch/arm64/kvm/hyp/include/nvhe/pkvm.h",
+        "arch/arm64/kvm/hyp/nvhe/device/device.c",
+        "arch/arm64/kvm/hyp/nvhe/iommu/iommu.c",
+        "include/kvm/device.h"
+      ],
+      "patch_sha256": "067069e5a2fa006a93cc1b636085a9c0d56aae9f668ae6c58b13a666ac841b4f"
+    },
+    {
+      "commit": "dedd128fc987a9e7c6a20e253928eaed3c5a7c54",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the ARM device reset callback, mandatory assignment reset and teardown reset calls with the whole assignment backend. These are necessary safeguards if that backend is enabled, not optional KMI padding. The initial patch documentation describes stronger teardown failure behavior than its WARN_ON code; this review makes no runtime assurance for it. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-kvm-shared-review.json",
+        "SECURITY.md: ARM virtualization and shared header contracts"
+      ],
+      "paths": [
+        "arch/arm64/include/asm/kvm_pkvm_module.h",
+        "arch/arm64/kvm/hyp/include/nvhe/pkvm.h",
+        "arch/arm64/kvm/hyp/nvhe/device/device.c",
+        "arch/arm64/kvm/hyp/nvhe/modules.c",
+        "include/kvm/device.h"
+      ],
+      "patch_sha256": "3ef0b48e343941dee16e1bbeebefc81419ae00c66e5ad19cdc92b37dae0c1706"
+    },
+    {
+      "commit": "2d2f67ab8cbe5896278bbd7716c2bcad9f8cfc71",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the ARM pKVM device-ops/power-lock extension with the physical-device assignment backend. It protects assigned devices against hostile host power cycling. The eight reserved fields are additionally KMI-only and would be excluded even if the functional callback were selected. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-kvm-shared-review.json",
+        "SECURITY.md: ARM virtualization and shared header contracts"
+      ],
+      "paths": [
+        "arch/arm64/include/asm/kvm_pkvm_module.h",
+        "arch/arm64/kvm/hyp/include/nvhe/pkvm.h",
+        "arch/arm64/kvm/hyp/nvhe/device/device.c",
+        "arch/arm64/kvm/hyp/nvhe/modules.c",
+        "include/kvm/device.h"
+      ],
+      "patch_sha256": "2886e7199e955de0aecd888315ba1d9f2082a280728a5216f09e241fa283bfcf"
+    },
+    {
+      "commit": "85870f0d74cd36a953fbdd9d2d89d5a75b393311",
+      "disposition": "omitted-current-target",
+      "rationale": "This is a real bounds-check fix: validate FF-A endpoint descriptor offsets before dereference and use version-specific descriptor sizes. It is not already present in the native ARM hyp ffa.c. Omit it only because that ARM EL2 implementation is outside the x86 image, and remove its orphan FFA_MEM_REGION_SZ helper. The native firmware driver descriptor-offset/overflow fix b39b08e6bee8 remains present in full. Reassess this security fix before any ARM target is added. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+      "result_commits": [
+        "9b04584c27f3eb4efae60460b2c8657e127bbf46"
+      ],
+      "evidence": [
+        "evidence/arm-kvm-shared-review.json",
+        "SECURITY.md: ARM virtualization and shared header contracts"
+      ],
+      "paths": [
+        "arch/arm64/kvm/hyp/nvhe/ffa.c",
+        "include/linux/arm_ffa.h"
+      ],
+      "patch_sha256": "4acdc61abae924e9e32514e376b61453ff16196707cd5d69ed36ecd2bde96720"
+    },
+    {
+      "commit": "beed589f871fd9ae0d877f4c96b132cd38ee446d",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the ARM module-owned host-stage2 sharing operation with the ARM pKVM backend. It intentionally permits module-owned pages to remain host mapped when accepted by a protected guest; that trust/ownership contract is not implemented for the SDK. The ABI descriptor and allowed-break entries are historical KMI metadata and are independently omitted. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-kvm-shared-review.json",
+        "SECURITY.md: ARM virtualization and shared header contracts"
+      ],
+      "paths": [
+        "arch/arm64/include/asm/kvm_pkvm_module.h",
+        "arch/arm64/kvm/hyp/include/nvhe/mem_protect.h",
+        "arch/arm64/kvm/hyp/nvhe/mem_protect.c",
+        "arch/arm64/kvm/hyp/nvhe/modules.c",
+        "gki/aarch64/abi.stg",
+        "gki/aarch64/abi.stg.allowed_breaks"
+      ],
+      "patch_sha256": "af20b49826f4587493f5e7eb6bc8d01d6da4b91dc58568fa7b78b00cc1199df9"
+    },
+    {
+      "commit": "62737560230abe11c0b850a4c0acdfb760ec6149",
+      "disposition": "omitted-current-target",
+      "rationale": "Keep native FF-A errno conversion and partition-count flag in the native ARM firmware driver. Undo the header-only half of the initial integration relocation, avoiding duplicate definitions when paired with that driver. The relocation serves the excluded ARM hyp callers; no LTS behavior or descriptor validation is removed. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+      "result_commits": [
+        "9b04584c27f3eb4efae60460b2c8657e127bbf46"
+      ],
+      "evidence": [
+        "evidence/arm-kvm-shared-review.json",
+        "SECURITY.md: ARM virtualization and shared header contracts"
+      ],
+      "paths": [
+        "drivers/firmware/arm_ffa/driver.c",
+        "include/linux/arm_ffa.h"
+      ],
+      "patch_sha256": "d1f7916fad7db7b0523a7c2a4bb9b71f1c11c5859850d88ffe764d2632b6a91b"
+    },
+    {
+      "commit": "ef468354cb750a187a59017ab6fa9f9c6b47b878",
+      "disposition": "reverted",
+      "rationale": "The first endpoint-offset fix and its revert have exact inverse changed lines. Retain the later complete fix already in LTS (b39b08e6bee8, equivalent to ACK 84048f33e713): version-specific EMAD size, checked offset addition, bounds before memset, and early header initialization. Both current driver and header now equal pinned LTS in full.",
+      "result_commits": [
+        "9b04584c27f3eb4efae60460b2c8657e127bbf46"
+      ],
+      "evidence": [
+        "evidence/arm-kvm-shared-review.json",
+        "SECURITY.md: ARM virtualization and shared header contracts"
+      ],
+      "paths": [
+        "drivers/firmware/arm_ffa/driver.c",
+        "include/linux/arm_ffa.h"
+      ],
+      "patch_sha256": "f5622fb21a1c913cba657eb75bace63785c13803e4d99407cd5acaa486e21e84"
+    },
+    {
+      "commit": "3b8a6a682c141e9507a99b9ea678a78a3250442e",
+      "disposition": "reverted",
+      "rationale": "The first endpoint-offset fix and its revert have exact inverse changed lines. Retain the later complete fix already in LTS (b39b08e6bee8, equivalent to ACK 84048f33e713): version-specific EMAD size, checked offset addition, bounds before memset, and early header initialization. Both current driver and header now equal pinned LTS in full.",
+      "result_commits": [
+        "9b04584c27f3eb4efae60460b2c8657e127bbf46"
+      ],
+      "evidence": [
+        "evidence/arm-kvm-shared-review.json",
+        "SECURITY.md: ARM virtualization and shared header contracts"
+      ],
+      "paths": [
+        "drivers/firmware/arm_ffa/driver.c",
+        "include/linux/arm_ffa.h"
+      ],
+      "patch_sha256": "99b1e6d0be20877d1e284e6b30099bb72805c3544ce66a89c8b3493efff20769"
+    },
+    {
+      "commit": "05da73c4450b0367f2c4f24602fb8d4ff4bbd814",
+      "disposition": "adapted",
+      "rationale": "Retain the two-u64 Android vendor-data array in iommu_domain for source modules implementing custom fault handling independently of cookie type. This is usable private state, not unused ABI reservation. Native domain layout, allocator behavior and IOTLB gather semantics remain; vendor code must initialize and synchronize its own state. The exact SDK subscriber is unresolved, so retain the interface conservatively for requested vendor customization.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "9b04584c27f3eb4efae60460b2c8657e127bbf46"
+      ],
+      "evidence": [
+        "evidence/arm-kvm-shared-review.json",
+        "SECURITY.md: ARM virtualization and shared header contracts"
+      ],
+      "paths": [
+        "include/linux/iommu.h"
+      ],
+      "patch_sha256": "5814576546a54de1f76dbbb2928ab9a3519bb8d8c5aec8e7cad2fc70b1ea7bae"
+    }
+  ],
+  "proofs": [
+    {
+      "path": "arch/arm64/include/asm/kvm_asm.h",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": "100644 blob 9da54d4ee49ee7b4f98baf9dd779f8409223b602\tarch/arm64/include/asm/kvm_asm.h"
+    },
+    {
+      "path": "arch/arm64/include/asm/kvm_hypevents.h",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": ""
+    },
+    {
+      "path": "arch/arm64/include/asm/kvm_pkvm.h",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": "100644 blob 7195be508d994af455f4a8940fe8a42db0e05821\tarch/arm64/include/asm/kvm_pkvm.h"
+    },
+    {
+      "path": "arch/arm64/include/asm/kvm_pkvm_module.h",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": ""
+    },
+    {
+      "path": "arch/arm64/include/uapi/asm/kvm.h",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": "100644 blob ed5f3892674c7df421265514ebdb1b23e12f3e14\tarch/arm64/include/uapi/asm/kvm.h"
+    },
+    {
+      "path": "arch/arm64/kvm/Kconfig",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": "100644 blob 4f803fd1c99afdaa3b7120f2df07a2a919e28f9e\tarch/arm64/kvm/Kconfig"
+    },
+    {
+      "path": "arch/arm64/kvm/arm.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": "100644 blob b52c162cb380e5e8a14550198f13c7294ef0ae24\tarch/arm64/kvm/arm.c"
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/include/nvhe/ffa.h",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": "100644 blob 146e0aebfa1c7c9834c75a9a29bf87eb6f94f436\tarch/arm64/kvm/hyp/include/nvhe/ffa.h"
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/include/nvhe/iommu.h",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": ""
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/include/nvhe/mem_protect.h",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": "100644 blob 5f9d56754e39f5ce9378dfe76a53c84ab5583e08\tarch/arm64/kvm/hyp/include/nvhe/mem_protect.h"
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/include/nvhe/pkvm.h",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": "100644 blob 184ad7a3995072e2c4f708b39a2ad4a4d9c86b61\tarch/arm64/kvm/hyp/include/nvhe/pkvm.h"
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/include/nvhe/trace/trace.h",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": ""
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/nvhe/Makefile",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": "100644 blob a244ec25f8c5bd0a744f7791102265323ecc681c\tarch/arm64/kvm/hyp/nvhe/Makefile"
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/nvhe/Makefile.module",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": ""
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/nvhe/device/device.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": ""
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/nvhe/events.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": ""
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/nvhe/ffa.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": "100644 blob 58b7d0c477d7fce235fc70d089d175c7879861b5\tarch/arm64/kvm/hyp/nvhe/ffa.c"
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/nvhe/hyp-main.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": "100644 blob 6e7547b7ca432ac659fcb2535dd928d4fc79aca9\tarch/arm64/kvm/hyp/nvhe/hyp-main.c"
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/nvhe/iommu/iommu.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": ""
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/nvhe/mem_protect.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": "100644 blob ece04bb10ab096533257ee3891e00266ec4f5e05\tarch/arm64/kvm/hyp/nvhe/mem_protect.c"
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/nvhe/module.lds.S",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": ""
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/nvhe/modules.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": ""
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/nvhe/pkvm.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": "100644 blob bf0250806a781cb6728cf81c902ab62f8533f8e8\tarch/arm64/kvm/hyp/nvhe/pkvm.c"
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/nvhe/power/hvc.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": ""
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/nvhe/trace.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": ""
+    },
+    {
+      "path": "arch/arm64/kvm/hyp_trace.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": ""
+    },
+    {
+      "path": "arch/arm64/kvm/mmu.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": "100644 blob af50fed5b59750cc19b3a53ccec7e8296036e7ef\tarch/arm64/kvm/mmu.c"
+    },
+    {
+      "path": "arch/arm64/kvm/pkvm.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": "100644 blob 24f0f8a8c943cc9b70d88220927b6623c6251f27\tarch/arm64/kvm/pkvm.c"
+    },
+    {
+      "path": "arch/arm64/kvm/psci.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": "100644 blob 3b5dbe9a0a0ea021e27502a2c0936c699f6a2bb5\tarch/arm64/kvm/psci.c"
+    },
+    {
+      "path": "drivers/firmware/arm_ffa/driver.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": "100644 blob 1d0bd586da4d6f7e4c8654e075e9f3b5f630f063\tdrivers/firmware/arm_ffa/driver.c"
+    },
+    {
+      "path": "include/kvm/arm_psci.h",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": "100644 blob cbaec804eb839233b8946ae8ecee9119adfb30ff\tinclude/kvm/arm_psci.h"
+    },
+    {
+      "path": "include/kvm/device.h",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": ""
+    },
+    {
+      "path": "include/kvm/power_domain.h",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": ""
+    },
+    {
+      "path": "include/linux/arm_ffa.h",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": "100644 blob 62d67dae8b703352cc7d2077be6d3943e3933cb1\tinclude/linux/arm_ffa.h"
+    },
+    {
+      "path": "include/uapi/linux/kvm.h",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "exact native blob or mutual absence",
+      "tree_entry": "100644 blob 954e0511ce91c4c34e6aace4cdfc0f4393b2a44c\tinclude/uapi/linux/kvm.h"
+    },
+    {
+      "path": "include/linux/iommu.h",
+      "comparison": "entire header equals native after removing only the retained two-u64 Android vendor field",
+      "blob": "b77299570266e3610236553419eb9c8b69584ea4"
+    },
+    {
+      "original": "ef468354cb750a187a59017ab6fa9f9c6b47b878",
+      "revert": "3b8a6a682c141e9507a99b9ea678a78a3250442e",
+      "comparison": "exact inverse changed lines"
+    },
+    {
+      "build_config": "common_dist/kernel_x86_64_dot_config",
+      "sha256": "48f19810fd5e10021d64b96e82cdb2b0b587f7cb24b3b4b5660b6732ae05cd09",
+      "selected": "CONFIG_X86_64=y; CONFIG_KVM=y; CONFIG_KVM_INTEL=y; CONFIG_KVM_AMD=y; CONFIG_IOMMU_SUPPORT=y"
+    },
+    {
+      "path": "drivers/misc/pkvm-smc/pkvm/pkvm-smc.c",
+      "comparison": "excluded ARM implementation/test absent from port"
+    },
+    {
+      "path": "drivers/misc/pkvm-smc/pkvm/events.h",
+      "comparison": "excluded ARM implementation/test absent from port"
+    },
+    {
+      "path": "tools/testing/selftests/hyp-trace/hyp-trace-test",
+      "comparison": "excluded ARM implementation/test absent from port"
+    }
+  ],
+  "related_evidence": [
+    "sdk-build-rule-structure.json",
+    "tools-tail-review.json",
+    "iommu-generic-review.json",
+    "build-results.json"
+  ],
+  "remote_resources_used": [],
+  "validation_limit": "Static patch and source comparison; build 187 recorded separately after completion. No ARM build, runtime or AVF validation."
+}

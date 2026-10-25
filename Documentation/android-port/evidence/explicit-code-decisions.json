@@ -28784,5 +28784,244 @@
       "evidence/fs-block-tail-review.json",
       "SECURITY.md: Remaining filesystem and block interfaces"
     ]
+  },
+  {
+    "commit": "f02d784fa2a7dc0d119745ebe9fa3a2d8a1c3325",
+    "disposition": "omitted-current-target",
+    "rationale": "Keep native PSCI functions in psci.c and the native arm_psci.h. The change relocates affinity and argument-narrowing helpers for ARM hyp reuse without a behavioral fix; its ARM register/MPIDR interfaces do not supply an x86 module API. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-kvm-shared-review.json",
+      "SECURITY.md: ARM virtualization and shared header contracts"
+    ]
+  },
+  {
+    "commit": "642b8b22019d52943520fb7c4c5a84c8f36fae48",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit ARM protected VM type bit 31 and the generic-named ARM KVM_VM_TYPE_MASK along with the ARM creation/IPA validation changes. Preserve the exact native UAPI header and x86 VM-type validation. Advertising this definition would not implement an ARM protected VM on x86. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-kvm-shared-review.json",
+      "SECURITY.md: ARM virtualization and shared header contracts"
+    ]
+  },
+  {
+    "commit": "a63908e12821bf8763a4ab4bc5c5029afca44876",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the ARM-only firmware capability 0xffbadab1, ARM firmware-info struct and SET_FW_IPA/INFO dispatcher together. The code requires ARM protected KVM and firmware-reserved memory; native x86 KVM and its capability handling remain. No successful protected firmware setup is advertised. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-kvm-shared-review.json",
+      "SECURITY.md: ARM virtualization and shared header contracts"
+    ]
+  },
+  {
+    "commit": "6088d6a0918c1b204b6b22b3e207d4c3cf45c00c",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the ARM hyp selftest event HVC, tracefs trigger, Kconfig and shell test together. Its config explicitly requires ARM64 and PROTECTED_NVHE_TESTING; the SDK selftest rule selects a separate explicit suite. The test is not run or claimed passed. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-kvm-shared-review.json",
+      "SECURITY.md: ARM virtualization and shared header contracts"
+    ]
+  },
+  {
+    "commit": "c5596e7e83e5a816cd63f7402be6161ef6036e5f",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the ARM EL2 module event-section automatic registration and its pkvm-smc call-site removal as a unit. The SMC filter Kconfig depends on ARM64/KVM/module mode; this is a separate hypervisor loader, not the retained Linux vendor-module registration/signing mechanism. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-kvm-shared-review.json",
+      "SECURITY.md: ARM virtualization and shared header contracts"
+    ]
+  },
+  {
+    "commit": "9f7d684f3a6442722fae9deb88676f618693bec1",
+    "disposition": "omitted-current-target",
+    "rationale": "The head/tail pointer, lost-event and timestamp reset fix is security-relevant to the ACK ARM hyp ring buffer, which is omitted together with its tracefs interface and test. Do not import a detached test or imply the unfixed ACK implementation remains executable; native Linux tracing is separately retained. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-kvm-shared-review.json",
+      "SECURITY.md: ARM virtualization and shared header contracts"
+    ]
+  },
+  {
+    "commit": "dafce300db7fa45f7260e124b624c0d5300ac38e",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit ARM guest FF-A version/feature negotiation, mailbox sharing and map-fault host request handling. Remove the orphan reverse errno helper from the shared ARM header; its positive caller is this excluded dispatcher. Retain the native firmware driver/header as a pair. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+    "result_commits": [
+      "9b04584c27f3eb4efae60460b2c8657e127bbf46"
+    ],
+    "evidence": [
+      "evidence/arm-kvm-shared-review.json",
+      "SECURITY.md: ARM virtualization and shared header contracts"
+    ]
+  },
+  {
+    "commit": "2eaa5d4ac3af113edeacea48bad2aefea299d38d",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit ARM guest/host direct-message forwarding and its source-endpoint mask together. The endpoint check prevents guest impersonation in that dispatcher; omitting the entire forwarding feature does not leave an unchecked forwarding path in the SDK. Remove the orphan header mask. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+    "result_commits": [
+      "9b04584c27f3eb4efae60460b2c8657e127bbf46"
+    ],
+    "evidence": [
+      "evidence/arm-kvm-shared-review.json",
+      "SECURITY.md: ARM virtualization and shared header contracts"
+    ]
+  },
+  {
+    "commit": "221fdaa6f1cdb051a206821a06bcc401fe7f63d6",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit ARM TrustZone secure-partition VM-availability notifications, state/retry tracking and guest-VM handle retention, plus their header flags. This establishes a secure-world lifecycle protocol for ARM FF-A, not a generic Linux VM notifier. Keep native ARM code; no protected-VM availability guarantee is claimed. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+    "result_commits": [
+      "9b04584c27f3eb4efae60460b2c8657e127bbf46"
+    ],
+    "evidence": [
+      "evidence/arm-kvm-shared-review.json",
+      "SECURITY.md: ARM virtualization and shared header contracts"
+    ]
+  },
+  {
+    "commit": "79d71eb85cabe2ead0eb44549977cfbd5b4a4147",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the ARM hyp include-path change and matching SMC template include fixes with the excluded ARM EL2 module build. The Linux module interface is unaffected; no historical hyp-module include compatibility is promised. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-kvm-shared-review.json",
+      "SECURITY.md: ARM virtualization and shared header contracts"
+    ]
+  },
+  {
+    "commit": "2a7420897c91635045c2799146a90e90c52bd83b",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the ARM hyp IOMMU gather implementation and undo its shared macro extraction. The positive extra caller is the ARM hyp implementation; native iommu_iotlb_gather_add_page retains exactly its disjoint-range/granularity flush and range accounting. Preserve the independent Android iommu_domain vendor field. This is not removal of native IOMMU TLB invalidation. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+    "result_commits": [
+      "9b04584c27f3eb4efae60460b2c8657e127bbf46"
+    ],
+    "evidence": [
+      "evidence/arm-kvm-shared-review.json",
+      "SECURITY.md: ARM virtualization and shared header contracts"
+    ]
+  },
+  {
+    "commit": "5bfadd596c9a6644eaebb21ad12fa409c804624d",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit ARM host-HVC power-domain registration/dispatch and its shared data type. The implementation requires firmware/IOMMU reset behavior that blocks DMA and an ARM EL2 HVC path, rather than the selected SDK virtio device contract. No unsupported power-isolation guarantee is introduced. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-kvm-shared-review.json",
+      "SECURITY.md: ARM virtualization and shared header contracts"
+    ]
+  },
+  {
+    "commit": "bc52873bb1f3e2c554e2648f2fb9ebf50a5cddc5",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the ARM hyp assignable-device registry, resources/IOMMU descriptors and device.h together. These describe trusted boot-time physical MMIO assignment; they do not implement SDK virtio devices or generic source-module hooks. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-kvm-shared-review.json",
+      "SECURITY.md: ARM virtualization and shared header contracts"
+    ]
+  },
+  {
+    "commit": "286f12ecf9f2bfe58ac609d8451a547c437b0c4b",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the ARM hyp IOMMU host-ownership checks/refcount field with the excluded device-assignment implementation. The checks prevent a host from altering a protected guest device and must accompany any future import of that feature; native x86 IOMMU and KVM isolation remain intact. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-kvm-shared-review.json",
+      "SECURITY.md: ARM virtualization and shared header contracts"
+    ]
+  },
+  {
+    "commit": "dedd128fc987a9e7c6a20e253928eaed3c5a7c54",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the ARM device reset callback, mandatory assignment reset and teardown reset calls with the whole assignment backend. These are necessary safeguards if that backend is enabled, not optional KMI padding. The initial patch documentation describes stronger teardown failure behavior than its WARN_ON code; this review makes no runtime assurance for it. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-kvm-shared-review.json",
+      "SECURITY.md: ARM virtualization and shared header contracts"
+    ]
+  },
+  {
+    "commit": "2d2f67ab8cbe5896278bbd7716c2bcad9f8cfc71",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the ARM pKVM device-ops/power-lock extension with the physical-device assignment backend. It protects assigned devices against hostile host power cycling. The eight reserved fields are additionally KMI-only and would be excluded even if the functional callback were selected. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-kvm-shared-review.json",
+      "SECURITY.md: ARM virtualization and shared header contracts"
+    ]
+  },
+  {
+    "commit": "85870f0d74cd36a953fbdd9d2d89d5a75b393311",
+    "disposition": "omitted-current-target",
+    "rationale": "This is a real bounds-check fix: validate FF-A endpoint descriptor offsets before dereference and use version-specific descriptor sizes. It is not already present in the native ARM hyp ffa.c. Omit it only because that ARM EL2 implementation is outside the x86 image, and remove its orphan FFA_MEM_REGION_SZ helper. The native firmware driver descriptor-offset/overflow fix b39b08e6bee8 remains present in full. Reassess this security fix before any ARM target is added. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+    "result_commits": [
+      "9b04584c27f3eb4efae60460b2c8657e127bbf46"
+    ],
+    "evidence": [
+      "evidence/arm-kvm-shared-review.json",
+      "SECURITY.md: ARM virtualization and shared header contracts"
+    ]
+  },
+  {
+    "commit": "beed589f871fd9ae0d877f4c96b132cd38ee446d",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the ARM module-owned host-stage2 sharing operation with the ARM pKVM backend. It intentionally permits module-owned pages to remain host mapped when accepted by a protected guest; that trust/ownership contract is not implemented for the SDK. The ABI descriptor and allowed-break entries are historical KMI metadata and are independently omitted. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-kvm-shared-review.json",
+      "SECURITY.md: ARM virtualization and shared header contracts"
+    ]
+  },
+  {
+    "commit": "62737560230abe11c0b850a4c0acdfb760ec6149",
+    "disposition": "omitted-current-target",
+    "rationale": "Keep native FF-A errno conversion and partition-count flag in the native ARM firmware driver. Undo the header-only half of the initial integration relocation, avoiding duplicate definitions when paired with that driver. The relocation serves the excluded ARM hyp callers; no LTS behavior or descriptor validation is removed. The selected build is ARCH=x86_64 with CONFIG_X86_64=y; ARM64 EL2/SMCCC code cannot be compiled into this image. This is an architecture/boot-contract decision, not an inference from a missing userspace consumer, and makes no AVF runtime parity claim.",
+    "result_commits": [
+      "9b04584c27f3eb4efae60460b2c8657e127bbf46"
+    ],
+    "evidence": [
+      "evidence/arm-kvm-shared-review.json",
+      "SECURITY.md: ARM virtualization and shared header contracts"
+    ]
+  },
+  {
+    "commit": "ef468354cb750a187a59017ab6fa9f9c6b47b878",
+    "disposition": "reverted",
+    "rationale": "The first endpoint-offset fix and its revert have exact inverse changed lines. Retain the later complete fix already in LTS (b39b08e6bee8, equivalent to ACK 84048f33e713): version-specific EMAD size, checked offset addition, bounds before memset, and early header initialization. Both current driver and header now equal pinned LTS in full.",
+    "result_commits": [
+      "9b04584c27f3eb4efae60460b2c8657e127bbf46"
+    ],
+    "evidence": [
+      "evidence/arm-kvm-shared-review.json",
+      "SECURITY.md: ARM virtualization and shared header contracts"
+    ]
+  },
+  {
+    "commit": "3b8a6a682c141e9507a99b9ea678a78a3250442e",
+    "disposition": "reverted",
+    "rationale": "The first endpoint-offset fix and its revert have exact inverse changed lines. Retain the later complete fix already in LTS (b39b08e6bee8, equivalent to ACK 84048f33e713): version-specific EMAD size, checked offset addition, bounds before memset, and early header initialization. Both current driver and header now equal pinned LTS in full.",
+    "result_commits": [
+      "9b04584c27f3eb4efae60460b2c8657e127bbf46"
+    ],
+    "evidence": [
+      "evidence/arm-kvm-shared-review.json",
+      "SECURITY.md: ARM virtualization and shared header contracts"
+    ]
+  },
+  {
+    "commit": "05da73c4450b0367f2c4f24602fb8d4ff4bbd814",
+    "disposition": "adapted",
+    "rationale": "Retain the two-u64 Android vendor-data array in iommu_domain for source modules implementing custom fault handling independently of cookie type. This is usable private state, not unused ABI reservation. Native domain layout, allocator behavior and IOTLB gather semantics remain; vendor code must initialize and synchronize its own state. The exact SDK subscriber is unresolved, so retain the interface conservatively for requested vendor customization.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "9b04584c27f3eb4efae60460b2c8657e127bbf46"
+    ],
+    "evidence": [
+      "evidence/arm-kvm-shared-review.json",
+      "SECURITY.md: ARM virtualization and shared header contracts"
+    ]
   }
 ]
