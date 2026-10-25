@@ -9473,3 +9473,53 @@ header checkpoint. The earlier physical-topology source-selection note for the
 core has been replaced with specific generic-interface decisions and test
 references. Absence of an established SDK caller is recorded as uncertainty,
 not treated as proof that these source APIs are unnecessary.
+
+## Configuration and metadata merge resolutions
+
+Sixteen unique merge resolutions are reviewed individually in
+`evidence/metadata-merge-review.json`. Review used the complete remerge patches,
+not the commits' first-parent diffs or long lists of imported parent commits.
+No source change or new remote resource was needed for this batch.
+
+Native roothash-signature, DM audit and LoadPin object/configuration rules are
+preserved alongside separately reviewed Android default-key, BOW and USER
+targets. The historical DM_VERITY_AVB handler was removed by final ACK itself;
+its old merge resolution does not warrant resurrecting vbmeta invalidation.
+Native audit and root-signature options remain available even though the SDK
+configuration disables them. The old modpost LTO-object prerequisite resolution
+is superseded by native output-symdump/modpost-deps rules, whose complete tail
+is unchanged; current mixed-build/signature adaptations remain independently
+reviewed and build 190 verifies module metadata.
+
+The root Kconfig retains both native io_uring and external vendor Kconfig
+inclusion. Local Kleaf source implements the external-prefix setup; this does
+not claim that an optional Kleaf test target was executed. Staging rules retain
+Android ashmem while accepting native GDM724X removal. The selected ashmem is
+the current Rust implementation, not the historical C driver. Native pidfs is
+unconditionally built; removal of the transitional FS_PID option does not
+remove process file descriptors. Native INTEL_MEI defaults remain intact, with
+the option enabled; a virtual guest Management Engine is not inferred from
+that configuration.
+
+Native kernel-parameter documentation has one keep_bootcon and one kunit.enable
+entry. The generic KUnit default is enabled and explicitly overridable by
+KUNIT_DEFAULT_ENABLED; the SDK sets it off, and native test.c obeys that setting.
+Do not replace that accurate generic description with an unconditional Android
+default. Native Hyper-V EARLY annotation remains, while the omitted ARM DCC
+runtime-enable extension is not documented as available. The only unrelated
+parameter-document delta is the separately reviewed DPM watchdog description.
+
+UML IRQ, Qualcomm PCIe delay/unwind/register and ARM PSCI include resolutions
+retain exact native platform implementations. Their architecture, firmware and
+controller requirements place the Android extensions outside this x86 SDK;
+this does not exclude generic IRQ, PCIe or power tracing. Native PSCI power
+tracing is retained without the ARM-specific vendor hook family. No physical
+controller or ARM runtime behavior is verified.
+
+MAINTAINERS resolutions preserve current native documentation-index and INA233
+records without restoring historical Incremental FS contact metadata. Incfs
+source/configuration remains independently retained. The only unrelated
+MAINTAINERS delta names the retained fsverity trace header. Two merge conflicts
+change only ARM64 ABI allowed-break records for task_struct, TLB-batch and UFS
+fields. Omit these historical binary-KMI exemptions as required; the merged
+functional fixes listed in their messages remain separately inventoried.
