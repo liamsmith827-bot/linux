@@ -10063,3 +10063,25 @@ queries without claiming they originated in upstream 6.18.
 
 Build 193 covers the unchanged executable code. No crypto, malformed-key,
 filesystem or ioctl runtime test was performed; no remote source was used.
+
+# Native mount queries, bio crypto and F2FS casefold
+
+Six decisions in `evidence/storage-native-tail-review.json` retain native
+implementations. Unique IDs, RB-tree namespace indexing, statmount and listmount
+remain LTS, including versioned request/size handling, current namespace and
+LSM checks, checked string growth and bounded list buffering. Whole-file
+comparisons isolate the already reviewed Android mount hook and export
+annotations; no early mount API implementation replaces newer stable fixes.
+
+The old bio crypto context implementation is superseded by native blk-crypto,
+with key-pointer compatibility, multi-limb DUN arithmetic rejecting wrap during
+merge, current request keyslot ownership and bio clone/error cleanup. Required
+Android dm-default-key skip propagation and GPL source exports remain.
+F2FS casefold uses native superblock encoding ownership and generic
+casefold/encryption dentry operations, retaining strict-name errors, concurrent
+rename handling and decrypt/free behavior. Exact functions and unload paths
+were checked; separate F2FS changes are not claimed to be native.
+
+These are source/equivalence reviews. Build 193 covers unchanged executable
+code; no mount syscall, encrypted I/O, casefold or concurrency runtime test
+was performed. No remote source was used.
