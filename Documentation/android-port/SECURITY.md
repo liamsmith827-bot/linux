@@ -9221,3 +9221,32 @@ current source positively connects do_exit, profile_task_exit, the task-exit
 notifier chain and the registered UID accounting callback. Its temporary BROKEN
 gate is absent. This confirms the static notification path, not runtime accounting
 accuracy. No additional remote resource was accessed.
+
+## Retired proc and media interfaces
+
+The 17 decisions in `evidence/revert-interface-review.json` follow explicit ACK
+reversions through current source. The /proc/uid directory was deleted including
+its registration hooks and intervening proc_ops conversion; current per-task
+cpufreq accounting and UID_SYS_STATS remain separate retained interfaces. The
+SOC_SINGLE_MULTI_EXT callback and descriptor were likewise retired, with only an
+intervening GPL-export conversion separating the inverse patches. Neither decision
+relies on failure to find an external consumer. Current native SCS accounting is
+retained in kilobytes per node; the reverted historical byte/zone implementation
+is not restored, and this does not disable native architecture SCS support.
+
+V4L2 reserved-plane-field forwarding was exactly reverted. Current native compat
+conversion remains intact. Three temporary legacy control callbacks were also
+exactly removed again. The pinned external virtio-media source explicitly guards
+those callbacks below Linux 6.15 and uses extended callbacks for 6.18, providing
+positive compatibility evidence for keeping native dispatch without modifying the
+dependency. The separate Android frame/device-count limits remain in place.
+
+The SDCA property workaround was reverted and identically reintroduced under an
+upstream-labelled commit. It is not represented in the pinned LTS implementation.
+It modifies newer Intel SOF/SoundWire physical-codec discovery guarded in ACK by
+SND_SOC_SOF_INTEL_SOUNDWIRE. Both generated SDK configurations disable SOF_TOPLEVEL
+and SOUNDWIRE. That future physical-platform implementation is omitted while
+preserving the complete native hda.c and its fixes. This needs reconsideration
+when targeting those devices. No media runtime test, SCS runtime test or additional
+remote lookup was performed; URLs appearing in local commit messages were not
+opened.
