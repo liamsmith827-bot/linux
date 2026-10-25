@@ -2607,8 +2607,8 @@ static int ieee80211_change_station(struct wiphy *wiphy,
 		}
 	}
 
-	/* NAN capabilties should not change */
-	if (statype == CFG80211_STA_NAN_DATA &&
+	/* NMI capabilities are copied to NDI stations and must stay fixed. */
+	if (statype == CFG80211_STA_NAN_MGMT &&
 	    sta->deflink.pub->ht_cap.ht_supported &&
 	    (params->link_sta_params.ht_capa ||
 	     params->link_sta_params.vht_capa ||

@@ -17200,6 +17200,11 @@ static int nl80211_nan_set_peer_sched(struct sk_buff *skb,
 		return -EINVAL;
 	}
 
+	if (n_channels > U8_MAX) {
+		NL_SET_ERR_MSG(info->extack, "Too many NAN peer channels");
+		return -EINVAL;
+	}
+
 	/*
 	 * Limit the number of peer channels to:
 	 * local_channels * 4 (possible BWs) * 2 (possible NSS values)
@@ -17351,6 +17356,11 @@ static int nl80211_nan_set_local_sched(struct sk_buff *skb,
 	nlmsg_for_each_attr_type(channel, NL80211_ATTR_NAN_CHANNEL,
 				 info->nlhdr, GENL_HDRLEN, rem)
 		n_channels++;
+
+	if (n_channels > U8_MAX) {
+		NL_SET_ERR_MSG(info->extack, "Too many NAN local channels");
+		return -EINVAL;
+	}
 
 	sched = kzalloc(struct_size(sched, nan_channels, n_channels),
 			GFP_KERNEL);
