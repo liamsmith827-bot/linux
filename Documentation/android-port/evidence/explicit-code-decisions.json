@@ -24212,5 +24212,211 @@
       "evidence/drm-pipeline-sdk-review.json",
       "SECURITY.md: SDK virtual display formats and optional display features"
     ]
+  },
+  {
+    "commit": "fd1f129aa0a043b1ffb6b3efb3941d0be0c7d217",
+    "disposition": "partially-adapted",
+    "result_commits": [
+      "67a2c6c604c7ffe3bbf6d9f15f79d1a5f887ede9"
+    ],
+    "rationale": "Retain the single generic source change increasing DRM_OBJECT_MAX_PROPERTY to 96 for Android source-module custom properties; omit both generated historical ABI graphs. Exact SDK demand above 64 is unconfirmed, so this is conservative compatibility retention, not a claim that current virtual drivers require it. Both property/value arrays use the same bound and native attach_property checks before insertion; traversal uses initialized count. Registration belongs to trusted driver setup. Costs 512 additional bytes per container on x86_64; exposes only properties the driver actually attaches. Native access/value/lifetime checks remain. Rebuilt modules use the new layout; no historical binary KMI is retained.",
+    "evidence": [
+      "evidence/drm-property-capacity-review.json",
+      "SECURITY.md: DRM custom-property capacity"
+    ]
+  },
+  {
+    "commit": "89301363b26354a21a78850f186d55f4c57b9a8b",
+    "disposition": "superseded",
+    "result_commits": [
+      "67a2c6c604c7ffe3bbf6d9f15f79d1a5f887ede9"
+    ],
+    "rationale": "The historical increase from 24 to 64 was represented by native LTS. It is now superseded by the explicitly retained 96-property capacity of fd1f129aa0a0, not still textually present as a 64 limit. Preserve native array bounds/iteration and rebuild modules. The previous whole-file textual-presence witness is retained in drm-property-capacity-review.json and removed from active text-presence records.",
+    "evidence": [
+      "evidence/drm-property-capacity-review.json",
+      "SECURITY.md: DRM custom-property capacity"
+    ]
+  },
+  {
+    "commit": "71734200125c32ba611bd4fcee380ff8b1f11d55",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Omit Spreadtrum platform-dependency relaxation and ARM64 GKI SPRD console selections. Current SDK is X86_64, its pinned cmdline names 8250, and the built configuration selects native 8250 console while SERIAL_SPRD is disabled. Keep native serial Kconfig and all LTS UART fixes. This is specific SoC early-console enablement, not a shared vendor-hook/module interface.",
+    "evidence": [
+      "evidence/tty-console-review.json",
+      "SECURITY.md: Console capacity and serial history"
+    ]
+  },
+  {
+    "commit": "a17498d851bbbdc92d283bb39b44b109b5075d45",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Omit relaxation of Samsung SoC serial platform dependencies. Preserve native final SERIAL_SAMSUNG dependency rules. Its SoC UART implementation is outside the SDK x86 virtual/8250 console target; the later dependency-add/revert pair is separately reconciled. Do not extrapolate this platform exclusion to generic serial interfaces.",
+    "evidence": [
+      "evidence/tty-console-review.json",
+      "SECURITY.md: Console capacity and serial history"
+    ]
+  },
+  {
+    "commit": "e1be87019fc97f736f2729a2a4198d250d28633b",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "The complete 360-line Qualcomm GENI early-console implementation, Kconfig entry and Makefile object are reversed exactly by 3a1426dc063c, verified by inverse patch ID. Final ACK and port have no msm_geni_serial_earlycon.c. Do not resurrect the obsolete register-polling implementation; retain native serial Makefile/Kconfig and generic console handling.",
+    "evidence": [
+      "evidence/tty-console-review.json",
+      "SECURITY.md: Console capacity and serial history"
+    ]
+  },
+  {
+    "commit": "3a1426dc063cd2cdd4986444f0503939cc5110c2",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Exact inverse of e1be87019fc9 across all three paths. Keep final retirement of the separate MSM GENI early-console driver. The driver body was fully examined through the forward patch and exact inverse proof; no missing-consumer inference is used.",
+    "evidence": [
+      "evidence/tty-console-review.json",
+      "SECURITY.md: Console capacity and serial history"
+    ]
+  },
+  {
+    "commit": "61d87acb93183be38997b7a8ffbe7bf20b3537cd",
+    "disposition": "superseded",
+    "result_commits": [],
+    "rationale": "The historical CPU0 FIFO/workqueue DCC implementation was removed by 65bff3006db4 except its leftover kfifo include (subsequently cleaned up). Later native 4419da5d5d4b supplies its own CPU0 serialization, which is preserved byte-for-byte in the current native hvc_dcc.c/Kconfig. Do not replay the old implementation over native changes. HVC_DCC requires ARM/ARM64 and cannot be selected for this x86 SDK.",
+    "evidence": [
+      "evidence/tty-console-review.json",
+      "SECURITY.md: Console capacity and serial history"
+    ]
+  },
+  {
+    "commit": "65bff3006db46399d227e95712631db390cfca43",
+    "disposition": "superseded",
+    "result_commits": [],
+    "rationale": "Reviewed full reversal of the old CPU0 DCC operations plus removal of its ARM64 GKI setting. Source reconstruction leaves only the independent enable parameter and leftover kfifo include relative to the pre-feature source. This does not authorize removing later native CPU0 support: retain native 4419da5d5d4b and subsequent fixes. ARM-only defconfig effects are outside the target.",
+    "evidence": [
+      "evidence/tty-console-review.json",
+      "SECURITY.md: Console capacity and serial history"
+    ]
+  },
+  {
+    "commit": "602b160a9591675f9fbd46cd87f07949cbfb10d9",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Omit the hvc_dcc.enable runtime gate and its ARM/ARM64 kernel-parameter documentation. Native HVC_DCC Kconfig depends explicitly on ARM generation or ARM64, so no DCC register probing code can execute in the x86 SDK build. Keep the native architecture driver and do not imply the gate would be unnecessary on an ARM guest without DCC registers. No shared hypervisor-console behavior is disabled.",
+    "evidence": [
+      "evidence/tty-console-review.json",
+      "SECURITY.md: Console capacity and serial history"
+    ]
+  },
+  {
+    "commit": "40e2f0f4f0ce02d9fc39716be9e91b6e08839f35",
+    "disposition": "superseded",
+    "result_commits": [],
+    "rationale": "Historical cleanup removes the kfifo include left by the old DCC revert. Current native 4419da5d5d4b CPU0 implementation legitimately uses kfifo and includes it. Keep the complete native source instead of applying this obsolete deletion. Driver remains architecture-gated outside the SDK.",
+    "evidence": [
+      "evidence/tty-console-review.json",
+      "SECURITY.md: Console capacity and serial history"
+    ]
+  },
+  {
+    "commit": "e8236ecffabac19cedb570a19e349ad5c2398269",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "be6aab8d72f2196accaefd55ff9bc268493e9c31"
+    ],
+    "rationale": "Retain HVC_ALLOC_TTY_ADAPTERS=64 in configured HVC_DRIVER with VIRTIO_CONSOLE=m. Native hvc_init allocates its tty driver using this count; no port lifetime/indexing logic changes. This preserves Android virtio-console/hotplug capacity and expands possible tty slots and associated allocation relative to native eight. Exact SDK demand above eight is unconfirmed; retain the generic configured runtime limit conservatively. Kernel console-slot MAX_NR_HVC_CONSOLES remains unchanged, so this is not a claim of 64 printk consoles or unlimited hotplug.",
+    "evidence": [
+      "evidence/tty-console-review.json",
+      "SECURITY.md: Console capacity and serial history"
+    ]
+  },
+  {
+    "commit": "65680ab92dfda4f4be447455b7ff94a5cfcedd10",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Its temporary Samsung dependency addition is exactly reversed by a86263ec8cfd. Verify the pair rather than interpreting either intermediate state as the final target requirement. Native final serial dependencies are retained independently for the SDK target.",
+    "evidence": [
+      "evidence/tty-console-review.json",
+      "SECURITY.md: Console capacity and serial history"
+    ]
+  },
+  {
+    "commit": "a86263ec8cfddf81449946b6750753ca2456c4b8",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Exact inverse of 65680ab92dfd. Do not import the intermediate pair; final native Samsung dependency restrictions remain as the explicit current-target selection, not historical KMI preservation.",
+    "evidence": [
+      "evidence/tty-console-review.json",
+      "SECURITY.md: Console capacity and serial history"
+    ]
+  },
+  {
+    "commit": "460adfb4993324a5158d16bdbc55a218c54b6c10",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Reviewed unique remerge hunk dropping the updated Samsung platform dependency. Reject that physical SoC enablement for this SDK target and keep the complete current native serial Kconfig. No other unique merge-resolution file is present.",
+    "evidence": [
+      "evidence/tty-console-review.json",
+      "SECURITY.md: Console capacity and serial history"
+    ]
+  },
+  {
+    "commit": "7e9c0ae634860f465ae2bad5f47e091998d86b81",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Reviewed unique remerge hunk again dropping Samsung dependency, now including ARCH_APPLE/ARCH_ARTPEC additions on the upstream side. Keep the current native platform guard rather than the historical dependency deletion; ordinary x86 SDK 8250/virtio console configuration remains.",
+    "evidence": [
+      "evidence/tty-console-review.json",
+      "SECURITY.md: Console capacity and serial history"
+    ]
+  },
+  {
+    "commit": "38c9e7651389cf87ab64a036073b4bacfb466997",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Unique resolution retains both kfifo (required by the later native CPU0 implementation) and moduleparam (required by downstream DCC-enable). Keep native kfifo and architecture driver code; omit moduleparam/enable because the DCC implementation is ARM-only and unselectable on this SDK target. Whole current hvc_dcc.c equals native LTS.",
+    "evidence": [
+      "evidence/tty-console-review.json",
+      "SECURITY.md: Console capacity and serial history"
+    ]
+  },
+  {
+    "commit": "cc6d12dfa9fbbd7732a545fb829c201b928ba754",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Omit the example ARM64 pKVM PL011 UART module and its build/Kconfig integration. Its Kconfig explicitly requires ARM64, hyp Makefile imports arch/arm64/kvm/hyp/nvhe/Makefile.module, and hyp MMIO uses ARM ldr/str with configurable PL011 registers. It supplies an EL2 serial example for physical UARTs, not the SDK x86 virtual console. Omit its privileged mapping/polling surface; this makes no decision about the separate x86 pKVM implementation.",
+    "evidence": [
+      "evidence/tty-console-review.json",
+      "SECURITY.md: Console capacity and serial history"
+    ]
+  },
+  {
+    "commit": "d50ffcc00e4168063a413e609d04c9d99ff5ff42",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "All changed module-token APIs belong to the ARM64 EL2 module loader/header, plus its SMC-filter and PL011 clients. The patch removes a redundant token while retaining hyp VA in the ARM64 module architecture state. These providers/clients are outside the x86 SDK architecture and are absent from the port. Do not add an ARM EL2 module mechanism just to retain this cleanup; x86 pKVM and generic module infrastructure are separate reviews.",
+    "evidence": [
+      "evidence/tty-console-review.json",
+      "SECURITY.md: Console capacity and serial history"
+    ]
+  },
+  {
+    "commit": "619cd8b0516dc53d278ef09bc89863d2190e42b6",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Omit missing-prototype declaration and module-only Kconfig correction with the omitted ARM64 PL011 example. The whole example is absent, so the earlier prototype/build-mode defect is not retained. No claim about prototype safety of other hypervisor modules is made.",
+    "evidence": [
+      "evidence/tty-console-review.json",
+      "SECURITY.md: Console capacity and serial history"
+    ]
+  },
+  {
+    "commit": "2fa0ed8af5b031e8bcde94aa0da9023132d19281",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Examined all three unique resolution files. Current ACK/LTS/port serdev_controller_add are identical: the old platform-serdev registration/log branch is gone. Their complete_walk functions are also identical, retaining scoped-root path_is_under/EXDEV protection and native weak revalidation without the retired success_walk_trace. Keep native dev_has_sync_state, preserving the merged helper and NULL guard while also keeping later READ_ONCE(dev->driver) rather than ACK repeated loads. Both final headers omit the historical driver_init declaration. These are final-code equivalence/native-fix proofs, not omission based on a missing consumer.",
+    "evidence": [
+      "evidence/tty-console-review.json",
+      "SECURITY.md: Console capacity and serial history"
+    ]
   }
 ]

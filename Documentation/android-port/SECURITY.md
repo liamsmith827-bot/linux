@@ -8116,5 +8116,50 @@ This costs 512 additional bytes per property container on x86_64 and permits mor
 properties to be exposed by drivers. Native value validation, lifetime and object
 access rules are unchanged. All modules are rebuilt against the enlarged source
 layout; omit both generated ABI graphs and historical binary-layout promises.
-No change to another manifest component is needed. Verification is pending in
-build169; no display runtime or vendor property population is claimed.
+No change to another manifest component is needed. Build169 at 67a2c6c604c7 completed the existing emulator workflow, generating
+the kernel image and all 145 modules. All signatures and module tables verified;
+the modified-payload control was rejected. No display runtime or vendor
+property population is claimed.
+
+
+## Console capacity and serial history
+
+Eighteen decisions, including four merges, are recorded in
+`evidence/tty-console-review.json`. Retain 64 HVC tty adapters: the SDK enables
+HVC_DRIVER and builds virtio_console as a module. The count sizes the native
+tty driver; native allocation, lifetime and console-index handling remain.
+Exact SDK demand above eight adapters is unconfirmed, so this is conservative
+retention of configured generic runtime capacity. MAX_NR_HVC_CONSOLES stays
+unchanged; this does not imply 64 printk consoles or unlimited hotplug.
+
+Keep native serial Kconfig and reject SoC dependency relaxations for Samsung
+and Spreadtrum, including the two Samsung merge resolutions. The SDK selects
+8250 console support and uses its x86 virtual platform. The old separate GENI
+early-console driver has an exact explicit revert across all files; do not
+resurrect it. The temporary Samsung dependency-add/revert pair is also exact.
+
+The historical DCC CPU0 implementation was reverted, leaving only the
+independent enable parameter and an unused include; exact source reconstruction
+checks this. Later native 4419da5d5d4b reintroduced its own CPU0 support and
+kfifo use, which remain intact. Do not replay the historical revert or include
+cleanup over that native code. Omit the downstream DCC enable parameter and
+its documentation because HVC_DCC's ARM/ARM64 dependency prevents this code
+from being selected on x86; this is not a claim that probing unsupported DCC
+registers would be safe on an ARM guest. The DCC merge's kfifo/moduleparam
+resolution is correspondingly split in favor of the native implementation.
+
+The PL011 pKVM example explicitly depends on ARM64, imports its nVHE module
+build rules, and implements ARM MMIO to a configured physical UART. Omit the
+example, prototype/module-only fix and ARM64 loader token cleanup with its
+SMC/PL011 clients. This adds no support solely for future physical platforms
+and makes no decision about x86 pKVM or generic module infrastructure.
+
+The three-path 2fa0ed8af5b0 merge is checked at function level. Final ACK, LTS
+and port controller_add/complete_walk are identical; the old platform-serdev
+and success-walk tracing branches have no remaining final code. Native scoped
+path validation and weak revalidation remain. Keep the native sync-state helper
+with its later READ_ONCE driver snapshot; do not substitute ACK's repeated
+loads. Final headers all omit the historical driver_init declaration. All
+other serial/serdev implementation files in this review are native LTS.
+No serial I/O, hotplug, DCC or EL2 example runtime is claimed. Only local sources
+were used.

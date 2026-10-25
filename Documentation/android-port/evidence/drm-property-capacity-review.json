@@ -1,0 +1,63 @@
+{
+  "source_head": "67a2c6c604c7ffe3bbf6d9f15f79d1a5f887ede9",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "fd1f129aa0a043b1ffb6b3efb3941d0be0c7d217",
+      "disposition": "partially-adapted",
+      "result_commits": [
+        "67a2c6c604c7ffe3bbf6d9f15f79d1a5f887ede9"
+      ],
+      "rationale": "Retain the single generic source change increasing DRM_OBJECT_MAX_PROPERTY to 96 for Android source-module custom properties; omit both generated historical ABI graphs. Exact SDK demand above 64 is unconfirmed, so this is conservative compatibility retention, not a claim that current virtual drivers require it. Both property/value arrays use the same bound and native attach_property checks before insertion; traversal uses initialized count. Registration belongs to trusted driver setup. Costs 512 additional bytes per container on x86_64; exposes only properties the driver actually attaches. Native access/value/lifetime checks remain. Rebuilt modules use the new layout; no historical binary KMI is retained.",
+      "evidence": [
+        "evidence/drm-property-capacity-review.json",
+        "SECURITY.md: DRM custom-property capacity"
+      ]
+    },
+    {
+      "commit": "89301363b26354a21a78850f186d55f4c57b9a8b",
+      "disposition": "superseded",
+      "result_commits": [
+        "67a2c6c604c7ffe3bbf6d9f15f79d1a5f887ede9"
+      ],
+      "rationale": "The historical increase from 24 to 64 was represented by native LTS. It is now superseded by the explicitly retained 96-property capacity of fd1f129aa0a0, not still textually present as a 64 limit. Preserve native array bounds/iteration and rebuild modules. The previous whole-file textual-presence witness is retained in drm-property-capacity-review.json and removed from active text-presence records.",
+      "evidence": [
+        "evidence/drm-property-capacity-review.json",
+        "SECURITY.md: DRM custom-property capacity"
+      ]
+    }
+  ],
+  "prior_text_presence_record": {
+    "commit": "89301363b26354a21a78850f186d55f4c57b9a8b",
+    "patch_sha256": "a93242270fab218f532cfc7b41b45208f12b243755d765727cb1e35e5507c9de",
+    "path_witnesses": {
+      "include/drm/drm_mode_object.h": {
+        "lts_blob": "c68edbd126d04d51221f50aa2b4166475543b59f",
+        "port_blob": "c68edbd126d04d51221f50aa2b4166475543b59f"
+      }
+    }
+  },
+  "omitted_metadata": {
+    "gki/aarch64/abi.stg": {
+      "kind": "generated historical ABI graph; omitted",
+      "patch_sha256": "634f9d4f8a6f4acc438ad41069b99e4053b1b1f5bab346624f3c43e891e9ea74"
+    },
+    "gki/x86_64/abi.stg": {
+      "kind": "generated historical ABI graph; omitted",
+      "patch_sha256": "df3068c089f333b48e24ca1002b53710582e9cdc116cded83b119eacf82bb708"
+    }
+  },
+  "source_checks": [
+    "Whole public header is native LTS except 64-to-96 constant.",
+    "Whole drm_mode_object.c and drm_property.c are native LTS.",
+    "Global DRM_OBJECT_MAX_PROPERTY references are the two array extents, declaration/docs and attach-property bound check."
+  ],
+  "patch_sha256": "95d3b218cadca33baf4937c913525b9282697038be88a2a69ba537b9d32f4358",
+  "remote_sources_used": [],
+  "limitations": "Build169 succeeded with all 145 module signatures/tables verified and modified-payload signature control rejected. No runtime display/custom-property population or optional vendor module consumer verified.",
+  "build_evidence": [
+    "evidence/build-results.json",
+    "evidence/module-tables-build-169.json"
+  ]
+}
