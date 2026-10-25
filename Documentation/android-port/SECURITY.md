@@ -10425,3 +10425,64 @@ justified adaptations. Packaging is not loading, successful signature validation
 is not runtime correctness, and no network, Bluetooth, NFC or attached USB
 operation was tested. No remote source was accessed, including URLs embedded in
 original commit messages.
+
+# Native fixes and historical build cleanup review
+
+Nineteen decisions in `evidence/native-misc-tail-review.json` cover historical
+build changes, upstream replacements, physical telemetry and PCI reverts.
+`6a5a59a0dd4b` restores documentation for the already retained x86
+`disable_dma32=on`; `6fec8f47da9f` corrects SCMVERSION's Android provenance and
+removes a stale comment about relative module paths. There is no executable or
+configuration change in this batch. The selected build remains verified by
+attempt 197; no new compilation result is claimed for later comments/docs.
+
+SCMVERSION's final restoration had brought back the old comments, although the
+module_srcpath logic already resolves relative paths. The nit correction is
+applied to the current implementation. SCMVERSION remains diagnostic metadata,
+not module authorization or binary KMI. Fifteen earlier modpost witnesses were
+revalidated after proving every non-comment line unchanged; their old records
+are preserved. The native whitelist-relative-path patch also passed its
+reverse-apply check against a temporary HEAD-tree index. No working index was
+used by that check.
+
+The old mixed-build `all` guard was explicitly reverted in ACK by cae6b5eff8e8.
+The selected virtual-device rule specifies `make_goals = ["modules"]`, and
+Kleaf passes those goals explicitly. Native architecture Makefiles remain,
+including later x86 APX restrictions; arbitrary mixed `make all` is not promised
+by final ACK or this port. KCONFIG_EXT_PREFIX and its empty fallback remain for
+vendor external-module configuration, with positive local Kleaf/DDK consumers.
+This is trusted build input. ARM64's separate compat-vDSO preprocessing flag
+and ARM SMCCC nosocid option are omitted with their architecture-specific
+consumers; x86 userspace compat behavior is unaffected.
+
+Native select stack separation, sched_prepare_exec tracing, Kconfig-based extra
+ELF notes and bounded dynamic core-file note limits remain. Complete affected
+functions or blocks were compared, including the native coredump count check,
+allocation failures and root-writable minmax sysctl. The two identical historic
+huge-zero-page patches are superseded by native LTS's three-argument
+`tag_clear_highpages(page, count, clear_pages)` contract. Normal clearing remains
+required when tag clearing did not initialize memory. Native tag/KASAN/fallback
+order is retained. The pre-existing trusted vendor callback may change init;
+that capability is not new here, and callbacks that suppress required clearing
+are not certified safe. Native behavior without such an override remains.
+
+The x86 DMA32 option and shared empty-zone guards were already retained in
+6637da622c0a and the initial integration. The original patch also touches x86,
+so its ARM64 subject is not a reason to omit it entirely. Native allocation
+loops, dma_coherent_ok address checks and fallback remain; the old ACK goto
+implementation is not substituted. Default zone construction remains native,
+while the shared empty-zone checks also handle naturally empty DMA32 zones.
+Enabling the boot option can reduce low-address DMA availability; it does not
+permit returning an address outside a device's coherent mask. The SDK build has
+ZONE_DMA32 enabled and NUMA disabled. Exact optional use, NUMA/hotplug behavior
+and real DMA allocation are unverified. ARM64 zone changes are not introduced.
+
+The DesignWare MSI and ELBI temporary revert/reapply pairs cancel exactly by
+ordered added/removed lines for every path. Complete current files stay native,
+retaining the parent MSI-domain API, shared optional ELBI resources and later
+LTS fixes. Pixel-specific historical workaround rationales are local history,
+not new platform support or independently verified device results. Three Intel
+PMC changes are omitted: extra Arrow Lake GUID, redundant-field cleanup and
+Wildcat Lake SSRAM telemetry. The physical PMC feature is not enabled in SDK,
+and all its affected files remain exactly LTS. Retaining a native field is not
+historical KMI preservation. No remote resources or runtime tests were used.

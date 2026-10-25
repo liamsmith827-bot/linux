@@ -34707,5 +34707,203 @@
       "SECURITY.md: Historical GKI module configuration review",
       "evidence/build-results.json: sdk-build-attempt-197"
     ]
+  },
+  {
+    "commit": "600066b974ad6f54cd76d185c0b65a893145a5fc",
+    "disposition": "applied",
+    "rationale": "Apply the documentation/comment nits in 6fec8f47da9f after final ACK restored older SCMVERSION wording: identify Android origin rather than imply upstream Linux 5.12, quote sed, and remove the stale relative-M limitation. Current module_srcpath already resolves relative external paths. No Make rule or executable line changes; SCMVERSION is optional diagnostic provenance, not loader authorization or KMI.",
+    "result_commits": [
+      "6fec8f47da9fdc5d43844b14f6a6ede3d982b714"
+    ],
+    "evidence": [
+      "evidence/native-misc-tail-review.json",
+      "SECURITY.md: Native fixes and historical build cleanup review"
+    ]
+  },
+  {
+    "commit": "0d018732af3146a0068894ec12aa4ec0a6c4d19f",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "Original mixed-build all-target guard was explicitly reverted by cae6b5eff8e8. Final SDK virtual_device_x86_64 specifies make_goals=[modules], and Kleaf passes explicit make goals. Keep complete native ARM/x86 Makefiles and native APX gating. This does not promise that arbitrary mixed make all is supported; that behavior is also absent from final ACK.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/native-misc-tail-review.json",
+      "SECURITY.md: Native fixes and historical build cleanup review"
+    ]
+  },
+  {
+    "commit": "5edbbb399d066288accf1588999ad7e5edd89364",
+    "disposition": "adapted",
+    "rationale": "Retain KCONFIG_EXT_PREFIX source inclusion and empty fallback Kconfig.ext for external module configuration, with corrected descend spelling. Local Kleaf kernel_env and DDK Kconfig builders positively consume this interface; it is trusted build input, not a runtime file-loading path. Preserve native Kconfig sources and no historical module-binary ABI.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/native-misc-tail-review.json",
+      "SECURITY.md: Native fixes and historical build cleanup review"
+    ]
+  },
+  {
+    "commit": "7b1c6f1101c32c31470c483143ab03f0f98b61ed",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native do_select is noinline_for_stack and native poll.h uses the restored 832-byte allocation threshold. Complete do_select and whole poll.h are native; select.c differs only by two whitespace cleanups. Keep later native locking/FD validation, not the historical parent implementation.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/native-misc-tail-review.json",
+      "SECURITY.md: Native fixes and historical build cleanup review"
+    ]
+  },
+  {
+    "commit": "76bbef6aa9343f8a5c2914784c314d24e22ef294",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit ARM64 compat-vDSO KCPPFLAGS_COMPAT input and its documentation as a unit. Entire ARM64 vDSO32 Makefile and kbuild document remain LTS. This is an ARM32 userspace vDSO built by the ARM64 kernel, not x86 compat support; the selected x86 SDK cannot select that architecture target.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/native-misc-tail-review.json",
+      "SECURITY.md: Native fixes and historical build cleanup review"
+    ]
+  },
+  {
+    "commit": "a19db5d39a454ecb3efde11b2a62d5f0670b69bc",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native sched_prepare_exec event and placement before point_of_no_return state replacement are retained. Exact current native event definition and trace/point-of-no-return sequence match LTS, including modern one-argument __assign_str usage. Other exec/trace Android changes are separately reviewed and this event adds no new privilege bypass.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/native-misc-tail-review.json",
+      "SECURITY.md: Native fixes and historical build cleanup review"
+    ]
+  },
+  {
+    "commit": "d0fbbdf4e8e687995d16d31a773b25dcccc47924",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native ARCH_HAVE_EXTRA_ELF_NOTES Kconfig block and CONFIG_ guard replace the old preprocessor macro. Whole generic elf.h and both PowerPC paths match LTS; no extra architecture port is added. Preserve native x86 extra-note selection/implementations and core-dump restrictions.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/native-misc-tail-review.json",
+      "SECURITY.md: Native fixes and historical build cleanup review"
+    ]
+  },
+  {
+    "commit": "ca65f513e71a40c39cc969448089dff599cba56e",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native dynamic core_file_note_size_limit exists with the 4MiB default, 16MiB bound and root-writable 0644 minmax sysctl. Complete fill_files_note, coredump.c and coredump.h remain native, including count overflow/allocation checks. Separately retained ELF page-size changes do not replace this logic; no coredump or sysctl write executed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/native-misc-tail-review.json",
+      "SECURITY.md: Native fixes and historical build cleanup review"
+    ]
+  },
+  {
+    "commit": "a1dfc257ae631464fada5881052af7bce8b5533f",
+    "disposition": "partially-adapted",
+    "rationale": "Retain x86 disable_dma32=on and shared empty-zone-aware DMA helpers through 6637da622c0a/initial integration; ARM64 zone implementation is omitted. Restore x86-scoped parameter documentation in 6a5a59a0dd4b. Keep native allocation while-loop, coherent-address checks and fallback rather than ACK older goto form. Default zone construction stays native; empty-zone handling also applies when DMA32 is naturally empty. Trusted boot configuration may trade away low-address DMA availability; exact optional SDK use and NUMA/hotplug behavior are unverified.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "6637da622c0a2163abdabb63764d543b0a2643dd",
+      "6a5a59a0dd4b4b64e4ddda3a430d539306d9649f"
+    ],
+    "evidence": [
+      "evidence/native-misc-tail-review.json",
+      "SECURITY.md: Native fixes and historical build cleanup review"
+    ]
+  },
+  {
+    "commit": "8fceedc18613bdf16186ea647cf0a93fe9751223",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "Temporary legacy MSI-domain revert is undone by 417f1fd5a420; every ordered added/removed line is exactly inverted. Keep all three complete native LTS files with msi_create_parent_irq_domain and later fixes, not the pp->msi_domain workaround for old Pixel drivers.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/native-misc-tail-review.json",
+      "SECURITY.md: Native fixes and historical build cleanup review"
+    ]
+  },
+  {
+    "commit": "417f1fd5a42056d417635d63fab4b640a3837a49",
+    "disposition": "already-represented-upstream",
+    "rationale": "Reapplication cancels 8fceedc18613 and restores native MSI parent-domain API. All affected files are entirely native LTS; old Pixel driver source compatibility is outside SDK, and native IRQ-domain lifetime/fixes are preserved. This is not an ACK-only platform port.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/native-misc-tail-review.json",
+      "SECURITY.md: Native fixes and historical build cleanup review"
+    ]
+  },
+  {
+    "commit": "3ca47cbfdacea6800c21afebd9e2313b33801f0d",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "Temporary ELBI mapping revert is exactly inverted by 9c2077ffc78a for all five paths. Keep complete native LTS core and Exynos/Qualcomm files with shared optional resource mapping and later fixes; no old driver-private register mapping is restored.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/native-misc-tail-review.json",
+      "SECURITY.md: Native fixes and historical build cleanup review"
+    ]
+  },
+  {
+    "commit": "8b92872c240c78462f711b9a41eccb739bdc7f62",
+    "disposition": "superseded",
+    "rationale": "Native LTS supersedes the two-argument huge-zero tag-clear correction with three-argument tag_clear_highpages(page,count,clear_pages), returning whether normal initialization remains required. Both ARM paths are entirely native; generic stub/post_alloc_hook preserve native tag/KASAN/fallback zeroing sequence. Existing trusted init hook and anonymous-CMA flag are separately recorded; without callback override, later native initialization effects remain. Do not regress to a helper that silently skips data clearing on hardware without tagging.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/native-misc-tail-review.json",
+      "SECURITY.md: Native fixes and historical build cleanup review"
+    ]
+  },
+  {
+    "commit": "8a6cd54d1ad1b0ecd76daeba1aa80cc925c1eee0",
+    "disposition": "superseded",
+    "rationale": "Duplicate of 8b92872c240c has an identical original patch. Preserve the same newer native three-argument tag-clear contract and complete native fallback initialization sequence rather than apply either old patch twice. The existing trusted callback may override init as separately reviewed; this row does not certify such callbacks or other-architecture runtime behavior.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/native-misc-tail-review.json",
+      "SECURITY.md: Native fixes and historical build cleanup review"
+    ]
+  },
+  {
+    "commit": "e07dcd1f6077a351d2e34119231d804aaaf32e11",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the additional Arrow Lake H/U physical PMC telemetry GUID. SDK has no enabled INTEL_PMC_CORE; exact LTS arl.c/core.h remain. This is a physical telemetry table extension, not a generic Android module interface or a claim of an upstream equivalent.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/native-misc-tail-review.json",
+      "SECURITY.md: Native fixes and historical build cleanup review"
+    ]
+  },
+  {
+    "commit": "ece109f37f9b39ecd2410125a857ae941e6233f6",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit physical PMC has_die_c6 cleanup with that disabled telemetry feature. Native initialization sets has_die_c6 alongside punit_ep and native debugfs registration tests it; retaining the native field is not historical KMI preservation. Whole core.c/core.h remain LTS.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/native-misc-tail-review.json",
+      "SECURITY.md: Native fixes and historical build cleanup review"
+    ]
+  },
+  {
+    "commit": "a6b3354d96e89ea3a1b3baf3d1fb3ff25dd1b82f",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit Wildcat Lake physical SSRAM telemetry GUID/register maps and substate requirement callbacks. SDK does not enable INTEL_PMC_CORE; retain whole native wcl.c/core.h and no future hardware platform extension.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/native-misc-tail-review.json",
+      "SECURITY.md: Native fixes and historical build cleanup review"
+    ]
+  },
+  {
+    "commit": "9c2077ffc78a135869589dd82342c1a8bcbe81ef",
+    "disposition": "already-represented-upstream",
+    "rationale": "Reapplication exactly reverses 3ca47cbfdace and restores native shared ELBI mapping and driver consumers. All five files remain full LTS, preserving native resource/error handling. Pixel fix claims are local commit-message context, not independently tested or fetched.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/native-misc-tail-review.json",
+      "SECURITY.md: Native fixes and historical build cleanup review"
+    ]
+  },
+  {
+    "commit": "22d898bf7ba07008f717e5807c0a2e6b43c3c38b",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit nosocid option and documentation with the ARM SMCCC SoC-ID target. Kconfig requires HAVE_ARM_SMCCC_DISCOVERY through ARM_PSCI_FW; SDK x86 does not enable this driver. Whole soc_id.c is native, no SoC-ID registration or exposed sysfs feature is changed on this target.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/native-misc-tail-review.json",
+      "SECURITY.md: Native fixes and historical build cleanup review"
+    ]
   }
 ]
