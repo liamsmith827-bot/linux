@@ -36,31 +36,32 @@ static bool fuse_prog_is_valid_access(int off, int size,
 {
 	int i;
 
-	if (off < 0 || off > offsetofend(struct fuse_bpf_args, out_args))
+	if (type != BPF_READ || off < 0 ||
+	    (size != 1 && size != 2 && size != 4 && size != 8) ||
+	    off > sizeof(struct fuse_bpf_args) - size || off % size)
 		return false;
 
-	/* TODO This is garbage. Do it properly */
-	for (i = 0; i < 5; i++) {
-		if (off == offsetof(struct fuse_bpf_args, in_args[i].value)) {
-			info->reg_type = PTR_TO_BUF;
-			info->ctx_field_size = 256;
-			if (type != BPF_READ)
+	/* Pointer fields must never be exposed as partial scalar loads. */
+	for (i = 0; i < FUSE_MAX_IN_ARGS; i++) {
+		int pos = offsetof(struct fuse_bpf_args, in_args[i].value);
+
+		if (off < pos + sizeof(void *) && off + size > pos) {
+			if (off != pos || size != sizeof(void *))
 				return false;
+			info->reg_type = PTR_TO_BUF | MEM_RDONLY;
 			return true;
 		}
 	}
-	for (i = 0; i < 3; i++) {
-		if (off == offsetof(struct fuse_bpf_args, out_args[i].value)) {
-			info->reg_type = PTR_TO_BUF;
-			info->ctx_field_size = 256;
-			if (type != BPF_READ)
+	for (i = 0; i < FUSE_MAX_OUT_ARGS; i++) {
+		int pos = offsetof(struct fuse_bpf_args, out_args[i].value);
+
+		if (off < pos + sizeof(void *) && off + size > pos) {
+			if (off != pos || size != sizeof(void *))
 				return false;
+			info->reg_type = PTR_TO_BUF;
 			return true;
 		}
 	}
-	if (type != BPF_READ)
-		return false;
-
 	return true;
 }
 

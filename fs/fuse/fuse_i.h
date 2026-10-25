@@ -2157,15 +2157,9 @@ void __exit fuse_bpf_cleanup(void);
 
 ssize_t fuse_bpf_simple_request(struct fuse_mount *fm, struct fuse_bpf_args *args);
 
-static inline int fuse_bpf_run(struct bpf_prog *prog, struct fuse_bpf_args *fba)
-{
-	int ret;
-
-	migrate_disable();
-	ret = bpf_prog_run(prog, fba);
-	migrate_enable();
-	return ret;
-}
+int fuse_bpf_run(struct bpf_prog *prog, struct fuse_bpf_args *fba);
+int fuse_bpf_prepare_inputs(struct fuse_bpf_args *fa, void **buffers);
+void fuse_bpf_cleanup_args(const struct fuse_bpf_args *original, void **buffers);
 
 /*
  * expression statement to wrap the backing filter logic
@@ -2192,7 +2186,8 @@ static inline int fuse_bpf_run(struct bpf_prog *prog, struct fuse_bpf_args *fba)
 	ssize_t res;							\
 	void *err;							\
 	int i;								\
-	bool initialized = false;					\
+	bool initialized = false, finalize_ready = false;		\
+	void *input_buffers[FUSE_MAX_OUT_ARGS] = {0};		\
 									\
 	do {								\
 		if (!fuse_inode || !fuse_inode->backing_inode)		\
@@ -2209,6 +2204,19 @@ static inline int fuse_bpf_run(struct bpf_prog *prog, struct fuse_bpf_args *fba)
 		initialized = true;					\
 									\
 		fa_backup = fa;						\
+		if (fa.in_numargs > FUSE_MAX_OUT_ARGS ||		\
+		    fa.out_numargs > FUSE_MAX_OUT_ARGS ||		\
+		    fa.in_numargs + fa.out_numargs > FUSE_MAX_IN_ARGS) { \
+			fer = (struct fuse_err_ret) { ERR_PTR(-E2BIG), true }; \
+			break;						\
+		}							\
+		if (fuse_inode->bpf) {				\
+			res = fuse_bpf_prepare_inputs(&fa, input_buffers); \
+			if (res) {					\
+				fer = (struct fuse_err_ret) { ERR_PTR(res), true }; \
+				break;					\
+			}						\
+		}							\
 		fa.opcode |= FUSE_PREFILTER;				\
 		for (i = 0; i < fa.in_numargs; ++i)			\
 			fa.out_args[i] = (struct fuse_bpf_arg) {	\
@@ -2257,6 +2265,10 @@ static inline int fuse_bpf_run(struct bpf_prog *prog, struct fuse_bpf_args *fba)
 			};						\
 		fa.out_numargs = fa_backup.out_numargs;			\
 									\
+		for (i = 0; i < fa.out_numargs; ++i)		\
+			if (fa.out_args[i].size)			\
+				memset(fa.out_args[i].value, 0, fa.out_args[i].size); \
+		finalize_ready = true;					\
 		fer = (struct fuse_err_ret) {				\
 			ERR_PTR(backing(&fa, args)),			\
 			true,						\
@@ -2296,12 +2308,14 @@ static inline int fuse_bpf_run(struct bpf_prog *prog, struct fuse_bpf_args *fba)
 		}							\
 	} while (false);						\
 									\
-	if (initialized && fer.ret) {					\
+	if (finalize_ready && fer.ret) {					\
 		err = finalize(&fa, args);				\
-		if (err)						\
+		if (err && !IS_ERR(fer.result))			\
 			fer.result = err;				\
 	}								\
 									\
+	if (initialized)						\
+		fuse_bpf_cleanup_args(&fa_backup, input_buffers);	\
 	fer;								\
 })
 

@@ -11166,3 +11166,57 @@ The unresolved necessity and known gap remain visible in
 unresolved-feature-questions.json. Current extracted MM checks passed with
 negative controls, but do not test kernel faults, races or exploitability.
 Build 202 compiled this exact executable source. Only local sources were used.
+
+## FUSE-BPF context bounds adaptation in progress
+
+The final foundation review found that ACK's is_valid_access accepts context
+reads starting at the end of the object, ignores access size/alignment, and
+permits partial pointer loads as scalar values. Its ctx_field_size=256 is not
+a buffer bound: native check_buffer_access records maximum accesses in
+prog->aux->max_rdonly_access/max_rdwr_access, which this FUSE runner did not
+validate. Input/output argument pointers can refer to small stack structures,
+short names or NULL slots. This is a memory-safety boundary, even though native
+BPF loading requires CAP_BPF (or an authorized token) for this program type.
+No generic verifier or authorization check is weakened or replaced.
+
+The adaptation validates whole context bounds/alignment, accepts only complete
+pointer-field loads and gives input pointers MEM_RDONLY. The runner uses the
+native verifier's maximum-access metadata to allocate zero-padded scratch
+arguments, preserves exact input/output aliases, and copies back only actual
+output bytes. Inactive slots also point to zeroed storage. end_offset remains
+zero, matching existing initializers; it is not presented as a checked dynamic
+end pointer. The allocation has a 64 KiB maximum per argument: larger verified
+access extents return E2BIG at execution. This is an explicit safety/resource
+limit, not historical KMI. Ordinary source program data layouts and opcode
+values are preserved. At least 256 bytes are available per scratch slot for
+complete NAME_MAX strings used by trace_printk. Bytes outside an actual
+argument are zero and writes there are discarded, not adjacent kernel memory.
+
+Prefilter inputs are copied into owned buffers with an extra zero byte. Their
+output aliases can be modified without writing dentry names or other const
+caller buffers, and remain alive through backing dispatch/finalization.
+Existing operations which ignore some prefilter input changes still do so;
+this does not implement all ACK TODOs. Kernel-vector write exposure is limited
+to the current contiguous segment and offset; arbitrary user iterators expose
+zero payload bytes instead of a nonzero-size NULL pointer. The original lower
+I/O iterator is retained, so this does not claim full write-payload filtering.
+
+Output buffers are zeroed before backing dispatch. Negative getxattr results
+are propagated before conversion to an unsigned output length. Readdir's page
+is released by common cleanup even for prefilter failure or native fallback;
+finalization begins only after backing dispatch and cannot replace an existing
+error with a positive result. The cleanup audit found readdir is the only
+initializer in this file allocating a resource. Other finalization/refcount
+reviews remain applicable; this is not a claim of complete FUSE concurrency or
+mixed-cache correctness.
+
+check_fuse_bpf_bounds.py runs extracted current access-check, runner, input
+preparation/cleanup and dispatch macro code under host ASan/UBSan. It checks
+1,928 context cases, rejects partial pointer loads, reproduces the prior end
+and partial-pointer acceptance, exercises zero padding, exact aliases, bounded
+copyback with sentinels, allocation failures in pre/post phases, error retention,
+readdir fallback cleanup and the no-BPF path. BPF execution, VFS, allocation and
+locks are shims: this is not the kernel verifier/JIT, a live FUSE mount or a
+runtime test. The local fuseMedia program and selftest filters use input reads
+and output writes; no actual BPF load/run is claimed. No remote resource was
+used. The remaining foundation review and build validation are still pending.

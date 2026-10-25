@@ -11,11 +11,121 @@
 #include <linux/fs_stack.h>
 #include <linux/splice.h>
 #include <linux/namei.h>
+#include <linux/vmalloc.h>
+#include <linux/sizes.h>
 
 #include "../internal.h"
 
 #define FUSE_BPF_IOCB_MASK (IOCB_APPEND | IOCB_DSYNC | IOCB_HIPRI | IOCB_NOWAIT | IOCB_SYNC | \
 			    IOCB_DONTCACHE)
+
+/* Bound per-call scratch allocation, including programs with large offsets. */
+#define FUSE_BPF_MAX_BUFFER_SIZE SZ_64K
+
+/*
+ * PTR_TO_BUF records maximum accesses in prog->aux, not a fixed buffer size.
+ * Run on zero-padded copies so short/absent arguments cannot expose adjacent
+ * kernel memory. Only the real output bytes are copied back. Exact aliases
+ * (prefilter inputs and postfilter outputs) share a scratch buffer.
+ */
+int fuse_bpf_run(struct bpf_prog *prog, struct fuse_bpf_args *fba)
+{
+	struct fuse_bpf_args ctx = *fba;
+	const void *original[FUSE_MAX_IN_ARGS + FUSE_MAX_OUT_ARGS] = {0};
+	u32 sizes[FUSE_MAX_IN_ARGS + FUSE_MAX_OUT_ARGS] = {0};
+	void *values[FUSE_MAX_IN_ARGS + FUSE_MAX_OUT_ARGS];
+	u32 stride = max(prog->aux->max_rdonly_access, prog->aux->max_rdwr_access);
+	void *scratch;
+	int i, j, ret;
+
+	if (fba->in_numargs > FUSE_MAX_IN_ARGS ||
+	    fba->out_numargs > FUSE_MAX_OUT_ARGS)
+		return -E2BIG;
+	if (stride > FUSE_BPF_MAX_BUFFER_SIZE)
+		return -E2BIG;
+	/* Keep complete NAME_MAX strings available to trace_printk as well. */
+	stride = max(stride, 256U);
+	/* Keep every pointer suitably aligned, including aliased arguments. */
+	stride = ALIGN(stride, sizeof(u64));
+	scratch = kvcalloc(ARRAY_SIZE(values), stride, GFP_KERNEL);
+	if (!scratch)
+		return -ENOMEM;
+
+	for (i = 0; i < fba->in_numargs; i++) {
+		original[i] = fba->in_args[i].value;
+		sizes[i] = fba->in_args[i].size;
+	}
+	for (i = 0; i < fba->out_numargs; i++) {
+		original[FUSE_MAX_IN_ARGS + i] = fba->out_args[i].value;
+		sizes[FUSE_MAX_IN_ARGS + i] = fba->out_args[i].size;
+	}
+	for (i = 0; i < ARRAY_SIZE(values); i++) {
+		values[i] = scratch + i * stride;
+		if (!original[i])
+			continue;
+		for (j = 0; j < i; j++) {
+			if (original[j] == original[i] && sizes[j] == sizes[i]) {
+				values[i] = values[j];
+				break;
+			}
+		}
+		if (j == i && sizes[i])
+			memcpy(values[i], original[i], min(sizes[i], stride));
+	}
+	for (i = 0; i < FUSE_MAX_IN_ARGS; i++) {
+		ctx.in_args[i].value = values[i];
+		ctx.in_args[i].end_offset = NULL;
+	}
+	for (i = 0; i < FUSE_MAX_OUT_ARGS; i++) {
+		ctx.out_args[i].value = values[FUSE_MAX_IN_ARGS + i];
+		ctx.out_args[i].end_offset = NULL;
+	}
+	migrate_disable();
+	ret = bpf_prog_run(prog, &ctx);
+	migrate_enable();
+	for (i = 0; i < fba->out_numargs; i++) {
+		j = FUSE_MAX_IN_ARGS + i;
+		if (original[j] && sizes[j])
+			memcpy((void *)original[j], values[j], min(sizes[j], stride));
+	}
+	kvfree(scratch);
+	return ret;
+}
+
+/* The prefilter may rewrite input bytes, but must not overwrite dentry names
+ * or the caller's const buffers. Keep private copies through finalization.
+ */
+int fuse_bpf_prepare_inputs(struct fuse_bpf_args *fa, void **buffers)
+{
+	int i;
+
+	if (fa->in_numargs > FUSE_MAX_OUT_ARGS)
+		return -E2BIG;
+
+	for (i = 0; i < fa->in_numargs; i++) {
+		if (!fa->in_args[i].size)
+			continue;
+		if (!fa->in_args[i].value)
+			return -EINVAL;
+		/* Keep string arguments terminated even if the filter rewrites NUL. */
+		buffers[i] = kvzalloc((size_t)fa->in_args[i].size + 1, GFP_KERNEL);
+		if (!buffers[i])
+			return -ENOMEM;
+		memcpy(buffers[i], fa->in_args[i].value, fa->in_args[i].size);
+		fa->in_args[i].value = buffers[i];
+	}
+	return 0;
+}
+
+void fuse_bpf_cleanup_args(const struct fuse_bpf_args *original, void **buffers)
+{
+	int i;
+
+	for (i = 0; i < FUSE_MAX_OUT_ARGS; i++)
+		kvfree(buffers[i]);
+	if (original->opcode == FUSE_READDIR)
+		free_page((unsigned long)original->out_args[1].value);
+}
 
 struct fuse_bpf_aio_req {
 	struct kiocb iocb;
@@ -612,6 +722,8 @@ int fuse_getxattr_backing(struct fuse_bpf_args *fa,
 		get_fuse_dentry(dentry)->backing_path.dentry,
 		fa->in_args[1].value, value, size);
 
+	if (ret < 0)
+		return ret;
 	if (fa->flags & FUSE_BPF_OUT_ARGVAR)
 		fa->out_args[0].size = ret;
 	else
@@ -626,6 +738,8 @@ void *fuse_getxattr_finalize(struct fuse_bpf_args *fa,
 {
 	struct fuse_getxattr_out *fgo;
 
+	if (fa->error_in)
+		return NULL;
 	if (fa->flags & FUSE_BPF_OUT_ARGVAR)
 		return ERR_PTR(fa->out_args[0].size);
 
@@ -920,9 +1034,11 @@ int fuse_file_write_iter_initialize(
 		.in_numargs = 2,
 		.in_args[0].size = sizeof(fwio->fwi),
 		.in_args[0].value = &fwio->fwi,
-		.in_args[1].size = fwio->fwi.size,
-		.in_args[1].value = iov_iter_is_kvec(from)
-			? from->kvec->iov_base : NULL,
+		.in_args[1].size = iov_iter_is_kvec(from) && from->nr_segs
+			? min_t(size_t, iov_iter_count(from),
+				from->kvec->iov_len - from->iov_offset) : 0,
+		.in_args[1].value = iov_iter_is_kvec(from) && from->nr_segs
+			? from->kvec->iov_base + from->iov_offset : NULL,
 		.out_numargs = 1,
 		.out_args[0].size = sizeof(fwio->fwio),
 		.out_args[0].value = &fwio->fwio,
@@ -2539,7 +2655,6 @@ void *fuse_readdir_finalize(struct fuse_bpf_args *fa,
 
 	backing_dir->f_pos = ctx->pos;
 
-	free_page((unsigned long) fa->out_args[1].value);
 	return ERR_PTR(err);
 }
 
