@@ -10204,3 +10204,47 @@ Existing host extracted-function tests cover modeled lifetime, flags and stale
 cache regressions, not real allocator, RCU or filesystem concurrency. Build 195
 is running for the small scope cleanup. All evidence was local; no remote
 resource was accessed.
+
+# Android test-build history review
+
+Twenty-seven decisions in `evidence/selftest-build-tail-review.json` trace original
+build-rule, CPU-ABI helper, KUnit and Tradefed metadata changes into the selected
+SDK distribution. Every touched path and metadata delta was inventoried; rule
+inputs/options/ABI grouping, normalized XML commands and current selected targets
+were checked. The helper `abi.bzl` moved to `bazel/abi.bzl`: its ABI means userspace
+CPU packaging, not historical vendor-module KMI, and its current file is exact
+ACK. Both 32-bit x86 and x86_64 selftest binaries are built by the existing
+x86_64 workflow. No ARM kernel target is added.
+
+Standard Binderfs, breakpoint, futex, timer, MM, socket, capabilities, seccomp,
+x86 register and memfd test packages remain at final suite selection. Historic
+aggregate futex, suspend breakpoint and obsolete vDSO/waitv standalone rules are
+not resurrected. Native source and separately reviewed compatibility changes
+remain; binaries can be compiled even when a runtime prerequisite is disabled.
+Timer invocations that change system time or suspend were removed by later ACK
+suite changes; their packaged binaries have not been executed.
+
+KUnit stays modular, disabled by default, with debugfs results and selected test
+modules. Its modules are excluded from the production system_dlkm list. The
+original accidental ARM list for x86 is superseded by the correct final x86
+list. Standalone ARM/Cuttlefish launch/JDK/Tradefed scripts, old test defconfigs
+and Gerrit ownership rules are omitted. Final shared VTS XML remains metadata;
+standalone VTS zip/install targets are not selected or provided by this SDK
+workflow. Neither XML nor inherited README device commands were executed.
+
+The Bionic compatibility header retains only its declarations/includes after
+`7eab0e190225` removed false-success pthread_cancel. The explicit Android skip
+for the unavailable cancellation-dependent thread case preserves honest results
+and other native timer tests. No native kernel security check is weakened to
+make test programs compile.
+
+Build 195 succeeded at `4b1669b5ea0c` with both images, 100 common and 45
+virtual-device modules. All 145 signatures verified against the kernel output
+certificate; a changed payload was rejected. Module tables and all 659 protected
+exports matched, with the old search stride missing 330 as the negative control.
+Read-only archive inspection records every packaged file hash and ELF class,
+verifies both runner XML files match source, and checks referenced executables
+and enabled KUnit modules exist. Compilation and artifact presence are the only
+claims: no selftest, preparer, kernel module, emulator or device was run. No
+remote resource was accessed; embedded license/documentation URLs remain local
+source text.
