@@ -2343,16 +2343,18 @@ select_cpu:
 void blk_mq_delay_run_hw_queue(struct blk_mq_hw_ctx *hctx, unsigned long msecs)
 {
 	bool skip = false;
+	int cpu;
 
 	if (unlikely(blk_mq_hctx_stopped(hctx)))
 		return;
 
-	trace_android_vh_blk_mq_delay_run_hw_queue(blk_mq_hctx_next_cpu(hctx),
+	cpu = blk_mq_hctx_next_cpu(hctx);
+	trace_android_vh_blk_mq_delay_run_hw_queue(cpu,
 			hctx, msecs_to_jiffies(msecs), &skip);
 	if (skip)
 		return;
 
-	kblockd_mod_delayed_work_on(blk_mq_hctx_next_cpu(hctx), &hctx->run_work,
+	kblockd_mod_delayed_work_on(cpu, &hctx->run_work,
 				    msecs_to_jiffies(msecs));
 }
 EXPORT_SYMBOL(blk_mq_delay_run_hw_queue);
