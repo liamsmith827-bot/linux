@@ -277,6 +277,7 @@ void unmap_region(struct ma_state *mas, struct vm_area_struct *vma,
  * @end: The exclusive end of the range to update, may be offset within @vma.
  * @vm_flags_ptr: A pointer to the VMA flags that the @start to @end range is
  * about to be set to. On merge, this will be updated to include sticky flags.
+ * On split, this will be updated to retain the resulting padding count.
  *
  * IMPORTANT: The actual modification being requested here is NOT applied,
  * rather the VMA is perhaps split, perhaps merged to accommodate the change,

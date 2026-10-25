@@ -1724,6 +1724,10 @@ struct vm_area_struct *vma_modify_flags(struct vma_iterator *vmi,
 	 */
 	if (vmg.state == VMA_MERGE_SUCCESS)
 		*vm_flags_ptr = ret->vm_flags;
+	else
+		/* A split may have changed the padding count in the returned VMA. */
+		*vm_flags_ptr = (vm_flags & ~VM_PAD_MASK) |
+			(ret->vm_flags & VM_PAD_MASK);
 	return ret;
 }
 

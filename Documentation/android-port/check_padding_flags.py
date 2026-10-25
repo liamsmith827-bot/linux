@@ -4,6 +4,9 @@
 Host ASan/UBSan shims reproduce the old two-writer count combination and force
 the new compare-exchange retry against a native guard-flag update. Exhaustive
 small-VMA split checks validate count conservation and bounds in both orders.
+The current flag-update wrapper is exercised after each split and on simulated
+merge/error paths, including preservation of native sticky flags. The previous
+wrapper is a negative control for stale padding restored by mprotect/mlock.
 This is not a kernel concurrency or lock-order test.
 """
 import argparse
@@ -20,6 +23,9 @@ root = Path(__file__).resolve().parents[2]
 baseline = 'd65b1b963b41a4833eab058c8f825742ba3b1614'
 source = (root / 'mm/pgsize_migration.c').read_text()
 old = subprocess.check_output(['git', 'show', baseline + ':mm/pgsize_migration.c'], cwd=root, text=True)
+flags_baseline = 'cd92f9b0ae2b'
+vma_source = (root / 'mm/vma.c').read_text()
+old_vma = subprocess.check_output(['git', 'show', flags_baseline + ':mm/vma.c'], cwd=root, text=True)
 
 def function(text, name):
     start = text.index(name)
@@ -36,6 +42,9 @@ excerpts = [function(old, 'void vma_set_pad_pages(').replace('vma_set_pad_pages(
             function(source, 'static unsigned long __vma_pad_pages('),
             function(source, 'unsigned long vma_pad_pages('),
             function(source, 'void split_pad_vma(')]
+wrappers = [function(old_vma, 'struct vm_area_struct *vma_modify_flags(').replace(
+                'vma_modify_flags(', 'old_vma_modify_flags(', 1),
+            function(vma_source, 'struct vm_area_struct *vma_modify_flags(')]
 inline = (root / 'include/linux/pgsize_migration_inline.h').read_text()
 constants = '\n'.join(line for line in inline.splitlines() if line.startswith('#define VM_'))
 shim = r'''
@@ -61,6 +70,21 @@ static int warnings, retries;
 #define WARN_ON(x) WARN_ON_ONCE(x)
 static unsigned long vma_pages(struct vm_area_struct *vma) {
     return (vma->vm_end - vma->vm_start) >> PAGE_SHIFT;
+}
+struct vma_iterator { int unused; };
+struct vma_merge_struct { struct vm_area_struct *middle; vm_flags_t vm_flags; int state; };
+#define VMA_MERGE_SUCCESS 1
+#define VMG_VMA_STATE(name, vmi, prev, vma, start, end) \
+    struct vma_merge_struct name = { .middle = (vma) }
+#define IS_ERR(p) ((p) == (void *)-1UL)
+static bool simulate_merge, simulate_error;
+static struct vm_area_struct *vma_modify(struct vma_merge_struct *vmg) {
+    if (simulate_error) return (void *)-1UL;
+    if (simulate_merge) {
+        vmg->state = VMA_MERGE_SUCCESS;
+        vmg->middle->vm_flags = vmg->vm_flags | VM_MAYBE_GUARD;
+    }
+    return vmg->middle;
 }
 static void old_set_pad_pages(struct vm_area_struct *, unsigned long);
 static void __vm_flags_mod(struct vm_area_struct *vma, vm_flags_t set, vm_flags_t clear) {
@@ -99,6 +123,7 @@ int main(void) {
     assert(vma.vm_flags == flags && vma_pad_pages(&vma) == 0);
     enabled = true; warnings = 0;
     unsigned int cases = 0;
+    unsigned int old_wrapper_failures = 0;
     for (unsigned long total = 2; total <= 32; total++) {
         for (unsigned long pad = 0; pad <= VM_TOTAL_PAD_PAGES && pad <= total; pad++) {
             for (unsigned long cut = 1; cut < total; cut++) {
@@ -116,16 +141,40 @@ int main(void) {
                     assert(low_pad <= vma_pages(&low) && high_pad <= vma_pages(&high));
                     assert((low.vm_flags & ~VM_PAD_MASK) == (3 | VM_MAYBE_GUARD));
                     assert((high.vm_flags & ~VM_PAD_MASK) == (3 | VM_MAYBE_GUARD));
+                    struct vm_area_struct *parts[] = { &low, &high };
+                    for (int part = 0; part < 2; part++) {
+                        vm_flags_t after_split = parts[part]->vm_flags;
+                        vm_flags_t requested = original ^ 1UL;
+                        old_vma_modify_flags(NULL, NULL, parts[part], 0, 0, &requested);
+                        if ((requested & VM_PAD_MASK) != (after_split & VM_PAD_MASK))
+                            old_wrapper_failures++;
+                        requested = original ^ 1UL;
+                        assert(vma_modify_flags(NULL, NULL, parts[part], 0, 0, &requested)
+                               == parts[part]);
+                        assert((requested & VM_PAD_MASK) == (after_split & VM_PAD_MASK));
+                        assert((requested & ~VM_PAD_MASK) == ((original ^ 1UL) & ~VM_PAD_MASK));
+                        parts[part]->vm_flags = requested; /* caller's final reset */
+                    }
+                    assert(vma_pad_pages(&low) + vma_pad_pages(&high) == pad);
                     cases++;
                 }
             }
         }
     }
     assert(warnings == 0);
-    printf("Padding flag interleavings and %u split cases passed; old combined-count control reproduced\n", cases);
+    assert(old_wrapper_failures > 0);
+    vm_flags_t requested = 2;
+    simulate_merge = true;
+    assert(vma_modify_flags(NULL, NULL, &vma, 0, 0, &requested) == &vma);
+    assert(requested == (2 | VM_MAYBE_GUARD));
+    simulate_merge = false; simulate_error = true;
+    requested = 3 | (2UL << VM_PAD_SHIFT);
+    assert(IS_ERR(vma_modify_flags(NULL, NULL, &vma, 0, 0, &requested)));
+    assert(requested == (3 | (2UL << VM_PAD_SHIFT)));
+    printf("Padding flags and %u split/update cases passed; old combined-count control reproduced; old wrapper restores stale padding in %u cases; sticky merge/error checks passed\n", cases, old_wrapper_failures);
 }
 '''
-program = '#include <stdint.h>\n' + constants + '\n' + shim + ''.join(excerpts) + checks
+program = '#include <stdint.h>\n' + constants + '\n' + shim + ''.join(excerpts + wrappers) + checks
 # The prototype must match the original externally visible definition.
 program = program.replace('static void old_set_pad_pages(struct vm_area_struct *, unsigned long);',
                           'void old_set_pad_pages(struct vm_area_struct *, unsigned long);')
@@ -141,7 +190,8 @@ with tempfile.TemporaryDirectory(prefix='padding-flags-check-') as tmp:
 record = {
     'source_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip(),
     'negative_control_commit': baseline,
-    'excerpts_sha256': hashlib.sha256(''.join(excerpts).encode()).hexdigest(),
+    'flag_wrapper_negative_control_commit': flags_baseline,
+    'excerpts_sha256': hashlib.sha256(''.join(excerpts + wrappers).encode()).hexdigest(),
     'compiler': subprocess.check_output(['cc', '--version'], text=True).splitlines()[0],
     'compiler_flags': options,
     'result': result.stdout.strip(),
