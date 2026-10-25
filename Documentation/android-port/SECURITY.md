@@ -8805,3 +8805,58 @@ BUILD.bazel AST change; all other retained statements and omitted rules are
 unchanged. This supports updated witnesses for 271 prior build-related decisions,
 including their separately examined merge resolutions. It does not turn compiler
 artifact checks into performance or runtime validation.
+
+## BPF history, attribute bounds and emulated mappings
+
+`evidence/bpf-final-review.json` finalizes eighteen candidates and leaves the
+ring-buffer ABI candidate explicitly provisional. The historical JIT magic check,
+dispatcher introduction/allocation/alignment and dispatcher CFI annotations are
+traced through their individual reverts. Four pairs have matching inverse patch
+IDs; the magic-check pair has identical changed lines with evolved context, and
+the last CFI pair removes the annotations after function renames. Native LTS
+dispatcher, trampoline, x86 JIT and filter header are retained exactly. The BPF
+Makefile retains its full native prefix and adds only the separately ported FUSE
+selection. Native RO+X dispatcher images, separate writable preparation and RCU
+synchronization remain. Native `__bpfcall` and architecture CFI handling remain;
+this is not a claim that every native BPF indirect call has CFI.
+
+Both missing-nospec-header copies are already represented upstream. The obsolete
+SYS_ADMIN permission workaround is superseded by native token-aware NET_ADMIN,
+BPF and PERFMON checks: `bpf_prog_load` is exact LTS. The local Android loader's
+capability configuration and SELinux policy explicitly permit NET_ADMIN, providing
+positive consumer evidence. The emulation macro undef before the BTF page-size
+enum is retained; that enum still describes the hardware page size. Array-map
+data allocation, mmap bounds and accounting consistently use the emulated page
+alignment, while the header keeps hardware alignment and all native overflow and
+zero-initialization logic remains.
+
+`993352b44d93` completes the twelve minimum attribute-size checks in `0e614c15af5e`.
+Initial integration missed the program-query minimum while resolving the native
+size-aware query API. Reject buffers smaller than `query.prog_cnt` before invoking
+the helper. Preserve the native cgroup revision-size check and previously adapted
+mprog query protections. Host execution of actual dispatch arms verifies 2,040
+command/size cases; the previous query and sockmap tests also pass. These tests
+use synthetic helper/copy operations and do not exercise the entire syscall.
+
+The ring-buffer review found that ACK's enlarged writable VMA permits mapping
+producer/pending counters and data writable, violating the native consumer-only
+write rule. `8a6b444d4315` maps only the hardware consumer page within that VMA.
+Padding stays unmapped. Read-only requests may include only the rounding padding
+beyond the actual ring; this permits the separate producer/data mappings of the
+4 KB ring explicitly defined in local Android netd. The native default BPF vmops
+have no fault callback, so absent PTEs fault with SIGBUS through `do_fault`.
+Read-only VMAs lose VM_MAYWRITE, preventing a later write upgrade. No native LTS
+permission check is removed. Tests execute the actual mapping function with
+remapping stubs over 10,944 combinations, plus negative controls demonstrating
+the previous writable exposure and small-ring mapping failure. These checks do
+not execute kernel page tables or boot the emulator.
+
+Candidate `ac40f53b8686` remains provisional: Android BpfRingbuf explicitly uses
+4096-byte metadata offsets on x86, but the local external/libbpf implementation
+uses getpagesize and a combined producer/data mapping with a data offset of that
+size. With 16 KB emulation, offset normalization alone does not supply the larger
+metadata gap. General offset normalization and user-produced rings must be
+examined together before resolving this compatibility question. The observed
+userspace code is evidence of an interface to preserve, not an absence-based
+exclusion. Build 182 compiles the current corrections. All evidence in this
+review is local; embedded links in commit messages were not accessed.
