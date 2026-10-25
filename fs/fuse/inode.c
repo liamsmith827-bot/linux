@@ -269,7 +269,7 @@ static void fuse_fill_attr_from_inode(struct fuse_attr *attr,
 		.nlink		= fi->inode.i_nlink,
 		.uid		= __kuid_val(fi->inode.i_uid),
 		.gid		= __kgid_val(fi->inode.i_gid),
-		.rdev		= fi->inode.i_rdev,
+		.rdev		= new_encode_dev(fi->inode.i_rdev),
 		.blksize	= 1u << fi->inode.i_blkbits,
 	};
 }
@@ -487,7 +487,8 @@ static void fuse_init_inode(struct inode *inode, struct fuse_attr *attr,
 	else if (S_ISCHR(inode->i_mode) || S_ISBLK(inode->i_mode) ||
 		 S_ISFIFO(inode->i_mode) || S_ISSOCK(inode->i_mode)) {
 		fuse_init_common(inode);
-		init_special_inode(inode, inode->i_mode, attr->rdev);
+		init_special_inode(inode, inode->i_mode,
+				   new_decode_dev(attr->rdev));
 	} else
 		BUG();
 	/*
@@ -1030,25 +1031,31 @@ static int fuse_parse_param(struct fs_context *fsc, struct fs_parameter *param)
 		ctx->blksize = result.uint_32;
 		break;
 
-	case OPT_ROOT_BPF:
-		ctx->root_bpf = bpf_prog_get_type_dev(result.uint_32,
+	case OPT_ROOT_BPF: {
+		struct bpf_prog *prog = bpf_prog_get_type_dev(result.uint_32,
 						BPF_PROG_TYPE_FUSE, false);
-		if (IS_ERR(ctx->root_bpf)) {
-			ctx->root_bpf = NULL;
+
+		if (IS_ERR(prog))
 			return invalfc(fsc, "Unable to open bpf program");
-		}
+		if (ctx->root_bpf)
+			bpf_prog_put(ctx->root_bpf);
+		ctx->root_bpf = prog;
 		break;
+	}
 
 	case OPT_ROOT_DIR: {
 		struct file *rd = fget(result.uint_32);
 
 		if (!rd)
 			return invalfc(fsc, "Unable to open root directory");
-		if (rd->f_inode->i_sb->s_magic == FUSE_SUPER_MAGIC ||
+		if (!S_ISDIR(file_inode(rd)->i_mode) ||
+		    rd->f_inode->i_sb->s_magic == FUSE_SUPER_MAGIC ||
 		    rd->f_inode->i_sb->s_stack_depth >= FILESYSTEM_MAX_STACK_DEPTH) {
 			fput(rd);
 			return invalfc(fsc, "Invalid root directory (FUSE or too deep)");
 		}
+		if (ctx->root_dir)
+			fput(ctx->root_dir);
 		ctx->root_dir = rd;
 		break;
 	}
@@ -1733,9 +1740,15 @@ static struct fuse_init_args *fuse_new_init(struct fuse_mount *fm)
 
 int fuse_send_init(struct fuse_mount *fm)
 {
-	struct fuse_init_args *ia = fuse_new_init(fm);
+	struct fuse_init_args *ia;
 	int err;
 
+	if (fm->fc->no_daemon) {
+		/* No INIT/reply can arrive. Fail fallback requests without waiting. */
+		fuse_abort_conn(fm->fc);
+		return 0;
+	}
+	ia = fuse_new_init(fm);
 	if (fm->fc->sync_init) {
 		ia->args.abort_on_kill = true;
 		err = fuse_simple_request(fm, &ia->args);
@@ -1744,7 +1757,7 @@ int fuse_send_init(struct fuse_mount *fm)
 			err = 0;
 	} else {
 		ia->args.end = process_init_reply;
-		err = unlikely(fm->fc->no_daemon) ? 0 : fuse_simple_background(fm, &ia->args, GFP_KERNEL);
+		err = fuse_simple_background(fm, &ia->args, GFP_KERNEL);
 		if (!err)
 			return 0;
 	}
@@ -2114,9 +2127,11 @@ static int fuse_fill_super(struct super_block *sb, struct fs_context *fsc)
 	struct fuse_mount *fm;
 	int err;
 
+	if (!ctx->rootmode_present || !ctx->user_id_present ||
+	    !ctx->group_id_present)
+		return -EINVAL;
 	if (!ctx->no_daemon) {
-		if (!ctx->file || !ctx->rootmode_present ||
-		    !ctx->user_id_present || !ctx->group_id_present)
+		if (!ctx->file)
 			return -EINVAL;
 
 		/*

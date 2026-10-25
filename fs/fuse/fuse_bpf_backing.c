@@ -213,11 +213,6 @@ int fuse_open_backing(struct fuse_bpf_args *fa,
 	struct fuse_dentry *fd = get_fuse_dentry(file->f_path.dentry);
 	struct file *backing_file;
 
-	ff = fuse_file_alloc(fm, true);
-	if (!ff)
-		return -ENOMEM;
-	file->private_data = ff;
-
 	switch (foi->flags & O_ACCMODE) {
 	case O_RDONLY:
 		mask = MAY_READ;
@@ -239,6 +234,11 @@ int fuse_open_backing(struct fuse_bpf_args *fa,
 				  get_fuse_inode(inode)->backing_inode, mask);
 	if (retval)
 		return retval;
+
+	ff = fuse_file_alloc(fm, true);
+	if (!ff)
+		return -ENOMEM;
+	file->private_data = ff;
 
 	backing_file = dentry_open(&fd->backing_path,
 				   foi->flags,
@@ -1829,13 +1829,17 @@ static int fuse_rename_backing_common(
 	target_inode = d_inode(newent);
 
 	trap = lock_rename(old_backing_dir_dentry, new_backing_dir_dentry);
+	if (IS_ERR(trap)) {
+		err = PTR_ERR(trap);
+		goto put_parents;
+	}
 	if (trap == old_backing_dentry) {
 		err = -EINVAL;
-		goto put_parents;
+		goto unlock;
 	}
 	if (trap == new_backing_dentry) {
 		err = -ENOTEMPTY;
-		goto put_parents;
+		goto unlock;
 	}
 	rd = (struct renamedata) {
 		.mnt_idmap = &nop_mnt_idmap,
@@ -2215,7 +2219,7 @@ void *fuse_getattr_finalize(struct fuse_bpf_args *fa,
 	if (fa->error_in)
 		return ERR_PTR(fa->error_in);
 
-	return ERR_PTR(finalize_attr(inode, outarg, attr_version, stat));
+	return ERR_PTR(finalize_attr(&nop_mnt_idmap, inode, outarg, attr_version, stat));
 }
 
 static void fattr_to_iattr(struct fuse_conn *fc,
@@ -2321,8 +2325,7 @@ int fuse_statfs_initialize(
 		.nodeid = get_node_id(d_inode(dentry)),
 		.opcode = FUSE_STATFS,
 		.out_numargs = 1,
-		.out_numargs = 1,
-		.out_args[0].size = sizeof(fso),
+		.out_args[0].size = sizeof(*fso),
 		.out_args[0].value = fso,
 	};
 
@@ -2366,6 +2369,9 @@ int fuse_get_link_initialize(struct fuse_bpf_args *fa, struct fuse_dummy_io *unu
 		struct inode *inode, struct dentry *dentry,
 		struct delayed_call *callback, const char **out)
 {
+	if (!dentry)
+		return -ECHILD;
+
 	/*
 	 * TODO
 	 * If we want to handle changing these things, we'll need to copy

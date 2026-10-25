@@ -109,7 +109,12 @@ static void fuse_file_put(struct inode *inode, struct fuse_file *ff, bool sync)
 
 #ifdef CONFIG_FUSE_BPF
 		struct fuse_err_ret fer = {0};
+#endif
 
+		if (ra && ra->inode)
+			fuse_file_io_release(ff, ra->inode);
+
+#ifdef CONFIG_FUSE_BPF
 		if (inode)
 			fer = fuse_bpf_backing(inode, struct fuse_release_in,
 					fuse_release_initialize,

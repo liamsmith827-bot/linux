@@ -11220,3 +11220,47 @@ locks are shims: this is not the kernel verifier/JIT, a live FUSE mount or a
 runtime test. The local fuseMedia program and selftest filters use input reads
 and output writes; no actual BPF load/run is claimed. No remote resource was
 used. The remaining foundation review and build validation are still pending.
+
+The follow-up foundation comparison restores the native final-file-reference
+call to fuse_file_io_release. Its loss would leave native cached/uncached and
+Android passthrough mode counts/references unreleased; IOM_NONE remains a no-op
+for independent BPF backing opens. Native fuse_init_inode is now byte-identical
+to 6.18.57 again, including new_decode_dev for protocol device numbers. The
+backing attribute producer uses new_encode_dev rather than changing the native
+consumer's interpretation. Ordinary daemon getattr again passes the caller's
+mnt_idmap through attribute finalization. BPF backing's existing use of
+nop_mnt_idmap is not claimed to implement general idmapped stacking.
+
+Internal attribute refresh handles a NULL file by finding and holding an alias
+for a backing inode, or returning ESTALE if none exists. Ordinary native refresh
+continues without requiring an alias. BPF permission checks return ECHILD for
+MAY_NOT_BLOCK before allocating or calling the filter; a missing RCU symlink
+dentry likewise returns ECHILD before dereference. These permit VFS retry in
+reference-walk context, not sleeping inside an RCU-only walk.
+
+Backing open allocates its fuse_file only after mode/permission validation,
+avoiding leaks on those failures. Rename now handles native lock_rename's
+ERR_PTR(-EXDEV) without assuming locks were acquired, and unlocks held parent
+locks on ancestor-trap errors. Statfs advertises sizeof(*fso), not pointer size,
+so bounded filters and daemon postfilters can access the complete output.
+Duplicate root_bpf/root_dir options release the superseded reference only after
+validating the new object, and root_dir must be a directory. A no_daemon mount
+still requires valid root mode/user/group options; it disconnects the absent
+daemon request queue before allocating INIT, so fallback requests fail instead
+of waiting forever, and the unsent INIT allocation is not leaked. Direct
+backing operations remain separate. This optional mode has no runtime test.
+
+check_fuse_native_adaptation.py verifies whole native fuse_init_inode equality
+and executes extracted rename, statfs, xattr, final-reference cleanup and
+attribute-finalization functions with host shims. Its 79 cases cover lock/ref
+balance, ERR_PTR and ancestor traps, negative xattr propagation, native I/O
+release invocation and mnt_idmap forwarding; historical negative controls
+reproduce lost locks, ignored lock errors and pointer-sized statfs output.
+The first harness compile failed because a counter shadowed libc puts; the
+counter was renamed and the checks passed. The old duplicate initializer emits
+an expected warning in the negative-control compilation. Current BPF dispatch
+checks were rerun after the helper signature changes and passed. These are
+source/extracted-model checks, not actual filesystem, lock, device or mount
+execution. Build 203 succeeded for the preceding context-bounds commit, with
+145 verified signatures and matching module tables; these additional fixes
+require a subsequent complete emulator workflow build.

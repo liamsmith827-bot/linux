@@ -2100,7 +2100,8 @@ static inline void iattr_to_fattr(struct mnt_idmap *idmap, struct fuse_conn *fc,
 void fuse_fillattr(struct mnt_idmap *idmap, struct inode *inode, struct fuse_attr *attr,
 			  struct kstat *stat);
 
-static inline int finalize_attr(struct inode *inode, struct fuse_attr_out *outarg,
+static inline int finalize_attr(struct mnt_idmap *idmap, struct inode *inode,
+				struct fuse_attr_out *outarg,
 				u64 attr_version, struct kstat *stat)
 {
 	int err = 0;
@@ -2114,7 +2115,7 @@ static inline int finalize_attr(struct inode *inode, struct fuse_attr_out *outar
 				       ATTR_TIMEOUT(outarg),
 				       attr_version);
 		if (stat)
-			fuse_fillattr(&nop_mnt_idmap, inode, &outarg->attr, stat);
+			fuse_fillattr(idmap, inode, &outarg->attr, stat);
 	}
 	return err;
 }
