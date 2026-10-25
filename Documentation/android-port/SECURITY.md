@@ -7887,3 +7887,36 @@ This preserves a generic source-module customization interface for configured
 DRM; exact optional SDK consumer use is unconfirmed. No historical binary ABI
 layout or userspace privilege is added. Build165 covers the retained sources;
 no runtime ioctl or display test was executed. Only pinned local inputs were used.
+
+## DRM atomic-state trace routing
+
+Complete 94d485fafb51's category-printer call site in atomic commit while keeping
+native checking, return propagation and driver commit ordering. Also allow the
+state dump when only the trace mask is enabled: ACK's remaining debug-only guard
+otherwise drops these trace messages. In the category-printer constructor,
+choose the trace callback directly for trace-only output. ACK routes that case
+through the debug callback, which treats debug as enabled under dynamic-debug
+configuration and can unexpectedly copy trace-only content to syslog. Other
+native debug-printer and dynamic-debug callsite semantics are unchanged.
+
+The existing DRM trace instance, root-writable mask and generic print interfaces
+from f30505952f41 remain available to configured virtio graphics and rebuilt
+modules. Its kernel-doc reference is now present. The unrelated Nouveau
+whitespace edit and historical ABI/symbol-list updates are omitted. Native DRM
+initialization failure/unplug synchronization and trace-array checks remain.
+This change adds atomic state diagnostics to authorized tracefs readers and
+intentionally uses debug severity for category-enabled syslog output; it does
+not change ioctl permissions or display state. Diagnostic dumps may contain
+sensitive state, and enabling them has CPU/buffer costs.
+
+`check_drm_category_trace.py` tests extracted port/ACK/native atomic functions
+and actual category-printer callbacks with host shims under ASan/UBSan. Each
+variant checks all sixteen debug/trace-mask combinations, including unrelated
+categories, against successful commits, check failures and driver failures.
+Both dynamic-debug macro modes are exercised. All 352 cases pass their stated
+expectations; ACK controls lose twelve trace-only atomic dumps per mode and
+emit four unwanted syslog entries in the dynamic-debug category-printer mode.
+The port has neither result. This verifies routing and control flow with fixed
+masks, not real tracefs, dynamic-debug callsite instrumentation, concurrent mask
+updates or a running display. The SDK build enables TRACING. Full workflow
+verification for the updated source is pending build166.

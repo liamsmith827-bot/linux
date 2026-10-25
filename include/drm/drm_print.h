@@ -508,7 +508,7 @@ static inline struct drm_printer drm_line_printer(struct drm_printer *p,
 
 /**
  * drm_debug_category_printer - construct a &drm_printer that outputs to
- * pr_debug() if enabled for the given category.
+ * debug output and/or tracefs if enabled for the given category.
  * @category: the DRM_UT_* message category this message belongs to
  * @prefix: trace output prefix
  *
@@ -525,8 +525,10 @@ drm_debug_category_printer(enum drm_debug_category category,
 		.category = category,
 	};
 
-	if (drm_debug_enabled_raw(category) || drm_debug_trace_enabled(category))
+	if (drm_debug_enabled_raw(category))
 		p.printfn = __drm_printfn_dbg;
+	else if (drm_debug_trace_enabled(category))
+		p.printfn = __drm_printfn_trace;
 	else
 		p.printfn = __drm_printfn_noop;
 
