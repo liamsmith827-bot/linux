@@ -265,6 +265,14 @@ static void check_sig_ign(int thread)
 	timer_t timerid;
 	sigset_t set;
 
+#ifdef __ANDROID__
+	/* Bionic has no pthread cancellation API for stopping ignore_thread. */
+	if (thread) {
+		ksft_test_result_skip("check_sig_ign SIGEV_THREAD_ID: pthread_cancel unavailable\n");
+		return;
+	}
+#endif
+
 	if (thread) {
 		if (pthread_create(&pthread, NULL, ignore_thread, &tid))
 			fatal_error(NULL, "pthread_create()");
@@ -312,8 +320,10 @@ static void check_sig_ign(int thread)
 
 	if (thread) {
 		/* Stop the thread first. No signal should be delivered to it */
+#ifndef __ANDROID__
 		if (pthread_cancel(pthread))
 			fatal_error(NULL, "pthread_cancel()");
+#endif
 		if (pthread_join(pthread, NULL))
 			fatal_error(NULL, "pthread_join()");
 	}
