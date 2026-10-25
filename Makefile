@@ -1982,7 +1982,7 @@ endif
 # Kernel headers from External Modules
 
 #Default location for installed headers
-export INSTALL_HDR_PATH = $(objtree)/usr
+export INSTALL_HDR_PATH = $(CURDIR)/usr
 
 quiet_cmd_headers_install = INSTALL $(INSTALL_HDR_PATH)/include
       cmd_headers_install = \
