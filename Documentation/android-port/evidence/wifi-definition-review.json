@@ -1,0 +1,200 @@
+{
+  "source_head": "f6a82566cd024ef1924080b5f90ef7e07e186405",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "cba7443712f74fc7248d49766ccaab24c2452122",
+      "disposition": "already-represented-upstream",
+      "rationale": "S1G split is represented by native 0901d2c89442; new header and relocated TIM wrapper reviewed with moved-line accounting. Keep native 68cf46755894 fix restricting walk end to tim+tim_len instead of ACK candidate tim+tim_len+2, avoiding an extra two bytes of malformed frame access. Full S1G header exact LTS; no old implementation overwrites its bounds fix.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/wifi-definition-review.json",
+        "SECURITY.md: Wireless definition splits and stable parser bounds"
+      ],
+      "paths": [
+        "include/linux/ieee80211-s1g.h",
+        "include/linux/ieee80211.h"
+      ],
+      "patch_sha256": "e9c710137816d4097d46812a103efb81c3b4a249f726d24d5efb3e6e4a83e4d0"
+    },
+    {
+      "commit": "5882dc08805a56c749722f9fed023acb9cc98a34",
+      "disposition": "adapted",
+      "rationale": "Retain split P2P header as an Android module-source include interface. Entire native P2P definitions block is unchanged in the new header and included through ieee80211.h, preserving existing consumers and wire formats. New header exact ACK; main native code remains except separately recorded definitions/splits. No runtime feature is enabled merely by moving declarations.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/wifi-definition-review.json",
+        "SECURITY.md: Wireless definition splits and stable parser bounds"
+      ],
+      "paths": [
+        "include/linux/ieee80211-p2p.h",
+        "include/linux/ieee80211.h"
+      ],
+      "patch_sha256": "acf37c7d9163c8785694396238f0ddc0a889cd6a83c63de26c957bae9fe9164a"
+    },
+    {
+      "commit": "fcbe2cb4c23eb0739b6164057ae38e3044becf57",
+      "disposition": "adapted",
+      "rationale": "Retain split NAN header for the shared Wi-Fi Aware implementation and source-module interface. Both original native NAN macro blocks are unchanged and remain reachable through main-header inclusion; later new NAN definitions are reviewed separately. Keep native S1G/UHR and bounds fixes alongside the split.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/wifi-definition-review.json",
+        "SECURITY.md: Wireless definition splits and stable parser bounds"
+      ],
+      "paths": [
+        "include/linux/ieee80211-nan.h",
+        "include/linux/ieee80211.h"
+      ],
+      "patch_sha256": "4e204d5dcf2c6b750349afc8b91837a4f44eb3a814210d7388d17e1607b583e0"
+    },
+    {
+      "commit": "a770728a2c7dac7d5e251bc167d843518a2fbcfa",
+      "disposition": "applied-net-state",
+      "rationale": "Retain appended ASSOC_FRAME_ENCRYPTION capability ABI and documentation, consumed by the previously retained capability-gated pre-association key path. Full feature enum equals ACK and all pre-existing native numeric values are unchanged; new index is 71. It does not itself encrypt frames or advertise support. Exact SDK encrypted-association use is unconfirmed, so preserve shared configured interface conservatively; drivers must honor the advertised security contract.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/wifi-definition-review.json",
+        "SECURITY.md: Wireless definition splits and stable parser bounds"
+      ],
+      "paths": [
+        "include/uapi/linux/nl80211.h"
+      ],
+      "patch_sha256": "faab1fe2b6037c628318490b5fca5f855013f049b73f8423cd57c56b8c168afc"
+    },
+    {
+      "commit": "fe3160f3bc1a7259bf0910da894ae623acbd3a0e",
+      "disposition": "already-represented-upstream",
+      "rationale": "Full UHR patch read, including size helpers, membership selector minimum, EIDs, enhanced update byte and main-header changes. New UHR header equals LTS exactly and those main-header definitions are also native, as whole-header reconstruction proves. Preserve native later validation and operation-attribute fixes documented in wifi-auth-interface-review.json; no new UHR implementation or resolution of existing helper FIXME limitations is claimed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/wifi-definition-review.json",
+        "SECURITY.md: Wireless definition splits and stable parser bounds"
+      ],
+      "paths": [
+        "include/linux/ieee80211-uhr.h",
+        "include/linux/ieee80211.h"
+      ],
+      "patch_sha256": "19a6a9c164452141dc8f73f1e71ed3c9cfa9511aafa087af684e2f6239554e70"
+    },
+    {
+      "commit": "19993727d153d3d6f8c03fae7bc3484d2b1cadd2",
+      "disposition": "applied-net-state",
+      "rationale": "Retain TX/RX antenna-position/mask constants and current copyright in final ACK NAN source header. These define wire-field interpretation for shared Android NAN interfaces; exact current SDK caller of these particular four macros was not established, so retain conservatively without claiming active use or adding a physical radio. No parsing behavior changes from constants alone.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/wifi-definition-review.json",
+        "SECURITY.md: Wireless definition splits and stable parser bounds"
+      ],
+      "paths": [
+        "include/linux/ieee80211-nan.h"
+      ],
+      "patch_sha256": "4bb74af507d078fbd32ca2f65266773afd0e0d9cb3adf50bc44c2ccb31a201cd"
+    },
+    {
+      "commit": "db5517b7c32b1fbefca5e991b3ef044b35407424",
+      "disposition": "applied-net-state",
+      "rationale": "Retain NAN OUI/type, attribute/master/anchor structures and bounded attribute iterator, positively consumed by the configured hwsim NAN beacon path. Per-iteration header length and declared payload length are checked before advance; caller checks required structure payload sizes. Retain previously reviewed caller/regulatory/lifetime fixes. Whole final NAN header matches ACK; this review is not a malformed-frame runtime test.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/wifi-definition-review.json",
+        "SECURITY.md: Wireless definition splits and stable parser bounds"
+      ],
+      "paths": [
+        "include/linux/ieee80211-nan.h",
+        "include/linux/ieee80211.h"
+      ],
+      "patch_sha256": "a0727d564da86b2ddd4088259a0135288d1f1d6fab97896371645703ada8e7e7"
+    }
+  ],
+  "proofs": [
+    {
+      "path": "include/linux/ieee80211-s1g.h",
+      "comparison": "whole file exact LTS",
+      "blob": "afc01379801fbee6e0d7bd1436b9535f7c05b459"
+    },
+    {
+      "path": "include/linux/ieee80211-uhr.h",
+      "comparison": "whole file exact LTS",
+      "blob": "132acced7d798247eda400a814df60947a10e2a8"
+    },
+    {
+      "path": "include/linux/ieee80211-s1g.h",
+      "native_split_commit": "0901d2c89442647c4b7462a3de6c6ee01b33684e",
+      "native_fix_commit": "68cf46755894d495b432e21f9e25637030d8b075",
+      "comparison": "Candidate split header equals native after precisely removing +2 from TIM walk end. All original new-header content read and moved-lines accounting checked; wrapper remains in main header. Native bounds fix retained."
+    },
+    {
+      "commit": "cba7443712f74fc7248d49766ccaab24c2452122",
+      "coverage": "Read all 575 lines of new header and all main-header additions. Every nonblank removed line occurs in that header or relocated main-header wrapper, except a reworded beacon comment. This structured comparison covers duplicate moved content rather than claiming two independent full raw reads.",
+      "removed_line_accounting": {
+        "/* bits unique to S1G beacon */": 1
+      },
+      "main_header_added_lines": [
+        "#include \"ieee80211-s1g.h\"",
+        "",
+        "/**",
+        " * ieee80211_check_tim - check if AID bit is set in TIM",
+        " * @tim: the TIM IE",
+        " * @tim_len: length of the TIM IE",
+        " * @aid: the AID to look for",
+        " * @s1g: whether the TIM is from an S1G PPDU",
+        " * Return: whether or not traffic is indicated in the TIM for the given AID",
+        " */",
+        "static inline bool ieee80211_check_tim(const struct ieee80211_tim_ie *tim,",
+        "\t\t\t\t       u8 tim_len, u16 aid, bool s1g)",
+        "{",
+        "\treturn s1g ? ieee80211_s1g_check_tim(tim, tim_len, aid) :",
+        "\t\t     __ieee80211_check_tim(tim, tim_len, aid);",
+        "}"
+      ]
+    },
+    {
+      "path": "include/linux/ieee80211.h",
+      "comparison": "Reinsert unchanged native P2P/NAN blocks, remove their includes and four separately identified new defines -> exact LTS. All UHR definitions, inclusion, membership selector and TIM wrapper remain native.",
+      "separate_added_defines": [
+        "#define WLAN_AUTH_IEEE8021X 8\n",
+        "#define WLAN_AUTH_EPPKE 9\n",
+        "#define WLAN_MAX_SECURE_LTF_KEYSEED_LEN\t48\n",
+        "#define WLAN_OUI_TYPE_WFA_NAN\t\t0x13\n"
+      ]
+    },
+    {
+      "path": "include/linux/ieee80211-p2p.h",
+      "comparison": "whole file exact final ACK",
+      "blob": "180891c11f08735381192efc0453e1ffae39b453"
+    },
+    {
+      "path": "include/linux/ieee80211-nan.h",
+      "comparison": "whole file exact final ACK",
+      "blob": "1c08150685bc80ef644a8043b9ce3abaf6aeb985"
+    },
+    {
+      "path": "include/uapi/linux/nl80211.h",
+      "comparison": "Full feature enum exact ACK; every native feature numeric value unchanged (excluding count/max sentinels).",
+      "association_frame_encryption_index": 71
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "blob": "dc9e46e1d733da2080234c556c6a306cbfd6deee",
+      "observation": "Retained nl80211_key_allowed consumes new feature to permit pre-association keys only when advertised. Existing detailed security decision is evidence/wifi-auth-interface-review.json, candidate 1dd823a9174d."
+    },
+    {
+      "path": "drivers/net/wireless/virtual/mac80211_hwsim_nan.c",
+      "blob": "826f41d8149cc0beee047cc9a9ebe9b6cfd5493f",
+      "observation": "Actual target hwsim NAN beacon parser consumes OUI, attribute iterator, master indication and anchor-master structures. Iterator checks header then declared size; caller separately checks payload size before accessing each structure. This is source review, not packet execution."
+    }
+  ],
+  "remote_resources_used": [],
+  "limits": "Six smaller patches read in full; S1G full new header and main additions read with explicit moved-line coverage. No radio, protocol, malformed-packet or encryption runtime test."
+}

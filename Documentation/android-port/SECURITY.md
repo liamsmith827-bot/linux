@@ -9948,6 +9948,41 @@ All three merge-resolution files are exact LTS, preserving its erratum fix.
 Build 193 is verifying the source-header cleanup; this review adds no runtime
 compatibility claim. No additional remote sources were used.
 
+## Wireless definition splits and stable parser bounds
+
+Seven candidates are recorded in evidence/wifi-definition-review.json. Six
+smaller patches were read in full. For the large S1G split, the entire new
+575-line header and main-header additions were read; a changed-line accounting
+comparison covers the duplicate moved content, with only a reworded comment
+outside the new header and relocated wrapper. Native LTS already has this split
+and the later 68cf46755894 bounds fix. Preserve its TIM walk end at tim+tim_len,
+not the older ACK candidate's additional two bytes. The complete S1G header is
+exact LTS, so the port cannot reverse that fix through this relocation.
+
+P2P and NAN splits are retained as Android source-module interfaces. Their
+original native definitions are unchanged and included through ieee80211.h.
+Recombining those blocks and removing four separately identified new defines
+yields the exact native main header. In particular, all UHR definitions,
+membership selector changes and the TIM wrapper remain native. The complete
+UHR header equals both its candidate version and LTS; later native validator and
+operation-attribute fixes are described in the earlier wireless-auth review.
+Existing optional-element FIXME limitations are not claimed solved.
+
+The association-frame-encryption feature has index 71, the complete feature enum
+matches ACK, and all pre-existing native feature values are unchanged. It is a
+capability declaration consumed by the previously reviewed pre-association key
+path, not an implementation or automatic advertisement of encryption. Actual
+SDK protocol use remains unconfirmed; retain the shared API conservatively and
+require drivers advertising it to honor the security contract.
+
+NAN OUI, attribute structures and iterator have a positive hwsim beacon-parser
+consumer. The iterator checks the header and declared length before advancing;
+the caller checks the required payload size for each interpreted structure.
+The four antenna bitfield macros have no established particular SDK caller and
+are retained conservatively as shared protocol definitions. These choices do
+not add a physical radio or claim packet, encryption or runtime verification.
+No additional remote resources were used.
+
 ## Audio loopback, reverted hostless DAI and SDCA interfaces
 
 Thirteen candidates are recorded in evidence/audio-interface-tail-review.json.
@@ -9990,3 +10025,18 @@ does not establish that addition cannot overflow. The entire new UMP path is
 omitted. Native exact-label matching remains and never acquires the new prefix
 ambiguity. Reassess these APIs and complete ownership/arithmetic checks for a
 future SoundWire target. No additional remote resources were used.
+
+# Build 193 verification
+
+The original `ARCH=x86_64 common/build_virt.sh` workflow succeeded at source
+`3c092b1cd7a22909cc27f0c1b7c6727f59f2a93d`, with manifest
+`c1b23e750e17cfc61aa967491c8f24cbb99217b6` and unchanged modified Kleaf
+`2142663d1a266266ec5d42c942ae14172be8dcc0`. Kernel image and 100 common plus
+45 virtual-device modules were produced. All 145 signatures verified against
+the exact build certificate; a modified payload was rejected.
+`evidence/build-results.json` records the pins and artifact hashes.
+`evidence/module-tables-build-193.json` verifies all module flag/CRC counts
+and all 659 protected exports; the historical pointer-stride control misses
+330 exports, and a nonexistent-name control is rejected. This verifies build
+and artifact metadata, not module loading, boot or runtime behavior. No remote
+resources were accessed for this checkpoint.
