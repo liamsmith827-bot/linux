@@ -1,0 +1,653 @@
+{
+  "source_head": "29210bd8da0b15b42b5c0311b9bd29fcdcf58351",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "05ecb9c3e4c93808eb86c71ed3d25ab256846672",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit ARM EL2 IOMMU early memory pool, driver-size validation, carveout sizing and boot parameter. Complete patch reviewed: pool allocation/reclaim is private hypervisor state and no generic allocator changes occur. Native ARM host/setup/Kconfig stay whole, private IOMMU files absent. SDK is x86 and does not configure this ARM protected backend; no shadow-IOMMU allocation guarantee is claimed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/vfio-tail-review.json",
+        "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+      ],
+      "files": [
+        "Documentation/admin-guide/kernel-parameters.txt",
+        "arch/arm64/include/asm/kvm_host.h",
+        "arch/arm64/kvm/Kconfig",
+        "arch/arm64/kvm/hyp/include/nvhe/iommu.h",
+        "arch/arm64/kvm/hyp/nvhe/iommu/iommu.c",
+        "arch/arm64/kvm/hyp/nvhe/setup.c",
+        "arch/arm64/kvm/iommu.c",
+        "arch/arm64/kvm/pkvm.c"
+      ],
+      "patch_sha256": "c5a0e87b2c33f0583617cc375898dcd0ba1def45b1bd671792cb4ea86d7072a3"
+    },
+    {
+      "commit": "aeadc44502dacec3c02c0ed1ebbf430eb54206ee",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit ARM-only dual-image IOMMU template, documentation addition and build selection. Complete patch read, including stub map/unmap operations and requirements to use/unuse DMA around mapping and TLB invalidation. This is an explicitly incomplete hardware-driver template, not a functioning SDK DMA-isolation provider. Native misc config retains UID stats only; no template or EL2 payload is delivered.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/vfio-tail-review.json",
+        "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+      ],
+      "files": [
+        "Documentation/virt/kvm/arm/pkvm-iommu.rst",
+        "drivers/misc/Kconfig",
+        "drivers/misc/Makefile",
+        "drivers/misc/pkvm-iommu-temp/Makefile",
+        "drivers/misc/pkvm-iommu-temp/pkvm-iommu-temp.c",
+        "drivers/misc/pkvm-iommu-temp/pkvm/Makefile",
+        "drivers/misc/pkvm-iommu-temp/pkvm/pkvm-iommu-temp.c",
+        "drivers/misc/pkvm-iommu-temp/pkvm/pkvm-iommu-temp.h"
+      ],
+      "patch_sha256": "bf7b844f83fd12bf705a6bdd47d66c2857b635e422f15493d54b2ea1fdbe1b4d"
+    },
+    {
+      "commit": "160959ad76c194d8e5473f75673c3b40225ce66f",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit vfio_file_get_device helper/export with protected assignment callers. Full patch returns the underlying device from a VFIO device file without introducing ordinary assignment functionality; lifetime must be held by the file. Both current VFIO source/header remain whole native. SDK common/virtual configs disable VFIO, matching ACK x86 selection, while real pvIOMMU crosvm consumers are ARM64-gated. No arbitrary future VFIO vendor-module compatibility claim is made.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/vfio-tail-review.json",
+        "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+      ],
+      "files": [
+        "drivers/vfio/vfio_main.c",
+        "include/linux/vfio.h"
+      ],
+      "patch_sha256": "0a4a77a3cc77ae41a67d2e738b0696b726f4f5f44046ddb57f65593ba41c6353"
+    },
+    {
+      "commit": "261d26055733545d2623fb4b4d262e04f6749445",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit architecture assignment/reclaim callbacks, group exposure beyond SPAPR and bridge calls with protected device ownership support. Full patch enforces donating a complete group before a protected guest can use it; this is not needed by native ordinary KVM assignment. Whole native VFIO group/KVM host/bridge files remain. Native bridge has no new assign-error branch or group references; later memory/refcount fixes are separately assessed rather than omitted from a retained buggy branch.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/vfio-tail-review.json",
+        "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+      ],
+      "files": [
+        "drivers/vfio/group.c",
+        "include/linux/kvm_host.h",
+        "virt/kvm/vfio.c"
+      ],
+      "patch_sha256": "ef063453d963923c858a567a6d6e6c552d17def25b679e1e21afffc97365e7d0"
+    },
+    {
+      "commit": "337160d05cbaaafe908f46474201f35f91da567c",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit ARM64 VFIO_PKVM_IOMMU backend, protected-device state, read/write denial and UAPI selector. Complete patch relies on hypervisor-controlled blocking domains and guest pvIOMMU ownership, not ordinary type1/no-IOMMU behavior. Native VFIO files/UAPI remain, with no false claim of mutual host/guest distrust. SDK VFIO is disabled; Android ARM64 consumer exists and is explicitly outside current target.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/vfio-tail-review.json",
+        "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+      ],
+      "files": [
+        "drivers/vfio/Kconfig",
+        "drivers/vfio/Makefile",
+        "drivers/vfio/platform/vfio_platform_common.c",
+        "drivers/vfio/vfio_pkvm_iommu.c",
+        "include/linux/vfio.h",
+        "include/uapi/linux/vfio.h"
+      ],
+      "patch_sha256": "aa79559f26049420c4764e9a551701161fe2ec4b33b2653ce88e343e73682c42"
+    },
+    {
+      "commit": "921bb57ad76069c4df8a3499f76f2acdb856247c",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit pvIOMMU attach/get-info UAPI and anonymous fd implementation with the ARM protected IOMMU backend. Full patch reviewed including fd allocation, unwind, size checks and host hypercall. Native bridge has no pviommufd and does not advertise these attributes. Real pinned crosvm callers require Android+aarch64; generated x86 bindings alone do not implement this path. Double-free, missing KVM reference and copy-size problems are tracked in their fix rows, with no old implementation retained.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/vfio-tail-review.json",
+        "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+      ],
+      "files": [
+        "include/uapi/linux/kvm.h",
+        "virt/kvm/vfio.c"
+      ],
+      "patch_sha256": "056e4ec04e59df9b6812cb3d75bf1a2cfbf42bc2a8ac48030ace127cbe9a7008"
+    },
+    {
+      "commit": "53cf0c78ab30d2da26c2907894098d666adc19c0",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit protected pvIOMMU per-fd SET_CONFIG ioctl and physical-to-virtual SID mapping. Complete patch validates input size/device fd and dispatches to ARM hypervisor ownership state; native KVM UAPI/bridge remain whole. Crosvm has a real ARM64-gated caller. Ordinary SDK KVM is retained, but protected device-assignment UAPI/runtime compatibility is not claimed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/vfio-tail-review.json",
+        "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+      ],
+      "files": [
+        "include/uapi/linux/kvm.h",
+        "virt/kvm/vfio.c"
+      ],
+      "patch_sha256": "ad841dbb95ce6835372779d31d8527533f6154629d5dbcb5f5bbe9c938647034"
+    },
+    {
+      "commit": "61f3ba8af960278c0eedff0ac17ed2f7876a48c3",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit optional PFNMAP backing-file reference API with its ARM protected DMA-BUF fault consumer. Full generic patch and final __pkvm_mem_abort_dmabuf caller read. The new output keeps the mapped DMA-BUF file alive for donated pages; native core has no backing_file output/acquisition, and whole KVM core/mm/header stay LTS. Native pin/unsafe-unmapping protections, read-only error PFNs, MMU notifier behavior and refcounted-page contract are preserved. The later error-PFN leak fix has no affected acquisition in retained code.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/vfio-tail-review.json",
+        "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+      ],
+      "files": [
+        "include/linux/kvm_host.h",
+        "virt/kvm/kvm_main.c",
+        "virt/kvm/kvm_mm.h"
+      ],
+      "patch_sha256": "a1de88b0eebb97263abfe298dbb20440af8a1b144c21c99c5749f0026ebc4697"
+    },
+    {
+      "commit": "6ace5be5937cc205a98e4738d000581686a7c3d9",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit ARM protected-IOMMU accounting wrappers, compound allocation/free callbacks and hypervisor top-up/reclaim integration. Complete patch read, including matching allocator base and subsystem counters. Private ARM IOMMU file is absent and native ARM host source remains whole. Generic IOMMU accounting/source fixes are not removed; no protected pool accounting or non-preemptible allocation behavior is claimed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/vfio-tail-review.json",
+        "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+      ],
+      "files": [
+        "Documentation/virt/kvm/arm/pkvm-iommu.rst",
+        "arch/arm64/include/asm/kvm_host.h",
+        "arch/arm64/include/asm/kvm_pkvm.h",
+        "arch/arm64/kvm/Makefile",
+        "arch/arm64/kvm/iommu.c",
+        "arch/arm64/kvm/pkvm.c"
+      ],
+      "patch_sha256": "5b4e0462608817845c2ad1628e8e2cddc346ad2f0e76ca1dfc72c64f4d48e0ae"
+    },
+    {
+      "commit": "ce8797643ed212ab0059e1dc0132e49627724fcd",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit conditional x86 pKVM dirty-logging disable with the excluded opt-in protected host. Full patch only masks KVM_MEM_LOG_DIRTY_PAGES when CONFIG_PKVM_X86 and enable_pkvm are true. Native entire KVM core stays LTS, retaining ordinary dirty logging and its existing GUEST_MEMFD restriction. Do not weaken or disable native migration/dirty tracking to match an unsupported backend.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/vfio-tail-review.json",
+        "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+      ],
+      "files": [
+        "virt/kvm/kvm_main.c"
+      ],
+      "patch_sha256": "199c0e9d92b4e1e604ef177ae04f76b9a123bd7c993dc0481ebd29b3ef76d0dd"
+    },
+    {
+      "commit": "04f52993ce9341df59f9cc10ccf4d681bcad0a51",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit KMI-motivated direct-call replacements while preserving native symbol_get/symbol_put lifetime behavior. Complete patch changes built-in KVM/VFIO paths to avoid exporting internal types into STG; historical KMI tracking is out of scope. SDK has KVM=y, VFIO disabled and TRIM_UNUSED_KSYMS disabled; kvm_get_kvm_safe/kvm_put_kvm exports are present in completed-build symvers. No symbol trimming reason requires bypassing native lookup. Both whole native files remain; no module-combination runtime test is claimed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/vfio-tail-review.json",
+        "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+      ],
+      "files": [
+        "drivers/vfio/vfio_main.c",
+        "virt/kvm/vfio.c"
+      ],
+      "patch_sha256": "1bbe882c82a0179e53c86f046bfef0bcf7b3272f028d239db27c08cda212d6b4"
+    },
+    {
+      "commit": "3c126dc1eb06699160cb954b5d27abff7c1102fa",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit one-to-zero reserved-page adjustment for the excluded ARM IOMMU template. Full patch changes only its registration count; template has no actual page use. No wasteful old copy remains and native SDK memory reservation is unaffected.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/vfio-tail-review.json",
+        "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+      ],
+      "files": [
+        "drivers/misc/pkvm-iommu-temp/pkvm-iommu-temp.c"
+      ],
+      "patch_sha256": "4872a9b067da6f9aac53ce2344e7285b56ec1edadefae9d7668a1396bfda209b"
+    },
+    {
+      "commit": "b61f7d20d4e1ab404a6170f46ca4cefde5d581b2",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit protected-mode guard for the excluded ARM IOMMU template. Full patch prevents a fatal EL2 initialization when loaded without pKVM; the entire template is absent, not retained without its guard. Future template use must include this guard, and no SDK load path can reach this private module.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/vfio-tail-review.json",
+        "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+      ],
+      "files": [
+        "drivers/misc/pkvm-iommu-temp/pkvm-iommu-temp.c"
+      ],
+      "patch_sha256": "dfb61f52f662d2ef7bb642f946a064f966e91e5b26e0239e38db94fe80f61b26"
+    },
+    {
+      "commit": "e6613dac9987ba432c817b6a8c58fd18b125d0cb",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit ARM protected-device power-domain provider and early initialization wiring. Full patch requires ARM_PKVM_GUEST, generic power domains, per-device DT node and DEV_REQ_PWR hypercall to avoid malicious host power tampering. SDK x86 has no ARM hypercall/DT contract; both private files absent and native ARM guest/Makefile stay whole. Native runtime PM remains separate, and no protected device power isolation is claimed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/vfio-tail-review.json",
+        "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+      ],
+      "files": [
+        "drivers/virt/coco/pkvm-guest/Makefile",
+        "drivers/virt/coco/pkvm-guest/arm-pkvm-guest.c",
+        "drivers/virt/coco/pkvm-guest/pkvm-device-power.c",
+        "drivers/virt/coco/pkvm-guest/pkvm-guest.h"
+      ],
+      "patch_sha256": "a3d0f6b9ab0e61a02e47edab13a6282f7532c030eb0fcd6f2b46167a8949fe2a"
+    },
+    {
+      "commit": "0a8db81497cab5d791f6026bc518aaabbbd13c7c",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit VFIO platform LOW_POWER_ENTRY/EXIT implementation. This is a generic physical-platform assignment extension, not solely pKVM or KMI: full patch adds ioctl dispatch, mutex-serialized low_power state and balanced PM refs even on errors. Current SDK disables VFIO entirely; pinned ACK x86 config does not select it, and SDK uses virtual devices rather than assigned platform MMIO devices. Whole native platform files retain existing behavior; optional platform-device passthrough and new ioctls remain unsupported/unverified and require reassessment.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/vfio-tail-review.json",
+        "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+      ],
+      "files": [
+        "drivers/vfio/platform/vfio_platform.c",
+        "drivers/vfio/platform/vfio_platform_common.c",
+        "drivers/vfio/platform/vfio_platform_private.h"
+      ],
+      "patch_sha256": "8b7d4404f6fd88905c6303fa11b5e0600add4b148acd8ce164fcbdfee088d9e8"
+    },
+    {
+      "commit": "88e59f90e918a5d074d07e6f6c5af7a58317a1d4",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit non-coherent VFIO registration relaxation and compensating type1 group validation together. Full patch defaults allow_non_coherent=false but permits opt-in binding because pKVM handles cache maintenance. Native whole vfio_main/type1 retain their original coherency admission rules; no unsafe bypass is introduced without a trusted maintenance backend. Generic native IOMMU support remains. Non-coherent protected device passthrough is outside the selected SDK.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/vfio-tail-review.json",
+        "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+      ],
+      "files": [
+        "drivers/vfio/vfio_iommu_type1.c",
+        "drivers/vfio/vfio_main.c"
+      ],
+      "patch_sha256": "19ed48bfae77b334a1d4ec60a0ac666d10d3191d07667c8c047bee00a6358911"
+    },
+    {
+      "commit": "febcf75c0c3097643944da188936ae7b25e1ee5e",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit pviommu attach double-free fix only with the entire absent attach implementation. Full patch changes ownership after anon_inode_getfile: release owns pviommu after success, so fput must not be followed by a second kfree, and return must use saved fdno. Native bridge has no such object/file path. No vulnerable older ACK implementation is retained; future pvIOMMU must include this fix.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/vfio-tail-review.json",
+        "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+      ],
+      "files": [
+        "virt/kvm/vfio.c"
+      ],
+      "patch_sha256": "56fc305146ad292c6d1111cc181fd8ca98a056f5b6c3fb6a0abee34d8e0dd2a7"
+    },
+    {
+      "commit": "f1937362c4817005e578c3f58ab70d2cb2025df2",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit pviommufd KVM-lifetime fix only with that absent fd API. Full patch takes a KVM ref before file creation, unwinds on failure and releases with fd, preventing closing VM fd while pvIOMMU operations still dereference it. Native bridge stays whole and has no pviommu object retaining a bare kvm_device pointer. This is a real UAF fix, not dismissed as cosmetic.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/vfio-tail-review.json",
+        "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+      ],
+      "files": [
+        "virt/kvm/vfio.c"
+      ],
+      "patch_sha256": "d8d82c0b669f2aa849363aa3edcbffc5746cf9b9d157c7ebd22f9838469411ae"
+    },
+    {
+      "commit": "7d845fc0b944c981e41cf3b925b53ade7e423118",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit DEV_REQ_PWR reserved-register zeroing with the absent ARM power driver. Full patch supplies four zero arguments required by hypervisor ABI; no older malformed call is present. Future driver support needs this correctness fix. Native guest and SDK power management remain unchanged.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/vfio-tail-review.json",
+        "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+      ],
+      "files": [
+        "drivers/virt/coco/pkvm-guest/pkvm-device-power.c"
+      ],
+      "patch_sha256": "ca4d38b8a1b77569f4b3a5dd714c2d8453e5c450e8454cc06433d9ddba9875fc"
+    },
+    {
+      "commit": "4d0ebc9a3d781a9d735333bc28da5b557efe5f09",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit standalone device_initcall conversion with the absent ARM power driver. Full patch fixes platform-driver registration before platform bus setup, moves service probing to initcall and removes obsolete header. Native ARM guest/Makefile remain whole; no too-early platform registration path is retained. No boot recipe was executed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/vfio-tail-review.json",
+        "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+      ],
+      "files": [
+        "drivers/virt/coco/pkvm-guest/arm-pkvm-guest.c",
+        "drivers/virt/coco/pkvm-guest/pkvm-device-power.c",
+        "drivers/virt/coco/pkvm-guest/pkvm-guest.h"
+      ],
+      "patch_sha256": "c74bbbd36552a64797f779159a91dbc998168a8343cb708b8985bf5938ca0421"
+    },
+    {
+      "commit": "071331fb7343111f51ea28094cbc6ae59fde14ae",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit backing-file error-PFN leak/output initialization fix only with the excluded API in 61f3ba8af960. Complete patch and native fault function reviewed: return zero can coexist with KVM_PFN_ERR_RO_FAULT, so the extra is_error_pfn check is necessary before ACK get_file. Native does not acquire or return this file reference at all. Retain its stricter pin/unsafe-mapping checks and current output contract; no leak from this ACK path remains.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/vfio-tail-review.json",
+        "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+      ],
+      "files": [
+        "virt/kvm/kvm_main.c"
+      ],
+      "patch_sha256": "600f6b413025fe31260c86bef3008d1189851735507c837320ee605c4c77b61c"
+    },
+    {
+      "commit": "6da35a4b1b02f5cd343b9b43c785adc9e526c2e1",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit assignment failure/group reference fixes only with absent assignment/reclaim callbacks. Full patch frees allocated kvf on new assign error and drops group refs after assignment/reclaim. Whole native bridge read: it has no assign-error branch; native SPAPR group references are retained/released under their existing lifecycle. No added leak paths are retained and no claim is made that untested future assignment callbacks are safe.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/vfio-tail-review.json",
+        "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+      ],
+      "files": [
+        "virt/kvm/vfio.c"
+      ],
+      "patch_sha256": "a04e87d9bad9c04cef350760177ebe27947e4974c46cc010cb1127654a3f3a6c"
+    },
+    {
+      "commit": "bbd92f8cc225e0da0712c1ac1b571e09cb626540",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit pvIOMMU variable-size output fix with the absent GET_INFO attribute. Full patch replaces copy_to_user of untrusted usize with copy_struct_to_user bounded by actual struct size; it prevents the documented check_copy_size warning and implements extensible output correctly. Native bridge has no such stack object/output. Do not describe old code as safe to port just because hardened copying may reject it.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/vfio-tail-review.json",
+        "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+      ],
+      "files": [
+        "virt/kvm/vfio.c"
+      ],
+      "patch_sha256": "225bf979e5bcbd7179342c55eab127c867b41841bb718702796957eea1ef488b"
+    }
+  ],
+  "proofs": [
+    {
+      "path": "Documentation/admin-guide/kernel-parameters.txt",
+      "port_entry": "100644 blob 09e1b46c3f02777556f9b748cbe822ba84d5cae0\tDocumentation/admin-guide/kernel-parameters.txt",
+      "lts_entry": "100644 blob 362ff3225220946ea5c91f4873ffc7f5e98e861b\tDocumentation/admin-guide/kernel-parameters.txt",
+      "ack_entry": "100644 blob 9766ec000bb0761e2e594733922e7c3f95e4bf7d\tDocumentation/admin-guide/kernel-parameters.txt",
+      "comparison": "shared delta read: unrelated UID statistics or disable_dma32/DPM watchdog documentation only"
+    },
+    {
+      "path": "Documentation/virt/kvm/arm/pkvm-iommu.rst",
+      "port_entry": "",
+      "lts_entry": "",
+      "ack_entry": "100644 blob 37acbc24482246d97e381e4e0f6737711ae4169d\tDocumentation/virt/kvm/arm/pkvm-iommu.rst",
+      "comparison": "mutually absent"
+    },
+    {
+      "path": "arch/arm64/include/asm/kvm_host.h",
+      "port_entry": "100644 blob 419e37112a6f02f324f3f8f370fb30701948c2a6\tarch/arm64/include/asm/kvm_host.h",
+      "lts_entry": "100644 blob 419e37112a6f02f324f3f8f370fb30701948c2a6\tarch/arm64/include/asm/kvm_host.h",
+      "ack_entry": "100644 blob 0ab34c13b1403fa271b7d7d75c8ab52148d29297\tarch/arm64/include/asm/kvm_host.h",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "arch/arm64/include/asm/kvm_pkvm.h",
+      "port_entry": "100644 blob 7195be508d994af455f4a8940fe8a42db0e05821\tarch/arm64/include/asm/kvm_pkvm.h",
+      "lts_entry": "100644 blob 7195be508d994af455f4a8940fe8a42db0e05821\tarch/arm64/include/asm/kvm_pkvm.h",
+      "ack_entry": "100644 blob b8d176e837925c7079685612fedb94d1d6c482ba\tarch/arm64/include/asm/kvm_pkvm.h",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "arch/arm64/kvm/Kconfig",
+      "port_entry": "100644 blob 4f803fd1c99afdaa3b7120f2df07a2a919e28f9e\tarch/arm64/kvm/Kconfig",
+      "lts_entry": "100644 blob 4f803fd1c99afdaa3b7120f2df07a2a919e28f9e\tarch/arm64/kvm/Kconfig",
+      "ack_entry": "100644 blob d932183affc707c394757aaa936ab9a29ed96206\tarch/arm64/kvm/Kconfig",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "arch/arm64/kvm/Makefile",
+      "port_entry": "100644 blob 3ebc0570345cc011830eea0a0472619e00e28056\tarch/arm64/kvm/Makefile",
+      "lts_entry": "100644 blob 3ebc0570345cc011830eea0a0472619e00e28056\tarch/arm64/kvm/Makefile",
+      "ack_entry": "100644 blob a65d250dfc60fde2cafa9990e83acc611b837f5d\tarch/arm64/kvm/Makefile",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/include/nvhe/iommu.h",
+      "port_entry": "",
+      "lts_entry": "",
+      "ack_entry": "100644 blob 5eacfa71aa6d94e70b7c3386e5de4b4b1133e9cf\tarch/arm64/kvm/hyp/include/nvhe/iommu.h",
+      "comparison": "mutually absent"
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/nvhe/iommu/iommu.c",
+      "port_entry": "",
+      "lts_entry": "",
+      "ack_entry": "100644 blob a5e7b356720df84e963983c2499010b3154154ff\tarch/arm64/kvm/hyp/nvhe/iommu/iommu.c",
+      "comparison": "mutually absent"
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/nvhe/setup.c",
+      "port_entry": "100644 blob 15b25086447a148d92ecbcfbef71d93a3a7c933d\tarch/arm64/kvm/hyp/nvhe/setup.c",
+      "lts_entry": "100644 blob 15b25086447a148d92ecbcfbef71d93a3a7c933d\tarch/arm64/kvm/hyp/nvhe/setup.c",
+      "ack_entry": "100644 blob 73dd039b31073e93635b217f04d8cfbb01db24d4\tarch/arm64/kvm/hyp/nvhe/setup.c",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "arch/arm64/kvm/iommu.c",
+      "port_entry": "",
+      "lts_entry": "",
+      "ack_entry": "100644 blob 7045bb4d0684cd4fa771faed5460f389339efb23\tarch/arm64/kvm/iommu.c",
+      "comparison": "mutually absent"
+    },
+    {
+      "path": "arch/arm64/kvm/pkvm.c",
+      "port_entry": "100644 blob 24f0f8a8c943cc9b70d88220927b6623c6251f27\tarch/arm64/kvm/pkvm.c",
+      "lts_entry": "100644 blob 24f0f8a8c943cc9b70d88220927b6623c6251f27\tarch/arm64/kvm/pkvm.c",
+      "ack_entry": "100644 blob 39ba61f11da56ad25148b5ac320ffffdcf033fb4\tarch/arm64/kvm/pkvm.c",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "drivers/misc/Kconfig",
+      "port_entry": "100644 blob 432047fe3401f067c3133f602bbe4af057f5eeeb\tdrivers/misc/Kconfig",
+      "lts_entry": "100644 blob b9c11f67315f0bc0b5a4a4100ebd315fac25927e\tdrivers/misc/Kconfig",
+      "ack_entry": "100644 blob d6d96080950a372192f904dff701f64bb472033d\tdrivers/misc/Kconfig",
+      "comparison": "shared delta read: unrelated UID statistics or disable_dma32/DPM watchdog documentation only"
+    },
+    {
+      "path": "drivers/misc/Makefile",
+      "port_entry": "100644 blob 09c70d950b7072ea42b65a8094ebe5249241dcbd\tdrivers/misc/Makefile",
+      "lts_entry": "100644 blob b32a2597d2467bc8883ef81a89ab76544c3c9285\tdrivers/misc/Makefile",
+      "ack_entry": "100644 blob b8b5710c308fc8f77fd0b65480782593da9adefd\tdrivers/misc/Makefile",
+      "comparison": "shared delta read: unrelated UID statistics or disable_dma32/DPM watchdog documentation only"
+    },
+    {
+      "path": "drivers/misc/pkvm-iommu-temp/Makefile",
+      "port_entry": "",
+      "lts_entry": "",
+      "ack_entry": "100644 blob 5d45d5edae700d5a1be4761b6bb081e4385dbba0\tdrivers/misc/pkvm-iommu-temp/Makefile",
+      "comparison": "mutually absent"
+    },
+    {
+      "path": "drivers/misc/pkvm-iommu-temp/pkvm-iommu-temp.c",
+      "port_entry": "",
+      "lts_entry": "",
+      "ack_entry": "100644 blob f2a66674f5e8fcbcd45cb1cb9d0d8f4ad74788a8\tdrivers/misc/pkvm-iommu-temp/pkvm-iommu-temp.c",
+      "comparison": "mutually absent"
+    },
+    {
+      "path": "drivers/misc/pkvm-iommu-temp/pkvm/Makefile",
+      "port_entry": "",
+      "lts_entry": "",
+      "ack_entry": "100644 blob ba3ed1b664a965b9806930e8ad80d85dcb4b15bb\tdrivers/misc/pkvm-iommu-temp/pkvm/Makefile",
+      "comparison": "mutually absent"
+    },
+    {
+      "path": "drivers/misc/pkvm-iommu-temp/pkvm/pkvm-iommu-temp.c",
+      "port_entry": "",
+      "lts_entry": "",
+      "ack_entry": "100644 blob f79c6006e1b855c3826a1246f73e71fe24dbecf0\tdrivers/misc/pkvm-iommu-temp/pkvm/pkvm-iommu-temp.c",
+      "comparison": "mutually absent"
+    },
+    {
+      "path": "drivers/misc/pkvm-iommu-temp/pkvm/pkvm-iommu-temp.h",
+      "port_entry": "",
+      "lts_entry": "",
+      "ack_entry": "100644 blob 5b997e7d0d0d4c05adef923263f6f4f9bc89a77d\tdrivers/misc/pkvm-iommu-temp/pkvm/pkvm-iommu-temp.h",
+      "comparison": "mutually absent"
+    },
+    {
+      "path": "drivers/vfio/Kconfig",
+      "port_entry": "100644 blob ceae52fd7586d019778cb7d1026942bea962315d\tdrivers/vfio/Kconfig",
+      "lts_entry": "100644 blob ceae52fd7586d019778cb7d1026942bea962315d\tdrivers/vfio/Kconfig",
+      "ack_entry": "100644 blob 5d11079a037865a869e7c6cb83e04d88db7c30eb\tdrivers/vfio/Kconfig",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "drivers/vfio/Makefile",
+      "port_entry": "100644 blob b2fc9fb499d8690cf7d75e32bdf9bbb02efdf9f7\tdrivers/vfio/Makefile",
+      "lts_entry": "100644 blob b2fc9fb499d8690cf7d75e32bdf9bbb02efdf9f7\tdrivers/vfio/Makefile",
+      "ack_entry": "100644 blob ab82c6848dd564ca9e4816fe2e6d052b65a641c0\tdrivers/vfio/Makefile",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "drivers/vfio/group.c",
+      "port_entry": "100644 blob c376a6279de0e63f3794851ccb9988d289ee3866\tdrivers/vfio/group.c",
+      "lts_entry": "100644 blob c376a6279de0e63f3794851ccb9988d289ee3866\tdrivers/vfio/group.c",
+      "ack_entry": "100644 blob 0d273b940f2ad205eaeb21c6288aacc9def790d2\tdrivers/vfio/group.c",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "drivers/vfio/platform/vfio_platform.c",
+      "port_entry": "100644 blob 512533501eb7f386546b19ad1d0eea8ffd691480\tdrivers/vfio/platform/vfio_platform.c",
+      "lts_entry": "100644 blob 512533501eb7f386546b19ad1d0eea8ffd691480\tdrivers/vfio/platform/vfio_platform.c",
+      "ack_entry": "100644 blob b067b0a60d31e98c3427e9936fadc487756f2add\tdrivers/vfio/platform/vfio_platform.c",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "drivers/vfio/platform/vfio_platform_common.c",
+      "port_entry": "100644 blob 3bf1043cd7957ca2f1ae3bf4512e4df4d45ab19c\tdrivers/vfio/platform/vfio_platform_common.c",
+      "lts_entry": "100644 blob 3bf1043cd7957ca2f1ae3bf4512e4df4d45ab19c\tdrivers/vfio/platform/vfio_platform_common.c",
+      "ack_entry": "100644 blob a3e7bb13fa1622d901ce703c3a45c63a671da428\tdrivers/vfio/platform/vfio_platform_common.c",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "drivers/vfio/platform/vfio_platform_private.h",
+      "port_entry": "100644 blob 8d8fab51684909ea81e15c9cffc1ae581a6040e4\tdrivers/vfio/platform/vfio_platform_private.h",
+      "lts_entry": "100644 blob 8d8fab51684909ea81e15c9cffc1ae581a6040e4\tdrivers/vfio/platform/vfio_platform_private.h",
+      "ack_entry": "100644 blob 66b4941ceb83eda0512529ec6ba2ccd9f77c3fc8\tdrivers/vfio/platform/vfio_platform_private.h",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "drivers/vfio/vfio_iommu_type1.c",
+      "port_entry": "100644 blob 5167bec14e363bff1f76af11c1a4b6ec90561dcd\tdrivers/vfio/vfio_iommu_type1.c",
+      "lts_entry": "100644 blob 5167bec14e363bff1f76af11c1a4b6ec90561dcd\tdrivers/vfio/vfio_iommu_type1.c",
+      "ack_entry": "100644 blob 4ab3da2a0fd138761f9b6941b00be11ea4fd05ea\tdrivers/vfio/vfio_iommu_type1.c",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "drivers/vfio/vfio_main.c",
+      "port_entry": "100644 blob 19c40fc5969998010bd6b39a61d1b9548442841a\tdrivers/vfio/vfio_main.c",
+      "lts_entry": "100644 blob 19c40fc5969998010bd6b39a61d1b9548442841a\tdrivers/vfio/vfio_main.c",
+      "ack_entry": "100644 blob aa1890117c4e82b5c1bc43851f8ea04dff390052\tdrivers/vfio/vfio_main.c",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "drivers/vfio/vfio_pkvm_iommu.c",
+      "port_entry": "",
+      "lts_entry": "",
+      "ack_entry": "100644 blob 38fb5b0d1fd65d5e1f7a08d6b10f9138089240c6\tdrivers/vfio/vfio_pkvm_iommu.c",
+      "comparison": "mutually absent"
+    },
+    {
+      "path": "drivers/virt/coco/pkvm-guest/Makefile",
+      "port_entry": "100644 blob 4bee24579423ae591ef2b8145923f0da07b36051\tdrivers/virt/coco/pkvm-guest/Makefile",
+      "lts_entry": "100644 blob 4bee24579423ae591ef2b8145923f0da07b36051\tdrivers/virt/coco/pkvm-guest/Makefile",
+      "ack_entry": "100644 blob c45dfc86ccdd75216a5d4b7fcae0582f55aaf118\tdrivers/virt/coco/pkvm-guest/Makefile",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "drivers/virt/coco/pkvm-guest/arm-pkvm-guest.c",
+      "port_entry": "100644 blob d66291def0f40827fcb3c76da30a4c77a76c4323\tdrivers/virt/coco/pkvm-guest/arm-pkvm-guest.c",
+      "lts_entry": "100644 blob d66291def0f40827fcb3c76da30a4c77a76c4323\tdrivers/virt/coco/pkvm-guest/arm-pkvm-guest.c",
+      "ack_entry": "100644 blob 63f1e75cae69d534a63147ac47a72c9eb3571c52\tdrivers/virt/coco/pkvm-guest/arm-pkvm-guest.c",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "drivers/virt/coco/pkvm-guest/pkvm-device-power.c",
+      "port_entry": "",
+      "lts_entry": "",
+      "ack_entry": "100644 blob d83883f7854e916dbfa297f67d25d2735b741b2b\tdrivers/virt/coco/pkvm-guest/pkvm-device-power.c",
+      "comparison": "mutually absent"
+    },
+    {
+      "path": "drivers/virt/coco/pkvm-guest/pkvm-guest.h",
+      "port_entry": "",
+      "lts_entry": "",
+      "ack_entry": "",
+      "comparison": "mutually absent"
+    },
+    {
+      "path": "include/linux/kvm_host.h",
+      "port_entry": "100644 blob 56033126bcde573167581c1d5bca45b4d9e4f7b1\tinclude/linux/kvm_host.h",
+      "lts_entry": "100644 blob 56033126bcde573167581c1d5bca45b4d9e4f7b1\tinclude/linux/kvm_host.h",
+      "ack_entry": "100644 blob 8ee1b93ad2e8798ed80fc4d338c3ae8d9b4887da\tinclude/linux/kvm_host.h",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "include/linux/vfio.h",
+      "port_entry": "100644 blob 18fc36aadc326f88261d6aaa61282d9d210343d5\tinclude/linux/vfio.h",
+      "lts_entry": "100644 blob 18fc36aadc326f88261d6aaa61282d9d210343d5\tinclude/linux/vfio.h",
+      "ack_entry": "100644 blob ef1e001539919863389f288878aba4721130562c\tinclude/linux/vfio.h",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "include/uapi/linux/kvm.h",
+      "port_entry": "100644 blob 954e0511ce91c4c34e6aace4cdfc0f4393b2a44c\tinclude/uapi/linux/kvm.h",
+      "lts_entry": "100644 blob 954e0511ce91c4c34e6aace4cdfc0f4393b2a44c\tinclude/uapi/linux/kvm.h",
+      "ack_entry": "100644 blob 6f8dbfce848740d32a820df2856eae6aba1eee24\tinclude/uapi/linux/kvm.h",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "include/uapi/linux/vfio.h",
+      "port_entry": "100644 blob 75100bf009baf5a1e10def475bbd9a4632031132\tinclude/uapi/linux/vfio.h",
+      "lts_entry": "100644 blob 75100bf009baf5a1e10def475bbd9a4632031132\tinclude/uapi/linux/vfio.h",
+      "ack_entry": "100644 blob 296cbc9dc32f904339332cb31978d6c170e21f9a\tinclude/uapi/linux/vfio.h",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "virt/kvm/kvm_main.c",
+      "port_entry": "100644 blob ba09b1dabc4b7e0e6b495d0ab7dbad9ba3827eaa\tvirt/kvm/kvm_main.c",
+      "lts_entry": "100644 blob ba09b1dabc4b7e0e6b495d0ab7dbad9ba3827eaa\tvirt/kvm/kvm_main.c",
+      "ack_entry": "100644 blob 3bb0106dae3fc5ea79526641c7da1d6365933138\tvirt/kvm/kvm_main.c",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "virt/kvm/kvm_mm.h",
+      "port_entry": "100644 blob 0e68675a8a630330f042395d047c573d8209d7a2\tvirt/kvm/kvm_mm.h",
+      "lts_entry": "100644 blob 0e68675a8a630330f042395d047c573d8209d7a2\tvirt/kvm/kvm_mm.h",
+      "ack_entry": "100644 blob 4a7b42e276df2722697b65e067897067a9e5f582\tvirt/kvm/kvm_mm.h",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "virt/kvm/vfio.c",
+      "port_entry": "100644 blob be50514bbd1145eac98c15054fd70f3dd9bbcdda\tvirt/kvm/vfio.c",
+      "lts_entry": "100644 blob be50514bbd1145eac98c15054fd70f3dd9bbcdda\tvirt/kvm/vfio.c",
+      "ack_entry": "100644 blob 618bf7d12b738fe23a63f4a1af14d06102626838\tvirt/kvm/vfio.c",
+      "comparison": "whole native source"
+    }
+  ],
+  "configs": {
+    "../kernel_manifest-6.18/common_dist/kernel_x86_64_dot_config": "6d27ff842b4cac221ab58093e8ca6bc7f8c692b6ccf56c9b7cceca230389d769",
+    "../kernel_manifest-6.18/out/bazel/output_user_root/961789292c522f6ecd25a5ebbdd4dcbc/execroot/_main/bazel-out/k8-fastbuild/bin/common-modules/virtual-device/virtual_device_x86_64_config/out_dir/.config": "5eb9df697a47e51c48fc154d7c5c9de503407ea3d7789c1d3cd3c6185088ba8e"
+  },
+  "ack_x86_config_blob": "180b3166b2cce53f484b656cd70bd9dbe4a5b487",
+  "symbol_table_sha256": "bdc79efb060d03b69bc09f0d19a01d93dfe8cf2666fa23343380bc53b8f0fd8c",
+  "local_consumer": {
+    "project": "external/crosvm",
+    "commit": "c7dd8d6950912fa5e6fde7ec2d1616e0ddc090f8",
+    "path": "devices/src/vfio.rs",
+    "sha256": "1a43c8b72972a53d09ca6933aa69d7a0476f83761f18581b551904b9e9c440ce",
+    "scope": "KvmVfioPviommu new/attach/get_sid_count and three ioctl bodies; actual Android+aarch64 cfg gates. Generated bindings found on other architectures are not executable callers."
+  },
+  "method": "All 23 complete original patches read. Every retained affected source/header compared whole with LTS; three shared doc/misc deltas read. Entire native KVM VFIO bridge, native safe KVM ref/get/put and group ref helper, fault/remap/pinning and memory-region flags examined. Final ARM backing-file consumer and pinned crosvm target gates traced. Config and existing exported-symbol checks performed; no runtime device assignment.",
+  "limits": "Generic APIs were considered separately from ARM paths; absence of consumers was not treated as proof. Real ARM64 pvIOMMU consumer exists. Optional SDK physical/platform VFIO assignment not supported by current config and not tested. KVM_VFIO bridge itself remains enabled; VFIO driver subsystem is disabled. Missing incorrectly named Module.symvers path was corrected to kernel_x86_64_Module.symvers, not used as absence evidence. No linked external patch/Trusty resource visited.",
+  "remote_resources_used": []
+}

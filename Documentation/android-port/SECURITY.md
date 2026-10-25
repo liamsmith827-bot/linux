@@ -11045,3 +11045,46 @@ its per-page API and granule ceiling, and is not compiled for x86. No generic
 SDK warning/error path is altered to mimic the protected provider. These are
 source/configuration findings; no runtime balloon or hypercall test was run.
 No remote resource was used.
+
+## Protected assignment and native KVM lifetime boundaries
+
+Twenty-three complete patches are assessed in vfio-tail-review.json. Real
+pvIOMMU consumers exist in pinned crosvm: its attach/info/config calls and
+constructors are gated to Android ARM64. Generated x86 bindings do not implement
+that path. The SDK common and virtual-device configs disable VFIO, while KVM
+and the KVM_VFIO bridge remain enabled. Pinned ACK x86 GKI likewise does not
+select VFIO; ARM GKI explicitly selects VFIO, VFIO_PLATFORM and VFIO_PKVM_IOMMU.
+This is positive platform/configuration evidence, not a missing-consumer claim.
+
+Native VFIO core/group/type1/platform, KVM core/headers/UAPI and bridge files
+remain whole LTS. Protected ownership callbacks, blocking-domain pvIOMMU,
+virtual SID configuration and ARM EL2 memory pools/templates are omitted as a
+unit. Generic helpers and platform PM ioctls were separately examined: platform
+LOW_POWER_ENTRY/EXIT is a real physical-device feature, but not selected in
+this SDK; optional passthrough remains unsupported/unverified. Non-coherent
+binding relaxation and its type1 compensation are both excluded, retaining
+native coherency admission. No hidden DMA-isolation or protected power guarantee
+is advertised without its hypervisor backend.
+
+The native KVM bridge was read in full. ACK pvIOMMU fixes address double freeing
+a file-owned object, missing KVM lifetime references, assignment-error memory
+and group-reference leaks, and user-sized output copying. Every affected new
+function/branch is absent, not retained in its vulnerable earlier state. Native
+SPAPR refcount lifecycle and ordinary bridge add/del/release remain intact.
+Future pvIOMMU work must include these fixes. Direct-call replacements motivated
+by STG/KMI size are omitted; native symbol lookup/refcount behavior remains.
+Trimming is disabled and both safe KVM ref/get/put exports exist in build output.
+
+The optional PFNMAP backing-file output is traced to ARM protected DMA-BUF
+fault handling. Native core has no extra file acquisition/output and retains
+current pin/unsafe-unmapping, read-only PFN error and notifier rules. Therefore
+its later ACK error-PFN file leak does not occur through that absent path. The
+x86 pKVM dirty-logging restriction is also excluded with protected mode; native
+ordinary logging and the GUEST_MEMFD restriction remain.
+
+Private ARM IOMMU template, pool-accounting and power-domain patches are
+reviewed including their follow-up guards, reserved-register zeroing and delayed
+initialization. No older fatal template init or early platform registration is
+retained. All affected ARM retained files remain native. No passthrough, PM,
+DMA, fault or lifetime runtime test was executed. Only local sources were used;
+embedded patch URLs were not visited.

@@ -36512,5 +36512,235 @@
       "evidence/virtio-range-tail-review.json",
       "SECURITY.md: Protected balloon ownership and ARM range hypercalls"
     ]
+  },
+  {
+    "commit": "05ecb9c3e4c93808eb86c71ed3d25ab256846672",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit ARM EL2 IOMMU early memory pool, driver-size validation, carveout sizing and boot parameter. Complete patch reviewed: pool allocation/reclaim is private hypervisor state and no generic allocator changes occur. Native ARM host/setup/Kconfig stay whole, private IOMMU files absent. SDK is x86 and does not configure this ARM protected backend; no shadow-IOMMU allocation guarantee is claimed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/vfio-tail-review.json",
+      "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+    ]
+  },
+  {
+    "commit": "aeadc44502dacec3c02c0ed1ebbf430eb54206ee",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit ARM-only dual-image IOMMU template, documentation addition and build selection. Complete patch read, including stub map/unmap operations and requirements to use/unuse DMA around mapping and TLB invalidation. This is an explicitly incomplete hardware-driver template, not a functioning SDK DMA-isolation provider. Native misc config retains UID stats only; no template or EL2 payload is delivered.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/vfio-tail-review.json",
+      "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+    ]
+  },
+  {
+    "commit": "160959ad76c194d8e5473f75673c3b40225ce66f",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit vfio_file_get_device helper/export with protected assignment callers. Full patch returns the underlying device from a VFIO device file without introducing ordinary assignment functionality; lifetime must be held by the file. Both current VFIO source/header remain whole native. SDK common/virtual configs disable VFIO, matching ACK x86 selection, while real pvIOMMU crosvm consumers are ARM64-gated. No arbitrary future VFIO vendor-module compatibility claim is made.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/vfio-tail-review.json",
+      "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+    ]
+  },
+  {
+    "commit": "261d26055733545d2623fb4b4d262e04f6749445",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit architecture assignment/reclaim callbacks, group exposure beyond SPAPR and bridge calls with protected device ownership support. Full patch enforces donating a complete group before a protected guest can use it; this is not needed by native ordinary KVM assignment. Whole native VFIO group/KVM host/bridge files remain. Native bridge has no new assign-error branch or group references; later memory/refcount fixes are separately assessed rather than omitted from a retained buggy branch.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/vfio-tail-review.json",
+      "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+    ]
+  },
+  {
+    "commit": "337160d05cbaaafe908f46474201f35f91da567c",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit ARM64 VFIO_PKVM_IOMMU backend, protected-device state, read/write denial and UAPI selector. Complete patch relies on hypervisor-controlled blocking domains and guest pvIOMMU ownership, not ordinary type1/no-IOMMU behavior. Native VFIO files/UAPI remain, with no false claim of mutual host/guest distrust. SDK VFIO is disabled; Android ARM64 consumer exists and is explicitly outside current target.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/vfio-tail-review.json",
+      "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+    ]
+  },
+  {
+    "commit": "921bb57ad76069c4df8a3499f76f2acdb856247c",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit pvIOMMU attach/get-info UAPI and anonymous fd implementation with the ARM protected IOMMU backend. Full patch reviewed including fd allocation, unwind, size checks and host hypercall. Native bridge has no pviommufd and does not advertise these attributes. Real pinned crosvm callers require Android+aarch64; generated x86 bindings alone do not implement this path. Double-free, missing KVM reference and copy-size problems are tracked in their fix rows, with no old implementation retained.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/vfio-tail-review.json",
+      "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+    ]
+  },
+  {
+    "commit": "53cf0c78ab30d2da26c2907894098d666adc19c0",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit protected pvIOMMU per-fd SET_CONFIG ioctl and physical-to-virtual SID mapping. Complete patch validates input size/device fd and dispatches to ARM hypervisor ownership state; native KVM UAPI/bridge remain whole. Crosvm has a real ARM64-gated caller. Ordinary SDK KVM is retained, but protected device-assignment UAPI/runtime compatibility is not claimed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/vfio-tail-review.json",
+      "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+    ]
+  },
+  {
+    "commit": "61f3ba8af960278c0eedff0ac17ed2f7876a48c3",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit optional PFNMAP backing-file reference API with its ARM protected DMA-BUF fault consumer. Full generic patch and final __pkvm_mem_abort_dmabuf caller read. The new output keeps the mapped DMA-BUF file alive for donated pages; native core has no backing_file output/acquisition, and whole KVM core/mm/header stay LTS. Native pin/unsafe-unmapping protections, read-only error PFNs, MMU notifier behavior and refcounted-page contract are preserved. The later error-PFN leak fix has no affected acquisition in retained code.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/vfio-tail-review.json",
+      "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+    ]
+  },
+  {
+    "commit": "6ace5be5937cc205a98e4738d000581686a7c3d9",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit ARM protected-IOMMU accounting wrappers, compound allocation/free callbacks and hypervisor top-up/reclaim integration. Complete patch read, including matching allocator base and subsystem counters. Private ARM IOMMU file is absent and native ARM host source remains whole. Generic IOMMU accounting/source fixes are not removed; no protected pool accounting or non-preemptible allocation behavior is claimed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/vfio-tail-review.json",
+      "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+    ]
+  },
+  {
+    "commit": "ce8797643ed212ab0059e1dc0132e49627724fcd",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit conditional x86 pKVM dirty-logging disable with the excluded opt-in protected host. Full patch only masks KVM_MEM_LOG_DIRTY_PAGES when CONFIG_PKVM_X86 and enable_pkvm are true. Native entire KVM core stays LTS, retaining ordinary dirty logging and its existing GUEST_MEMFD restriction. Do not weaken or disable native migration/dirty tracking to match an unsupported backend.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/vfio-tail-review.json",
+      "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+    ]
+  },
+  {
+    "commit": "04f52993ce9341df59f9cc10ccf4d681bcad0a51",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit KMI-motivated direct-call replacements while preserving native symbol_get/symbol_put lifetime behavior. Complete patch changes built-in KVM/VFIO paths to avoid exporting internal types into STG; historical KMI tracking is out of scope. SDK has KVM=y, VFIO disabled and TRIM_UNUSED_KSYMS disabled; kvm_get_kvm_safe/kvm_put_kvm exports are present in completed-build symvers. No symbol trimming reason requires bypassing native lookup. Both whole native files remain; no module-combination runtime test is claimed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/vfio-tail-review.json",
+      "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+    ]
+  },
+  {
+    "commit": "3c126dc1eb06699160cb954b5d27abff7c1102fa",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit one-to-zero reserved-page adjustment for the excluded ARM IOMMU template. Full patch changes only its registration count; template has no actual page use. No wasteful old copy remains and native SDK memory reservation is unaffected.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/vfio-tail-review.json",
+      "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+    ]
+  },
+  {
+    "commit": "b61f7d20d4e1ab404a6170f46ca4cefde5d581b2",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit protected-mode guard for the excluded ARM IOMMU template. Full patch prevents a fatal EL2 initialization when loaded without pKVM; the entire template is absent, not retained without its guard. Future template use must include this guard, and no SDK load path can reach this private module.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/vfio-tail-review.json",
+      "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+    ]
+  },
+  {
+    "commit": "e6613dac9987ba432c817b6a8c58fd18b125d0cb",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit ARM protected-device power-domain provider and early initialization wiring. Full patch requires ARM_PKVM_GUEST, generic power domains, per-device DT node and DEV_REQ_PWR hypercall to avoid malicious host power tampering. SDK x86 has no ARM hypercall/DT contract; both private files absent and native ARM guest/Makefile stay whole. Native runtime PM remains separate, and no protected device power isolation is claimed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/vfio-tail-review.json",
+      "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+    ]
+  },
+  {
+    "commit": "0a8db81497cab5d791f6026bc518aaabbbd13c7c",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit VFIO platform LOW_POWER_ENTRY/EXIT implementation. This is a generic physical-platform assignment extension, not solely pKVM or KMI: full patch adds ioctl dispatch, mutex-serialized low_power state and balanced PM refs even on errors. Current SDK disables VFIO entirely; pinned ACK x86 config does not select it, and SDK uses virtual devices rather than assigned platform MMIO devices. Whole native platform files retain existing behavior; optional platform-device passthrough and new ioctls remain unsupported/unverified and require reassessment.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/vfio-tail-review.json",
+      "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+    ]
+  },
+  {
+    "commit": "88e59f90e918a5d074d07e6f6c5af7a58317a1d4",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit non-coherent VFIO registration relaxation and compensating type1 group validation together. Full patch defaults allow_non_coherent=false but permits opt-in binding because pKVM handles cache maintenance. Native whole vfio_main/type1 retain their original coherency admission rules; no unsafe bypass is introduced without a trusted maintenance backend. Generic native IOMMU support remains. Non-coherent protected device passthrough is outside the selected SDK.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/vfio-tail-review.json",
+      "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+    ]
+  },
+  {
+    "commit": "febcf75c0c3097643944da188936ae7b25e1ee5e",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit pviommu attach double-free fix only with the entire absent attach implementation. Full patch changes ownership after anon_inode_getfile: release owns pviommu after success, so fput must not be followed by a second kfree, and return must use saved fdno. Native bridge has no such object/file path. No vulnerable older ACK implementation is retained; future pvIOMMU must include this fix.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/vfio-tail-review.json",
+      "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+    ]
+  },
+  {
+    "commit": "f1937362c4817005e578c3f58ab70d2cb2025df2",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit pviommufd KVM-lifetime fix only with that absent fd API. Full patch takes a KVM ref before file creation, unwinds on failure and releases with fd, preventing closing VM fd while pvIOMMU operations still dereference it. Native bridge stays whole and has no pviommu object retaining a bare kvm_device pointer. This is a real UAF fix, not dismissed as cosmetic.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/vfio-tail-review.json",
+      "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+    ]
+  },
+  {
+    "commit": "7d845fc0b944c981e41cf3b925b53ade7e423118",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit DEV_REQ_PWR reserved-register zeroing with the absent ARM power driver. Full patch supplies four zero arguments required by hypervisor ABI; no older malformed call is present. Future driver support needs this correctness fix. Native guest and SDK power management remain unchanged.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/vfio-tail-review.json",
+      "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+    ]
+  },
+  {
+    "commit": "4d0ebc9a3d781a9d735333bc28da5b557efe5f09",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit standalone device_initcall conversion with the absent ARM power driver. Full patch fixes platform-driver registration before platform bus setup, moves service probing to initcall and removes obsolete header. Native ARM guest/Makefile remain whole; no too-early platform registration path is retained. No boot recipe was executed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/vfio-tail-review.json",
+      "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+    ]
+  },
+  {
+    "commit": "071331fb7343111f51ea28094cbc6ae59fde14ae",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit backing-file error-PFN leak/output initialization fix only with the excluded API in 61f3ba8af960. Complete patch and native fault function reviewed: return zero can coexist with KVM_PFN_ERR_RO_FAULT, so the extra is_error_pfn check is necessary before ACK get_file. Native does not acquire or return this file reference at all. Retain its stricter pin/unsafe-mapping checks and current output contract; no leak from this ACK path remains.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/vfio-tail-review.json",
+      "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+    ]
+  },
+  {
+    "commit": "6da35a4b1b02f5cd343b9b43c785adc9e526c2e1",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit assignment failure/group reference fixes only with absent assignment/reclaim callbacks. Full patch frees allocated kvf on new assign error and drops group refs after assignment/reclaim. Whole native bridge read: it has no assign-error branch; native SPAPR group references are retained/released under their existing lifecycle. No added leak paths are retained and no claim is made that untested future assignment callbacks are safe.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/vfio-tail-review.json",
+      "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+    ]
+  },
+  {
+    "commit": "bbd92f8cc225e0da0712c1ac1b571e09cb626540",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit pvIOMMU variable-size output fix with the absent GET_INFO attribute. Full patch replaces copy_to_user of untrusted usize with copy_struct_to_user bounded by actual struct size; it prevents the documented check_copy_size warning and implements extensible output correctly. Native bridge has no such stack object/output. Do not describe old code as safe to port just because hardened copying may reject it.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/vfio-tail-review.json",
+      "SECURITY.md: Protected assignment and native KVM lifetime boundaries"
+    ]
   }
 ]
