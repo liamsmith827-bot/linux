@@ -1,0 +1,172 @@
+{
+  "source_head": "960f64fa17a656273dff68916f4a5ac609a65d5c",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "60d41471b18e2758eb7f858d3428de5fb524cc5f",
+      "disposition": "superseded",
+      "rationale": "Historical keyslot-manager derive_raw_secret passthrough is superseded by native blk-crypto generic wrapped-key dispatch e93912786e50. Preserve native derive/import/generate/prepare operations and 97330e31ea16 first-device failure handling. Do not restore old missing-table SRCU leak or retry every device on invalid keys. Modern source API replaces historical signatures without binary-KMI preservation.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/dm-verity-tail-review.json",
+        "SECURITY.md: Wrapped-key dispatcher and verity query tail"
+      ],
+      "paths": [
+        "drivers/md/dm.c"
+      ],
+      "patch_sha256": "9fd1d09d8d12194d69f50f4387fa68aa0b3991544ad767778b8ff5c0f7fae5b7"
+    },
+    {
+      "commit": "65007944026a1b0e025fa7f2465df60f6c18cfbd",
+      "disposition": "superseded",
+      "rationale": "Removal of the evolved dm-table.c raw-secret callback is an intermediate transition, not removal of modern wrapped-key compatibility. Preserve native replacement and failure fixes. Original 60d414 patch targeted dm.c and older manager types, so these patches are not asserted exact inverses.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/dm-verity-tail-review.json",
+        "SECURITY.md: Wrapped-key dispatcher and verity query tail"
+      ],
+      "paths": [
+        "drivers/md/dm-table.c"
+      ],
+      "patch_sha256": "391404c9ff5496d80a92d06826dfae0e897485d7789f91ad2b62cdc13c067622"
+    },
+    {
+      "commit": "07f88d1ace08bc7fa1e6538a81dc9808de0535af",
+      "disposition": "already-represented-upstream",
+      "rationale": "The t->num_targets iteration fix is represented in native dm_exec_wrappedkey_op. Keep current dispatcher and its balanced SRCU/error behavior instead of resurrecting the obsolete standalone helper.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/dm-verity-tail-review.json",
+        "SECURITY.md: Wrapped-key dispatcher and verity query tail"
+      ],
+      "paths": [
+        "drivers/md/dm-table.c"
+      ],
+      "patch_sha256": "74ceca188ff426f4da6237d9b845cd5c4fea8c83b4b04535c082c8caa1fd6e29"
+    },
+    {
+      "commit": "a803f67012cb629f91da36efa208a227ce44d686",
+      "disposition": "already-represented-upstream",
+      "rationale": "Native wrapped-key dispatcher already uses block_device, ephemeral key names, size_t lengths and fixed-size software secret output. Historical API adaptation is represented in current operations, with later invalid-key single-device handling preserved. No old queue-profile call or unsigned-size signature is reintroduced.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/dm-verity-tail-review.json",
+        "SECURITY.md: Wrapped-key dispatcher and verity query tail"
+      ],
+      "paths": [
+        "drivers/md/dm-table.c"
+      ],
+      "patch_sha256": "94a597446d833e31c67d137b8e5ff67076f087da22f1932e633ce9f241e075db"
+    },
+    {
+      "commit": "f230e0ca639bb34e515e89491669b95ae69018e5",
+      "disposition": "already-represented-upstream",
+      "rationale": "Native e93912786e50 implements all four candidate operations, union arguments, capability gate and common dispatch. Whole dm-table.c equals LTS, including later 97330e31ea16 fix returning after first provider even on error, avoiding attacker-triggered excessive hardware key requests. Missing table always releases SRCU. Existing homogeneous-key-provider assumption remains a limitation, not a new mixed-provider support claim.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/dm-verity-tail-review.json",
+        "SECURITY.md: Wrapped-key dispatcher and verity query tail"
+      ],
+      "paths": [
+        "drivers/md/dm-table.c"
+      ],
+      "patch_sha256": "e26004eaa5c69f296dcc4fb1ca69b3585114be385f4dcab93531079ba57be537"
+    },
+    {
+      "commit": "9586844ce3af7455cd7a5f9db703a3c044e1164c",
+      "disposition": "adapted",
+      "rationale": "Retain FS_XFLAG_VERITY reporting ABI, both flag conversions and common/read-only masks from initial integration. All changed source lines relative to LTS exactly equal candidate. Native permission/LSM and filesystem setters remain; ext4/F2FS modifiable masks exclude verity, so setting query flags cannot bypass verity enable parameters or disable verification. Restore accompanying query documentation in 960f64fa17a6 with wording appropriate to this 6.18 backport. Android fs-verity use is positive, but exact new-query caller unconfirmed; retain conservatively for userspace compatibility.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "960f64fa17a656273dff68916f4a5ac609a65d5c"
+      ],
+      "evidence": [
+        "evidence/dm-verity-tail-review.json",
+        "SECURITY.md: Wrapped-key dispatcher and verity query tail"
+      ],
+      "paths": [
+        "Documentation/filesystems/fsverity.rst",
+        "fs/file_attr.c",
+        "include/linux/fileattr.h",
+        "include/uapi/linux/fs.h"
+      ],
+      "patch_sha256": "eda2af294a646fc93518a2621653b38265fc10c771f7bc3068963a2a935cf96a"
+    }
+  ],
+  "proofs": [
+    {
+      "path": "drivers/md/dm-table.c",
+      "comparison": "whole file exact LTS",
+      "blob": "81265ed204b5426a05619c8f6d18185098d71cef",
+      "native_implementation": "e93912786e50804e7c53456da75d586cace8732f",
+      "native_failure_fix": "97330e31ea1646a9fae568c2a5bbf2f0d41d10bf",
+      "observation": "All four wrapped-key operations dispatch once under documented common-provider assumption; error returned without repeated attempts. Missing-table path releases SRCU. Capability intersection and HW_WRAPPED gate remain native."
+    },
+    {
+      "path": "drivers/md/dm.c",
+      "blob": "84dcb194867517da1315492525f56eb37251ed70",
+      "comparison": "Exact LTS after excluding two separately reviewed GPL exports and equivalent short-circuit expression. No historical derive_raw_secret implementation remains."
+    },
+    {
+      "path": "fs/file_attr.c",
+      "blob": "d2721c7d6933a690d49dd58faac5ee555b02fd9c",
+      "comparison": "All changed lines relative to LTS exactly match candidate; no other source difference."
+    },
+    {
+      "path": "include/linux/fileattr.h",
+      "blob": "3780904a63a6c760f3ad684a72361001bf1bf2c9",
+      "comparison": "All changed lines relative to LTS exactly match candidate; no other source difference."
+    },
+    {
+      "path": "include/uapi/linux/fs.h",
+      "blob": "0e078eef17eeee7da21282d63854c4ff4d6e821f",
+      "comparison": "All changed lines relative to LTS exactly match candidate; no other source difference."
+    },
+    {
+      "path": "fs/file_attr.c",
+      "sha256": "4acea32d689b3c75a98614a1df20aee2fe4b7a184d7f2ba63e91b4ad33efd796",
+      "observation": "Query mapping in both directions and read-only xflag masking retained. Masking xflags does not by itself clear translated fa.flags; native per-filesystem setters are also examined, not assumed safe solely from this mask."
+    },
+    {
+      "path": "fs/ext4/ioctl.c",
+      "sha256": "a4249b8876c4c9f893b2d0b99b66194f5fdcfce5d20342292d4b5fde4a14f79c",
+      "observation": "Get exposes existing verity flag. Set masks EXT4_FL_USER_MODIFIABLE, and update loop only mutates this mask, leaving verity state untouched."
+    },
+    {
+      "path": "fs/ext4/ext4.h",
+      "sha256": "3cca0296740d1c125460c1569cfb1dab253f7f8c871a1fa7d8230a087e53173e",
+      "observation": "EXT4_FL_USER_MODIFIABLE excludes EXT4_VERITY_FL."
+    },
+    {
+      "path": "fs/f2fs/file.c",
+      "sha256": "f28262f03a5dca63d02d48a278a4a24ff3a5ab28d4c4e69acc90c278d468181e",
+      "observation": "Get reports IS_VERITY; set masks F2FS_SETTABLE_FS_FL, which excludes FS_VERITY_FL. Existing verity state cannot be changed by this new reporting bit."
+    },
+    {
+      "path": "fs/btrfs/ioctl.c",
+      "sha256": "b2c8c16652b2d2474cfd33fd4309910d87b50597341d0ba166e8319fae450226",
+      "observation": "Btrfs setter preserves inode flags except explicitly supported attribute masks; no new verity setter is introduced. No Btrfs runtime claim."
+    },
+    {
+      "path": "../grapheneos-17/system/security/ondevice-signing/VerityUtils.cpp",
+      "sha256": "0468316e10d7d4d196ba1213ab1e4220af2419ca0c614a534757a940553dbdf3",
+      "observation": "Positive Android fs-verity enable/measure consumer; does not establish use of new FS_XFLAG_VERITY query."
+    },
+    {
+      "path": "../grapheneos-17/system/security/fsverity/libfsverity_rs/sys.rs",
+      "sha256": "5c3d06adbc37a2b0bf89051ee9c596fd1700da691e5a01f307b2e67625c1f1d9",
+      "observation": "Positive existing enable/measure ioctl interface; exact SDK caller for new flag remains unconfirmed, so conservatively retain reporting ABI."
+    },
+    {
+      "path": "fs/ext4/ext4.h",
+      "modifiable_mask": "#define EXT4_FL_USER_MODIFIABLE\t\t(EXT4_SECRM_FL | \\\n\t\t\t\t\t EXT4_UNRM_FL | \\\n\t\t\t\t\t EXT4_COMPR_FL | \\\n\t\t\t\t\t EXT4_SYNC_FL | \\\n\t\t\t\t\t EXT4_IMMUTABLE_FL | \\\n\t\t\t\t\t EXT4_APPEND_FL | \\\n\t\t\t\t\t EXT4_NODUMP_FL | \\\n\t\t\t\t\t EXT4_NOATIME_FL | \\\n\t\t\t\t\t EXT4_JOURNAL_DATA_FL | \\\n\t\t\t\t\t EXT4_NOTAIL_FL | \\\n\t\t\t\t\t EXT4_DIRSYNC_FL | \\\n\t\t\t\t\t EXT4_TOPDIR_FL | \\\n\t\t\t\t\t EXT4_EXTENTS_FL | \\\n\t\t\t\t\t 0x00400000 /* EXT4_EOFBLOCKS_FL */ | \\\n\t\t\t\t\t EXT4_DAX_FL | \\\n\t\t\t\t\t EXT4_PROJINHERIT_FL | \\\n\t\t\t\t\t EXT4_CASEFOLD_FL)"
+    },
+    {
+      "path": "fs/f2fs/file.c",
+      "modifiable_mask": "#define F2FS_SETTABLE_FS_FL (\t\t\\\n\t\tFS_COMPR_FL |\t\t\\\n\t\tFS_SYNC_FL |\t\t\\\n\t\tFS_IMMUTABLE_FL |\t\\\n\t\tFS_APPEND_FL |\t\t\\\n\t\tFS_NODUMP_FL |\t\t\\\n\t\tFS_NOATIME_FL |\t\t\\\n\t\tFS_NOCOMP_FL |\t\t\\\n\t\tFS_DIRSYNC_FL |\t\t\\\n\t\tFS_PROJINHERIT_FL |\t\\\n\t\tFS_CASEFOLD_FL)"
+    }
+  ],
+  "remote_resources_used": [],
+  "limits": "All six full candidate patches examined locally, plus native invalid-key fix and current setters. Build 193 covers unchanged executable code; added documentation is not an executable change. No wrapped-key, invalid-key, ioctl, verity or filesystem runtime test."
+}

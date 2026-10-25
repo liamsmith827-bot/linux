@@ -33155,5 +33155,68 @@
       "evidence/wifi-definition-review.json",
       "SECURITY.md: Wireless definition splits and stable parser bounds"
     ]
+  },
+  {
+    "commit": "60d41471b18e2758eb7f858d3428de5fb524cc5f",
+    "disposition": "superseded",
+    "rationale": "Historical keyslot-manager derive_raw_secret passthrough is superseded by native blk-crypto generic wrapped-key dispatch e93912786e50. Preserve native derive/import/generate/prepare operations and 97330e31ea16 first-device failure handling. Do not restore old missing-table SRCU leak or retry every device on invalid keys. Modern source API replaces historical signatures without binary-KMI preservation.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/dm-verity-tail-review.json",
+      "SECURITY.md: Wrapped-key dispatcher and verity query tail"
+    ]
+  },
+  {
+    "commit": "65007944026a1b0e025fa7f2465df60f6c18cfbd",
+    "disposition": "superseded",
+    "rationale": "Removal of the evolved dm-table.c raw-secret callback is an intermediate transition, not removal of modern wrapped-key compatibility. Preserve native replacement and failure fixes. Original 60d414 patch targeted dm.c and older manager types, so these patches are not asserted exact inverses.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/dm-verity-tail-review.json",
+      "SECURITY.md: Wrapped-key dispatcher and verity query tail"
+    ]
+  },
+  {
+    "commit": "07f88d1ace08bc7fa1e6538a81dc9808de0535af",
+    "disposition": "already-represented-upstream",
+    "rationale": "The t->num_targets iteration fix is represented in native dm_exec_wrappedkey_op. Keep current dispatcher and its balanced SRCU/error behavior instead of resurrecting the obsolete standalone helper.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/dm-verity-tail-review.json",
+      "SECURITY.md: Wrapped-key dispatcher and verity query tail"
+    ]
+  },
+  {
+    "commit": "a803f67012cb629f91da36efa208a227ce44d686",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native wrapped-key dispatcher already uses block_device, ephemeral key names, size_t lengths and fixed-size software secret output. Historical API adaptation is represented in current operations, with later invalid-key single-device handling preserved. No old queue-profile call or unsigned-size signature is reintroduced.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/dm-verity-tail-review.json",
+      "SECURITY.md: Wrapped-key dispatcher and verity query tail"
+    ]
+  },
+  {
+    "commit": "f230e0ca639bb34e515e89491669b95ae69018e5",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native e93912786e50 implements all four candidate operations, union arguments, capability gate and common dispatch. Whole dm-table.c equals LTS, including later 97330e31ea16 fix returning after first provider even on error, avoiding attacker-triggered excessive hardware key requests. Missing table always releases SRCU. Existing homogeneous-key-provider assumption remains a limitation, not a new mixed-provider support claim.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/dm-verity-tail-review.json",
+      "SECURITY.md: Wrapped-key dispatcher and verity query tail"
+    ]
+  },
+  {
+    "commit": "9586844ce3af7455cd7a5f9db703a3c044e1164c",
+    "disposition": "adapted",
+    "rationale": "Retain FS_XFLAG_VERITY reporting ABI, both flag conversions and common/read-only masks from initial integration. All changed source lines relative to LTS exactly equal candidate. Native permission/LSM and filesystem setters remain; ext4/F2FS modifiable masks exclude verity, so setting query flags cannot bypass verity enable parameters or disable verification. Restore accompanying query documentation in 960f64fa17a6 with wording appropriate to this 6.18 backport. Android fs-verity use is positive, but exact new-query caller unconfirmed; retain conservatively for userspace compatibility.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "960f64fa17a656273dff68916f4a5ac609a65d5c"
+    ],
+    "evidence": [
+      "evidence/dm-verity-tail-review.json",
+      "SECURITY.md: Wrapped-key dispatcher and verity query tail"
+    ]
   }
 ]

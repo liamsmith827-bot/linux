@@ -10040,3 +10040,26 @@ and all 659 protected exports; the historical pointer-stride control misses
 330 exports, and a nonexistent-name control is rejected. This verifies build
 and artifact metadata, not module loading, boot or runtime behavior. No remote
 resources were accessed for this checkpoint.
+
+# Wrapped-key dispatcher and verity query tail
+
+Six decisions in `evidence/dm-verity-tail-review.json` retain native device-mapper
+wrapped-key operations and the Android verity query ABI. The entire dm-table.c
+is native LTS, including `97330e31ea16`: an invalid key does not cause repeated
+hardware operations across all devices. Native SRCU acquisition is paired on
+missing-table errors. The original raw-secret helper and intermediate API
+versions are superseded, not replayed. Existing common-provider assumptions
+remain; this is not certification of mixed hardware key providers.
+
+FS_XFLAG_VERITY mappings, masks and UAPI value exactly match the ACK candidate
+relative to LTS. Existing Android enable/measure consumers are present, although
+a current SDK caller of this additional query was not established; the reporting
+ABI is retained conservatively. The xflag read-only mask alone is not the full
+security argument: translated fa.flags can still carry the bit, so ext4 and F2FS
+setters and their modifiable masks were examined. Those masks exclude verity
+and leave existing verification state intact. Native inode ownership, locking
+and LSM checks remain. Documentation `960f64fa17a6` describes the backported
+queries without claiming they originated in upstream 6.18.
+
+Build 193 covers the unchanged executable code. No crypto, malformed-key,
+filesystem or ioctl runtime test was performed; no remote source was used.
