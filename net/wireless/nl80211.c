@@ -16247,16 +16247,9 @@ static int nl80211_parse_nan_conf(struct wiphy *wiphy,
 		return err;
 
 	changed |= CFG80211_NAN_CONF_CHANGED_CONFIG;
-	if (attrs[NL80211_NAN_CONF_CLUSTER_ID] && start) {
+	if (attrs[NL80211_NAN_CONF_CLUSTER_ID] && start)
 		ether_addr_copy(conf->cluster_id,
 				nla_data(attrs[NL80211_NAN_CONF_CLUSTER_ID]));
-	} else if (start) {
-		conf->cluster_id[0] = 0x50;
-		conf->cluster_id[1] = 0x6f;
-		conf->cluster_id[2] = 0x9a;
-		conf->cluster_id[3] = 0x01;
-		get_random_bytes(&conf->cluster_id[4], 2);
-	}
 
 	if (attrs[NL80211_NAN_CONF_EXTRA_ATTRS]) {
 		conf->extra_nan_attrs =
@@ -16337,6 +16330,15 @@ out:
 					    "5 GHz band operation is not allowed");
 			return -EINVAL;
 		}
+	}
+
+	/* NAN_CONFIG itself is optional, so initialize the default here. */
+	if (start && is_zero_ether_addr(conf->cluster_id)) {
+		conf->cluster_id[0] = 0x50;
+		conf->cluster_id[1] = 0x6f;
+		conf->cluster_id[2] = 0x9a;
+		conf->cluster_id[3] = 0x01;
+		get_random_bytes(&conf->cluster_id[4], 2);
 	}
 
 	if (changed_flags)
