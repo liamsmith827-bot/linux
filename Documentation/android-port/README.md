@@ -1,7 +1,7 @@
 # Android 6.18 SDK emulator port audit
 
-Status: work in progress. The complete emulator workflow succeeded in attempt 190
-at Linux 610c2b5413c3, including final signing. All 145 generated module signatures
+Status: work in progress. The complete emulator workflow succeeded in attempt 191
+at Linux a6086a9c7c71, including final signing. All 145 generated module signatures
 were cryptographically verified against the build certificate; a modified-payload
 control was rejected. The exhaustive commit audit remains unfinished. No runtime compatibility is claimed.
 
@@ -53,6 +53,42 @@ commits, of which 2,623 are merges. The exhaustive ledger is `candidates.jsonl`
 and its tabular rendering is `candidates.tsv`. Rows marked `review_status=draft-net-reconciliation` are not completed
 review even when a provisional disposition is populated. See DECISIONS.md. Each row records parents, subject, changed files and the decision
 evidence; implementations must record resulting commit IDs before completion.
+
+## File guide for reviewers
+
+Start with this README, DECISIONS.md, candidates.tsv and SECURITY.md. The ledger
+is the commit-by-commit index, but its section-level cross-references are not
+complete: also read the relevant security sections and follow the supporting
+evidence references. Draft rows remain unfinished. The evidence directory mixes
+substantive review records with generated reports; it is not all internal scratch.
+
+| File or family | Purpose and intended use |
+| --- | --- |
+| README.md | Scope, pins, delivery locations, build status and external-resource log. |
+| DECISIONS.md | Ledger meanings, evidence limitations and utility usage. |
+| candidates.tsv | Human-readable candidate decisions, reasons, evidence and resulting commits. |
+| SECURITY.md | Detailed design, security, conflict and verification analysis, including historical checkpoints. |
+| candidates.jsonl | Structured ledger for queries and automation; contains the same candidate records as the TSV. |
+| inputs/*.tsv | Original immutable project/dependency pins for reproducibility. |
+| evidence/*-review.json, explicit-*-decisions.json, final-*-decisions.json, path-review.json and related decision records | Substantive evidence supporting dispositions; inspect as referenced, including its recorded source version. |
+| evidence/*-check.json, *-test.json, build-results.json and module-table reports | Validation results, artifact hashes and stated test limitations. |
+| evidence/merge-resolutions.patch, merge indexes, other patches and extracted history | Raw comparison material for deeper review of individual changes. |
+| evidence/progress.json, decision-counts.json and validation reports | Generated completion and consistency information; not semantic correctness proofs. |
+| check_*.py and check_zram_uapi.c | Optional audit verification programs, separate from the normal emulator workflow. |
+| Other Python utilities | Inventory, integration, reconciliation and evidence-recording tools; some historical integration scripts are non-idempotent. Read DECISIONS.md before running them. |
+
+The actual port is the source/configuration commit history in the Linux delivery
+branch. The manifest's `common/` directory is its build checkout. The manifest
+repository and modified Kleaf dependency have their own delivery branches.
+`common_dist/` and `virt_dist/` contain generated deliverables; `out/` contains
+build intermediates and caches. Workspace `sdk-build-attempt-*.log` files retain
+build history, including failed attempts.
+
+The sibling `ack-port-analysis/` worktree, workspace temporary `*.index` files,
+`resolve-*.json`, `f2fs-*.h`, `prune-*`, `inspect-prune.py`,
+`sdk-runtime-paths.nul`, and temporary analysis files under `/tmp` are working
+material, not the primary review documents or delivered kernel. Python
+`__pycache__/` directories are generated caches.
 
 The ledger distinguishes commit identity, patch equivalence, and effective code.
 A patch-equivalent upstream commit is evidence of representation, not proof that
