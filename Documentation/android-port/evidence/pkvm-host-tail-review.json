@@ -1,0 +1,3473 @@
+{
+  "source_head": "067dd0e43828d58b846880c34bc42b358fa3bad6",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "41add7aa2d2638433271eadc21aa4d7afc60da94",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the opt-in protected-host enable flag, private object selection and parameter documentation. ACK enable_pkvm starts false and is set by early_param(kvm-intel.pkvm); supplied SDK command line does not enable it. Preserve native KVM/Hyper-V initialization and native enlightened VMCS behavior. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Add enable_pkvm parameter",
+      "patch_sha256": "b6e3e011bc047f4db159936bbfd5b2fc56146a0d9f869aa9744dc1ac0f77ea5a",
+      "sections": [
+        {
+          "path": "Documentation/admin-guide/kernel-parameters.txt",
+          "classification": "shared",
+          "patch_sha256": "9acbe01f088ec3b113f4ae2fd1958c5a2088f7e686870efadc083417fba6d85c",
+          "hunk_headers": [
+            "@@ -3119,6 +3119,13 @@"
+          ],
+          "added_lines": 7,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/include/asm/kvm_host.h",
+          "classification": "shared",
+          "patch_sha256": "0659693e04910793a5f3f3b13db3144823d31f0d3dc45cececbee48276083e33",
+          "hunk_headers": [
+            "@@ -1990,6 +1990,11 @@ extern bool __read_mostly enable_apicv;"
+          ],
+          "added_lines": 5,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/Kconfig",
+          "classification": "shared",
+          "patch_sha256": "aad3540ffcbd3a132eb7b7077f52b7eff59264cc9d982e837dce67351a17607e",
+          "hunk_headers": [
+            "@@ -140,12 +140,16 @@ config PKVM_INTEL"
+          ],
+          "added_lines": 10,
+          "removed_lines": 6
+        },
+        {
+          "path": "arch/x86/kvm/Makefile",
+          "classification": "shared",
+          "patch_sha256": "6b043d502a5e203f44ca309b5e95b91c3a92e8bd7cf9787829e1f13fc60eed86",
+          "hunk_headers": [
+            "@@ -47,7 +47,7 @@ $(obj)/kvm-asm-offsets.h: $(obj)/kvm-asm-offsets.s FORCE"
+          ],
+          "added_lines": 1,
+          "removed_lines": 1
+        },
+        {
+          "path": "arch/x86/kvm/pkvm.c",
+          "classification": "private",
+          "patch_sha256": "051bac28a95519cdabc2454de70975d3ec72ea2dba8f11ca8186e68ec2dd6fd1",
+          "hunk_headers": [
+            "@@ -0,0 +1,4 @@"
+          ],
+          "added_lines": 4,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/vmx/pkvm_init.c",
+          "classification": "private",
+          "patch_sha256": "c03d8e274415b9a1061caacbbd190627dea7772c109b89ca64c3dede00af7e1d",
+          "hunk_headers": [
+            "@@ -3,6 +3,12 @@"
+          ],
+          "added_lines": 6,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/vmx/vmx.c",
+          "classification": "shared",
+          "patch_sha256": "83f3026fe3fdaebc8617dba26abb2a535f7c67f90ca5952656db9627aec22ecb",
+          "hunk_headers": [
+            "@@ -8704,7 +8704,7 @@ static void __init do_vmx_pkvm_init(void)"
+          ],
+          "added_lines": 1,
+          "removed_lines": 1
+        }
+      ]
+    },
+    {
+      "commit": "78d0a6cd83d9e71acaa99d3af961edd5b0bf5100",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit private ticket spinlock and its use by hypervisor early allocation. Both files belong to the separately built protected image and are absent from native LTS and port. Ordinary kernel spinlocks/allocators are unchanged; this does not assert the private original constraints were correct. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Add spinlock for the pKVM hypervisor",
+      "patch_sha256": "1d6589767fe81717f0a78c359b3739e68e1890dc238a1c3ae7b908a03a6d8d24",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/pkvm_spinlock.h",
+          "classification": "private",
+          "patch_sha256": "9b0c27b852604b2be6432841f65b3a25fa4b6ca49b821be3bc17ce4b709024c9",
+          "hunk_headers": [
+            "@@ -0,0 +1,51 @@"
+          ],
+          "added_lines": 51,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/early_alloc.c",
+          "classification": "private",
+          "patch_sha256": "db86b191c2dc006b56d4266dbcd01bec6be53210cd2640f4041a9d154caddffc",
+          "hunk_headers": [
+            "@@ -1,12 +1,15 @@",
+            "@@ -15,11 +18,15 @@ void *pkvm_early_alloc_contig(unsigned int nr_pages)"
+          ],
+          "added_lines": 8,
+          "removed_lines": 1
+        }
+      ]
+    },
+    {
+      "commit": "d81f2213622eb975b8eac427f790e80e9429d5df",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit protected-host VM-exit stack/register assembly, RIP/RSP setup and private entry prototype. They service deprivileged host exits into the omitted root-mode image; native VMX entry/exit stack handling remains. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: VMX: Setup the RSP and RIP fields for the pKVM hypervisor",
+      "patch_sha256": "1f8dedea1fa15f50e7c67ce30b04d43be4ff1aa5391cd605a59f8038aa06cb80",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/kvm_pkvm.h",
+          "classification": "private",
+          "patch_sha256": "9d04d684bc1b39b3b31c3e95a77aab9e16df692e2ff240237ae108967bb1c8f3",
+          "hunk_headers": [
+            "@@ -7,6 +7,8 @@",
+            "@@ -36,6 +38,11 @@ static inline unsigned long pkvm_data_pages(unsigned long extra_global,"
+          ],
+          "added_lines": 7,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/Makefile",
+          "classification": "private",
+          "patch_sha256": "aa9e2ad2fd74fca06df14d26952c1d550804f49e5aa3141dff2f937649e43991",
+          "hunk_headers": [
+            "@@ -1,5 +1,9 @@"
+          ],
+          "added_lines": 6,
+          "removed_lines": 2
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/vmx/host_vmentry.S",
+          "classification": "private",
+          "patch_sha256": "8789d10e736f56ac1b668cb748f4eed939d9170f8aae6d898e8e2062bd892cc1",
+          "hunk_headers": [
+            "@@ -0,0 +1,82 @@"
+          ],
+          "added_lines": 82,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/vmx/host_vmx.c",
+          "classification": "private",
+          "patch_sha256": "19efdad6d4233e8abda9b1a99f9055d34982c7c755dcfe00b4f86f57a918e223",
+          "hunk_headers": [
+            "@@ -0,0 +1,7 @@"
+          ],
+          "added_lines": 7,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/vmx/host_vmx.h",
+          "classification": "private",
+          "patch_sha256": "ffb3b5c5d9d01d09b1812d9e0cf9ba01dc4591c43ded3f0df295356d02469b2d",
+          "hunk_headers": [
+            "@@ -0,0 +1,9 @@"
+          ],
+          "added_lines": 9,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/vmx/vcpu_regs.h",
+          "classification": "private",
+          "patch_sha256": "93d55b3230c09d0aa1ce3403bc67fcf9d087c221214263aa43d9816107beb5e3",
+          "hunk_headers": [
+            "@@ -0,0 +1,26 @@"
+          ],
+          "added_lines": 26,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/vmx/pkvm_init.c",
+          "classification": "private",
+          "patch_sha256": "db2d275953dd1be1d25054b95f0997dff848f17abf233e62402e4e1f6d0451f4",
+          "hunk_headers": [
+            "@@ -276,9 +276,10 @@ static __init void init_guest_state_area(void)",
+            "@@ -331,6 +332,31 @@ static __init void init_host_state_area(void)",
+            "@@ -396,14 +422,14 @@ static __init void init_vmentry_control(struct vcpu_vmx *vmx)",
+            "@@ -434,7 +460,7 @@ static __init void pkvm_host_deprivilege_cpu(void *data)"
+          ],
+          "added_lines": 30,
+          "removed_lines": 4
+        },
+        {
+          "path": "arch/x86/kvm/vmx/vmx.h",
+          "classification": "shared",
+          "patch_sha256": "9e119d3c3edf0d4d5a16781513f2eb234fb16e22c6a7887a270bfdb6cb40c7c4",
+          "hunk_headers": [
+            "@@ -776,6 +776,7 @@ static inline unsigned long pkvm_vmx_data_pages(void)"
+          ],
+          "added_lines": 1,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "4b94fe453303bc903f629c5245ed0b82231a2934",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit private image section packing, linker symbols and generated linker-file ignore rule. Whole native x86 linker remains, including native rodata permissions and section layout. No private pages are inserted into native text/data ranges. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Rearrange the pKVM text/bss/data/rodata sections",
+      "patch_sha256": "71dfbee68ffc7fa336cd25c45f59f988e51e98724401523967c6f5e345db9393",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/pkvm_image.h",
+          "classification": "private",
+          "patch_sha256": "180cf2859d6f74312794f84adc734db9407724aa11558b534e9fffbeb40e9c0f",
+          "hunk_headers": [
+            "@@ -0,0 +1,22 @@"
+          ],
+          "added_lines": 22,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kernel/vmlinux.lds.S",
+          "classification": "shared",
+          "patch_sha256": "eab435ffc94930552ed3e67c6ca678e51db64990dac8b70456d9f6b83d203d97",
+          "hunk_headers": [
+            "@@ -118,6 +118,50 @@ PHDRS {",
+            "@@ -156,6 +200,7 @@ SECTIONS",
+            "@@ -184,6 +229,8 @@ SECTIONS",
+            "@@ -201,6 +248,16 @@ SECTIONS",
+            "@@ -369,6 +426,7 @@ SECTIONS"
+          ],
+          "added_lines": 58,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/.gitignore",
+          "classification": "shared",
+          "patch_sha256": "4d196dd22504a3c30c719079629086e3d697e12f7ce4d5d7c48d52d091618437",
+          "hunk_headers": [
+            "@@ -1,2 +1,3 @@"
+          ],
+          "added_lines": 1,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/Makefile",
+          "classification": "private",
+          "patch_sha256": "38587f6befcc628d4b77fee46777158f8778f95c42087aa573f68d7f3c0b2511",
+          "hunk_headers": [
+            "@@ -6,4 +6,37 @@ pkvm-hyp-y\t\t\t:= early_alloc.o"
+          ],
+          "added_lines": 34,
+          "removed_lines": 1
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/pkvm.lds.S",
+          "classification": "private",
+          "patch_sha256": "5595584a289f1429685f3add051b2c919172c41b74c8ecc22f68e35da29ca297",
+          "hunk_headers": [
+            "@@ -0,0 +1,13 @@"
+          ],
+          "added_lines": 13,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "d8416d6348c4a8934c9c8811fbf919474f221a7c",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the private exception-table placement and objtool .pkvm__ex_table special cases. Native exception entries and objtool IBT/special-section validation remain byte-identical; no native validation is relaxed. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Put the exception table section to rodata section",
+      "patch_sha256": "6afd1e2ccfa353130c63c56b68fa4245564d40d5213b709531e9eec9075743e4",
+      "sections": [
+        {
+          "path": "arch/x86/kernel/vmlinux.lds.S",
+          "classification": "shared",
+          "patch_sha256": "b3193c8e9057b96e783ad89f0d5881764ff5b132e8356aab5e9428931fac40e0",
+          "hunk_headers": [
+            "@@ -148,6 +148,9 @@ PHDRS {"
+          ],
+          "added_lines": 3,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/pkvm.lds.S",
+          "classification": "private",
+          "patch_sha256": "330a9432b6c956c12c7d58cf4200c8b31c01d3f5477d1d4f730e128b8df219a2",
+          "hunk_headers": [
+            "@@ -7,6 +7,7 @@"
+          ],
+          "added_lines": 1,
+          "removed_lines": 0
+        },
+        {
+          "path": "tools/objtool/check.c",
+          "classification": "shared",
+          "patch_sha256": "fb7ec3e10d590b44cf711ecc53fcc3aa6a04bc7b7a8a1df0c334f644f4999240",
+          "hunk_headers": [
+            "@@ -4522,6 +4522,7 @@ static int validate_ibt(struct objtool_file *file)"
+          ],
+          "added_lines": 1,
+          "removed_lines": 0
+        },
+        {
+          "path": "tools/objtool/special.c",
+          "classification": "shared",
+          "patch_sha256": "28440c1d50ebf7bdfe0e808aac80003b0449163900887df61e74b595974cccb2",
+          "hunk_headers": [
+            "@@ -51,6 +51,12 @@ static const struct special_entry entries[] = {"
+          ],
+          "added_lines": 6,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "1aae23bcc836f1c1f67179dbe61404ae7134e6d1",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit private symbol renaming, wrappers and __PKVM_HYP__ conditional compilation of shared KVM/export code. Keep native nested exception handling, Hyper-V support and export machinery; no guard that suppresses native mitigations or interfaces is introduced. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Rename all the pKVM hypervisor symbols",
+      "patch_sha256": "5c086c059aa1ba4db973a5cce272cfa1f8b70aa80ec8239f386cd77693df8c2f",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/kvm_pkvm.h",
+          "classification": "private",
+          "patch_sha256": "91eeb001246f81e0b1d42fea52be42ef7d55cbb18243aeff2a50503e9b0030fc",
+          "hunk_headers": [
+            "@@ -3,7 +3,9 @@",
+            "@@ -25,9 +27,9 @@ struct pkvm_hyp {",
+            "@@ -43,6 +45,32 @@ static inline unsigned long get_host_stack_top(struct pkvm_pcpu *pcpu)"
+          ],
+          "added_lines": 31,
+          "removed_lines": 3
+        },
+        {
+          "path": "arch/x86/include/asm/pkvm_image.h",
+          "classification": "private",
+          "patch_sha256": "42bfd9d1b67e142e3b8d93eef644a5d60e5d7c8d32e35e2fd74f4316bb9f5395",
+          "hunk_headers": [
+            "@@ -2,6 +2,26 @@"
+          ],
+          "added_lines": 20,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kernel/vmlinux.lds.S",
+          "classification": "shared",
+          "patch_sha256": "b0252482b93f70c6a1d719af9fc9e082256878f522654f15b4fbcbb018339625",
+          "hunk_headers": [
+            "@@ -123,38 +123,38 @@ PHDRS {"
+          ],
+          "added_lines": 10,
+          "removed_lines": 10
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/Makefile",
+          "classification": "private",
+          "patch_sha256": "b7ecdf0092cb553e61f4ed070f3868acb8dde465c76a73a84e6d8f6db1890d28",
+          "hunk_headers": [
+            "@@ -1,15 +1,30 @@",
+            "@@ -37,6 +52,28 @@ $(obj)/%.pkvm.o: $(src)/%.S FORCE"
+          ],
+          "added_lines": 42,
+          "removed_lines": 5
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/compiling_cmds.sh",
+          "classification": "private",
+          "patch_sha256": "e511972e7930cf8f7194a1f4f3f93c4a3a04be1bbd2fc228cce3216ebc4cd565",
+          "hunk_headers": [
+            "@@ -0,0 +1,53 @@"
+          ],
+          "added_lines": 53,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/pkvm.c",
+          "classification": "private",
+          "patch_sha256": "0f4bc7eed20d65538ccc60e910db482c7025b9cac49b64bca97631880af321d5",
+          "hunk_headers": [
+            "@@ -0,0 +1,10 @@"
+          ],
+          "added_lines": 10,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/undef.h",
+          "classification": "private",
+          "patch_sha256": "3ddec5d1eb5162d9852de408db8ee290f9cf20c7db5c49056a52d37db97525d5",
+          "hunk_headers": [
+            "@@ -0,0 +1,44 @@"
+          ],
+          "added_lines": 44,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/vmx/pkvm_init.c",
+          "classification": "private",
+          "patch_sha256": "e9fbe0d5bceff46296c644524c64442b7424c7010e2f652fad4c6e63230d8449",
+          "hunk_headers": [
+            "@@ -3,6 +3,7 @@",
+            "@@ -27,7 +28,7 @@ u64 pkvm_total_reserve_pages(void)",
+            "@@ -74,7 +75,7 @@ static __init int pkvm_setup_host_vmcs_config(void)",
+            "@@ -88,7 +89,7 @@ static __init int pkvm_setup_host_vm(struct pkvm_hyp *pkvm)",
+            "@@ -121,7 +122,7 @@ static __init int pkvm_setup_pcpu(struct pkvm_hyp *pkvm, int cpu)",
+            "@@ -145,7 +146,7 @@ static __init int pkvm_setup_host_vcpu(struct pkvm_hyp *pkvm, int cpu)",
+            "@@ -157,7 +158,7 @@ static __init int pkvm_setup_host_vcpu(struct pkvm_hyp *pkvm, int cpu)",
+            "@@ -356,7 +357,7 @@ static __init void init_host_state_area(struct vcpu_vmx *vmx, struct pkvm_hyp *p",
+            "@@ -520,9 +521,9 @@ int __init vmx_pkvm_init(void)"
+          ],
+          "added_lines": 10,
+          "removed_lines": 9
+        },
+        {
+          "path": "arch/x86/kvm/vmx/vmx.c",
+          "classification": "shared",
+          "patch_sha256": "964f8bc041b3a2ff2ddda655b324610ab2b40aa61019f1f0394cfeb800275083",
+          "hunk_headers": [
+            "@@ -80,6 +80,8 @@ MODULE_AUTHOR(\"Qumranet\");",
+            "@@ -413,6 +415,7 @@ module_param_cb(vmentry_l1d_flush, &vmentry_l1d_flush_ops, NULL, 0644);",
+            "@@ -467,6 +470,7 @@ noinline void invept_error(unsigned long ext, u64 eptp)",
+            "@@ -479,8 +483,10 @@ static DECLARE_BITMAP(vmx_vpid_bitmap, VMX_NR_VPIDS);",
+            "@@ -1770,6 +1776,7 @@ int vmx_skip_emulated_instruction(struct kvm_vcpu *vcpu)",
+            "@@ -1807,6 +1814,7 @@ void vmx_inject_exception(struct kvm_vcpu *vcpu)",
+            "@@ -1814,6 +1822,7 @@ void vmx_inject_exception(struct kvm_vcpu *vcpu)",
+            "@@ -1829,6 +1838,7 @@ void vmx_inject_exception(struct kvm_vcpu *vcpu)",
+            "@@ -8791,3 +8801,4 @@ int __init vmx_init(void)"
+          ],
+          "added_lines": 11,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/vmx/vmx.h",
+          "classification": "shared",
+          "patch_sha256": "34ddd8e6753b9f0f3fecd88ccea90e49a9e968ba08ed70daeca828c4bea4be7b",
+          "hunk_headers": [
+            "@@ -776,7 +776,8 @@ static inline unsigned long pkvm_vmx_data_pages(void)"
+          ],
+          "added_lines": 2,
+          "removed_lines": 1
+        },
+        {
+          "path": "arch/x86/kvm/vmx/vmx_onhyperv.h",
+          "classification": "shared",
+          "patch_sha256": "04645b7c7888c467f1afc15f8f6f4faeca1896ca9a344acec4a6d3d751d9425c",
+          "hunk_headers": [
+            "@@ -14,7 +14,7 @@",
+            "@@ -119,7 +119,7 @@ static inline void evmcs_load(u64 phys_addr)",
+            "@@ -128,6 +128,6 @@ static __always_inline u64 evmcs_read64(unsigned long field) { return 0; }"
+          ],
+          "added_lines": 3,
+          "removed_lines": 3
+        },
+        {
+          "path": "arch/x86/kvm/x86.c",
+          "classification": "shared",
+          "patch_sha256": "6f7a09bad7cf323eb6b07b6239dbe7acb9de7d6a4225f65064f75585d6aa0ba0",
+          "hunk_headers": [
+            "@@ -88,6 +88,8 @@",
+            "@@ -704,6 +706,7 @@ static void drop_user_return_notifiers(void)",
+            "@@ -739,6 +742,8 @@ static int exception_class(int vector)",
+            "@@ -770,6 +775,7 @@ static int exception_type(int vector)",
+            "@@ -823,6 +829,7 @@ void kvm_deliver_exception_payload(struct kvm_vcpu *vcpu,",
+            "@@ -837,6 +844,7 @@ static void kvm_queue_exception_vmexit(struct kvm_vcpu *vcpu, unsigned int vecto",
+            "@@ -847,6 +855,7 @@ static void kvm_multiple_exception(struct kvm_vcpu *vcpu, unsigned int nr,",
+            "@@ -857,6 +866,7 @@ static void kvm_multiple_exception(struct kvm_vcpu *vcpu, unsigned int nr,",
+            "@@ -901,6 +911,7 @@ static void kvm_multiple_exception(struct kvm_vcpu *vcpu, unsigned int nr,",
+            "@@ -1016,6 +1027,7 @@ void kvm_inject_nmi(struct kvm_vcpu *vcpu)",
+            "@@ -1023,6 +1035,7 @@ void kvm_queue_exception_e(struct kvm_vcpu *vcpu, unsigned nr, u32 error_code)",
+            "@@ -14397,3 +14410,4 @@ static void __exit kvm_x86_exit(void)"
+          ],
+          "added_lines": 14,
+          "removed_lines": 0
+        },
+        {
+          "path": "include/linux/export.h",
+          "classification": "shared",
+          "patch_sha256": "66b4a0baa6362db0f6a4da6643e1edd743d3296e90f45496116a972e92e53b3f",
+          "hunk_headers": [
+            "@@ -38,7 +38,7 @@"
+          ],
+          "added_lines": 1,
+          "removed_lines": 1
+        }
+      ]
+    },
+    {
+      "commit": "181ca3490f9a7f6d68752b3772c283f5ffe01ce1",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit private percpu allocation and linker section, with the protected-host initialization path. Native percpu linker layout remains byte-identical; no host percpu lifetime or address conversion is changed. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Setup percpu area for the pKVM hypervisor",
+      "patch_sha256": "9bc8ea82001b824cfd55ec567d90196c5bc9304123ec06db95ee1e39367c2b3c",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/kvm_pkvm.h",
+          "classification": "private",
+          "patch_sha256": "be467d31ff2475b02cc4eed6b2895cf7a5087dbefc8c01a125962183f06fce11",
+          "hunk_headers": [
+            "@@ -33,12 +33,15 @@ u64 pkvm_total_reserve_pages(void);"
+          ],
+          "added_lines": 4,
+          "removed_lines": 1
+        },
+        {
+          "path": "arch/x86/kernel/vmlinux.lds.S",
+          "classification": "shared",
+          "patch_sha256": "03ff7d3cea4c1fbfc89889de0a1d7a2fe7bdb681f413987721cb239e8f3a7d13",
+          "hunk_headers": [
+            "@@ -156,12 +156,25 @@ PHDRS {",
+            "@@ -393,6 +406,8 @@ SECTIONS"
+          ],
+          "added_lines": 15,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/Makefile",
+          "classification": "private",
+          "patch_sha256": "43687b464ec6c76767c770a58c2b9b33760bea8d3bb4d1b9b906903023f098f4",
+          "hunk_headers": [
+            "@@ -10,7 +10,7 @@ asflags-y += -D__PKVM_HYP__"
+          ],
+          "added_lines": 1,
+          "removed_lines": 1
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/cpu.c",
+          "classification": "private",
+          "patch_sha256": "7c8a425ea6b57d3f3828fbcc2601c47739a756256b87f61fe5335abbeb99ac0c",
+          "hunk_headers": [
+            "@@ -0,0 +1,34 @@"
+          ],
+          "added_lines": 34,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/pkvm.lds.S",
+          "classification": "private",
+          "patch_sha256": "31fb5162f58d86dc1713dc98b14973fb482268b093336d49b29d28b912ee21ad",
+          "hunk_headers": [
+            "@@ -9,6 +9,18 @@ SECTIONS {"
+          ],
+          "added_lines": 12,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/vmx/pkvm_init.c",
+          "classification": "private",
+          "patch_sha256": "552405cf774408dba333a630e9cf224461001964e42ed07ddf1b83c1669a8d91",
+          "hunk_headers": [
+            "@@ -183,6 +183,29 @@ static __init int pkvm_setup_host_vcpu(struct pkvm_hyp *pkvm, int cpu)",
+            "@@ -563,6 +586,9 @@ int __init vmx_pkvm_init(void)"
+          ],
+          "added_lines": 26,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "d7a47adbf7b848e04dc5eadbf26a75d03cba504f",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit protected image GDT/IDT/TSS, exception enumeration and assembly handlers. These run as root-mode host state after deprivileging; native host exception/FRED setup is preserved. No new exception trust boundary exists in this SDK port. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Setup the VMCS host state fields with pKVM's own state",
+      "patch_sha256": "0ce8af9c6662e91bdbe82d88e5553f7b14c6ec0465038c7121fa1992e9ad2c3b",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/GEN-for-each-exc.h",
+          "classification": "private",
+          "patch_sha256": "e57e29cfc523222d459934b54da67dd7dc958e3c011f34e278ad1a93b147adb6",
+          "hunk_headers": [
+            "@@ -0,0 +1,33 @@"
+          ],
+          "added_lines": 33,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/include/asm/kvm_pkvm.h",
+          "classification": "private",
+          "patch_sha256": "bd0089a12a61d1411269a772ee685de95fea7e059e63ee7104f3e5a6e9610cc7",
+          "hunk_headers": [
+            "@@ -5,6 +5,7 @@",
+            "@@ -12,8 +13,15 @@",
+            "@@ -36,6 +44,9 @@ PKVM_DECLARE(void, pkvm_early_alloc_init, (void *virt, unsigned long size));"
+          ],
+          "added_lines": 11,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/Makefile",
+          "classification": "private",
+          "patch_sha256": "9a5bf13ac48cf94e74ff6be70bdf5b495dda1a76d740ff8c273d2d3589d0baf4",
+          "hunk_headers": [
+            "@@ -10,7 +10,8 @@ asflags-y += -D__PKVM_HYP__"
+          ],
+          "added_lines": 2,
+          "removed_lines": 1
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/entry.S",
+          "classification": "private",
+          "patch_sha256": "ef4cd6d164cb02de1546b856586a022d3b8594746e3cdcb3c44d3b393d51ac78",
+          "hunk_headers": [
+            "@@ -0,0 +1,71 @@"
+          ],
+          "added_lines": 71,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/idt.c",
+          "classification": "private",
+          "patch_sha256": "d55dc972d7b2914df0bea924d0eb19fc36555d721d29d7481c0834e7d8a1a73c",
+          "hunk_headers": [
+            "@@ -0,0 +1,27 @@"
+          ],
+          "added_lines": 27,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/idt.h",
+          "classification": "private",
+          "patch_sha256": "319ed04e64dc550299df6b9a404bed8c401138cc3037f1da60707f4a685f95dd",
+          "hunk_headers": [
+            "@@ -0,0 +1,10 @@"
+          ],
+          "added_lines": 10,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/vmx/pkvm_init.c",
+          "classification": "private",
+          "patch_sha256": "987a35afd351689b9cb7ccab99cf672b7b7109f1642d0e374732904e0bb0568d",
+          "hunk_headers": [
+            "@@ -19,6 +19,14 @@ struct pkvm_deprivilege_param {",
+            "@@ -124,6 +132,51 @@ static __init int pkvm_alloc_vmxarea(int cpu)",
+            "@@ -140,6 +193,10 @@ static __init int pkvm_setup_pcpu(struct pkvm_hyp *pkvm, int cpu)",
+            "@@ -316,51 +373,38 @@ static __init void init_host_state_area(struct vcpu_vmx *vmx, struct pkvm_hyp *p",
+            "@@ -385,7 +429,7 @@ static __init void init_host_state_area(struct vcpu_vmx *vmx, struct pkvm_hyp *p"
+          ],
+          "added_lines": 80,
+          "removed_lines": 36
+        }
+      ]
+    },
+    {
+      "commit": "84a06c7a8202ad1762845ce2d9ef39ccfb5ff9f3",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit alternate call-depth thunk for private text and is_pkvm_text selection. Entire native nospec-branch.h and callthunks.c remain, retaining the LTS call-depth mitigation and relocation logic for ordinary kernel text. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Correctly patch call thunks for pkvm",
+      "patch_sha256": "3f6040d72aee9775fd078cfee62c993556e25a5beb107fa040a87ea82e70d2e2",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/nospec-branch.h",
+          "classification": "shared",
+          "patch_sha256": "cfacc1501332c48e41efc1eac6e7a02a84c8c216b970dd99789868eb9c907114",
+          "hunk_headers": [
+            "@@ -94,11 +94,16 @@"
+          ],
+          "added_lines": 5,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/include/asm/pkvm_image.h",
+          "classification": "private",
+          "patch_sha256": "2be4ef773f8d90ba568905ca26859258f095b5d10147f8d8fa729bcc82b366c9",
+          "hunk_headers": [
+            "@@ -2,6 +2,8 @@",
+            "@@ -39,4 +41,18 @@"
+          ],
+          "added_lines": 16,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kernel/callthunks.c",
+          "classification": "shared",
+          "patch_sha256": "293fdd11536981603565807168620157a3c594827233757672f9e6090033ea40",
+          "hunk_headers": [
+            "@@ -21,6 +21,7 @@",
+            "@@ -80,6 +81,25 @@ extern u8 skl_call_thunk_tail[];",
+            "@@ -183,9 +203,18 @@ static void *patch_dest(void *dest, bool direct)"
+          ],
+          "added_lines": 31,
+          "removed_lines": 2
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/cpu.c",
+          "classification": "private",
+          "patch_sha256": "460040bc8517f3115eb5fd0fc8a8859c8353bc74a9b3f1b2cb77f27d9b681dca",
+          "hunk_headers": [
+            "@@ -12,6 +12,9 @@"
+          ],
+          "added_lines": 3,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "dbcf961ebebfa7608ef71d6d94688a7b7e5ccdb6",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit generated private retpoline reuse/stubs and objtool recognition of suffixed private thunk names. Native retpoline and objtool embedded-instruction analysis remain; this is not removal of native speculative-execution defenses. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Reuse retpoline.S in kernel for pkvm",
+      "patch_sha256": "1e897c2d177120e25a49e23b4c2f65c1ebf189bdaa061408c4e36d017cd48efc",
+      "sections": [
+        {
+          "path": "arch/x86/kvm/.gitignore",
+          "classification": "shared",
+          "patch_sha256": "91bc7d9acff7e72bff161f37017f98a06ae22b7b7a2a5691d46a62c3649aa718",
+          "hunk_headers": [
+            "@@ -1,3 +1,4 @@"
+          ],
+          "added_lines": 1,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/Makefile",
+          "classification": "private",
+          "patch_sha256": "0a6d1caecd5a93e56326b38eb00f8b02334ee867a886d8a6528c447fabe7146c",
+          "hunk_headers": [
+            "@@ -7,15 +7,24 @@ ccflags-y += -D__PKVM_HYP__",
+            "@@ -25,7 +34,8 @@ pkvm-hyp-$(CONFIG_PKVM_INTEL)\t+= vmx/host_vmentry.o vmx/host_vmx.o \\"
+          ],
+          "added_lines": 12,
+          "removed_lines": 2
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/compiling_cmds.sh",
+          "classification": "private",
+          "patch_sha256": "e0e13049f98bea80ce387c7a3f3c8a803c9da8c38849f2cd8e95cd8f545090ef",
+          "hunk_headers": [
+            "@@ -17,13 +17,18 @@ rename_syms() {",
+            "@@ -32,7 +37,12 @@ rename_syms() {",
+            "@@ -42,6 +52,33 @@ rename_syms() {",
+            "@@ -49,5 +86,11 @@ case \"$cmd\" in"
+          ],
+          "added_lines": 46,
+          "removed_lines": 3
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/kern_stub.c",
+          "classification": "private",
+          "patch_sha256": "70068b94e668d99526aeb05c79ccd8c891dd557d4d4b66f0ec743debd697d650",
+          "hunk_headers": [
+            "@@ -0,0 +1,4 @@"
+          ],
+          "added_lines": 4,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/kern_stub.h",
+          "classification": "private",
+          "patch_sha256": "f3e4a9b6b539e7a44d47f011ac3e3377d504f0f73e5a7410d8c325e1255f9bbb",
+          "hunk_headers": [
+            "@@ -0,0 +1,7 @@"
+          ],
+          "added_lines": 7,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/pkvm.lds.S",
+          "classification": "private",
+          "patch_sha256": "8fbfedea881be1da5547631e35ccfabdef9bfc014b2ed245f762203c315973de",
+          "hunk_headers": [
+            "@@ -5,6 +5,13 @@"
+          ],
+          "added_lines": 7,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/undef.h",
+          "classification": "private",
+          "patch_sha256": "d977a0f40d3586efc76e3d6ac59d48bdd9f36a7a9ede75c98b535e33660d45ef",
+          "hunk_headers": [
+            "@@ -11,6 +11,7 @@"
+          ],
+          "added_lines": 1,
+          "removed_lines": 0
+        },
+        {
+          "path": "tools/objtool/arch/x86/decode.c",
+          "classification": "shared",
+          "patch_sha256": "2b41f0780f216dc7d75566e773c41b3c9941037972c91bef3808131621f56ac3",
+          "hunk_headers": [
+            "@@ -865,7 +865,10 @@ bool arch_is_embedded_insn(struct symbol *sym)"
+          ],
+          "added_lines": 4,
+          "removed_lines": 1
+        }
+      ]
+    },
+    {
+      "commit": "35212b36d937528cf45668111d05f643d4043a88",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit sorting/prototypes for the private exception table before host deprivilege. Native exception-table sorting remains separately provided by LTS; there is no unsorted private table in the resulting image. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Sort the exception table exception",
+      "patch_sha256": "dff011ecf1b34c854747aeb1e502b64c98748f27c0b9e8891823822895d04d49",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/pkvm_image.h",
+          "classification": "private",
+          "patch_sha256": "fe950bfbe35a350b4848e255ad63abbfcc7a2559b1222bcf588e274b46cbb4e1",
+          "hunk_headers": [
+            "@@ -45,6 +45,9 @@"
+          ],
+          "added_lines": 3,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/vmx/pkvm_init.c",
+          "classification": "private",
+          "patch_sha256": "d9baebad5221a1fc580da57778f65f5d9d47bd1c333f080f63888308fcba8240",
+          "hunk_headers": [
+            "@@ -3,6 +3,7 @@",
+            "@@ -571,6 +572,16 @@ static __init int pkvm_host_deprivilege_cpus(struct pkvm_hyp *pkvm)"
+          ],
+          "added_lines": 11,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "b6498a39fbbc2ce8540be74b89000c8d383f81c8",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the protected-host MSR-exit handler change and __PKVM_HYP__ tracepoint suppression. Native msr.h and ordinary KVM MSR handling stay intact; native tracing is not globally disabled. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: VMX: Improve the host MSR vmexit handler",
+      "patch_sha256": "ea5b5328741965333497647169a74cbcc13568fff4ec8d6364d8dbd04d91bdae",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/msr.h",
+          "classification": "shared",
+          "patch_sha256": "6a0ce7f4caff41d8cf5d29dfb153042ea90bf378d6cca58e189bb3b189e8a468",
+          "hunk_headers": [
+            "@@ -43,6 +43,11 @@ struct saved_msrs {"
+          ],
+          "added_lines": 5,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/undef.h",
+          "classification": "private",
+          "patch_sha256": "f4547220375b6f184a457483bc9f63fb04666a3ff750b3e78de3ec0c81354b87",
+          "hunk_headers": [
+            "@@ -13,6 +13,9 @@",
+            "@@ -42,6 +45,7 @@"
+          ],
+          "added_lines": 4,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/vmx/host_vmx.c",
+          "classification": "private",
+          "patch_sha256": "90d6c438d9357f572b0eb92007f9524cafb7d3a7fc5c7b022eff6dcd585ccfd6",
+          "hunk_headers": [
+            "@@ -64,16 +64,55 @@ static void handle_cr(struct kvm_vcpu *vcpu)"
+          ],
+          "added_lines": 43,
+          "removed_lines": 4
+        }
+      ]
+    },
+    {
+      "commit": "fbfddc0f29e2243115f70f42dfb56548cf072361",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit private host NMI/IRQ-window delivery and helper exposure for the hypervisor build. Shared vmx.c/vmx.h are entirely native, preserving ordinary interrupt locking, NMI injection and HLT semantics. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: VMX: Handle NMI",
+      "patch_sha256": "34f50da31a76b8cfb73bdfc7a355e316c6a145f0c789f9fbf196bccdb19e6c1a",
+      "sections": [
+        {
+          "path": "arch/x86/kvm/pkvm/Makefile",
+          "classification": "private",
+          "patch_sha256": "c7bb244fb35eb7f4a4c4685674c916815174de1aa570f554f730119ff0c1cc52",
+          "hunk_headers": [
+            "@@ -1,6 +1,7 @@",
+            "@@ -33,7 +34,7 @@ kvm\t\t\t\t:= .."
+          ],
+          "added_lines": 2,
+          "removed_lines": 1
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/idt.c",
+          "classification": "private",
+          "patch_sha256": "9912e4b8d2f34fa5a9c169ea6be1468e3075560777331ed341f69c5e0c749c81",
+          "hunk_headers": [
+            "@@ -139,3 +139,11 @@ void handle_exception(struct pt_regs *regs, int vector, bool has_error_code)"
+          ],
+          "added_lines": 8,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/idt.h",
+          "classification": "private",
+          "patch_sha256": "c5eca4407751b3a0ade568e32a0b5749dc157be3246d6122ab373e5e39c168e6",
+          "hunk_headers": [
+            "@@ -6,5 +6,6 @@"
+          ],
+          "added_lines": 1,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/vmx/host_vmx.c",
+          "classification": "private",
+          "patch_sha256": "ecaff3aa27df7378d2f20ddd64772e7d631392b09a5bb4530fdb515a5079e1a3",
+          "hunk_headers": [
+            "@@ -19,6 +19,16 @@ static void skip_emulated_instruction(void)",
+            "@@ -122,6 +132,11 @@ static int handle_write_msr(struct kvm_vcpu *vcpu)",
+            "@@ -132,20 +147,72 @@ static void handle_xsetbv(struct kvm_vcpu *vcpu)",
+            "@@ -156,6 +223,9 @@ void pkvm_host_vmexit_main(struct vcpu_vmx *vmx)",
+            "@@ -172,6 +242,9 @@ void pkvm_host_vmexit_main(struct vcpu_vmx *vmx)",
+            "@@ -183,7 +256,12 @@ void pkvm_host_vmexit_main(struct vcpu_vmx *vmx)"
+          ],
+          "added_lines": 80,
+          "removed_lines": 2
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/vmx/host_vmx.h",
+          "classification": "private",
+          "patch_sha256": "40ee56e28b22e560e7c56ebef35be110d04240c65d9200b9e639577c377e19ed",
+          "hunk_headers": [
+            "@@ -4,6 +4,12 @@"
+          ],
+          "added_lines": 6,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/vmx/idt.c",
+          "classification": "private",
+          "patch_sha256": "f0974661336c9fb1d675e25dfe55d55a6e2f0267c591349b0c360f2cf4416288",
+          "hunk_headers": [
+            "@@ -0,0 +1,32 @@"
+          ],
+          "added_lines": 32,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/vmx/pkvm_init.c",
+          "classification": "private",
+          "patch_sha256": "5790fa19c0f12a6d5f6267f389edeb95f3c3c7cbfb0290f56f10d5331e3ec41e",
+          "hunk_headers": [
+            "@@ -53,6 +53,7 @@ static __init int pkvm_setup_host_vmcs_config(void)",
+            "@@ -65,7 +66,8 @@ static __init int pkvm_setup_host_vmcs_config(void)",
+            "@@ -458,16 +460,20 @@ static __init void init_host_state_area(struct vcpu_vmx *vmx, struct pkvm_hyp *p",
+            "@@ -589,6 +595,8 @@ static __init int pkvm_host_deprivilege_cpus(struct pkvm_hyp *pkvm)"
+          ],
+          "added_lines": 11,
+          "removed_lines": 3
+        },
+        {
+          "path": "arch/x86/kvm/vmx/vmx.c",
+          "classification": "shared",
+          "patch_sha256": "893a86db272d23fbe088f6cc6f2180e06c4262c19105827b180e368864bb5139",
+          "hunk_headers": [
+            "@@ -1778,7 +1778,7 @@ int vmx_skip_emulated_instruction(struct kvm_vcpu *vcpu)",
+            "@@ -4926,12 +4926,14 @@ void vmx_vcpu_reset(struct kvm_vcpu *vcpu, bool init_event)"
+          ],
+          "added_lines": 3,
+          "removed_lines": 1
+        },
+        {
+          "path": "arch/x86/kvm/vmx/vmx.h",
+          "classification": "shared",
+          "patch_sha256": "5dc3efe1fb8255d44a5bcae03eb74191c87340468af97e05e1a6dc06a511029b",
+          "hunk_headers": [
+            "@@ -762,6 +762,7 @@ int vmx_init(void);",
+            "@@ -777,6 +778,7 @@ static inline unsigned long pkvm_vmx_data_pages(void)"
+          ],
+          "added_lines": 2,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "54ceb109865b85a57a8336bbcf7d256350906fc4",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit creation of the private hypervisor MMU, duplicate address-mask state and handoff of its reserved-memory ranges. The separate image and allocator are absent; native host page tables and MMU protections are unchanged. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Create the pKVM hypervisor mmu",
+      "patch_sha256": "a7406d5418673baa3514dfca1b28079fd2646a54b358bde15021f9c953d3c614",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/kvm_pkvm.h",
+          "classification": "private",
+          "patch_sha256": "abb1f450c3cdbd328f80396db131f01e51dccab1ae35b0f91c28d2c9f4527a58",
+          "hunk_headers": [
+            "@@ -38,6 +38,19 @@ struct pkvm_hyp {",
+            "@@ -92,6 +105,10 @@ extern struct cpuinfo_x86 pkvm_sym(boot_cpu_data);"
+          ],
+          "added_lines": 17,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/include/asm/pkvm_image.h",
+          "classification": "private",
+          "patch_sha256": "8cc41eb5627e9b032f338b243f3f9110e0120d2fa4a8995def685009a5566b8c",
+          "hunk_headers": [
+            "@@ -45,6 +45,9 @@"
+          ],
+          "added_lines": 3,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/init.c",
+          "classification": "private",
+          "patch_sha256": "d0d23671cda1dabb5f1df94d7147692defc0d89fa52936a3c0904542494c0ee8",
+          "hunk_headers": [
+            "@@ -1,7 +1,10 @@",
+            "@@ -19,20 +22,81 @@ static int divide_memory_pool(phys_addr_t phys, unsigned long size)"
+          ],
+          "added_lines": 68,
+          "removed_lines": 4
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/init.h",
+          "classification": "private",
+          "patch_sha256": "fc1482887f776e38f0c54350e2e689cf300c83d6625a5c693e86085dc8ae925b",
+          "hunk_headers": [
+            "@@ -2,6 +2,8 @@"
+          ],
+          "added_lines": 3,
+          "removed_lines": 1
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/memory.c",
+          "classification": "private",
+          "patch_sha256": "387611df681b2a1441f8498e28ea64f3e6c9eaf3667bda006a550fc856d5bfd5",
+          "hunk_headers": [
+            "@@ -8,6 +8,10 @@ unsigned long phys_base;"
+          ],
+          "added_lines": 4,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/pkvm.c",
+          "classification": "private",
+          "patch_sha256": "43c4b575de905489fb35ca28c27dc0dad4bd69e1b3829ba872a3823cff34eb53",
+          "hunk_headers": [
+            "@@ -21,7 +21,8 @@ void pkvm_handle_host_hypercall(struct kvm_vcpu *vcpu)"
+          ],
+          "added_lines": 2,
+          "removed_lines": 1
+        },
+        {
+          "path": "arch/x86/kvm/vmx/pkvm_init.c",
+          "classification": "private",
+          "patch_sha256": "4a0efa4cf934e2a9da188372b8fa76c274068f4fd080d17cbe39356c2f97456d",
+          "hunk_headers": [
+            "@@ -62,6 +62,11 @@ static __init void pkvm_setup_syms(void)",
+            "@@ -669,9 +674,45 @@ static __init int pkvm_host_deprivilege_cpus(struct pkvm_hyp *pkvm)"
+          ],
+          "added_lines": 43,
+          "removed_lines": 2
+        }
+      ]
+    },
+    {
+      "commit": "cd4553fc899df0906ee78852bed76847fdeea62f",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit debug configuration and symbol aliases that let private hypervisor code call host logging functions. ACK itself warns this debug mode cannot guarantee protected isolation. Native logging and linker remain; no untrusted-host debug bypass is added. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: DEBUG: pKVM: x86: Add log printing capability for debug",
+      "patch_sha256": "2ab58674bb324a5a432b18b841b55df8dff3bdd132925fbcefeddf359adc1335",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/kvm_pkvm.h",
+          "classification": "private",
+          "patch_sha256": "976185f4a427c470baf1c520824741356d8d957f24d5b29162ff5d5f68feb7fd",
+          "hunk_headers": [
+            "@@ -232,6 +232,8 @@ static inline unsigned long pkvm_host_pgtable_pages(void)",
+            "@@ -254,6 +256,8 @@ static inline unsigned long pkvm_host_pgtable_pages(void)"
+          ],
+          "added_lines": 4,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/include/asm/pkvm_image_vars.h",
+          "classification": "private",
+          "patch_sha256": "7c5f8a33f5aaeec1fd0a74c8ed82dd126e9298d96f2b59671ed49ae015ffdfad",
+          "hunk_headers": [
+            "@@ -0,0 +1,24 @@"
+          ],
+          "added_lines": 24,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kernel/vmlinux.lds.S",
+          "classification": "shared",
+          "patch_sha256": "0f5fd70baa311a7adf94030ab7551f6c9dd9b7b34bd45d46461cae5a685f4ffc",
+          "hunk_headers": [
+            "@@ -603,6 +603,8 @@ PROVIDE(__ref_stack_chk_guard = __stack_chk_guard);"
+          ],
+          "added_lines": 2,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/Kconfig",
+          "classification": "shared",
+          "patch_sha256": "b944e448d15e1feb1e5c1c5c2b5593e8a95096c933c299efa58f318bcebb269c",
+          "hunk_headers": [
+            "@@ -153,6 +153,18 @@ config PKVM_INTEL"
+          ],
+          "added_lines": 12,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/cpu.c",
+          "classification": "private",
+          "patch_sha256": "010b49cbb9cd330e28b823e3ef5dcee31820f7c90a816ca71bb5c9128fbc117e",
+          "hunk_headers": [
+            "@@ -21,10 +21,14 @@ unsigned int nr_cpu_ids;",
+            "@@ -41,8 +45,12 @@ int pkvm_setup_per_cpu(int cpu, unsigned long base)"
+          ],
+          "added_lines": 8,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/init.c",
+          "classification": "private",
+          "patch_sha256": "7fd3e62b96c0579920948e28f49b19a8556a4da4c838e07f070481ac37fbad9d",
+          "hunk_headers": [
+            "@@ -122,6 +122,15 @@ static int create_hyp_mmu(const struct pkvm_mem_info infos[], int nr_infos)",
+            "@@ -134,6 +143,7 @@ static int create_hyp_mmu(const struct pkvm_mem_info infos[], int nr_infos)",
+            "@@ -184,9 +194,23 @@ static int create_host_mmu(const struct pkvm_mem_info infos[], int nr_infos,"
+          ],
+          "added_lines": 24,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/mmu.c",
+          "classification": "private",
+          "patch_sha256": "63e1db13a6f41d879b66a9e15a5f07cbc39ec7923a39914a288de559b7b538ec",
+          "hunk_headers": [
+            "@@ -162,11 +162,20 @@ static int fix_hyp_mmu_page_refcnt(void)",
+            "@@ -234,6 +243,18 @@ int pkvm_hyp_mmu_map(unsigned long vaddr, unsigned long phys,"
+          ],
+          "added_lines": 21,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/mmu.h",
+          "classification": "private",
+          "patch_sha256": "4218499df0edf93803e71ccc209abaab9d48bcbbcc4a70631a28d2e81bbf0b49",
+          "hunk_headers": [
+            "@@ -13,6 +13,9 @@ void pkvm_hyp_mmu_load(void);"
+          ],
+          "added_lines": 3,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/undef.h",
+          "classification": "private",
+          "patch_sha256": "0463d46eba4651b152968de15c96a2745dfbacee174f94fd9b5b24ec69dbd3d4",
+          "hunk_headers": [
+            "@@ -9,7 +9,9 @@"
+          ],
+          "added_lines": 2,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/vmx/pkvm_init.c",
+          "classification": "private",
+          "patch_sha256": "e663c4e71033022ef4eeb009de99ce384d4e2696ce22689b81ff805db50ebd5f",
+          "hunk_headers": [
+            "@@ -295,14 +295,17 @@ static __init int pkvm_setup_host_vcpu(struct pkvm_hyp *pkvm, int cpu)",
+            "@@ -312,6 +315,17 @@ static __init int pkvm_setup_per_cpu(struct pkvm_hyp *pkvm, int cpu)",
+            "@@ -438,6 +452,10 @@ static __init void init_host_state_area(struct vcpu_vmx *vmx, struct pkvm_hyp *p",
+            "@@ -455,6 +473,46 @@ static __init void init_host_state_area(struct vcpu_vmx *vmx, struct pkvm_hyp *p",
+            "@@ -469,6 +527,7 @@ static __init void init_host_state_area(struct vcpu_vmx *vmx, struct pkvm_hyp *p"
+          ],
+          "added_lines": 59,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "81a198763556bd2c049ce7fad5b2981e252221e5",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit per-host-vCPU protected-image VM-exit timing counters and trace hooks. They describe exits of the deprivileged host into the omitted hypervisor; native KVM observability is unchanged. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: trace: Add host vmexit stats tracing support",
+      "patch_sha256": "b06b35d5c1e78428a53884cdf0344ae50a80c77759a949ec45b81b3c80048d7f",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/pkvm_trace.h",
+          "classification": "private",
+          "patch_sha256": "3c3f0ddc270ce076c1dfa57c47dd56c1fdf535f6bce483d08aa8bff39bce3e23",
+          "hunk_headers": [
+            "@@ -0,0 +1,34 @@"
+          ],
+          "added_lines": 34,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/Makefile",
+          "classification": "private",
+          "patch_sha256": "a3c0a95e69b97b94a37c4024ba5d2001bfd898973f12cb368f7c327ee4b5951e",
+          "hunk_headers": [
+            "@@ -14,7 +14,7 @@ cmd_deps\t\t\t:= $(src)/compiling_cmds.sh"
+          ],
+          "added_lines": 1,
+          "removed_lines": 1
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/init.c",
+          "classification": "private",
+          "patch_sha256": "4ee7982066b9cb41cf3d752eff5ded8ccdde88b426e105fa80e51be4d193b726",
+          "hunk_headers": [
+            "@@ -6,6 +6,8 @@",
+            "@@ -277,6 +279,8 @@ int pkvm_init(struct pkvm_mem_info infos[], int nr_infos)"
+          ],
+          "added_lines": 4,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/trace.c",
+          "classification": "private",
+          "patch_sha256": "8450cf3326bc3fb92b0c9c1992c727624417d4e24b58020379a65fa774c41cd1",
+          "hunk_headers": [
+            "@@ -0,0 +1,69 @@"
+          ],
+          "added_lines": 69,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/trace.h",
+          "classification": "private",
+          "patch_sha256": "f41b3f9d39147cd199c93c7b26b02e4394d7fc9e000b514463d32a048f6fc9e9",
+          "hunk_headers": [
+            "@@ -0,0 +1,11 @@"
+          ],
+          "added_lines": 11,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/vmx/host_vmx.c",
+          "classification": "private",
+          "patch_sha256": "052d2cb7c1552381acc6f34f22a334edc4b0a5232e974092cbdd8496a930ba04",
+          "hunk_headers": [
+            "@@ -8,6 +8,7 @@",
+            "@@ -302,6 +303,8 @@ void pkvm_host_vmexit_main(struct vcpu_vmx *vmx)",
+            "@@ -391,4 +394,6 @@ void pkvm_host_vmexit_main(struct vcpu_vmx *vmx)"
+          ],
+          "added_lines": 5,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "5be336ba5367a74feb007a6392e1033806ed075a",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit private PV command enabling/resetting hypervisor VM-exit statistics. No new hypercall/debug surface is exposed; the native guest hypercall API remains. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: trace: Add enable_vmexit_trace PV interface",
+      "patch_sha256": "5aa77f6376016ac7f3de14da9ab41cd05224afe5b393c84a3d9a4bb677c53725",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/pkvm_hypercalls.h",
+          "classification": "private",
+          "patch_sha256": "a13ddbceb7f8b2ec8735a9fde8f1bdf21b3db288b5629d3661b6645c683eb7e5",
+          "hunk_headers": [
+            "@@ -8,4 +8,7 @@ PKVM_HC(init)"
+          ],
+          "added_lines": 3,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/include/asm/pkvm_trace.h",
+          "classification": "private",
+          "patch_sha256": "7fe1ba5e2b90b0bac9a5ca2780ae648fc67ba217d88ed951b4fc612a898cd8c5",
+          "hunk_headers": [
+            "@@ -29,6 +29,7 @@ struct vmexit_perf {"
+          ],
+          "added_lines": 1,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/pkvm.c",
+          "classification": "private",
+          "patch_sha256": "72e97df61485f91ad956793d4333071e740ff5a6960dd3de0a631aa6840e44cd",
+          "hunk_headers": [
+            "@@ -3,6 +3,7 @@",
+            "@@ -31,6 +32,9 @@ void pkvm_handle_host_hypercall(struct kvm_vcpu *vcpu)"
+          ],
+          "added_lines": 4,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/trace.c",
+          "classification": "private",
+          "patch_sha256": "1b222eff056768923865d2f51f53c466d178b636758d398eea2d1868d92d5b73",
+          "hunk_headers": [
+            "@@ -5,6 +5,7 @@",
+            "@@ -22,6 +23,13 @@ static inline struct vmexit_perf *vcpu_to_perf(struct kvm_vcpu *vcpu)",
+            "@@ -31,6 +39,8 @@ void pkvm_trace_vmexit_start(struct kvm_vcpu *vcpu)",
+            "@@ -48,6 +58,10 @@ void pkvm_trace_vmexit_end(struct kvm_vcpu *vcpu, u32 reason)",
+            "@@ -67,3 +81,15 @@ void pkvm_vcpu_perf_init(struct kvm_vcpu *vcpu)"
+          ],
+          "added_lines": 26,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/trace.h",
+          "classification": "private",
+          "patch_sha256": "86d3c57b76643e85d2ab686551a73bd737cd83277038b9330f354eca099effb7",
+          "hunk_headers": [
+            "@@ -7,5 +7,6 @@"
+          ],
+          "added_lines": 1,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "3983405a2c1d618cab697a425cc5586d06b385c6",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit private host-hypercall statistics and their debugfs rendering. All four paths are private image/service files absent from native and port; native KVM debugfs is unchanged. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: trace: Add tracing of host hypercalls",
+      "patch_sha256": "4dedb300c1cd053c5df9b78ed8da0a0596912adb304fcb476880370c99bb35bc",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/kvm_pkvm.h",
+          "classification": "private",
+          "patch_sha256": "8ea14a61b5dee0de2ccc416292d16997f81a4eb76c4e81fb31b07eae5eaff388",
+          "hunk_headers": [
+            "@@ -57,6 +57,8 @@ struct pkvm_mem_info {"
+          ],
+          "added_lines": 2,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/include/asm/pkvm_trace.h",
+          "classification": "private",
+          "patch_sha256": "01ac15ce4dcec2c8c551d97e48a8b278f8380421eb692554c97839af345fb22c",
+          "hunk_headers": [
+            "@@ -2,6 +2,7 @@",
+            "@@ -22,12 +23,14 @@ struct vmexit_stats {"
+          ],
+          "added_lines": 3,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/trace.c",
+          "classification": "private",
+          "patch_sha256": "bc12efed53e5f3e6592ffbb1033f43221e2167e8daa36fe7c8dc615dc424bec9",
+          "hunk_headers": [
+            "@@ -12,6 +12,11 @@ struct perf_ctrl {",
+            "@@ -19,7 +24,7 @@ static inline struct vmexit_perf *vcpu_to_perf(struct kvm_vcpu *vcpu)",
+            "@@ -27,6 +32,7 @@ static inline struct vmexit_perf *vcpu_to_perf(struct kvm_vcpu *vcpu)",
+            "@@ -65,6 +71,7 @@ void pkvm_trace_vmexit_start(struct kvm_vcpu *vcpu)",
+            "@@ -93,6 +100,12 @@ void pkvm_trace_vmexit_end(struct kvm_vcpu *vcpu, u32 reason)"
+          ],
+          "added_lines": 14,
+          "removed_lines": 1
+        },
+        {
+          "path": "arch/x86/kvm/pkvm_debugfs.c",
+          "classification": "private",
+          "patch_sha256": "22b8107b850cd0477fedb3be029dd2fd2e210473680f8439e00bd50a3b6d1f29",
+          "hunk_headers": [
+            "@@ -46,6 +46,28 @@ static const char *get_vmexit_reason(int reason)",
+            "@@ -67,22 +89,19 @@ static int print_perf_data(struct seq_file *m, struct perf_data *summary,"
+          ],
+          "added_lines": 33,
+          "removed_lines": 14
+        }
+      ]
+    },
+    {
+      "commit": "954eae4217d5d836cf2e852eadeec8aa69a77596",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit pkvm_relax_cpu_bugs parser and documentation with the protected backend. ACK defaults the development override to true; it must not weaken native CPU mitigation policy. Whole native shared mitigation code is retained. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Add kernel command line to control relax_cpu_bugs",
+      "patch_sha256": "6aa91cf704b4911b4bda6bd08bc38152e7a1072cd20b875bc4b1195f8c74e7a0",
+      "sections": [
+        {
+          "path": "Documentation/admin-guide/kernel-parameters.txt",
+          "classification": "shared",
+          "patch_sha256": "83591ef2c1b59e6fc20d23b532ca2ec52b94a357581ae236e3f8c11015699954",
+          "hunk_headers": [
+            "@@ -3126,6 +3126,15 @@"
+          ],
+          "added_lines": 9,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/vmx/pkvm_init.c",
+          "classification": "private",
+          "patch_sha256": "b1570abb82aab387a3c67a59291988d67e9cdfba80be754aacfa4ab246a8aa18",
+          "hunk_headers": [
+            "@@ -15,6 +15,11 @@ static int __init early_pkvm_parse_cmdline(char *buf)",
+            "@@ -1247,6 +1252,8 @@ int __init vmx_pkvm_init(void)"
+          ],
+          "added_lines": 7,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "75157b5b380b57d021c70ac6c4529d50260942ed",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit temporary protected VM type 28 in kernel/tools UAPI and its private helper. ACK advertises this type only when enable_pkvm is true; native supported_vm_types validation remains and native VM type numbers are unchanged. This deliberately does not promise protected VM creation. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Introduce a new vm type",
+      "patch_sha256": "a718a16c03f94d6bf8c43110cd2287df890cb0c7f21da619e931a0ee1b323693",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/kvm_pkvm.h",
+          "classification": "private",
+          "patch_sha256": "2bf1af01896fc2a326d2049382e6d71ba9d1bf25c7da5ff1539dbc3a2ff5b0b2",
+          "hunk_headers": [
+            "@@ -234,6 +234,16 @@ static inline unsigned long pkvm_host_pgtable_pages(void)",
+            "@@ -264,6 +274,11 @@ static inline unsigned long pkvm_host_pgtable_pages(void)"
+          ],
+          "added_lines": 15,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/include/uapi/asm/kvm.h",
+          "classification": "shared",
+          "patch_sha256": "96416bc110bbf9e0c34a390558d11c7eb486f282c787d00a3578d58670df5c83",
+          "hunk_headers": [
+            "@@ -966,6 +966,12 @@ struct kvm_hyperv_eventfd {"
+          ],
+          "added_lines": 6,
+          "removed_lines": 0
+        },
+        {
+          "path": "tools/arch/x86/include/uapi/asm/kvm.h",
+          "classification": "shared",
+          "patch_sha256": "6e963b321e3812efcb374c3c83e20c185a61c0648496903b6fd2d4cbe5e51912",
+          "hunk_headers": [
+            "@@ -966,6 +966,12 @@ struct kvm_hyperv_eventfd {"
+          ],
+          "added_lines": 6,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "41d2d3840422afa0ea7e680be7e619bbaee1a5a0",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit private init.text/init.data retention in private image sections. Whole native linker remains; this does not extend or free any native init lifetime differently. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Rearrange init.text and init.data sections",
+      "patch_sha256": "ffe6f3d9f01cda7c242dbdcab56c82f3e4e90efba2aa8e9f9be73fdf98e60f5f",
+      "sections": [
+        {
+          "path": "arch/x86/kernel/vmlinux.lds.S",
+          "classification": "shared",
+          "patch_sha256": "ed35649ef7794b525c886a00595982611e0de053338d791f6f44dd16d9cee072",
+          "hunk_headers": [
+            "@@ -126,6 +126,7 @@ PHDRS {",
+            "@@ -140,6 +141,7 @@ PHDRS {"
+          ],
+          "added_lines": 2,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/pkvm.lds.S",
+          "classification": "private",
+          "patch_sha256": "1d0a90370c0ec8d47146e68e6cc8db7b68412dbf5ea14b88a1963bd27f055f38",
+          "hunk_headers": [
+            "@@ -14,6 +14,7 @@ SECTIONS {",
+            "@@ -29,5 +30,6 @@ SECTIONS {"
+          ],
+          "added_lines": 2,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "fea2a1cca1fe10b634e7c1251a9a5385a9edfa1c",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit private pVMX ops instance and its build/prototype plumbing. Native vt_x86_ops and ordinary VMX backend remain; no unimplemented protected backend is advertised. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: KVM: pVMX: Add initial pKVM host interface",
+      "patch_sha256": "d11fb5411fdb501790d093e26a9e6aa854ae882bcaa24ccb31ded901921529b0",
+      "sections": [
+        {
+          "path": "arch/x86/kvm/Makefile",
+          "classification": "shared",
+          "patch_sha256": "8a8d64f97ec7c1bd6ef3a8a35b727d9218f9729b02be31d8615dc6a39dded851",
+          "hunk_headers": [
+            "@@ -45,7 +45,7 @@ $(obj)/vmx/vmenter.o: $(obj)/kvm-asm-offsets.h"
+          ],
+          "added_lines": 1,
+          "removed_lines": 1
+        },
+        {
+          "path": "arch/x86/kvm/vmx/pkvm_host.c",
+          "classification": "private",
+          "patch_sha256": "aa09104b120a6420f527b0713fd8d6208d626372ec3e9dd0894d586ec3ed1df5",
+          "hunk_headers": [
+            "@@ -0,0 +1,6 @@"
+          ],
+          "added_lines": 6,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/vmx/x86_ops.h",
+          "classification": "shared",
+          "patch_sha256": "675d8d298ed73d2de343ba5efb41974744572463ef431488990e20b4fe83e174",
+          "hunk_headers": [
+            "@@ -10,6 +10,9 @@ __init int vmx_hardware_setup(void);"
+          ],
+          "added_lines": 3,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "9bd913a18582532c6c82b6ec34914f4088c8a39d",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit private per-CPU FPU initialization and conditional reuse of native FPU helpers. Whole native FPU core remains, preserving ordinary guest/host state ownership and isolation. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Initialize the percpu fpu",
+      "patch_sha256": "599a3b1c80a2adeecf81fc6278f58cb5a91245cca769c343fb3fa6b769ab808c",
+      "sections": [
+        {
+          "path": "arch/x86/kernel/fpu/core.c",
+          "classification": "shared",
+          "patch_sha256": "10421589d1a271f637f691a5a38a5f7b5de7651039ba2837be2f98139fd94dbf",
+          "hunk_headers": [
+            "@@ -507,6 +507,7 @@ static inline unsigned int init_fpstate_copy_size(void)",
+            "@@ -545,6 +546,7 @@ void fpstate_init_user(struct fpstate *fpstate)"
+          ],
+          "added_lines": 2,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/Makefile",
+          "classification": "private",
+          "patch_sha256": "0107d5af1309e73e7c579e78dbd63bcd9e030f613f3d2bc78c376917fc6b1a2e",
+          "hunk_headers": [
+            "@@ -14,7 +14,7 @@ cmd_deps\t\t\t:= $(src)/compiling_cmds.sh",
+            "@@ -49,6 +49,8 @@ pkvm-hyp-y\t\t\t+= $(fpu)/core.o"
+          ],
+          "added_lines": 3,
+          "removed_lines": 1
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/fpu.c",
+          "classification": "private",
+          "patch_sha256": "fae34cf070058e337bc6806fc9498974b298a43d148f31b9047cfd9e0c180754",
+          "hunk_headers": [
+            "@@ -0,0 +1,37 @@"
+          ],
+          "added_lines": 37,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/fpu.h",
+          "classification": "private",
+          "patch_sha256": "cb8fb3b9c599353b9ac417153b6e408461ccb940292acd49fa904a4f0d6495ca",
+          "hunk_headers": [
+            "@@ -0,0 +1,7 @@"
+          ],
+          "added_lines": 7,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/init.c",
+          "classification": "private",
+          "patch_sha256": "cb76ba9d6acaaf0b9d23cb072e6b375a1b72cf00b6fdabc0dbc6669c2d0719d1",
+          "hunk_headers": [
+            "@@ -2,6 +2,7 @@",
+            "@@ -284,6 +285,8 @@ int pkvm_init(struct pkvm_mem_info infos[], int nr_infos)"
+          ],
+          "added_lines": 3,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/undef.h",
+          "classification": "private",
+          "patch_sha256": "2f1a02b2d7ef0f8d089b4a9d20127ad8e1ff642aa26eeb393dfe0de5929bb6cd",
+          "hunk_headers": [
+            "@@ -22,6 +22,8 @@"
+          ],
+          "added_lines": 2,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "2ee3f499363b3dec2faf17dbef6b7cdf41ed5f0a",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit private vcpu_load implementation, current_vmcs reuse and alternate GDT/TR/SYSENTER path. Native remote VMCS clear, interrupt protection, posted-interrupt loading and host CPU state handling remain byte-identical. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: VMX: Implement vcpu_load operation",
+      "patch_sha256": "25944417d6701a0f5622ef783bad693236d30e5c1c156aaeedb0f751c6638b1f",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/pkvm_image_vars.h",
+          "classification": "private",
+          "patch_sha256": "e3b627b83b72d5edbe762ff87b650a7d99db26eedef36ea5b8405da55519372d",
+          "hunk_headers": [
+            "@@ -19,6 +19,7 @@ PKVM_ALIAS(__trace_bprintk);"
+          ],
+          "added_lines": 1,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/pkvm.c",
+          "classification": "private",
+          "patch_sha256": "de41b69d3615a22ac305adb5a332667b7c5ae9138e4e371ddcf89c80f6d20353",
+          "hunk_headers": [
+            "@@ -696,3 +696,14 @@ void pkvm_put_vcpu(struct pkvm_vcpu *pkvm_vcpu)"
+          ],
+          "added_lines": 11,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/pkvm.h",
+          "classification": "private",
+          "patch_sha256": "bed79e8fea9ae4f3049af675ae953034affe061324b9b0a93e55744df7256042",
+          "hunk_headers": [
+            "@@ -98,5 +98,6 @@ struct pkvm_vm *pkvm_get_vm(int vm_handle);"
+          ],
+          "added_lines": 1,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/vmx/main.c",
+          "classification": "shared",
+          "patch_sha256": "20d9ff495a2184d0856eb99edea5db5a917c5dff828d179c814c4da2003d4250",
+          "hunk_headers": [
+            "@@ -888,7 +888,9 @@ struct kvm_x86_ops vt_x86_ops __initdata = {"
+          ],
+          "added_lines": 2,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/vmx/vmx.c",
+          "classification": "shared",
+          "patch_sha256": "bdf269d4f54d20e1d54212a5d36fdd10c6dcb17a48011ac8bdb045a58a778732",
+          "hunk_headers": [
+            "@@ -490,7 +490,9 @@ noinline void invept_error(unsigned long ext, u64 eptp)",
+            "@@ -1424,6 +1426,7 @@ static void grow_ple_window(struct kvm_vcpu *vcpu)",
+            "@@ -1448,6 +1451,15 @@ void vmx_vcpu_load_vmcs(struct kvm_vcpu *vcpu, int cpu)",
+            "@@ -1462,6 +1474,7 @@ void vmx_vcpu_load_vmcs(struct kvm_vcpu *vcpu, int cpu)",
+            "@@ -1471,6 +1484,25 @@ void vmx_vcpu_load_vmcs(struct kvm_vcpu *vcpu, int cpu)",
+            "@@ -1492,6 +1524,7 @@ void vmx_vcpu_load_vmcs(struct kvm_vcpu *vcpu, int cpu)",
+            "@@ -1508,9 +1541,12 @@ void vmx_vcpu_load(struct kvm_vcpu *vcpu, int cpu)"
+          ],
+          "added_lines": 36,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "35a7933a6787a0234d10968d62e1dd3d4dd2b16e",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit private xstate cache initialization/export and conditional compilation. Whole native xstate source/header remain, including native feature sizing and coredump behavior; no FPU isolation rule is relaxed. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Setup xstate cache",
+      "patch_sha256": "8c7df081b8ba1d462f571c4681664ed31ba0796070f3fb569955fc03bbaf8c19",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/fpu/xstate.h",
+          "classification": "shared",
+          "patch_sha256": "12bd713d71097856d97da47fab6bc461edd031bdc96a01e7ff565705fd014a09",
+          "hunk_headers": [
+            "@@ -131,4 +131,8 @@ static __always_inline __pure bool fpu_state_size_dynamic(void)"
+          ],
+          "added_lines": 4,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kernel/fpu/xstate.c",
+          "classification": "shared",
+          "patch_sha256": "60fd2cba87b0c207a0fc592d9292feac08e8f33b3504287281f35807a9da0dfa",
+          "hunk_headers": [
+            "@@ -38,6 +38,7 @@",
+            "@@ -86,6 +87,7 @@ static unsigned short xsave_cpuid_features[] __initdata = {",
+            "@@ -121,6 +123,7 @@ static inline unsigned int next_xfeature_order(unsigned int i, u64 mask)",
+            "@@ -163,12 +166,14 @@ static bool xfeature_is_aligned64(int xfeature_nr)",
+            "@@ -238,6 +243,7 @@ static bool xfeature_enabled(enum xfeature xfeature)",
+            "@@ -292,6 +298,7 @@ static void __init setup_xstate_cache(void)",
+            "@@ -2009,3 +2016,16 @@ int elf_coredump_extra_notes_size(void)"
+          ],
+          "added_lines": 20,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/Makefile",
+          "classification": "private",
+          "patch_sha256": "81f6e758b54c29f3b409150007e05ce76df4d4222a8a7c99280ed3f5b3c6525c",
+          "hunk_headers": [
+            "@@ -48,7 +48,7 @@ AFLAGS_$(kvm)/vmx/vmenter.pkvm.o += -iquote $(obj)"
+          ],
+          "added_lines": 1,
+          "removed_lines": 1
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/init.c",
+          "classification": "private",
+          "patch_sha256": "2120e7a74eda819c9855ae3d742cbc23544fa8707a23e713898882bb4145e3db",
+          "hunk_headers": [
+            "@@ -1,5 +1,6 @@",
+            "@@ -243,6 +244,8 @@ static int initialize_global(struct pkvm_mem_info infos[], int nr_infos)"
+          ],
+          "added_lines": 3,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "7bce99a144f24b28b1070670b77981722bdd7b28",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit prepare_switch_to_host ops extension used only by the protected image. Shared native VMX host restoration remains unchanged; the private path relies on hardware-restored segments and exchanges MSR_KERNEL_GS_BASE, which must not replace ordinary native restoration. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: VMX: Introduce prepare_switch_to_host",
+      "patch_sha256": "cd2c5c72d9ab1c67fe141148a2e154be5ab9ebfa21a97bd4394fe84bd7b7406e",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/kvm-x86-ops.h",
+          "classification": "shared",
+          "patch_sha256": "fac211b2249653a7385d4e85b598bd9c2979c3de554d8dd1729c3e83997180c1",
+          "hunk_headers": [
+            "@@ -27,6 +27,7 @@ KVM_X86_OP(vcpu_create)"
+          ],
+          "added_lines": 1,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/include/asm/kvm_host.h",
+          "classification": "shared",
+          "patch_sha256": "c337e8181913ff791bcdfed26c80c52e4d3d3264e736a08fe19d5ba548a6b28b",
+          "hunk_headers": [
+            "@@ -1809,6 +1809,7 @@ struct kvm_x86_ops {"
+          ],
+          "added_lines": 1,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/vmx/main.c",
+          "classification": "shared",
+          "patch_sha256": "5b512189dfb12bb2b1647c95424641355cbb4678f1c6f796fc806fe801d186bb",
+          "hunk_headers": [
+            "@@ -887,6 +887,9 @@ struct kvm_x86_ops vt_x86_ops __initdata = {"
+          ],
+          "added_lines": 3,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/vmx/vmx.c",
+          "classification": "shared",
+          "patch_sha256": "ea9c73d847651b3c6ebf6f8b24db471930c233e9b7bf628d0e24cc32b8c27f29",
+          "hunk_headers": [
+            "@@ -1368,14 +1368,16 @@ void vmx_prepare_switch_to_guest(struct kvm_vcpu *vcpu)",
+            "@@ -1404,10 +1406,22 @@ static void vmx_prepare_switch_to_host(struct vcpu_vmx *vmx)",
+            "@@ -9329,6 +9343,11 @@ int __init vmx_init(void)"
+          ],
+          "added_lines": 21,
+          "removed_lines": 2
+        },
+        {
+          "path": "arch/x86/kvm/vmx/x86_ops.h",
+          "classification": "shared",
+          "patch_sha256": "27295f1675c1497b8276a6a3114416ab31602d59348a7ad40a17a373fc8b5fdf",
+          "hunk_headers": [
+            "@@ -159,4 +159,8 @@ void tdx_load_mmu_pgd(struct kvm_vcpu *vcpu, hpa_t root_hpa, int root_level);"
+          ],
+          "added_lines": 4,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "da044b99c212dd9074dab90128e99000aca5f1cb",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit private kvm_x86_init_ops instance and prototype. They initialize the omitted protected backend; retain native vendor initialization and cleanup paths. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: KVM: pVMX: Add kvm_x86_init_ops instance",
+      "patch_sha256": "ad4e0aa2a29eea42c82129d2b155c508dc740b3b698e9c6d5c4433c3020ee8bd",
+      "sections": [
+        {
+          "path": "arch/x86/kvm/vmx/pkvm_host.c",
+          "classification": "private",
+          "patch_sha256": "bc42cff66909943009c2cf5ae5697ec3da6647c3e9e0f97747e62e73ef59b1cb",
+          "hunk_headers": [
+            "@@ -1906,6 +1906,44 @@ struct kvm_x86_ops pkvm_host_vt_x86_ops __initdata = {"
+          ],
+          "added_lines": 38,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/vmx/x86_ops.h",
+          "classification": "shared",
+          "patch_sha256": "226d0e95cc06d6da8eda6622418afa182ca40def06aa5bf985c6fc7a1a6ff95a",
+          "hunk_headers": [
+            "@@ -12,6 +12,7 @@ extern struct kvm_x86_ops vt_x86_ops __initdata;"
+          ],
+          "added_lines": 1,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "58e527ab0eb3434c00839c540c070f47f4ea2efc",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit protected-vCPU IO hypercall dispatcher and register-sharing protocol. Its host entry is guarded by pkvm_is_protected_vcpu; ordinary native hypercalls and SEV MMIO helpers remain untouched. No private MMIO forwarding surface or register disclosure is introduced. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Handle pVM's IO hypercalls",
+      "patch_sha256": "560d2257853761de5a519aeeba9af2bb5e4cf09622c31b9cbfe56ac32ac897d0",
+      "sections": [
+        {
+          "path": "arch/x86/kvm/vmx/vmx.c",
+          "classification": "shared",
+          "patch_sha256": "987065fbaaa0d058961de8a47a7e2288c136cd65b98857276f6fff569d612a23",
+          "hunk_headers": [
+            "@@ -9748,6 +9748,16 @@ static void update_protected_vcpu_state(struct kvm_vcpu *vcpu,",
+            "@@ -9847,6 +9857,22 @@ static void share_protected_vcpu_state(struct kvm_vcpu *vcpu,"
+          ],
+          "added_lines": 26,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/x86.c",
+          "classification": "shared",
+          "patch_sha256": "76d294dbe3dfa2c330b2f3694e2aa92597968bb6d342ad4a293c87764cbb2848",
+          "hunk_headers": [
+            "@@ -10621,6 +10621,50 @@ static int complete_hypercall_exit(struct kvm_vcpu *vcpu)",
+            "@@ -10727,6 +10771,9 @@ EXPORT_SYMBOL_FOR_KVM_INTERNAL(____kvm_emulate_hypercall);",
+            "@@ -14889,6 +14936,7 @@ int pkvm_vcpu_enter_guest(struct kvm_vcpu *vcpu, bool force_immediate_exit,",
+            "@@ -14898,6 +14946,18 @@ int pkvm_emulate_hypercall(struct kvm_vcpu *vcpu)"
+          ],
+          "added_lines": 60,
+          "removed_lines": 0
+        },
+        {
+          "path": "include/uapi/linux/kvm_para.h",
+          "classification": "shared",
+          "patch_sha256": "0266c1d2dfc49fe064f5ac227f0d6ee8c5f0c032f27ffc85f17cc8f3bc8c6c78",
+          "hunk_headers": [
+            "@@ -31,6 +31,13 @@"
+          ],
+          "added_lines": 7,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "3996a0e35d1e2009a75f9f22d77eb53a9c17af01",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit protected guest VM-exit trace extension and __PKVM_HYP__ instrumentation around VM entry. Whole shared vmx.c stays native; ordinary native KVM trace behavior remains. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: trace: Extend pKVM trace to support guest vCPU",
+      "patch_sha256": "882bbe13c9ffb17c19e2f0fe9f3c77457b644327fcd8e11b69dd3f2dcf657bed",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/pkvm_trace.h",
+          "classification": "private",
+          "patch_sha256": "56806826f656eee5bc4e0392010461a075e874ab6b399ac0478d052128a392e4",
+          "hunk_headers": [
+            "@@ -25,6 +25,7 @@ struct perf_data {"
+          ],
+          "added_lines": 1,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/pkvm.c",
+          "classification": "private",
+          "patch_sha256": "d255a972a9cd427d5adc53014cbdc29bb74fd7ace20bba171109d026e868e4b3",
+          "hunk_headers": [
+            "@@ -447,6 +447,8 @@ static int __vcpu_create(struct kvm *kvm, struct kvm_vcpu *vcpu, struct fpstate"
+          ],
+          "added_lines": 2,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/pkvm.h",
+          "classification": "private",
+          "patch_sha256": "c5561e0d9517378d618a9cb86865289b4e2cb41b78ed7cbd65ffa6a2bce7e50f",
+          "hunk_headers": [
+            "@@ -5,6 +5,7 @@",
+            "@@ -27,6 +28,8 @@ struct pkvm_vcpu {"
+          ],
+          "added_lines": 3,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/trace.c",
+          "classification": "private",
+          "patch_sha256": "2a9be13189861a6cadb7d3645d548372c5f4a3e9a76d8d24da59699fbf535909",
+          "hunk_headers": [
+            "@@ -19,14 +19,8 @@ static inline bool is_host_vcpu(struct kvm_vcpu *vcpu)",
+            "@@ -113,6 +107,7 @@ void pkvm_vcpu_perf_init(struct kvm_vcpu *vcpu)"
+          ],
+          "added_lines": 3,
+          "removed_lines": 8
+        },
+        {
+          "path": "arch/x86/kvm/vmx/vmx.c",
+          "classification": "shared",
+          "patch_sha256": "f73d8bad5b7cdf5fc28a37cd25bb451255b583bbacfe647c0901761e4b758139",
+          "hunk_headers": [
+            "@@ -77,6 +77,7 @@",
+            "@@ -8082,8 +8083,14 @@ static noinstr void vmx_vcpu_enter_exit(struct kvm_vcpu *vcpu,"
+          ],
+          "added_lines": 7,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "6d75326f56817597fa4a88abdba99e657ba85a02",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit private per-VM debugfs statistics registration and stub/prototype. The only shared call creates protected-image tracing state; native mmu_rmaps_stat remains and no new private debugfs nodes are added. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: trace: Register per guest VM vmexit trace debug file",
+      "patch_sha256": "0deb98b9c9e284688219f9a6e3f71485e9308c329dca876895e8ef1448b11d46",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/kvm_host.h",
+          "classification": "shared",
+          "patch_sha256": "aacdc449fee61badf606778875a3155482046bc510191c314acc6c2042c1c9d9",
+          "hunk_headers": [
+            "@@ -2072,10 +2072,12 @@ extern phys_addr_t pkvm_mem_base;"
+          ],
+          "added_lines": 2,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/debugfs.c",
+          "classification": "shared",
+          "patch_sha256": "d775291a9dbdd3431bf323c8290a499dc28643092ebbc2d8ff93cfe814d85ba5",
+          "hunk_headers": [
+            "@@ -193,4 +193,6 @@ void kvm_arch_create_vm_debugfs(struct kvm *kvm)"
+          ],
+          "added_lines": 2,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm_debugfs.c",
+          "classification": "private",
+          "patch_sha256": "f4de30271ec9f280e9573a7cc2b3855e8102c0135ad8ef01d18fa2080f8c9691",
+          "hunk_headers": [
+            "@@ -288,3 +288,12 @@ void pkvm_init_debugfs(void)"
+          ],
+          "added_lines": 9,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "4ce6e0861e48d03698cf51df0af6319fec687138",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit protected guest memory share/unshare hypercalls and their private ABI numbers. They act on protected-vCPU ownership under the omitted backend; native ordinary/SEV memory operations and hypercall namespace remain unchanged. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Implement guest share/unshare hypercalls",
+      "patch_sha256": "251fd1e27414b0cfbc77403da13cae6d62c54a47dab7e5ecd463b1965c9e1e76",
+      "sections": [
+        {
+          "path": "arch/x86/kvm/x86.c",
+          "classification": "shared",
+          "patch_sha256": "5d2693a5a595d372a5d7fa0c1c4a5fb8a8b8ace5118789ffe584f8553b37209a",
+          "hunk_headers": [
+            "@@ -14940,8 +14940,8 @@ int pkvm_vcpu_enter_guest(struct kvm_vcpu *vcpu, bool force_immediate_exit,",
+            "@@ -14952,8 +14952,18 @@ int pkvm_emulate_hypercall(struct kvm_vcpu *vcpu)"
+          ],
+          "added_lines": 11,
+          "removed_lines": 1
+        },
+        {
+          "path": "include/uapi/linux/kvm_para.h",
+          "classification": "shared",
+          "patch_sha256": "79a84177a5023a9182f007567fe01c8eae83813185425f6a3a9a1d77d7b6cacf",
+          "hunk_headers": [
+            "@@ -35,6 +35,8 @@"
+          ],
+          "added_lines": 2,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "ce1c25b4cc812318d44b21e545d9755da40b1689",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit pvmfw boot-memory parser, private state and setup for protected guests. Final ACK also validates/clears an explicitly supplied pvmfw region before returning when enable_pkvm is false; supplied SDK command line contains neither pvmfw nor the enabling option. Do not generalize the exclusion to bootloaders supplying protected firmware. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Parse pvmfw memory region info from the bootloader",
+      "patch_sha256": "b5a045821e8ae443b4bc6db8e1a2e4825230426f34dfca0b61c1ddf94d76bc46",
+      "sections": [
+        {
+          "path": "Documentation/admin-guide/kernel-parameters.txt",
+          "classification": "shared",
+          "patch_sha256": "071e27796dda26192f8c01782d4d3137cc8175b82d3c4ac5611858a67bb59814",
+          "hunk_headers": [
+            "@@ -5384,6 +5384,13 @@"
+          ],
+          "added_lines": 7,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/include/asm/kvm_host.h",
+          "classification": "shared",
+          "patch_sha256": "767dd1534dbcb5a75686205301b4f2f2e28d3caf6d0b7828727cb30dcfb52ae3",
+          "hunk_headers": [
+            "@@ -2160,6 +2160,9 @@ extern struct kvm_x86_ops kvm_x86_ops;"
+          ],
+          "added_lines": 3,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/include/asm/kvm_pkvm.h",
+          "classification": "private",
+          "patch_sha256": "b723f658ca64929731762487661958d0784befc3e2087079b964ab8f251de0af",
+          "hunk_headers": [
+            "@@ -347,6 +347,9 @@ extern struct fpu_state_config pkvm_sym(fpu_user_cfg);"
+          ],
+          "added_lines": 3,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm.c",
+          "classification": "private",
+          "patch_sha256": "4ec6f23c3bff47dd8a1db04a6fef1798d6ea2efda7f4a7f167475685d49a40bb",
+          "hunk_headers": [
+            "@@ -13,6 +13,10 @@ static unsigned int pkvm_memblock_nr;"
+          ],
+          "added_lines": 4,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/init.c",
+          "classification": "private",
+          "patch_sha256": "a3436d260f51a3201982dacea25d9b66a980cec660c45d34aeb69ad5bb532a87",
+          "hunk_headers": [
+            "@@ -18,6 +18,10 @@"
+          ],
+          "added_lines": 4,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/vmx/pkvm_init.c",
+          "classification": "private",
+          "patch_sha256": "399c491f0d091bbed234144b3d5d68b837c38cb53053fb16df0691c17c8b8638",
+          "hunk_headers": [
+            "@@ -4,6 +4,7 @@",
+            "@@ -23,6 +24,31 @@ static int __init early_pkvm_relax_cpu_bugs_parse_cmdline(char *buf)",
+            "@@ -1189,13 +1215,70 @@ static __init int pkvm_hyp_init(void)",
+            "@@ -1275,6 +1358,14 @@ int __init vmx_pkvm_init(void)"
+          ],
+          "added_lines": 92,
+          "removed_lines": 1
+        }
+      ]
+    },
+    {
+      "commit": "8b66af490e49a0b825ba75c67a7c225b30dc7d9c",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit protected firmware GPA/info capability and UAPI structure with its backend. ACK capability handler requires pkvm_is_protected_vm and validates unused args; native capability flags/type validation remain. No false promise of protected-firmware enforcement or information is retained. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Introduce uAPI to set/query pvmfw info",
+      "patch_sha256": "f0c48f9f891c72746313e165f80818b1ffd3623373a8ebde8370eff1e8fb6a30",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/kvm_host.h",
+          "classification": "shared",
+          "patch_sha256": "321cb76b0e668dd86f8c6de15ccf90cd88bcc75cc740e20f121f7468b3265d60",
+          "hunk_headers": [
+            "@@ -927,6 +927,8 @@ struct kvm_pkvm_vm {",
+            "@@ -2166,12 +2168,15 @@ extern phys_addr_t pvmfw_size;"
+          ],
+          "added_lines": 5,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/include/uapi/asm/kvm.h",
+          "classification": "shared",
+          "patch_sha256": "7290375ff522bf50c2110a1498baaceb79240f1e4405305bf5df59765e414ed5",
+          "hunk_headers": [
+            "@@ -972,6 +972,15 @@ struct kvm_hyperv_eventfd {"
+          ],
+          "added_lines": 9,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm.c",
+          "classification": "private",
+          "patch_sha256": "360df0bd637a7efe28b6dd9f13639d7b1254a4edc07c8289011a8db35d8805f6",
+          "hunk_headers": [
+            "@@ -134,3 +134,40 @@ void kvm_free_pkvm_memcache(struct pkvm_memcache *mc)"
+          ],
+          "added_lines": 37,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/x86.c",
+          "classification": "shared",
+          "patch_sha256": "64f7849f7831fee6d4c0b5bd495d3c5fa9757ee6e20a8894c75245d08164ce44",
+          "hunk_headers": [
+            "@@ -6997,6 +6997,16 @@ int kvm_vm_ioctl_enable_cap(struct kvm *kvm,",
+            "@@ -13586,6 +13596,10 @@ int kvm_arch_init_vm(struct kvm *kvm, unsigned long type)"
+          ],
+          "added_lines": 14,
+          "removed_lines": 0
+        },
+        {
+          "path": "include/uapi/linux/kvm.h",
+          "classification": "shared",
+          "patch_sha256": "a921a3d494cc4f244b93594db8605e118fa33f3cb5d97232de31b1acf1f284e5",
+          "hunk_headers": [
+            "@@ -972,6 +972,7 @@ struct kvm_enable_cap {"
+          ],
+          "added_lines": 1,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "3553802b4157cb64e9c84905d1a8588a2b1d6d50",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit secure secondary protected-vCPU startup and its share/sanitization hypercall protocol. Shared function exposure exists to build the private image; native SIPI/INIT and ordinary CPU startup remain. The port does not claim protected secondary-vCPU entry enforcement. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Implement secure startup of secondary vCPUs",
+      "patch_sha256": "7d2613af8e0f9133f0345c142216a42e28b1ef2234a9862f15af681a82032488",
+      "sections": [
+        {
+          "path": "arch/x86/kvm/pkvm/pkvm.c",
+          "classification": "private",
+          "patch_sha256": "013ea6212b4ed8caf06424d1d4c4bc8a77a8b6a1cd88681d0011ff1d4a2201f8",
+          "hunk_headers": [
+            "@@ -845,6 +845,13 @@ static bool is_guest_vcpu_accessible(struct kvm_vcpu *vcpu, enum pkvm_hc hc)",
+            "@@ -1328,6 +1335,12 @@ static void pkvm_vcpu_pvmfw_entry_init(struct kvm_vcpu *vcpu)",
+            "@@ -1395,13 +1408,6 @@ static void update_vcpu_state_from_host(struct kvm_vcpu *vcpu)",
+            "@@ -1463,8 +1469,9 @@ static int pkvm_vcpu_run(struct kvm_vcpu *vcpu, bool force_immediate_exit,",
+            "@@ -1473,6 +1480,8 @@ static int pkvm_vcpu_run(struct kvm_vcpu *vcpu, bool force_immediate_exit,",
+            "@@ -2007,6 +2016,58 @@ unsigned long pkvm_pcpu_tss(int cpu)"
+          ],
+          "added_lines": 70,
+          "removed_lines": 9
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/pkvm.h",
+          "classification": "private",
+          "patch_sha256": "7faa2504dce9e207862f71dad553a8068ccee19d2f58ced9bc8741e4b10c850b",
+          "hunk_headers": [
+            "@@ -153,6 +153,7 @@ void pkvm_put_vm(struct pkvm_vm *pkvm_vm);"
+          ],
+          "added_lines": 1,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/x86.c",
+          "classification": "shared",
+          "patch_sha256": "99ecaff4274911b014ad6d9e5e57560ce92f337bfcb59adc1b7fbaa2423743fc",
+          "hunk_headers": [
+            "@@ -8065,6 +8065,7 @@ static int vcpu_mmio_read(struct kvm_vcpu *vcpu, gpa_t addr, int len, void *v)",
+            "@@ -8078,6 +8079,7 @@ void kvm_get_segment(struct kvm_vcpu *vcpu,",
+            "@@ -10636,6 +10638,31 @@ static int complete_hypercall_exit(struct kvm_vcpu *vcpu)",
+            "@@ -10694,6 +10721,11 @@ static int kvm_pkvm_hypercall(struct kvm_vcpu *vcpu)",
+            "@@ -13400,7 +13432,6 @@ void kvm_vcpu_reset(struct kvm_vcpu *vcpu, bool init_event)",
+            "@@ -13413,6 +13444,7 @@ void kvm_vcpu_deliver_sipi_vector(struct kvm_vcpu *vcpu, u8 vector)",
+            "@@ -15038,6 +15070,16 @@ int pkvm_emulate_hypercall(struct kvm_vcpu *vcpu)"
+          ],
+          "added_lines": 43,
+          "removed_lines": 1
+        },
+        {
+          "path": "include/uapi/linux/kvm_para.h",
+          "classification": "shared",
+          "patch_sha256": "90a7026a8db82924b29700e5d26cc33b733ac5f16dbb17c72047d92afc043ce4",
+          "hunk_headers": [
+            "@@ -39,6 +39,7 @@"
+          ],
+          "added_lines": 1,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "ee0b3b281affad1537417d88c2ea0b92bf020f0e",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit extra extable include/prototype adjustment in the private image header, which is absent. Native extable definitions and kernel build remain; the private minimal-config compile failure cannot occur without that image. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Include exception_table_entry definition in pkvm_image.h",
+      "patch_sha256": "daa93702c654e2d91aba59fea2f3a3bd02a0058aeea30fb8b1eba8feef4a7e5e",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/pkvm_image.h",
+          "classification": "private",
+          "patch_sha256": "daa93702c654e2d91aba59fea2f3a3bd02a0058aeea30fb8b1eba8feef4a7e5e",
+          "hunk_headers": [
+            "@@ -43,12 +43,13 @@"
+          ],
+          "added_lines": 2,
+          "removed_lines": 1
+        }
+      ]
+    },
+    {
+      "commit": "778125d36f84c454a4fa7cb2b8a0f78eeeca1a7f",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit architectural LBR control additions for deprivileged-host VMCS setup. This prevents an untrusted host profiling the protected hypervisor; that boundary is absent here. Native KVM PMU and ordinary branch controls remain unchanged, not replaced with weaker private settings. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: VMX: Enforce architectural LBR isolation",
+      "patch_sha256": "64f1c7636691aa9cfe9a85e235ca41b934856f1bb661c34db23e7a209b66a364",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/vmx.h",
+          "classification": "shared",
+          "patch_sha256": "85069da4d13992f8025941dc65cc0d127d2953f450154299f92e6b399969c382",
+          "hunk_headers": [
+            "@@ -106,6 +106,7 @@",
+            "@@ -121,6 +122,7 @@",
+            "@@ -286,6 +288,8 @@ enum vmcs_field {"
+          ],
+          "added_lines": 4,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/vmx/pkvm_init.c",
+          "classification": "private",
+          "patch_sha256": "98a820f9f64939e7030ab95a0714df85f4e9ee63264608263fc94b6030245036",
+          "hunk_headers": [
+            "@@ -188,6 +188,15 @@ static __init int pkvm_setup_host_vmcs_config(void)",
+            "@@ -791,6 +800,11 @@ static __init void init_guest_state_area_from_native(struct vcpu_vmx *vmx)"
+          ],
+          "added_lines": 14,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "9e3cd98939c8c887a611790dfec1a0dda00dcac5",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit private hypervisor panic/reset infrastructure, private INIT-signal handler and objtool noreturn entry. Native panic/reset and native objtool noreturn list remain; no new firmware reset sequence is installed. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Add hypervisor panic and reset infrastructure",
+      "patch_sha256": "e494b2880ab44ab1df17b8bced0d0938a48026262af211b51292fdcee8c3e70f",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/kvm_pkvm.h",
+          "classification": "private",
+          "patch_sha256": "a31b6e5efbd20b8b7b5d92a1411c50c2b0eaafe8a6b09f6aa4a838a1136e4831",
+          "hunk_headers": [
+            "@@ -842,7 +842,6 @@ static inline size_t pkvm_guest_initial_fpstate_size(struct kvm *kvm)",
+            "@@ -858,10 +857,29 @@ static inline size_t pkvm_guest_initial_fpstate_size(struct kvm *kvm)"
+          ],
+          "added_lines": 21,
+          "removed_lines": 3
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/Makefile",
+          "classification": "private",
+          "patch_sha256": "040200cad6c80e0c15154904abeb3db04fff5bb249e0eafc65e5017b56eb4943",
+          "hunk_headers": [
+            "@@ -14,7 +14,8 @@ cmd_deps\t\t\t:= $(src)/compiling_cmds.sh"
+          ],
+          "added_lines": 2,
+          "removed_lines": 1
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/panic.c",
+          "classification": "private",
+          "patch_sha256": "cce0ae800e87d11557e4f49c227b7e56f6a0204b9dd39e1a2769576deff84d24",
+          "hunk_headers": [
+            "@@ -0,0 +1,91 @@"
+          ],
+          "added_lines": 91,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/panic.h",
+          "classification": "private",
+          "patch_sha256": "20d96804197dff815052256c00568211158ef4b911ee3d32e0ccd73801adc7c9",
+          "hunk_headers": [
+            "@@ -0,0 +1,9 @@"
+          ],
+          "added_lines": 9,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/pkvm.c",
+          "classification": "private",
+          "patch_sha256": "fa36e9cf3bd325322fa5c86f10cf793419f34026769cc64dbd20efa71a46e057",
+          "hunk_headers": [
+            "@@ -9,6 +9,7 @@",
+            "@@ -2135,6 +2136,14 @@ void pkvm_wait_vcpu_kicked_out(struct kvm_vcpu *vcpu)"
+          ],
+          "added_lines": 9,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/pkvm.h",
+          "classification": "private",
+          "patch_sha256": "c42c3d9d19a6e50d47bd50159599f21798a55bd4430615c267995a73fb001425",
+          "hunk_headers": [
+            "@@ -198,6 +198,7 @@ struct pkvm_x86_ops {"
+          ],
+          "added_lines": 1,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/vmx/host_vmx.c",
+          "classification": "private",
+          "patch_sha256": "128466c4f4c87930040e5bf23897d2d89ee571c11c79e397b72aaac1a9326971",
+          "hunk_headers": [
+            "@@ -327,11 +327,7 @@ void pkvm_host_vmexit_main(struct vcpu_vmx *vmx)"
+          ],
+          "added_lines": 1,
+          "removed_lines": 5
+        },
+        {
+          "path": "arch/x86/kvm/vmx/vmx.c",
+          "classification": "shared",
+          "patch_sha256": "8ebbc90de5577f4a6b998da720dc75d9d741d3aefc57a4582051c9a663012844",
+          "hunk_headers": [
+            "@@ -6762,10 +6762,11 @@ static int handle_wrmsr_imm(struct kvm_vcpu *vcpu)"
+          ],
+          "added_lines": 4,
+          "removed_lines": 3
+        },
+        {
+          "path": "tools/objtool/noreturns.h",
+          "classification": "shared",
+          "patch_sha256": "21da1fe6b04a029f6dd7b3bad4b41726f893dfc4306f799944058ad334e79432",
+          "hunk_headers": [
+            "@@ -40,6 +40,7 @@ NORETURN(nmi_panic_self_stop)"
+          ],
+          "added_lines": 1,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "f838c2a00a2063a4746b1bc2fe8f7501675b9dd3",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit relocation of private BUG/WARN/KVM redefinitions to pkvm_redef.h. Both private headers are absent; native assertions and logging remain, and no private host-call suppression leaks into ordinary code. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Move redefinitions of BUG, WARN etc to a separate header",
+      "patch_sha256": "0425975609d1e464b21a2af7aaf1bc5b71fd02cd809838c8fc7dfb93643e547d",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/kvm_pkvm.h",
+          "classification": "private",
+          "patch_sha256": "a4e9725901561926ad0f036380b5cddc08e8af40a99ab985fc6147199edd809b",
+          "hunk_headers": [
+            "@@ -10,6 +10,7 @@",
+            "@@ -825,91 +826,6 @@ static inline size_t pkvm_guest_initial_fpstate_size(struct kvm *kvm)"
+          ],
+          "added_lines": 1,
+          "removed_lines": 85
+        },
+        {
+          "path": "arch/x86/include/asm/pkvm_redef.h",
+          "classification": "private",
+          "patch_sha256": "365243acffcfb82ee341be11d76a7138787516f8f489d025cfb77da58f888a21",
+          "hunk_headers": [
+            "@@ -0,0 +1,90 @@"
+          ],
+          "added_lines": 90,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "bf4926729c964a58b2df8027bd3628ad11ff8667",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit FRED #PF event-data fix for injecting into the deprivileged host on protected EPT violations. The changed host_vmx.c and its event-data constant serve that private path only; native VMX source/header remain. This does not claim native KVM implements FRED guest virtualization. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: VMX: Fix empty FRED event data on #PF injection to host",
+      "patch_sha256": "0f363d7fab2ed74112d72163d03da722ff0929d06a5b5e53982a5504cfafa11b",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/vmx.h",
+          "classification": "shared",
+          "patch_sha256": "5f00e3007dbb58d514421b5fbf77c3f2b8d2ab4f0dd2b892c79ff94ce2837147",
+          "hunk_headers": [
+            "@@ -264,6 +264,7 @@ enum vmcs_field {"
+          ],
+          "added_lines": 1,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/vmx/host_vmx.c",
+          "classification": "private",
+          "patch_sha256": "5cd855551bb97d31257ee8e6261dc86598f2b5fbe2638f6644a3e85b46c7a06f",
+          "hunk_headers": [
+            "@@ -348,6 +348,18 @@ static void handle_pending_events(struct kvm_vcpu *vcpu, bool *req_immediate_exi"
+          ],
+          "added_lines": 12,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "f348279185590c1daacc364a676e71e01f697558",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the private spinlock constraint correction together with the entire private lock. Read-write +m operands are the correct fix for the lock fields actually modified; the port retains neither the buggy original lock nor a copy using its constraints. Native locks are unchanged. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Fix inline asm constraints for spinlock operations",
+      "patch_sha256": "3d44322f70f5f26b6f14ab2e75a10a6583cf7419d71029ebc1d8cd15e029f6b5",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/pkvm_spinlock.h",
+          "classification": "private",
+          "patch_sha256": "3d44322f70f5f26b6f14ab2e75a10a6583cf7419d71029ebc1d8cd15e029f6b5",
+          "hunk_headers": [
+            "@@ -32,10 +32,8 @@ static inline void pkvm_spin_lock(pkvm_spinlock_t *lock)",
+            "@@ -43,8 +41,8 @@ static inline void pkvm_spin_unlock(pkvm_spinlock_t *lock)"
+          ],
+          "added_lines": 3,
+          "removed_lines": 5
+        }
+      ]
+    },
+    {
+      "commit": "c46674d1e0e9d28b020406700eaa065b9867727d",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit CONFIG_BUG guard around private debug alias __warn_printk. The private alias header is absent and native CONFIG_BUG linkage remains unaffected. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Fix link issue when CONFIG_BUG=n",
+      "patch_sha256": "407a2236763fd133b3e38cf9f38388ef33a9f1499728c6850071c0332ccd1a15",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/pkvm_image_vars.h",
+          "classification": "private",
+          "patch_sha256": "407a2236763fd133b3e38cf9f38388ef33a9f1499728c6850071c0332ccd1a15",
+          "hunk_headers": [
+            "@@ -12,7 +12,9 @@"
+          ],
+          "added_lines": 2,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "cecfe0bbd42086cbe3853c6944a25a92b8a5d299",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit private debug percpu offset double-conversion fix, header naming and comment corrections with the private image. Native percpu offsets/VMALLOC handling are unchanged; do not retain the invalid conversion in any active code. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Fix header guard naming and percpu offset for debug build",
+      "patch_sha256": "254cd3a7fece0ab9be562fb8e90cc7a1ab011987c645e7f380119c6a440828bd",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/pkvm_image_vars.h",
+          "classification": "private",
+          "patch_sha256": "85887a44f87ab5056cfc1fa2d0a3b0beb8a921b94ee822d90158580ec6a85ed5",
+          "hunk_headers": [
+            "@@ -1,6 +1,6 @@",
+            "@@ -24,4 +24,4 @@ PKVM_ALIAS(vmalloc_base);"
+          ],
+          "added_lines": 3,
+          "removed_lines": 3
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/cpu.c",
+          "classification": "private",
+          "patch_sha256": "1207d8f0002286cc6cf9abc7927f9138a44262d1107a618f48d7ba4cf8d3ebb5",
+          "hunk_headers": [
+            "@@ -66,7 +66,12 @@ int pkvm_setup_per_cpu(int cpu, unsigned long base,"
+          ],
+          "added_lines": 6,
+          "removed_lines": 1
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/mmu.c",
+          "classification": "private",
+          "patch_sha256": "18593ade3a91b4bf5f4857264b113012a44d811fa36cf1d96290d05894bc9103",
+          "hunk_headers": [
+            "@@ -179,7 +179,7 @@ static int fix_hyp_mmu_page_refcnt(void)"
+          ],
+          "added_lines": 1,
+          "removed_lines": 1
+        },
+        {
+          "path": "arch/x86/kvm/vmx/pkvm_init.c",
+          "classification": "private",
+          "patch_sha256": "b967d4a51a8f38b4a00b611ccba32aaf10bcb606cbd417c85b91c4c1e74f8c9a",
+          "hunk_headers": [
+            "@@ -464,7 +464,7 @@ static __init int pkvm_setup_per_cpu(int cpu)"
+          ],
+          "added_lines": 1,
+          "removed_lines": 1
+        }
+      ]
+    },
+    {
+      "commit": "d9b4ab7e6969f9ef85293c26ed5cd4f57d62e554",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit private panic function rename and declaration removal. Calls remain confined to the absent image/redefinition header; native panic signature and implementation are unchanged. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Rename pkvm_panic to panic",
+      "patch_sha256": "08df06bbf0c3cba27bda208405afe64f9b24646f1ca7e318e59502afbb530c97",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/pkvm_redef.h",
+          "classification": "private",
+          "patch_sha256": "6861ad6c7ec975590f06e640d157ec1a2e58aa462abbf5837ee60330e978a405",
+          "hunk_headers": [
+            "@@ -52,8 +52,6 @@",
+            "@@ -63,11 +61,11 @@ void __noreturn pkvm_panic(const char *fmt, ...);"
+          ],
+          "added_lines": 5,
+          "removed_lines": 7
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/idt.c",
+          "classification": "private",
+          "patch_sha256": "b249e677404b77564c0a0cf78cdce7b4037eafba56723ef7e7e79442637a2d52",
+          "hunk_headers": [
+            "@@ -138,15 +138,15 @@ static void default_exception_handler(struct pt_regs *regs,"
+          ],
+          "added_lines": 8,
+          "removed_lines": 8
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/panic.c",
+          "classification": "private",
+          "patch_sha256": "8d9623e6d585aece4a3637950034294ff70b90473a31cddf01c9a0ee363a3aad",
+          "hunk_headers": [
+            "@@ -135,7 +135,7 @@ static void __noreturn pkvm_emergency_reset(void)"
+          ],
+          "added_lines": 1,
+          "removed_lines": 1
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/panic.h",
+          "classification": "private",
+          "patch_sha256": "1ed8a7489548d2b057ef7ce624cf3775ffe485993af4bebec9a74eb776ed4dc3",
+          "hunk_headers": [
+            "@@ -4,6 +4,4 @@"
+          ],
+          "added_lines": 0,
+          "removed_lines": 2
+        }
+      ]
+    },
+    {
+      "commit": "92378ced66f1faad5aa0211129792fcbca45a282",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit formatting of private hypervisor panic timestamps/banner for ramoops and bootstat. Native panic/ramoops output remains; no protected-hypervisor panic can be generated by the absent backend. Embedded Google source URL was read only as local commit text, not accessed. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Format panic message for ramoops and bootstat detection",
+      "patch_sha256": "d59dd2cb65f1280b07065b6f0f3b627a3a71b5fdfdd5daa8f7bffccfebc6b679",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/pkvm_redef.h",
+          "classification": "private",
+          "patch_sha256": "54b7f5b05b8df1d161da7543ef762021758731ffb26e2c3bc4f81839b08bb0cf",
+          "hunk_headers": [
+            "@@ -61,10 +61,7 @@"
+          ],
+          "added_lines": 1,
+          "removed_lines": 4
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/idt.c",
+          "classification": "private",
+          "patch_sha256": "b8964a45358e720bb145ba863ead9050a523e9202cc62d1f0fb4ad042fdf6cec",
+          "hunk_headers": [
+            "@@ -119,14 +119,10 @@ static void default_exception_handler(struct pt_regs *regs,"
+          ],
+          "added_lines": 2,
+          "removed_lines": 6
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/panic.c",
+          "classification": "private",
+          "patch_sha256": "2727dd2cfd71ced5a4b8d038e9ca45ee053a22a564cacb4ea20547ff7aa4b37a",
+          "hunk_headers": [
+            "@@ -133,12 +133,40 @@ static void __noreturn pkvm_emergency_reset(void)",
+            "@@ -167,8 +195,14 @@ void __noreturn panic(const char *fmt, ...)"
+          ],
+          "added_lines": 35,
+          "removed_lines": 1
+        }
+      ]
+    },
+    {
+      "commit": "9a6e4e2094e8a6f38561b3281df630d06aa82c6c",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit low-32-bit private GSMI bounce-buffer reservations and declarations. ACK pkvm_reserve returns before any allocation when enable_pkvm is false; native memblock behavior remains and no sub-4GiB range is consumed by the omitted feature. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Reserve 32-bit memory for GSMI bounce buffers",
+      "patch_sha256": "2d1cba2e73173187df45d1776c22f9f001978570f6954d9e9c4977280693cc77",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/kvm_host.h",
+          "classification": "shared",
+          "patch_sha256": "0bcfa12a088b82ab05b40362457ec227b239ee56a5c4871d1e2254ac9eb00cd0",
+          "hunk_headers": [
+            "@@ -2043,6 +2043,8 @@ extern struct kvm_x86_ops kvm_x86_ops;"
+          ],
+          "added_lines": 2,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/include/asm/kvm_pkvm.h",
+          "classification": "private",
+          "patch_sha256": "c83ddd3baacfa0f1744d95c50b655e8f25e6a2478e4b423ea131c265ac628381",
+          "hunk_headers": [
+            "@@ -9,6 +9,7 @@"
+          ],
+          "added_lines": 1,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/include/asm/pkvm_gsmi.h",
+          "classification": "private",
+          "patch_sha256": "7812f728813d7f18e46ffda66ff759f65b6fc898f0344679b108055da41ec5c7",
+          "hunk_headers": [
+            "@@ -0,0 +1,43 @@"
+          ],
+          "added_lines": 43,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm.c",
+          "classification": "private",
+          "patch_sha256": "91dd4c60177e100e33a3ce44e51572ef668d47d64b46b3c6db2dbd7ebd2bf121",
+          "hunk_headers": [
+            "@@ -18,6 +18,8 @@ static unsigned int pkvm_memblock_nr;",
+            "@@ -90,6 +92,22 @@ void __init pkvm_reserve(void)"
+          ],
+          "added_lines": 18,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/vmx/pkvm_init.c",
+          "classification": "private",
+          "patch_sha256": "7e22db295e4e3ea44bda852fe1f7e8dd20180a483312f2ecdb1d720349c53395",
+          "hunk_headers": [
+            "@@ -1305,6 +1305,13 @@ static void do_pkvm_hyp_init(void *data)",
+            "@@ -1531,6 +1538,8 @@ int __init vmx_pkvm_init(void)"
+          ],
+          "added_lines": 9,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "1caa6e93fb4aee837324985051eaff6cfa085c15",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit private GSMI firmware handshake/probing and helper declaration. It is invoked after the protected-host enable gate and serves the isolated SMM mediation path; ordinary native firmware code remains. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Probe GSMI support in firmware",
+      "patch_sha256": "5a657fd5b0c5c18a12a1d646a803d87ced727379db867736ff5500f976edea76",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/kvm_host.h",
+          "classification": "shared",
+          "patch_sha256": "2de839bdac3d0f0b954e2f0af0758999fc2b4e491ec00e6393e35861c99cc015",
+          "hunk_headers": [
+            "@@ -2053,6 +2053,7 @@ void pkvm_init_debugfs(void);"
+          ],
+          "added_lines": 1,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/include/asm/pkvm_gsmi.h",
+          "classification": "private",
+          "patch_sha256": "887aff1027f58f6ca33cb509e688efcc10ed5fa4c1583a0470270e4b3f3e8ed4",
+          "hunk_headers": [
+            "@@ -9,6 +9,10 @@"
+          ],
+          "added_lines": 4,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm.c",
+          "classification": "private",
+          "patch_sha256": "f9f84f2b869a5b7c3f60553c0e6c46be406c8affe7887718af45193b04110919",
+          "hunk_headers": [
+            "@@ -1,5 +1,6 @@",
+            "@@ -329,3 +330,70 @@ void __init pkvm_ramoops_init(void)"
+          ],
+          "added_lines": 68,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/vmx/pkvm_init.c",
+          "classification": "private",
+          "patch_sha256": "3e35747cee641b80dbd5636b5c81b0565c4cadbbb7641ab4ed77a10961cb220d",
+          "hunk_headers": [
+            "@@ -1452,6 +1452,10 @@ int __init vmx_pkvm_init(void)"
+          ],
+          "added_lines": 4,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "41b08ff5640c98de19af601684b1efe40282dfd8",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit private coreboot GSMI/SMM mediation and bounce buffers with the protected-host backend. It prevents a deprivileged host using higher-privilege SMM to read protected guest memory; the port does not create that private memory boundary. Native firmware code is unchanged. Commit-message source URLs and destructive hardware test recipes were not accessed/executed. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Mediate host's GSMI commands to coreboot's SMM",
+      "patch_sha256": "7ac745aec64c66b932c6cc9f06555413895e20153b53f80f5305fa30124d420b",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/kvm_pkvm.h",
+          "classification": "private",
+          "patch_sha256": "769b2d6cf414b760046e6d619c6376df215ea5d747b4e244b7b614fbbc35ea55",
+          "hunk_headers": [
+            "@@ -669,6 +669,11 @@ extern phys_addr_t pkvm_sym(pvmfw_size);"
+          ],
+          "added_lines": 5,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/include/asm/pkvm_gsmi.h",
+          "classification": "private",
+          "patch_sha256": "46fc4fc829f66e5ed7e8c69cb4dd819f74acabcd0314ccbdd45e98c86a7b81a3",
+          "hunk_headers": [
+            "@@ -10,8 +10,14 @@"
+          ],
+          "added_lines": 6,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm.c",
+          "classification": "private",
+          "patch_sha256": "792558247f67a13a028b92067758861496cbbbf0703de053174f1051e2f5b914",
+          "hunk_headers": [
+            "@@ -395,5 +395,10 @@ int __init pkvm_gsmi_init(void)"
+          ],
+          "added_lines": 5,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/Makefile",
+          "classification": "private",
+          "patch_sha256": "fc6410ddfb61e501ac7e2bb55fe28aca6206ca5182b049c9b31c28c116e9329a",
+          "hunk_headers": [
+            "@@ -15,7 +15,7 @@ cmd_deps\t\t\t:= $(src)/compiling_cmds.sh"
+          ],
+          "added_lines": 1,
+          "removed_lines": 1
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/gsmi.c",
+          "classification": "private",
+          "patch_sha256": "ba23939fd73826927cc6a04a5ec70536314c68d2b31660d7c08ada15bd43ab33",
+          "hunk_headers": [
+            "@@ -0,0 +1,129 @@"
+          ],
+          "added_lines": 129,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/gsmi.h",
+          "classification": "private",
+          "patch_sha256": "7b80b67215d9b3af49796e48987d28d212055134148367a549a26064b9019dd3",
+          "hunk_headers": [
+            "@@ -0,0 +1,10 @@"
+          ],
+          "added_lines": 10,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/init.c",
+          "classification": "private",
+          "patch_sha256": "468b61829933e68c49e9b4d046b87a107305d73b1a571831d90ed5d4a052d5f4",
+          "hunk_headers": [
+            "@@ -6,6 +6,7 @@",
+            "@@ -248,6 +249,10 @@ static int initialize_global(struct pkvm_mem_info infos[], int nr_infos)"
+          ],
+          "added_lines": 5,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/pkvm/vmx/host_vmx.c",
+          "classification": "private",
+          "patch_sha256": "f47c391d499115055496e9a64bd6a0fcc986d676f4df3c99029bc159c0f0fb1e",
+          "hunk_headers": [
+            "@@ -6,6 +6,7 @@",
+            "@@ -110,6 +111,48 @@ static void handle_cr(struct kvm_vcpu *vcpu)",
+            "@@ -436,6 +479,10 @@ void pkvm_host_vmexit_main(struct vcpu_vmx *vmx)"
+          ],
+          "added_lines": 47,
+          "removed_lines": 0
+        },
+        {
+          "path": "arch/x86/kvm/vmx/pkvm_init.c",
+          "classification": "private",
+          "patch_sha256": "4d0ffb51757b4a7d82c9771472b71184355e4947a41a43b2c711b877d12fdcf9",
+          "hunk_headers": [
+            "@@ -279,6 +279,9 @@ static __init int pkvm_setup_host_vm(struct pkvm_hyp *pkvm)",
+            "@@ -1464,6 +1467,10 @@ int __init vmx_pkvm_init(void)"
+          ],
+          "added_lines": 7,
+          "removed_lines": 0
+        }
+      ]
+    },
+    {
+      "commit": "6193c712a0999dc42269acd399da99078893182b",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit configuration guards for private debug symbol aliases. The private alias header is absent; native PRINTK/TRACING/DYNAMIC_DEBUG linkage and diagnostics remain. Embedded upstream URL is local provenance only. Supplied Goldfish boot contract leaves the opt-in protected-host backend disabled; generic Android virtualization is not presumed absent. See the positive runtime/build gate and exact native-file proofs in pkvm-host-tail-review.json.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/pkvm-host-tail-review.json",
+        "SECURITY.md: Remaining x86 protected-host review"
+      ],
+      "subject": "ANDROID: pKVM: x86: Fix debug builds with disabled configs",
+      "patch_sha256": "7fca73cbb4d3ae01ecb614e652f3889683cf4f07d561ee057b17b79ed7556495",
+      "sections": [
+        {
+          "path": "arch/x86/include/asm/pkvm_image_vars.h",
+          "classification": "private",
+          "patch_sha256": "7fca73cbb4d3ae01ecb614e652f3889683cf4f07d561ee057b17b79ed7556495",
+          "hunk_headers": [
+            "@@ -11,17 +11,27 @@"
+          ],
+          "added_lines": 13,
+          "removed_lines": 3
+        }
+      ]
+    }
+  ],
+  "path_proofs": [
+    {
+      "path": "arch/x86/include/asm/GEN-for-each-exc.h",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 81864883d1cab1909acfed1c4bd535094691d048\tarch/x86/include/asm/GEN-for-each-exc.h"
+    },
+    {
+      "path": "arch/x86/include/asm/kvm_pkvm.h",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob f7fdc55cfaf1735c5b5bc76731e6a541b2048a72\tarch/x86/include/asm/kvm_pkvm.h"
+    },
+    {
+      "path": "arch/x86/include/asm/pkvm_gsmi.h",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob d2dec423fff74b85761b309ffcbf2113f7fa5d8c\tarch/x86/include/asm/pkvm_gsmi.h"
+    },
+    {
+      "path": "arch/x86/include/asm/pkvm_hypercalls.h",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob adbc0b6d4039381444ced030d2b080e080b48979\tarch/x86/include/asm/pkvm_hypercalls.h"
+    },
+    {
+      "path": "arch/x86/include/asm/pkvm_image.h",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 4b369aeec44e454497f148f49ac407399f7b333a\tarch/x86/include/asm/pkvm_image.h"
+    },
+    {
+      "path": "arch/x86/include/asm/pkvm_image_vars.h",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 0f897bf99269877047f7a8228abfa8df6edf4fa3\tarch/x86/include/asm/pkvm_image_vars.h"
+    },
+    {
+      "path": "arch/x86/include/asm/pkvm_redef.h",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 72434efa73bac729f8441fed337b24b963fdb566\tarch/x86/include/asm/pkvm_redef.h"
+    },
+    {
+      "path": "arch/x86/include/asm/pkvm_spinlock.h",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 2c403a535e712f4ed10afd4fc996f639c39e51cb\tarch/x86/include/asm/pkvm_spinlock.h"
+    },
+    {
+      "path": "arch/x86/include/asm/pkvm_trace.h",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob db9d059ff6f71ac21fb0cf10715ac7e840ffbb4d\tarch/x86/include/asm/pkvm_trace.h"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm.c",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob ea28ce3a466a8352db686cb3816ed8c3aedde056\tarch/x86/kvm/pkvm.c"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/Makefile",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 245cbe3be13477a8be3c2b01fc5ac85e7032bac3\tarch/x86/kvm/pkvm/Makefile"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/compiling_cmds.sh",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob fc702d448b32645d7cfd4e0499c716964189285e\tarch/x86/kvm/pkvm/compiling_cmds.sh"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/cpu.c",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 06394e059623bdf11a3eb8cadf0d4004904c0e73\tarch/x86/kvm/pkvm/cpu.c"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/early_alloc.c",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 9c746b62a49906ab54abd23d7bbf453b4fe08c8b\tarch/x86/kvm/pkvm/early_alloc.c"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/entry.S",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 20ddaf97d6a770f988b11a2cd99d63d2f87a94bb\tarch/x86/kvm/pkvm/entry.S"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/fpu.c",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 7da72d75a4c080fafc86f6f6339d419ad90b2293\tarch/x86/kvm/pkvm/fpu.c"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/fpu.h",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 0bbf9da06be450c404d820c70ce62b26ed143c20\tarch/x86/kvm/pkvm/fpu.h"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/gsmi.c",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 386181c391c064d63e05f37788c090465d990846\tarch/x86/kvm/pkvm/gsmi.c"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/gsmi.h",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob aaee8e78e10061f57b39925fc74d5279b394b9c3\tarch/x86/kvm/pkvm/gsmi.h"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/idt.c",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 36e7696885d93e7ca187738c00b46f71b6e74963\tarch/x86/kvm/pkvm/idt.c"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/idt.h",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 1752ce78238f5ceb58403aaeb48806c907b3c7e7\tarch/x86/kvm/pkvm/idt.h"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/init.c",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 8942676d75b4f208b2e713809b806c4cefc85060\tarch/x86/kvm/pkvm/init.c"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/init.h",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob bf934eaf41aa5729b841e1e04e75eeba172ba864\tarch/x86/kvm/pkvm/init.h"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/kern_stub.c",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 1e63df9c48377682bd90d35e2abcae7e68903662\tarch/x86/kvm/pkvm/kern_stub.c"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/kern_stub.h",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 02f4fc88f1ebdfe9ac62f336a2287bf2a8784862\tarch/x86/kvm/pkvm/kern_stub.h"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/memory.c",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 523ca6230be8f370d2f1fb2b0457fb8cc8ce5b24\tarch/x86/kvm/pkvm/memory.c"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/mmu.c",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob bf772914322099ea422b6595b307976dfdb3f763\tarch/x86/kvm/pkvm/mmu.c"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/mmu.h",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 83e188706fb30715931ec1dccea56e899e67702f\tarch/x86/kvm/pkvm/mmu.h"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/panic.c",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob c4df5b538fe544eb70c0ddafd787566c795aaf0f\tarch/x86/kvm/pkvm/panic.c"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/panic.h",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob a88bdae4470a205c673e4dd072913c07f3a40719\tarch/x86/kvm/pkvm/panic.h"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/pkvm.c",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 2f5493a36eac7dcf35af9108b892203a25a22bd4\tarch/x86/kvm/pkvm/pkvm.c"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/pkvm.h",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob e87f5ec1cc29387fa799ad5b576b0ad7a1e6d6d4\tarch/x86/kvm/pkvm/pkvm.h"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/pkvm.lds.S",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 432ea63a8d73df8904ac6c8a617cb0a2a13367e0\tarch/x86/kvm/pkvm/pkvm.lds.S"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/trace.c",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 6d4a4e952278e06e3f778229178beb753ac38677\tarch/x86/kvm/pkvm/trace.c"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/trace.h",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob dd00297e30c496b4e75311905d029a918ff2c1be\tarch/x86/kvm/pkvm/trace.h"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/undef.h",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 7b07d092271ee453217861ddb8e0746ec42b515c\tarch/x86/kvm/pkvm/undef.h"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/vmx/host_vmentry.S",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 1a5cf15c51bab8a782b840f4ac67c258974ad02c\tarch/x86/kvm/pkvm/vmx/host_vmentry.S"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/vmx/host_vmx.c",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 5f5edce030f3adf3b2ae03e29f3c50d9f7c6ec56\tarch/x86/kvm/pkvm/vmx/host_vmx.c"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/vmx/host_vmx.h",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob ae783917313a7a84f96cf53c57a5396d7e7fd524\tarch/x86/kvm/pkvm/vmx/host_vmx.h"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/vmx/idt.c",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob c4b636acbc46640fdfef485fe59afe4a9b56b4f9\tarch/x86/kvm/pkvm/vmx/idt.c"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm/vmx/vcpu_regs.h",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 70df2e64f408a54c3065da138d995f5630ec7a84\tarch/x86/kvm/pkvm/vmx/vcpu_regs.h"
+    },
+    {
+      "path": "arch/x86/kvm/pkvm_debugfs.c",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 13b6dc2963a3cad000233aef858bd2ad8bcc2926\tarch/x86/kvm/pkvm_debugfs.c"
+    },
+    {
+      "path": "arch/x86/kvm/vmx/pkvm_host.c",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 65c42732476dd96582d9b464bacf670f4b7ea949\tarch/x86/kvm/vmx/pkvm_host.c"
+    },
+    {
+      "path": "arch/x86/kvm/vmx/pkvm_init.c",
+      "classification": "private image/service/header absent from native LTS and port",
+      "ack_blob": "100644 blob 5bee41e18f4bbb2438dccc0525f26d5fed5d3038\tarch/x86/kvm/vmx/pkvm_init.c"
+    },
+    {
+      "path": "Documentation/admin-guide/kernel-parameters.txt",
+      "comparison": "Only nine separately reviewed DPM watchdog documentation lines added; no protected parameters retained.",
+      "lts_blob": "362ff3225220946ea5c91f4873ffc7f5e98e861b",
+      "port_blob": "406bbf217e5704cbb481adb182a2be2c1c8475c6",
+      "lts_delta_sha256": "3e1d9e6639a6e03525bc48a341d438037f5cf2e2265121210ff0568db0152941"
+    },
+    {
+      "path": "arch/x86/include/asm/fpu/xstate.h",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "7a7dc9d56027506667da4992c043fb5a833494da",
+      "port_blob": "7a7dc9d56027506667da4992c043fb5a833494da",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "arch/x86/include/asm/kvm-x86-ops.h",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "617c5a44a96d0d3c4ff6dac70a510ffb2d5b025d",
+      "port_blob": "617c5a44a96d0d3c4ff6dac70a510ffb2d5b025d",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "arch/x86/include/asm/kvm_host.h",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "3349623985660c07e164ccc244b3fd257f26a183",
+      "port_blob": "3349623985660c07e164ccc244b3fd257f26a183",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "arch/x86/include/asm/msr.h",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "9c2ea29e12a96ee9995fa07b4c876f9aabef5b34",
+      "port_blob": "9c2ea29e12a96ee9995fa07b4c876f9aabef5b34",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "arch/x86/include/asm/nospec-branch.h",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "e316cc994bf07ea1222a78df14316efd1161acd9",
+      "port_blob": "e316cc994bf07ea1222a78df14316efd1161acd9",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "arch/x86/include/asm/vmx.h",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "c85c500195239b2eb4fe08fe090d4b6a816f25f0",
+      "port_blob": "c85c500195239b2eb4fe08fe090d4b6a816f25f0",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "arch/x86/include/uapi/asm/kvm.h",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "67b3bea44c674ff978414122fe006a50ae39946b",
+      "port_blob": "67b3bea44c674ff978414122fe006a50ae39946b",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "arch/x86/kernel/callthunks.c",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "a951333c5995d5d3c1133296497cf28ce72f0bda",
+      "port_blob": "a951333c5995d5d3c1133296497cf28ce72f0bda",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "arch/x86/kernel/fpu/core.c",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "9badb21e5a5bce5431cb3c7957f05cf79c515af2",
+      "port_blob": "9badb21e5a5bce5431cb3c7957f05cf79c515af2",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "arch/x86/kernel/fpu/xstate.c",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "5f54a207ace46ca37c37a3e0909d2d3c0a7b88dc",
+      "port_blob": "5f54a207ace46ca37c37a3e0909d2d3c0a7b88dc",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "arch/x86/kernel/vmlinux.lds.S",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "4ed82b1fe173b4369f52d389135e14e4ef7653b3",
+      "port_blob": "4ed82b1fe173b4369f52d389135e14e4ef7653b3",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "arch/x86/kvm/.gitignore",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "615d6ff35c009336b260dff7bd0b2d2fe171bddd",
+      "port_blob": "615d6ff35c009336b260dff7bd0b2d2fe171bddd",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "arch/x86/kvm/Kconfig",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "278f08194ec87b9481500b8b800c3ccec1c2dc76",
+      "port_blob": "278f08194ec87b9481500b8b800c3ccec1c2dc76",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "arch/x86/kvm/Makefile",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "1f823bddbf95de2d04e116551a1a2e1cd21adddb",
+      "port_blob": "1f823bddbf95de2d04e116551a1a2e1cd21adddb",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "arch/x86/kvm/debugfs.c",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "999227fc7c6659158051525bcf819ae2f9edc5f0",
+      "port_blob": "999227fc7c6659158051525bcf819ae2f9edc5f0",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "arch/x86/kvm/vmx/main.c",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "0eb2773b2ae235ffdce889d815a6919eaacd2c64",
+      "port_blob": "0eb2773b2ae235ffdce889d815a6919eaacd2c64",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "arch/x86/kvm/vmx/vmx.c",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "5bae3d5ce6eec267e9a5f342714e08723db32513",
+      "port_blob": "5bae3d5ce6eec267e9a5f342714e08723db32513",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "arch/x86/kvm/vmx/vmx.h",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "ea93121029f913fdb8b64505f4807745b41b36ca",
+      "port_blob": "ea93121029f913fdb8b64505f4807745b41b36ca",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "arch/x86/kvm/vmx/vmx_onhyperv.h",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "cdf8cbb69209dea9fbd6b8f9007ed4af2fafac45",
+      "port_blob": "cdf8cbb69209dea9fbd6b8f9007ed4af2fafac45",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "arch/x86/kvm/vmx/x86_ops.h",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "9697368d65b3a133017e553bbd900f55deadd753",
+      "port_blob": "9697368d65b3a133017e553bbd900f55deadd753",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "arch/x86/kvm/x86.c",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "907efeed6c91dfbf8a5cba223201cf8abb6a272b",
+      "port_blob": "907efeed6c91dfbf8a5cba223201cf8abb6a272b",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "include/linux/export.h",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "a686fd0ba406509da5f397e3a415d05c5a051c0d",
+      "port_blob": "a686fd0ba406509da5f397e3a415d05c5a051c0d",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "include/uapi/linux/kvm.h",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "954e0511ce91c4c34e6aace4cdfc0f4393b2a44c",
+      "port_blob": "954e0511ce91c4c34e6aace4cdfc0f4393b2a44c",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "include/uapi/linux/kvm_para.h",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "960c7e93d1a98a363df4c6e7eeaffee065512f7c",
+      "port_blob": "960c7e93d1a98a363df4c6e7eeaffee065512f7c",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tools/arch/x86/include/uapi/asm/kvm.h",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "d420c9c066d48c9836854a12436e13b4d6aa9d35",
+      "port_blob": "d420c9c066d48c9836854a12436e13b4d6aa9d35",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tools/objtool/arch/x86/decode.c",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "fdaddc636e9777b089bd83deb43fe069e730132f",
+      "port_blob": "fdaddc636e9777b089bd83deb43fe069e730132f",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tools/objtool/check.c",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "141ff11f70a4ba4c7dbdac8987d2dde1eda9b162",
+      "port_blob": "141ff11f70a4ba4c7dbdac8987d2dde1eda9b162",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tools/objtool/noreturns.h",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "802895fae3cac00f46269917f631e02bfb5d3a3e",
+      "port_blob": "802895fae3cac00f46269917f631e02bfb5d3a3e",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tools/objtool/special.c",
+      "comparison": "Whole native LTS file",
+      "lts_blob": "c80fed8a840ee91cf89d4cf70ae12170a8318865",
+      "port_blob": "c80fed8a840ee91cf89d4cf70ae12170a8318865",
+      "lts_delta_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "boot_contract": {
+    "goldfish_commit": "5281db702f36e0e8c0af9e33d70b63d3ba4916ae",
+    "path": "../grapheneos-17/device/generic/goldfish/board/kernel/x86_64_cmdline.txt",
+    "contents": "8250.nr_uarts=1 clocksource=pit\n",
+    "sha256": "ec34f1f155caa37116a3396e454beefab1eed40b66d95027450a1e4dbb95b2ff",
+    "install_rule": "board/kernel/x86_64.mk installs kernel_cmdline.txt; BOARD_KERNEL_CMDLINE explicitly unsupported"
+  },
+  "ack_gate_blobs": {
+    "arch/x86/kvm/pkvm.c": "ea28ce3a466a8352db686cb3816ed8c3aedde056",
+    "arch/x86/kvm/vmx/pkvm_init.c": "5bee41e18f4bbb2438dccc0525f26d5fed5d3038",
+    "arch/x86/kvm/Makefile": "5d4fe0ffeadfdd0ffe0a3849c9b6bf29b67f271f",
+    "arch/x86/kvm/Kconfig": "80dbd39f7417a576e159fe31dcee084df46751ce",
+    "arch/x86/kvm/pkvm/Makefile": "245cbe3be13477a8be3c2b01fc5ac85e7032bac3",
+    "arch/x86/kvm/x86.c": "cbe49ea3b662cbb07be81e525390176930b7bad2"
+  },
+  "generated_config_sha256": "5eb9df697a47e51c48fc154d7c5c9de503407ea3d7789c1d3cd3c6185088ba8e",
+  "native_kvm_enabled": [
+    "KVM",
+    "KVM_INTEL",
+    "KVM_AMD"
+  ],
+  "method": "Enumerated every changed path and hunk. Read every shared-path hunk in full; checked entire shared files against LTS. Private implementation paths, symbols and hunk scopes were classified against the positively established separate image/build/runtime gate, with selected initialization/security-fix patches read in full. Not a claim of line-by-line semantic correctness review of every omitted private implementation. All private files are absent from both native and port. No source change or runtime execution in this review.",
+  "limits": "Ordinary SDK supplied boot contract only. Other command-line overrides, pvmfw bootloader provisioning and protected-VM guests/host behavior are not supported or verified by this decision. Native KVM compilation is not virtualization runtime verification. Shared VFIO/IOMMU and x86 protected-guest candidates outside this list remain separately reviewed/provisional.",
+  "remote_resources_used": []
+}

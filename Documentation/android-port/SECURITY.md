@@ -10322,3 +10322,65 @@ all 659 entries, while the obsolete stride missed 330; native symbol/CRC/flag
 counts also passed. Pins, artifact hashes and checks are in build-results.json
 and module-tables-build-197.json. No emulator, device or kernel test was run.
 All sources examined were local; no additional remote resource was accessed.
+
+# Remaining x86 protected-host review
+
+`evidence/pkvm-host-tail-review.json` records 48 individual decisions, with all
+changed paths/hunk scopes and original patch hashes. Every shared-path hunk was
+read; the 30 shared files were compared in full with the pinned LTS. Twenty-nine
+are identical; kernel-parameters.txt differs only by nine separately justified
+DPM-watchdog documentation lines. All 44 private image/service/header paths are
+absent from native LTS and the port. Private code was classified by its image,
+build and runtime boundary, with selected initialization/security fixes read in
+full. This does not claim line-by-line correctness review of every omitted
+private implementation.
+
+The pinned Goldfish x86_64.mk installs the supplied kernel_cmdline.txt, containing
+`8250.nr_uarts=1 clocksource=pit`. ACK's enable_pkvm is initially false, set by
+`early_param("kvm-intel.pkvm", ...)`; pkvm_reserve returns without allocating
+when false. The host initialization returns before creating the protected image,
+and the new VM type is advertised only when enable_pkvm is true. ACK builds its
+private objects under CONFIG_PKVM_X86 and __PKVM_HYP__, including reuse of shared
+source and private compiler options. These are affirmative boundaries for the
+supplied target, not an argument that Android virtualization callers are absent.
+Native KVM, Intel KVM and AMD KVM remain configured in the verified SDK build.
+
+There is a relevant exception to a simple “nothing runs when disabled” statement:
+ACK validates and clears a separately supplied pvmfw region before returning
+from disabled protected-host initialization. The supplied SDK command line has
+neither pvmfw nor the enabling option. A bootloader/command-line contract that
+supplies protected firmware must revisit this omission; it is not supported or
+verified here. No claim is made that an arbitrary command-line override or
+protected nested guest could work with the omitted backend.
+
+Shared changes were checked for independent native effects. Private section,
+percpu, exception-table, symbol-renaming and retpoline machinery is omitted as a
+unit. Native linker permissions, call-depth mitigation, objtool IBT/section/
+noreturn validation, exports and ordinary Hyper-V behavior remain. Private
+__PKVM_HYP__ branches that omit remote VMCS clearing, posted interrupts, native
+state restoration or tracepoints are not introduced into ordinary KVM. FPU and
+xstate source/header files remain entirely native. Private IO/memory-sharing/
+secondary-CPU hypercalls and firmware capabilities are not advertised without
+the backend that enforces their ownership and validation rules.
+
+Security fixes inside the omitted boundary are still identified: LBR controls
+protect the hypervisor from profiling by its deprivileged host; FRED event data
+corrects #PF injection into that host; GSMI mediation prevents coreboot SMM from
+reading protected memory on behalf of that host. Their affected private paths
+are absent. This is not a claim that ordinary native KVM implements those
+protected-host guarantees or FRED guest virtualization. Native PMU, MSR,
+exception and firmware implementations are preserved. The private spinlock
+read-write operand fix is omitted together with the original buggy lock, not
+in favor of it.
+
+Private debug aliases, permissive CPU-bug initialization policy, tracing,
+panic/reset and ramoops formatting are omitted with the image. In particular,
+ACK's development relax_cpu_bugs default is not imported as a native mitigation
+policy, and its debug mode's untrusted-host calls do not become a new isolation
+bypass. Native diagnostics/panic handling remain. The embedded coreboot, kernel,
+GitHub, lore and Google-internal URLs were read only as local commit text; none
+was contacted. Hardware panic, SMI, suspend and reset recipes were not executed.
+
+This batch changes review records only, so the source built in attempt 197 is
+unchanged. It does not finalize other shared VFIO/IOMMU or protected-guest
+candidates, nor establish runtime virtualization compatibility.
