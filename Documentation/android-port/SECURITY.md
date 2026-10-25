@@ -9741,6 +9741,43 @@ control was rejected. Module flag/CRC tables and all 659 protected exports match
 the historical wrong-stride control misses 330 exports. This verifies compilation
 and artifact generation only, without running a thermal service or kernel.
 
+## Build configuration and remaining crypto evaluation support
+
+evidence/build-crypto-tail-review.json records ten full candidate reviews.
+a812d24eb68c removes the initial integration's 32-bit-only allmod/allyes frame
+warning override. Its !64BIT requirement excludes the selected kernel even with
+IA32 userspace support. The native FRAME_WARN block and SDK value 2048 remain.
+The ARM/GCC12 plugin workaround and ARM PAC shadow-call-stack Rust KASAN workaround
+are also excluded by their architecture/toolchain predicates. Native x86 build
+flags and Rust global instrumentation remain. No ARM build is certified.
+
+Retain Android's non-RT prompt visibility for PROVE_RAW_LOCK_NESTING, allowing
+debug configurations to disable this RT-specific diagnostic without losing all
+later lockdep reporting to the documented early cpufreq-times warning. The native
+PROVE_LOCKING dependency and default y on RT-capable architectures remain. This
+is an option, not forced disabling; choosing it off reduces diagnostic coverage
+and does not make incorrect locking safe. Current SDK disables both PROVE_LOCKING
+and PREEMPT_RT, and its cpufreq-time accounting uses a regular IRQ-saving spinlock.
+No locking workload or PREEMPT_RT compatibility test was performed.
+
+The generic SHA/HMAC FIPS known-answer tests are distinguished from the separate
+ARM64 FIPS140 module. Their five-file patch, including generator and all three
+vectors, was read. SDK disables CRYPTO_SELFTESTS, which prevents CRYPTO_FIPS, and
+native fips_enabled is constant zero. Preserve the complete native SHA/HMAC
+implementations, initialization and KUnit tests without adding the unused FIPS
+mode tests. This does not assert equivalent FIPS self-testing or certification;
+reassess if generic FIPS mode becomes a target requirement.
+
+The BUILD_FIPS140_KO SHA256 exception, extra utils dependency and ARM assembly
+FORCE prerequisites belong to the omitted ARM64 FIPS module/override mechanism.
+Native SHA256, headers and utils have no override table; SDK already selects
+utils through native CRYPTO. Keep native preboot export-suppression behavior.
+The entire 638-line evaluation utility was reviewed, including AF_ALG tests and
+the special device's version/service queries. It is not part of the existing
+SDK distribution build and was not executed. The maintainer-email wrapper is
+likewise development tooling; no email or external service was used. All review
+evidence was local and no additional remote resource was accessed.
+
 ## Zram ioctl history, documentation and ublk page-size ABI
 
 The six remaining zram/ublk candidates are reviewed in

@@ -1,0 +1,255 @@
+{
+  "source_head": "a812d24eb68c7fea59e84ec3c3f5fb2b459bb249",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "4eae42c42e2773cd7e592a771aea1fbb6230fb76",
+      "disposition": "omitted-current-target",
+      "rationale": "Remove 32-bit allmod/allyes-only FORCE_FRAME_WARN_TO_2K option from initial integration in a812d24eb68c. Explicit depends !64BIT excludes the selected x86_64 kernel, including kernels with IA32 userspace emulation. Native FRAME_WARN block and generated 2048-byte warning threshold remain; no stack-bound diagnostic is weakened for SDK.",
+      "result_commits": [
+        "a812d24eb68c7fea59e84ec3c3f5fb2b459bb249"
+      ],
+      "evidence": [
+        "evidence/build-crypto-tail-review.json",
+        "SECURITY.md: Build configuration and remaining crypto evaluation support"
+      ],
+      "paths": [
+        "lib/Kconfig.debug"
+      ],
+      "patch_sha256": "cc4c1db50f3630cc6852d4cd61eb46b00339a62c7513beb8c7476baeab2a9587"
+    },
+    {
+      "commit": "cd11229d54a43cb1a97f68fe1168b3a492cd8b49",
+      "disposition": "omitted-current-target",
+      "rationale": "Keep exact native GCC plugin configuration. Candidate disables plugins only on 32-bit ARM to work around a specific GCC12 kernelci failure; SDK uses x86_64 Clang and does not enter that path. No generic build or plugin API is removed, and no ARM kernelci success is claimed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/build-crypto-tail-review.json",
+        "SECURITY.md: Build configuration and remaining crypto evaluation support"
+      ],
+      "paths": [
+        "scripts/gcc-plugins/Kconfig"
+      ],
+      "patch_sha256": "2b338908f97e6a2619af429879d0e3a414b5f9ae205cbd68882f0251e1c1f90a"
+    },
+    {
+      "commit": "bed1201d409479f214f31f35a6bf99f7b7097e64",
+      "disposition": "adapted",
+      "rationale": "Retain non-RT visibility of PROVE_RAW_LOCK_NESTING so Android debug configuration may disable the RT-specific diagnostic. The current cpufreq-times implementation is a positive regular-spinlock user, and the local patch explains the resulting early lockdep shutdown on non-RT GKI. Native PROVE_LOCKING dependency and default y for RT-capable architectures remain; this does not force checking off. Disabling it reduces diagnostic coverage and does not make invalid locking safe. Actual SDK has PROVE_LOCKING=n and PREEMPT_RT=n; no RT support is claimed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/build-crypto-tail-review.json",
+        "SECURITY.md: Build configuration and remaining crypto evaluation support"
+      ],
+      "paths": [
+        "lib/Kconfig.debug"
+      ],
+      "patch_sha256": "a3545072ba2e7eeaa8c9306a213dba65ebcff1dee6955234e495d935c9b895dc"
+    },
+    {
+      "commit": "b79cbaaba114c42e5b6fb3f290a4e19ac5207410",
+      "disposition": "omitted-current-target",
+      "rationale": "Full shell wrapper read: enumerates patch recipients using get_maintainer.pl and adds Android kernel-team address. This is maintainer/email development tooling, not a kernel, module-source interface or dependency of the existing emulator build. Keep native maintainer tool; do not run the wrapper or send email. No runtime/security behavior changes.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/build-crypto-tail-review.json",
+        "SECURITY.md: Build configuration and remaining crypto evaluation support"
+      ],
+      "paths": [
+        "scripts/get_emails.sh"
+      ],
+      "patch_sha256": "ec00264ddbafa05bbb0b8ea75aa048e7982bcd154c7427a4d52c1d9e13eacc8c"
+    },
+    {
+      "commit": "e0329d54de61196b242a8b7a34e28af2d8eb67b3",
+      "disposition": "omitted-current-target",
+      "rationale": "Full five-file generic FIPS self-test addition read: known-answer HMAC-SHA1/256/512 vectors, generator and conditional init/panic checks. These are not ARM-only or KMI changes. SDK disables CRYPTO_SELFTESTS, so CRYPTO_FIPS cannot be enabled and fips_enabled is constant zero; no current-target execution is lost. Keep complete native SHA/HMAC implementations, initialization and existing KUnit tests without claiming equivalent FIPS self-testing or certification. Reassess if generic FIPS mode becomes part of the target.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/build-crypto-tail-review.json",
+        "SECURITY.md: Build configuration and remaining crypto evaluation support"
+      ],
+      "paths": [
+        "lib/crypto/fips.h",
+        "lib/crypto/sha1.c",
+        "lib/crypto/sha256.c",
+        "lib/crypto/sha512.c",
+        "scripts/crypto/gen-fips-testvecs.py"
+      ],
+      "patch_sha256": "9ac2453e5e1b4910f5cf634e229b9abc925cf29ebf08cef6a49e66d56d6db8f9"
+    },
+    {
+      "commit": "d3eba974c765dd67d969fd719c4953274b02f63c",
+      "disposition": "omitted-current-target",
+      "rationale": "Full 638-line lab utility read, including AF_ALG jitterentropy/invalid-input commands and /dev/fips140 version/service ioctls. It is evaluation tooling for the separately omitted ARM64 FIPS140 module and is not part of the SDK kernel/module distribution workflow. Native crypto APIs remain; omission is not a statement that its tests passed or that a FIPS requirement is satisfied.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/build-crypto-tail-review.json",
+        "SECURITY.md: Build configuration and remaining crypto evaluation support"
+      ],
+      "paths": [
+        "samples/crypto/fips140_lab_util.c"
+      ],
+      "patch_sha256": "44fb42bbc0213351443c938ca55ab49489a6a4556bc2a8fcb4b0e31a94653852"
+    },
+    {
+      "commit": "a97894a0466264f6895aefa8d94c3b510f376366",
+      "disposition": "omitted-current-target",
+      "rationale": "BUILD_FIPS140_KO exception enables architecture SHA256/HMAC/init code when exports are suppressed for the separate FIPS module. That module is explicitly ARM64-only and not delivered for SDK. Keep exact native SHA256 and preboot __DISABLE_EXPORTS behavior; no x86 SHA/HMAC algorithm is removed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/build-crypto-tail-review.json",
+        "SECURITY.md: Build configuration and remaining crypto evaluation support"
+      ],
+      "paths": [
+        "lib/crypto/sha256.c"
+      ],
+      "patch_sha256": "d9bb59d4bd3bad85530f9eb224a5b5928cb35a4d32750a6cd9709c4466af3c15"
+    },
+    {
+      "commit": "8ed4fbecf30a9d7150b1a1e8510b2fe48cbac342",
+      "disposition": "omitted-current-target",
+      "rationale": "Additional SHA256->CRYPTO_LIB_UTILS selection repairs missing symbols from the FIPS140 function-override table, explicitly shown in local candidate message. Delivered SHA256/header/utils are native and contain no such table; SDK already enables utils through native CRYPTO. Keep native Kconfig dependency rather than an orphaned requirement for the excluded override feature. No link success outside the verified SDK is claimed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/build-crypto-tail-review.json",
+        "SECURITY.md: Build configuration and remaining crypto evaluation support"
+      ],
+      "paths": [
+        "lib/crypto/Kconfig"
+      ],
+      "patch_sha256": "392422619410e67536898a52268027819a59a71beabfc60a6515f576f84bac93"
+    },
+    {
+      "commit": "f26b61355a1b5a3b8286d5bddc7a3fa5a5191317",
+      "disposition": "omitted-current-target",
+      "rationale": "Candidate disables Rust global KASAN instrumentation only when ARM PAC-to-shadow-call-stack patching is configured. x86 SDK cannot enter that ARM feature. Keep native Rust KASAN flags (apart from a separately reviewed obsolete comment removal), preserving instrumentation rather than importing the physical ARM workaround. No KASAN runtime or affected ARM device test is claimed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/build-crypto-tail-review.json",
+        "SECURITY.md: Build configuration and remaining crypto evaluation support"
+      ],
+      "paths": [
+        "scripts/Makefile.kasan"
+      ],
+      "patch_sha256": "78d8230ccfdf965086bfec2d285d44c7618c66a6e7a3d541399a6bab533a9856"
+    },
+    {
+      "commit": "af6c9c0964fb860c57beb367d866b6815cf3db63",
+      "disposition": "omitted-current-target",
+      "rationale": "Adds FORCE prerequisites to two ARM64 assembly outputs in the separate FIPS module Kbuild fragment. Omit with that complete module/build feature; native x86 crypto assembly dependencies remain. This is a real rebuild-correctness fix for its provider, not historical KMI, and no absent module is advertised as buildable.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/build-crypto-tail-review.json",
+        "SECURITY.md: Build configuration and remaining crypto evaluation support"
+      ],
+      "paths": [
+        "lib/crypto/Kbuild.fips140"
+      ],
+      "patch_sha256": "238bbd5a5aeee2aef6ef37281fba240235db3cc6574a1903864ae0e9813e5af0"
+    }
+  ],
+  "proofs": [
+    {
+      "path": "lib/crypto/Kbuild.fips140",
+      "comparison": "absent in both LTS and port",
+      "blob": null
+    },
+    {
+      "path": "lib/crypto/fips.h",
+      "comparison": "absent in both LTS and port",
+      "blob": null
+    },
+    {
+      "path": "lib/crypto/sha1.c",
+      "comparison": "whole file exact LTS",
+      "blob": "5904e4ae85d2407f022aba83c7e1f4ce007ee40d"
+    },
+    {
+      "path": "lib/crypto/sha256.c",
+      "comparison": "whole file exact LTS",
+      "blob": "881b935418cead822a7695ba20848da325922ba0"
+    },
+    {
+      "path": "lib/crypto/sha512.c",
+      "comparison": "whole file exact LTS",
+      "blob": "d8062188be98a7f8a26827f7e695090e086f8034"
+    },
+    {
+      "path": "samples/crypto/fips140_lab_util.c",
+      "comparison": "absent in both LTS and port",
+      "blob": null
+    },
+    {
+      "path": "scripts/crypto/gen-fips-testvecs.py",
+      "comparison": "absent in both LTS and port",
+      "blob": null
+    },
+    {
+      "path": "scripts/gcc-plugins/Kconfig",
+      "comparison": "whole file exact LTS",
+      "blob": "6b34ba19358d84702c36aeb59500189d8f018984"
+    },
+    {
+      "path": "scripts/get_emails.sh",
+      "comparison": "absent in both LTS and port",
+      "blob": null
+    },
+    {
+      "path": "lib/Kconfig.debug",
+      "config": "FRAME_WARN",
+      "comparison": "exact native block; removed separate 32-bit-only force symbol in a812d24eb68c7fea59e84ec3c3f5fb2b459bb249"
+    },
+    {
+      "path": "lib/Kconfig.debug",
+      "config": "PROVE_RAW_LOCK_NESTING",
+      "code": "config PROVE_RAW_LOCK_NESTING\n\tbool \"Enable raw_spinlock - spinlock nesting checks\" if !PREEMPT_RT\n\tdepends on PROVE_LOCKING\n\tdefault y if ARCH_SUPPORTS_RT\n\thelp\n\t Enable the raw_spinlock vs. spinlock nesting checks which ensure\n\t that the lock nesting rules for PREEMPT_RT enabled kernels are\n\t not violated.\n\n",
+      "observation": "only prompt visibility differs, default y if ARCH_SUPPORTS_RT and PROVE_LOCKING dependency unchanged; non-RT users may choose to disable this diagnostic"
+    },
+    {
+      "path": "lib/crypto/Kconfig",
+      "config": "CRYPTO_LIB_SHA256",
+      "comparison": "native SHA256 selection retained; native headers/utils have no fips140_lib_funcs override table. Candidate extra utils selection exists to satisfy that omitted table, as its local message states."
+    },
+    {
+      "path": "scripts/Makefile.kasan",
+      "comparison": "native flags and instrumentation, except previously removed obsolete SW_TAGS comment; no ARM PAC workaround added to x86 path"
+    },
+    {
+      "path": "crypto/Kconfig",
+      "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "definition": "config CRYPTO_FIPS140_MOD\n\ttristate \"Enable FIPS 140 cryptographic module\"\n\tdepends on ARM64\n\tdepends on CC_IS_CLANG\n\tdepends on m\n\tselect CRYPTO_FIPS140_MERGE_MOD_SECTIONS\n\thelp\n\t  This option enables building a loadable module fips140.ko, which\n\t  contains various crypto algorithms that are also built into vmlinux.\n\t  At load time, this module overrides the built-in implementations of\n\t  these algorithms with its implementations.  It also runs self-tests on\n\t  these algorithms and verifies the integrity of its code and data.  If\n\t  either of these steps fails, the kernel will panic.\n\n\t  This module is intended to be loaded at early boot time in order to\n\t  meet FIPS 140 and NIAP FPT_TST_EXT.1 requirements.  It shouldn't be\n\t  used if you don't need to meet these requirements.\n\n"
+    },
+    {
+      "path": "../kernel_manifest-6.18/common_dist/kernel_x86_64_dot_config",
+      "sha256": "48f19810fd5e10021d64b96e82cdb2b0b587f7cb24b3b4b5660b6732ae05cd09",
+      "build": "sdk-build-attempt-192",
+      "observation": "x86_64 Clang/non-RT; native frame warning 2048; PROVE_LOCKING and CRYPTO_SELFTESTS off, hence native CRYPTO_FIPS dependency unsatisfied. FIPS-library tests would not execute."
+    },
+    {
+      "path": "drivers/cpufreq/cpufreq_times.c",
+      "blob": "aeb7b7b0bbdad7a88415fdf6e94e34fbcb429a4f"
+    },
+    {
+      "path": "crypto/Kconfig",
+      "blob": "4150e42f7f4a6289f6059ce4ba3c5b5bb1bbe1e8"
+    },
+    {
+      "path": "lib/crypto/tests/sha1_kunit.c",
+      "blob": "24ba8d5669c8f4e2887ef3322943f7e39cbd96cd"
+    },
+    {
+      "path": "lib/crypto/tests/sha256_kunit.c",
+      "blob": "5dccdee79693a88eb0ad67a34155af1a71aa9daa"
+    },
+    {
+      "path": "lib/crypto/tests/sha512_kunit.c",
+      "blob": "8923e2d7d3d43d93e92dd5c7129e2d85fa75b431"
+    }
+  ],
+  "remote_resources_used": [],
+  "limits": "Local full patch/source/configuration review. No lab utility, FIPS test, ARM kernel, KASAN kernel or lockdep workload executed."
+}
