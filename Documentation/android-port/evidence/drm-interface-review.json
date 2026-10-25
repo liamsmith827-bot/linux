@@ -1,0 +1,115 @@
+{
+  "source_head": "ee61e3a638a8f7b4f41b0e559dc7a6ebeeb4c33b",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "89ee7ae95831a936947dff3ae6eda7112cc5c10f",
+      "disposition": "omit-current-sdk-target",
+      "result_commits": [],
+      "rationale": "Reviewed NULL-versus-ERR_PTR failure correction in drm_plane_create_color_pipeline_property. The entire new constructor is absent; native drm_plane.c remains identical to LTS. Omission does not retain the NULL dereference. The omitted feature scope is supported by drm-pipeline-sdk-review.json, including positive SDK provider and userspace evidence.",
+      "evidence": [
+        "evidence/drm-interface-review.json",
+        "evidence/drm-pipeline-sdk-review.json",
+        "SECURITY.md: DRM capability guard and render-node buffer interfaces"
+      ],
+      "patch_sha256": "135b010579dd74b7460af76036d0a4d1bd9358b05483f147450ab8ae0b1446c2",
+      "changed_paths": [
+        "drivers/gpu/drm/drm_plane.c"
+      ]
+    },
+    {
+      "commit": "9524ac5814b26df4a84fceb0a67c8fecc610fdc4",
+      "disposition": "omit-current-sdk-target",
+      "result_commits": [],
+      "rationale": "Reviewed final ACK capability guard: scans planes for color_pipeline_property and returns EOPNOTSUPP when none exists, avoiding hiding legacy encoding/range properties. ACK virtio-gpu/VKMS therefore reject this capability too. Retain native EINVAL for the unknown capability, a documented errno difference; neither kernel activates pipeline mode on these target drivers. Local drm_hwcomposer checks nonzero failure without distinguishing these errno values. Native property visibility remains, so the regression fixed here is not imported.",
+      "evidence": [
+        "evidence/drm-interface-review.json",
+        "evidence/drm-pipeline-sdk-review.json",
+        "SECURITY.md: DRM capability guard and render-node buffer interfaces"
+      ],
+      "patch_sha256": "f85d0c6b5eeb2c263c9de377ce56a855ecafd4be88e8ab76c10ed2f1d466560f",
+      "changed_paths": [
+        "drivers/gpu/drm/drm_ioctl.c"
+      ]
+    },
+    {
+      "commit": "6e1eaaea3c36672d0ae7ae0d531449b7917d8078",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain all three DRM_RENDER_ALLOW entries for create/map/destroy dumb buffers. Goldfish packages minigbm; its pinned virtgpu_virgl.c explicitly routes the non-3D path through drv_dumb_bo_create_ex/destroy/map, which issue these ioctls. This deliberately relaxes native render-client permission rejection and expands allocation/mapping attack surface for processes able to open render nodes. Preserve whole native dumb-buffer validation (zero dimensions, overflow, output initialization), per-file handle mapping/deletion and all other ioctl privilege flags. It does not grant DRM master/modesetting permission. Current ioctl source equals native after replacing exactly these three flags with zero. Build165 compiled the corresponding virtio-gpu module; no runtime ioctl test or allocation-safety proof is claimed.",
+      "evidence": [
+        "evidence/drm-interface-review.json",
+        "evidence/drm-pipeline-sdk-review.json",
+        "SECURITY.md: DRM capability guard and render-node buffer interfaces"
+      ],
+      "patch_sha256": "1d730c3f449554edcc7ed2fc47005eb0d4dbf641807e9cedf603e2ee19ad6093",
+      "changed_paths": [
+        "drivers/gpu/drm/drm_ioctl.c"
+      ]
+    },
+    {
+      "commit": "c2030b6f4e114bb1a817cc50ecab9c5c8b178b0b",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "f9dd0aa8659c46264586d82bb15da11ca7fadf8b"
+      ],
+      "rationale": "Retain GPL export of the current native drm_mode_convert_to_umode implementation for rebuilt display modules. Preserve native strscpy_pad and all native mode fields/validation; the historical strncpy body is not restored. The result commit also exports the opposite-direction native helper under its separate review. This is a generic source customization interface for configured DRM, with exact optional SDK module usage unconfirmed. Modules are trusted kernel code; exporting a helper is not a new userspace ioctl or preservation of historical binary KMI.",
+      "evidence": [
+        "evidence/drm-interface-review.json",
+        "evidence/drm-pipeline-sdk-review.json",
+        "SECURITY.md: DRM capability guard and render-node buffer interfaces"
+      ],
+      "patch_sha256": "b82cdf19aaf1a726bbe7693f4be9e9508ad1b900c39fea52a4b4c7ab98e17c96",
+      "changed_paths": [
+        "drivers/gpu/drm/drm_modes.c"
+      ]
+    }
+  ],
+  "witnesses": {
+    "drivers/gpu/drm/drm_dumb_buffers.c": {
+      "port_blob": "7b4ba9fab299ac01f3acfe8d9cc5a6ce780d7eca",
+      "lts_blob": "7b4ba9fab299ac01f3acfe8d9cc5a6ce780d7eca",
+      "ack_blob": "70032bba1c97e787d7499814000089d32b0b8d48"
+    },
+    "drivers/gpu/drm/drm_gem.c": {
+      "port_blob": "224ed96bd0d4ae9cf7a76a210edf3a0066a5be33",
+      "lts_blob": "224ed96bd0d4ae9cf7a76a210edf3a0066a5be33",
+      "ack_blob": "cc34ee8e1d48321dfc511820b59c65724ff0d4f2"
+    },
+    "drivers/gpu/drm/drm_ioctl.c": {
+      "port_blob": "b8308a68ce4684a7acfbd352f7f4ffb3f97584c6",
+      "lts_blob": "e81ec3eb516b10af226a8de5bb60c8f8e88abbdf",
+      "ack_blob": "b21f1889e473aefc0ee75d9c9c6577505b90297a"
+    },
+    "drivers/gpu/drm/drm_modes.c": {
+      "port_blob": "23eca5532b350fe0856dc17b54f6a33154330ee1",
+      "lts_blob": "e72f855fc4950aae9ecab73bea34acd365ffbdbc",
+      "ack_blob": "0a455b12101f85c36188e109fddfebf90f73ab46"
+    },
+    "drivers/gpu/drm/drm_plane.c": {
+      "port_blob": "4cadea997129da46f21e92e0b1aa3005259ba5a7",
+      "lts_blob": "4cadea997129da46f21e92e0b1aa3005259ba5a7",
+      "ack_blob": "16e205ccbfa72728f191ca403f6842cf7ad6bb8a"
+    }
+  },
+  "native_equal_files": [
+    "drivers/gpu/drm/drm_dumb_buffers.c",
+    "drivers/gpu/drm/drm_gem.c",
+    "drivers/gpu/drm/drm_plane.c"
+  ],
+  "ioctl_only_three_dumb_render_flags": true,
+  "mode_conversion_only_two_gpl_exports": true,
+  "local_minigbm": {
+    "path": "../grapheneos-17/external/minigbm",
+    "commit": "ce79bbee67b3e2ea7abb110e1415e9ceceaa6471",
+    "file_sha256": {
+      "drv_helpers.c": "72bac2bdefc51034425303ff781dd773190db9416c72756594fa2db2ddc8d86d",
+      "virtgpu_virgl.c": "fe1f8b118858c4489047cd3b7f055e7d051705827c9b401d24b432b56c8fe594"
+    }
+  },
+  "remote_sources_used": [],
+  "limitations": "Source and prior build165 verification only. No graphics runtime, ioctl execution or alternate compositor support is claimed."
+}

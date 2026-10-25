@@ -7812,3 +7812,78 @@ enforcement or lockdown requires it. The actual SDK modules are rebuilt and
 signed; historical unsigned-binary behavior and KMI import allowlists are not
 preserved. Build165 verifies signatures and table structure, without executing
 the loader or claiming runtime enforcement tests. No remote source was used.
+
+## DRM color pipelines and SDK display scope
+
+The 33 decisions in `evidence/drm-pipeline-sdk-review.json` retain native LTS
+atomic display, mode-object, framebuffer and color-management code. The new
+colorop subsystem is omitted for this SDK target. This decision uses positive
+platform evidence: Goldfish packages the Ranchu composer; its DRM backend
+explicitly selects virtio devices and requests universal-plane and atomic
+capabilities. ACK's pipeline constructor is called by AMD display setup for
+DCN 3.0 or newer. The complete virtio-gpu and VKMS plane initializers match in
+ACK, LTS and the port, and create no color pipeline. Both virtual drivers are
+built as external modules; their absence from the common configuration is not
+used as evidence of exclusion. AMDGPU is disabled in the SDK build.
+
+A real userspace consumer exists in the pinned local `external/drm_hwcomposer`
+project. Its `vendor.hwc.drm.enable_color_pipeline` property defaults false.
+When enabled, capability failure produces a warning, but noncursor planes
+without COLOR_PIPELINE are subsequently rejected. This is not a working
+fallback. ACK's SDK drivers cannot provide those pipelines either. The port
+retains native EINVAL for the unsupported capability instead of advertising
+it without the required target provider. Adding a provider for another platform
+is outside the present scope. Native vendor source interfaces and the separately
+reviewed DRM print, TTM hook and virtio changes remain intact.
+
+Every feature patch was examined, including DATA blob sizes and references,
+LUT interpolation, atomic locking/state swap, destruction and suspend state.
+The blob-release, bypass-duplication and affected-state fixes address code
+introduced by the omitted subsystem; their faulty prerequisite code is also
+absent. No native 6.18.y fix is dropped. Native DRM UAPI headers remain intact,
+including the existing AMD CTM declaration in its original header. The original
+colorop patch's unrelated removal of a deprecated connector-state accessor is
+also omitted to preserve the native source interface. Color-pipeline-specific
+documentation is omitted with the feature.
+
+Ranchu's guest composer has an RGBA color-matrix operation, while its host
+composer explicitly excludes virtio from host display-color-transform support.
+These paths do not establish complete color support in every composition mode;
+no visual output or runtime behavior has been tested. Build165 already verifies
+compilation and artifacts for the unchanged source used by this review.
+
+The old SECURE framebuffer flag and extra panel-mode flags have explicit ACK
+reverts whose added/deleted lines are exact inverses. Retain native rejection
+of unknown framebuffer flags and native mode validation. Accepting a flag named
+SECURE alone would not enforce protected-memory isolation. The review records
+local project commits, file hashes and provider queries. Embedded patch/RFC
+links were not accessed, and no additional remote source was used.
+
+## DRM capability guard and render-node buffer interfaces
+
+Four further decisions in `evidence/drm-interface-review.json` cover the final
+ACK color-pipeline guard, its property-allocation error fix, and two retained
+generic interfaces. Final ACK checks for a plane with COLOR_PIPELINE and returns
+EOPNOTSUPP without one. Native LTS returns EINVAL for the unknown capability.
+That errno difference is explicit: both reject the request on the SDK providers,
+and the examined drm_hwcomposer consumer only checks for nonzero failure.
+Native legacy color properties stay visible. The NULL-check correction fixes
+the omitted pipeline constructor; the faulty constructor is also absent.
+
+Retain 6e1eaaea3c36's permission change for the three dumb-buffer ioctls.
+The local minigbm virtio implementation calls create/map/destroy dumb buffers
+when its 3D parameter is false. Allowing render clients intentionally relaxes
+the LTS permission policy and exposes allocation/mapping code to render-node
+holders. Native zero-dimension and arithmetic-overflow checks, output-field
+initialization, and file-private GEM handle lookup/deletion remain unchanged.
+Other ioctl permissions, including DRM master checks, remain intact. This
+supports the SDK's minigbm path; it is not a claim that allocation code is free
+of vulnerabilities. The entire ioctl file differs from LTS only at these three
+table flags. Result commit: 2fbc2da4ade330c86d97491696f9223c9df7bc8f.
+
+Retain c2030b6f4e11's GPL mode-conversion export through
+f9dd0aa8659c, using the native helper and its current string-copy behavior.
+This preserves a generic source-module customization interface for configured
+DRM; exact optional SDK consumer use is unconfirmed. No historical binary ABI
+layout or userspace privilege is added. Build165 covers the retained sources;
+no runtime ioctl or display test was executed. Only pinned local inputs were used.
