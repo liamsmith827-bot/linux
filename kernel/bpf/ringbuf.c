@@ -265,6 +265,7 @@ static int ringbuf_map_get_next_key(struct bpf_map *map, void *key,
 static int ringbuf_map_mmap_kern(struct bpf_map *map, struct vm_area_struct *vma)
 {
 	struct bpf_ringbuf_map *rb_map;
+	unsigned long size = vma->vm_end - vma->vm_start;
 
 	rb_map = container_of(map, struct bpf_ringbuf_map, map);
 
@@ -272,10 +273,23 @@ static int ringbuf_map_mmap_kern(struct bpf_map *map, struct vm_area_struct *vma
 		/* allow writable mapping for the consumer_pos only */
 		if (vma->vm_pgoff != 0 || vma->vm_end - vma->vm_start != __PAGE_SIZE)
 			return -EPERM;
+		/* Emulation rounds the VMA, not the writable metadata page. */
+		return remap_vmalloc_range_partial(vma, vma->vm_start,
+					   rb_map->rb, RINGBUF_PGOFF, PAGE_SIZE);
 	}
-	/* remap_vmalloc_range() checks size and offset constraints */
-	return remap_vmalloc_range(vma, rb_map->rb,
-				   vma->vm_pgoff + RINGBUF_PGOFF);
+	if (__PAGE_SIZE != PAGE_SIZE) {
+		u64 end = RINGBUF_POS_PAGES * PAGE_SIZE + 2ULL * map->max_entries;
+		u64 offset = (u64)vma->vm_pgoff << PAGE_SHIFT;
+
+		if (vma->vm_pgoff >= (end >> PAGE_SHIFT) ||
+		    size > __PAGE_ALIGN(end - offset))
+			return -EINVAL;
+		/* Leave VMA rounding beyond the ring unmapped. */
+		size = min_t(u64, size, end - offset);
+	}
+	/* The remapper checks size and offset constraints. */
+	return remap_vmalloc_range_partial(vma, vma->vm_start, rb_map->rb,
+					   vma->vm_pgoff + RINGBUF_PGOFF, size);
 }
 
 static int ringbuf_map_mmap_user(struct bpf_map *map, struct vm_area_struct *vma)
