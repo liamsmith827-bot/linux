@@ -10486,3 +10486,70 @@ PMC changes are omitted: extra Arrow Lake GUID, redundant-field cleanup and
 Wildcat Lake SSRAM telemetry. The physical PMC feature is not enabled in SDK,
 and all its affected files remain exactly LTS. Retaining a native field is not
 historical KMI preservation. No remote resources or runtime tests were used.
+
+# Native and Android merge resolution review
+
+Twenty merges are individually resolved in `evidence/native-merge-tail-review.json`.
+Every unique remerge hunk was read, including changes outside conflict-marker
+regions. The report records patch hashes, exact source blobs and 56 scoped
+comparisons. Parent commits remain independently inventoried. No executable or
+configuration change is made in this batch, and no new compilation or runtime
+result is claimed.
+
+Native VMX control names and folio-based THP/address-selection helpers supersede
+the older APIs. The THP comparisons cover the complete named functions, not
+unrelated huge-memory hook or move-pages decisions. Native DM crypto-profile
+cleanup replaces old keyslot/congestion interfaces; whole DWC3 gadget source
+retains its current scatterlist handling. Native iomap preserves positional bio
+submission, short/atomic-I/O cleanup and tail zeroing. Ext4 and F2FS bound their
+mapping lengths with native fscrypt_limit_io_blocks to avoid DUN wraparound,
+superseding the historical iomap page-count limiter. Only the independent
+statistics notification differs in iomap/direct-io.c. The old ARM64 KVM CFI
+exemption is not imported into an unselected architecture.
+
+Historical extra_free_kbytes declarations and DMA helper exports are absent
+from final ACK and native source. The DMA export removal was already reviewed
+as 1756dedada25; both final trees have identical ops_helpers.c. Port mapping.c is
+native; its other ACK differences concern separately reviewed batching/resource
+checks. Native IPv6 purge retains its RCU walk, safe reference acquisition and
+deletion/restart logic. Android per-interface route-table selection coexists
+with native metrics and route lifetimes. Native virtio networking and XFRM
+compat translators replace the old merge-time exceptions; independent SPI and
+network-hook decisions are unchanged.
+
+Encrypted casefold lookup uses current native generic_ci_match, including
+decrypted-name cleanup and strict-encoding handling. Native superblock dentry
+operations are selected before root-dentry creation; the older F2FS-specific
+and per-directory registration APIs are not recreated. Native d_real uses its
+current enum argument and retains the new unalias callbacks. The Android
+canonical-path callback keeps the reviewed integer error-return adaptation,
+not the merge's older void signature. This preserves error propagation already
+documented in the FUSE review.
+
+Android time_in_state entries coexist with exact native seccomp and KSM proc
+blocks and their permission modes. Task vendor/OEM initialization follows the
+newer complete native MM-CID and BPF state initialization. Shared hook includes
+coexist with native swap, TCX, RX-queue, PHY topology, rseq and UID/GID definitions;
+the old __GENSYMS__ guard is unnecessary historical KMI machinery. Existing
+callback authority and locking obligations remain as separately reviewed.
+The jiffies notification runs only after the native snapshot-based tick_cpu
+check and update, retaining the native race fix. Timer selftests were not run
+against the host clock. Native RPC-GSS tracing retains its current length-aware
+string representation and assignment helper.
+
+SCMVERSION documentation remains alongside native srcversion/version entries.
+Generic topology and PSCI call sites are omitted under positive non-x86 build
+dependencies, with shared declarations retained. The selected Rust ashmem
+staging integration remains while removed board code stays absent. Native MEI
+GPU dependencies are retained. UFS header extensions remain omitted under the
+documented virtio SDK storage scope; UFS is compiled and supports a native QEMU
+device, so this is not a claim that its paths are universally physical-only.
+
+The Bluetooth merge preserves native cyclic identifier allocation, IDA tracking
+and tx_ident state. Its removal of a late id_addr_timer cancellation must not
+be interpreted as permission to omit work shutdown: complete native
+l2cap_conn_del disables both delayed works before taking the connection mutex
+and destroys the IDA after work cancellation. Those later LTS effects remain
+exactly. Only the independently reviewed null-connection timeout guard differs
+in the whole L2CAP C file. No remote resources were accessed; embedded commit
+message URLs were not contacted.
