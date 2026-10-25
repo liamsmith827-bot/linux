@@ -23683,10 +23683,11 @@
     "commit": "47afd44fe2915b8131d52edcdd5f2817f5ab7e2c",
     "disposition": "omit-current-sdk-target",
     "result_commits": [],
-    "rationale": "Adds colorop acquisition when a plane with an active pipeline enters a transaction. Omit with colorop state; native affected-plane acquisition and its error handling remain whole-file identical to LTS. SDK scope is established by Goldfish product selection of Ranchu composer, its explicit virtio DRM backend, ACK/port target plane initialization, and AMD-only pipeline registration; see drm-pipeline-sdk-review.json. No absent-consumer inference is used. Keep all native LTS fixes; no display runtime validation.",
+    "rationale": "Adds colorop acquisition when a plane with an active pipeline enters a transaction. Omit with colorop state; native affected-plane acquisition and its error handling are unchanged; the separate drm_atomic_commit diagnostic routing adaptation is the only change to that native source file. SDK scope is established by Goldfish product selection of Ranchu composer, its explicit virtio DRM backend, ACK/port target plane initialization, and AMD-only pipeline registration; see drm-pipeline-sdk-review.json. No absent-consumer inference is used. Keep all native LTS fixes; no display runtime validation.",
     "evidence": [
       "evidence/drm-pipeline-sdk-review.json",
-      "SECURITY.md: DRM color pipelines and SDK display scope"
+      "SECURITY.md: DRM color pipelines and SDK display scope",
+      "evidence/drm-trace-review.json"
     ]
   },
   {
@@ -23805,6 +23806,160 @@
       "evidence/drm-interface-review.json",
       "evidence/drm-pipeline-sdk-review.json",
       "SECURITY.md: DRM capability guard and render-node buffer interfaces"
+    ]
+  },
+  {
+    "commit": "94d485fafb51376a4342283ebe1dab3db61a9266",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "3188544c95fbdfb3de7d22c5ebcdfc8130fe363b",
+      "13caca5ed131026432ae4775d954039a4b662e61"
+    ],
+    "rationale": "Retain the generic category printer and no-op callback from 3188544c95fb; complete the drm_atomic_commit call-site conversion in 13caca5ed131. Adapt its guard to include trace-only state dumps, preserving native atomic_check_only, errors and driver callback order. Category-enabled syslog changes from native info severity to debug, as intended by ACK. No colorop state is imported. Host extracted-function tests cover routing and commit failures; actual tracefs/display execution is unverified.",
+    "evidence": [
+      "evidence/drm-trace-review.json",
+      "evidence/drm-category-trace-test.json",
+      "SECURITY.md: DRM atomic-state trace routing"
+    ]
+  },
+  {
+    "commit": "f30505952f41c0cc709f5b38372f987b2999130a",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "3188544c95fbdfb3de7d22c5ebcdfc8130fe363b",
+      "13caca5ed131026432ae4775d954039a4b662e61"
+    ],
+    "rationale": "Retain the generic DRM tracing interface from 3188544c95fb: trace instance lifecycle, root-writable trace mask, debug/error routing, source APIs and exports. Complete the kernel-doc reference and choose the trace callback directly for trace-only category printers in 13caca5ed131; ACK otherwise sends those to syslog under its dynamic-debug always-true private predicate. Whole drm_print.c equals pinned ACK, while native DRM init failure/unplug/register synchronization remains. Omit only Nouveau whitespace and old ABI/symbol allowlists: source exports remain available without historical KMI or trimming. Native trace_array_printk rejects NULL, global-instance use, and disabled PRINTK. Diagnostic state exposure and processing costs remain for authorized tracefs readers. No dynamic-debug callsite or concurrent mask-change test is claimed.",
+    "evidence": [
+      "evidence/drm-trace-review.json",
+      "evidence/drm-category-trace-test.json",
+      "SECURITY.md: DRM atomic-state trace routing"
+    ]
+  },
+  {
+    "commit": "7e8839034a7cf309c3ea35fb272565031503a958",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "dc431d0446196b348fb43bbe4b0c091b6eb81d17"
+    ],
+    "rationale": "Retain centralized device-state update helper for the USB lifecycle tracepoints. Reviewed suspend-entry/exit active_duration arithmetic and recursive NOTATTACHED path: the helper preserves native updates and executes under the existing device_state_lock. Whole hub.c equals native after reversing only this refactor/trace addition and removing empty lines; later LTS hub fixes remain.",
+    "evidence": [
+      "evidence/usb-thermal-interface-review.json",
+      "SECURITY.md: USB lifecycle and generic thermal interfaces"
+    ]
+  },
+  {
+    "commit": "95b214ec7deff913472c939bca9631a4ca47bdb8",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "dc431d0446196b348fb43bbe4b0c091b6eb81d17"
+    ],
+    "rationale": "Retain both device-allocation/state-change tracepoints, event class and Makefile object in configured generic USB. The virtual-device workflow includes dummy_hcd and common xHCI. The allocation event is after naming/initialization/authorization; state events follow state/port update under the native lock. Trace records copy name, speed, state, current and authorization; this adds diagnostic exposure for authorized tracing users but no policy override. No trace callback may sleep in the locked state path. Exact userspace tracing consumer is unconfirmed; generic configured-subsystem diagnostics are retained conservatively.",
+    "evidence": [
+      "evidence/usb-thermal-interface-review.json",
+      "SECURITY.md: USB lifecycle and generic thermal interfaces"
+    ]
+  },
+  {
+    "commit": "7c9770b28761567420e0f799c4a6162c58536820",
+    "disposition": "omitted-kmi-only",
+    "result_commits": [],
+    "rationale": "Full executable-source diff only adds android_kabi.h and DECLONLY static_call_mod/trace_eval_map to hide transitive definitions from symbol CRC computation. Omit those historical binary-KMI declarations; retain the underlying lifecycle traces and rebuild all modules with current CRCs. No runtime definition/layout is needed from this patch.",
+    "evidence": [
+      "evidence/usb-thermal-interface-review.json",
+      "SECURITY.md: USB lifecycle and generic thermal interfaces"
+    ]
+  },
+  {
+    "commit": "a2b9b4b7c260d1d6b70fa0487d85994f40f9f69e",
+    "disposition": "partially-adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "dc431d0446196b348fb43bbe4b0c091b6eb81d17"
+    ],
+    "rationale": "Retain generic suspend/resume bypass hooks, declarations and GPL registry exports on native USB PM code; omit DECLONLY trace_eval_map. With callback output false, both functions equal native after removing the hook statements/local variable. A true suspend bypass returns success before offload locking, interface/device suspend and URB flushing; a true resume bypass skips device/interface callbacks while still reaching native PM-lock release/reset_resume cleanup. Trusted modules must own a coherent PM/offload policy, preserve hardware access safety and keep prepare/resume decisions consistent. Native detached-device gates, failure cleanup and per-device serialization remain. This intentionally permits vendor power policy to bypass native PM operations; it is not an unprivileged control or a guarantee that arbitrary callbacks are safe. Exact SDK callback use remains unconfirmed.",
+    "evidence": [
+      "evidence/usb-thermal-interface-review.json",
+      "SECURITY.md: USB lifecycle and generic thermal interfaces"
+    ]
+  },
+  {
+    "commit": "0e49b045d561ca646100887fe91cf33baa10c650",
+    "disposition": "omitted-kmi-only",
+    "result_commits": [],
+    "rationale": "Executable change only adds DECLONLY static_call_mod in usb/core/driver.c; the other changed path is the generated x86 ABI graph. Omit both historical CRC/ABI maintenance pieces. Keep source hooks and current generated symbol CRCs for rebuilt modules; no runtime behavior from this commit is required.",
+    "evidence": [
+      "evidence/usb-thermal-interface-review.json",
+      "SECURITY.md: USB lifecycle and generic thermal interfaces"
+    ]
+  },
+  {
+    "commit": "ec32332c46abacbe0080c588ca0efd7a612b0817",
+    "disposition": "already-represented-upstream",
+    "result_commits": [
+      "09f78265a93d496f84598e5cf7e5d655953c2ad0"
+    ],
+    "rationale": "Full five-path dedicated offload-lock patch reviewed against native 09f78265a93d, an LTS ancestor. Keep native offload_lock/PM gate, reference acquisition, runtime-active checks, paired PM puts and spinlock initialization. Whole offload.c, xhci-sideband.c and usb.h equal LTS; driver.c and usb.c retain native code with separately reviewed Android hooks/traces. USB_XHCI_SIDEBAND=y. Do not restore the older device-lock/autoresume design or offload_at_suspend bit.",
+    "evidence": [
+      "evidence/usb-thermal-interface-review.json",
+      "SECURITY.md: USB lifecycle and generic thermal interfaces"
+    ]
+  },
+  {
+    "commit": "baead118d8f4807ab8ff6e6a772d4dc6b4fe964f",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Explicit ad39a2c85de0 reverses all three-path changes exactly: public declaration/stub and GPL export of thermal_zone_device_is_enabled. Keep the current native thermal API, not this retired export. This conclusion rests on the actual reversal and final source, not the revert message's assertion about out-of-tree consumers.",
+    "evidence": [
+      "evidence/usb-thermal-interface-review.json",
+      "SECURITY.md: USB lifecycle and generic thermal interfaces"
+    ]
+  },
+  {
+    "commit": "ad39a2c85de05d0413e866fd35daa108549fa9b0",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Reviewed exact inverse of baead118d8f4. Keep final native thermal public/internal headers and absence of the retired thermal_zone_device_is_enabled export. Modern thermal state/locking remains; do not use the historical removal rationale as proof of arbitrary consumer absence.",
+    "evidence": [
+      "evidence/usb-thermal-interface-review.json",
+      "SECURITY.md: USB lifecycle and generic thermal interfaces"
+    ]
+  },
+  {
+    "commit": "2d89290aec213c015611aadce0c99368f3bea4a4",
+    "disposition": "superseded-no-residual-code",
+    "result_commits": [],
+    "rationale": "The added usb_function_instance.f pointer is explicitly removed by d23db69132ac, whose larger gadget retirement is already fully reviewed in accessory-full-review.json. Current ACK, LTS and port function-instance declarations match. Keep modern Android accessory/configfs notifications and native setup routing through their separate reviewed implementations; no old pointer lifetime or obsolete early-setup interception is resurrected.",
+    "evidence": [
+      "evidence/usb-thermal-interface-review.json",
+      "SECURITY.md: USB lifecycle and generic thermal interfaces"
+    ]
+  },
+  {
+    "commit": "29f41c64dd0d7d26b2da28c8a9c1db7d962e2341",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain thermal event suppression hook and registry export in configured THERMAL_NETLINK. Default enable=1 preserves native allocation, encoding, multicast and error cleanup; an affirmative vendor suppression returns success before allocation. This can hide events from thermal-policy userspace and must be restricted to trusted modules that provide the intended policy. Callbacks must first interpret event type: non-zone events leave tz_id zero through aggregate initialization, so zero alone is not a valid zone identity. Hook does not itself disable in-kernel governor operation. No runtime policy consumer or thermal test is claimed.",
+    "evidence": [
+      "evidence/usb-thermal-interface-review.json",
+      "SECURITY.md: USB lifecycle and generic thermal interfaces"
+    ]
+  },
+  {
+    "commit": "238d0b4a83d883613eededabaf833ef0314ac4bb",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "85ab9dbc6af8b5d2750ac9b954cbdac4a14ce6c0"
+    ],
+    "rationale": "Retain wakeability hook at registration and prepare/complete traversals. Adapt the latter two to initialize irq_wakeable per zone, preventing one callback result from skipping unrelated zones. Native zone mutex/completion handling and workqueue flush remain; default false follows native behavior. Trusted vendor code can intentionally leave a zone active and must maintain consistent policy/controller accessibility across the PM cycle. Incorrect callbacks can disrupt thermal management. Thirty extracted-function ASan/UBSan host cases show six unintentional ACK-control skips and none in the port; hardware, locking concurrency and suspend behavior are unverified.",
+    "evidence": [
+      "evidence/usb-thermal-interface-review.json",
+      "SECURITY.md: USB lifecycle and generic thermal interfaces",
+      "evidence/thermal-pm-hook-test.json",
+      "SECURITY.md: Thermal PM hook decisions are local to each zone"
     ]
   }
 ]

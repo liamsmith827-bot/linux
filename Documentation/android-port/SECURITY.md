@@ -7918,8 +7918,9 @@ expectations; ACK controls lose twelve trace-only atomic dumps per mode and
 emit four unwanted syslog entries in the dynamic-debug category-printer mode.
 The port has neither result. This verifies routing and control flow with fixed
 masks, not real tracefs, dynamic-debug callsite instrumentation, concurrent mask
-updates or a running display. The SDK build enables TRACING. Full workflow
-verification for the updated source is pending build166.
+updates or a running display. The SDK build enables TRACING. The full workflow succeeded in build166 at 13caca5ed131, producing the kernel
+and all 145 modules. Their signatures and module tables verified successfully,
+and the modified-payload signature control was rejected.
 
 ## Thermal PM hook decisions are local to each zone
 
@@ -7944,4 +7945,45 @@ Thirty host cases under ASan/UBSan cover no selected zone, each individual zone,
 and all zones in both phases. ACK skips six unselected zone operations across
 the cases; the port skips none and passes zero initially to every callback.
 These are traversal shims, not thermal hardware, workqueue or suspend tests.
-The updated kernel will be verified by the existing workflow in build167.
+Build167 at 85ab9dbc6af8 completed the existing emulator workflow. The kernel
+image, 100 common modules and 45 virtual-device modules were generated. All
+145 module signatures and module tables verified; the modified-payload
+signature control was rejected.
+
+## USB lifecycle and generic thermal interfaces
+
+Eleven decisions in `evidence/usb-thermal-interface-review.json` retain generic
+USB lifecycle diagnostics and PM hooks, native offload synchronization, and
+thermal customization. USB, sideband support, thermal core and thermal netlink
+are enabled; the virtual-device build also includes dummy_hcd. Exact optional
+vendor callback consumers remain unconfirmed. Their retention preserves the
+configured generic interfaces without adding a platform driver.
+
+The USB state helper preserves native active-duration arithmetic, recursive
+detach behavior and device-state locking. Tracepoints capture initialized
+allocation state and completed state/port updates. Authorized trace readers gain
+device name, speed, state, current and authorization diagnostics. The PM hooks
+intentionally permit trusted code to bypass interface/device suspend/resume;
+a suspend bypass occurs before offload locking and URB flushing, while a resume
+bypass still reaches native offload-unlock/reset-resume cleanup. Callbacks must
+maintain coherent hardware/offload and prepare/resume policy. Native detached
+device gates, default behavior and error cleanup remain unchanged. Native
+09f78265a93d already supplies the dedicated offload spinlock, active-runtime-PM
+checks and paired references. No older offload implementation is restored.
+
+The thermal event hook defaults to enabled and leaves native message encoding,
+allocation/error cleanup and multicast intact. Trusted modules may suppress
+events before allocation, potentially hiding information needed by userspace
+thermal policy. Non-zone events initialize tz_id to zero; callbacks must inspect
+the event type rather than interpreting that value alone as a zone identity.
+In-kernel governor processing is not disabled by this event filter. The separate
+PM hook uses the per-zone adaptation described above, preserving native zone
+locks, completion handling and workqueue flushing.
+
+Omit the USB DECLONLY and generated ABI-graph changes whose sole purpose is old
+symbol-CRC compatibility. Current modules are rebuilt. The old public thermal
+is-enabled export has an exact explicit ACK revert. The function-instance
+pointer is likewise explicitly removed by d23db69132ac; modern accessory and
+configfs interfaces remain under their existing reviews. These retirements
+are established by source history, not by claims that no consumers exist.
+No runtime USB, thermal or suspend test is claimed, and no remote source was used.

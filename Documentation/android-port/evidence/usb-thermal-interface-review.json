@@ -1,0 +1,316 @@
+{
+  "source_head": "85ab9dbc6af8b5d2750ac9b954cbdac4a14ce6c0",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "7e8839034a7cf309c3ea35fb272565031503a958",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "dc431d0446196b348fb43bbe4b0c091b6eb81d17"
+      ],
+      "rationale": "Retain centralized device-state update helper for the USB lifecycle tracepoints. Reviewed suspend-entry/exit active_duration arithmetic and recursive NOTATTACHED path: the helper preserves native updates and executes under the existing device_state_lock. Whole hub.c equals native after reversing only this refactor/trace addition and removing empty lines; later LTS hub fixes remain.",
+      "evidence": [
+        "evidence/usb-thermal-interface-review.json",
+        "SECURITY.md: USB lifecycle and generic thermal interfaces"
+      ],
+      "patch_sha256": "5f1d0933799f9ed72b554be27415a880c17140f4cff6d413bef78629e9eb7809",
+      "changed_paths": [
+        "drivers/usb/core/hub.c"
+      ]
+    },
+    {
+      "commit": "95b214ec7deff913472c939bca9631a4ca47bdb8",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "dc431d0446196b348fb43bbe4b0c091b6eb81d17"
+      ],
+      "rationale": "Retain both device-allocation/state-change tracepoints, event class and Makefile object in configured generic USB. The virtual-device workflow includes dummy_hcd and common xHCI. The allocation event is after naming/initialization/authorization; state events follow state/port update under the native lock. Trace records copy name, speed, state, current and authorization; this adds diagnostic exposure for authorized tracing users but no policy override. No trace callback may sleep in the locked state path. Exact userspace tracing consumer is unconfirmed; generic configured-subsystem diagnostics are retained conservatively.",
+      "evidence": [
+        "evidence/usb-thermal-interface-review.json",
+        "SECURITY.md: USB lifecycle and generic thermal interfaces"
+      ],
+      "patch_sha256": "25a2c09338f89d5714616637732e92e49e45ddeec0b3662779f486d12d8bce68",
+      "changed_paths": [
+        "drivers/usb/core/Makefile",
+        "drivers/usb/core/hub.c",
+        "drivers/usb/core/trace.c",
+        "drivers/usb/core/trace.h",
+        "drivers/usb/core/usb.c"
+      ]
+    },
+    {
+      "commit": "7c9770b28761567420e0f799c4a6162c58536820",
+      "disposition": "omitted-kmi-only",
+      "result_commits": [],
+      "rationale": "Full executable-source diff only adds android_kabi.h and DECLONLY static_call_mod/trace_eval_map to hide transitive definitions from symbol CRC computation. Omit those historical binary-KMI declarations; retain the underlying lifecycle traces and rebuild all modules with current CRCs. No runtime definition/layout is needed from this patch.",
+      "evidence": [
+        "evidence/usb-thermal-interface-review.json",
+        "SECURITY.md: USB lifecycle and generic thermal interfaces"
+      ],
+      "patch_sha256": "a521057e5cda12dcee2cbc21af3b47232e52c6495a8738004fabd86cde4d5b27",
+      "changed_paths": [
+        "drivers/usb/core/hub.c",
+        "drivers/usb/core/usb.c"
+      ]
+    },
+    {
+      "commit": "a2b9b4b7c260d1d6b70fa0487d85994f40f9f69e",
+      "disposition": "partially-adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "dc431d0446196b348fb43bbe4b0c091b6eb81d17"
+      ],
+      "rationale": "Retain generic suspend/resume bypass hooks, declarations and GPL registry exports on native USB PM code; omit DECLONLY trace_eval_map. With callback output false, both functions equal native after removing the hook statements/local variable. A true suspend bypass returns success before offload locking, interface/device suspend and URB flushing; a true resume bypass skips device/interface callbacks while still reaching native PM-lock release/reset_resume cleanup. Trusted modules must own a coherent PM/offload policy, preserve hardware access safety and keep prepare/resume decisions consistent. Native detached-device gates, failure cleanup and per-device serialization remain. This intentionally permits vendor power policy to bypass native PM operations; it is not an unprivileged control or a guarantee that arbitrary callbacks are safe. Exact SDK callback use remains unconfirmed.",
+      "evidence": [
+        "evidence/usb-thermal-interface-review.json",
+        "SECURITY.md: USB lifecycle and generic thermal interfaces"
+      ],
+      "patch_sha256": "857f8facaee31fbd3313b1e71b33895ef3cda1bd1b203c7fc37572e06369407c",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/usb/core/driver.c",
+        "include/trace/hooks/usb.h"
+      ]
+    },
+    {
+      "commit": "0e49b045d561ca646100887fe91cf33baa10c650",
+      "disposition": "omitted-kmi-only",
+      "result_commits": [],
+      "rationale": "Executable change only adds DECLONLY static_call_mod in usb/core/driver.c; the other changed path is the generated x86 ABI graph. Omit both historical CRC/ABI maintenance pieces. Keep source hooks and current generated symbol CRCs for rebuilt modules; no runtime behavior from this commit is required.",
+      "evidence": [
+        "evidence/usb-thermal-interface-review.json",
+        "SECURITY.md: USB lifecycle and generic thermal interfaces"
+      ],
+      "patch_sha256": "ed4343f4e2f31e3ec97507ea65b4ef35a149bd52b08296df6e0c56c415e27a5f",
+      "changed_paths": [
+        "drivers/usb/core/driver.c",
+        "gki/x86_64/abi.stg"
+      ]
+    },
+    {
+      "commit": "ec32332c46abacbe0080c588ca0efd7a612b0817",
+      "disposition": "already-represented-upstream",
+      "result_commits": [
+        "09f78265a93d496f84598e5cf7e5d655953c2ad0"
+      ],
+      "rationale": "Full five-path dedicated offload-lock patch reviewed against native 09f78265a93d, an LTS ancestor. Keep native offload_lock/PM gate, reference acquisition, runtime-active checks, paired PM puts and spinlock initialization. Whole offload.c, xhci-sideband.c and usb.h equal LTS; driver.c and usb.c retain native code with separately reviewed Android hooks/traces. USB_XHCI_SIDEBAND=y. Do not restore the older device-lock/autoresume design or offload_at_suspend bit.",
+      "evidence": [
+        "evidence/usb-thermal-interface-review.json",
+        "SECURITY.md: USB lifecycle and generic thermal interfaces"
+      ],
+      "patch_sha256": "f638d17345a07c0d22c0a87853608161cc48e40b6fef5221b7f88e7a32674edf",
+      "changed_paths": [
+        "drivers/usb/core/driver.c",
+        "drivers/usb/core/offload.c",
+        "drivers/usb/core/usb.c",
+        "drivers/usb/host/xhci-sideband.c",
+        "include/linux/usb.h"
+      ]
+    },
+    {
+      "commit": "baead118d8f4807ab8ff6e6a772d4dc6b4fe964f",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Explicit ad39a2c85de0 reverses all three-path changes exactly: public declaration/stub and GPL export of thermal_zone_device_is_enabled. Keep the current native thermal API, not this retired export. This conclusion rests on the actual reversal and final source, not the revert message's assertion about out-of-tree consumers.",
+      "evidence": [
+        "evidence/usb-thermal-interface-review.json",
+        "SECURITY.md: USB lifecycle and generic thermal interfaces"
+      ],
+      "patch_sha256": "3b3a8f9c91bbed3835148fd799f1c2432ddd3f45256db74d668e8aec68485f1d",
+      "changed_paths": [
+        "drivers/thermal/thermal_core.c",
+        "drivers/thermal/thermal_core.h",
+        "include/linux/thermal.h"
+      ]
+    },
+    {
+      "commit": "ad39a2c85de05d0413e866fd35daa108549fa9b0",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Reviewed exact inverse of baead118d8f4. Keep final native thermal public/internal headers and absence of the retired thermal_zone_device_is_enabled export. Modern thermal state/locking remains; do not use the historical removal rationale as proof of arbitrary consumer absence.",
+      "evidence": [
+        "evidence/usb-thermal-interface-review.json",
+        "SECURITY.md: USB lifecycle and generic thermal interfaces"
+      ],
+      "patch_sha256": "d71e3354352eb8dee30f3760d784ed5e07350d93e1c98e540e2ed17b59fff4f4",
+      "changed_paths": [
+        "drivers/thermal/thermal_core.c",
+        "drivers/thermal/thermal_core.h",
+        "include/linux/thermal.h"
+      ]
+    },
+    {
+      "commit": "2d89290aec213c015611aadce0c99368f3bea4a4",
+      "disposition": "superseded-no-residual-code",
+      "result_commits": [],
+      "rationale": "The added usb_function_instance.f pointer is explicitly removed by d23db69132ac, whose larger gadget retirement is already fully reviewed in accessory-full-review.json. Current ACK, LTS and port function-instance declarations match. Keep modern Android accessory/configfs notifications and native setup routing through their separate reviewed implementations; no old pointer lifetime or obsolete early-setup interception is resurrected.",
+      "evidence": [
+        "evidence/usb-thermal-interface-review.json",
+        "SECURITY.md: USB lifecycle and generic thermal interfaces"
+      ],
+      "patch_sha256": "2edb2546f149a3602dbadf69d29b0983040a11cdacd8a38dfa75cd3fdab5a3db",
+      "changed_paths": [
+        "include/linux/usb/composite.h"
+      ]
+    },
+    {
+      "commit": "29f41c64dd0d7d26b2da28c8a9c1db7d962e2341",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain thermal event suppression hook and registry export in configured THERMAL_NETLINK. Default enable=1 preserves native allocation, encoding, multicast and error cleanup; an affirmative vendor suppression returns success before allocation. This can hide events from thermal-policy userspace and must be restricted to trusted modules that provide the intended policy. Callbacks must first interpret event type: non-zone events leave tz_id zero through aggregate initialization, so zero alone is not a valid zone identity. Hook does not itself disable in-kernel governor operation. No runtime policy consumer or thermal test is claimed.",
+      "evidence": [
+        "evidence/usb-thermal-interface-review.json",
+        "SECURITY.md: USB lifecycle and generic thermal interfaces"
+      ],
+      "patch_sha256": "ecb24a16e3561c6b037c6007c51283b7624869968e38f9a663da0ffbc6388ec2",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/thermal/thermal_netlink.c",
+        "include/trace/hooks/thermal.h"
+      ]
+    },
+    {
+      "commit": "238d0b4a83d883613eededabaf833ef0314ac4bb",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "85ab9dbc6af8b5d2750ac9b954cbdac4a14ce6c0"
+      ],
+      "rationale": "Retain wakeability hook at registration and prepare/complete traversals. Adapt the latter two to initialize irq_wakeable per zone, preventing one callback result from skipping unrelated zones. Native zone mutex/completion handling and workqueue flush remain; default false follows native behavior. Trusted vendor code can intentionally leave a zone active and must maintain consistent policy/controller accessibility across the PM cycle. Incorrect callbacks can disrupt thermal management. Thirty extracted-function ASan/UBSan host cases show six unintentional ACK-control skips and none in the port; hardware, locking concurrency and suspend behavior are unverified.",
+      "evidence": [
+        "evidence/usb-thermal-interface-review.json",
+        "SECURITY.md: USB lifecycle and generic thermal interfaces",
+        "evidence/thermal-pm-hook-test.json",
+        "SECURITY.md: Thermal PM hook decisions are local to each zone"
+      ],
+      "patch_sha256": "0f7691dde05187cfb1b69c1ad19efe1c27b76b6b143ae19f0ca55bffdfd4a0ab",
+      "changed_paths": [
+        "drivers/android/vendor_hooks.c",
+        "drivers/thermal/thermal_core.c",
+        "include/trace/hooks/thermal.h"
+      ]
+    }
+  ],
+  "witnesses": {
+    "drivers/android/vendor_hooks.c": {
+      "port_blob": "3982987abc7ca93d58a72aecd2707e41d5c37769",
+      "lts_blob": null,
+      "ack_blob": "d5e98cbe95e1cee151f1d0cc769fe1792e774018"
+    },
+    "drivers/thermal/thermal_core.c": {
+      "port_blob": "a32065c8228b05e3fe6093ca45b95ef4a9b2730e",
+      "lts_blob": "1310e76c0fa642069d3acf9e2b8675275f0b287f",
+      "ack_blob": "80db951dc595a3eae31e600dd128a54edfd23926"
+    },
+    "drivers/thermal/thermal_core.h": {
+      "port_blob": "bdadd141aa24cf3c0afaf8d4c274e62bd796a4e9",
+      "lts_blob": "bdadd141aa24cf3c0afaf8d4c274e62bd796a4e9",
+      "ack_blob": "bdadd141aa24cf3c0afaf8d4c274e62bd796a4e9"
+    },
+    "drivers/thermal/thermal_netlink.c": {
+      "port_blob": "b9956797dab4727b93993d16cb1c44ee1ccaa91a",
+      "lts_blob": "315a76b01f6a199250fb68c6208ea14c8a1c61de",
+      "ack_blob": "b9956797dab4727b93993d16cb1c44ee1ccaa91a"
+    },
+    "drivers/usb/core/Makefile": {
+      "port_blob": "60ea76160122b98e604ac416bf0ec8f398341411",
+      "lts_blob": "766000b4939ef937a04848aa9cc45d8bb8860fe5",
+      "ack_blob": "60ea76160122b98e604ac416bf0ec8f398341411"
+    },
+    "drivers/usb/core/driver.c": {
+      "port_blob": "3ee80dbec847cd3ee5b025b654f16e132adc3636",
+      "lts_blob": "acd05f87b8e1414a250aea283b040347a6ed22a5",
+      "ack_blob": "f470c5d617fba6349e64e75d248fb2ff22af541b"
+    },
+    "drivers/usb/core/hub.c": {
+      "port_blob": "47f4c06fbf4b0a9f87505d5b7f2abf38a602c88d",
+      "lts_blob": "eedbe84a4812f73c511fe65a83c0fecc12cbe5ad",
+      "ack_blob": "f636ec5d40590c4d778dc7c9cad73a6ea0dac72e"
+    },
+    "drivers/usb/core/offload.c": {
+      "port_blob": "9db3cfedd29c7b55a65dbbfdd6a7ef1ae77a446a",
+      "lts_blob": "9db3cfedd29c7b55a65dbbfdd6a7ef1ae77a446a",
+      "ack_blob": "9db3cfedd29c7b55a65dbbfdd6a7ef1ae77a446a"
+    },
+    "drivers/usb/core/trace.c": {
+      "port_blob": "607bcf639d27f15a628537a86155fa92df33fa14",
+      "lts_blob": null,
+      "ack_blob": "607bcf639d27f15a628537a86155fa92df33fa14"
+    },
+    "drivers/usb/core/trace.h": {
+      "port_blob": "903e57dc273af58781ab3fb2f341690d4289bdf8",
+      "lts_blob": null,
+      "ack_blob": "903e57dc273af58781ab3fb2f341690d4289bdf8"
+    },
+    "drivers/usb/core/usb.c": {
+      "port_blob": "d51e3445868d71e8a4f075a7665bb5c59dfd56df",
+      "lts_blob": "048cf28efd4ee19a570243836a8056fb3f6800ec",
+      "ack_blob": "47b28db64a935789ee564a0e501007690d2ab121"
+    },
+    "drivers/usb/host/xhci-sideband.c": {
+      "port_blob": "ceca614d3a66274d587464cd8827f078d9857c36",
+      "lts_blob": "ceca614d3a66274d587464cd8827f078d9857c36",
+      "ack_blob": "651973606137693a21b04f017c912173a496b770"
+    },
+    "gki/x86_64/abi.stg": {
+      "port_blob": null,
+      "lts_blob": null,
+      "ack_blob": "6035652062c09d4e6c66d7e31b2bd8d87a4a137b"
+    },
+    "include/linux/thermal.h": {
+      "port_blob": "0b5ed682108073eba2585cd076191ef343aab3be",
+      "lts_blob": "0b5ed682108073eba2585cd076191ef343aab3be",
+      "ack_blob": "cb16ce7e1017069788a49c6d13941d4a1db1dae5"
+    },
+    "include/linux/usb.h": {
+      "port_blob": "f2adf76340953ff7ced1b8369e22eab8e4a9b4b5",
+      "lts_blob": "f2adf76340953ff7ced1b8369e22eab8e4a9b4b5",
+      "ack_blob": "168328aa1d8affae50b08baecfafd09a7e3fbff0"
+    },
+    "include/linux/usb/composite.h": {
+      "port_blob": "1e9b141852700b53c62fcbb31783923a6d5abed0",
+      "lts_blob": "c18041fafa5216abd51ebb3f692f8f13a04a712c",
+      "ack_blob": "1e9b141852700b53c62fcbb31783923a6d5abed0"
+    },
+    "include/trace/hooks/thermal.h": {
+      "port_blob": "d2aaf2063fe7773f54ba82f2b98003c28c903fbe",
+      "lts_blob": null,
+      "ack_blob": "9b87f957cb1e122bda7faa6db70aab673c2c4b29"
+    },
+    "include/trace/hooks/usb.h": {
+      "port_blob": "1a1b4c5e8a64e49b7371dac3df182339558d58fb",
+      "lts_blob": null,
+      "ack_blob": "1a1b4c5e8a64e49b7371dac3df182339558d58fb"
+    }
+  },
+  "native_and_ack_checks": {
+    "drivers/usb/core/driver.c": "Native file after removing only the two hook calls/branches/output locals and hook include; empty-line differences ignored.",
+    "drivers/usb/core/hub.c": "Native file outside the centralized state updater, its two reviewed callers and trace include; empty lines ignored.",
+    "drivers/usb/core/usb.c": "Native allocation/lifetime source plus trace include and one post-initialization event only.",
+    "drivers/usb/core/offload.c": "Whole file equals native LTS.",
+    "drivers/usb/host/xhci-sideband.c": "Whole file equals native LTS.",
+    "include/linux/usb.h": "Whole file equals native LTS.",
+    "drivers/thermal/thermal_core.h": "Whole file equals native LTS.",
+    "include/linux/thermal.h": "Whole file equals native LTS.",
+    "drivers/usb/core/trace.c": "Whole file equals pinned ACK.",
+    "drivers/usb/core/trace.h": "Whole file equals pinned ACK.",
+    "drivers/usb/core/Makefile": "Whole file equals pinned ACK.",
+    "drivers/thermal/thermal_netlink.c": "Whole file equals pinned ACK.",
+    "include/trace/hooks/thermal.h": "Whole file equals pinned ACK except trailing blank line.",
+    "drivers/thermal/thermal_core.c": "Native whole file outside three reviewed hook-bearing functions and include. Prepare/complete now reset output per zone; single-zone init already did."
+  },
+  "thermal_export_pair_inverse_patch_id": "b94af61bac4563e1e6ce0c1c80f507806d05aba7",
+  "retired_gadget_pointer": "d23db69132acd1d182bd2a48bb9a95b7ea8bca14",
+  "offload_native_commit": "09f78265a93d496f84598e5cf7e5d655953c2ad0",
+  "config_sha256": "48f19810fd5e10021d64b96e82cdb2b0b587f7cb24b3b4b5660b6732ae05cd09",
+  "registry_exports_preserved": true,
+  "remote_sources_used": [],
+  "limitations": "Compilation/artifact workflow only; build167 succeeded for per-zone fix, generating the image and 145 modules with all signatures verified and modified-payload control rejected. Host traversal tests are not suspend/thermal/USB hardware tests. Optional callback consumers remain unconfirmed; generic configured-subsystem interfaces are retained conservatively. Historical commit URLs were not accessed.",
+  "build_evidence": [
+    "evidence/build-results.json",
+    "evidence/module-tables-build-167.json"
+  ]
+}
