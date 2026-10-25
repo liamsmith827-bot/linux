@@ -32,7 +32,7 @@
 #include <errno.h>
 #include "../kselftest.h"
 
-#define UNREASONABLE_LAT (NSEC_PER_SEC * 5) /* hopefully we resume in 5 secs */
+#define UNREASONABLE_LAT (NSEC_PER_SEC * 5LL) /* hopefully we resume in 5 secs */
 
 #define SUSPEND_SECS 15
 int alarmcount;
@@ -72,9 +72,9 @@ char *clockstring(int clockid)
 
 long long timespec_sub(struct timespec a, struct timespec b)
 {
-	long long ret = NSEC_PER_SEC * b.tv_sec + b.tv_nsec;
+	long long ret = (long long)NSEC_PER_SEC * b.tv_sec + b.tv_nsec;
 
-	ret -= NSEC_PER_SEC * a.tv_sec + a.tv_nsec;
+	ret -= (long long)NSEC_PER_SEC * a.tv_sec + a.tv_nsec;
 	return ret;
 }
 
@@ -89,7 +89,7 @@ void sigalarm(int signo)
 	alarmcount++;
 
 	delta_ns = timespec_sub(start_time, ts);
-	delta_ns -= NSEC_PER_SEC * SUSPEND_SECS * alarmcount;
+	delta_ns -= (long long)NSEC_PER_SEC * SUSPEND_SECS * alarmcount;
 
 	printf("ALARM(%i): %ld:%ld latency: %lld ns ", alarmcount, ts.tv_sec,
 							ts.tv_nsec, delta_ns);
