@@ -8961,3 +8961,69 @@ retained conservatively. `9d5f5cbffd00` restores native coherent-pool diagnostic
 the KiB-formatting-only change provides no required Android ABI or behavior.
 coherent.c now equals LTS in full. Build 184 checks these small cleanups using the
 original workflow. All resources used for these decisions were local.
+
+## Remaining selftests and test distribution
+
+`evidence/tools-tail-review.json` records 55 individual decisions, original patch
+hashes, exact final/native comparisons and the explicitly selected SDK test
+sources. These changes affect testing and development tools, not kernel access
+controls. Test skips must remain distinguishable from successful tests.
+
+`7eab0e190225` removes an integration stub which returned success from
+pthread_cancel without cancelling anything. Bionic does not provide that API.
+The replacement skips only the thread-based SIG_IGN test under __ANDROID__,
+retains all 19 native planned results, and preserves real cancellation on other
+libcs. The process SIG_IGN, rearm and deletion tests remain enabled; copying
+ACK's global exclusion would unnecessarily suppress them. The original stub
+could misrepresent validation and leave a spinning test thread; its removal is
+not a kernel runtime security fix. No timer selftest was run.
+
+`0dbc8ac9c628` applies explicit Binderfs user-namespace and futex shmget skips for
+the USER_NS/SYSVIPC-disabled SDK configuration, plus the zero-length sendto and
+mremap overflow-expression compiler fixes. The older broader futex skip and
+psock header-guard pairs are reverted in ACK history and are not resurrected.
+Native waitv, timeout and wouldblock tests remain. `ce995d281cc8` guards the timer
+test's LONG_MAX/LONG_MIN definitions without changing its values or native
+signed-ppm fix. Native RTC tests remain in full: the SDK enables RTC_DRV_CMOS,
+and the tests inspect device availability and alarm features/granularity. The
+ACK blanket Android exclusion is not necessary to compile those tests; actual
+SDK interrupt/alarm operation remains unverified.
+
+The shipped x86/x86_64 XML and mappings retain the current ACK invocation policy,
+including the corrected closing tag, regmap prerequisite modules, architecture
+controller, leaf result parsing and obsolete futex argument removal. Native
+futex_requeue_pi now supplies the scenario matrix through harness variants.
+The vDSO-mremap and illustrative KUnit examples remain excluded from automated
+invocation as in ACK, but their binaries/modules remain built. This test-selection
+policy does not prove the excluded tests pass. `0e1904a4843c` removes three stray
+ARM-only XML files which the SDK distribution never selects.
+
+Final ACK documentation accompanies the supplied test artifacts and explains
+source-module testing; its tutorial patches are inert text, not applied kernel
+changes. Its example device-launch commands and external links were not executed
+or fetched. The original common test-launch scripts are absent in final ACK and
+are not restored. The existing build entry point remains build_virt.sh.
+
+The remaining KVM shared-library patches have positive consumers in the new
+ARCH=arm64 protected-VM selftest. That test's assembly, system-register checks,
+SMCCC memory/guard contracts and hyp tracing are outside this x86 SDK guest
+build. Their omission does not affect native kernel KVM fixes or settle AVF
+runtime parity. The BPF, sched_ext, cgroup and proc test-suite expansions are
+also outside the existing enumerated SDK test artifact closure. They test
+relevant behaviors, and would provide useful future runtime coverage; their
+omission is not evidence that the corresponding kernel fixes or userspace
+interfaces are unnecessary. Native test files remain, and kernel implementation
+decisions are recorded separately.
+
+Build 185 completed at 0e1904a4843c, including the kernel, common modules,
+virtual-device modules and packaged Bionic test programs. All 145 module
+signatures verified, a tampered payload was rejected, and all module flag/CRC
+tables matched. Build 186 also succeeded at ce995d281cc8 with the subsequent four-line libc
+guard change and the same signature and module-table checks.
+These are compilation/artifact checks only. All resources for this batch were
+local checkouts; no additional remote source was consulted.
+
+The prior finalized psock assertion decision a755993436b5 was revalidated
+after its file changed: the full native source differs only in the sendto
+argument, and NDEBUG is still undefined before the header includes. This
+refresh adds no new finalized candidate.
