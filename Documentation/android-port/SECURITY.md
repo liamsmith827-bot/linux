@@ -856,8 +856,10 @@ control. This validates compilation and artifacts, not runtime device behavior.
 
 A structural comparison of BUILD.bazel against pinned ACK finds 119 retained
 top-level statements: 117 are AST-identical, and two are adapted. The SDK kernel
-rule removes historical ABI inputs/enforcement/strict trimming and cross-architecture
-AutoFDO profile input, and adds the SHA-256 signing fragment. Protected-module
+rule removes historical ABI inputs/enforcement/strict trimming and adds the
+SHA-256 signing fragment. It retains ACK's shared AutoFDO profile input because
+the x86 rule explicitly consumes it; the earlier omission was corrected in
+`8a394ca713c0`. Protected-module
 name handling and the full x86 module source/header/export machinery remain. The
 other change removes a nonexistent LTS timer-test helper header from its input
 list; the existing workflow compiles the retained selftest package. Runtime tests
@@ -873,8 +875,11 @@ ARM64 implementations. The constants retain pinned Clang/Rust/NDK versions while
 using lts-sdk-6.18 and an empty KMI generation. MODVERSIONS/GENDWARFKSYMS remain for
 matching modules built from this source, without preserving historical CRCs or
 layouts. Deprecated build.config.common only prints a migration error and exits;
-its constants symlink and unused DDK test rules are outside the Bazel SDK workflow.
-The actual constants and DDK header archive used by that workflow are retained.
+its failure-only entry point is omitted. The functional constants symlink is
+retained in `23a6d60f6e99` for external build definitions; its absence from the
+selected workflow alone was insufficient grounds for omission. Unused DDK test
+rules remain outside the selected closure. The actual constants and DDK header
+archive used by that workflow are retained.
 
 See evidence/sdk-build-rule-structure.json for exact retained/omitted statements
 and evidence/sdk-build-rule-adaptations.patch for the two normalized changes.
@@ -8728,3 +8733,75 @@ not regenerate them. All sources in this review were local, and no remote URL wa
 opened. Build 179 passed at `79035f77e9e3`, generating the image, 100 common
 modules and 45 virtual-device modules. All 145 module signatures and flag/CRC
 tables verified; the modified-payload signature control was rejected.
+
+## Legacy build migration and current profiling inputs
+
+Seventy-seven candidate decisions are in `evidence/build-history-review.json`.
+The historical shell configuration series is traced through compiler-path changes,
+assembler selection, make goals, module lists, output metadata, boot packaging,
+fragment ordering and migration to Kleaf attributes. Final ACK deletes many old
+entry points and retains failure-only migration messages in others. This port
+omits those failed entry points while preserving the current original emulator
+workflow. `23a6d60f6e99` restores ACK's still-functional `build.config.constants`
+symlink to the existing central constants for external build definitions.
+
+The SDK rule explicitly selects x86_64, gki_defconfig plus sdk.fragment,
+bzImage/modules goals, current Clang/Rust versions and Android KCFLAGS. Kleaf
+provides vmlinux.symvers, modules.builtin, modules.builtin.modinfo, boot artifacts,
+system_dlkm and virtual-device initramfs packaging. Build 179 already verified
+these outputs and the complete module sets. Old arm32/arm64/riscv64 and physical
+board packaging is not added. The historical arm64 BTF-output toggle and temporary
+prepare-objtool goal are separately traced to their removals; current native BTF
+configuration and Kbuild tool dependencies remain.
+
+ACK contributor README changes and OWNERS/Gerrit policy changes are organizational
+metadata, omitted with individual explanations. Their links and external reviewer
+includes were not followed. Historical arm64 ABI corpora are classified by their
+generated XML schema and binary-layout-monitoring role, not by a claim to have
+semantically reviewed every generated type. These corpora and old whitelist are
+omitted under the explicit no-historical-KMI requirement.
+
+The x86 virtual-device symbol list has a separate functional role: the unchanged
+manifest module rule consumes it for staging import checks before final signing.
+Retain the final list plus the already documented native source imports from
+`4a8a3df378ad` and `0b7e6baa8c22`. Common-kernel binary ABI aggregation, strict
+enforcement and trimming remain disabled. This preserves current source-build
+checks and protected-module policy without promising historical symbol layouts,
+CRCs or every obsolete listed API.
+
+The ACK x86 build explicitly consumes the profile stored under
+`gki/aarch64/afdo`, so its directory name is not grounds for excluding it.
+`8a394ca713c0` retains the exact final 6.18.32 profile and local provenance README,
+and restores its existing x86 build selection. All earlier profile blobs and the
+6.18.21 revert/retry are accounted for by identity; the retry uses different bytes
+from the reverted update. The pinned llvm-profdata recognizes the 4,190,544-byte
+profile, including an empty profile-symbol-list section. Copied Pixel benchmark
+claims are neither reproduced nor asserted to apply to this SDK or LTS source.
+
+`97d96dc1cd01` completes Rust AutoFDO support: the retained Makefile.lib selected
+Rust profiling flags whose definitions/export were missing. Define those flags
+with the ACK debug-info, discriminator, sample-use and function-splitting options.
+Both affected files now match functional ACK, while all native Clang/LTO lines
+remain. Existing per-object/directory exclusions still apply. Neither profile
+selection nor Rust optimization replaces LTS source or reverses a fix, but compiler
+optimization can change layout and timing; runtime, performance and side-channel
+effects are unmeasured. No profile was collected and no VM or device was run.
+
+Build 180 passed with the restored C profile, producing the kernel image and all
+145 modules. All signatures and flag/CRC tables verified, and the modified-payload
+control was rejected. Build 181 also passed with the completed Rust flags and
+constants alias, producing the kernel and 100 common plus 45 virtual-device
+modules. All signatures and flag/CRC tables verified, with the modified-payload
+control rejected. All inputs were local; no remote resource was used.
+
+`evidence/build-history-corrections.json` corrects 38 prior decisions for constants
+history and profile selectors. Every constants patch was re-examined: intermediate
+compiler versions are superseded by the current pinned versions, centralization
+and the symlink are retained, and the three temporary 6.13 internal variables are
+an exact addition/revert pair. The ARM64-only profile rule remains outside this
+target, while the explicit x86 profile selector is retained. A structural proof
+against the previous reviewed source establishes that this selector is the sole
+BUILD.bazel AST change; all other retained statements and omitted rules are
+unchanged. This supports updated witnesses for 271 prior build-related decisions,
+including their separately examined merge resolutions. It does not turn compiler
+artifact checks into performance or runtime validation.
