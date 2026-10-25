@@ -1,0 +1,94 @@
+{
+  "source_head": "066845be07d68803c204948a00e7b546e01d7aad",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "a24bbf4fdb43a0a7af4e824e5656576093c6d08a",
+      "disposition": "applied",
+      "rationale": "Apply the complete guard. Native of_reserved_mem_lookup dereferences np->full_name, while native ACPI/platform matching can bind the OF-compatible driver without a device-tree node. Fail probing cleanly when no supported firmware description exists. This is a generic robustness correction in the already-enabled Android module; no LTS source difference was overwritten.",
+      "result_commits": [
+        "9d3fbd00c3bdcd4a8a0f88e358e6853a417f82a3"
+      ],
+      "evidence": [
+        "evidence/open-dice-tail-review.json",
+        "SECURITY.md: OpenDICE firmware discovery and null-node handling"
+      ],
+      "patch_sha256": "f92b98e5aa2b813eed0cc668379c483f5423cfd1364433cd3fe64b38e2ea6c39",
+      "exact_candidate_patch": true
+    },
+    {
+      "commit": "21324ae6fbb31a5f310e41d258235eca56a0cd74",
+      "disposition": "applied",
+      "rationale": "Apply the complete prerequisite refactor: retain memory base/size directly, allowing either DT reserved-memory or ACPI resource discovery. All three read/mmap/wipe users receive the same validated values. Preserve size, page alignment, access controls, mapping flags and serialized wipe. This is functional discovery infrastructure, not historical layout preservation.",
+      "result_commits": [
+        "a373fda3888b78770a5b610ac0d851f034184f1d"
+      ],
+      "evidence": [
+        "evidence/open-dice-tail-review.json",
+        "SECURITY.md: OpenDICE firmware discovery and null-node handling"
+      ],
+      "patch_sha256": "adaa424e3c14ef35f4e3c4582d72a809dbe51038f7e28fc98fed6efea437ab47",
+      "exact_candidate_patch": true
+    },
+    {
+      "commit": "89a836b9e8070d1806f9fc85d9ac4afcc564ed5b",
+      "disposition": "applied",
+      "rationale": "Apply ACPI discovery conservatively for the existing OPEN_DICE=m module and native x86 ACPI matching. Retain the same userspace ABI across firmware descriptions without requiring protected execution or changing firmware/configuration. The specific SDK firmware producer and runtime necessity remain unconfirmed: local positive consumers are Microdroid/pvmfw, and the commit describes an injected crosvm ACPI table. These do not prove SDK use or dispensability. Inclusion preserves this generic Android discovery contract on the current configured architecture, rather than adding an entire future platform.",
+      "result_commits": [
+        "066845be07d68803c204948a00e7b546e01d7aad"
+      ],
+      "evidence": [
+        "evidence/open-dice-tail-review.json",
+        "SECURITY.md: OpenDICE firmware discovery and null-node handling"
+      ],
+      "patch_sha256": "0ed737e4a0b50b5861fa0f7307a180b9a9e3f50fb131ef2fd736c0475458cc74",
+      "exact_candidate_patch": true
+    }
+  ],
+  "local_evidence": [
+    {
+      "path": "drivers/misc/open-dice.c",
+      "sha256": "7f5f171848142b6beb95672e0cec953042a0d3eb0dde9436dbc3b2207cc5013b"
+    },
+    {
+      "path": "drivers/of/of_reserved_mem.c",
+      "sha256": "1aa359ffc417c3fe7f172bc94ea32d535ba2dea093225c01a2b3b798d326ea66"
+    },
+    {
+      "path": "drivers/acpi/bus.c",
+      "sha256": "22ddef216c1c9856feff9445f871ccf9d4c8db6252fbae102bd8ef6f06fd19e1"
+    },
+    {
+      "path": "drivers/base/platform.c",
+      "sha256": "b3df261190611e2840323be3e1082f6f1b0a9165176b7ad12eca4ad6ac8622c1"
+    },
+    {
+      "path": "Documentation/firmware-guide/acpi/enumeration.rst",
+      "sha256": "4457c6c5e82202c1f6d4decbb6ead9866e4784acb2cc452510a03d8f0e066398"
+    },
+    {
+      "path": "../grapheneos-17/packages/modules/Virtualization/libs/dice/driver/src/lib.rs",
+      "sha256": "7a61e91c096ac27f6c3eede462abdbcdcd09a6e776ca5abc5dd086e8113aa6c6"
+    },
+    {
+      "path": "../grapheneos-17/packages/modules/Virtualization/guest/microdroid_manager/src/main.rs",
+      "sha256": "ce960ef8721fd6f8687371373d54891cd29b83ca8b8c6a6ed739924c522b6883"
+    },
+    {
+      "path": "../grapheneos-17/packages/modules/Virtualization/guest/pvmfw/platform_x86_64.dts",
+      "sha256": "dc03f2aa326c8430290ab04d01be8d96d185807a0a3f2300c0b6739902347c2c"
+    },
+    {
+      "path": "../grapheneos-17/packages/modules/Virtualization/build/microdroid/ueventd.rc",
+      "sha256": "d5dcf10cc94b0e25572cff71434739f5d55cd28d3491030f1a0ab50ed2d3e270"
+    }
+  ],
+  "baseline_equals_candidate_parent": true,
+  "final_file_equals_ack": true,
+  "config_sha256": "5eb9df697a47e51c48fc154d7c5c9de503407ea3d7789c1d3cd3c6185088ba8e",
+  "source_review": "All three complete patches, complete native driver, native reserved-memory lookup and ACPI compatible matching, local Android DICE mapping/wipe consumer and x86 pvmfw description examined. SDK-specific producer/use unconfirmed; retain generic configured interface conservatively. No firmware, hypervisor or Android userspace modified. Existing native protections and checks retained; no newer LTS change to this file is reversed.",
+  "security": "Firmware supplies the physical region and remains trusted. ACPI discovery expands firmware-description support, not unprivileged arbitrary-physical-memory selection. The misc device starts at 0600; shared writable mappings and later write upgrades are blocked, mappings are non-dumpable/non-inheritable, private mapping behavior is unchanged. The driver transports/wipes opaque DICE data and does not validate chains, establish protected execution, authenticate a VM, or guarantee SDK attestation. Actual wipe coherence, firmware reservation and runtime security have not been tested.",
+  "validation": "Exact patch and baseline comparisons plus configured target checks. Compilation will be recorded separately; build 197 predates these executable changes. No runtime test or remote resource used.",
+  "remote_resources_used": []
+}

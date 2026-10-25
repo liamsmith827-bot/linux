@@ -10637,3 +10637,36 @@ without the old global mutex; native FF data remains guarded. Unrelated upstream
 changes between the pair's tree endpoints are recorded separately and are not
 attributed to the two candidate patches. No new source/configuration change,
 build result, controller/display runtime test or remote access is claimed.
+
+## OpenDICE firmware discovery and null-node handling
+
+The three complete patches in `evidence/open-dice-tail-review.json` are applied
+as `9d3fbd00c3bd`, `a373fda3888b` and `066845be07d6`. Native
+`of_reserved_mem_lookup()` dereferences its node argument. Native ACPI matching
+can already match the driver's OF compatible string without an OF node. The
+first patch rejects unsupported descriptions before that dereference. The next
+two store the same validated physical base/size directly and support ACPI MMIO
+resources through the existing x86 ACPI matching mechanism. The pre-patch file
+is identical to pinned LTS and the final file equals ACK: no newer LTS fix is
+removed or weakened.
+
+The selected configuration already provides OPEN_DICE=m and ACPI=y. Local
+Microdroid code reads the size, privately maps the DICE handover, and requests
+a wipe; x86 pvmfw supplies a DT reserved-memory description. The ACK commit
+contains an injected crosvm ACPI-table example. Those are concrete interface
+contracts, but they do not establish that SDK firmware supplies such a region.
+That necessity question remains explicit in `unresolved-feature-questions.json`.
+Generic discovery support is retained conservatively for the already-configured
+module and architecture; no firmware producer, protected-guest platform or new
+configuration is added. The earlier configuration-history statement that the
+module remains native describes build 187; this section records its later change.
+
+Firmware remains trusted to identify reserved physical memory. The existing
+nonzero/ULONG_MAX and page-alignment checks, mode 0600, serialized wipe,
+shared-write rejection and VM_MAYWRITE removal, VM_DONTCOPY/VM_DONTDUMP and
+private mapping semantics remain. ACPI discovery does not let userspace choose
+arbitrary physical addresses. The driver neither verifies DICE chains nor
+establishes protected execution or SDK attestation. Firmware correctness,
+wipe coherence and runtime use are unverified. Exact patch/baseline checks pass;
+the next recorded build must compile these executable changes, which postdate
+build 197. All evidence was local; embedded source links were not contacted.
