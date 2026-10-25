@@ -10912,3 +10912,36 @@ obsolete stride missed 330; module flag/CRC table checks passed for all 145.
 Exact dependency pins and artifacts are in build-results.json and
 module-tables-build-201.json. Compilation/artifact checks do not establish
 runtime behavior; no emulator or device was booted. No remote resource was used.
+
+## X86 protected guest boundary and native MMIO
+
+Eight original patches are reviewed in full in x86-guest-tail-review.json.
+The ordinary SDK/QEMU guest is the delivery target; running this image itself
+under an x86 pKVM protected outer hypervisor is a separate deployment. ACK GKI
+does enable PKVM_X86_GUEST: its omission is deliberate, not an inference that
+it was disabled or lacks consumers. The local AVF virtmgr has an explicit
+protectedVm branch selecting protected crosvm launch options, so protected VM
+consumers exist. The SDK command line alone does not prove outer CPUID state.
+
+ACK detection requires PKVMPKVMPKVM, supplied by its private hypervisor only for
+protected vCPUs. Ownership share/unshare, bounce-buffer attributes, MMIO/PCI
+hypercalls and trusted secondary-CPU startup are coupled to that guest contract.
+Their private implementations are omitted together; protected guest execution
+is neither advertised nor verified. All 11 shared affected files remain whole
+native LTS, and all four private paths are absent. Native KVM guest support and
+ordinary virtio remain configured. A changed outer-VMM contract requires review.
+
+The MMIO static-key optimization fixes overhead introduced by ACK pv_mmio_ops.
+Native inline mov accessors are retained without that dispatch; importing the
+optimization would add an otherwise unnecessary backend. The later hardware
+present-bit/type fix is a real protection against converting non-present page
+metadata into hypercall physical addresses. The vulnerable private function is
+absent; a future implementation must include that fix. Native PAT/CoCo locking,
+MMIO barriers and APIC behavior are preserved, not replaced with older ACK code.
+
+The pKVM-only balloon-disable stub is excluded with its guest backend. Native
+virtio balloon still clears ACCESS_PLATFORM and native restricted-memory
+negotiation rejects devices missing that feature; ACK's relaxation is excluded.
+Ordinary balloon remains built. This does not claim balloon is safe in an
+unimplemented protected guest. Local source and compiled artifact checks only
+were performed; embedded URLs were not visited and no VM was booted.

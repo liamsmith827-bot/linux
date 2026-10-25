@@ -1,0 +1,264 @@
+{
+  "source_head": "58c423b33404245ce2122b4cb225ee0af4daf917",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "d006f39415062807cbe44a6e1b3e7c4d42dcc896",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the protected-guest detector and its config/build/enum registration. Complete patch requires the distinct PKVMPKVMPKVM CPUID signature, which ACK supplies only for protected vCPUs in its private hypervisor. The SDK deliverable is the ordinary Goldfish/QEMU guest; launching this kernel itself as an x86 protected guest is a separate deployment not claimed here. ACK GKI does enable this config, so omission is deliberate target scope, not a claim the feature was absent. Keep all native hypervisor detection and KVM guest support. A different outer VMM/CPUID contract requires reassessment; the SDK command line alone does not establish its CPUID.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/x86-guest-tail-review.json",
+        "SECURITY.md: X86 protected guest boundary and native MMIO"
+      ],
+      "patch_sha256": "ccae333844aef3ec36e715925b54f0c3fbbff9855fa754a7db8a4f96e9cf7f77",
+      "files": [
+        "arch/x86/Kconfig",
+        "arch/x86/include/asm/hypervisor.h",
+        "arch/x86/kernel/cpu/Makefile",
+        "arch/x86/kernel/cpu/hypervisor.c",
+        "arch/x86/kernel/cpu/pkvm.c"
+      ]
+    },
+    {
+      "commit": "81f530a28fb33cd66ad4af454b01c788f14e3619",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit protected-guest memory ownership sharing: page touching, share retry on EAGAIN, unshare errors, confidential-computing vendor attributes and set_memory interception. These are coupled to the protected detector and host ownership hypercalls. Keep whole native CoCo/PAT/memory-encryption files and their LTS locking/errors. Ordinary virtio transport/DMA remains available. Do not advertise protected memory isolation without this backend; no pKVM guest or arbitrary outer VMM compatibility is claimed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/x86-guest-tail-review.json",
+        "SECURITY.md: X86 protected guest boundary and native MMIO"
+      ],
+      "patch_sha256": "c5b84f3326c90720d79b022f0b7cbefc6eb16d3e5f3022c6a139ab9c92e9cc2d",
+      "files": [
+        "arch/x86/Kconfig",
+        "arch/x86/coco/Makefile",
+        "arch/x86/coco/core.c",
+        "arch/x86/coco/pkvm/Makefile",
+        "arch/x86/coco/pkvm/pkvm.c",
+        "arch/x86/include/asm/coco.h",
+        "arch/x86/include/asm/pkvm_guest.h",
+        "arch/x86/kernel/cpu/pkvm.c",
+        "arch/x86/mm/pat/set_memory.c"
+      ]
+    },
+    {
+      "commit": "cd1c1ff12613506f091f809f0e6f60b6c3c1303f",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit protected-only MMIO hypercalls and all read/write callbacks. They exist to emulate accesses when the host cannot read protected guest instructions. The entire private implementation is absent; ordinary native inline MMIO and barrier semantics are retained, including full native io.h/paravirt files. Its later present-entry validation fix is assessed separately, not silently discarded while retaining the vulnerable function.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/x86-guest-tail-review.json",
+        "SECURITY.md: X86 protected guest boundary and native MMIO"
+      ],
+      "patch_sha256": "dbe574265216cda1b0de76d035ae7f5cc78232a8249cf65f1e8ab31a6d79a35a",
+      "files": [
+        "arch/x86/coco/pkvm/pkvm.c"
+      ]
+    },
+    {
+      "commit": "ba2cbbd30bdbfd8e4b8a8ea731543cb7f1d9aaac",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the six protected-guest PCI MMCONFIG callback overrides with the protected MMIO backend. Full patch only assigns read/write b/w/l callbacks during protected-guest initialization. Native PCI access and MMIO primitives are retained; no independent generic PCI fix is lost. A guest protected from its outer host is outside this SDK deployment.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/x86-guest-tail-review.json",
+        "SECURITY.md: X86 protected guest boundary and native MMIO"
+      ],
+      "patch_sha256": "15217186978b6b47ec58fdbd17e06cc2d8c398fcb632b8300396f7d033c89f72",
+      "files": [
+        "arch/x86/coco/pkvm/pkvm.c"
+      ]
+    },
+    {
+      "commit": "171a0f6163b37c35a8ef394153bce28ba6206f71",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit protected-guest secondary-CPU hypercall registration. Full patch replaces the APIC wakeup callback only inside protected-guest initialization, where host-emulated INIT/SIPI is not trusted. Retain native APIC startup and mitigations for the ordinary SDK. This does not promise trusted CPU startup under pKVM or restore the untrusted APIC method inside a supported protected guest.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/x86-guest-tail-review.json",
+        "SECURITY.md: X86 protected guest boundary and native MMIO"
+      ],
+      "patch_sha256": "63a222d15d3540707cefa8a219840114c5b054c78c633cca664260fb21dad27c",
+      "files": [
+        "arch/x86/coco/pkvm/pkvm.c"
+      ]
+    },
+    {
+      "commit": "d09fd633aff3f998bf21bb42e61880e6fe37dc43",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the x86 pKVM-specific balloon-disable stub and architecture capability selection. They are necessary for the separate protected guest lacking relinquish support, and are omitted with that guest backend. Entire native virtio core and balloon files remain, including clearing ACCESS_PLATFORM and rejecting restricted-memory devices lacking it; the ACK relaxation 5444ed1c069f is not imported. Thus the known protected balloon hazard is not newly enabled. Ordinary SDK balloon module remains compiled.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/x86-guest-tail-review.json",
+        "SECURITY.md: X86 protected guest boundary and native MMIO"
+      ],
+      "patch_sha256": "819d07e20f15f771bbec4dc0db1720c6e5c1a53005965aadebd6b4ab1e5a1ec1",
+      "files": [
+        "arch/x86/Kconfig",
+        "arch/x86/coco/pkvm/pkvm.c"
+      ]
+    },
+    {
+      "commit": "338d7b572122d7ded329b2d55aaac0dac633888d",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the static-key MMIO optimization with the already excluded pv_mmio_ops introduction f87819dc9429. Full patch improves ordinary systems affected by ACK indirect dispatch, but the port retains the whole native inline mov accessors and has no such dispatch overhead to fix. No key/export is needed without the backend; native barrier and call semantics remain. Do not transplant older ACK paravirt implementation over LTS.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/x86-guest-tail-review.json",
+        "SECURITY.md: X86 protected guest boundary and native MMIO"
+      ],
+      "patch_sha256": "a79a4adbb7350fc80d0c648e39d87409aaa5df92afac5cf90fcb25451ddd4602",
+      "files": [
+        "arch/x86/coco/pkvm/pkvm.c",
+        "arch/x86/include/asm/io.h",
+        "arch/x86/include/asm/paravirt.h",
+        "arch/x86/kernel/paravirt.c"
+      ]
+    },
+    {
+      "commit": "85f7f315b0cae40b58e28a62fe6182e4ea0d3b05",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the unsigned lookup level and hardware-present check only because the complete private pkvm_virt_mmio implementation is absent. This is a real correctness/security fix: non-present metadata must not become a physical address passed to the hypervisor, and PROTNONE must not count as hardware-present. No older vulnerable copy is retained. If protected-guest MMIO is added later, both fixes are required along with its ownership/translation contract.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/x86-guest-tail-review.json",
+        "SECURITY.md: X86 protected guest boundary and native MMIO"
+      ],
+      "patch_sha256": "8f9fec6cf6f9fec934e4241a4260bed891c57b7ae3fc4228ad799ddf9e61e8c1",
+      "files": [
+        "arch/x86/coco/pkvm/pkvm.c"
+      ]
+    }
+  ],
+  "proofs": [
+    {
+      "path": "arch/x86/Kconfig",
+      "comparison": "whole native LTS blob",
+      "entry": "100644 blob 8623c4a5ce7b5314c33224e876f5e622131b5a8c\tarch/x86/Kconfig",
+      "ack_entry": "100644 blob ed87a006a5fbf0e49eb3a815782c0764bc8d028c\tarch/x86/Kconfig"
+    },
+    {
+      "path": "arch/x86/coco/Makefile",
+      "comparison": "whole native LTS blob",
+      "entry": "100644 blob eabdc7486538d94a4286ab199f509105ef31a989\tarch/x86/coco/Makefile",
+      "ack_entry": "100644 blob fa9105136446347eaa8fa1c02b4bd6199d020a85\tarch/x86/coco/Makefile"
+    },
+    {
+      "path": "arch/x86/coco/core.c",
+      "comparison": "whole native LTS blob",
+      "entry": "100644 blob 989ca9f72ba30b987ac3cd2e78d3ac55c7f284bb\tarch/x86/coco/core.c",
+      "ack_entry": "100644 blob 4ee84bee7b3e4d69c87d502484e2521e6c019640\tarch/x86/coco/core.c"
+    },
+    {
+      "path": "arch/x86/coco/pkvm/Makefile",
+      "comparison": "absent in LTS and port",
+      "entry": "",
+      "ack_entry": "100644 blob 3624456025eedb5cc021c4229fa6e3e2dd00519b\tarch/x86/coco/pkvm/Makefile"
+    },
+    {
+      "path": "arch/x86/coco/pkvm/pkvm.c",
+      "comparison": "absent in LTS and port",
+      "entry": "",
+      "ack_entry": "100644 blob 82310f52d7fb4871bbf381f17fdce172ad2ab61b\tarch/x86/coco/pkvm/pkvm.c"
+    },
+    {
+      "path": "arch/x86/include/asm/coco.h",
+      "comparison": "whole native LTS blob",
+      "entry": "100644 blob e1dbf8df1b695b4db2af78223c9810ded664ea5c\tarch/x86/include/asm/coco.h",
+      "ack_entry": "100644 blob 26d0e29fd50ab2990d5e779b8236c2c281db6b48\tarch/x86/include/asm/coco.h"
+    },
+    {
+      "path": "arch/x86/include/asm/hypervisor.h",
+      "comparison": "whole native LTS blob",
+      "entry": "100644 blob 9ad86a7d13f6d79274a5436b688266920869b087\tarch/x86/include/asm/hypervisor.h",
+      "ack_entry": "100644 blob 586da83b7cc6e5d22de1cce99cf98adadaf59d46\tarch/x86/include/asm/hypervisor.h"
+    },
+    {
+      "path": "arch/x86/include/asm/io.h",
+      "comparison": "whole native LTS blob",
+      "entry": "100644 blob ca309a3227c78bee2eafa2eecfb4b91f941072a8\tarch/x86/include/asm/io.h",
+      "ack_entry": "100644 blob a486a06829d6c98c8e3656b5cd89c668ee39ba54\tarch/x86/include/asm/io.h"
+    },
+    {
+      "path": "arch/x86/include/asm/paravirt.h",
+      "comparison": "whole native LTS blob",
+      "entry": "100644 blob b5e59a7ba0d0e206e01a2f63b2dfa3dbbe6ef81d\tarch/x86/include/asm/paravirt.h",
+      "ack_entry": "100644 blob a4091d3b67984b9272da6c6f6a91d0ff5a05d9c6\tarch/x86/include/asm/paravirt.h"
+    },
+    {
+      "path": "arch/x86/include/asm/pkvm_guest.h",
+      "comparison": "absent in LTS and port",
+      "entry": "",
+      "ack_entry": "100644 blob 24c11c48f0cdad976ed513cef77631ea83409822\tarch/x86/include/asm/pkvm_guest.h"
+    },
+    {
+      "path": "arch/x86/kernel/cpu/Makefile",
+      "comparison": "whole native LTS blob",
+      "entry": "100644 blob 2f8a58ef690ec75678d523476136d50e930cee3f\tarch/x86/kernel/cpu/Makefile",
+      "ack_entry": "100644 blob 2f292c0aa8a143ffa358d16adcfaabb7c42ee98d\tarch/x86/kernel/cpu/Makefile"
+    },
+    {
+      "path": "arch/x86/kernel/cpu/hypervisor.c",
+      "comparison": "whole native LTS blob",
+      "entry": "100644 blob f3e9219845e8582a696a0f91946ab02d0baf0774\tarch/x86/kernel/cpu/hypervisor.c",
+      "ack_entry": "100644 blob 5da95de0d251c3fc6bd39174fe02027553896c48\tarch/x86/kernel/cpu/hypervisor.c"
+    },
+    {
+      "path": "arch/x86/kernel/cpu/pkvm.c",
+      "comparison": "absent in LTS and port",
+      "entry": "",
+      "ack_entry": "100644 blob 3a815936c4e8f5bade4bf7a1005b9721c4bbcbc9\tarch/x86/kernel/cpu/pkvm.c"
+    },
+    {
+      "path": "arch/x86/kernel/paravirt.c",
+      "comparison": "whole native LTS blob",
+      "entry": "100644 blob ab3e172dcc693120cf05eb530082c22aab0e9e85\tarch/x86/kernel/paravirt.c",
+      "ack_entry": "100644 blob b1ea6f6dd8c14120989f46c17da0f5eea85079a1\tarch/x86/kernel/paravirt.c"
+    },
+    {
+      "path": "arch/x86/mm/pat/set_memory.c",
+      "comparison": "whole native LTS blob",
+      "entry": "100644 blob 62e7c4ee06f9d63ca7938db5e7259d1d1778e24e\tarch/x86/mm/pat/set_memory.c",
+      "ack_entry": "100644 blob 9cfa81eb8beeebab7fb3b647f5f9c674829024d9\tarch/x86/mm/pat/set_memory.c"
+    },
+    {
+      "path": "drivers/virtio/virtio_balloon.c",
+      "comparison": "whole native LTS blob",
+      "entry": "100644 blob a3995e77a652ca3a750bd2799243cc052dad7ba2\tdrivers/virtio/virtio_balloon.c"
+    },
+    {
+      "path": "drivers/virtio/virtio.c",
+      "comparison": "whole native LTS blob",
+      "entry": "100644 blob 4ced08886d0b80b52571d6738a37de9ca82f5cde\tdrivers/virtio/virtio.c"
+    },
+    {
+      "path": "arch/x86/include/asm/paravirt_types.h",
+      "comparison": "whole native LTS blob",
+      "entry": "100644 blob 37a8627d8277fbf2c1f9f1a4f4e3f2180596de1c\tarch/x86/include/asm/paravirt_types.h"
+    }
+  ],
+  "local_resources": [
+    {
+      "project": "device/generic/goldfish",
+      "commit": "5281db702f36e0e8c0af9e33d70b63d3ba4916ae",
+      "files": {
+        "board/kernel/x86_64.mk": "f5431c8a99767dcc022310cf8d3d67b8a663cddf9765bae089b6a69c3f11ac54",
+        "board/kernel/x86_64_cmdline.txt": "ec34f1f155caa37116a3396e454beefab1eed40b66d95027450a1e4dbb95b2ff"
+      }
+    },
+    {
+      "project": "packages/modules/Virtualization",
+      "commit": "877c295900229876d631aef92b713634dad600b7",
+      "files": {
+        "android/virtmgr/src/crosvm.rs": "f7a87cdd508e25ccf66a20ab477b7f0637ad6b238230dd3eda0b4fa9dc7b2de4"
+      }
+    }
+  ],
+  "generated_config_sha256": "6d27ff842b4cac221ab58093e8ca6bc7f8c692b6ccf56c9b7cceca230389d769",
+  "ack_cpuid_blob": "b437f41f10e817cabd2ddef3d183142bc308e95f",
+  "method": "All eight complete original patches read; all 15 affected final paths compared as whole blobs, plus native virtio and paravirt types. Native MMIO and virtio restricted-memory negotiation read; ACK detector and protected-host CPUID producer traced. Pinned Goldfish artifact/command-line files and AVF protected VM launch branching examined.",
+  "limits": "SDK ordinary guest is the deployment boundary, not a runtime observation of CPUID. ACK GKI enables PKVM_X86_GUEST; excluded deliberately. AVF has real protected-VM consumers, as its explicit crosvm protectedVm branch demonstrates. No outer hypervisor, guest memory sharing, CPU startup, or protected/nested VM runtime was tested. Failed old-path lookups and broad file searches are not absence evidence. Commit-message URLs were not contacted.",
+  "remote_resources_used": []
+}
