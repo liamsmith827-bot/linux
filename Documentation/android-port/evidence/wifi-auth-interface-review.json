@@ -1,0 +1,363 @@
+{
+  "source_head": "75ea12295e6b737a6dc75e4b49b5be5f338f2fb7",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "records": [
+    {
+      "commit": "f99178857c857920b4018d1526a0a2be44260f3b",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain appended EPPKE authentication type/feature and authentication data forwarding for the generic Android cfg80211 interface. AUTHENTICATE and CONNECT reject the new type unless the driver advertises EPPKE; AUTHENTICATE requires AUTH_DATA and retains existing interface/auth checks. START_AP does not receive the same feature gate, matching ACK AP-side userspace authentication semantics; do not claim universal gating or kernel implementation of the protocol. Current SDK hwsim/mac80211 does not advertise EPPKE, and exact SDK use is unconfirmed; retain the configured generic interface conservatively without adding a physical driver.",
+      "evidence": [
+        "evidence/wifi-auth-interface-review.json",
+        "SECURITY.md: Wireless authentication and lifecycle interfaces"
+      ],
+      "patch_sha256": "1ae627891efcf7079821670d704d62849a2a60199d8d49beede64538cbd50e73",
+      "changed_paths": [
+        "include/linux/ieee80211.h",
+        "include/uapi/linux/nl80211.h",
+        "net/wireless/nl80211.c"
+      ]
+    },
+    {
+      "commit": "1dd823a9174d129f761345c138f3cafd5669329b",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain pre-association key management only for STA/P2P-client drivers advertising ASSOC_FRAME_ENCRYPTION. This intentionally relaxes the native connected-only check to support encrypted association; ordinary drivers still return ENOLINK before association. Cipher, key-type, length and link checks remain on the existing key paths. Actual encrypted association on the SDK is unconfirmed and not claimed; the change preserves an Android cfg80211 capability-gated source/userspace contract.",
+      "evidence": [
+        "evidence/wifi-auth-interface-review.json",
+        "SECURITY.md: Wireless authentication and lifecycle interfaces"
+      ],
+      "patch_sha256": "f021c2a71151231935d1050d0b1470b30246c4b884eaa3df7224eb2e6edd2cef",
+      "changed_paths": [
+        "net/wireless/nl80211.c"
+      ]
+    },
+    {
+      "commit": "f3f13407703555071e95f4ba62896c17d96f2523",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain new IEEE8021X authentication-frame algorithm constant, appended nl80211 type/feature and AUTH_DATA forwarding. AUTHENTICATE/CONNECT require the advertised capability; this is distinct from ordinary 802.1X EAPOL and does not implement or enable the cryptography in hwsim. Retain native malformed MLME frame-length checks. Exact SDK use remains unconfirmed; preserve the shared configured API conservatively.",
+      "evidence": [
+        "evidence/wifi-auth-interface-review.json",
+        "SECURITY.md: Wireless authentication and lifecycle interfaces"
+      ],
+      "patch_sha256": "ab504d87aedd88fe2f339ea71ed0fad3cf1ec1c7aa919cf5323ecd8f6b73c250",
+      "changed_paths": [
+        "include/linux/ieee80211.h",
+        "include/uapi/linux/nl80211.h",
+        "net/wireless/nl80211.c"
+      ]
+    },
+    {
+      "commit": "ac41d4146b884d06e15c80a6669ec800c39e2cb6",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "All ordered added/deleted lines exactly match native 335c515932a5. Preserve that LTS UHR capability, disable/regulatory, rate-report and bitrate implementation, with native fe44ae31ca78 validator fix and 84263694c8d1 operation-attribute replacement. Full UHR definitions header and bitrate helpers equal LTS. The historical boolean-return validator and beacon-derived full operation pointer are superseded; no additional UHR implementation is ported. Native helper FIXME limitations for DPS/DBE/P-EDCA are not claimed solved.",
+      "evidence": [
+        "evidence/wifi-auth-interface-review.json",
+        "SECURITY.md: Wireless authentication and lifecycle interfaces"
+      ],
+      "patch_sha256": "7c8158973bd166f6aa22ba949620f0fcff5c7d1f965a3954fcfe5310835c563c",
+      "changed_paths": [
+        "include/net/cfg80211.h",
+        "include/uapi/linux/nl80211.h",
+        "net/wireless/nl80211.c",
+        "net/wireless/reg.c",
+        "net/wireless/util.c"
+      ]
+    },
+    {
+      "commit": "c69ad1cc4028e33574e55766617241d72538e39d",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Ordered patch edits exactly match native fe44ae31ca78; current validate_uhr_capa equals LTS. Keep conversion of boolean length validation to zero/EINVAL, so malformed data is rejected rather than returning success. This is already represented in the pinned stable source, not a new port change.",
+      "evidence": [
+        "evidence/wifi-auth-interface-review.json",
+        "SECURITY.md: Wireless authentication and lifecycle interfaces"
+      ],
+      "patch_sha256": "d8d1997c2179832d144e63c024ed420a79f4a41de7b589d34a1f66d84ed0f1fa",
+      "changed_paths": [
+        "net/wireless/nl80211.c"
+      ]
+    },
+    {
+      "commit": "31bdbc00a9f9ce0b7ec19c22a83b65e619acae77",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Ordered patch edits exactly match native 84263694c8d1. Keep the separate UHR_OPERATION attribute, its full-operation length validator and AP parameter assignment. This supersedes extracting abridged beacon data as full operation information. Native validate_uhr_operation and AP PHY/regulatory validation are retained verbatim; no claim of complete UHR optional-element validation.",
+      "evidence": [
+        "evidence/wifi-auth-interface-review.json",
+        "SECURITY.md: Wireless authentication and lifecycle interfaces"
+      ],
+      "patch_sha256": "ddf469fe36c6f3a92f504d522e700cdd60f5a824e8b103e2a8736d58b1c37825",
+      "changed_paths": [
+        "include/uapi/linux/nl80211.h",
+        "net/wireless/nl80211.c"
+      ]
+    },
+    {
+      "commit": "9864493055f9eb8a32c3c52a8ce7475f842f2703",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain driver-supplied assoc_encrypted through receive-association response, queued connect response and nl80211 CONNECT result. This lets userspace interpret key-delivery information conditionally; it is an assertion from the driver, not independent kernel proof of encryption. cfg80211_rx_assoc_resp otherwise equals current native LTS, including 78ac450ad462 response-length checks before status/IE access and BSS-reference cleanup. Native 8f4127a93cf6 rx/tx MLME minimum lengths also remain. Zero-initialized existing callers default false; no SDK encryption runtime is asserted.",
+      "evidence": [
+        "evidence/wifi-auth-interface-review.json",
+        "SECURITY.md: Wireless authentication and lifecycle interfaces"
+      ],
+      "patch_sha256": "4e61176061bdd6492e85bcf67f571720b965e83e5e4127dfd952632907f41b5c",
+      "changed_paths": [
+        "include/net/cfg80211.h",
+        "include/uapi/linux/nl80211.h",
+        "net/wireless/mlme.c",
+        "net/wireless/nl80211.c",
+        "net/wireless/sme.c"
+      ]
+    },
+    {
+      "commit": "a296057a87bc32eac28c526f85e92ca97e9e395a",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain probe_client-to-probe_peer source API rename with all in-tree callbacks/wrappers/trace updates. UAPI PROBE_CLIENT remains an alias of the same command number, preserving the pinned Android wpa_supplicant nl80211 caller and capability/event dispatch. Physical-driver changes only preserve the common callback build interface. No binary export/layout compatibility is promised. This prepares the generic STA probe extension without changing ordinary AP probing.",
+      "evidence": [
+        "evidence/wifi-auth-interface-review.json",
+        "SECURITY.md: Wireless authentication and lifecycle interfaces"
+      ],
+      "patch_sha256": "42874daec291ba57e83a096330dc6ded77cb8f54be3e0c325e07814f8279b9a5",
+      "changed_paths": [
+        "drivers/net/wireless/ath/wil6210/cfg80211.c",
+        "drivers/net/wireless/marvell/mwifiex/cfg80211.c",
+        "include/net/cfg80211.h",
+        "include/uapi/linux/nl80211.h",
+        "net/mac80211/cfg.c",
+        "net/wireless/nl80211.c",
+        "net/wireless/rdev-ops.h",
+        "net/wireless/trace.h"
+      ]
+    },
+    {
+      "commit": "4bace9525793a6db15197934956f287d15a0f20d",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain STA/P2P-client probing of the associated AP, requiring PROBE_AP, connected state and no supplied MAC; AP/GO still requires MAC. Preserve callback existence and checked allocation/serialization. Status events allow a missing peer and optional link ID; current mac80211/wil callers pass -1. Current mac80211/hwsim does not advertise PROBE_AP and its AP-oriented callback still expects a non-NULL peer, so do not advertise this new mode without a supporting driver. The old Android AP caller remains supported; optional SDK STA probing use is unconfirmed.",
+      "evidence": [
+        "evidence/wifi-auth-interface-review.json",
+        "SECURITY.md: Wireless authentication and lifecycle interfaces"
+      ],
+      "patch_sha256": "8db613e4df9857ae3ffb86b07113f4275f6a1187ca4119ac735cc13583c33d5f",
+      "changed_paths": [
+        "drivers/net/wireless/ath/wil6210/cfg80211.c",
+        "include/net/cfg80211.h",
+        "include/uapi/linux/nl80211.h",
+        "net/mac80211/status.c",
+        "net/wireless/nl80211.c"
+      ]
+    },
+    {
+      "commit": "416c09721c9a7ff145d4977915339d40993d7998",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain cfg80211_stop_link export and source-compatible inline cfg80211_stop_iface wrapper using -1. Existing mac80211 SDK callers use the wrapper and keep whole-interface teardown. Only AP/GO may request a particular link; asynchronous event carries it to native AP teardown while all existing whole-interface callers pass -1. Retain later ACK NAN handling and native radar/lifetime fixes. The supplied link ID is a driver API contract, not a newly user-controlled index; arbitrary invalid driver indices are not claimed safe. No old binary-symbol compatibility wrapper is added.",
+      "evidence": [
+        "evidence/wifi-auth-interface-review.json",
+        "SECURITY.md: Wireless authentication and lifecycle interfaces"
+      ],
+      "patch_sha256": "da51c233362c9d24d66af5560f618b5d768410097f9d17c012f6f4811c9b69e6",
+      "changed_paths": [
+        "include/net/cfg80211.h",
+        "net/wireless/core.c",
+        "net/wireless/core.h",
+        "net/wireless/reg.c",
+        "net/wireless/sysfs.c",
+        "net/wireless/trace.h",
+        "net/wireless/util.c"
+      ]
+    },
+    {
+      "commit": "bcb082394c01b6cc0743f56b3e7d8198c9c05b0c",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain removal of duplicate cfg80211_leave during owned-interface destruction. Current path first closes dependent NAN data devices, calls dev_close for netdev interfaces (whose notifier performs leave), then removes the virtual interface under wiphy locking; non-netdev unregistration handles its own stop. This avoids duplicate teardown while retaining actual stop/unregister paths. cfg80211_destroy_ifaces equals final ACK; native workqueue cancellation and frame validation remain separately preserved.",
+      "evidence": [
+        "evidence/wifi-auth-interface-review.json",
+        "SECURITY.md: Wireless authentication and lifecycle interfaces"
+      ],
+      "patch_sha256": "b25ff5cbd32e37dc9a52f272d2fcb8a5c6f886334dfdc66390f5af976e076477",
+      "changed_paths": [
+        "net/wireless/core.c"
+      ]
+    },
+    {
+      "commit": "696a3b4f98885a8d232e1ec66712e5cd4b62341f",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain unified suspend handling: wowlan success/error returns directly, refusal/no-wowlan closes interfaces and drains events/works before ordinary suspend. Mark unregistered devices suspended on success too, preventing queued works from running during suspend. Keep final ACK follow-on locking: cfg80211_leave_all runs outside the wiphy lock and acquires appropriate locks internally, with RTNL held. This is required by retained NAN dependent teardown, not a physical-platform enablement. Whole sysfs.c equals final ACK; no suspend/resume runtime verification is claimed.",
+      "evidence": [
+        "evidence/wifi-auth-interface-review.json",
+        "SECURITY.md: Wireless authentication and lifecycle interfaces"
+      ],
+      "patch_sha256": "5b66a0e9deafb7bfae7cc4749b1c8dedaa5e439f8234cad596baca1950bfea00",
+      "changed_paths": [
+        "net/wireless/sysfs.c"
+      ]
+    }
+  ],
+  "function_equivalence": [
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "nl80211_valid_auth_type",
+      "equals": "ACK",
+      "sha256": "4e909aa54d920e45561c018f80d8e2bd4fba0294925daf1137f5495c44d349d3"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "nl80211_key_allowed",
+      "equals": "ACK",
+      "sha256": "c4c87ffe8590a29b52a430d9908978cdac7d51c08e9f57be09223fae4a1d13b4"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "nl80211_authenticate",
+      "equals": "ACK",
+      "sha256": "12ecc15804d504534e4b676896add96afa32061923d93446fcae9d93c18153df"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "nl80211_probe_peer",
+      "equals": "ACK",
+      "sha256": "1c48a7374f9ff915511af6376c925824e8d634983f337299ec60907cac9e6592"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "cfg80211_probe_status",
+      "equals": "ACK",
+      "sha256": "7fc0eea9648bacb032ce892abeec332e3400e2ab5648d889e707e2a8d2b1d762"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "nl80211_send_connect_result",
+      "equals": "ACK",
+      "sha256": "ebfc2d19b45a2fb52be1982c12ffe5071ab3d69fd63cc87b53783cc9cdab0c2a"
+    },
+    {
+      "path": "net/mac80211/cfg.c",
+      "function": "ieee80211_probe_peer",
+      "equals": "ACK",
+      "sha256": "3d0812d37df21e047e6eb45afd3d47e2e437a6fa342261f9750cf08b13df7af5"
+    },
+    {
+      "path": "net/wireless/sme.c",
+      "function": "cfg80211_connect_done",
+      "equals": "ACK",
+      "sha256": "fa9cdf57e4db31aa38e5ce7590daaba26de192b18503a4276ad2a85256a78ca4"
+    },
+    {
+      "path": "net/wireless/core.c",
+      "function": "cfg80211_stop_link",
+      "equals": "ACK",
+      "sha256": "6281b965f9f4e482ed79fce400afc14012f96c6a0a2c602b4eef465d7a56256e"
+    },
+    {
+      "path": "net/wireless/core.c",
+      "function": "cfg80211_destroy_ifaces",
+      "equals": "ACK",
+      "sha256": "a6a5ea21c22cdc12060cb8d366324a7b7872725f4b67b1336d6c66b25163fabe"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "validate_uhr_capa",
+      "equals": "LTS",
+      "sha256": "8428d96920639d4601c181871d0bb8aeb7e138b49475b725dd2dea0f36ba11a3"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "validate_uhr_operation",
+      "equals": "LTS",
+      "sha256": "1c1b617ac70a4b224f5adb34cf79e87d2132895ea3ad89871aa970e7b055d54f"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "nl80211_validate_ap_phy_operation",
+      "equals": "LTS",
+      "sha256": "b7a08863d15ab3cb501f37d16779e8c0b6131852bb27b34a6b18f5d1c470d6b3"
+    },
+    {
+      "path": "net/wireless/util.c",
+      "function": "_cfg80211_calculate_bitrate_eht_uhr",
+      "equals": "LTS",
+      "sha256": "ad071e5b9016687cfa98ec2bbeaadd31b8ed423289b7be62c6399eaf201dded8"
+    },
+    {
+      "path": "net/wireless/util.c",
+      "function": "cfg80211_calculate_bitrate_eht",
+      "equals": "LTS",
+      "sha256": "1f3cc0fdedb95bfefd428e358fb85a3a3ca912bd7b385ae0e84251c7d230b525"
+    },
+    {
+      "path": "net/wireless/util.c",
+      "function": "cfg80211_calculate_bitrate_uhr",
+      "equals": "LTS",
+      "sha256": "6e6f469db7917b978804934cece1d9c9a6b88587ab2e22d2f2bd209d279aa0ad"
+    },
+    {
+      "path": "net/wireless/mlme.c",
+      "function": "cfg80211_rx_mlme_mgmt",
+      "equals": "LTS",
+      "sha256": "2b68a5e8384d97807ee80152809576424f411fcb7651a5b50a22343694bc2789"
+    },
+    {
+      "path": "net/wireless/mlme.c",
+      "function": "cfg80211_tx_mlme_mgmt",
+      "equals": "LTS",
+      "sha256": "9d9ed2e4c6a1e2fef2d7e885a3e3f7939ceb894a14921a1646826f09ed298d72"
+    }
+  ],
+  "native_patch_edit_pairs": [
+    {
+      "candidate": "ac41d4146b884d06e15c80a6669ec800c39e2cb6",
+      "native": "335c515932a59a694f5602af891292184cf2b215",
+      "ordered_added_deleted_lines_sha256": "fdadebd1aac327aa24372cd437a06ee3d7a22f83d0e4244067918226c63aeaea"
+    },
+    {
+      "candidate": "c69ad1cc4028e33574e55766617241d72538e39d",
+      "native": "fe44ae31ca78a4185995a514bd01833c6a04014b",
+      "ordered_added_deleted_lines_sha256": "20f88a575cae233e13862a9ac286d500efd3cc9a8caa222e73904102f8a936d8"
+    },
+    {
+      "candidate": "31bdbc00a9f9ce0b7ec19c22a83b65e619acae77",
+      "native": "84263694c8d1fd6a76002fdb78f5b1862b21f5df",
+      "ordered_added_deleted_lines_sha256": "5f4af05fe9f8616fc299efd6ab84a8f7d4139f6735e9677f76e676e22ed53ef3"
+    }
+  ],
+  "native_assoc_preservation": "cfg80211_rx_assoc_resp equals LTS after removing only assoc_encrypted initializer.",
+  "whole_file_checks": {
+    "include/linux/ieee80211-uhr.h": "LTS identical",
+    "net/wireless/sysfs.c": "ACK identical"
+  },
+  "local_consumer_evidence": [
+    "Goldfish VirtIO Wi-Fi hwsim creation and nl80211 supplicant service, recorded in pmsr-interface-review.json.",
+    "Pinned external/wpa_supplicant_8/src/drivers/driver_nl80211.c sends PROBE_CLIENT; driver_nl80211_capa.c/event.c recognize the same command. Alias preserves its number.",
+    "Existing net/mac80211 cfg.c/iface.c/chan.c invoke cfg80211_stop_iface, now the -1 wrapper.",
+    "No new EPPKE/IEEE8021X_AUTH/ASSOC_FRAME_ENCRYPTION/PROBE_AP advertisement found in current virtual wireless driver/mac80211 sources; feature-specific SDK use remains unconfirmed, not deemed unnecessary."
+  ],
+  "limitations": "Build 170 verifies compilation/artifacts at unchanged implementation source 18287885bb0e, not protocol, PHY, encryption, link teardown, suspend or runtime behavior. UHR helper optional-layout FIXME limitations remain native. Source equality replaces unnecessary duplicate function testing; an exploratory extraction harness encountered an already-refactored native helper and was discarded without changing kernel code.",
+  "remote_sources_used": []
+}

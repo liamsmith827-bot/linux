@@ -8241,3 +8241,58 @@ produced the kernel image, 100 common and 45 virtual-device modules. All 145
 signatures verified against the exact certificate; a tampered payload was
 rejected, and generated export/CRC tables passed inspection. All
 sources used here are local; commit-message URLs were not accessed.
+
+## Wireless authentication and lifecycle interfaces
+
+Twelve decisions are recorded in `evidence/wifi-auth-interface-review.json`.
+The three UHR candidates already exist in native LTS: their complete ordered
+added/deleted lines equal 335c515932a5, fe44ae31ca78 and 84263694c8d1. The full
+UHR definitions header, rate helpers, capability/operation validators and AP
+PHY validation match native source. Keep the corrected errno semantics and
+separate full-operation attribute, not the earlier buggy validator or abridged
+beacon interpretation. Native optional-layout FIXME limitations remain; no
+complete UHR protocol support is claimed or added by these dispositions.
+
+Retain EPPKE and the new authentication-frame form of IEEE8021X in the common
+cfg80211 interface. AUTHENTICATE/CONNECT require the corresponding advertised
+capability; authentication requests require AUTH_DATA. This does not implement
+the protocols in mac80211/hwsim. START_AP does not have those same new feature
+gates, matching ACK's AP-side handling; do not generalize the STA checks to all
+commands. Pre-association key management intentionally relaxes native STA and
+P2P-client connected-only checks for ASSOC_FRAME_ENCRYPTION providers, retaining
+ordinary ENOLINK behavior without that feature and existing key validation.
+Exact SDK use is unconfirmed; retain these configured Android interfaces
+conservatively without enabling a physical provider.
+
+Propagate assoc_encrypted from driver response data through queued connect
+results to userspace. This allows userspace to condition key-delivery processing
+on the driver's indication; it is not independent verification of encryption.
+The receive-association function otherwise exactly matches LTS, preserving
+78ac450ad462 bounds before status/IE access and BSS reference cleanup. Both
+MLME receive/transmit callbacks exactly match native 8f4127a93cf6 length checks.
+Existing zero-initialized callers default to no encrypted-association indication.
+
+The probe_peer rename keeps PROBE_CLIENT as an identical-number userspace alias.
+Pinned Android wpa_supplicant actively uses that old command and recognizes it
+in capability/event dispatch. All source callbacks and reports are updated;
+physical-driver edits provide API coherence, not platform enablement. STA probing
+requires PROBE_AP, a connected interface and an omitted MAC, while AP/GO probing
+requires a MAC. Current mac80211/hwsim does not advertise PROBE_AP; its existing
+AP callback still requires a non-NULL peer. Keep that feature contract and do
+not advertise a mode the callback cannot implement. Optional status peer/link
+fields preserve current callers' -1 non-MLO behavior.
+
+The new stop_link export retains existing SDK callers through an inline
+stop_iface wrapper passing -1. Per-link shutdown is an AP/GO driver API; valid
+link indices remain the driver's responsibility. No arbitrary-index safety or
+old binary-symbol compatibility is claimed. Keep asynchronous event ownership,
+whole-interface teardown for other callers, later NAN handling and native radar
+cleanup. Removal of duplicate leave in owned-interface destruction relies on
+actual netdev notifier teardown and non-netdev unregistration, not skipped
+cleanup. Keep the final ACK suspend refactor and its follow-on locking: dependent
+interface closure runs outside the wiphy lock under RTNL, while driver/event
+operations hold the wiphy lock. Unregistered devices are marked suspended on
+success too. This supports the retained configured lifecycle; it adds no physical
+platform support. No link, suspend, encryption or radio runtime test was run.
+Build 170 covers the unchanged implementation source and generated artifacts.
+All source comparisons and consumer searches used only the pinned local trees.
