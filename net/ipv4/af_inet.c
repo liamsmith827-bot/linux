@@ -406,6 +406,7 @@ out_rcu_unlock:
 out_sk_release:
 	sk_common_release(sk);
 	sock->sk = NULL;
+	sk = NULL;
 	goto out;
 }
 

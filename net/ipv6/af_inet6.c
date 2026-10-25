@@ -70,8 +70,6 @@
 #include <linux/mroute6.h>
 #include <trace/hooks/net.h>
 
-#include <trace/hooks/net.h>
-
 #include "ip6_offload.h"
 
 MODULE_AUTHOR("Cast of dozens");
@@ -281,6 +279,7 @@ out_rcu_unlock:
 out_sk_release:
 	sk_common_release(sk);
 	sock->sk = NULL;
+	sk = NULL;
 	goto out;
 }
 
