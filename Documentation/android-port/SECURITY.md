@@ -157,8 +157,10 @@ not enforce a security boundary against arbitrary kernel code.
 
 Graphics retains LTS DRM and TTM, with the Android virtio format/mapping behavior
 and render-node dumb-buffer ioctls needed by Android minigbm. The new physical
-AMD color-operation pipeline and unrelated TTM large-order optimizations are
-omitted: the SDK virtio driver uses the existing shared-memory path. The ioctl
+AMD color-operation pipeline and TTM folio backup optimization are omitted:
+the SDK virtio driver uses the existing shared-memory path. The configured
+TTM source-module allocation API and independent backup unlock correction
+are retained; see the later TTM review for the precise scope. The ioctl
 access flag change expands which authenticated device users can invoke these
 operations, while retaining the LTS allocation and parameter validation.
 
@@ -7987,3 +7989,69 @@ pointer is likewise explicitly removed by d23db69132ac; modern accessory and
 configfs interfaces remain under their existing reviews. These retirements
 are established by source history, not by claims that no consumers exist.
 No runtime USB, thermal or suspend test is claimed, and no remote source was used.
+
+
+## TTM allocation interfaces and backup lock ownership
+
+Retain the ACK flags-based TTM device/pool initialization API, DMA/DMA32
+getters, optional beneficial allocation order and ENOSPC propagation. TTM is
+explicitly enabled by GKI_HIDDEN_DRM_CONFIGS for source-built module support.
+This preserves generic configured-subsystem customization even though the
+exact SDK vendor consumer remains unconfirmed. Native in-tree driver and KUnit
+call sites are converted with identical DMA decisions and no new opt-in flags;
+these mechanical conversions do not enable any additional physical platform.
+No historical binary layout or CRC preservation is included.
+
+Beneficial order zero retains native reclaim policy. A nonzero value disables
+direct reclaim above that order, after the vendor GFP hook, as in final ACK.
+Retain ff792dc1fcca's unsigned result, so orders greater than one are not
+truncated to true. This explicitly prioritizes the selected latency policy
+over a hook trying to restore direct reclaim. All other allocator flags,
+DMA mapping/cleanup, cache handling and the existing MAX_PAGE_ORDER hook clamp
+remain. The optional ENOSPC bit changes the error exposed by resource exhaustion;
+without it native ENOMEM compatibility remains. Native dmem EAGAIN-to-ENOSPC
+conversion and eviction retry logic are preserved. Trusted module authors own
+the latency/error-policy choice; no arbitrary userspace flag is introduced.
+
+Adapt the initialization warning to inspect the incoming flags. ACK's getter
+refactor reads pool->alloc_flags before initializing the pool, which can miss a
+missing DMA device or warn based on stale contents. The port preserves the
+native argument-based check. This is a diagnostic correction, not validation
+that makes an invalid DMA setup safe.
+
+From 42ab2c618ff1, retain the independent backup lock-ownership correction:
+only AOP_WRITEPAGE_ACTIVATE leaves a shmem folio locked. The local shmem_writeout
+and swap_writeout implementations explicitly unlock on every other return,
+including arch_prepare_to_swap errors. A second unlock could disrupt another
+lock owner's synchronization. Preserve the native page-by-page backup algorithm
+and put_page lifetime operation. The new compound backup, partial-OOM split
+retry, allocation-reserve policy and private fault injector are performance
+changes for TTM-backed graphics, rather than the SDK virtio GEM-shmem path.
+Their absence does not prove that an arbitrary optional TTM module could not
+benefit; no fragmentation or latency parity is claimed. The configured public
+allocation API and hooks are retained separately.
+
+ACK's two GPU-accounting backports contain no GPU-stat counter updates: the
+first only adds an unused reclaim argument, and the second wraps __free_pages
+without accounting. Omit these inert parts. The latter also replaces put_page
+with an order-zero __free_pages call in backup; keep native reference-release
+semantics with the retained native backup algorithm instead of adopting that
+change as a fictitious accounting fix. No omitted NR_GPU accounting code from
+an external upstream tree is invented.
+
+All native TTM fixes remain: NULL/handle-aware backup runs (22aa7fb4e7d0),
+restore-state disposal (329ddc5d438f), resource UAF repair (73867f253670),
+success-only LRU updates (060f8f302051/d0ce7b07dafe), eviction charge conversion
+(9a34b94832c3), missing-resource access handling (b94182b3d722), and the KUnit
+PREEMPT_RT lock API (be0c2255d717). Source comparisons in the accompanying review
+check the changed files against the native tree, allowing only the reviewed
+API/policy transformations and prior hooks.
+
+The extracted-function ASan/UBSan checks cover 49,163 allocation and
+initialization cases per port/ACK variant and 65 backup cases per port/LTS
+variant. They expose two incorrect ACK initialization warnings and four native
+control double unlocks, with none in the port. These use allocator/writeout
+shims; they are not real DMA, reclaim, swap, KUnit or concurrency tests. The
+existing emulator build will verify the updated source in attempt 168. Only
+local pinned source and prior build configuration were used; no remote source
+was accessed.

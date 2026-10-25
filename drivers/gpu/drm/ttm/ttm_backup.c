@@ -119,11 +119,11 @@ ttm_backup_backup_page(struct file *backup, struct page *page,
 		if (!folio_test_writeback(to_folio))
 			folio_clear_reclaim(to_folio);
 		/*
-		 * If writeout succeeds, it unlocks the folio.	errors
-		 * are otherwise dropped, since writeout is only best
-		 * effort here.
+		 * Only activation leaves the folio locked. Other returns,
+		 * including errors, have already unlocked it. Writeout is
+		 * best effort here.
 		 */
-		if (ret)
+		if (ret == AOP_WRITEPAGE_ACTIVATE)
 			folio_unlock(to_folio);
 	} else {
 		folio_unlock(to_folio);
