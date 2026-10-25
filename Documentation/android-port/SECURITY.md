@@ -9133,3 +9133,61 @@ the retained Linux vendor hooks, module signing or native x86 virtualization.
 Validation here is static source/patch comparison and the separately recorded
 SDK compilation. No ARM build, runtime selftest, device assignment or protected-VM
 operation was executed. No additional remote resource was accessed.
+
+## Configuration history and delivered module placement
+
+The 53 decisions in `evidence/config-tail-review.json` track historical changes
+through the final configuration and actual module artifacts. The complete x86
+GKI defconfig equals final ACK except five previously reviewed exclusions:
+protected x86 host/guest selections, Samsung UART/console, and obsolete
+KUNIT_DEBUGFS. Shared generic hidden-media, audio, RPMSG and networking selections
+remain. This does not justify importing extra physical-platform implementations;
+it preserves existing Android configuration and source-module interfaces. Unknown
+SDK subscribers for generic interfaces are recorded without assuming absence.
+
+Current Bazel module lists supersede the old text lists and built-in/module
+transitions. Every current common+x86_64 GKI module entry exists in common_dist.
+Bluetooth, RFKILL, 6LoWPAN, CAN, IEEE802154, PPP/L2TP, USB networking, 9P, MACsec,
+PPS/PTP, WWAN, GNSS, CRC-CCITT, USB monitoring and Thunderbolt keep their final
+placement. The virtual-device build provides the system DMA heap, cfg80211,
+mac80211/hwsim, virtio graphics/input/network/RNG/PMEM and dummy device test
+modules. This is compilation and packaging evidence, not device presence or
+module-load verification. Rust Binder remains a compiled alternative alongside
+built-in C Binder; its runtime selection is not asserted.
+
+The native open-dice module and existing OPEN_DICE=m configuration remain in the
+common artifact list, while protected Microdroid guest enablement remains outside
+the target. Merely compiling that driver does not attest the SDK guest or create
+protected execution. Historical ptp_kvm configuration is superseded by final ACK
+removal; PPS/PTP cores remain, and no inference is made that virtual PTP could
+never be useful. The final x86 PCI transport and current manifest fragments take
+precedence over old Cuttlefish-only MMIO, vTPM and serial/audio selections.
+
+The SHA-1 workaround is adapted through 59b5610e4fb9: sdk.fragment overrides the
+base ACK signing choice with SHA-256, and the matching signing-tool adaptation
+and final signatures are verified. The TLS enable/revert history ends with TLS
+disabled in both generated configurations; no private security-report history is
+claimed as independently verified evidence. CFS_BANDWIDTH and BLK_WBT remain
+enabled; default BLK_WBT_MQ throttling remains disabled. Exact workload quotas,
+queue policies and performance are unverified. MEMCG remains enabled with
+MEMCG_V1 disabled; pinned GrapheneOS libprocessgroup configuration explicitly
+places memory under Cgroups2 while retaining separate cpu/blkio/cpuset entries.
+Generated ABI-layout dump changes accompanying these options are excluded as
+historical KMI data, not treated as functional source changes.
+
+The incomplete stackinit deployment was exactly reverted. Binder allocator,
+RTC library and clock helper KUnit modules are present in tests.zip with the
+current x86 invocation metadata; no tests were executed. IncFS remains built in.
+SDCARD_FS is absent from both final ACK and native LTS sources, so its temporary
+board-module configuration is not restored. Current Kleaf system_dlkm generation
+produces kernel module filesystem artifacts without building Android OS images.
+No additional remote resource was accessed.
+
+Build 187 successfully executed the unchanged command
+`ARCH=x86_64 common/build_virt.sh` at Linux `9b04584c27f3` and manifest `8d86ddd`.
+It generated bzImage, 100 common modules and 45 virtual-device modules. All 145
+module signatures verified with SHA-256 against the exact output certificate;
+a tampered-payload control was rejected. The protected-export and parallel
+symbol/flag/CRC table checks also passed. No boot, flash, OS build or runtime
+compatibility test was performed. This build covers the source changes above;
+subsequent audit edits are documentation only.
