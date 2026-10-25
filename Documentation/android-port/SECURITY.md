@@ -10602,3 +10602,38 @@ nine merge-resolution files. The old binary-signature wrapper is omitted as
 required; source modules must use the native API. This preserves the security
 fix while dropping the wrapper, not the underlying bounds protection. No remote
 resources were used, including URLs quoted in local merge messages.
+
+# Final merge group and Nintendo history
+
+Seven decisions in `evidence/last-merge-tail-review.json` cover the last four
+unresolved merges and three related Nintendo introduction/revert candidates.
+Executable remerge hunks and the original driver introduction were read in
+full. Four STG ABI graph patches were enumerated and hashed, with their schema
+and field classes recorded; individual historical type IDs/CRCs were not
+manually audited as executable changes. These complete snapshots are omitted
+under the user's historical binary-KMI exclusion. Parent source commits have
+independent dispositions.
+
+The UFS complete-init hook header/export remain omitted under the earlier
+virtio SDK storage decision, not because they are ABI snapshots. UFS is compiled
+and native QEMU matching exists. Intel ISH reset/D3 extensions remain omitted
+with its disabled provider and the positively selected Ranchu qemud sensor HAL;
+both complete source files remain native. The LT9611 bridge is disabled and its
+whole driver remains native; its historical add/add merge does not justify
+adding a physical DSI/HDMI platform. The separate virtio hunk retains native
+managed modeset initialization and error handling, while the previously reviewed
+eight-format Android adaptation removes the host-only format gate/preference.
+Native GEM references, allocation and cleanup remain.
+
+Nintendo Kconfig, IDs, Makefile, driver and joydev are entirely native LTS.
+The current driver is selected in the SDK build and retains USB/Bluetooth,
+charging-grip, calibration, IMU, battery, LED and rumble support. The newer full
+input-report size check is preserved instead of the historical 12-byte minimum.
+The temporary downgrade and restoration have exactly inverse candidate lines
+in Kconfig, IDs and joydev. They are not exact inverses in the driver: the
+restored tree also has force-feedback guards and LED error-unlock corrections.
+The complete residual was examined. Native LED player allocation now uses IDA
+without the old global mutex; native FF data remains guarded. Unrelated upstream
+changes between the pair's tree endpoints are recorded separately and are not
+attributed to the two candidate patches. No new source/configuration change,
+build result, controller/display runtime test or remote access is claimed.
