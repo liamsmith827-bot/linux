@@ -1,0 +1,427 @@
+{
+  "source_head": "e95eaf3986b6eba1be39a74c8aee561d81d257ed",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "records": [
+    {
+      "commit": "9375c09543350601a473e6aa7380d18e06751c93",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain NAN_DATA as the netdev data interface and the per-wiphy management/data dependency. NETDEV_PRE_UP requires a running NAN interface; NAN shutdown/delete/suspend/owner cleanup closes dependent data netdevs first under RTNL and then acquires the wiphy lock. EVENT_STOPPED cannot use that locking path for NAN, and NAN type conversion is rejected. Retain native c2ddd180bbee wiphy-work cancellation and e8c75736cfd0 scan-abort handling in the notifier; do not restore obsolete cancel_work_sync. Historical mac80211 placeholder rejects are superseded by later retained NAN station/data support. No one-to-one NMI binding beyond the implemented per-wiphy contract or runtime teardown correctness is asserted.",
+      "evidence": [
+        "evidence/nan-interfaces-review.json",
+        "SECURITY.md: NAN data interfaces and schedule contracts"
+      ],
+      "patch_sha256": "a615003499ad901ea886d78b394777df1fa8bf5401a07f78562605a6fe5d49da",
+      "changed_paths": [
+        "include/net/cfg80211.h",
+        "include/uapi/linux/nl80211.h",
+        "net/mac80211/cfg.c",
+        "net/mac80211/chan.c",
+        "net/mac80211/iface.c",
+        "net/mac80211/rx.c",
+        "net/mac80211/util.c",
+        "net/wireless/chan.c",
+        "net/wireless/core.c",
+        "net/wireless/core.h",
+        "net/wireless/nl80211.c",
+        "net/wireless/reg.c",
+        "net/wireless/sysfs.c",
+        "net/wireless/util.c"
+      ]
+    },
+    {
+      "commit": "20b078d5eef0995036516dbff8768e45b807cee9",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "e95eaf3986b6eba1be39a74c8aee561d81d257ed"
+      ],
+      "rationale": "Retain NMI/NDI station types, NDI-to-NMI MAC relation, management-only capability configuration and flag restrictions. NAN requests omit ordinary AP AID/listen/rates requirements but still require MAC, reject supplied legacy rates and UAPSD, and enforce NMI address for NDI. The actual initial state check requires authenticated or associated (despite the historical comment saying authorized). Driver callback validation handles existing-peer/capability relationships; e95eaf3986b6 corrects mac80211 capability immutability at the management station. Native ordinary-station validation stays outside the NAN branches. Pinned Android has source callers, but its older draft numeric API mismatch is separately documented and is not claimed compatible.",
+      "evidence": [
+        "evidence/nan-interfaces-review.json",
+        "SECURITY.md: NAN data interfaces and schedule contracts"
+      ],
+      "patch_sha256": "0d50864b6f33c824e88c336bcde82ac50de82261028b02d38cbc949d9db5be37",
+      "changed_paths": [
+        "include/net/cfg80211.h",
+        "include/uapi/linux/nl80211.h",
+        "net/wireless/nl80211.c"
+      ]
+    },
+    {
+      "commit": "23b3920536928830b29165d3e62fc4740af30b4b",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "e95eaf3986b6eba1be39a74c8aee561d81d257ed"
+      ],
+      "rationale": "Retain peer scheduling command, two-map limit, required metadata and all-or-none schedule fields, checked channel definitions, local compatibility, map ID uniqueness, cross-map channel incompatibility, single-radio slot exclusions and scheduled-channel coverage. Keep shared 32-slot length/index validation and structured ULW length validation. Adapt both local and peer preflight to reject counts above U8_MAX before allocation/index/count narrowing; preserve all ordinary native validation and the local_channels*8 peer bound. Host prefix tests verify boundary behavior without claiming a demonstrated corruption exploit or full parser coverage. Persistent schedule ownership and other cross-update constraints remain driver responsibilities. Keep canonical ACK/LTS values; pinned supplicant older-draft numbering is an inherited integration limitation.",
+      "evidence": [
+        "evidence/nan-interfaces-review.json",
+        "SECURITY.md: NAN data interfaces and schedule contracts"
+      ],
+      "patch_sha256": "f3f878b99a89ce7bb294e439cd54b0940fe35b2ce944006696a389ee00aa1fc6",
+      "changed_paths": [
+        "include/net/cfg80211.h",
+        "include/uapi/linux/nl80211.h",
+        "net/wireless/nl80211.c",
+        "net/wireless/rdev-ops.h",
+        "net/wireless/trace.h"
+      ]
+    },
+    {
+      "commit": "a5ba80c652b3c7ebd366a679316c4b410b00be86",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain NAN_DATA support in unexpected-frame subscription/reporting with renamed socket owner field. Existing AP/GO behavior, single-subscriber EBUSY, READ_ONCE target, checked netlink construction and socket-unregister cleanup remain. The current mac80211 spurious-report call is AP-only and pinned supplicant registers it in AP subscription, so this does not establish working SDK NAN_DATA reporting; preserve the shared API conservatively rather than infer dispensability from the missing NAN call. No event receiver is granted authority merely by its existence; subscription retains GENL_UNS_ADMIN_PERM.",
+      "evidence": [
+        "evidence/nan-interfaces-review.json",
+        "SECURITY.md: NAN data interfaces and schedule contracts"
+      ],
+      "patch_sha256": "e03bed38372af074076bbc723cbe837d96fa60be9e0178f5a4420ffdefe6b76c",
+      "changed_paths": [
+        "include/net/cfg80211.h",
+        "include/uapi/linux/nl80211.h",
+        "net/wireless/mlme.c",
+        "net/wireless/nl80211.c"
+      ]
+    },
+    {
+      "commit": "29d27a8012566f2572be8de1cb76ad931909edf1",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain owner-directed NAN unaligned-window update event, export and trace definition as part of the configured common source/userspace interface. Message allocation/serialization failures free or drop the event and unicast uses the wiphy network namespace and owner port. No in-tree emission caller or pinned supplicant handling was found; exact SDK use is unresolved and not treated as proof of unnecessary code. The driver must supply a valid ULW pointer/length, including for tracing; this API is not an independent validator of arbitrary driver buffers. No cryptographic material or delivery guarantee is implied.",
+      "evidence": [
+        "evidence/nan-interfaces-review.json",
+        "SECURITY.md: NAN data interfaces and schedule contracts"
+      ],
+      "patch_sha256": "1bc9d6010482a454f1ba965f282e0d41b7fcb529c802e3ea113016ff0c8ee1aa",
+      "changed_paths": [
+        "include/net/cfg80211.h",
+        "include/uapi/linux/nl80211.h",
+        "net/wireless/nl80211.c",
+        "net/wireless/trace.h"
+      ]
+    },
+    {
+      "commit": "d8b4c6237010254f731d7bfadfbb06d50e3fe851",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain owner-directed NAN channel-evacuation notification with checked nested channel serialization and trace. Retained mac80211 ieee80211_nan_evacuate_channel calls it under the wiphy lock after detaching the channel and updating peer references; user space can reconfigure its schedule. No matching event handling was found in the pinned supplicant; record the integration uncertainty while retaining the concrete common-kernel producer. No extra platform or alternate channel policy is introduced.",
+      "evidence": [
+        "evidence/nan-interfaces-review.json",
+        "SECURITY.md: NAN data interfaces and schedule contracts"
+      ],
+      "patch_sha256": "8f1d62c95731ef0a47329810dd1a7c99f37ac9dc3fc3c9c7dcd62e8dfec049d3",
+      "changed_paths": [
+        "include/net/cfg80211.h",
+        "include/uapi/linux/nl80211.h",
+        "net/wireless/nl80211.c",
+        "net/wireless/trace.h"
+      ]
+    },
+    {
+      "commit": "4b000e9b7c4e0517fda7dc6bf0cba930dd4a9683",
+      "disposition": "partially-adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "e95eaf3986b6eba1be39a74c8aee561d81d257ed"
+      ],
+      "rationale": "Retain separate NMI/NDI station objects and RCU relation, capability inheritance, allowed shared address with the corresponding NMI, dependent NDI destruction before NMI removal, interface-stop flushing, and NMI-before-NDI reconfiguration. NAN uses band-agnostic capabilities and explicit channel context where needed; later bandwidth/helper refactors supersede intermediate guards. Omit historical KABI reserve preservation. Correct the immutable-capability guard to CFG80211_STA_NAN_MGMT: NDI capabilities are copied from NMI and the old NDI guard left their source mutable. Initial capability installation is allowed until HT is established, after which replacement HT/VHT/HE is rejected. Native station worker cancellation, RCU link free and interface-list cleanup remain, with source equivalence recorded. No station lifecycle or concurrency runtime is asserted.",
+      "evidence": [
+        "evidence/nan-interfaces-review.json",
+        "SECURITY.md: NAN data interfaces and schedule contracts"
+      ],
+      "patch_sha256": "7d7d5a295e2aa057dc3317c670003ba1b8e06a6d232a7032f9524f947e4b9946",
+      "changed_paths": [
+        "include/net/mac80211.h",
+        "net/mac80211/cfg.c",
+        "net/mac80211/he.c",
+        "net/mac80211/ht.c",
+        "net/mac80211/iface.c",
+        "net/mac80211/sta_info.c",
+        "net/mac80211/sta_info.h",
+        "net/mac80211/util.c",
+        "net/mac80211/vht.c"
+      ]
+    },
+    {
+      "commit": "45b4b814e5f0eed2c5c206f758facf510d691f74",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain copying per-link aggregation capabilities from the NMI station to its NDI station and recomputing station aggregates. This completes the existing capability inheritance instead of leaving data-station aggregation defaults inconsistent. Full sta_apply_parameters equals final ACK; native cleanup functions remain independently proven. The e95eaf3986b6 source-capability immutability correction prevents later divergence of those inherited values. Compilation verifies the interface, not live aggregation behavior.",
+      "evidence": [
+        "evidence/nan-interfaces-review.json",
+        "SECURITY.md: NAN data interfaces and schedule contracts"
+      ],
+      "patch_sha256": "88090b361029ca8b4660388c6352aefb72fcdb32eeb2c2fb9224f9d266179b6f",
+      "changed_paths": [
+        "net/mac80211/cfg.c"
+      ]
+    }
+  ],
+  "function_equivalence": [
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "nl80211_register_unexpected_frame",
+      "equals": "ACK",
+      "sha256": "5b5fb9c17a45572cc2691612b5db2cbfdf6f2912bfe834573a2f2b212af8ba08"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "__nl80211_unexpected_frame",
+      "equals": "ACK",
+      "sha256": "e3cfe94f6be1c124d580058ea3964bc62cd23b9e095c638142bb4109bb0c7eec"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "cfg80211_rx_spurious_frame",
+      "equals": "ACK",
+      "sha256": "5ec2f93a87274864c4fefc180edd5e1b0d1a2d3d68170c57c7c9bc44de17b9f9"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "cfg80211_nan_ulw_update",
+      "equals": "ACK",
+      "sha256": "666de0374977a753b49f42aa81eb94ebd8e09fa19d18b0ce69a0dea20487a82c"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "cfg80211_nan_channel_evac",
+      "equals": "ACK",
+      "sha256": "547f1d6475cadaec206e13e11a051f82a80ea5cc10e0d08eaa5b662e3ab24434"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "parse_station_flags",
+      "equals": "ACK",
+      "sha256": "407bd3c6f30df4994c8812c3771068faf2afdd9be94a1a299b4d4e3529596d40"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "cfg80211_check_station_change",
+      "equals": "ACK",
+      "sha256": "ee3d2b4e4ec7ae9e656b0056e184b18c2c7de791974606016f09d9fb19e19280"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "nl80211_new_station",
+      "equals": "ACK",
+      "sha256": "d109f738dc5c479fe43df8c558e8c694ddc911035bd7632150bb63c9ddb09b7d"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "nl80211_set_station",
+      "equals": "ACK",
+      "sha256": "c68a406ab25047b9f67b94bc8e94617fb63bd16688f80ac8baf440335708396b"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "nl80211_del_station",
+      "equals": "ACK",
+      "sha256": "67c38547a268cd05266b70113397500ecdef1383eed6f92b814375a68d1aed53"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "nl80211_dump_station",
+      "equals": "ACK",
+      "sha256": "83e0c6367dd8e0a1670cf16c109d0641c5eb3fc3d26f01e0ef1057503da3a8c5"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "nl80211_stop_nan",
+      "equals": "ACK",
+      "sha256": "3cd28f7b30b52f6692178db2c2943c6a6dcf901fccdab1b06033b3a91cf46ac5"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "nl80211_del_interface",
+      "equals": "ACK",
+      "sha256": "88eb816ef8317297de76e18c106e805edd7aa734bae0aa907cbb6bce4b1bb145"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "validate_nan_ulw",
+      "equals": "ACK",
+      "sha256": "abb2828b3d54fb1de6dbb9597e23b6295116b4eb721d4a9022e330b8cbd4867a"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "nl80211_parse_nan_schedule",
+      "equals": "ACK",
+      "sha256": "a93015adf65a822491ecdb1525a456c08a7e8bd45e7061a37f1e20cb839c0ca0"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "nl80211_parse_nan_peer_map",
+      "equals": "ACK",
+      "sha256": "c61f211dd5ae2875808a4084ac25e59013cf6ab69cc40392fc50b1ce6dfc74bc"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "nl80211_nan_validate_map_pair",
+      "equals": "ACK",
+      "sha256": "4e9210962abad5d273e42634653c5506ebf067df5cfc8cbbff465b37b348f1c2"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "nl80211_parse_nan_channel",
+      "equals": "ACK",
+      "sha256": "398b90dce45ecbebce40b1ece03e655ed8024f72721d4363dd93f8c42e9af7ec"
+    },
+    {
+      "path": "net/wireless/core.c",
+      "function": "cfg80211_shutdown_all_interfaces",
+      "equals": "ACK",
+      "sha256": "008ebe06a845aba9ead96fcab417130f49ae34a28f8bf400731b7f6cf4b8ffbc"
+    },
+    {
+      "path": "net/wireless/core.c",
+      "function": "cfg80211_close_dependents",
+      "equals": "ACK",
+      "sha256": "96f642dc231c70555afe02978b185a4bb9ec80dc197a71cc4dfba53a97935730"
+    },
+    {
+      "path": "net/wireless/util.c",
+      "function": "cfg80211_change_iface",
+      "equals": "ACK",
+      "sha256": "832835f9c04cbfa49e695310b4c1fc05988aa4cfaf322082a89dd3710ce22094"
+    },
+    {
+      "path": "net/wireless/util.c",
+      "function": "cfg80211_process_wdev_events",
+      "equals": "ACK",
+      "sha256": "181d9d2f10a48549b40c866376ca9f132873f225bc45a623416851ad60046dfb"
+    },
+    {
+      "path": "net/wireless/mlme.c",
+      "function": "cfg80211_mlme_unregister_socket",
+      "equals": "ACK",
+      "sha256": "32274df885214fe7b577205bb2071cf4f0bdbf4bbc947408118ce61e15b0a60f"
+    },
+    {
+      "path": "net/mac80211/cfg.c",
+      "function": "sta_link_apply_parameters",
+      "equals": "ACK",
+      "sha256": "7118c2586ebe565e1871b2b1bf08033494ddf44fab120c1817bb4d0a56be7565"
+    },
+    {
+      "path": "net/mac80211/cfg.c",
+      "function": "sta_apply_parameters",
+      "equals": "ACK",
+      "sha256": "2c39806896f436e16acac2c610fb0a5c49da620dd47e017b1fb54d23f094c4a7"
+    },
+    {
+      "path": "net/mac80211/sta_info.c",
+      "function": "sta_info_insert_check",
+      "equals": "ACK",
+      "sha256": "4b8da3c635578ce2719a5d737185ec7b266d7229ca9753f91e9fe58de5097ec0"
+    },
+    {
+      "path": "net/mac80211/sta_info.c",
+      "function": "__sta_info_destroy_part1",
+      "equals": "ACK",
+      "sha256": "09d7430da0c44c9f25ce8dacc059580fef26103c749e5bb7ca972076caf49adc"
+    },
+    {
+      "path": "net/mac80211/util.c",
+      "function": "ieee80211_reconfig_nan",
+      "equals": "ACK",
+      "sha256": "28cecfdc33520cdb0a0a7473d3ab20061fa433317d0c281cc606445de78a54fc"
+    },
+    {
+      "path": "net/mac80211/sta_info.c",
+      "function": "__cleanup_single_sta",
+      "equals": "LTS",
+      "sha256": "c360c1417bee5064c61e6f79d72b4326486fb95a5d7a3a7adfd100fa76137548"
+    },
+    {
+      "path": "net/mac80211/sta_info.c",
+      "function": "sta_link_free_rcu",
+      "equals": "LTS",
+      "sha256": "22f9e910dc503f1249ce82a3d6defaf659121642f1bf24013556df0bc77267bb"
+    },
+    {
+      "path": "net/mac80211/sta_info.c",
+      "function": "sta_remove_link",
+      "equals": "LTS",
+      "sha256": "823c4181d885396fb763b218d339562fdc1bb31c09b706e54fe55f73b37a4a60"
+    },
+    {
+      "path": "net/mac80211/iface.c",
+      "function": "ieee80211_unlist_sdata",
+      "equals": "LTS",
+      "sha256": "c08b8355ebf3409c247ffe93b64fc9e1ad85c9fe38ef8fed0d072ae702d41bbf"
+    },
+    {
+      "path": "net/mac80211/iface.c",
+      "function": "ieee80211_uninit",
+      "equals": "LTS",
+      "sha256": "4813e5200e693436a417d0d36081b78034e638f18c0ff2b4bd268b63cfa2c956"
+    },
+    {
+      "path": "net/mac80211/iface.c",
+      "function": "ieee80211_netdev_setup_tc",
+      "equals": "LTS",
+      "sha256": "3914cb0d3095b507e70df8f971b74fbdef368521320796059f815ce4e9cb0f37"
+    },
+    {
+      "path": "net/mac80211/cfg.c",
+      "function": "ieee80211_set_fils_discovery",
+      "equals": "LTS",
+      "sha256": "59454033da4ffc57b5e6b5f620a05e88374e6f0969e69da0f87d18425228a1f2"
+    },
+    {
+      "path": "net/mac80211/cfg.c",
+      "function": "ieee80211_set_unsol_bcast_probe_resp",
+      "equals": "LTS",
+      "sha256": "0752dab76205262963f1723ed58659fb8cfa6ee29b96e4ff5bf91e8f59582e9a"
+    }
+  ],
+  "adaptations": [
+    {
+      "path": "net/mac80211/cfg.c",
+      "function": "ieee80211_change_station",
+      "ack_to_port_diff": "--- \n+++ \n@@ -86,8 +86,8 @@\n \t\t}\n \t}\n \n-\t/* NAN capabilties should not change */\n-\tif (statype == CFG80211_STA_NAN_DATA &&\n+\t/* NMI capabilities are copied to NDI stations and must stay fixed. */\n+\tif (statype == CFG80211_STA_NAN_MGMT &&\n \t    sta->deflink.pub->ht_cap.ht_supported &&\n \t    (params->link_sta_params.ht_capa ||\n \t     params->link_sta_params.vht_capa ||\n"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "nl80211_nan_set_peer_sched",
+      "ack_to_port_diff": "--- \n+++ \n@@ -29,6 +29,11 @@\n \t\t!info->attrs[NL80211_ATTR_NAN_PEER_MAPS] && !n_channels)))) {\n \t\tNL_SET_ERR_MSG(info->extack,\n \t\t\t       \"Either provide all of: seq id, channels and maps, or none\");\n+\t\treturn -EINVAL;\n+\t}\n+\n+\tif (n_channels > U8_MAX) {\n+\t\tNL_SET_ERR_MSG(info->extack, \"Too many NAN peer channels\");\n \t\treturn -EINVAL;\n \t}\n \n"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "nl80211_nan_set_local_sched",
+      "ack_to_port_diff": "--- \n+++ \n@@ -21,6 +21,11 @@\n \tnlmsg_for_each_attr_type(channel, NL80211_ATTR_NAN_CHANNEL,\n \t\t\t\t info->nlhdr, GENL_HDRLEN, rem)\n \t\tn_channels++;\n+\n+\tif (n_channels > U8_MAX) {\n+\t\tNL_SET_ERR_MSG(info->extack, \"Too many NAN local channels\");\n+\t\treturn -EINVAL;\n+\t}\n \n \tsched = kzalloc(struct_size(sched, nan_channels, n_channels),\n \t\t\tGFP_KERNEL);\n"
+    },
+    {
+      "path": "net/wireless/core.c",
+      "function": "cfg80211_netdev_notifier_call",
+      "ack_to_port_diff": "--- \n+++ \n@@ -42,18 +42,19 @@\n \t\tbreak;\n \tcase NETDEV_GOING_DOWN:\n \t\tcfg80211_leave(rdev, wdev, -1);\n-\t\tscoped_guard(wiphy, &rdev->wiphy)\n+\t\tscoped_guard(wiphy, &rdev->wiphy) {\n \t\t\tcfg80211_remove_links(wdev);\n-\t\t/* since we just did cfg80211_leave() nothing to do there */\n-\t\tcancel_work_sync(&wdev->disconnect_wk);\n+\t\t\t/* since we just did cfg80211_leave() nothing to do there */\n+\t\t\twiphy_work_cancel(wdev->wiphy, &wdev->disconnect_wk);\n+\t\t}\n \t\tbreak;\n \tcase NETDEV_DOWN:\n \t\twiphy_lock(&rdev->wiphy);\n \t\tcfg80211_update_iface_num(rdev, wdev->iftype, -1);\n \t\tif (rdev->scan_req && rdev->scan_req->req.wdev == wdev) {\n-\t\t\tif (WARN_ON(!rdev->scan_req->notified &&\n-\t\t\t\t    (!rdev->int_scan_req ||\n-\t\t\t\t     !rdev->int_scan_req->notified)))\n+\t\t\tif (!rdev->scan_req->notified &&\n+\t\t\t    (!rdev->int_scan_req ||\n+\t\t\t     !rdev->int_scan_req->notified))\n \t\t\t\trdev->scan_req->info.aborted = true;\n \t\t\t___cfg80211_scan_done(rdev, false);\n \t\t}\n"
+    }
+  ],
+  "native_preservation": "Station destroy part2 equals LTS with only netdev-to-wdev reporting argument adaptation; native worker cancellation and RCU frees retained. Core notifier retains c2ddd180bbee/e8c75736cfd0 effects. Full reviewed common-interface native function deltas are saved in nan-interface-native-functions.patch.",
+  "tests": [
+    "evidence/nan-channel-count-test.json",
+    "evidence/nan-supplicant-uapi.json"
+  ],
+  "source_contract_limitations": [
+    "ULW notification has no located current kernel producer; spurious NAN_DATA reporting has no current mac80211 producer; channel evacuation has a concrete mac80211 producer. None of these facts proves an unlocated Android/vendor consumer absent.",
+    "NAN station identity/capability relations are validated by mac80211; cfg80211 documents driver responsibilities. Initial-state condition is authenticated-or-associated; do not overstate the historical comment.",
+    "Pinned supplicant has older draft NAN numbering. ACK and all substantive shared LTS constants match port. Android Soong named wpa_supplicant includes CONFIG_NAN, but Goldfish radio constructor omits the enable flag and interface mask whose default excludes NAN/NAN_DATA. Preserve standard kernel protocol, record inherited mismatch; no Android source modification or OS build.",
+    "Netlink notification driver pointer/length validity and locking remain API contracts; no arbitrary-driver-input safety or event delivery guarantee."
+  ],
+  "build": "Build 173 passed the existing SDK workflow at e95eaf3986b6: kernel image, 100 common modules, 45 virtual-device modules. All signatures verified against the build certificate; tampered control rejected; export/CRC tables matched. No runtime boot or protocol test.",
+  "remote_sources_used": []
+}

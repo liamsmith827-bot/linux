@@ -1,0 +1,577 @@
+--- net/wireless/nl80211.c:nl80211_register_unexpected_frame:native
++++ net/wireless/nl80211.c:nl80211_register_unexpected_frame:port
+@@ -5,12 +5,13 @@
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 
+ 	if (wdev->iftype != NL80211_IFTYPE_AP &&
+-	    wdev->iftype != NL80211_IFTYPE_P2P_GO)
++	    wdev->iftype != NL80211_IFTYPE_P2P_GO &&
++	    wdev->iftype != NL80211_IFTYPE_NAN_DATA)
+ 		return -EINVAL;
+ 
+-	if (wdev->ap_unexpected_nlportid)
++	if (wdev->unexpected_nlportid)
+ 		return -EBUSY;
+ 
+-	wdev->ap_unexpected_nlportid = info->snd_portid;
++	wdev->unexpected_nlportid = info->snd_portid;
+ 	return 0;
+ }
+
+--- net/wireless/nl80211.c:__nl80211_unexpected_frame:native
++++ net/wireless/nl80211.c:__nl80211_unexpected_frame:port
+@@ -5,7 +5,7 @@
+ 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
+ 	struct sk_buff *msg;
+ 	void *hdr;
+-	u32 nlportid = READ_ONCE(wdev->ap_unexpected_nlportid);
++	u32 nlportid = READ_ONCE(wdev->unexpected_nlportid);
+ 
+ 	if (!nlportid)
+ 		return false;
+
+--- net/wireless/nl80211.c:cfg80211_rx_spurious_frame:native
++++ net/wireless/nl80211.c:cfg80211_rx_spurious_frame:port
+@@ -7,7 +7,8 @@
+ 	trace_cfg80211_rx_spurious_frame(dev, addr, link_id);
+ 
+ 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_AP &&
+-		    wdev->iftype != NL80211_IFTYPE_P2P_GO)) {
++		    wdev->iftype != NL80211_IFTYPE_P2P_GO &&
++		    wdev->iftype != NL80211_IFTYPE_NAN_DATA)) {
+ 		trace_cfg80211_return_bool(false);
+ 		return false;
+ 	}
+
+--- net/wireless/nl80211.c:parse_station_flags:native
++++ net/wireless/nl80211.c:parse_station_flags:port
+@@ -21,6 +21,26 @@
+ 		if ((params->sta_flags_mask |
+ 		     params->sta_flags_set) & BIT(__NL80211_STA_FLAG_INVALID))
+ 			return -EINVAL;
++
++		if ((iftype == NL80211_IFTYPE_NAN ||
++		     iftype == NL80211_IFTYPE_NAN_DATA) &&
++		    params->sta_flags_mask &
++		    ~(BIT(NL80211_STA_FLAG_AUTHENTICATED) |
++		      BIT(NL80211_STA_FLAG_ASSOCIATED) |
++		      BIT(NL80211_STA_FLAG_AUTHORIZED) |
++		      BIT(NL80211_STA_FLAG_MFP)))
++				return -EINVAL;
++
++		/* WME is always used in NAN */
++		if (iftype == NL80211_IFTYPE_NAN_DATA) {
++			/* but don't let userspace control it */
++			if (params->sta_flags_mask & BIT(NL80211_STA_FLAG_WME))
++				return -EINVAL;
++
++			params->sta_flags_mask |= BIT(NL80211_STA_FLAG_WME);
++			params->sta_flags_set |= BIT(NL80211_STA_FLAG_WME);
++		}
++
+ 		return 0;
+ 	}
+ 
+
+--- net/wireless/nl80211.c:cfg80211_check_station_change:native
++++ net/wireless/nl80211.c:cfg80211_check_station_change:port
+@@ -71,10 +71,12 @@
+ 			return -EINVAL;
+ 		if (params->link_sta_params.supported_rates)
+ 			return -EINVAL;
+-		if (params->ext_capab || params->link_sta_params.ht_capa ||
+-		    params->link_sta_params.vht_capa ||
+-		    params->link_sta_params.he_capa ||
+-		    params->link_sta_params.eht_capa ||
++		if (statype != CFG80211_STA_NAN_MGMT &&
++		    (params->link_sta_params.ht_capa ||
++		     params->link_sta_params.vht_capa ||
++		     params->link_sta_params.he_capa))
++			return -EINVAL;
++		if (params->ext_capab || params->link_sta_params.eht_capa ||
+ 		    params->link_sta_params.uhr_capa)
+ 			return -EINVAL;
+ 		if (params->sta_flags_mask & BIT(NL80211_STA_FLAG_SPP_AMSDU))
+@@ -146,6 +148,19 @@
+ 		    params->plink_action != NL80211_PLINK_ACTION_BLOCK)
+ 			return -EINVAL;
+ 		break;
++	case CFG80211_STA_NAN_MGMT:
++		if (params->sta_flags_mask &
++		    ~(BIT(NL80211_STA_FLAG_AUTHORIZED) |
++		      BIT(NL80211_STA_FLAG_MFP)))
++			return -EINVAL;
++		break;
++	case CFG80211_STA_NAN_DATA:
++		if (params->sta_flags_mask &
++		    ~(BIT(NL80211_STA_FLAG_AUTHORIZED) |
++		      BIT(NL80211_STA_FLAG_MFP) |
++		      BIT(NL80211_STA_FLAG_WME)))
++			return -EINVAL;
++		break;
+ 	}
+ 
+ 	/*
+
+--- net/wireless/nl80211.c:nl80211_new_station:native
++++ net/wireless/nl80211.c:nl80211_new_station:port
+@@ -2,8 +2,8 @@
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	int err;
+-	struct net_device *dev = info->user_ptr[1];
+-	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct wireless_dev *wdev = info->user_ptr[1];
++	struct net_device *dev = wdev->netdev;
+ 	struct station_parameters params;
+ 	u8 *mac_addr = NULL;
+ 	u32 auth_assoc = BIT(NL80211_STA_FLAG_AUTHENTICATED) |
+@@ -11,21 +11,40 @@
+ 
+ 	memset(&params, 0, sizeof(params));
+ 
++	if (!dev && wdev->iftype != NL80211_IFTYPE_NAN)
++		return -EINVAL;
++
+ 	if (!rdev->ops->add_station)
+ 		return -EOPNOTSUPP;
+ 
+ 	if (!info->attrs[NL80211_ATTR_MAC])
+ 		return -EINVAL;
+ 
+-	if (!info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL])
+-		return -EINVAL;
+-
+-	if (!info->attrs[NL80211_ATTR_STA_SUPPORTED_RATES])
+-		return -EINVAL;
+-
+-	if (!info->attrs[NL80211_ATTR_STA_AID] &&
+-	    !info->attrs[NL80211_ATTR_PEER_AID])
+-		return -EINVAL;
++	if (wdev->iftype == NL80211_IFTYPE_NAN ||
++	    wdev->iftype == NL80211_IFTYPE_NAN_DATA) {
++		if (info->attrs[NL80211_ATTR_STA_SUPPORTED_RATES])
++			return -EINVAL;
++		if (wdev->iftype == NL80211_IFTYPE_NAN_DATA) {
++			if (!info->attrs[NL80211_ATTR_NAN_NMI_MAC])
++				return -EINVAL;
++
++			/* Only NMI stations receive the HT/VHT/HE capabilities */
++			if (info->attrs[NL80211_ATTR_HT_CAPABILITY] ||
++			    info->attrs[NL80211_ATTR_VHT_CAPABILITY] ||
++			    info->attrs[NL80211_ATTR_HE_CAPABILITY])
++				return -EINVAL;
++		}
++	} else {
++		if (!info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL])
++			return -EINVAL;
++
++		if (!info->attrs[NL80211_ATTR_STA_SUPPORTED_RATES])
++			return -EINVAL;
++
++		if (!info->attrs[NL80211_ATTR_STA_AID] &&
++		    !info->attrs[NL80211_ATTR_PEER_AID])
++			return -EINVAL;
++	}
+ 
+ 	params.link_sta_params.link_id =
+ 		nl80211_link_id_or_invalid(info->attrs);
+@@ -41,12 +60,16 @@
+ 		mac_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
+ 	}
+ 
+-	params.link_sta_params.supported_rates =
+-		nla_data(info->attrs[NL80211_ATTR_STA_SUPPORTED_RATES]);
+-	params.link_sta_params.supported_rates_len =
+-		nla_len(info->attrs[NL80211_ATTR_STA_SUPPORTED_RATES]);
+-	params.listen_interval =
+-		nla_get_u16(info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL]);
++	if (info->attrs[NL80211_ATTR_STA_SUPPORTED_RATES]) {
++		params.link_sta_params.supported_rates =
++			nla_data(info->attrs[NL80211_ATTR_STA_SUPPORTED_RATES]);
++		params.link_sta_params.supported_rates_len =
++			nla_len(info->attrs[NL80211_ATTR_STA_SUPPORTED_RATES]);
++	}
++
++	if (info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL])
++		params.listen_interval =
++			nla_get_u16(info->attrs[NL80211_ATTR_STA_LISTEN_INTERVAL]);
+ 
+ 	if (info->attrs[NL80211_ATTR_VLAN_ID])
+ 		params.vlan_id = nla_get_u16(info->attrs[NL80211_ATTR_VLAN_ID]);
+@@ -60,12 +83,12 @@
+ 		 * and is NOT supported for AP interface
+ 		 */
+ 		params.support_p2p_ps =
+-			dev->ieee80211_ptr->iftype == NL80211_IFTYPE_P2P_GO;
++			wdev->iftype == NL80211_IFTYPE_P2P_GO;
+ 	}
+ 
+ 	if (info->attrs[NL80211_ATTR_PEER_AID])
+ 		params.aid = nla_get_u16(info->attrs[NL80211_ATTR_PEER_AID]);
+-	else
++	else if (info->attrs[NL80211_ATTR_STA_AID])
+ 		params.aid = nla_get_u16(info->attrs[NL80211_ATTR_STA_AID]);
+ 
+ 	if (info->attrs[NL80211_ATTR_STA_CAPABILITY]) {
+@@ -166,7 +189,7 @@
+ 	if (err)
+ 		return err;
+ 
+-	if (parse_station_flags(info, dev->ieee80211_ptr->iftype, &params))
++	if (parse_station_flags(info, wdev->iftype, &params))
+ 		return -EINVAL;
+ 
+ 	/* HT/VHT requires QoS, but if we don't have that just ignore HT/VHT
+@@ -186,6 +209,16 @@
+ 			return -EINVAL;
+ 	}
+ 
++	if (wdev->iftype == NL80211_IFTYPE_NAN ||
++	    wdev->iftype == NL80211_IFTYPE_NAN_DATA) {
++		if (params.sta_modify_mask & STATION_PARAM_APPLY_UAPSD)
++			return -EINVAL;
++		/* NAN NMI station must be added in associated or authorized state */
++		if (!(params.sta_flags_set & (BIT(NL80211_STA_FLAG_ASSOCIATED) |
++					      BIT(NL80211_STA_FLAG_AUTHENTICATED))))
++			return -EINVAL;
++	}
++
+ 	/* Ensure that HT/VHT capabilities are not set for 6 GHz HE STA */
+ 	if (params.link_sta_params.he_6ghz_capa &&
+ 	    (params.link_sta_params.ht_capa || params.link_sta_params.vht_capa))
+@@ -194,7 +227,7 @@
+ 	/* When you run into this, adjust the code below for the new flag */
+ 	BUILD_BUG_ON(NL80211_STA_FLAG_MAX != 8);
+ 
+-	switch (dev->ieee80211_ptr->iftype) {
++	switch (wdev->iftype) {
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_AP_VLAN:
+ 	case NL80211_IFTYPE_P2P_GO:
+@@ -278,6 +311,11 @@
+ 		 */
+ 		params.sta_flags_mask &= ~BIT(NL80211_STA_FLAG_AUTHORIZED);
+ 		break;
++	case NL80211_IFTYPE_NAN:
++		break;
++	case NL80211_IFTYPE_NAN_DATA:
++		params.nmi_mac = nla_data(info->attrs[NL80211_ATTR_NAN_NMI_MAC]);
++		break;
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
+@@ -303,7 +341,7 @@
+ 	params.epp_peer =
+ 		nla_get_flag(info->attrs[NL80211_ATTR_EPP_PEER]);
+ 
+-	err = rdev_add_station(rdev, dev, mac_addr, &params);
++	err = rdev_add_station(rdev, wdev, mac_addr, &params);
+ out:
+ 	dev_put(params.vlan);
+ 	return err;
+
+--- net/wireless/nl80211.c:nl80211_set_station:native
++++ net/wireless/nl80211.c:nl80211_set_station:port
+@@ -1,12 +1,17 @@
+ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+-	struct net_device *dev = info->user_ptr[1];
++	struct wireless_dev *wdev = info->user_ptr[1];
++	struct net_device *dev = wdev->netdev;
+ 	struct station_parameters params;
+ 	u8 *mac_addr;
+ 	int err;
+ 
+ 	memset(&params, 0, sizeof(params));
++
++	if (!dev && wdev->iftype != NL80211_IFTYPE_NAN &&
++	    wdev->iftype != NL80211_IFTYPE_NAN_DATA)
++		return -EINVAL;
+ 
+ 	if (!rdev->ops->change_station)
+ 		return -EOPNOTSUPP;
+@@ -80,7 +85,7 @@
+ 			nla_len(info->attrs[NL80211_ATTR_STA_EXT_CAPABILITY]);
+ 	}
+ 
+-	if (parse_station_flags(info, dev->ieee80211_ptr->iftype, &params))
++	if (parse_station_flags(info, wdev->iftype, &params))
+ 		return -EINVAL;
+ 
+ 	if (info->attrs[NL80211_ATTR_STA_PLINK_ACTION])
+@@ -140,7 +145,7 @@
+ 	if (IS_ERR(params.vlan))
+ 		return PTR_ERR(params.vlan);
+ 
+-	switch (dev->ieee80211_ptr->iftype) {
++	switch (wdev->iftype) {
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_AP_VLAN:
+ 	case NL80211_IFTYPE_P2P_GO:
+@@ -148,6 +153,8 @@
+ 	case NL80211_IFTYPE_STATION:
+ 	case NL80211_IFTYPE_ADHOC:
+ 	case NL80211_IFTYPE_MESH_POINT:
++	case NL80211_IFTYPE_NAN:
++	case NL80211_IFTYPE_NAN_DATA:
+ 		break;
+ 	default:
+ 		err = -EOPNOTSUPP;
+@@ -155,7 +162,7 @@
+ 	}
+ 
+ 	/* driver will call cfg80211_check_station_change() */
+-	err = rdev_change_station(rdev, dev, mac_addr, &params);
++	err = rdev_change_station(rdev, wdev, mac_addr, &params);
+ 
+  out_put_vlan:
+ 	dev_put(params.vlan);
+
+--- net/wireless/nl80211.c:nl80211_del_station:native
++++ net/wireless/nl80211.c:nl80211_del_station:port
+@@ -1,12 +1,15 @@
+ static int nl80211_del_station(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+-	struct net_device *dev = info->user_ptr[1];
+-	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct wireless_dev *wdev = info->user_ptr[1];
++	struct net_device *dev = wdev->netdev;
+ 	struct station_del_parameters params;
+ 	int link_id = nl80211_link_id_or_invalid(info->attrs);
+ 
+ 	memset(&params, 0, sizeof(params));
++
++	if (!dev && wdev->iftype != NL80211_IFTYPE_NAN)
++		return -EINVAL;
+ 
+ 	if (info->attrs[NL80211_ATTR_MAC])
+ 		params.mac = nla_data(info->attrs[NL80211_ATTR_MAC]);
+@@ -16,6 +19,8 @@
+ 	case NL80211_IFTYPE_AP_VLAN:
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 	case NL80211_IFTYPE_P2P_GO:
++	case NL80211_IFTYPE_NAN:
++	case NL80211_IFTYPE_NAN_DATA:
+ 		/* always accept these */
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+@@ -63,5 +68,5 @@
+ 
+ 	params.link_id = link_id;
+ 
+-	return rdev_del_station(rdev, dev, &params);
++	return rdev_del_station(rdev, wdev, &params);
+ }
+
+--- net/wireless/nl80211.c:nl80211_dump_station:native
++++ net/wireless/nl80211.c:nl80211_dump_station:port
+@@ -15,7 +15,7 @@
+ 	/* nl80211_prepare_wdev_dump acquired it in the successful case */
+ 	__acquire(&rdev->wiphy.mtx);
+ 
+-	if (!wdev->netdev) {
++	if (!wdev->netdev && wdev->iftype != NL80211_IFTYPE_NAN) {
+ 		err = -EINVAL;
+ 		goto out_err;
+ 	}
+@@ -38,7 +38,7 @@
+ 			sinfo_alloc = true;
+ 		}
+ 
+-		err = rdev_dump_station(rdev, wdev->netdev, sta_idx,
++		err = rdev_dump_station(rdev, wdev, sta_idx,
+ 					mac_addr, &sinfo);
+ 		if (err == -ENOENT)
+ 			break;
+@@ -56,7 +56,7 @@
+ 		if (nl80211_send_station(skb, NL80211_CMD_NEW_STATION,
+ 				NETLINK_CB(cb->skb).portid,
+ 				cb->nlh->nlmsg_seq, NLM_F_MULTI,
+-				rdev, wdev->netdev, mac_addr,
++				rdev, wdev, mac_addr,
+ 				&sinfo, false) < 0)
+ 			goto out;
+ 
+
+--- net/wireless/nl80211.c:nl80211_stop_nan:native
++++ net/wireless/nl80211.c:nl80211_stop_nan:port
+@@ -6,6 +6,10 @@
+ 	if (wdev->iftype != NL80211_IFTYPE_NAN)
+ 		return -EOPNOTSUPP;
+ 
++	cfg80211_close_dependents(rdev, wdev);
++
++	guard(wiphy)(&rdev->wiphy);
++
+ 	cfg80211_stop_nan(rdev, wdev);
+ 
+ 	return 0;
+
+--- net/wireless/nl80211.c:nl80211_del_interface:native
++++ net/wireless/nl80211.c:nl80211_del_interface:port
+@@ -29,6 +29,8 @@
+ 	else
+ 		dev_close(wdev->netdev);
+ 
++	cfg80211_close_dependents(rdev, wdev);
++
+ 	mutex_lock(&rdev->wiphy.mtx);
+ 
+ 	return cfg80211_remove_virtual_intf(rdev, wdev);
+
+--- net/wireless/core.c:cfg80211_shutdown_all_interfaces:native
++++ net/wireless/core.c:cfg80211_shutdown_all_interfaces:port
+@@ -5,16 +5,21 @@
+ 
+ 	ASSERT_RTNL();
+ 
++	/*
++	 * Some netdev interfaces need to be closed before some non-netdev
++	 * ones, i.e. NAN_DATA interfaces need to be closed before the NAN
++	 * interface
++	 */
+ 	list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
+ 		if (wdev->netdev) {
+ 			dev_close(wdev->netdev);
+ 			continue;
+ 		}
++	}
+ 
+-		/* otherwise, check iftype */
++	guard(wiphy)(wiphy);
+ 
+-		guard(wiphy)(wiphy);
+-
++	list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
+ 		switch (wdev->iftype) {
+ 		case NL80211_IFTYPE_P2P_DEVICE:
+ 			cfg80211_stop_p2p_device(rdev, wdev);
+@@ -22,6 +27,9 @@
+ 		case NL80211_IFTYPE_NAN:
+ 			cfg80211_stop_nan(rdev, wdev);
+ 			break;
++		case NL80211_IFTYPE_PD:
++			cfg80211_stop_pd(rdev, wdev);
++			break;
+ 		default:
+ 			break;
+ 		}
+
+--- net/wireless/core.c:cfg80211_netdev_notifier_call:native
++++ net/wireless/core.c:cfg80211_netdev_notifier_call:port
+@@ -41,8 +41,8 @@
+ 		}
+ 		break;
+ 	case NETDEV_GOING_DOWN:
++		cfg80211_leave(rdev, wdev, -1);
+ 		scoped_guard(wiphy, &rdev->wiphy) {
+-			cfg80211_leave(rdev, wdev);
+ 			cfg80211_remove_links(wdev);
+ 			/* since we just did cfg80211_leave() nothing to do there */
+ 			wiphy_work_cancel(wdev->wiphy, &wdev->disconnect_wk);
+@@ -124,6 +124,23 @@
+ 
+ 		if (rfkill_blocked(rdev->wiphy.rfkill))
+ 			return notifier_from_errno(-ERFKILL);
++
++		/* NAN_DATA interfaces require a running NAN interface */
++		if (wdev->iftype == NL80211_IFTYPE_NAN_DATA) {
++			struct wireless_dev *iter;
++			bool nan_started = false;
++
++			list_for_each_entry(iter, &rdev->wiphy.wdev_list, list) {
++				if (iter->iftype == NL80211_IFTYPE_NAN &&
++				    wdev_running(iter)) {
++					nan_started = true;
++					break;
++				}
++			}
++
++			if (!nan_started)
++				return notifier_from_errno(-ENOLINK);
++		}
+ 		break;
+ 	default:
+ 		return NOTIFY_DONE;
+
+--- net/wireless/util.c:cfg80211_change_iface:native
++++ net/wireless/util.c:cfg80211_change_iface:port
+@@ -11,9 +11,17 @@
+ 	if (otype == NL80211_IFTYPE_AP_VLAN)
+ 		return -EOPNOTSUPP;
+ 
++	/*
++	 * for NAN interfaces cfg80211_leave must be called for leaving,
++	 * but locking here doesn't allow this.
++	 */
++	if (otype == NL80211_IFTYPE_NAN)
++		return -EOPNOTSUPP;
++
+ 	/* cannot change into P2P device or NAN */
+ 	if (ntype == NL80211_IFTYPE_P2P_DEVICE ||
+-	    ntype == NL80211_IFTYPE_NAN)
++	    ntype == NL80211_IFTYPE_NAN ||
++	    ntype == NL80211_IFTYPE_PD)
+ 		return -EOPNOTSUPP;
+ 
+ 	if (!rdev->ops->change_virtual_intf ||
+@@ -31,7 +39,7 @@
+ 		dev->ieee80211_ptr->use_4addr = false;
+ 		rdev_set_qos_map(rdev, dev, NULL);
+ 
+-		cfg80211_leave(rdev, dev->ieee80211_ptr);
++		cfg80211_leave_locked(rdev, dev->ieee80211_ptr, -1);
+ 
+ 		cfg80211_process_rdev_events(rdev);
+ 		cfg80211_mlme_purge_registrations(dev->ieee80211_ptr);
+@@ -59,6 +67,7 @@
+ 		case NL80211_IFTYPE_OCB:
+ 		case NL80211_IFTYPE_P2P_CLIENT:
+ 		case NL80211_IFTYPE_ADHOC:
++		case NL80211_IFTYPE_NAN_DATA:
+ 			dev->priv_flags |= IFF_DONT_BRIDGE;
+ 			break;
+ 		case NL80211_IFTYPE_P2P_GO:
+@@ -77,6 +86,7 @@
+ 		case NL80211_IFTYPE_P2P_DEVICE:
+ 		case NL80211_IFTYPE_WDS:
+ 		case NL80211_IFTYPE_NAN:
++		case NL80211_IFTYPE_PD:
+ 			WARN_ON(1);
+ 			break;
+ 		}
+
+--- net/wireless/util.c:cfg80211_process_wdev_events:native
++++ net/wireless/util.c:cfg80211_process_wdev_events:port
+@@ -31,7 +31,15 @@
+ 					       ev->ij.channel);
+ 			break;
+ 		case EVENT_STOPPED:
+-			cfg80211_leave(wiphy_to_rdev(wdev->wiphy), wdev);
++			/*
++			 * for NAN interfaces cfg80211_leave must be called but
++			 * locking here doesn't allow this.
++			 */
++			if (WARN_ON(wdev->iftype == NL80211_IFTYPE_NAN))
++				break;
++
++			cfg80211_leave_locked(wiphy_to_rdev(wdev->wiphy), wdev,
++					      ev->link_id);
+ 			break;
+ 		case EVENT_PORT_AUTHORIZED:
+ 			__cfg80211_port_authorized(wdev, ev->pa.peer_addr,
+
+--- net/wireless/mlme.c:cfg80211_mlme_unregister_socket:native
++++ net/wireless/mlme.c:cfg80211_mlme_unregister_socket:port
+@@ -24,6 +24,6 @@
+ 		rdev_crit_proto_stop(rdev, wdev);
+ 	}
+ 
+-	if (nlportid == wdev->ap_unexpected_nlportid)
+-		wdev->ap_unexpected_nlportid = 0;
++	if (nlportid == wdev->unexpected_nlportid)
++		wdev->unexpected_nlportid = 0;
+ }

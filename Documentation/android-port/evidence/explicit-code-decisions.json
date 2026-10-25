@@ -24923,5 +24923,104 @@
     "evidence": [
       "evidence/nan-validation-review.json: scan_bounds_witness_migration"
     ]
+  },
+  {
+    "commit": "9375c09543350601a473e6aa7380d18e06751c93",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain NAN_DATA as the netdev data interface and the per-wiphy management/data dependency. NETDEV_PRE_UP requires a running NAN interface; NAN shutdown/delete/suspend/owner cleanup closes dependent data netdevs first under RTNL and then acquires the wiphy lock. EVENT_STOPPED cannot use that locking path for NAN, and NAN type conversion is rejected. Retain native c2ddd180bbee wiphy-work cancellation and e8c75736cfd0 scan-abort handling in the notifier; do not restore obsolete cancel_work_sync. Historical mac80211 placeholder rejects are superseded by later retained NAN station/data support. No one-to-one NMI binding beyond the implemented per-wiphy contract or runtime teardown correctness is asserted.",
+    "evidence": [
+      "evidence/nan-interfaces-review.json",
+      "SECURITY.md: NAN data interfaces and schedule contracts"
+    ]
+  },
+  {
+    "commit": "20b078d5eef0995036516dbff8768e45b807cee9",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "e95eaf3986b6eba1be39a74c8aee561d81d257ed"
+    ],
+    "rationale": "Retain NMI/NDI station types, NDI-to-NMI MAC relation, management-only capability configuration and flag restrictions. NAN requests omit ordinary AP AID/listen/rates requirements but still require MAC, reject supplied legacy rates and UAPSD, and enforce NMI address for NDI. The actual initial state check requires authenticated or associated (despite the historical comment saying authorized). Driver callback validation handles existing-peer/capability relationships; e95eaf3986b6 corrects mac80211 capability immutability at the management station. Native ordinary-station validation stays outside the NAN branches. Pinned Android has source callers, but its older draft numeric API mismatch is separately documented and is not claimed compatible.",
+    "evidence": [
+      "evidence/nan-interfaces-review.json",
+      "SECURITY.md: NAN data interfaces and schedule contracts"
+    ]
+  },
+  {
+    "commit": "23b3920536928830b29165d3e62fc4740af30b4b",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "e95eaf3986b6eba1be39a74c8aee561d81d257ed"
+    ],
+    "rationale": "Retain peer scheduling command, two-map limit, required metadata and all-or-none schedule fields, checked channel definitions, local compatibility, map ID uniqueness, cross-map channel incompatibility, single-radio slot exclusions and scheduled-channel coverage. Keep shared 32-slot length/index validation and structured ULW length validation. Adapt both local and peer preflight to reject counts above U8_MAX before allocation/index/count narrowing; preserve all ordinary native validation and the local_channels*8 peer bound. Host prefix tests verify boundary behavior without claiming a demonstrated corruption exploit or full parser coverage. Persistent schedule ownership and other cross-update constraints remain driver responsibilities. Keep canonical ACK/LTS values; pinned supplicant older-draft numbering is an inherited integration limitation.",
+    "evidence": [
+      "evidence/nan-interfaces-review.json",
+      "SECURITY.md: NAN data interfaces and schedule contracts"
+    ]
+  },
+  {
+    "commit": "a5ba80c652b3c7ebd366a679316c4b410b00be86",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain NAN_DATA support in unexpected-frame subscription/reporting with renamed socket owner field. Existing AP/GO behavior, single-subscriber EBUSY, READ_ONCE target, checked netlink construction and socket-unregister cleanup remain. The current mac80211 spurious-report call is AP-only and pinned supplicant registers it in AP subscription, so this does not establish working SDK NAN_DATA reporting; preserve the shared API conservatively rather than infer dispensability from the missing NAN call. No event receiver is granted authority merely by its existence; subscription retains GENL_UNS_ADMIN_PERM.",
+    "evidence": [
+      "evidence/nan-interfaces-review.json",
+      "SECURITY.md: NAN data interfaces and schedule contracts"
+    ]
+  },
+  {
+    "commit": "29d27a8012566f2572be8de1cb76ad931909edf1",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain owner-directed NAN unaligned-window update event, export and trace definition as part of the configured common source/userspace interface. Message allocation/serialization failures free or drop the event and unicast uses the wiphy network namespace and owner port. No in-tree emission caller or pinned supplicant handling was found; exact SDK use is unresolved and not treated as proof of unnecessary code. The driver must supply a valid ULW pointer/length, including for tracing; this API is not an independent validator of arbitrary driver buffers. No cryptographic material or delivery guarantee is implied.",
+    "evidence": [
+      "evidence/nan-interfaces-review.json",
+      "SECURITY.md: NAN data interfaces and schedule contracts"
+    ]
+  },
+  {
+    "commit": "d8b4c6237010254f731d7bfadfbb06d50e3fe851",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain owner-directed NAN channel-evacuation notification with checked nested channel serialization and trace. Retained mac80211 ieee80211_nan_evacuate_channel calls it under the wiphy lock after detaching the channel and updating peer references; user space can reconfigure its schedule. No matching event handling was found in the pinned supplicant; record the integration uncertainty while retaining the concrete common-kernel producer. No extra platform or alternate channel policy is introduced.",
+    "evidence": [
+      "evidence/nan-interfaces-review.json",
+      "SECURITY.md: NAN data interfaces and schedule contracts"
+    ]
+  },
+  {
+    "commit": "4b000e9b7c4e0517fda7dc6bf0cba930dd4a9683",
+    "disposition": "partially-adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "e95eaf3986b6eba1be39a74c8aee561d81d257ed"
+    ],
+    "rationale": "Retain separate NMI/NDI station objects and RCU relation, capability inheritance, allowed shared address with the corresponding NMI, dependent NDI destruction before NMI removal, interface-stop flushing, and NMI-before-NDI reconfiguration. NAN uses band-agnostic capabilities and explicit channel context where needed; later bandwidth/helper refactors supersede intermediate guards. Omit historical KABI reserve preservation. Correct the immutable-capability guard to CFG80211_STA_NAN_MGMT: NDI capabilities are copied from NMI and the old NDI guard left their source mutable. Initial capability installation is allowed until HT is established, after which replacement HT/VHT/HE is rejected. Native station worker cancellation, RCU link free and interface-list cleanup remain, with source equivalence recorded. No station lifecycle or concurrency runtime is asserted.",
+    "evidence": [
+      "evidence/nan-interfaces-review.json",
+      "SECURITY.md: NAN data interfaces and schedule contracts"
+    ]
+  },
+  {
+    "commit": "45b4b814e5f0eed2c5c206f758facf510d691f74",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain copying per-link aggregation capabilities from the NMI station to its NDI station and recomputing station aggregates. This completes the existing capability inheritance instead of leaving data-station aggregation defaults inconsistent. Full sta_apply_parameters equals final ACK; native cleanup functions remain independently proven. The e95eaf3986b6 source-capability immutability correction prevents later divergence of those inherited values. Compilation verifies the interface, not live aggregation behavior.",
+    "evidence": [
+      "evidence/nan-interfaces-review.json",
+      "SECURITY.md: NAN data interfaces and schedule contracts"
+    ]
   }
 ]

@@ -8348,6 +8348,89 @@ GCMP-256, keeping native index, pairwise/address, length, sequence and supported
 cipher checks; all validator callers pass the device context. Ordinary interface
 cipher choices are unchanged. No historical binary layout or module ABI is kept.
 
-The regression tests and source comparisons are recorded; full workflow build
-verification for both adaptations is pending. All sources used here are local.
+Build 172 passed the full workflow at ca0c99fea3a0 and produced the kernel image,
+100 common modules and 45 virtual-device modules. All signatures and export/CRC
+tables verified; a tampered payload was rejected. Both adaptations are covered
+by that build. All sources used here are local.
 Commit-message remote URLs were read as local text and were not accessed.
+
+## NAN data interfaces and schedule contracts
+
+Eight decisions are recorded in `evidence/nan-interfaces-review.json`. Retain the
+NAN_DATA netdev, management/data station distinction, peer scheduling and owner
+notifications in the configured common wireless stack. A data netdev requires a
+running NAN interface on its wiphy. Teardown closes dependent data netdevs before
+management stop, under RTNL and then the wiphy lock; event-driven stop rejects NAN
+where that lock order cannot be followed. Native c2ddd180bbee disconnect wiphy-work
+cancellation and e8c75736cfd0 scan-abort handling remain in the notifier. The
+per-wiphy dependency should not be described as a stronger one-to-one relationship.
+No teardown, suspend or concurrency runtime behavior has been verified.
+
+NAN station creation keeps MAC requirements, permits omission of AP-specific
+AID/listen/rate fields, rejects legacy rates/UAPSD, and requires the management
+station address for data stations. The actual initial-state test requires
+AUTHENTICATED or ASSOCIATED; the old comment's AUTHORIZED wording is inaccurate.
+Data stations inherit capabilities and aggregation state from an existing HT
+management peer; separate station objects allow that peer to reuse its address
+for data with different keys. Dependent stations are removed before the management
+station, and reconfiguration restores management stations first. Driver checks
+remain necessary beyond the generic cfg80211 parser.
+
+Adaptation e95eaf3986b6 corrects the immutability guard to inspect the management
+station, whose capabilities are the source of data-station copies. ACK checked
+the data-station type, leaving that source mutable. Initial capability installation
+is still allowed until HT is established; later HT/VHT/HE replacements are rejected.
+This avoids divergence among inherited capability/aggregation values. The full
+change function otherwise equals ACK; the correction was source-reviewed and
+compiled, without a live station test. Historical KABI reserve layout is omitted.
+Native station worker cleanup, deferred RCU link free, interface-list cleanup and
+FILS/probe-template lifetime fixes retain exact native functions, with the sole
+station-destroy reporting argument adapted from netdev to wdev.
+
+Peer scheduling retains metadata requirements, all-or-none schedule fields,
+32-slot index checks, at most two maps, distinct map IDs, incompatible channels
+across maps, nonoverlapping slots on a single radio, compatibility with local
+channels and coverage of each peer channel. The shared ULW parser validates
+attribute IDs, allowed lengths and remaining bytes; driver-owned persistent
+schedule constraints are a separate contract. Both local and peer request counts
+are now bounded by U8_MAX before allocation or narrowing into 8-bit counts/indices.
+The previous local native path and ACK peer path lacked that representability
+check. The extra bound preserves valid representable requests and existing
+channel/regulatory checks; it does not remove a native fix. Actual pre-allocation
+function prefixes pass 4,112 local and 24,672 peer cases under ASan/UBSan. ACK
+accepts 258 and 259 unrepresentable-count cases respectively at that boundary.
+Later validation can reject requests too, so this is not evidence of a demonstrated
+memory-corruption exploit. The test does not run full netlink parsing or drivers.
+
+Unexpected-frame registration keeps its administrative permission, single owner,
+READ_ONCE event target and unregister cleanup. Its current mac80211 producer is
+AP-only; the NAN_DATA extension is retained as a shared API, not claimed exercised.
+The unaligned-window notification has no located in-tree producer or pinned
+supplicant handler; retain it conservatively and record uncertain usage. Its
+pointer/length and trace inputs remain driver contracts. Channel evacuation does
+have a concrete mac80211 producer under the wiphy lock after detaching the channel
+and updating peers. Checked serialization and namespace/owner-directed unicast
+remain; delivery, reception and cryptographic protection are not guaranteed.
+
+A host C enumeration of the pinned supplicant header found an inherited protocol
+mismatch: eleven shared NAN names have different values, and its old INIT_ULW name
+also differs numerically from current ULW. All 101 compared ACK values equal the
+port; all 77 substantive shared LTS values also equal it. The remaining LTS
+comparison is only CAPABILITIES_MAX growing for appended PHY data. For example,
+the supplicant local/peer schedule commands are 160/161, versus kernel 161/163.
+This prevents assuming that source callers prove wire compatibility. The named
+Android Soong wpa_supplicant includes CONFIG_NAN, despite the older android.config
+file not enabling it. Goldfish's actual radio constructor omits the NAN enable
+flag and interface-mask attribute, and hwsim's default mask excludes NAN/NAN_DATA;
+that constructor therefore does not enable these interfaces. Other clients or
+product invocation remain unverified. Preserve established ACK/LTS protocol
+numbers rather than renumbering them for an older draft header. No Android source
+or prebuilt is modified; the inherited mismatch remains an explicit integration
+limitation, not a claim of full optional-feature compatibility. See
+`evidence/nan-supplicant-uapi.json` for every numeric result and header hash.
+
+Build 173 passed the existing workflow at e95eaf3986b6, producing the kernel image,
+100 common modules and 45 virtual-device modules. All signatures verified, the
+tampered control was rejected, and export/CRC tables matched. All review sources
+were local. No remote
+resource was accessed and no Android OS build, boot or flashing was performed.
