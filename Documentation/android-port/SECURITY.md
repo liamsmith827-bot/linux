@@ -9687,6 +9687,60 @@ EHT, UHR, mesh and the native TIM dispatch remain. This is preservation of sourc
 interfaces, not a claim about an emulated radio's runtime capabilities. All
 evidence was local; no additional remote resource was used.
 
+## PCI, ARM performance and physical platform tail
+
+evidence/platform-tail-review.json records 23 full candidate patches. The native
+Qualcomm driver already has evolved SDM845 clock/reset/regulator support, and
+native PSCI already uses the restart notifier with priority 129. Preserve those
+whole LTS files. The DWC DMA-mask revert/reapply and PCI non-x86 bridge-D3
+revert/reapply pairs have exactly inverse changed lines. Current DWC MSI uses
+coherent allocation with a 32-bit first attempt and explicit 64-bit fallback;
+the native bridge predicate retains current hotplug, firmware and x86 BIOS-year
+checks. Generic Android PCI power hooks remain independently reviewed.
+
+The old Qualcomm ECAM preparation is superseded by native fc2bc2623e3a. Its local
+commit message explains the regression caused by treating configuration space
+as DBI, and why the old Qualcomm-specific setup became unnecessary. Keep the
+entire native driver instead of reapplying ACK's historical version and reversing
+that correction. The message's embedded remote URL was not accessed.
+
+The DWC host-handler GPL export is a functional module-source interface, but its
+root-complex provider is not selected in the SDK. Configured DWC endpoint support
+is distinct. Omit the host-specific export while retaining native source and
+generic PCI/MSI customization. The PSCI-idle hook placement and ARM TRBE/PMU/SPE
+affinity conversions belong to explicit ARM providers; native files remain.
+The NoC S3/SI L1 counter extension and its follow-up ternary-precedence correction
+are omitted together. The native driver has neither the new event-base formula
+nor its bug. No ARM build or physical-device correctness is certified.
+
+2d16122c8e8e removes two leftover physical Intel thermal additions from the
+initial integration: a Wildcat Lake power-slider capability and four new TCC
+CPU matches. Both files now equal LTS exactly, including native Panther Lake
+slider support. SDK configuration disables INT340X_THERMAL and INTEL_TCC_COOLING.
+Positive product evidence selects com.android.hardware.thermal, whose local
+example implementation supplies fixed skin/battery temperatures and no physical
+cooling controls. The TCC driver instead accesses physical thermal MSRs. This
+removal avoids adding future physical platforms; no LTS fix is weakened.
+
+Chrome EC probe-deferral, alternate-mode and sensor-drift changes remain omitted
+with their unselected physical provider. CHROME_PLATFORMS is disabled, and the
+selected goldfish sensor implementation uses the QEMU sensor transport. The full
+drift algorithm and later 5000-ppm limit were examined, including batching,
+history movement and out-of-order sample handling. These are functional physical
+fixes, not claims of upstream equivalence. Likewise the new Wildcat Lake VSEC
+PCI ID and MAX77759 charger property alias are specific hardware support, not
+generic SDK interfaces. Native source and existing generic subsystems remain.
+All evidence is local; no additional remote resource was used. Build 192 was
+started with the original emulator workflow at 2d16122c8e8e, manifest 49411bf;
+its result must be recorded separately after completion.
+
+Build 192 completed successfully at that source/manifest pair, producing the
+kernel image, 100 common modules and 45 virtual-device modules. All 145 module
+signatures verified against the build certificate, and the altered-payload
+control was rejected. Module flag/CRC tables and all 659 protected exports match;
+the historical wrong-stride control misses 330 exports. This verifies compilation
+and artifact generation only, without running a thermal service or kernel.
+
 ## Zram ioctl history, documentation and ublk page-size ABI
 
 The six remaining zram/ublk candidates are reviewed in

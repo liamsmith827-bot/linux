@@ -31889,5 +31889,239 @@
       "evidence/single-path-merge-review.json",
       "SECURITY.md: Single-path core and networking merge resolutions"
     ]
+  },
+  {
+    "commit": "daa9cbe3d94356d22ea44a8e237d9e1a2b28d35b",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native whole Qualcomm PCIe driver includes SDM845 compatible/cfg_2_7_0 with evolved bulk clock/reset/regulator and root-complex initialization. Keep native cleanup, reset timings and later fixes rather than replaying the 204-line initial implementation. This physical ARM controller is not added to SDK; existing native support is preserved.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-tail-review.json",
+      "SECURITY.md: PCI, ARM performance and physical platform tail"
+    ]
+  },
+  {
+    "commit": "58dfad071882b7d4444c37823325b076aa41152b",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native whole PSCI file already registers psci_sys_reset as restart notifier with priority 129 and retains warm/soft reset2 handling. Keep evolved native PSCI implementation; no Android-only restart replacement is required and x86 SDK does not call ARM PSCI.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-tail-review.json",
+      "SECURITY.md: PCI, ARM performance and physical platform tail"
+    ]
+  },
+  {
+    "commit": "310b82860b376094cf6de0557fb6888b0e73e346",
+    "disposition": "omitted-current-target",
+    "rationale": "GPL export of DesignWare host MSI handler is a functional source-module interface, not historical KMI. Its provider is the separate DWC root-complex driver, absent from current SDK config; DWC endpoint support is distinct. Keep native function/source and generic SDK PCI/MSI/module hooks, without adding an export solely for a future physical host controller.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-tail-review.json",
+      "SECURITY.md: PCI, ARM performance and physical platform tail"
+    ]
+  },
+  {
+    "commit": "8f9f701b5c5abcdb4c13912a372983204f83980b",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "Removal of the old 32-bit streaming DMA mask was exactly reversed by 778306b54349. Keep current native DWC MSI allocator, which uses coherent 32-bit allocation with explicit 64-bit fallback and failure cleanup, rather than reviving the temporary mask removal.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-tail-review.json",
+      "SECURITY.md: PCI, ARM performance and physical platform tail"
+    ]
+  },
+  {
+    "commit": "778306b543497b1f84e9c5263ae9f324078c4e0d",
+    "disposition": "superseded",
+    "rationale": "Exact inverse restores historical 32-bit streaming-mask setup, but native final driver evolved to coherent MSI-target allocation and documented fallback. Entire driver is LTS; preserve current address constraints and lifecycle instead of replaying obsolete allocation APIs.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-tail-review.json",
+      "SECURITY.md: PCI, ARM performance and physical platform tail"
+    ]
+  },
+  {
+    "commit": "40a9a838b456d0bac88b3c358d068fbc8bff7419",
+    "disposition": "omitted-current-target",
+    "rationale": "Moves ARM PSCI vendor callbacks inside context-tracking IRQ entry/exit so RCU is watching. Those platform-specific callbacks are absent from native delivered cpuidle-psci.c; the entire file is LTS. ARM_PSCI_CPUIDLE provider is outside x86 SDK. Do not add an ARM idle-hook implementation only to move its callbacks; generic SDK idle hooks remain.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-tail-review.json",
+      "SECURITY.md: PCI, ARM performance and physical platform tail"
+    ]
+  },
+  {
+    "commit": "bad859279573caa32219c68e4cf126c5a53efa86",
+    "disposition": "omitted-current-target",
+    "rationale": "Adds one legacy property alias gated by maxim,max77759chrg device-tree compatible. This is a physical charger binding, not generic GPIO behavior. Keep exact native gpiolib-of and the SDK goldfish device model; no MAX77759 charger is being added for this target. It is not classified KMI-only or as a proven absence of all Android consumers.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-tail-review.json",
+      "SECURITY.md: PCI, ARM performance and physical platform tail"
+    ]
+  },
+  {
+    "commit": "562adcda5cd48c23dcdd3f378d2ee142f7f20420",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "The non-x86 bridge-D3 policy revert is exactly undone by efd77156c8e3. Current pci_bridge_d3_possible is exact LTS with hotplug/blacklist/firmware checks and x86 BIOS-year restriction. No power-management restriction is removed by this port.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-tail-review.json",
+      "SECURITY.md: PCI, ARM performance and physical platform tail"
+    ]
+  },
+  {
+    "commit": "efd77156c8e3f2ba3c9b2f30c08c27b90e10125a",
+    "disposition": "already-represented-upstream",
+    "rationale": "Reapplied non-x86 D3 policy is represented in the exact native bridge predicate; selected x86 retains BIOS-year and hotplug restrictions. Independent Android PCI power hooks are retained and reviewed separately. No old full pci.c replacement is used.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-tail-review.json",
+      "SECURITY.md: PCI, ARM performance and physical platform tail"
+    ]
+  },
+  {
+    "commit": "6874dac422af3e0ca2ce43ed5527f3388b1ca330",
+    "disposition": "superseded",
+    "rationale": "ACK reverted and later reapplied the same ECAM preparation, but native fc2bc2623e3a subsequently removed it because using config start as DBI broke vendor accesses. Keep whole native Qualcomm driver and its evolved ECAM strategy. The omission follows an affirmative upstream regression correction, not consumer absence.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-tail-review.json",
+      "SECURITY.md: PCI, ARM performance and physical platform tail"
+    ]
+  },
+  {
+    "commit": "76b8ab02c6b68861fa2edf4843d6e1074464d4c3",
+    "disposition": "omitted-current-target",
+    "rationale": "Converts ARM64 TRBE per-CPU interrupt discovery to platform_get_irq_affinity and copies returned CPU mask. CORESIGHT_TRBE explicitly depends on ARM64 and ETM4X; native driver is unchanged for this x86 SDK. Generic IRQ affinity APIs and other SDK IRQ paths are not removed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-tail-review.json",
+      "SECURITY.md: PCI, ARM performance and physical platform tail"
+    ]
+  },
+  {
+    "commit": "8467b7eef6b32a630707b3f5d75243a9b8018094",
+    "disposition": "omitted-current-target",
+    "rationale": "Changes ARM PMU per-CPU IRQ parsing/helper signature to the new affinity API. ARM_PMU explicitly requires ARM/ARM64; whole native provider remains outside x86 SDK. This decision does not suppress generic perf or claim an ARM build has been validated.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-tail-review.json",
+      "SECURITY.md: PCI, ARM performance and physical platform tail"
+    ]
+  },
+  {
+    "commit": "734fef0f71a9f7de93b4f46129d728d2b8479b3f",
+    "disposition": "omitted-current-target",
+    "rationale": "Converts ARMv8.2 SPE IRQ affinity discovery and removes the old partition-error branch. ARM_SPE_PMU requires ARM64, and delivered file is exact LTS. No x86 PMU/security behavior or native IRQ validation is weakened.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-tail-review.json",
+      "SECURITY.md: PCI, ARM performance and physical platform tail"
+    ]
+  },
+  {
+    "commit": "e3d0e834008b7a8c72d4e5ad78d55b0578aef018",
+    "disposition": "omitted-current-target",
+    "rationale": "Defers a Chrome EC USB-PD ACPI child until GOOG0004 parent is ready. It changes the separate Chrome EC device hierarchy, not generic probe deferral. CHROME_PLATFORMS is disabled and selected goldfish provides its emulator services; preserve exact native file rather than add Chrome EC support for a future platform. This real physical-device fix is not claimed represented upstream.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-tail-review.json",
+      "SECURITY.md: PCI, ARM performance and physical platform tail"
+    ]
+  },
+  {
+    "commit": "57fe2cdc88fdb195c6e9fee10b0e3c355ccedc26",
+    "disposition": "omitted-current-target",
+    "rationale": "Adds only Intel Wildcat Lake VSEC PCI ID 0xfd7d using mtl_info. Native whole VSEC driver remains and SDK disables INTEL_VSEC. This expands physical telemetry-controller matching, with no generic Android API or security fix bundled; no future hardware table is added.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-tail-review.json",
+      "SECURITY.md: PCI, ARM performance and physical platform tail"
+    ]
+  },
+  {
+    "commit": "e365f91359bf4ae508be743f35ae314c3178f4c0",
+    "disposition": "omitted-current-target",
+    "rationale": "Remove initial-integration Wildcat Lake SOC power-slider match flag and restore exact native thermal PCI driver in 2d16122c8e8e. SDK disables INT340X_THERMAL and selects the example thermal APEX with fixed temperatures/no physical cooling controls. Preserve native Panther Lake slider and all LTS behavior; do not add support solely for a physical Wildcat Lake controller.",
+    "result_commits": [
+      "2d16122c8e8e3bcc8b5bbcd0f434bf81f9296296"
+    ],
+    "evidence": [
+      "evidence/platform-tail-review.json",
+      "SECURITY.md: PCI, ARM performance and physical platform tail"
+    ]
+  },
+  {
+    "commit": "1db7a1e7c3f6a869a3dc72a2bb51caa0f2b1f74c",
+    "disposition": "superseded",
+    "rationale": "Reapplies old Qualcomm ECAM register/DBI preparation exactly, but later native fc2bc2623e3a supersedes it after a documented DBI/vendor-access regression. Keep entire current LTS driver without qcom_pci_config_ecam; do not reverse upstream correction to reproduce ACK history on a nonselected physical controller.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-tail-review.json",
+      "SECURITY.md: PCI, ARM performance and physical platform tail"
+    ]
+  },
+  {
+    "commit": "b1ac3849568b2c939c214b2ab47ac73f7edd1bd2",
+    "disposition": "omitted-current-target",
+    "rationale": "Sets Chrome EC no_mode_control based on whether the AP owns alternate modes. This belongs to the excluded physical Type-C mode-control feature/provider; native cros_ec_typec and generic Type-C interfaces remain coherent. SDK disables Chrome platform drivers and supplies no such EC topology. No generic userspace ABI is removed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-tail-review.json",
+      "SECURITY.md: PCI, ARM performance and physical platform tail"
+    ]
+  },
+  {
+    "commit": "5214095053ab70d004e430412c3eb9f4c00147ac",
+    "disposition": "omitted-current-target",
+    "rationale": "Remove four initial-integration physical CPU TCC model matches (Panther/Wildcat/Nova Lake) and restore exact native file in 2d16122c8e8e. Driver directly accesses programmable thermal MSRs, is disabled in SDK, and is unrelated to the selected example thermal service. Native existing CPU support, safe MSR reads and lock checks remain; no future-platform support is introduced.",
+    "result_commits": [
+      "2d16122c8e8e3bcc8b5bbcd0f434bf81f9296296"
+    ],
+    "evidence": [
+      "evidence/platform-tail-review.json",
+      "SECURITY.md: PCI, ARM performance and physical platform tail"
+    ]
+  },
+  {
+    "commit": "45253f7c720047a7f1941b376d893cdc50edad62",
+    "disposition": "omitted-current-target",
+    "rationale": "Full NoC S3/SI L1 PMU extension read: part/node IDs, register offsets, per-event MMIO base, FCU discovery and counter lifecycle. ARM_NI requires ARM64 or compile-test, both outside selected x86 configuration. Keep native NI700 driver, including its existing register formulas, rather than add an unused physical interconnect and its new offset bug.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-tail-review.json",
+      "SECURITY.md: PCI, ARM performance and physical platform tail"
+    ]
+  },
+  {
+    "commit": "057ef31ac12837dabdac1d890cecba0b55ff87c0",
+    "disposition": "omitted-current-target",
+    "rationale": "Corrects ternary-precedence error in the preceding NoC extension and caches 7xx identification. Omit together with the complete excluded NoC extension; native file never contains the faulty new event_base expression. This is a real hardware correctness fix, not cosmetic, and no native LTS fix is removed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-tail-review.json",
+      "SECURITY.md: PCI, ARM performance and physical platform tail"
+    ]
+  },
+  {
+    "commit": "fe93a1e392de6249a04450e4c60ecae291cd7dd9",
+    "disposition": "omitted-current-target",
+    "rationale": "Full Chrome EC sensor timestamp change read: slope clamp, batching gap, sample-history movement, ODR reset and rejection of out-of-order events. It changes a physical EC FIFO/IIO provider; selected goldfish sensors use their QEMU transport and CHROME_PLATFORMS is disabled. Keep exact native file rather than alter an unselected provider. No generic timestamp/core fix or claim that the physical algorithm is equivalent is made.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-tail-review.json",
+      "SECURITY.md: PCI, ARM performance and physical platform tail"
+    ]
+  },
+  {
+    "commit": "90956e7221e2eae4f48d8869b909a45c55335ef8",
+    "disposition": "omitted-current-target",
+    "rationale": "Raises the preceding physical EC slope clamp from 200 to 5000 ppm. Omit consistently with the whole unselected Chrome EC drift algorithm; native filter remains unchanged and SDK sensors use QEMU transport. No sensor-runtime or physical clock-accuracy validation is claimed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/platform-tail-review.json",
+      "SECURITY.md: PCI, ARM performance and physical platform tail"
+    ]
   }
 ]

@@ -1,0 +1,547 @@
+{
+  "source_head": "2d16122c8e8e3bcc8b5bbcd0f434bf81f9296296",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "daa9cbe3d94356d22ea44a8e237d9e1a2b28d35b",
+      "disposition": "already-represented-upstream",
+      "rationale": "Native whole Qualcomm PCIe driver includes SDM845 compatible/cfg_2_7_0 with evolved bulk clock/reset/regulator and root-complex initialization. Keep native cleanup, reset timings and later fixes rather than replaying the 204-line initial implementation. This physical ARM controller is not added to SDK; existing native support is preserved.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-tail-review.json",
+        "SECURITY.md: PCI, ARM performance and physical platform tail"
+      ],
+      "paths": [
+        "drivers/pci/controller/dwc/pcie-qcom.c"
+      ],
+      "patch_sha256": "6d84ea9bd77aca97a7984f94b0c30b1a675994aca516051fe389d1bde5e91061"
+    },
+    {
+      "commit": "58dfad071882b7d4444c37823325b076aa41152b",
+      "disposition": "already-represented-upstream",
+      "rationale": "Native whole PSCI file already registers psci_sys_reset as restart notifier with priority 129 and retains warm/soft reset2 handling. Keep evolved native PSCI implementation; no Android-only restart replacement is required and x86 SDK does not call ARM PSCI.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-tail-review.json",
+        "SECURITY.md: PCI, ARM performance and physical platform tail"
+      ],
+      "paths": [
+        "drivers/firmware/psci/psci.c"
+      ],
+      "patch_sha256": "0da24498f0b3198521d8f7cec638fa737596d5a16871fa217ecaa835276a9f18"
+    },
+    {
+      "commit": "310b82860b376094cf6de0557fb6888b0e73e346",
+      "disposition": "omitted-current-target",
+      "rationale": "GPL export of DesignWare host MSI handler is a functional source-module interface, not historical KMI. Its provider is the separate DWC root-complex driver, absent from current SDK config; DWC endpoint support is distinct. Keep native function/source and generic SDK PCI/MSI/module hooks, without adding an export solely for a future physical host controller.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-tail-review.json",
+        "SECURITY.md: PCI, ARM performance and physical platform tail"
+      ],
+      "paths": [
+        "drivers/pci/controller/dwc/pcie-designware-host.c"
+      ],
+      "patch_sha256": "246b52bf8cbea903ef6bf716ef6bac08f145d7976b3350573376593acde6bcd7"
+    },
+    {
+      "commit": "8f9f701b5c5abcdb4c13912a372983204f83980b",
+      "disposition": "reverted-no-residual-code",
+      "rationale": "Removal of the old 32-bit streaming DMA mask was exactly reversed by 778306b54349. Keep current native DWC MSI allocator, which uses coherent 32-bit allocation with explicit 64-bit fallback and failure cleanup, rather than reviving the temporary mask removal.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-tail-review.json",
+        "SECURITY.md: PCI, ARM performance and physical platform tail"
+      ],
+      "paths": [
+        "drivers/pci/controller/dwc/pcie-designware-host.c"
+      ],
+      "patch_sha256": "3d3bfd32db821f9a087a7cac6f6c09eba3e432d19fd139278b1c0167ae571674"
+    },
+    {
+      "commit": "778306b543497b1f84e9c5263ae9f324078c4e0d",
+      "disposition": "superseded",
+      "rationale": "Exact inverse restores historical 32-bit streaming-mask setup, but native final driver evolved to coherent MSI-target allocation and documented fallback. Entire driver is LTS; preserve current address constraints and lifecycle instead of replaying obsolete allocation APIs.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-tail-review.json",
+        "SECURITY.md: PCI, ARM performance and physical platform tail"
+      ],
+      "paths": [
+        "drivers/pci/controller/dwc/pcie-designware-host.c"
+      ],
+      "patch_sha256": "07b75480ef59fcf6b87417ddb7d77512a364dea283ab7214381dd4a8d8e13068"
+    },
+    {
+      "commit": "40a9a838b456d0bac88b3c358d068fbc8bff7419",
+      "disposition": "omitted-current-target",
+      "rationale": "Moves ARM PSCI vendor callbacks inside context-tracking IRQ entry/exit so RCU is watching. Those platform-specific callbacks are absent from native delivered cpuidle-psci.c; the entire file is LTS. ARM_PSCI_CPUIDLE provider is outside x86 SDK. Do not add an ARM idle-hook implementation only to move its callbacks; generic SDK idle hooks remain.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-tail-review.json",
+        "SECURITY.md: PCI, ARM performance and physical platform tail"
+      ],
+      "paths": [
+        "drivers/cpuidle/cpuidle-psci.c"
+      ],
+      "patch_sha256": "1e72efd599f737780c48fb243f367ed95d4dac9235338c479ecd51fb9e7ac36e"
+    },
+    {
+      "commit": "bad859279573caa32219c68e4cf126c5a53efa86",
+      "disposition": "omitted-current-target",
+      "rationale": "Adds one legacy property alias gated by maxim,max77759chrg device-tree compatible. This is a physical charger binding, not generic GPIO behavior. Keep exact native gpiolib-of and the SDK goldfish device model; no MAX77759 charger is being added for this target. It is not classified KMI-only or as a proven absence of all Android consumers.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-tail-review.json",
+        "SECURITY.md: PCI, ARM performance and physical platform tail"
+      ],
+      "paths": [
+        "drivers/gpio/gpiolib-of.c"
+      ],
+      "patch_sha256": "482cbce8e9e00b532ebe3eedce4b75736c53a09200d144b6803c43aebf1dd03f"
+    },
+    {
+      "commit": "562adcda5cd48c23dcdd3f378d2ee142f7f20420",
+      "disposition": "reverted-no-residual-code",
+      "rationale": "The non-x86 bridge-D3 policy revert is exactly undone by efd77156c8e3. Current pci_bridge_d3_possible is exact LTS with hotplug/blacklist/firmware checks and x86 BIOS-year restriction. No power-management restriction is removed by this port.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-tail-review.json",
+        "SECURITY.md: PCI, ARM performance and physical platform tail"
+      ],
+      "paths": [
+        "drivers/pci/pci.c"
+      ],
+      "patch_sha256": "51116c94574c5cf1b8e666ea2e606d524b095c6417cfcdb001770288b043a3c5"
+    },
+    {
+      "commit": "efd77156c8e3f2ba3c9b2f30c08c27b90e10125a",
+      "disposition": "already-represented-upstream",
+      "rationale": "Reapplied non-x86 D3 policy is represented in the exact native bridge predicate; selected x86 retains BIOS-year and hotplug restrictions. Independent Android PCI power hooks are retained and reviewed separately. No old full pci.c replacement is used.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-tail-review.json",
+        "SECURITY.md: PCI, ARM performance and physical platform tail"
+      ],
+      "paths": [
+        "drivers/pci/pci.c"
+      ],
+      "patch_sha256": "ea2f3f97768403cd171a07fcea77f1264239527e094be8d3dc86d800594bcfb8"
+    },
+    {
+      "commit": "6874dac422af3e0ca2ce43ed5527f3388b1ca330",
+      "disposition": "superseded",
+      "rationale": "ACK reverted and later reapplied the same ECAM preparation, but native fc2bc2623e3a subsequently removed it because using config start as DBI broke vendor accesses. Keep whole native Qualcomm driver and its evolved ECAM strategy. The omission follows an affirmative upstream regression correction, not consumer absence.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-tail-review.json",
+        "SECURITY.md: PCI, ARM performance and physical platform tail"
+      ],
+      "paths": [
+        "drivers/pci/controller/dwc/pcie-qcom.c"
+      ],
+      "patch_sha256": "295272c46b988df3be7612d2da82cadb0a748e90c1f6b06b52ef482f34663eaa"
+    },
+    {
+      "commit": "76b8ab02c6b68861fa2edf4843d6e1074464d4c3",
+      "disposition": "omitted-current-target",
+      "rationale": "Converts ARM64 TRBE per-CPU interrupt discovery to platform_get_irq_affinity and copies returned CPU mask. CORESIGHT_TRBE explicitly depends on ARM64 and ETM4X; native driver is unchanged for this x86 SDK. Generic IRQ affinity APIs and other SDK IRQ paths are not removed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-tail-review.json",
+        "SECURITY.md: PCI, ARM performance and physical platform tail"
+      ],
+      "paths": [
+        "drivers/hwtracing/coresight/coresight-trbe.c"
+      ],
+      "patch_sha256": "38edf1c1bab6a6433d8c389801ec0e598cd21d02964e7c6c983eef884e446c56"
+    },
+    {
+      "commit": "8467b7eef6b32a630707b3f5d75243a9b8018094",
+      "disposition": "omitted-current-target",
+      "rationale": "Changes ARM PMU per-CPU IRQ parsing/helper signature to the new affinity API. ARM_PMU explicitly requires ARM/ARM64; whole native provider remains outside x86 SDK. This decision does not suppress generic perf or claim an ARM build has been validated.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-tail-review.json",
+        "SECURITY.md: PCI, ARM performance and physical platform tail"
+      ],
+      "paths": [
+        "drivers/perf/arm_pmu_platform.c"
+      ],
+      "patch_sha256": "fc642ce351f83e0d1d20d7bbeda63509cfd2c816b5d2b802586702a8b8428373"
+    },
+    {
+      "commit": "734fef0f71a9f7de93b4f46129d728d2b8479b3f",
+      "disposition": "omitted-current-target",
+      "rationale": "Converts ARMv8.2 SPE IRQ affinity discovery and removes the old partition-error branch. ARM_SPE_PMU requires ARM64, and delivered file is exact LTS. No x86 PMU/security behavior or native IRQ validation is weakened.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-tail-review.json",
+        "SECURITY.md: PCI, ARM performance and physical platform tail"
+      ],
+      "paths": [
+        "drivers/perf/arm_spe_pmu.c"
+      ],
+      "patch_sha256": "ae6433fd9a7ec30f814e8a8d9c731e03ac2c96f135b31df86f43d53285bb0fe1"
+    },
+    {
+      "commit": "e3d0e834008b7a8c72d4e5ad78d55b0578aef018",
+      "disposition": "omitted-current-target",
+      "rationale": "Defers a Chrome EC USB-PD ACPI child until GOOG0004 parent is ready. It changes the separate Chrome EC device hierarchy, not generic probe deferral. CHROME_PLATFORMS is disabled and selected goldfish provides its emulator services; preserve exact native file rather than add Chrome EC support for a future platform. This real physical-device fix is not claimed represented upstream.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-tail-review.json",
+        "SECURITY.md: PCI, ARM performance and physical platform tail"
+      ],
+      "paths": [
+        "drivers/platform/chrome/cros_usbpd_notify.c"
+      ],
+      "patch_sha256": "91fb80255efd95a949a95b910e50d520012c273f7038964aa420636e2454350b"
+    },
+    {
+      "commit": "57fe2cdc88fdb195c6e9fee10b0e3c355ccedc26",
+      "disposition": "omitted-current-target",
+      "rationale": "Adds only Intel Wildcat Lake VSEC PCI ID 0xfd7d using mtl_info. Native whole VSEC driver remains and SDK disables INTEL_VSEC. This expands physical telemetry-controller matching, with no generic Android API or security fix bundled; no future hardware table is added.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-tail-review.json",
+        "SECURITY.md: PCI, ARM performance and physical platform tail"
+      ],
+      "paths": [
+        "drivers/platform/x86/intel/vsec.c"
+      ],
+      "patch_sha256": "aac40d089b08c99922797063548ca26e923e194219a481097404bb5ada30ee00"
+    },
+    {
+      "commit": "e365f91359bf4ae508be743f35ae314c3178f4c0",
+      "disposition": "omitted-current-target",
+      "rationale": "Remove initial-integration Wildcat Lake SOC power-slider match flag and restore exact native thermal PCI driver in 2d16122c8e8e. SDK disables INT340X_THERMAL and selects the example thermal APEX with fixed temperatures/no physical cooling controls. Preserve native Panther Lake slider and all LTS behavior; do not add support solely for a physical Wildcat Lake controller.",
+      "result_commits": [
+        "2d16122c8e8e3bcc8b5bbcd0f434bf81f9296296"
+      ],
+      "evidence": [
+        "evidence/platform-tail-review.json",
+        "SECURITY.md: PCI, ARM performance and physical platform tail"
+      ],
+      "paths": [
+        "drivers/thermal/intel/int340x_thermal/processor_thermal_device_pci.c"
+      ],
+      "patch_sha256": "036f12a455707e33bed7da9fa6241a163d43dd6e12af7019cf117543ce6af525"
+    },
+    {
+      "commit": "1db7a1e7c3f6a869a3dc72a2bb51caa0f2b1f74c",
+      "disposition": "superseded",
+      "rationale": "Reapplies old Qualcomm ECAM register/DBI preparation exactly, but later native fc2bc2623e3a supersedes it after a documented DBI/vendor-access regression. Keep entire current LTS driver without qcom_pci_config_ecam; do not reverse upstream correction to reproduce ACK history on a nonselected physical controller.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-tail-review.json",
+        "SECURITY.md: PCI, ARM performance and physical platform tail"
+      ],
+      "paths": [
+        "drivers/pci/controller/dwc/pcie-qcom.c"
+      ],
+      "patch_sha256": "f58a16758bc3622d1856ea4364e4b8c8a0ab757cad144c3f838708476c33d33f"
+    },
+    {
+      "commit": "b1ac3849568b2c939c214b2ab47ac73f7edd1bd2",
+      "disposition": "omitted-current-target",
+      "rationale": "Sets Chrome EC no_mode_control based on whether the AP owns alternate modes. This belongs to the excluded physical Type-C mode-control feature/provider; native cros_ec_typec and generic Type-C interfaces remain coherent. SDK disables Chrome platform drivers and supplies no such EC topology. No generic userspace ABI is removed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-tail-review.json",
+        "SECURITY.md: PCI, ARM performance and physical platform tail"
+      ],
+      "paths": [
+        "drivers/platform/chrome/cros_ec_typec.c"
+      ],
+      "patch_sha256": "79c0aefa99741638a964bfb40cd2565b65e16604050a4569bb781fa99d90d982"
+    },
+    {
+      "commit": "5214095053ab70d004e430412c3eb9f4c00147ac",
+      "disposition": "omitted-current-target",
+      "rationale": "Remove four initial-integration physical CPU TCC model matches (Panther/Wildcat/Nova Lake) and restore exact native file in 2d16122c8e8e. Driver directly accesses programmable thermal MSRs, is disabled in SDK, and is unrelated to the selected example thermal service. Native existing CPU support, safe MSR reads and lock checks remain; no future-platform support is introduced.",
+      "result_commits": [
+        "2d16122c8e8e3bcc8b5bbcd0f434bf81f9296296"
+      ],
+      "evidence": [
+        "evidence/platform-tail-review.json",
+        "SECURITY.md: PCI, ARM performance and physical platform tail"
+      ],
+      "paths": [
+        "drivers/thermal/intel/intel_tcc_cooling.c"
+      ],
+      "patch_sha256": "d53a62ab13319bb1d801a3a4df68e9f6de09eb091f2e4ba20d9657088332db04"
+    },
+    {
+      "commit": "45253f7c720047a7f1941b376d893cdc50edad62",
+      "disposition": "omitted-current-target",
+      "rationale": "Full NoC S3/SI L1 PMU extension read: part/node IDs, register offsets, per-event MMIO base, FCU discovery and counter lifecycle. ARM_NI requires ARM64 or compile-test, both outside selected x86 configuration. Keep native NI700 driver, including its existing register formulas, rather than add an unused physical interconnect and its new offset bug.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-tail-review.json",
+        "SECURITY.md: PCI, ARM performance and physical platform tail"
+      ],
+      "paths": [
+        "drivers/perf/arm-ni.c"
+      ],
+      "patch_sha256": "d026977d0386cff2b8a2525056f46f9a2108777adc6edf1814b91b1c675e03a4"
+    },
+    {
+      "commit": "057ef31ac12837dabdac1d890cecba0b55ff87c0",
+      "disposition": "omitted-current-target",
+      "rationale": "Corrects ternary-precedence error in the preceding NoC extension and caches 7xx identification. Omit together with the complete excluded NoC extension; native file never contains the faulty new event_base expression. This is a real hardware correctness fix, not cosmetic, and no native LTS fix is removed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-tail-review.json",
+        "SECURITY.md: PCI, ARM performance and physical platform tail"
+      ],
+      "paths": [
+        "drivers/perf/arm-ni.c"
+      ],
+      "patch_sha256": "a5d8a197a6d37bccb2a53ef2e209816aae96c9b1b89226221aba92e006cf69e4"
+    },
+    {
+      "commit": "fe93a1e392de6249a04450e4c60ecae291cd7dd9",
+      "disposition": "omitted-current-target",
+      "rationale": "Full Chrome EC sensor timestamp change read: slope clamp, batching gap, sample-history movement, ODR reset and rejection of out-of-order events. It changes a physical EC FIFO/IIO provider; selected goldfish sensors use their QEMU transport and CHROME_PLATFORMS is disabled. Keep exact native file rather than alter an unselected provider. No generic timestamp/core fix or claim that the physical algorithm is equivalent is made.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-tail-review.json",
+        "SECURITY.md: PCI, ARM performance and physical platform tail"
+      ],
+      "paths": [
+        "drivers/platform/chrome/cros_ec_sensorhub_ring.c"
+      ],
+      "patch_sha256": "e5a92c3c3afaaab0183380732370e04c74b4d9553ecf146df1453c0130237086"
+    },
+    {
+      "commit": "90956e7221e2eae4f48d8869b909a45c55335ef8",
+      "disposition": "omitted-current-target",
+      "rationale": "Raises the preceding physical EC slope clamp from 200 to 5000 ppm. Omit consistently with the whole unselected Chrome EC drift algorithm; native filter remains unchanged and SDK sensors use QEMU transport. No sensor-runtime or physical clock-accuracy validation is claimed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/platform-tail-review.json",
+        "SECURITY.md: PCI, ARM performance and physical platform tail"
+      ],
+      "paths": [
+        "drivers/platform/chrome/cros_ec_sensorhub_ring.c"
+      ],
+      "patch_sha256": "83e5f8e91e346c201786591df2b9054ca2e8140169c170bf05824917183bd4a8"
+    }
+  ],
+  "proofs": [
+    {
+      "path": "drivers/cpuidle/cpuidle-psci.c",
+      "port_blob": "49156e67db275c2a63c5aa9b20ab26b4ab8abcd0",
+      "native_blob": "49156e67db275c2a63c5aa9b20ab26b4ab8abcd0",
+      "comparison": "whole file exact LTS"
+    },
+    {
+      "path": "drivers/firmware/psci/psci.c",
+      "port_blob": "38ca190d4a22d6e7e0f06420e8478a2b0ec2fe6f",
+      "native_blob": "38ca190d4a22d6e7e0f06420e8478a2b0ec2fe6f",
+      "comparison": "whole file exact LTS"
+    },
+    {
+      "path": "drivers/gpio/gpiolib-of.c",
+      "port_blob": "7bb33c46788c63047a0fe031359a8e61b792091a",
+      "native_blob": "7bb33c46788c63047a0fe031359a8e61b792091a",
+      "comparison": "whole file exact LTS"
+    },
+    {
+      "path": "drivers/hwtracing/coresight/coresight-trbe.c",
+      "port_blob": "43643d2c5bdd0ac432f976dbe666ff0f494033ee",
+      "native_blob": "43643d2c5bdd0ac432f976dbe666ff0f494033ee",
+      "comparison": "whole file exact LTS"
+    },
+    {
+      "path": "drivers/pci/controller/dwc/pcie-designware-host.c",
+      "port_blob": "48e4a887bb1bb7659262f82e28969e15ba4b7f5b",
+      "native_blob": "48e4a887bb1bb7659262f82e28969e15ba4b7f5b",
+      "comparison": "whole file exact LTS"
+    },
+    {
+      "path": "drivers/pci/controller/dwc/pcie-qcom.c",
+      "port_blob": "fbdb5a92647851a1a0d18b9f95aa80dc1db3be86",
+      "native_blob": "fbdb5a92647851a1a0d18b9f95aa80dc1db3be86",
+      "comparison": "whole file exact LTS"
+    },
+    {
+      "path": "drivers/pci/pci.c",
+      "port_blob": "5ba0f88932dd2099b5758c655f0b6a72d047edc6",
+      "native_blob": "264213aa7630bff5ac3f27c2686c1b8810bc2d41",
+      "comparison": "native bridge predicate retained; independent PCI power hooks reviewed separately"
+    },
+    {
+      "path": "drivers/perf/arm-ni.c",
+      "port_blob": "1615a05640319b77f4d4584ace70e1c8a8f05451",
+      "native_blob": "1615a05640319b77f4d4584ace70e1c8a8f05451",
+      "comparison": "whole file exact LTS"
+    },
+    {
+      "path": "drivers/perf/arm_pmu_platform.c",
+      "port_blob": "118170a5cedefaac2e0dd84eb7de9edf9ef36e35",
+      "native_blob": "118170a5cedefaac2e0dd84eb7de9edf9ef36e35",
+      "comparison": "whole file exact LTS"
+    },
+    {
+      "path": "drivers/perf/arm_spe_pmu.c",
+      "port_blob": "7bc24db50d1ffcf2d1b98d7837e13a9e843f59f7",
+      "native_blob": "7bc24db50d1ffcf2d1b98d7837e13a9e843f59f7",
+      "comparison": "whole file exact LTS"
+    },
+    {
+      "path": "drivers/platform/chrome/cros_ec_sensorhub_ring.c",
+      "port_blob": "b5970e8620bf0eb8d0e9934d318749b47958842d",
+      "native_blob": "b5970e8620bf0eb8d0e9934d318749b47958842d",
+      "comparison": "whole file exact LTS"
+    },
+    {
+      "path": "drivers/platform/chrome/cros_ec_typec.c",
+      "port_blob": "03ca776a837fbd221510090bbd98e1f5c6341e45",
+      "native_blob": "03ca776a837fbd221510090bbd98e1f5c6341e45",
+      "comparison": "whole file exact LTS"
+    },
+    {
+      "path": "drivers/platform/chrome/cros_usbpd_notify.c",
+      "port_blob": "313d2bcd577bdaa9d09c605c884c1c29c64c8d02",
+      "native_blob": "313d2bcd577bdaa9d09c605c884c1c29c64c8d02",
+      "comparison": "whole file exact LTS"
+    },
+    {
+      "path": "drivers/platform/x86/intel/vsec.c",
+      "port_blob": "1e292eaeb209d664683a677ca04eb0110295a9be",
+      "native_blob": "1e292eaeb209d664683a677ca04eb0110295a9be",
+      "comparison": "whole file exact LTS"
+    },
+    {
+      "path": "drivers/thermal/intel/int340x_thermal/processor_thermal_device_pci.c",
+      "port_blob": "e2471768d355f00983b14a5c4969cd5ae84c23ce",
+      "native_blob": "e2471768d355f00983b14a5c4969cd5ae84c23ce",
+      "comparison": "whole file exact LTS"
+    },
+    {
+      "path": "drivers/thermal/intel/intel_tcc_cooling.c",
+      "port_blob": "f352ecafbedf070f5fc7de435cde1240672051c1",
+      "native_blob": "f352ecafbedf070f5fc7de435cde1240672051c1",
+      "comparison": "whole file exact LTS"
+    },
+    {
+      "commits": [
+        "8f9f701b5c5abcdb4c13912a372983204f83980b",
+        "778306b543497b1f84e9c5263ae9f324078c4e0d"
+      ],
+      "comparison": "complete patches reviewed; changed-line multisets exact inverses"
+    },
+    {
+      "commits": [
+        "562adcda5cd48c23dcdd3f378d2ee142f7f20420",
+        "efd77156c8e3f2ba3c9b2f30c08c27b90e10125a"
+      ],
+      "comparison": "complete patches reviewed; changed-line multisets exact inverses"
+    },
+    {
+      "commits": [
+        "6874dac422af3e0ca2ce43ed5527f3388b1ca330",
+        "1db7a1e7c3f6a869a3dc72a2bb51caa0f2b1f74c"
+      ],
+      "comparison": "complete patches reviewed; changed-line multisets exact inverses"
+    },
+    {
+      "path": "drivers/pci/pci.c",
+      "function": "pci_bridge_d3_possible",
+      "comparison": "exact LTS including non-x86 policy and x86 BIOS-year/native hotplug restrictions"
+    },
+    {
+      "path": "drivers/pci/controller/dwc/pcie-qcom.c",
+      "observation": "native evolved SDM845 clock/reset/regulator implementation retained. Native fc2bc2623e3a explicitly reverts old ECAM preparation after DBI-address regression; local message inspected, embedded URL not opened",
+      "native_revert": "fc2bc2623e3a099165b02d13567d21fabb5ea54d",
+      "message": "Revert \"PCI: qcom: Prepare for the DWC ECAM enablement\"\n\nThis reverts commit 4660e50cf81800f82eeecf743ad1e3e97ab72190.\n\nCommit f6fd357f7afb (\"PCI: dwc: Prepare the driver for enabling ECAM\nmechanism using iATU 'CFG Shift Feature'\") enabled ECAM access by using\nthe config space start as DBI address.\n\nHowever, this approach breaks vendor drivers that rely on the DBI address\nfor internal accesses, especially when the vendor config space is 256MB\naligned.\n\nTo resolve this, avoid using the DBI as the start of config space and\ninstead introduce a custom ECAM PCI ops implementation.\n\nRevert the qcom specific ECAM preparation logic in 4660e50cf818 (\"PCI:\nqcom: Prepare for the DWC ECAM enablement\") since it's no longer necessary.\n\nSigned-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>\n[bhelgaas: commit log]\nSigned-off-by: Bjorn Helgaas <bhelgaas@google.com>\nLink: https://patch.msgid.link/20251017-ecam_fix-v1-2-f6faa3d0edf3@oss.qualcomm.com\n\n"
+    },
+    {
+      "path": "drivers/pci/controller/dwc/pcie-designware-host.c",
+      "observation": "native MSI coherent allocation first requests 32-bit target, then documented 64-bit fallback; historical streaming-mask removal is not replayed. dw_handle_msi_irq remains native unexported; current SDK has no DWC host driver."
+    },
+    {
+      "path": "drivers/perf/Kconfig",
+      "config": "ARM_PMU",
+      "definition": "config ARM_PMU\n\tdepends on ARM || ARM64\n\tbool \"ARM PMU framework\"\n\tdefault y\n\thelp\n\t  Say y if you want to use CPU performance monitors on ARM-based\n\t  systems.\n\n"
+    },
+    {
+      "path": "drivers/perf/Kconfig",
+      "config": "ARM_SPE_PMU",
+      "definition": "config ARM_SPE_PMU\n\ttristate \"Enable support for the ARMv8.2 Statistical Profiling Extension\"\n\tdepends on ARM64\n\thelp\n\t  Enable perf support for the ARMv8.2 Statistical Profiling\n\t  Extension, which provides periodic sampling of operations in\n\t  the CPU pipeline and reports this via the perf AUX interface.\n\n"
+    },
+    {
+      "path": "drivers/perf/Kconfig",
+      "config": "ARM_NI",
+      "definition": "config ARM_NI\n\ttristate \"Arm NI-700 PMU support\"\n\tdepends on ARM64 || COMPILE_TEST\n\thelp\n\t  Support for PMU events monitoring on the Arm NI-700 Network-on-Chip\n\t  interconnect and family.\n\n"
+    },
+    {
+      "path": "drivers/hwtracing/coresight/Kconfig",
+      "config": "CORESIGHT_TRBE",
+      "definition": "config CORESIGHT_TRBE\n\ttristate \"Trace Buffer Extension (TRBE) driver\"\n\tdepends on ARM64 && CORESIGHT_SOURCE_ETM4X\n\thelp\n\t  This driver provides support for percpu Trace Buffer Extension (TRBE).\n\t  TRBE always needs to be used along with its corresponding percpu ETE\n\t  component. ETE generates trace data which is then captured with TRBE.\n\t  Unlike traditional sink devices, TRBE is a CPU feature accessible via\n\t  system registers. But its explicit dependency with trace unit (ETE)\n\t  requires it to be plugged in as a coresight sink device.\n\n\t  To compile this driver as a module, choose M here: the module will be\n\t  called coresight-trbe.\n\n"
+    },
+    {
+      "path": "drivers/cpuidle/Kconfig.arm",
+      "config": "ARM_PSCI_CPUIDLE",
+      "definition": "config ARM_PSCI_CPUIDLE\n\tbool \"PSCI CPU idle Driver\"\n\tdepends on ARM_PSCI_FW\n\tselect DT_IDLE_STATES\n\tselect CPU_IDLE_MULTIPLE_DRIVERS\n\thelp\n\t  Select this to enable PSCI firmware based CPUidle driver for ARM.\n\t  It provides an idle driver that is capable of detecting and\n\t  managing idle states through the PSCI firmware interface.\n\n\t  The driver has limitations when used with PREEMPT_RT:\n\t  - If the idle states are described with the non-hierarchical layout,\n\t    all idle states are still available.\n\n\t  - If the idle states are described with the hierarchical layout,\n\t    only the idle states defined per CPU are available, but not the ones\n\t    being shared among a group of CPUs (aka cluster idle states).\n\n"
+    },
+    {
+      "path": "drivers/pci/controller/dwc/Kconfig",
+      "config": "PCIE_QCOM",
+      "definition": "config PCIE_QCOM\n\tbool \"Qualcomm PCIe controller (host mode)\"\n\tdepends on OF && (ARCH_QCOM || COMPILE_TEST)\n\tdepends on PCI_MSI\n\tselect PCIE_DW_HOST\n\tselect CRC8\n\tselect PCIE_QCOM_COMMON\n\tselect PCI_HOST_COMMON\n\tselect PCI_PWRCTRL_SLOT\n\thelp\n\t  Say Y here to enable PCIe controller support on Qualcomm SoCs. The\n\t  PCIe controller uses the DesignWare core plus Qualcomm-specific\n\t  hardware wrappers.\n\n"
+    },
+    {
+      "path": "drivers/platform/chrome/Kconfig",
+      "config": "CROS_EC_TYPEC",
+      "definition": "config CROS_EC_TYPEC\n\ttristate \"ChromeOS EC Type-C Connector Control\"\n\tdepends on MFD_CROS_EC_DEV && TYPEC\n\tdepends on CROS_USBPD_NOTIFY\n\tdepends on USB_ROLE_SWITCH\n\tdefault MFD_CROS_EC_DEV\n\tselect CROS_EC_TYPEC_ALTMODES if TYPEC_DP_ALTMODE\n\tselect CROS_EC_TYPEC_ALTMODES if TYPEC_TBT_ALTMODE\n\thelp\n\t  If you say Y here, you get support for accessing Type C connector\n\t  information from the Chrome OS EC.\n\n\t  To compile this driver as a module, choose M here: the module will be\n\t  called cros-ec-typec.\n\n"
+    },
+    {
+      "path": "drivers/platform/chrome/Kconfig",
+      "config": "CROS_EC_SENSORHUB",
+      "definition": "config CROS_EC_SENSORHUB\n\ttristate \"ChromeOS EC MEMS Sensor Hub\"\n\tdepends on MFD_CROS_EC_DEV\n\tdefault MFD_CROS_EC_DEV\n\thelp\n\t  Allow loading IIO sensors. This driver is loaded by MFD and will in\n\t  turn query the EC and register the sensors.\n\t  It also spreads the sensor data coming from the EC to the IIO sensor\n\t  object.\n\n\t  To compile this driver as a module, choose M here: the\n\t  module will be called cros_ec_sensorhub.\n\n"
+    },
+    {
+      "path": "drivers/platform/chrome/Kconfig",
+      "config": "CROS_USBPD_NOTIFY",
+      "definition": "config CROS_USBPD_NOTIFY\n\ttristate \"ChromeOS Type-C power delivery event notifier\"\n\tdepends on MFD_CROS_EC_DEV\n\tdefault MFD_CROS_EC_DEV\n\thelp\n\t  If you say Y here, you get support for Type-C PD event notifications\n\t  from the ChromeOS EC. On ACPI platforms this driver will bind to the\n\t  GOOG0003 ACPI device, and on platforms which don't have this device it\n\t  will get initialized on ECs which support the feature\n\t  EC_FEATURE_USB_PD.\n\n\t  To compile this driver as a module, choose M here: the\n\t  module will be called cros_usbpd_notify.\n\n"
+    },
+    {
+      "path": "../kernel_manifest-6.18/common_dist/kernel_x86_64_dot_config",
+      "sha256": "48f19810fd5e10021d64b96e82cdb2b0b587f7cb24b3b4b5660b6732ae05cd09",
+      "settings": [
+        "CONFIG_X86_64=y",
+        "# CONFIG_COMPILE_TEST is not set",
+        "# CONFIG_CHROME_PLATFORMS is not set",
+        "# CONFIG_INTEL_VSEC is not set",
+        "# CONFIG_INT340X_THERMAL is not set",
+        "# CONFIG_INTEL_TCC_COOLING is not set"
+      ],
+      "observation": "build-191 configuration inspected before build192 completes; DWC endpoint support is present but no DWC host. Disabled settings supplement positive architecture/provider boundaries, not a general missing-consumer proof."
+    },
+    {
+      "path": "../grapheneos-17/device/generic/goldfish/product/generic.mk",
+      "sha256": "7962bdd2efbbf6bc3c6a76bc904b8c03645e2445c9ff25022a98a1441722e47f",
+      "observation": "selected goldfish sensor transport and example thermal APEX; thermal example supplies fixed skin/battery values and no physical cooling-device controls. Local project pins in inputs."
+    },
+    {
+      "path": "../grapheneos-17/device/generic/goldfish/hals/sensors/multihal_sensors_qemu.cpp",
+      "sha256": "1e8747be7d9419a1093627f8e244d10ee0f1846298e4f771d23ff14a671831dc",
+      "observation": "selected goldfish sensor transport and example thermal APEX; thermal example supplies fixed skin/battery values and no physical cooling-device controls. Local project pins in inputs."
+    },
+    {
+      "path": "../grapheneos-17/hardware/interfaces/thermal/aidl/default/Android.bp",
+      "sha256": "896c16cee2443df35000f30cd3db6296cc7c171285b4e3d75916f22c907a3318",
+      "observation": "selected goldfish sensor transport and example thermal APEX; thermal example supplies fixed skin/battery values and no physical cooling-device controls. Local project pins in inputs."
+    },
+    {
+      "path": "../grapheneos-17/hardware/interfaces/thermal/aidl/default/Thermal.cpp",
+      "sha256": "1d5843bcdbb46d6d6e46369bf7749fe2b6aedbc86ef102840ea3005382bf470f",
+      "observation": "selected goldfish sensor transport and example thermal APEX; thermal example supplies fixed skin/battery values and no physical cooling-device controls. Local project pins in inputs."
+    }
+  ],
+  "remote_resources_used": [],
+  "limits": "Full local patches, native provider comparisons, explicit architecture/configuration boundaries and selected SDK userspace. No physical device, sensor, thermal MSR or ARM execution. Build192 is in progress, not claimed passed."
+}

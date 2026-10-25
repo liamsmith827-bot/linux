@@ -12,6 +12,7 @@ def nonblank_blob(oid):
   blob_cache[oid]=b'\n'.join(line.rstrip() for line in content.splitlines() if line.strip())
  return blob_cache[oid]
 def omitted(p):
+ if p in ('drivers/thermal/intel/int340x_thermal/processor_thermal_device_pci.c','drivers/thermal/intel/intel_tcc_cooling.c'):return 'physical-device'
  if p in ('kernel/dma/direct.h','kernel/dma/mapping.c','kernel/dma/coherent.c'):return 'lts-native-source-api'
  if p=='drivers/usb/gadget/function/f_fs.c':return 'lts-native-source-api'
  if p in ('mm/mm_init.c','include/linux/memblock.h'):return 'sdk-memsize-report'
@@ -78,6 +79,8 @@ for p,x in out.items():
   x['review_record']='SECURITY.md: historical KMI and module compatibility'
 # Reviewed specific evidence prevents broad policy names from hiding source differences.
 notes={
+ 'drivers/thermal/intel/int340x_thermal/processor_thermal_device_pci.c':'Exact LTS after 2d16122c8e8e; omit only new Wildcat Lake physical-controller power-slider capability. Native Panther Lake support remains. SDK disables INT340X_THERMAL and positively selects example thermal service; see evidence/platform-tail-review.json.',
+ 'drivers/thermal/intel/intel_tcc_cooling.c':'Exact LTS after 2d16122c8e8e; omit four new physical CPU/MSR-controller matches. SDK disables INTEL_TCC_COOLING and selects example thermal service; native existing support and safe MSR/lock checks remain. See evidence/platform-tail-review.json.',
  'kernel/dma/coherent.c':'Exact native LTS after 9d5f5cbffd00. The only ACK delta was two allocation-log unit/format changes, with no Android ABI, configuration or source-interface effect. Retain native allocation, cleanup and diagnostics; see evidence/mm-tail-review.json for candidate 23bb0f66e0a0.',
  'kernel/dma/direct.h':'Native synchronous internal DMA helpers after eb47f4db3c60. ACK batching completion is empty on x86; retain public DMA interfaces and native cache completion. See evidence/intel-hypercalls-dma-review.json for f880f0340afa/5bef17dd8878 architecture gates and whole-file equality.',
  'kernel/dma/mapping.c':'Exact native LTS after eb47f4db3c60; only the unused internal batching arguments were removed. Public DMA API and all later native mapping fixes remain. See evidence/intel-hypercalls-dma-review.json.',
