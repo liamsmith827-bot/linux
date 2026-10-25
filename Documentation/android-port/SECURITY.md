@@ -8096,3 +8096,25 @@ the HDMI CEC notifier helper; it is not characterized as entirely ARM-only.
 The existing generic hidden DRM selections for source modules remain intact.
 No physical display support, optional module equivalence, KUnit execution or
 rendered output is verified. Only pinned local sources were used.
+
+
+## DRM custom-property capacity
+
+Retain fd1f129aa0a0's 96-property capacity for configured DRM source-module
+customization. Although the commit describes downstream QCOM demand, the change
+is in the generic object property interface and adds no QCOM driver. The exact
+SDK vendor consumer exceeding 64 properties remains unconfirmed; retention is
+conservative under the compatibility priority, not proof that current virtual
+drivers need 96. The earlier 24-to-64 candidate is superseded by this final
+capacity, rather than still described as textually identical to native LTS.
+
+Both parallel arrays use the same constant, and native attach_property checks
+the bound before writing either array and incrementing count. Existing iteration
+uses the initialized count. Registration is by trusted driver code before object
+exposure, not an unprivileged interface for attaching arbitrary new properties.
+This costs 512 additional bytes per property container on x86_64 and permits more
+properties to be exposed by drivers. Native value validation, lifetime and object
+access rules are unchanged. All modules are rebuilt against the enlarged source
+layout; omit both generated ABI graphs and historical binary-layout promises.
+No change to another manifest component is needed. Verification is pending in
+build169; no display runtime or vendor property population is claimed.
