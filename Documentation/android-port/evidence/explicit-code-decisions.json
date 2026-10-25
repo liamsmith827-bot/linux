@@ -23961,5 +23961,256 @@
       "evidence/thermal-pm-hook-test.json",
       "SECURITY.md: Thermal PM hook decisions are local to each zone"
     ]
+  },
+  {
+    "commit": "9f6871a66ce00f5c1acd81ed8d95659f8874a6bc",
+    "disposition": "adapted",
+    "result_commits": [
+      "7bfbc774035b4f9f8e24ff75d9f0b799c0db6bc4"
+    ],
+    "rationale": "Retain pool getters as prerequisites for configured TTM module allocation interfaces. Adapt the initialization diagnostic to inspect incoming flags, avoiding ACK reading stale/uninitialized pool state before assignment. Getter rewrites preserve native DMA handling, cache selection, backup eligibility and encryption/accounting gates. Current flags use bit8/bit9, not the superseded intermediate booleans.",
+    "evidence": [
+      "evidence/ttm-interface-review.json",
+      "evidence/ttm-interface-test.json",
+      "SECURITY.md: TTM allocation interfaces and backup lock ownership"
+    ]
+  },
+  {
+    "commit": "4c10a3dda814c3bf25e2b2f165c2e091ab8cca2a",
+    "disposition": "adapted",
+    "result_commits": [
+      "7bfbc774035b4f9f8e24ff75d9f0b799c0db6bc4"
+    ],
+    "rationale": "Retain flags-based pool initialization and public allocation header for generic TTM source-module compatibility; TTM=y is explicitly selected by GKI_HIDDEN_DRM_CONFIGS. Convert tests and the AMD pool call with the original DMA decisions. Final bit positions and beneficial-order fix are combined with later reviewed patches. This changes source signatures/layout, as intended for rebuilt modules, without historical binary KMI.",
+    "evidence": [
+      "evidence/ttm-interface-review.json",
+      "evidence/ttm-interface-test.json",
+      "SECURITY.md: TTM allocation interfaces and backup lock ownership"
+    ]
+  },
+  {
+    "commit": "45e70280351b0952a6abcd03c5a68092b50f122a",
+    "disposition": "adapted",
+    "result_commits": [
+      "7bfbc774035b4f9f8e24ff75d9f0b799c0db6bc4"
+    ],
+    "rationale": "Retain flags-based generic TTM device initialization, converting every affected native driver/helper and KUnit call. Original DMA and DMA32 predicates map exactly to flags; all native callers retain zero for new optional policies. Physical driver call-site edits only maintain coherence with the shared API and enable no additional platform. Native PREEMPT_RT and GPU-buddy KUnit changes remain.",
+    "evidence": [
+      "evidence/ttm-interface-review.json",
+      "evidence/ttm-interface-test.json",
+      "SECURITY.md: TTM allocation interfaces and backup lock ownership"
+    ]
+  },
+  {
+    "commit": "aa7d4370136c57bd9e282e991a83bfd355a4aeb1",
+    "disposition": "adapted",
+    "result_commits": [
+      "7bfbc774035b4f9f8e24ff75d9f0b799c0db6bc4"
+    ],
+    "rationale": "Retain opt-in beneficial-order policy as part of the configured generic allocation API, including the final unsigned getter correction. Zero keeps native reclaim policy. Above a nonzero threshold, clear DIRECT_RECLAIM after the vendor hook; this intentionally enforces the selected latency policy even if a hook sets that bit. Other flags and the earlier MAX_PAGE_ORDER clamp remain. Exact SDK consumer is unconfirmed; conservative source customization retention is not a measured performance claim.",
+    "evidence": [
+      "evidence/ttm-interface-review.json",
+      "evidence/ttm-interface-test.json",
+      "SECURITY.md: TTM allocation interfaces and backup lock ownership"
+    ]
+  },
+  {
+    "commit": "fd8eb5a54b67b07b7eb6b7f45705ab5c35974704",
+    "disposition": "adapted",
+    "result_commits": [
+      "7bfbc774035b4f9f8e24ff75d9f0b799c0db6bc4"
+    ],
+    "rationale": "Retain optional ENOSPC propagation flag and stored device flags. Default remains native ENOMEM compatibility. A trusted driver can distinguish exhausted device resources from host allocation failure. Preserve native dmem EAGAIN-to-ENOSPC conversion, eviction retries, resource lifetime and success-only LRU updates; do not restore the older ACK ttm_bo body.",
+    "evidence": [
+      "evidence/ttm-interface-review.json",
+      "evidence/ttm-interface-test.json",
+      "SECURITY.md: TTM allocation interfaces and backup lock ownership"
+    ]
+  },
+  {
+    "commit": "ff792dc1fccaa4bc0289fc10acdbb287df057457",
+    "disposition": "applied",
+    "result_commits": [
+      "7bfbc774035b4f9f8e24ff75d9f0b799c0db6bc4"
+    ],
+    "rationale": "Retain unsigned beneficial-order getter in the combined API port. The boolean predecessor would collapse every positive order to one and prematurely disable direct reclaim. Exhaustive extracted getter/allocation tests cover all 2048 defined flag combinations and allocation orders 0..11; no GPU performance is claimed.",
+    "evidence": [
+      "evidence/ttm-interface-review.json",
+      "evidence/ttm-interface-test.json",
+      "SECURITY.md: TTM allocation interfaces and backup lock ownership"
+    ]
+  },
+  {
+    "commit": "fa642463d4a985ee8ebcb587267c17c17da14818",
+    "disposition": "applied",
+    "result_commits": [
+      "7bfbc774035b4f9f8e24ff75d9f0b799c0db6bc4"
+    ],
+    "rationale": "Retain the four kernel-doc wildcard corrections matching the newly retained allocation flag interfaces. Documentation-only, with no separate runtime/security effect.",
+    "evidence": [
+      "evidence/ttm-interface-review.json",
+      "evidence/ttm-interface-test.json",
+      "SECURITY.md: TTM allocation interfaces and backup lock ownership"
+    ]
+  },
+  {
+    "commit": "52e8573f8c02e6fb1af35170ac4668df13d0bd25",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "The complete actual ACK patch adds an unused private reclaim parameter and passes constant booleans at free callers, plus an empty line. It adds no NR_GPU counter update or public source API. Omit this semantically inert accounting scaffold; do not infer GPU statistics from its title or reconstruct code absent from ACK. Native allocation accounting remains.",
+    "evidence": [
+      "evidence/ttm-interface-review.json",
+      "evidence/ttm-interface-test.json",
+      "SECURITY.md: TTM allocation interfaces and backup lock ownership"
+    ]
+  },
+  {
+    "commit": "bbc48d58b1ad7476470137d7feff36069c9d6f97",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Actual ACK wrapper only calls __free_pages and ignores reclaim; all purported GPU counter updates are absent. Omit those inert substitutions. The backup put_page-to-__free_pages(order0) substitution is separately acknowledged: keep native page reference-release semantics with native split/page-at-a-time backup, rather than importing a direct-free change as an accounting fix. Both release references for these noncompound pages; no new counter correctness is supplied by the actual patch. No arbitrary out-of-tree reference/lifetime equivalence is claimed.",
+    "evidence": [
+      "evidence/ttm-interface-review.json",
+      "evidence/ttm-interface-test.json",
+      "SECURITY.md: TTM allocation interfaces and backup lock ownership"
+    ]
+  },
+  {
+    "commit": "42ab2c618ff1c956ec994d575536c84aa9ceb1b3",
+    "disposition": "partially-adapted",
+    "result_commits": [
+      "7bfbc774035b4f9f8e24ff75d9f0b799c0db6bc4"
+    ],
+    "rationale": "Extract the independent lock-ownership fix: only AOP_WRITEPAGE_ACTIVATE requires the caller to unlock after shmem_writeout. Local shmem/swap writer code unlocks on other returns including hard architecture errors; host contract tests expose the native double unlock. Keep native per-page backup, put_page, NULL/handle guards and restore-state cleanup. Omit compound backup/performance changes and private fault-injection API for the current SDK virtio GEM-shmem implementation. The new compound path changes reserve use, fragmentation and partial-OOM retry behavior, not the configured public allocation API; no TTM module latency/fragmentation parity or impossibility of an optional consumer is asserted.",
+    "evidence": [
+      "evidence/ttm-interface-review.json",
+      "evidence/ttm-interface-test.json",
+      "SECURITY.md: TTM allocation interfaces and backup lock ownership"
+    ]
+  },
+  {
+    "commit": "6904105a3f186b59a1f7faaaa01f94cb4bc9a5a1",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Preserve the original reviewed unique merge resolutions and dispositions from the recorded prior witness set. The AMD unpopulate function still exactly equals native LTS, including backend unbind and the native userptr check. The only later change to its file is a mechanically equivalent TTM allocation-argument conversion. All other original merge witness paths remain unchanged. Original complete witness evidence and exact seven-patch reconstruction are recorded in ttm-interface-review.json. This explicit scope review replaces the whole-file classification, which correctly invalidated after the generic API call-site edit.",
+    "evidence": [
+      "evidence/ttm-interface-review.json",
+      "evidence/generic-source-review.json",
+      "evidence/merge-hunk-examination.json"
+    ]
+  },
+  {
+    "commit": "78cd45a9d21678a8c2777537bacf42dc10492ade",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Omit the XE-only beneficial-order=2M opt-in for the current SDK virtual display target; XE is disabled in the built configuration. The later generic TTM API conversion passes zero, retaining the native default policy. This does not implement this candidate's performance tuning. Original complete witness evidence and exact seven-patch reconstruction are recorded in ttm-interface-review.json. This explicit scope review replaces the whole-file classification, which correctly invalidated after the generic API call-site edit.",
+    "evidence": [
+      "evidence/ttm-interface-review.json",
+      "evidence/generic-source-review.json",
+      "evidence/merge-hunk-examination.json"
+    ]
+  },
+  {
+    "commit": "05aaa5dd43ddbcc9f236fb84d515dcd1e48ec5b2",
+    "disposition": "adapted-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain eight standard primary-plane RGB(A)/BGR(A) formats, matching virtio protocol translation and removal of the host-byte-order-only framebuffer gate/legacy preference. Pinned minigbm advertises ABGR8888/XBGR8888 among render formats; Goldfish DrmClient passes gralloc format to drmModeAddFB2. This deliberately accepts more userspace framebuffer formats than native LTS, while preserving native GEM handle lookup/references, allocation cleanup, framebuffer initialization and all later modeset checks. Plane code equals native apart from the format list and translation function; display code equals native after restoring exactly the removed gate/quirk. x86_64 is little-endian; no big-endian or visual output verification is claimed.",
+    "evidence": [
+      "evidence/drm-sdk-tail-review.json",
+      "evidence/drm-pipeline-sdk-review.json",
+      "SECURITY.md: SDK virtual display formats and optional display features"
+    ]
+  },
+  {
+    "commit": "58584a093e66d54f1330900701dcc63298166b17",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain __PAGE_SIZE alignment for virtio dumb buffers. The local Goldfish x86_64_16k product uses page_shift=14, and the driver allocates backing shmem using the returned size. Without this change 4K-rounded buffers can be shorter than the emulated mmap granularity. Native zero-dimension/32-bit multiplication validation and output initialization remain, and args->size is u64 before alignment on the x86_64 target. This can increase padding by up to 12KiB relative to 4K alignment; native GEM allocation/lifetime stays intact. This resolves buffer sizing only, not the separately unresolved shared-file EOF page-compatibility question.",
+    "evidence": [
+      "evidence/drm-sdk-tail-review.json",
+      "evidence/drm-pipeline-sdk-review.json",
+      "SECURITY.md: SDK virtual display formats and optional display features"
+    ]
+  },
+  {
+    "commit": "a933123884e166350f1c7ac764774a524087deaf",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Omit the new signed-magnitude fixed-point conversion helper with the unimplemented CTM/color-pipeline feature on the current virtual display paths. The actual SDK VKMS constructor sets has_ctm=false and its compositor interpolates native 16-bit LUT entries; it does not use a signed-magnitude CTM. The global ACK query found only the new test calls, but that absence is corroborating evidence rather than proof that no optional module could use it. Keep the complete native fixed-point header and existing rendering behavior; no general arithmetic bug fix is omitted.",
+    "evidence": [
+      "evidence/drm-sdk-tail-review.json",
+      "evidence/drm-pipeline-sdk-review.json",
+      "SECURITY.md: SDK virtual display formats and optional display features"
+    ]
+  },
+  {
+    "commit": "a2c79ac78f33e637ebaddf7acdaaceddcd5a96e1",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Omit this optional KUnit source and Makefile addition along with the new signed-magnitude helper. The patch tests new sm2fixp and existing int2fixp/fraction conventions but changes no rendering implementation or fixes arithmetic. Native VKMS uses existing fixed-point interpolation and advertises no CTM. No KUnit execution is claimed; preserving existing test sources does not assert the new tests are valueless on another feature set.",
+    "evidence": [
+      "evidence/drm-sdk-tail-review.json",
+      "evidence/drm-pipeline-sdk-review.json",
+      "SECURITY.md: SDK virtual display formats and optional display features"
+    ]
+  },
+  {
+    "commit": "aa1ec549da490e781d666bd89a339bb90bed12cc",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Omit the U0.32 LUT conversion helper accompanying the omitted color-pipeline feature. Its positive ACK caller is AMD amdgpu_dm_color.c; the SDK VKMS composer consumes the native u16 drm_color_lut representation and virtio exposes its existing virtual scanout path. Keep native drm_color_mgmt.h and existing color APIs. This does not establish impossibility of an optional vendor consumer; it scopes this additional LUT32 feature to the reviewed current target.",
+    "evidence": [
+      "evidence/drm-sdk-tail-review.json",
+      "evidence/drm-pipeline-sdk-review.json",
+      "SECURITY.md: SDK virtual display formats and optional display features"
+    ]
+  },
+  {
+    "commit": "971e81ef829ebcaaa3ab1d37973ccb98a6a0a191",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Omit this physical DisplayPort Panel Replay DPCD full-line sentinel addition. Both SDK display providers construct virtual connectors/encoders, and their protocol/composition paths are not a DP AUX/eDP Panel Replay endpoint. Current display-link helpers are not enabled in the SDK common configuration. No existing virtual scanout behavior changes; this is target protocol evidence, not merely an unsuccessful consumer search.",
+    "evidence": [
+      "evidence/drm-sdk-tail-review.json",
+      "evidence/drm-pipeline-sdk-review.json",
+      "SECURITY.md: SDK virtual display formats and optional display features"
+    ]
+  },
+  {
+    "commit": "b8b015f2b9fb12ab9f64327fdf1815d7ab135c2d",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Omit the new DSC DPCD capability parsers, three exported helpers and declarations/constants. Reviewed all throughput cases, 2MPixel delta handling, invalid line-width range and per-slice/branch queries. These APIs interpret capabilities of physical DisplayPort DSC sink/branch devices. SDK virtio and VKMS implement virtual outputs with no DP AUX link or DSC branch negotiation. Keep native DP helpers/header versions; source-module DP support beyond the virtual SDK is outside this target. No DisplayPort specification or commit URL was opened.",
+    "evidence": [
+      "evidence/drm-sdk-tail-review.json",
+      "evidence/drm-pipeline-sdk-review.json",
+      "SECURITY.md: SDK virtual display formats and optional display features"
+    ]
+  },
+  {
+    "commit": "5a8fb799022ad5e0b88307cf4fcdbdb25d4493b6",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Omit the additional VRR timing-match flag and comparison helper. It compares vertical sync offsets from vtotal for physical fastset variants while keeping horizontal timings fixed. SDK virtual connectors use native fixed mode matching and their existing vblank/composition path; this change adds an optional source API for a different timing-transition feature, not a fix to the selected virtual mode matcher. Native mode matching and validation remain unchanged; the two separately reviewed mode-conversion exports remain. Optional physical-module use is not declared impossible.",
+    "evidence": [
+      "evidence/drm-sdk-tail-review.json",
+      "evidence/drm-pipeline-sdk-review.json",
+      "SECURITY.md: SDK virtual display formats and optional display features"
+    ]
+  },
+  {
+    "commit": "ceb4e648a23c053f5fa039e16e342498881a9c11",
+    "disposition": "omitted-current-target",
+    "result_commits": [],
+    "rationale": "Omit this ARM64-conditioned bridge-connector selection and expansion of the display-helper Kconfig gate. The only new select is DRM_BRIDGE_CONNECTOR if DRM && ARM64, false on this X86_64 SDK target. The expanded gate also exposes physical DP/HDMI options and may default HDMI_CEC_NOTIFIER_HELPER from CEC_NOTIFIER; this is acknowledged rather than treating the whole patch as textually ARM-only. The actual SDK virtio/VKMS outputs construct virtual connectors, not bridge chains. Preserve the existing generic GKI hidden DRM module selections (including TTM, shmem and client helpers) and native display Kconfig dependencies.",
+    "evidence": [
+      "evidence/drm-sdk-tail-review.json",
+      "evidence/drm-pipeline-sdk-review.json",
+      "SECURITY.md: SDK virtual display formats and optional display features"
+    ]
   }
 ]

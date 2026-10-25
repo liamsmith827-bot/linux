@@ -8052,6 +8052,47 @@ initialization cases per port/ACK variant and 65 backup cases per port/LTS
 variant. They expose two incorrect ACK initialization warnings and four native
 control double unlocks, with none in the port. These use allocator/writeout
 shims; they are not real DMA, reclaim, swap, KUnit or concurrency tests. The
-existing emulator build will verify the updated source in attempt 168. Only
+existing emulator workflow succeeded in build168 at 7bfbc774035b: kernel image,
+100 common modules and 45 virtual-device modules generated; all signatures
+and module tables verified, with the modified-payload control rejected. Only
 local pinned source and prior build configuration were used; no remote source
 was accessed.
+
+
+## SDK virtual display formats and optional display features
+
+Nine final decisions are recorded in `evidence/drm-sdk-tail-review.json`.
+Retain the eight primary-plane 32-bit RGB/BGR formats and their matching virtio
+protocol values, together with removal of the host-byte-order-only framebuffer
+gate. Goldfish's DrmClient forwards gralloc's format to drmModeAddFB2; minigbm
+advertises ABGR/XBGR variants. This intentionally expands accepted framebuffer
+formats while keeping native handle lookup, references, allocation cleanup and
+modeset initialization. The two changed virtio files were compared in full:
+only the reviewed list, translation function, gate and legacy preference differ
+from LTS. Big-endian mappings remain source-compatible but are not tested here.
+
+Retain virtual dumb-buffer alignment to the emulated page size. The local
+Goldfish x86_64_16k product passes page_shift=14; backing shmem is allocated at
+the returned size. The native common ioctl retains zero-dimension and 32-bit
+multiply checks and initializes outputs. Alignment acts on the u64 size on
+x86_64, and can add up to 12 KiB compared with 4 KiB rounding. This is buffer
+sizing, not resolution of the separate shared-file EOF-tail question.
+
+Omit optional CTM signed-magnitude and LUT32 helpers and their new fixed-point
+KUnit suite with the reviewed absent feature. VKMS explicitly sets has_ctm=false
+and implements native u16 LUT interpolation. AMD's LUT32 calls belong to the
+omitted color pipeline. Preserve the existing fixed-point functions and test
+suite; the additional tests change no runtime algorithm. Consumer searches are
+recorded but are not treated as proof of arbitrary module absence.
+
+The DP Panel Replay sentinel, DSC branch/sink capability parser APIs and VRR
+sync-offset matching option are scoped to additional display-link/timing
+features. The SDK providers construct virtual connectors and use their existing
+virtio protocol or VKMS composition/vblank implementation, not DP AUX/DSC sink
+negotiation. Native mode matching/validation and the separately retained source
+exports remain. Omit the ARM64 bridge-connector hidden select and its enclosing
+Kconfig gate expansion. The latter also exposes DP/HDMI options and can default
+the HDMI CEC notifier helper; it is not characterized as entirely ARM-only.
+The existing generic hidden DRM selections for source modules remain intact.
+No physical display support, optional module equivalence, KUnit execution or
+rendered output is verified. Only pinned local sources were used.

@@ -1,0 +1,200 @@
+{
+  "source_head": "7bfbc774035b4f9f8e24ff75d9f0b799c0db6bc4",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "05aaa5dd43ddbcc9f236fb84d515dcd1e48ec5b2",
+      "disposition": "adapted-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain eight standard primary-plane RGB(A)/BGR(A) formats, matching virtio protocol translation and removal of the host-byte-order-only framebuffer gate/legacy preference. Pinned minigbm advertises ABGR8888/XBGR8888 among render formats; Goldfish DrmClient passes gralloc format to drmModeAddFB2. This deliberately accepts more userspace framebuffer formats than native LTS, while preserving native GEM handle lookup/references, allocation cleanup, framebuffer initialization and all later modeset checks. Plane code equals native apart from the format list and translation function; display code equals native after restoring exactly the removed gate/quirk. x86_64 is little-endian; no big-endian or visual output verification is claimed.",
+      "evidence": [
+        "evidence/drm-sdk-tail-review.json",
+        "evidence/drm-pipeline-sdk-review.json",
+        "SECURITY.md: SDK virtual display formats and optional display features"
+      ],
+      "patch_sha256": "f7d47c1158e073a5d15e5c769f9ae807d2daf869285be0e6b5f32eff41c02885",
+      "changed_paths": [
+        "drivers/gpu/drm/virtio/virtgpu_display.c",
+        "drivers/gpu/drm/virtio/virtgpu_plane.c"
+      ]
+    },
+    {
+      "commit": "58584a093e66d54f1330900701dcc63298166b17",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain __PAGE_SIZE alignment for virtio dumb buffers. The local Goldfish x86_64_16k product uses page_shift=14, and the driver allocates backing shmem using the returned size. Without this change 4K-rounded buffers can be shorter than the emulated mmap granularity. Native zero-dimension/32-bit multiplication validation and output initialization remain, and args->size is u64 before alignment on the x86_64 target. This can increase padding by up to 12KiB relative to 4K alignment; native GEM allocation/lifetime stays intact. This resolves buffer sizing only, not the separately unresolved shared-file EOF page-compatibility question.",
+      "evidence": [
+        "evidence/drm-sdk-tail-review.json",
+        "evidence/drm-pipeline-sdk-review.json",
+        "SECURITY.md: SDK virtual display formats and optional display features"
+      ],
+      "patch_sha256": "8b8bf5d7b10c3ac73b61f0047bbe8281855f6ffe42705285ea7e4bc7b55c18ec",
+      "changed_paths": [
+        "drivers/gpu/drm/virtio/virtgpu_gem.c",
+        "gki/x86_64/symbols/virtual_device"
+      ]
+    },
+    {
+      "commit": "a933123884e166350f1c7ac764774a524087deaf",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Omit the new signed-magnitude fixed-point conversion helper with the unimplemented CTM/color-pipeline feature on the current virtual display paths. The actual SDK VKMS constructor sets has_ctm=false and its compositor interpolates native 16-bit LUT entries; it does not use a signed-magnitude CTM. The global ACK query found only the new test calls, but that absence is corroborating evidence rather than proof that no optional module could use it. Keep the complete native fixed-point header and existing rendering behavior; no general arithmetic bug fix is omitted.",
+      "evidence": [
+        "evidence/drm-sdk-tail-review.json",
+        "evidence/drm-pipeline-sdk-review.json",
+        "SECURITY.md: SDK virtual display formats and optional display features"
+      ],
+      "patch_sha256": "d92347b5ba56c87b55b5db7c76727896171427b90c35bb6103c31d54c97be37a",
+      "changed_paths": [
+        "include/drm/drm_fixed.h"
+      ]
+    },
+    {
+      "commit": "a2c79ac78f33e637ebaddf7acdaaceddcd5a96e1",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Omit this optional KUnit source and Makefile addition along with the new signed-magnitude helper. The patch tests new sm2fixp and existing int2fixp/fraction conventions but changes no rendering implementation or fixes arithmetic. Native VKMS uses existing fixed-point interpolation and advertises no CTM. No KUnit execution is claimed; preserving existing test sources does not assert the new tests are valueless on another feature set.",
+      "evidence": [
+        "evidence/drm-sdk-tail-review.json",
+        "evidence/drm-pipeline-sdk-review.json",
+        "SECURITY.md: SDK virtual display formats and optional display features"
+      ],
+      "patch_sha256": "36d369d195a9769ba3539ae69974762cbd594bb3aa3bd726c20ea0789a4bccab",
+      "changed_paths": [
+        "drivers/gpu/drm/tests/Makefile",
+        "drivers/gpu/drm/tests/drm_fixp_test.c"
+      ]
+    },
+    {
+      "commit": "aa1ec549da490e781d666bd89a339bb90bed12cc",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Omit the U0.32 LUT conversion helper accompanying the omitted color-pipeline feature. Its positive ACK caller is AMD amdgpu_dm_color.c; the SDK VKMS composer consumes the native u16 drm_color_lut representation and virtio exposes its existing virtual scanout path. Keep native drm_color_mgmt.h and existing color APIs. This does not establish impossibility of an optional vendor consumer; it scopes this additional LUT32 feature to the reviewed current target.",
+      "evidence": [
+        "evidence/drm-sdk-tail-review.json",
+        "evidence/drm-pipeline-sdk-review.json",
+        "SECURITY.md: SDK virtual display formats and optional display features"
+      ],
+      "patch_sha256": "28ff92274d1495f833b669dac8b172721302da68316fa8b6b8f3b18731c221e6",
+      "changed_paths": [
+        "include/drm/drm_color_mgmt.h"
+      ]
+    },
+    {
+      "commit": "971e81ef829ebcaaa3ab1d37973ccb98a6a0a191",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Omit this physical DisplayPort Panel Replay DPCD full-line sentinel addition. Both SDK display providers construct virtual connectors/encoders, and their protocol/composition paths are not a DP AUX/eDP Panel Replay endpoint. Current display-link helpers are not enabled in the SDK common configuration. No existing virtual scanout behavior changes; this is target protocol evidence, not merely an unsuccessful consumer search.",
+      "evidence": [
+        "evidence/drm-sdk-tail-review.json",
+        "evidence/drm-pipeline-sdk-review.json",
+        "SECURITY.md: SDK virtual display formats and optional display features"
+      ],
+      "patch_sha256": "4404c50ee1aa99fed2708ddb8c0dd549d8dc319290343d1f05757f19eb35236c",
+      "changed_paths": [
+        "include/drm/display/drm_dp.h"
+      ]
+    },
+    {
+      "commit": "b8b015f2b9fb12ab9f64327fdf1815d7ab135c2d",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Omit the new DSC DPCD capability parsers, three exported helpers and declarations/constants. Reviewed all throughput cases, 2MPixel delta handling, invalid line-width range and per-slice/branch queries. These APIs interpret capabilities of physical DisplayPort DSC sink/branch devices. SDK virtio and VKMS implement virtual outputs with no DP AUX link or DSC branch negotiation. Keep native DP helpers/header versions; source-module DP support beyond the virtual SDK is outside this target. No DisplayPort specification or commit URL was opened.",
+      "evidence": [
+        "evidence/drm-sdk-tail-review.json",
+        "evidence/drm-pipeline-sdk-review.json",
+        "SECURITY.md: SDK virtual display formats and optional display features"
+      ],
+      "patch_sha256": "142fa7bdcee893e312344dc5a0e887cad0e6580ef51fd165fca0b57f05f278a7",
+      "changed_paths": [
+        "drivers/gpu/drm/display/drm_dp_helper.c",
+        "include/drm/display/drm_dp.h",
+        "include/drm/display/drm_dp_helper.h"
+      ]
+    },
+    {
+      "commit": "5a8fb799022ad5e0b88307cf4fcdbdb25d4493b6",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Omit the additional VRR timing-match flag and comparison helper. It compares vertical sync offsets from vtotal for physical fastset variants while keeping horizontal timings fixed. SDK virtual connectors use native fixed mode matching and their existing vblank/composition path; this change adds an optional source API for a different timing-transition feature, not a fix to the selected virtual mode matcher. Native mode matching and validation remain unchanged; the two separately reviewed mode-conversion exports remain. Optional physical-module use is not declared impossible.",
+      "evidence": [
+        "evidence/drm-sdk-tail-review.json",
+        "evidence/drm-pipeline-sdk-review.json",
+        "SECURITY.md: SDK virtual display formats and optional display features"
+      ],
+      "patch_sha256": "b715595a2342ec543bd85c65ed36788b0aa22ba4d63f1b1041ce2cccbaefbb32",
+      "changed_paths": [
+        "drivers/gpu/drm/drm_modes.c",
+        "include/drm/drm_modes.h"
+      ]
+    },
+    {
+      "commit": "ceb4e648a23c053f5fa039e16e342498881a9c11",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Omit this ARM64-conditioned bridge-connector selection and expansion of the display-helper Kconfig gate. The only new select is DRM_BRIDGE_CONNECTOR if DRM && ARM64, false on this X86_64 SDK target. The expanded gate also exposes physical DP/HDMI options and may default HDMI_CEC_NOTIFIER_HELPER from CEC_NOTIFIER; this is acknowledged rather than treating the whole patch as textually ARM-only. The actual SDK virtio/VKMS outputs construct virtual connectors, not bridge chains. Preserve the existing generic GKI hidden DRM module selections (including TTM, shmem and client helpers) and native display Kconfig dependencies.",
+      "evidence": [
+        "evidence/drm-sdk-tail-review.json",
+        "evidence/drm-pipeline-sdk-review.json",
+        "SECURITY.md: SDK virtual display formats and optional display features"
+      ],
+      "patch_sha256": "ac582167644da597cf9cd3bcfc661270d7686bce7c54adb80268ae605d7a59ea",
+      "changed_paths": [
+        "drivers/gpu/drm/display/Kconfig",
+        "init/Kconfig.gki"
+      ]
+    }
+  ],
+  "native_checks": {
+    "include/drm/drm_fixed.h": "Whole file equals pinned native LTS, after removing the two separately reviewed conversion GPL exports for drm_modes.c only.",
+    "include/drm/drm_color_mgmt.h": "Whole file equals pinned native LTS, after removing the two separately reviewed conversion GPL exports for drm_modes.c only.",
+    "drivers/gpu/drm/tests/Makefile": "Whole file equals pinned native LTS, after removing the two separately reviewed conversion GPL exports for drm_modes.c only.",
+    "include/drm/display/drm_dp.h": "Whole file equals pinned native LTS, after removing the two separately reviewed conversion GPL exports for drm_modes.c only.",
+    "include/drm/display/drm_dp_helper.h": "Whole file equals pinned native LTS, after removing the two separately reviewed conversion GPL exports for drm_modes.c only.",
+    "drivers/gpu/drm/display/drm_dp_helper.c": "Whole file equals pinned native LTS, after removing the two separately reviewed conversion GPL exports for drm_modes.c only.",
+    "drivers/gpu/drm/drm_modes.c": "Whole file equals pinned native LTS, after removing the two separately reviewed conversion GPL exports for drm_modes.c only.",
+    "include/drm/drm_modes.h": "Whole file equals pinned native LTS, after removing the two separately reviewed conversion GPL exports for drm_modes.c only.",
+    "drivers/gpu/drm/display/Kconfig": "Whole file equals pinned native LTS, after removing the two separately reviewed conversion GPL exports for drm_modes.c only.",
+    "drivers/gpu/drm/drm_dumb_buffers.c": "Whole file equals pinned native LTS, after removing the two separately reviewed conversion GPL exports for drm_modes.c only.",
+    "drivers/gpu/drm/vkms/vkms_crtc.c": "Whole file equals pinned native LTS, after removing the two separately reviewed conversion GPL exports for drm_modes.c only.",
+    "drivers/gpu/drm/vkms/vkms_composer.c": "Whole file equals pinned native LTS, after removing the two separately reviewed conversion GPL exports for drm_modes.c only.",
+    "drivers/gpu/drm/vkms/vkms_connector.c": "Whole file equals pinned native LTS, after removing the two separately reviewed conversion GPL exports for drm_modes.c only.",
+    "drivers/gpu/drm/virtio/virtgpu_plane.c": "Native whole file except eight-format list and ACK-identical translation function.",
+    "drivers/gpu/drm/virtio/virtgpu_display.c": "Native whole file except exact format-gate/preference removal.",
+    "drivers/gpu/drm/virtio/virtgpu_gem.c": "Native whole file except compatibility include and size alignment."
+  },
+  "global_ack_queries": {
+    "drm_sm2fixp": "23112ce1886ea26b19be03207c0227a06a6ca009:drivers/gpu/drm/tests/drm_fixp_test.c:14:\tKUNIT_EXPECT_EQ(test, drm_int2fixp(1), drm_sm2fixp(1ull << DRM_FIXED_POINT));\n23112ce1886ea26b19be03207c0227a06a6ca009:drivers/gpu/drm/tests/drm_fixp_test.c:18:\t\t\tdrm_sm2fixp((1ull << 63) | (1ull << DRM_FIXED_POINT)));\n23112ce1886ea26b19be03207c0227a06a6ca009:drivers/gpu/drm/tests/drm_fixp_test.c:22:\t\t\tdrm_sm2fixp(1ull << (DRM_FIXED_POINT - 1)));\n23112ce1886ea26b19be03207c0227a06a6ca009:drivers/gpu/drm/tests/drm_fixp_test.c:26:\t\t\tdrm_sm2fixp((1ull << 63) | (1ull << (DRM_FIXED_POINT - 1))));\n23112ce1886ea26b19be03207c0227a06a6ca009:include/drm/drm_fixed.h:82: * @drm_sm2fixp\n23112ce1886ea26b19be03207c0227a06a6ca009:include/drm/drm_fixed.h:89:static inline s64 drm_sm2fixp(__u64 a)\n",
+    "drm_color_lut32_extract": "23112ce1886ea26b19be03207c0227a06a6ca009:drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_color.c:958:\trgb->red = drm_color_lut32_extract(lut.red, bit_precision);\n23112ce1886ea26b19be03207c0227a06a6ca009:drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_color.c:959:\trgb->green = drm_color_lut32_extract(lut.green, bit_precision);\n23112ce1886ea26b19be03207c0227a06a6ca009:drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm_color.c:960:\trgb->blue  = drm_color_lut32_extract(lut.blue, bit_precision);\n23112ce1886ea26b19be03207c0227a06a6ca009:include/drm/drm_color_mgmt.h:54: * drm_color_lut32_extract - clamp and round LUT entries\n23112ce1886ea26b19be03207c0227a06a6ca009:include/drm/drm_color_mgmt.h:61:static inline u32 drm_color_lut32_extract(u32 user_input, int bit_precision)\n",
+    "DRM_MODE_MATCH_TIMINGS_VRR": "23112ce1886ea26b19be03207c0227a06a6ca009:drivers/gpu/drm/drm_modes.c:1560:\tif (match_flags & DRM_MODE_MATCH_TIMINGS_VRR &&\n23112ce1886ea26b19be03207c0227a06a6ca009:include/drm/drm_modes.h:196:#define DRM_MODE_MATCH_TIMINGS_VRR (1 << 5)\n",
+    "DP_PANEL_REPLAY_FULL_LINE_GRANULARITY": "23112ce1886ea26b19be03207c0227a06a6ca009:include/drm/display/drm_dp.h:573:# define DP_PANEL_REPLAY_FULL_LINE_GRANULARITY\t\t0xffff\n",
+    "drm_dp_dsc_branch_max_overall_throughput": "23112ce1886ea26b19be03207c0227a06a6ca009:drivers/gpu/drm/display/drm_dp_helper.c:2918: * drm_dp_dsc_branch_max_overall_throughput() - Branch device's max overall DSC pixel throughput\n23112ce1886ea26b19be03207c0227a06a6ca009:drivers/gpu/drm/display/drm_dp_helper.c:2934:int drm_dp_dsc_branch_max_overall_throughput(const u8 dsc_branch_dpcd[DP_DSC_BRANCH_CAP_SIZE],\n23112ce1886ea26b19be03207c0227a06a6ca009:drivers/gpu/drm/display/drm_dp_helper.c:2955:EXPORT_SYMBOL(drm_dp_dsc_branch_max_overall_throughput);\n23112ce1886ea26b19be03207c0227a06a6ca009:include/drm/display/drm_dp_helper.h:208:int drm_dp_dsc_branch_max_overall_throughput(const u8 dsc_branch_dpcd[DP_DSC_BRANCH_CAP_SIZE],\n",
+    "drm_dp_dsc_branch_max_line_width": "23112ce1886ea26b19be03207c0227a06a6ca009:drivers/gpu/drm/display/drm_dp_helper.c:2958: * drm_dp_dsc_branch_max_line_width() - Branch device's max DSC line width\n23112ce1886ea26b19be03207c0227a06a6ca009:drivers/gpu/drm/display/drm_dp_helper.c:2972:int drm_dp_dsc_branch_max_line_width(const u8 dsc_branch_dpcd[DP_DSC_BRANCH_CAP_SIZE])\n23112ce1886ea26b19be03207c0227a06a6ca009:drivers/gpu/drm/display/drm_dp_helper.c:2985:EXPORT_SYMBOL(drm_dp_dsc_branch_max_line_width);\n23112ce1886ea26b19be03207c0227a06a6ca009:include/drm/display/drm_dp_helper.h:210:int drm_dp_dsc_branch_max_line_width(const u8 dsc_branch_dpcd[DP_DSC_BRANCH_CAP_SIZE]);\n",
+    "drm_dp_dsc_sink_max_slice_throughput": "23112ce1886ea26b19be03207c0227a06a6ca009:drivers/gpu/drm/display/drm_dp_helper.c:2850: * drm_dp_dsc_sink_max_slice_throughput() - Get a DSC sink's maximum pixel throughput per slice\n23112ce1886ea26b19be03207c0227a06a6ca009:drivers/gpu/drm/display/drm_dp_helper.c:2865: *   total_slice_count = @peak_pixel_rate / drm_dp_dsc_sink_max_slice_throughput(@peak_pixel_rate)\n23112ce1886ea26b19be03207c0227a06a6ca009:drivers/gpu/drm/display/drm_dp_helper.c:2872:int drm_dp_dsc_sink_max_slice_throughput(const u8 dsc_dpcd[DP_DSC_RECEIVER_CAP_SIZE],\n23112ce1886ea26b19be03207c0227a06a6ca009:drivers/gpu/drm/display/drm_dp_helper.c:2910:EXPORT_SYMBOL(drm_dp_dsc_sink_max_slice_throughput);\n23112ce1886ea26b19be03207c0227a06a6ca009:include/drm/display/drm_dp_helper.h:206:int drm_dp_dsc_sink_max_slice_throughput(const u8 dsc_dpcd[DP_DSC_RECEIVER_CAP_SIZE],\n"
+  },
+  "local_inputs": {
+    "../grapheneos-17/device/generic/goldfish": {
+      "commit": "5281db702f36e0e8c0af9e33d70b63d3ba4916ae",
+      "files": {
+        "hals/hwc3/DrmClient.cpp": "ec344e434c9045da3f22c898c293989dc514405da1799fa7ee0317586fc65c70",
+        "board/kernel/x86_64_16k_cmdline.txt": "a8df23ba1cec47cf4d8de94467b50a95b8d87e2e9d131e93ead446df8347e1d1",
+        "board/kernel/x86_64_16k.mk": "3f2c157019d8176aa05f23631e3e85876a864bc5eb3e5a84edb1fc118c5024e4",
+        "board/emu64x16k/details.mk": "bae26c13741a2214b23fb78ae362d3fa043b38428c10a78c635c1f996ee7bb5b"
+      }
+    },
+    "../grapheneos-17/external/minigbm": {
+      "commit": "ce79bbee67b3e2ea7abb110e1415e9ceceaa6471",
+      "files": {
+        "virtgpu_virgl.c": "fe1f8b118858c4489047cd3b7f055e7d051705827c9b401d24b432b56c8fe594"
+      }
+    }
+  },
+  "config_sha256": "48f19810fd5e10021d64b96e82cdb2b0b587f7cb24b3b4b5660b6732ae05cd09",
+  "remote_sources_used": [],
+  "limitations": "Compilation/artifacts only; no rendered frames, format ioctls, page-emulation runtime, KUnit execution, DisplayPort hardware or optional out-of-tree display consumers verified. Failure to locate a consumer alone is not used as omission proof."
+}

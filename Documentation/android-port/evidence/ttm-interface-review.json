@@ -1,0 +1,458 @@
+{
+  "source_head": "7bfbc774035b4f9f8e24ff75d9f0b799c0db6bc4",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "9f6871a66ce00f5c1acd81ed8d95659f8874a6bc",
+      "disposition": "adapted",
+      "result_commits": [
+        "7bfbc774035b4f9f8e24ff75d9f0b799c0db6bc4"
+      ],
+      "rationale": "Retain pool getters as prerequisites for configured TTM module allocation interfaces. Adapt the initialization diagnostic to inspect incoming flags, avoiding ACK reading stale/uninitialized pool state before assignment. Getter rewrites preserve native DMA handling, cache selection, backup eligibility and encryption/accounting gates. Current flags use bit8/bit9, not the superseded intermediate booleans.",
+      "evidence": [
+        "evidence/ttm-interface-review.json",
+        "evidence/ttm-interface-test.json",
+        "SECURITY.md: TTM allocation interfaces and backup lock ownership"
+      ],
+      "patch_sha256": "f517ba783e179a2e824f2724678d01a5fced4fce9932a08541dfa3606ecc0591",
+      "changed_paths": [
+        "drivers/gpu/drm/ttm/tests/ttm_pool_test.c",
+        "drivers/gpu/drm/ttm/ttm_pool.c",
+        "drivers/gpu/drm/ttm/ttm_pool_internal.h",
+        "drivers/gpu/drm/ttm/ttm_tt.c"
+      ]
+    },
+    {
+      "commit": "4c10a3dda814c3bf25e2b2f165c2e091ab8cca2a",
+      "disposition": "adapted",
+      "result_commits": [
+        "7bfbc774035b4f9f8e24ff75d9f0b799c0db6bc4"
+      ],
+      "rationale": "Retain flags-based pool initialization and public allocation header for generic TTM source-module compatibility; TTM=y is explicitly selected by GKI_HIDDEN_DRM_CONFIGS. Convert tests and the AMD pool call with the original DMA decisions. Final bit positions and beneficial-order fix are combined with later reviewed patches. This changes source signatures/layout, as intended for rebuilt modules, without historical binary KMI.",
+      "evidence": [
+        "evidence/ttm-interface-review.json",
+        "evidence/ttm-interface-test.json",
+        "SECURITY.md: TTM allocation interfaces and backup lock ownership"
+      ],
+      "patch_sha256": "926b31a91c461341654f6fe12e8c257605957ad0e7a51c2a969a89c3991f8b9c",
+      "changed_paths": [
+        "drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c",
+        "drivers/gpu/drm/ttm/tests/ttm_device_test.c",
+        "drivers/gpu/drm/ttm/tests/ttm_pool_test.c",
+        "drivers/gpu/drm/ttm/ttm_device.c",
+        "drivers/gpu/drm/ttm/ttm_pool.c",
+        "drivers/gpu/drm/ttm/ttm_pool_internal.h",
+        "include/drm/ttm/ttm_allocation.h",
+        "include/drm/ttm/ttm_pool.h"
+      ]
+    },
+    {
+      "commit": "45e70280351b0952a6abcd03c5a68092b50f122a",
+      "disposition": "adapted",
+      "result_commits": [
+        "7bfbc774035b4f9f8e24ff75d9f0b799c0db6bc4"
+      ],
+      "rationale": "Retain flags-based generic TTM device initialization, converting every affected native driver/helper and KUnit call. Original DMA and DMA32 predicates map exactly to flags; all native callers retain zero for new optional policies. Physical driver call-site edits only maintain coherence with the shared API and enable no additional platform. Native PREEMPT_RT and GPU-buddy KUnit changes remain.",
+      "evidence": [
+        "evidence/ttm-interface-review.json",
+        "evidence/ttm-interface-test.json",
+        "SECURITY.md: TTM allocation interfaces and backup lock ownership"
+      ],
+      "patch_sha256": "95dbc9e8b2ee9da38d81515b1782a2f98d82cb1e4a0053d00ff7486ad21c3395",
+      "changed_paths": [
+        "drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c",
+        "drivers/gpu/drm/drm_gem_vram_helper.c",
+        "drivers/gpu/drm/i915/intel_region_ttm.c",
+        "drivers/gpu/drm/loongson/lsdc_ttm.c",
+        "drivers/gpu/drm/nouveau/nouveau_ttm.c",
+        "drivers/gpu/drm/qxl/qxl_ttm.c",
+        "drivers/gpu/drm/radeon/radeon_ttm.c",
+        "drivers/gpu/drm/ttm/tests/ttm_bo_test.c",
+        "drivers/gpu/drm/ttm/tests/ttm_bo_validate_test.c",
+        "drivers/gpu/drm/ttm/tests/ttm_device_test.c",
+        "drivers/gpu/drm/ttm/tests/ttm_kunit_helpers.c",
+        "drivers/gpu/drm/ttm/tests/ttm_kunit_helpers.h",
+        "drivers/gpu/drm/ttm/ttm_device.c",
+        "drivers/gpu/drm/vmwgfx/vmwgfx_drv.c",
+        "drivers/gpu/drm/xe/xe_device.c",
+        "include/drm/ttm/ttm_device.h"
+      ]
+    },
+    {
+      "commit": "aa7d4370136c57bd9e282e991a83bfd355a4aeb1",
+      "disposition": "adapted",
+      "result_commits": [
+        "7bfbc774035b4f9f8e24ff75d9f0b799c0db6bc4"
+      ],
+      "rationale": "Retain opt-in beneficial-order policy as part of the configured generic allocation API, including the final unsigned getter correction. Zero keeps native reclaim policy. Above a nonzero threshold, clear DIRECT_RECLAIM after the vendor hook; this intentionally enforces the selected latency policy even if a hook sets that bit. Other flags and the earlier MAX_PAGE_ORDER clamp remain. Exact SDK consumer is unconfirmed; conservative source customization retention is not a measured performance claim.",
+      "evidence": [
+        "evidence/ttm-interface-review.json",
+        "evidence/ttm-interface-test.json",
+        "SECURITY.md: TTM allocation interfaces and backup lock ownership"
+      ],
+      "patch_sha256": "1cf207343aabfa01e31fe9274c2b92a7d6917872d49271f106c50fc6e1b7cd77",
+      "changed_paths": [
+        "drivers/gpu/drm/ttm/ttm_pool.c",
+        "drivers/gpu/drm/ttm/ttm_pool_internal.h",
+        "include/drm/ttm/ttm_allocation.h"
+      ]
+    },
+    {
+      "commit": "fd8eb5a54b67b07b7eb6b7f45705ab5c35974704",
+      "disposition": "adapted",
+      "result_commits": [
+        "7bfbc774035b4f9f8e24ff75d9f0b799c0db6bc4"
+      ],
+      "rationale": "Retain optional ENOSPC propagation flag and stored device flags. Default remains native ENOMEM compatibility. A trusted driver can distinguish exhausted device resources from host allocation failure. Preserve native dmem EAGAIN-to-ENOSPC conversion, eviction retries, resource lifetime and success-only LRU updates; do not restore the older ACK ttm_bo body.",
+      "evidence": [
+        "evidence/ttm-interface-review.json",
+        "evidence/ttm-interface-test.json",
+        "SECURITY.md: TTM allocation interfaces and backup lock ownership"
+      ],
+      "patch_sha256": "e8fe5e05150bc75a52a20c7eb635ce725443b35191fc19dd50403cbd9aef0305",
+      "changed_paths": [
+        "drivers/gpu/drm/ttm/ttm_bo.c",
+        "drivers/gpu/drm/ttm/ttm_device.c",
+        "include/drm/ttm/ttm_allocation.h",
+        "include/drm/ttm/ttm_device.h"
+      ]
+    },
+    {
+      "commit": "ff792dc1fccaa4bc0289fc10acdbb287df057457",
+      "disposition": "applied",
+      "result_commits": [
+        "7bfbc774035b4f9f8e24ff75d9f0b799c0db6bc4"
+      ],
+      "rationale": "Retain unsigned beneficial-order getter in the combined API port. The boolean predecessor would collapse every positive order to one and prematurely disable direct reclaim. Exhaustive extracted getter/allocation tests cover all 2048 defined flag combinations and allocation orders 0..11; no GPU performance is claimed.",
+      "evidence": [
+        "evidence/ttm-interface-review.json",
+        "evidence/ttm-interface-test.json",
+        "SECURITY.md: TTM allocation interfaces and backup lock ownership"
+      ],
+      "patch_sha256": "18471cd9015fb36caed0dc3d28972e055b45343fb88b9ffeabbefb45a8d3d8bb",
+      "changed_paths": [
+        "drivers/gpu/drm/ttm/ttm_pool_internal.h"
+      ]
+    },
+    {
+      "commit": "fa642463d4a985ee8ebcb587267c17c17da14818",
+      "disposition": "applied",
+      "result_commits": [
+        "7bfbc774035b4f9f8e24ff75d9f0b799c0db6bc4"
+      ],
+      "rationale": "Retain the four kernel-doc wildcard corrections matching the newly retained allocation flag interfaces. Documentation-only, with no separate runtime/security effect.",
+      "evidence": [
+        "evidence/ttm-interface-review.json",
+        "evidence/ttm-interface-test.json",
+        "SECURITY.md: TTM allocation interfaces and backup lock ownership"
+      ],
+      "patch_sha256": "2e6a41446190b8465fd4baddf5d3ec1584162ab97182ee0e5e68a8f32d1571bb",
+      "changed_paths": [
+        "drivers/gpu/drm/ttm/ttm_device.c",
+        "drivers/gpu/drm/ttm/ttm_pool.c",
+        "include/drm/ttm/ttm_device.h",
+        "include/drm/ttm/ttm_pool.h"
+      ]
+    },
+    {
+      "commit": "52e8573f8c02e6fb1af35170ac4668df13d0bd25",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "The complete actual ACK patch adds an unused private reclaim parameter and passes constant booleans at free callers, plus an empty line. It adds no NR_GPU counter update or public source API. Omit this semantically inert accounting scaffold; do not infer GPU statistics from its title or reconstruct code absent from ACK. Native allocation accounting remains.",
+      "evidence": [
+        "evidence/ttm-interface-review.json",
+        "evidence/ttm-interface-test.json",
+        "SECURITY.md: TTM allocation interfaces and backup lock ownership"
+      ],
+      "patch_sha256": "a28a5984efd16bedf929c379ea8836e1d0f330ff5da57b3bdf209a9305eb7452",
+      "changed_paths": [
+        "drivers/gpu/drm/ttm/ttm_pool.c"
+      ]
+    },
+    {
+      "commit": "bbc48d58b1ad7476470137d7feff36069c9d6f97",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [],
+      "rationale": "Actual ACK wrapper only calls __free_pages and ignores reclaim; all purported GPU counter updates are absent. Omit those inert substitutions. The backup put_page-to-__free_pages(order0) substitution is separately acknowledged: keep native page reference-release semantics with native split/page-at-a-time backup, rather than importing a direct-free change as an accounting fix. Both release references for these noncompound pages; no new counter correctness is supplied by the actual patch. No arbitrary out-of-tree reference/lifetime equivalence is claimed.",
+      "evidence": [
+        "evidence/ttm-interface-review.json",
+        "evidence/ttm-interface-test.json",
+        "SECURITY.md: TTM allocation interfaces and backup lock ownership"
+      ],
+      "patch_sha256": "d0a72d8d46cc40519c4d0baee77b7f0593a7bfbcacee44ba364e4561ce10cf2c",
+      "changed_paths": [
+        "drivers/gpu/drm/ttm/ttm_pool.c"
+      ]
+    },
+    {
+      "commit": "42ab2c618ff1c956ec994d575536c84aa9ceb1b3",
+      "disposition": "partially-adapted",
+      "result_commits": [
+        "7bfbc774035b4f9f8e24ff75d9f0b799c0db6bc4"
+      ],
+      "rationale": "Extract the independent lock-ownership fix: only AOP_WRITEPAGE_ACTIVATE requires the caller to unlock after shmem_writeout. Local shmem/swap writer code unlocks on other returns including hard architecture errors; host contract tests expose the native double unlock. Keep native per-page backup, put_page, NULL/handle guards and restore-state cleanup. Omit compound backup/performance changes and private fault-injection API for the current SDK virtio GEM-shmem implementation. The new compound path changes reserve use, fragmentation and partial-OOM retry behavior, not the configured public allocation API; no TTM module latency/fragmentation parity or impossibility of an optional consumer is asserted.",
+      "evidence": [
+        "evidence/ttm-interface-review.json",
+        "evidence/ttm-interface-test.json",
+        "SECURITY.md: TTM allocation interfaces and backup lock ownership"
+      ],
+      "patch_sha256": "8d6e8757b797d4116652e8741f8f2cb91ad5cc58e3d7ce422e15296f5eb384e5",
+      "changed_paths": [
+        "drivers/gpu/drm/ttm/ttm_backup.c",
+        "drivers/gpu/drm/ttm/ttm_pool.c",
+        "drivers/gpu/drm/ttm/ttm_pool_internal.h",
+        "include/drm/ttm/ttm_backup.h"
+      ]
+    }
+  ],
+  "reconstruction": {
+    "baseline": "ceaf7dd24717a5940a24544118a5680ce88e319e",
+    "patches": [
+      {
+        "commit": "9f6871a66ce00f5c1acd81ed8d95659f8874a6bc",
+        "sha256": "f517ba783e179a2e824f2724678d01a5fced4fce9932a08541dfa3606ecc0591"
+      },
+      {
+        "commit": "4c10a3dda814c3bf25e2b2f165c2e091ab8cca2a",
+        "sha256": "926b31a91c461341654f6fe12e8c257605957ad0e7a51c2a969a89c3991f8b9c"
+      },
+      {
+        "commit": "45e70280351b0952a6abcd03c5a68092b50f122a",
+        "sha256": "95dbc9e8b2ee9da38d81515b1782a2f98d82cb1e4a0053d00ff7486ad21c3395"
+      },
+      {
+        "commit": "aa7d4370136c57bd9e282e991a83bfd355a4aeb1",
+        "sha256": "1cf207343aabfa01e31fe9274c2b92a7d6917872d49271f106c50fc6e1b7cd77"
+      },
+      {
+        "commit": "fd8eb5a54b67b07b7eb6b7f45705ab5c35974704",
+        "sha256": "e8fe5e05150bc75a52a20c7eb635ce725443b35191fc19dd50403cbd9aef0305"
+      },
+      {
+        "commit": "ff792dc1fccaa4bc0289fc10acdbb287df057457",
+        "sha256": "18471cd9015fb36caed0dc3d28972e055b45343fb88b9ffeabbefb45a8d3d8bb"
+      },
+      {
+        "commit": "fa642463d4a985ee8ebcb587267c17c17da14818",
+        "sha256": "2e6a41446190b8465fd4baddf5d3ec1584162ab97182ee0e5e68a8f32d1571bb"
+      }
+    ],
+    "result": "Reversing exactly the seven reviewed patches, with only obsolete DECLONLY context removed and the argument-based warning separately reverted, reproduces every pre-change file exactly. The baseline TTM subtree equals LTS except the two previously reviewed allocation hooks; removing those exactly reproduces LTS. The backup source equals LTS except the AOP activation condition and its comment.",
+    "changed_paths": [
+      "drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c",
+      "drivers/gpu/drm/drm_gem_vram_helper.c",
+      "drivers/gpu/drm/i915/intel_region_ttm.c",
+      "drivers/gpu/drm/loongson/lsdc_ttm.c",
+      "drivers/gpu/drm/nouveau/nouveau_ttm.c",
+      "drivers/gpu/drm/qxl/qxl_ttm.c",
+      "drivers/gpu/drm/radeon/radeon_ttm.c",
+      "drivers/gpu/drm/ttm/tests/ttm_bo_test.c",
+      "drivers/gpu/drm/ttm/tests/ttm_bo_validate_test.c",
+      "drivers/gpu/drm/ttm/tests/ttm_device_test.c",
+      "drivers/gpu/drm/ttm/tests/ttm_kunit_helpers.c",
+      "drivers/gpu/drm/ttm/tests/ttm_kunit_helpers.h",
+      "drivers/gpu/drm/ttm/tests/ttm_pool_test.c",
+      "drivers/gpu/drm/ttm/ttm_backup.c",
+      "drivers/gpu/drm/ttm/ttm_bo.c",
+      "drivers/gpu/drm/ttm/ttm_device.c",
+      "drivers/gpu/drm/ttm/ttm_pool.c",
+      "drivers/gpu/drm/ttm/ttm_pool_internal.h",
+      "drivers/gpu/drm/ttm/ttm_tt.c",
+      "drivers/gpu/drm/vmwgfx/vmwgfx_drv.c",
+      "drivers/gpu/drm/xe/xe_device.c",
+      "include/drm/ttm/ttm_allocation.h",
+      "include/drm/ttm/ttm_device.h",
+      "include/drm/ttm/ttm_pool.h"
+    ]
+  },
+  "stable_commits": [
+    "d0ce7b07dafe43d78150f90894027746576d7cb7",
+    "060f8f3020516d71bc4d6159d4d0beef85606a74",
+    "73867f2536704760dc42671eb508c1fdc7fd9b0b",
+    "329ddc5d438f991f49e4fd24c704d1c7288d5e03",
+    "22aa7fb4e7d0b3ab41d1240ed743167980912970",
+    "9a34b94832c374543ce553d4cec6eda6955397d1",
+    "be0c2255d717c8c548cba3b78c6d3c33ecd1feb8",
+    "b94182b3d7228aec18d069cba56d5982e9bfe1b1",
+    "65677f7a20c48cf9ed02c56db389cc327d2b61b2"
+  ],
+  "refreshed_final_net_records": [
+    {
+      "previous": {
+        "commit": "6904105a3f186b59a1f7faaaa01f94cb4bc9a5a1",
+        "source_head": "a658d19bb7fab3a676acf5bc466fdd7bb68358d8",
+        "disposition": "merge-resolution-reconciled-to-lts",
+        "method": "Every residual path is either a specifically reviewed physical-device implementation outside the x86 SDK target, an architecture/KMI-only exclusion, or a generic symbol/tracepoint export. Physical-device path evidence includes configuration, driver selection and the SDK virtio hardware model; retain exact LTS implementations. For export-only paths, both normalized ACK versus common ancestor and port versus pinned LTS contain only export declarations, preserving native LTS function bodies. These exports retain source-level vendor customization without binary KMI promises; newly loaded trusted modules gain these entry points but no new userspace interface is introduced. No generic shared implementation is omitted based on a missing consumer. Identity paths have no residual ACK code. See evidence/generic-source-review.json and SECURITY.md. Merge resolution hunks are separately indexed.",
+        "path_witnesses": {
+          "drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c": {
+            "policy": "lts-graphics",
+            "ack_blob": "8d2d4f5654ee28c05923ba9c7767fc1c8f3faec1",
+            "lts_blob": "08c31d78b3faee0e84ea4f6ca531ade0190cb6fb",
+            "port_blob": "08c31d78b3faee0e84ea4f6ca531ade0190cb6fb",
+            "normalized_ack_blob": "8d2d4f5654ee28c05923ba9c7767fc1c8f3faec1",
+            "common_ancestor_blob": "d629c5f73bf598df6e9f088a39baa51ab02228dc",
+            "specific_evidence": "Physical AMD/Intel graphics driver changes. The recorded common x86 configuration disables DRM_AMDGPU, DRM_I915 and DRM_XE, while the virtual-device module set explicitly supplies virtio-gpu, goldfish display transport and vkms. A host GPU used to accelerate the emulator is not an AMD/Intel PCI display device assigned to this SDK guest. Keep native LTS driver code; generic DRM APIs are separate decisions."
+          },
+          "drivers/gpu/drm/drm_panel_orientation_quirks.c": {
+            "policy": "no-final-ack-delta",
+            "ack_blob": "3a218fb592cef4dd975e39da9742fdc31d55d976",
+            "lts_blob": "3a218fb592cef4dd975e39da9742fdc31d55d976",
+            "port_blob": "3a218fb592cef4dd975e39da9742fdc31d55d976",
+            "normalized_ack_blob": "3a218fb592cef4dd975e39da9742fdc31d55d976",
+            "common_ancestor_blob": "3a218fb592cef4dd975e39da9742fdc31d55d976"
+          },
+          "drivers/gpu/drm/i915/gem/i915_gem_ttm.c": {
+            "policy": "lts-graphics",
+            "ack_blob": "045fbdbbe18351658cfa9e3b9f84e85d6dfb1750",
+            "lts_blob": "d17695ae0a31c9b44db7be5e3d9cd071ec585ecb",
+            "port_blob": "d17695ae0a31c9b44db7be5e3d9cd071ec585ecb",
+            "normalized_ack_blob": "045fbdbbe18351658cfa9e3b9f84e85d6dfb1750",
+            "common_ancestor_blob": "1f4814968868457ba8570cbcaecb94c7d757ea87",
+            "specific_evidence": "Physical AMD/Intel graphics driver changes. The recorded common x86 configuration disables DRM_AMDGPU, DRM_I915 and DRM_XE, while the virtual-device module set explicitly supplies virtio-gpu, goldfish display transport and vkms. A host GPU used to accelerate the emulator is not an AMD/Intel PCI display device assigned to this SDK guest. Keep native LTS driver code; generic DRM APIs are separate decisions."
+          }
+        }
+      },
+      "current": {
+        "commit": "6904105a3f186b59a1f7faaaa01f94cb4bc9a5a1",
+        "source_head": "7bfbc774035b4f9f8e24ff75d9f0b799c0db6bc4",
+        "disposition": "merge-resolution-reconciled-to-lts",
+        "method": "Every residual path is either a specifically reviewed physical-device implementation outside the x86 SDK target, an architecture/KMI-only exclusion, or a generic symbol/tracepoint export. Physical-device path evidence includes configuration, driver selection and the SDK virtio hardware model; retain exact LTS implementations. For export-only paths, both normalized ACK versus common ancestor and port versus pinned LTS contain only export declarations, preserving native LTS function bodies. These exports retain source-level vendor customization without binary KMI promises; newly loaded trusted modules gain these entry points but no new userspace interface is introduced. No generic shared implementation is omitted based on a missing consumer. Identity paths have no residual ACK code. See evidence/generic-source-review.json and SECURITY.md. Merge resolution hunks are separately indexed. Subsequent 7bfbc774035b call-site review: the physical runtime bodies remain native, with only equivalent TTM flag arguments at initialization. The unique AMD unpopulate merge resolution is untouched; XE beneficial-order=2M remains omitted. The original witnesses and exact reconstruction proof are retained in evidence/ttm-interface-review.json.",
+        "path_witnesses": {
+          "drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c": {
+            "policy": "lts-graphics",
+            "ack_blob": "8d2d4f5654ee28c05923ba9c7767fc1c8f3faec1",
+            "lts_blob": "08c31d78b3faee0e84ea4f6ca531ade0190cb6fb",
+            "port_blob": "1bc5e80cae5707225efe427287050eb34baded0b",
+            "normalized_ack_blob": "8d2d4f5654ee28c05923ba9c7767fc1c8f3faec1",
+            "common_ancestor_blob": "d629c5f73bf598df6e9f088a39baa51ab02228dc",
+            "specific_evidence": "Physical AMD/Intel graphics driver changes. The recorded common x86 configuration disables DRM_AMDGPU, DRM_I915 and DRM_XE, while the virtual-device module set explicitly supplies virtio-gpu, goldfish display transport and vkms. A host GPU used to accelerate the emulator is not an AMD/Intel PCI display device assigned to this SDK guest. Keep native LTS driver code; generic DRM APIs are separate decisions. Physical-driver runtime code remains native; 7bfbc774035b only converts TTM initialization arguments to the equivalent shared flags API. No beneficial-order or ENOSPC opt-in is added to these drivers. See evidence/ttm-interface-review.json for exact inverse-patch proof."
+          },
+          "drivers/gpu/drm/drm_panel_orientation_quirks.c": {
+            "policy": "no-final-ack-delta",
+            "ack_blob": "3a218fb592cef4dd975e39da9742fdc31d55d976",
+            "lts_blob": "3a218fb592cef4dd975e39da9742fdc31d55d976",
+            "port_blob": "3a218fb592cef4dd975e39da9742fdc31d55d976",
+            "normalized_ack_blob": "3a218fb592cef4dd975e39da9742fdc31d55d976",
+            "common_ancestor_blob": "3a218fb592cef4dd975e39da9742fdc31d55d976"
+          },
+          "drivers/gpu/drm/i915/gem/i915_gem_ttm.c": {
+            "policy": "lts-graphics",
+            "ack_blob": "045fbdbbe18351658cfa9e3b9f84e85d6dfb1750",
+            "lts_blob": "d17695ae0a31c9b44db7be5e3d9cd071ec585ecb",
+            "port_blob": "d17695ae0a31c9b44db7be5e3d9cd071ec585ecb",
+            "normalized_ack_blob": "045fbdbbe18351658cfa9e3b9f84e85d6dfb1750",
+            "common_ancestor_blob": "1f4814968868457ba8570cbcaecb94c7d757ea87",
+            "specific_evidence": "Physical AMD/Intel graphics driver changes. The recorded common x86 configuration disables DRM_AMDGPU, DRM_I915 and DRM_XE, while the virtual-device module set explicitly supplies virtio-gpu, goldfish display transport and vkms. A host GPU used to accelerate the emulator is not an AMD/Intel PCI display device assigned to this SDK guest. Keep native LTS driver code; generic DRM APIs are separate decisions."
+          }
+        }
+      },
+      "changed_paths": [
+        "drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c"
+      ],
+      "replacement_explicit_record": {
+        "commit": "6904105a3f186b59a1f7faaaa01f94cb4bc9a5a1",
+        "disposition": "merge-resolution-reconciled-to-lts",
+        "result_commits": [],
+        "rationale": "Preserve the original reviewed unique merge resolutions and dispositions from the recorded prior witness set. The AMD unpopulate function still exactly equals native LTS, including backend unbind and the native userptr check. The only later change to its file is a mechanically equivalent TTM allocation-argument conversion. All other original merge witness paths remain unchanged. Original complete witness evidence and exact seven-patch reconstruction are recorded in ttm-interface-review.json. This explicit scope review replaces the whole-file classification, which correctly invalidated after the generic API call-site edit.",
+        "evidence": [
+          "evidence/ttm-interface-review.json",
+          "evidence/generic-source-review.json",
+          "evidence/merge-hunk-examination.json"
+        ]
+      }
+    },
+    {
+      "previous": {
+        "commit": "78cd45a9d21678a8c2777537bacf42dc10492ade",
+        "source_head": "a658d19bb7fab3a676acf5bc466fdd7bb68358d8",
+        "disposition": "reconciled-to-lts",
+        "method": "Every residual path is either a specifically reviewed physical-device implementation outside the x86 SDK target, an architecture/KMI-only exclusion, or a generic symbol/tracepoint export. Physical-device path evidence includes configuration, driver selection and the SDK virtio hardware model; retain exact LTS implementations. For export-only paths, both normalized ACK versus common ancestor and port versus pinned LTS contain only export declarations, preserving native LTS function bodies. These exports retain source-level vendor customization without binary KMI promises; newly loaded trusted modules gain these entry points but no new userspace interface is introduced. No generic shared implementation is omitted based on a missing consumer. Identity paths have no residual ACK code. See evidence/generic-source-review.json and SECURITY.md. Merge resolution hunks are separately indexed.",
+        "path_witnesses": {
+          "drivers/gpu/drm/xe/xe_device.c": {
+            "policy": "lts-graphics",
+            "ack_blob": "9edf34f8709141484201ca36012154cfb4b5a861",
+            "lts_blob": "1d5deb149137ae6505e9597dfebfb75fb82a73b5",
+            "port_blob": "1d5deb149137ae6505e9597dfebfb75fb82a73b5",
+            "normalized_ack_blob": "9edf34f8709141484201ca36012154cfb4b5a861",
+            "common_ancestor_blob": "0d69cd0e4e798504f5092c3df983841ebafd5448",
+            "specific_evidence": "Physical AMD/Intel graphics driver changes. The recorded common x86 configuration disables DRM_AMDGPU, DRM_I915 and DRM_XE, while the virtual-device module set explicitly supplies virtio-gpu, goldfish display transport and vkms. A host GPU used to accelerate the emulator is not an AMD/Intel PCI display device assigned to this SDK guest. Keep native LTS driver code; generic DRM APIs are separate decisions."
+          }
+        }
+      },
+      "current": {
+        "commit": "78cd45a9d21678a8c2777537bacf42dc10492ade",
+        "source_head": "7bfbc774035b4f9f8e24ff75d9f0b799c0db6bc4",
+        "disposition": "reconciled-to-lts",
+        "method": "Every residual path is either a specifically reviewed physical-device implementation outside the x86 SDK target, an architecture/KMI-only exclusion, or a generic symbol/tracepoint export. Physical-device path evidence includes configuration, driver selection and the SDK virtio hardware model; retain exact LTS implementations. For export-only paths, both normalized ACK versus common ancestor and port versus pinned LTS contain only export declarations, preserving native LTS function bodies. These exports retain source-level vendor customization without binary KMI promises; newly loaded trusted modules gain these entry points but no new userspace interface is introduced. No generic shared implementation is omitted based on a missing consumer. Identity paths have no residual ACK code. See evidence/generic-source-review.json and SECURITY.md. Merge resolution hunks are separately indexed. Subsequent 7bfbc774035b call-site review: the physical runtime bodies remain native, with only equivalent TTM flag arguments at initialization. The unique AMD unpopulate merge resolution is untouched; XE beneficial-order=2M remains omitted. The original witnesses and exact reconstruction proof are retained in evidence/ttm-interface-review.json.",
+        "path_witnesses": {
+          "drivers/gpu/drm/xe/xe_device.c": {
+            "policy": "lts-graphics",
+            "ack_blob": "9edf34f8709141484201ca36012154cfb4b5a861",
+            "lts_blob": "1d5deb149137ae6505e9597dfebfb75fb82a73b5",
+            "port_blob": "74205c048ff689a67b0546ae1cd4d3ff674cae2a",
+            "normalized_ack_blob": "9edf34f8709141484201ca36012154cfb4b5a861",
+            "common_ancestor_blob": "0d69cd0e4e798504f5092c3df983841ebafd5448",
+            "specific_evidence": "Physical AMD/Intel graphics driver changes. The recorded common x86 configuration disables DRM_AMDGPU, DRM_I915 and DRM_XE, while the virtual-device module set explicitly supplies virtio-gpu, goldfish display transport and vkms. A host GPU used to accelerate the emulator is not an AMD/Intel PCI display device assigned to this SDK guest. Keep native LTS driver code; generic DRM APIs are separate decisions. Physical-driver runtime code remains native; 7bfbc774035b only converts TTM initialization arguments to the equivalent shared flags API. No beneficial-order or ENOSPC opt-in is added to these drivers. See evidence/ttm-interface-review.json for exact inverse-patch proof."
+          }
+        }
+      },
+      "changed_paths": [
+        "drivers/gpu/drm/xe/xe_device.c"
+      ],
+      "replacement_explicit_record": {
+        "commit": "78cd45a9d21678a8c2777537bacf42dc10492ade",
+        "disposition": "reconciled-to-lts",
+        "result_commits": [],
+        "rationale": "Omit the XE-only beneficial-order=2M opt-in for the current SDK virtual display target; XE is disabled in the built configuration. The later generic TTM API conversion passes zero, retaining the native default policy. This does not implement this candidate's performance tuning. Original complete witness evidence and exact seven-patch reconstruction are recorded in ttm-interface-review.json. This explicit scope review replaces the whole-file classification, which correctly invalidated after the generic API call-site edit.",
+        "evidence": [
+          "evidence/ttm-interface-review.json",
+          "evidence/generic-source-review.json",
+          "evidence/merge-hunk-examination.json"
+        ]
+      }
+    }
+  ],
+  "source_hashes": {
+    "drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c": "8fa262bceaea97a4bc6a69af68d05752e43637dd4a483a72f63ac3c2fe1afa2e",
+    "drivers/gpu/drm/drm_gem_vram_helper.c": "2900bd4ac728dba2cb5250b5a97fb500a55de2ab788505b4f3fe15153ca9a27b",
+    "drivers/gpu/drm/i915/intel_region_ttm.c": "147b5237757e9874cd24fa8fcba2226dae1b99b8d8ecd89d4704950885631a4f",
+    "drivers/gpu/drm/loongson/lsdc_ttm.c": "4531cf6b1d78a6b6fdc7e762a16ca2b82cf8418b3db7abeac96006b6b072c95f",
+    "drivers/gpu/drm/nouveau/nouveau_ttm.c": "629d7dbb739861412dc8e670aede9261e6bdb6da723edaffb117c0d6793fa418",
+    "drivers/gpu/drm/qxl/qxl_ttm.c": "b73e3dfab4cb3909f33e53e260a29b245bdef24d091b0a7f02cc76026a335198",
+    "drivers/gpu/drm/radeon/radeon_ttm.c": "175ecf9f04fc89caeafacba46d20544cbb86bdb75da8ac01d4dd491013c38581",
+    "drivers/gpu/drm/ttm/tests/ttm_bo_test.c": "819bde6ef087b60359b5166c17271bbaeb236232302e63bf8b8e5b6562cc57c2",
+    "drivers/gpu/drm/ttm/tests/ttm_bo_validate_test.c": "c8ee493bb5f9a15d20c9a641cbe1ad0e37781f75fd897562ddd3f35ead3d56ca",
+    "drivers/gpu/drm/ttm/tests/ttm_device_test.c": "f134d8d278eefd36204dffd04fe8710f4a02c1026881c0fb4b7a43418a63449b",
+    "drivers/gpu/drm/ttm/tests/ttm_kunit_helpers.c": "2a30c60f181b9afd761bb1d24b717d8870c81d232f27411731853ea07cc8df73",
+    "drivers/gpu/drm/ttm/tests/ttm_kunit_helpers.h": "98bb6942dff2f97bfd3c7e2a6592f4fc92ce3929424c76f11608f3efa2a6e4a9",
+    "drivers/gpu/drm/ttm/tests/ttm_pool_test.c": "11b40f46bec3c686b321d129a3a567e4bd95ae6d7bc46ffbf6ff4c15d1a2b65f",
+    "drivers/gpu/drm/ttm/ttm_backup.c": "9bb25f14f420516265a647cd3a5f1c92b58cf77213529890eb7ab7615e074022",
+    "drivers/gpu/drm/ttm/ttm_bo.c": "becfbe1f2dffcdf40175fce886d3929c9886da107707868883ee927cdccbae98",
+    "drivers/gpu/drm/ttm/ttm_device.c": "52c507f79297e9fa9272b863bc57f71211dac24d84f8f6d3072abf32293ae74d",
+    "drivers/gpu/drm/ttm/ttm_pool.c": "6965015cdc0b47ada56c54bbb29e9cb15d0c3af34a39b99f626f53bc357b3db3",
+    "drivers/gpu/drm/ttm/ttm_pool_internal.h": "182d6706389beee48c71554c07d19358df04949f9e1e4e705fa2c92cbf1ea159",
+    "drivers/gpu/drm/ttm/ttm_tt.c": "655f1b6573dcbbba59e80416fb5a546188b6b5d3172ab448b51e996882ecc999",
+    "drivers/gpu/drm/vmwgfx/vmwgfx_drv.c": "9ac659a5d6d8da2a57e183d2367c3fa438169912ebf40e7bfb82d87b7b635e21",
+    "drivers/gpu/drm/xe/xe_device.c": "e1a6814fa95d99fa4739146654479859051f6076452c268cc78880cfbf408263",
+    "include/drm/ttm/ttm_allocation.h": "6d69201f3c52a1eedc62416b13491a4c64e70b70d6697a2a5e6ce4a9d683db70",
+    "include/drm/ttm/ttm_device.h": "75ac0f0d64ae0d13b05ee227cc47af337c9fe0591bcb73da7fc5b1b915a21e35",
+    "include/drm/ttm/ttm_pool.h": "9e51e68258f00929eb8ae9a32e4e7d702939696b7dc73d45b6e517665c12a4fd",
+    "mm/shmem.c": "55b6baeb9b35eff58010ada7548cb03184e0dda7b473b8ccc7d2ad245db5a0aa",
+    "mm/page_io.c": "2873e41cc13fe60429d21bc9616a508945df35be907329ff117d51708e6c6323",
+    "drivers/gpu/drm/virtio/virtgpu_object.c": "0da51d8a7f0ab5065fb010a0cba2c41f1e8d12da49c53e5b4bc25e7158a542e3",
+    "drivers/gpu/drm/virtio/virtgpu_drv.h": "08d74afe8f9b1dc656bd50456ba8b0ee907002e29326347f41dace9a92281926",
+    "drivers/gpu/drm/virtio/Kconfig": "35800f0aee18286ae65e004e01cdb94034cad474a62d02f2a562842b9fb96d31"
+  },
+  "sdk_evidence": [
+    "evidence/drm-pipeline-sdk-review.json",
+    "evidence/build-results.json"
+  ],
+  "remote_sources_used": [],
+  "limitations": "Build168 succeeded at the recorded source head, with all 145 module signatures/tables verified and the modified-payload signature control rejected. Host tests use shims, not real GPU/DMA/reclaim/swap or KUnit execution. Optional TTM consumers are unconfirmed; public configured source API retained conservatively. Omitted compound-backup performance behavior is not claimed equivalent for arbitrary TTM modules. Commit-message URLs were not opened.",
+  "witness_refresh_note": "The initial narrow witness refresh was rejected because the generated whole-file policy/disposition changed after API conversion. Both old decisions were explicitly re-reviewed and migrated to explicit records; no generic witness auto-refresh was used.",
+  "build_evidence": [
+    "evidence/build-results.json",
+    "evidence/module-tables-build-168.json"
+  ]
+}
