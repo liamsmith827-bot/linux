@@ -10802,3 +10802,68 @@ The ARM64 POLYVAL migration is excluded from architecture-private files and
 config/object wiring. Its generic key-power explanation remains in the adapted
 x86/generic library. Native ARM crypto is preserved and no ARM FIPS validation is
 claimed. All project evidence is local and pinned; no remote source was accessed.
+
+## Shared memory history and native VMA flag propagation
+
+`evidence/shared-last-tail-review.json` resolves seventeen historical changes.
+Modern native anonymous-VMA naming supersedes the old saved-userspace-pointer
+implementation; pinned bionic uses PR_SET_VMA for thread/signal stacks. Native
+owned names, refcounts, bounds and merge handling remain. Native executable write
+denial also already represents the historical revert, including the newer
+FMODE_FSNOTIFY_HSM exception and balanced file-lifetime accounting. Twenty-two
+selected function comparisons retain native bodies apart from separately
+reviewed observation calls and export visibility. Historical LTP results are not
+claimed reproduced.
+
+The selected Rust ashmem driver supplies the device ABI and memfd ioctl shim.
+The original C driver restore was read in full, including its older purge/range
+shrinker and error/permission paths. Current ACK-compatible Rust behavior and its
+previously recorded lifetime/CFI fixes supersede that implementation. The C shim
+delete/restore pair is exactly inverse, and all three C blobs equal the fully
+read introduction. No duplicate C configuration or stale object entry remains.
+ARM KASAN_SW_TAGS fallback is outside this configured RUST/ASHMEM x86 target.
+Local libcutils creates and seals memfds; ordinary tmpfs remains excluded from
+the shim. Read/execute restriction requests retain ACK's no-op compatibility
+behavior, but this does not override native memfd execute/seal policy. Pin/purge
+compatibility replies do not pin physical pages against swapping.
+
+Native LTS already contains the SHA-1 parser/OID and module-signing choices from
+the historical revert. The five parser/public-key files and OID registry are
+whole native, as are relevant config blocks and current ECDSA vector arrays.
+Native legacy acceptance is retained; the SDK selects SHA-256 and build 199
+verified all 145 module signatures. No SHA-1 signing downgrade was necessary.
+PG_error, in contrast, is a retained functional bit used by IncFS read failures,
+with consistent compound alias, trace and kpageflags reporting. IncFS stress-tool
+source is included, but its mounting/destructive runtime utility was not run.
+
+The RCU boot-delay ABI retains the configured 20-second default, serialization,
+one-way completion and native end-of-boot relaxation. cd92f9b0ae2b changes only
+the storage type to unsigned to match its parser/getter: accepted values above
+INT_MAX otherwise become negative and then near-U64_MAX in the elapsed-time
+comparison. Long privileged delays can still prolong expedited-RCU costs. No
+boot-time or real-time improvement was measured, and the specific SDK tuning
+consumer remains uncertain. The compression-dictionary export is similarly
+retained for generic source compatibility; native size/LSM/write-denial checks
+remain. READING_POLICY classification does not authenticate dictionary contents
+or validate vendor parsers, and its INT_MAX allocation ceiling can be expensive.
+
+The complete padding patches expose an adaptation gap fixed by 68c207cc790a.
+After a native split, split_pad_vma corrects each half's count, but callers were
+then resetting flags captured before that split. Propagate the corrected field
+through native vma_modify_flags for no-merge returns, preserving all other
+requested bits. Its successful-merge branch still returns native sticky flags,
+and errors do not alter caller flags. This covers mprotect, both mlock paths and
+flag-changing madvise. Userfaultfd changes only its own flags; anonymous naming
+rejects the file-backed ELF mappings that receive padding. Native APIs are not
+replaced by older ACK helpers. The existing host check now exercises 14,962
+split/update cases and reproduces 18,660 stale half-VMA counts with the previous
+wrapper, plus sticky-merge/error cases. It uses actual extracted code with
+simulated merge/error plumbing, not kernel execution or concurrency testing.
+
+Final padding permits entirely padded fragments, uses unsigned count bounds,
+reconstructs pre-split size and updates fields atomically. Absolute linker path
+checks, MAP_PRIVATE restriction, copied-VMA reset and bounded diagnostics remain.
+These are compatibility rules, not authentication. The readahead cast-overlay
+experiment and its correction cancel exactly; native file_ra_state remains whole
+with independent order/mmap_miss fields. All consulted projects are local and
+pinned; no remote resource was accessed.

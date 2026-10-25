@@ -35851,5 +35851,209 @@
       "evidence/platform-last-tail-review.json",
       "SECURITY.md: Remaining platform, USB and architecture decisions"
     ]
+  },
+  {
+    "commit": "f592305c13aa1adae796e5eab660a8052771c9da",
+    "disposition": "adapted",
+    "rationale": "Retain final Incremental FS stress-tool source and its Makefile/gitignore in ea8c7bfe0e53. This historical utility spawns readers, fills blocks and mounts/unmounts/removes its own test directories; it is development tooling, not kernel runtime policy. Keep current test sources beside the retained IncFS implementation; maintainer metadata is separately adapted. All three tool files match final ACK. Tool was not executed, and its historical commit test claim is not our validation.",
+    "result_commits": [
+      "ea8c7bfe0e53bfd115f0cd9d24b3fecc482001ad"
+    ],
+    "evidence": [
+      "evidence/shared-last-tail-review.json",
+      "SECURITY.md: Shared memory history and native VMA flag propagation"
+    ]
+  },
+  {
+    "commit": "a41bb72f85fe43e578026d71e48725c8711cebe3",
+    "disposition": "superseded",
+    "rationale": "This revert retired the old Android user-pointer anonymous-name implementation to make room for upstream naming. Preserve modern native PR_SET_VMA/ANON_NAME, owned refcounted name storage, native allocation/free/replacement and current merge hooks; do not replay removal of the public API or restore GUP-based reads from a saved userspace pointer. Generated SDK enables ANON_VMA_NAME and pinned bionic names thread/signal stacks. Native naming functions match, while emulated address alignment is separately adapted.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/shared-last-tail-review.json",
+      "SECURITY.md: Shared memory history and native VMA flag propagation"
+    ]
+  },
+  {
+    "commit": "f5eed40f62780363fe5e5b7bd399f65fec6d9427",
+    "disposition": "adapted",
+    "rationale": "Retain ashmem userspace/device and configuration support through the selected Rust implementation, not the historical 970-line C driver. The complete original restore was reviewed: area lifetime, shmem backing/mmap restrictions, monotonic permissions, range pin/purge shrinker, ioctl/compat, name-copy and registration cleanup. Current ASHMEM requires SHMEM/RUST and both are selected; later ACK retires C pin/purge behavior in favor of compatibility responses. The previous Rust ownership/CFI/I/O corrections remain linked. No duplicate C driver or legacy shrinker is introduced; this is not an omission of ashmem support.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/shared-last-tail-review.json",
+      "SECURITY.md: Shared memory history and native VMA flag propagation"
+    ]
+  },
+  {
+    "commit": "ea7be9d2625cc8c54d19106b2052b6c57d9b4667",
+    "disposition": "adapted",
+    "rationale": "Retain independent ASHMEM build selection without the retired CONFIG_ANDROID gate. Current staging Makefile selects android/ using ASHMEM, current ashmem Kconfig depends on SHMEM/RUST and generated SDK has ASHMEM=y. The obsolete menu/conditional layout is superseded by the single selected Rust driver. No historical binary ABI constraint is involved.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/shared-last-tail-review.json",
+      "SECURITY.md: Shared memory history and native VMA flag propagation"
+    ]
+  },
+  {
+    "commit": "fa422bbb51fd9d6f6e016cce5f08e67617393fc6",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native LTS already has SHA-1 digest/OID support in all five asymmetric-key files and the OID registry, plus the MODULE_SIG_SHA1/hash choices. Those complete files/blocks remain native. The three current ECDSA vector arrays also match LTS; their later format supersedes historical test additions. The SDK build explicitly chooses SHA-256 and build 199 cryptographically verifies all 145 modules, so no old BoringSSL signing workaround or downgrade is applied. Native legacy SHA-1 acceptance remains; no claim of hardening that acceptance.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/shared-last-tail-review.json",
+      "SECURITY.md: Shared memory history and native VMA flag propagation"
+    ]
+  },
+  {
+    "commit": "b7f9fb6c83c6678744f9ad39c73217a0b3c76fc3",
+    "disposition": "adapted",
+    "rationale": "Retain the generic RCU boot-delay tuning ABI and configured 20000ms default for Android boot/runtime compatibility. Keep mutex serialization, one-way completion, delayed work and native unexpedite/async-relax transitions; parameter changes cannot end boot before init calls the helper. cd92f9b0ae2b makes storage unsigned to match kstrtouint/param_get_uint, avoiding sign extension of values above INT_MAX into a near-U64_MAX deadline. Long privileged delays can extend expedited-RCU CPU/latency costs; no measured boot or real-time benefit claimed. Specific SDK tuning consumer remains unconfirmed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "cd92f9b0ae2b940935578c7543bbc15390024b4c"
+    ],
+    "evidence": [
+      "evidence/shared-last-tail-review.json",
+      "SECURITY.md: Shared memory history and native VMA flag propagation"
+    ]
+  },
+  {
+    "commit": "cc895a739a96d3ba4b186333f145bdb47a63c76c",
+    "disposition": "already-represented-upstream",
+    "rationale": "Retain native executable write-denial/reference handling, now using exe_file_deny_write_access/exe_file_allow_write_access rather than reverting to raw older calls. Complete ELF/FDPIC/misc loaders, exec open/close/transfer and fork executable-ref functions match native after unrelated observation hooks. The native FMODE_FSNOTIFY_HSM exception is retained and its mode is stable for the file lifetime, preserving native watch support and balanced write counts. No historical ETXTBSY LTP test was run; no ACK implementation overwrites newer LTS cleanup.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/shared-last-tail-review.json",
+      "SECURITY.md: Shared memory history and native VMA flag propagation"
+    ]
+  },
+  {
+    "commit": "a46d5ea00779400f7e7eb60d497b1f23d4d29c3a",
+    "disposition": "adapted",
+    "rationale": "Retain PG_error and Error helpers, kpageflags/trace naming and matching compound-folio alias because current enabled IncFS sets PageError on failed reads. This bit is consumed runtime state, not historical layout padding. Preserve native page-snapshot/flag reporting and other page-bit logic around it; all modules rebuild against this enum. The alias for PG_has_hwpoisoned is intentionally moved consistently with ACK. Compilation does not validate memory-failure or IncFS error runtime behavior.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/shared-last-tail-review.json",
+      "SECURITY.md: Shared memory history and native VMA flag propagation"
+    ]
+  },
+  {
+    "commit": "e433d83cab405a1f815ac628ac5d01d23b47e901",
+    "disposition": "adapted",
+    "rationale": "Preserve the memfd ashmem ioctl compatibility contract through the selected Rust shim and SHMEM_FL_MEMFD-only dispatch. Omit duplicate C source/config and stale Makefile entry (bbc9b0705c30). Current libcutils creates/seals memfds, supplying a positive user ABI consumer. GET_NAME uses a dentry-name snapshot and bounded NUL-terminated copy; native seals enforce write restrictions, compat file-ID sizing is handled, SET_NAME/SIZE return EINVAL, and pin/purge calls retain documented compatibility results. Read/execute restriction requests remain no-ops as in ACK and do not bypass native memfd/noexec policy.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "69eb820a7f4c5ff40bfccf2bd9fe7409d4353430",
+      "bbc9b0705c307c8491b306fd50bc17bc44244341"
+    ],
+    "evidence": [
+      "evidence/shared-last-tail-review.json",
+      "SECURITY.md: Shared memory history and native VMA flag propagation"
+    ]
+  },
+  {
+    "commit": "ba1f64a941e9eff6112194f9bb4a7cb95f952836",
+    "disposition": "superseded",
+    "rationale": "The historical C-shim deletion and b8ed0704a330 restoration have exactly inverse changed lines on all six paths, with identical C blobs. Current selected Rust implementation provides the functionality and C fallback is absent after later configuration consolidation; bbc9b0705c30 removes its obsolete Makefile entry. Preserve current Rust dispatch and ordinary tmpfs exclusion rather than replaying intermediate include/ioctl toggles. No C-fallback configuration is verified.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "bbc9b0705c307c8491b306fd50bc17bc44244341"
+    ],
+    "evidence": [
+      "evidence/shared-last-tail-review.json",
+      "SECURITY.md: Shared memory history and native VMA flag propagation"
+    ]
+  },
+  {
+    "commit": "b8ed0704a33014aa947962a0fdbec464ba7a3c2d",
+    "disposition": "superseded",
+    "rationale": "This exact inverse restored a C fallback for ARM KASAN_SW_TAGS configurations that could not build Rust. The delivered x86 SDK instead positively selects RUST/ASHMEM and the later single-driver configuration; current compatibility is supplied by the retained Rust shim. Complete historical C blobs match the original introduction and the deletion pair cancels. Do not add an unselected ARM-specific fallback solely for future products. Rust-disabled sanitizer configurations remain unsupported/unverified here.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "bbc9b0705c307c8491b306fd50bc17bc44244341"
+    ],
+    "evidence": [
+      "evidence/shared-last-tail-review.json",
+      "SECURITY.md: Shared memory history and native VMA flag propagation"
+    ]
+  },
+  {
+    "commit": "e8edda71e15ccda37b7c07574cc56b3298069404",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "The actual patch moved existing ra->order into a cast overlay despite its upstream-feature subject. 99d39097be8b exactly reverses all additions/deletions on three paths after reporting the overlay overlapped prev_pos. Native file_ra_state already owns separate order/mmap_miss fields and is retained whole; no overlay or historical layout is restored. Preserve current native readahead ordering/bounds and separately reviewed hooks/padding behavior.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/shared-last-tail-review.json",
+      "SECURITY.md: Shared memory history and native VMA flag propagation"
+    ]
+  },
+  {
+    "commit": "99d39097be8bced539da5cbd5f5d96633b3fa460",
+    "disposition": "reverted-no-residual-code",
+    "rationale": "Exact inverse of e8edda71e15c on all three files; removes the erroneous order overlay and restores native ra->order. Current file_ra_state equals LTS and no DEFINE_RA_MMAP_MISS overlay remains. This corrective historical effect is represented by using native structures, without replaying intermediate casts or unrelated whole-file ACK state.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/shared-last-tail-review.json",
+      "SECURITY.md: Shared memory history and native VMA flag propagation"
+    ]
+  },
+  {
+    "commit": "f1485e6d19010d5b17062c1adbec437086e2b75f",
+    "disposition": "adapted",
+    "rationale": "Retain GPL read_comp_algo_dictionary wrapper and declaration for generic source-module compatibility. It passes offset zero, INT_MAX and READING_POLICY to native kernel_read_file_from_path. Both underlying native read functions match exactly and retain regular-file/size checks, deny-write lifetime, pre/post LSM checks, allocation cleanup and full-read validation. READING_POLICY is a security classification choice, not authentication of dictionary content; callers remain responsible for path trust and parser bounds, and allocations can be large. Specific vendor dictionary consumer is unconfirmed; retain conservatively.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/shared-last-tail-review.json",
+      "SECURITY.md: Shared memory history and native VMA flag propagation"
+    ]
+  },
+  {
+    "commit": "e91dbfa7bd9332f473401b7bc3f58d315d89d13b",
+    "disposition": "adapted",
+    "rationale": "Retain __filemap_remove_folio/inode_add_lru exports and GPL prep_new_page/folio_isolate_lru plus prep_new_page declaration/nonstatic visibility. Four function bodies match native after separate observation calls/static normalization, retaining native accounting and initialization. These are functional source APIs with strong caller lock, allocation and ownership preconditions, not safe general userspace operations or KMI machinery. Incorrect subscribers can corrupt memory; no vendor module behavior certified.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/shared-last-tail-review.json",
+      "SECURITY.md: Shared memory history and native VMA flag propagation"
+    ]
+  },
+  {
+    "commit": "277a43d3425d5b1e10f069bd4d9d669ba76847ff",
+    "disposition": "adapted",
+    "rationale": "Retain VMA padding split/merge/display behavior using native LTS APIs. Existing aa723abf2d05 validates and atomically replaces pad fields, reconstructs pre-split size and permits all-padding fragments. New 68c207cc790a propagates corrected pad counts through native vma_modify_flags after splits; mprotect, both mlock paths and flag-changing madvise otherwise overwrite counts captured before the split. Native successful-merge sticky flags/error handling remain intact. The host extracted-function check covers 14962 split cases and detects stale restoration in 18660 old-wrapper half-VMA cases; this is not a kernel concurrency/VM runtime test.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "aa723abf2d0547fdddee6cc7e806da55cbd19d7b",
+      "68c207cc790a47b5b7be411d872f44aaec21d204"
+    ],
+    "evidence": [
+      "evidence/shared-last-tail-review.json",
+      "SECURITY.md: Shared memory history and native VMA flag propagation"
+    ]
+  },
+  {
+    "commit": "66044bcf67fccd02311c0030f04ba5f5e7197b8e",
+    "disposition": "adapted",
+    "rationale": "Retain absolute linker-path/error checks, MAP_PRIVATE-only padding, and clear padding on copied/remapped VMAs. Supersede this intermediate signed-int/strict-less-than pad validation with final unsigned bounded counts that allow all-padding split fragments and reconstruct combined size while splitting. Preserve atomic field updates and rate-limited diagnostics; native merge/split and sticky-flag effects remain. Bionic DropPaddingPages is a positive consumer. Proc display is compatibility metadata, not an authorization boundary; linker path recognition is not attestation.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "aa723abf2d0547fdddee6cc7e806da55cbd19d7b",
+      "c476769367dd9ec44abeb0483606f530d43b18dc",
+      "68c207cc790a47b5b7be411d872f44aaec21d204"
+    ],
+    "evidence": [
+      "evidence/shared-last-tail-review.json",
+      "SECURITY.md: Shared memory history and native VMA flag propagation"
+    ]
   }
 ]

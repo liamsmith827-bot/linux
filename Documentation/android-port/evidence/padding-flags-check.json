@@ -1,7 +1,8 @@
 {
-  "source_commit": "aa723abf2d0547fdddee6cc7e806da55cbd19d7b",
+  "source_commit": "68c207cc790a47b5b7be411d872f44aaec21d204",
   "negative_control_commit": "d65b1b963b41a4833eab058c8f825742ba3b1614",
-  "excerpts_sha256": "7d8796ba3b0cb609552b0569d910fb6dc246ba7c07334ad52f4682683e8d92d0",
+  "flag_wrapper_negative_control_commit": "cd92f9b0ae2b",
+  "excerpts_sha256": "d3b2a08ff8b6b1159e9339f02908e0e590311f5bce8d24c1ad54057c361ac8ea",
   "compiler": "cc (GCC) 16.2.1 20260810",
   "compiler_flags": [
     "-std=gnu11",
@@ -11,6 +12,6 @@
     "-fsanitize=address,undefined",
     "-fno-omit-frame-pointer"
   ],
-  "result": "Padding flag interleavings and 14962 split cases passed; old combined-count control reproduced",
-  "scope": "Exercise extracted padding updates/splits with deterministic host interleavings.\n\nHost ASan/UBSan shims reproduce the old two-writer count combination and force\nthe new compare-exchange retry against a native guard-flag update. Exhaustive\nsmall-VMA split checks validate count conservation and bounds in both orders.\nThis is not a kernel concurrency or lock-order test."
+  "result": "Padding flags and 14962 split/update cases passed; old combined-count control reproduced; old wrapper restores stale padding in 18660 cases; sticky merge/error checks passed",
+  "scope": "Exercise extracted padding updates/splits with deterministic host interleavings.\n\nHost ASan/UBSan shims reproduce the old two-writer count combination and force\nthe new compare-exchange retry against a native guard-flag update. Exhaustive\nsmall-VMA split checks validate count conservation and bounds in both orders.\nThe current flag-update wrapper is exercised after each split and on simulated\nmerge/error paths, including preservation of native sticky flags. The previous\nwrapper is a negative control for stale padding restored by mprotect/mlock.\nThis is not a kernel concurrency or lock-order test."
 }
