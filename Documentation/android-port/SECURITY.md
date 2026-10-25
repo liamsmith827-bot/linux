@@ -9638,3 +9638,42 @@ extensions are omitted consistently with their provider scope, while native
 UFS code and binding remain. No ARM/protected-host, documentation-renderer,
 crypto-certification or physical-device execution is claimed. No additional
 remote resources were used.
+
+## Zram ioctl history, documentation and ublk page-size ABI
+
+The six remaining zram/ublk candidates are reviewed in
+evidence/zram-ublk-tail-review.json. Both the original d174eba7a5ab process
+writeback patch and its e677433addcc revert were read; their changed lines are
+exact inverses. The later 0f3edb450d27 reimplementation pins the swap device,
+checks device ownership and slot bounds, and uses separate writeback control
+cleanup. The delivered range/prefetch/version API and command-1 adapter retain
+that corrected lineage plus the previously documented LTS and lifetime fixes.
+The original unpinned swap walk is not restored. The deliberate CAP_SYS_NICE
+authorization instead of ptrace access remains subject to the metadata exposure
+and SELinux limitations in "Zram Android memory management and failure lifetimes".
+
+The filp_open_block helper and its GPL export/declaration are retained for the
+actual zram backing-device caller. The helper matches final ACK; ordinary open
+and close helpers remain native LTS. It opens the path, checks the resulting
+inode type, then closes and rejects a non-block file. Consequently this is a
+post-open type restriction, not prevention of open-time effects on other file
+types. Existing permissions, open flags and zram initialization checks remain.
+
+1652f55c9927 restores the zram ioctl registry entry and adapts the compressed
+writeback documentation to the actual final name, compressed_writeback. ACK
+c300a4ec0c58 renamed the implementation but left the old documentation spelling.
+The local mmd setup and service code use the final name. Boolean parsing,
+init_lock protection and EBUSY after initialization match final ACK; the new
+text does not change storage format, write limits or tail zeroing.
+
+The SDK enables ublk. Its 8f9c40a53c87 page-size adaptation is retained
+conservatively for the configured Android page-size ABI; no concrete SDK ublk
+daemon was established. The complete driver equals LTS after reversing this
+candidate's page-size substitutions and the independent VFS namespace import.
+Native queue bounds, zero-filled allocation, process ownership, exact mmap size
+validation and VM_MAYWRITE clearing all remain. Allocation, mapping and freeing
+share the same size helper; physical PFNs and allocation orders still use base
+pages. Emulation size is boot-time read-only and capped at 16 KiB, and queue
+depth is capped at 4096, avoiding an unbounded descriptor-size multiplication.
+This is source analysis, not execution of ublk, swapped processes, memory-daemon
+services or a 16 KiB emulator. No additional remote resources were used.
