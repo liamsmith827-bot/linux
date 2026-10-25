@@ -9585,3 +9585,56 @@ BPF; no live mount, redaction, concurrency or hook execution was tested. The
 broader mixed-mapping/cache and BPF concurrency limits remain unchanged. This
 batch does not finalize the large original BPF implementation candidate. Only
 local checkouts and recorded local evidence were used.
+
+## Documentation accuracy and architecture-scoped crypto
+
+`evidence/docs-crypto-tail-review.json` reviews 25 remaining documentation and
+crypto-wrapper candidates against the delivered implementations. Three complete
+documentation patches and one partial patch are recorded in `4d139dba3d8c`:
+module symbol flags now describe __kflagstab, x86 fscrypt guidance no longer
+recommends the removed CRYPTO_POLYVAL_CLMUL_NI option, dm-verity explains its FEC
+input parameters and interleaving, and xHCI DbC documents its actual five state
+strings rather than an additional nonexistent stalled state. These changes
+affect no executable code. Module GPL/CRC enforcement, cryptographic checks,
+FEC verification and endpoint stall processing remain unchanged.
+
+The POLYVAL edit is deliberately partial: HCTR2 selects the common library and
+the x86 library implementation is enabled through CRYPTO_LIB_POLYVAL_ARCH, while
+the native ARM64 Kconfig/Makefile remain outside this SDK port and still name
+CRYPTO_POLYVAL_ARM64_CE. Their existing documentation is retained. This is not a
+claim that an ARM kernel can be built from this x86-targeted port. FEC constructor
+checks confirm that fec_blocks covers data/hash/optional metadata rather than
+parity blocks, and requires equal block sizes and valid roots. The earlier
+corrected-block status description remains. The updated FEC text is explanation,
+not a new security proof or recovery test.
+
+Native documentation already represents the Maxim TCPCI binding and shared
+Type-C partner/cable identity attributes, so their older patches are not replayed.
+Keep the native KUnit documentation: the SDK disables its configurable default,
+but a blanket claim that built-in tests are unsupported would be inaccurate.
+The F2FS LaTeX-only table reformat is omitted; its values/meanings are unchanged,
+the emulator workflow does not render LaTeX, and all separately retained Android
+F2FS feature descriptions remain.
+
+The protected ARM documents were read in full, including MMIO guard IDs/ranges,
+memory relinquish, partial-progress returns, IOMMU DMA ownership, reset-to-blocking
+and power-state requirements, guest pvIOMMU operations, device resource tokens,
+and VFIO container/topology interfaces. Their specific ARM EL2/HVC64 providers
+are outside the selected x86 SDK. Native KVM, VFIO, IOMMU and virtualization
+documentation remains; this does not claim protected virtualization unnecessary
+for other targets or remove any native isolation check. The Gunyah documentation
+similarly describes a separate ARM64/GIC platform with an explicit ARM64 config
+gate. URLs embedded in these local documents were not accessed.
+
+Four fips140-module.c changes concern namespace import syntax, a complete crypto
+library override table, removal of algorithm-registration exemptions, and a
+library-based integrity HMAC. They include functional integrity changes and are
+not classified as KMI-only. The ACK module requires ARM64, Clang and module
+build, so it remains omitted as a complete platform-specific implementation.
+Native FIPS and jump-label code is retained without claiming FIPS certification.
+The ARM/ARM64 AEGIS SIMD guard refactor is likewise outside the x86 backend;
+the native balanced NEON wrapper remains. Physical UFS TX-equalization binding
+extensions are omitted consistently with their provider scope, while native
+UFS code and binding remain. No ARM/protected-host, documentation-renderer,
+crypto-certification or physical-device execution is claimed. No additional
+remote resources were used.
