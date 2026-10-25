@@ -30918,5 +30918,370 @@
       "evidence/metadata-merge-review.json",
       "SECURITY.md: Configuration and metadata merge resolutions"
     ]
+  },
+  {
+    "commit": "314603f83de1e7f5dd8ea6294326c54b44762be8",
+    "disposition": "superseded",
+    "rationale": "Initial skeleton adds empty passthrough methods, old per-connection IDR, open field and bit 28. It is temporarily removed by 2cb79cc13a04 and reapplied by abbb00d5ae3f. Final ACK itself replaces this legacy API in c26c49ee3b64 with native capability bit 37, fuse_backing_map and BACKING_OPEN/CLOSE; current MediaProvider/libfuse positively support that protocol. Their legacy fallback remains in userspace, so this is evidence of replacement, not an assertion of no consumer. Preserve native dispatch/ownership and separately reviewed Android mixed-open behavior; do not resurrect old ioctl numbers or pointer-sized UAPI.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "aca265111afaf8a664d0c53f086258613a5d3808",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain canonical opcode 2016, daemon-context kern_path resolution and d_canonical_path callback. Final implementation uses split args.h, zeroed buffer, errno return, ENOSYS caching and existing reference/error cleanup. Reject zero-size replies and terminate within PATH_MAX instead of replaying original size-1 underflow. MediaProvider canonical callback and libfuse reply are positive consumers; native transport and VFS lookup checks remain.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "9e4d89fab8be269cdfa979c81871aff240be829d"
+    ],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "4e1d08e6a688bc5596e20519c206d7dd542189ae",
+    "disposition": "superseded",
+    "rationale": "The old capability was moved from bit 28 to bit 31 to avoid HANDLE_KILLPRIV_V2. Final ACK itself replaces this legacy API in c26c49ee3b64 with native capability bit 37, fuse_backing_map and BACKING_OPEN/CLOSE; current MediaProvider/libfuse positively support that protocol. Their legacy fallback remains in userspace, so this is evidence of replacement, not an assertion of no consumer. Preserve native dispatch/ownership and separately reviewed Android mixed-open behavior; do not resurrect old ioctl numbers or pointer-sized UAPI.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "7b889bd062f49eaea752761d8c88ad0a325dc632",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "rationale": "All three unique hunks preserve native HANDLE_KILLPRIV_V2 together with old Android passthrough. Keep native privilege handling, bit 28 and SETXATTR_EXT; current passthrough uses bit 37 and negotiated depth checks instead of old bit 31/unconditional maximum depth. Final ACK itself replaces this legacy API in c26c49ee3b64 with native capability bit 37, fuse_backing_map and BACKING_OPEN/CLOSE; current MediaProvider/libfuse positively support that protocol. Their legacy fallback remains in userspace, so this is evidence of replacement, not an assertion of no consumer. Preserve native dispatch/ownership and separately reviewed Android mixed-open behavior; do not resurrect old ioctl numbers or pointer-sized UAPI.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "7ad75c4cc44c230f2cfc0dc93de73ff8575439db"
+    ],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "6fca9dca4eaf0c69ee07beaafe73a3c683ec3bff",
+    "disposition": "superseded",
+    "rationale": "This temporary revert removes bit 31; it is not the exact inverse of the preceding 28-to-31 move. The subsequent reapplication restores bit 31 before final protocol replacement. Final ACK itself replaces this legacy API in c26c49ee3b64 with native capability bit 37, fuse_backing_map and BACKING_OPEN/CLOSE; current MediaProvider/libfuse positively support that protocol. Their legacy fallback remains in userspace, so this is evidence of replacement, not an assertion of no consumer. Preserve native dispatch/ownership and separately reviewed Android mixed-open behavior; do not resurrect old ioctl numbers or pointer-sized UAPI.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "2cb79cc13a04882b376846deb2910221a2001e89",
+    "disposition": "superseded",
+    "rationale": "Read all eight removal paths, including temporary removal of empty methods, old IDR, open/create hooks, ioctl and negotiation. Reapplication abbb00d5ae3f follows; removal is not a decision to drop modern passthrough. Final ACK itself replaces this legacy API in c26c49ee3b64 with native capability bit 37, fuse_backing_map and BACKING_OPEN/CLOSE; current MediaProvider/libfuse positively support that protocol. Their legacy fallback remains in userspace, so this is evidence of replacement, not an assertion of no consumer. Preserve native dispatch/ownership and separately reviewed Android mixed-open behavior; do not resurrect old ioctl numbers or pointer-sized UAPI.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "5a9733d86c6295e5cc1a17127fca105f573d3fc6",
+    "disposition": "superseded",
+    "rationale": "Old compatibility dispatch compares only ioctl type/number to tolerate the pointer-sized legacy argument. Merge 331962b5c516 returns to full command matching; current fixed-width native CLONE/BACKING commands and compat_ptr_ioctl remain. Keep ENOTTY for unknown commands and native clone validation, without broadening accepted size/direction encodings.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "abbb00d5ae3f6f732f8734ccf08c861f04157626",
+    "disposition": "superseded",
+    "rationale": "Reapplies the old skeleton with bit 31 and number-only ioctl matching after the temporary revert. Final ACK itself replaces this legacy API in c26c49ee3b64 with native capability bit 37, fuse_backing_map and BACKING_OPEN/CLOSE; current MediaProvider/libfuse positively support that protocol. Their legacy fallback remains in userspace, so this is evidence of replacement, not an assertion of no consumer. Preserve native dispatch/ownership and separately reviewed Android mixed-open behavior; do not resurrect old ioctl numbers or pointer-sized UAPI.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "40499ff09c4ed39b399d55b69fe0f879945b9782",
+    "disposition": "superseded",
+    "rationale": "Moves pointer-bearing V1 ioctl from number 1 to 127 to avoid upstream allocation. Final ACK itself replaces this legacy API in c26c49ee3b64 with native capability bit 37, fuse_backing_map and BACKING_OPEN/CLOSE; current MediaProvider/libfuse positively support that protocol. Their legacy fallback remains in userspace, so this is evidence of replacement, not an assertion of no consumer. Preserve native dispatch/ownership and separately reviewed Android mixed-open behavior; do not resurrect old ioctl numbers or pointer-sized UAPI.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "7ca039f50b894f3a40bee36295b4a81fe20f74fb",
+    "disposition": "merge-resolution-reconciled-to-lts",
+    "rationale": "Unique resolution keeps old pto/127 ioctl and incorrectly preserves EINVAL rather than upstream ENOTTY for wrong magic. Current ACK already removes that old interface. Native full-command dispatcher, ENOTTY default and fixed-width arguments are retained exactly; no stale magic-only dispatch or old error regression is restored.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "331962b5c516fd1a03a1609cb251071872a22e48",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "rationale": "All dev/inode/header hunks reviewed: retain native full-command dispatch and SETXATTR_EXT/privilege negotiation. Legacy Android passthrough branch and bit 31 are replaced by current backing API; current Android mixed-open policy remains separately adapted. No native xattr or privilege bit is displaced.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "7ad75c4cc44c230f2cfc0dc93de73ff8575439db"
+    ],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "37314b838da8b37dc1960d68dd44cbf9852b8a48",
+    "disposition": "superseded",
+    "rationale": "Replaces pointer-bearing V1 structure with a u32 lower fd and reserves ioctl 126, removing the unused len/vec fields. Final ACK itself replaces this legacy API in c26c49ee3b64 with native capability bit 37, fuse_backing_map and BACKING_OPEN/CLOSE; current MediaProvider/libfuse positively support that protocol. Their legacy fallback remains in userspace, so this is evidence of replacement, not an assertion of no consumer. Preserve native dispatch/ownership and separately reviewed Android mixed-open behavior; do not resurrect old ioctl numbers or pointer-sized UAPI.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "293f275f4da1b800731dc086a5ec64537c9e192b",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "rationale": "All seven resolution paths reviewed. Retain exact native ARM DMA mapping, versatile HAS_IOMEM gate, current UFS core and bootconfig utility; omit ARM platform/UFS hook extensions under their existing target-scope decisions. Current FUSE retains native syncfs plus modern passthrough/canonical opcode. Preserve native complete_walk nd->state/ND_JUMPED and omit retired success_walk_trace; the historical resolution incorrectly used nd->flags and is not replayed. Native UFS monitor behavior is retained even though no UFS device is established in SDK topology.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "cffa61e7b4a1defb1d8453aaefed28477c749d20",
+    "disposition": "superseded",
+    "rationale": "Moves legacy passthrough from bit 31 to conditional bit 63 for protocol >=7.36, with an intermediate send-init placement. Current native 64-bit flags/flags2 construction correctly advertises bit 37. Final ACK itself replaces this legacy API in c26c49ee3b64 with native capability bit 37, fuse_backing_map and BACKING_OPEN/CLOSE; current MediaProvider/libfuse positively support that protocol. Their legacy fallback remains in userspace, so this is evidence of replacement, not an assertion of no consumer. Preserve native dispatch/ownership and separately reviewed Android mixed-open behavior; do not resurrect old ioctl numbers or pointer-sized UAPI.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "a131e0b4b930a24860c5ed4cf65672dbe48bffb3",
+    "disposition": "superseded",
+    "rationale": "Changes __u32 to userspace uint32_t only in the retired ioctl 126 definition. Native fixed-width backing-map/clone definitions already use their current UAPI types. Final ACK itself replaces this legacy API in c26c49ee3b64 with native capability bit 37, fuse_backing_map and BACKING_OPEN/CLOSE; current MediaProvider/libfuse positively support that protocol. Their legacy fallback remains in userspace, so this is evidence of replacement, not an assertion of no consumer. Preserve native dispatch/ownership and separately reviewed Android mixed-open behavior; do not resurrect old ioctl numbers or pointer-sized UAPI.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "c6ca13e9aa82eae71566f1ef9d91051135153934",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain synchronous request wakeup hint, but adapt to current LTS send_req/queue operations: set a private one-shot FR_SYNC_WAKEUP flag on synchronous send, consume/clear it when device queue wakes the daemon, and leave native virtio_fs.c byte-identical. Forget/interrupt/background paths use ordinary wakeups. Preserve native request locking, disconnect handling, completion references and io_uring transport; no scheduler performance or live transport test is claimed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "71f335db4700080106aa8d69dba7be7f3e30ce4d",
+    "disposition": "merge-resolution-adapted-net-state",
+    "rationale": "Single opcode resolution preserves native TMPFILE=51 and Android canonical-path=2016. Entire current opcode enum equals native plus canonical-path; all newer native opcodes remain present.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "820401ccadf835315e98e4074c410fb98a24ec7c",
+    "disposition": "merge-resolution-adapted-net-state",
+    "rationale": "Single opcode resolution preserves native STATX=52 and Android canonical-path=2016. Entire current opcode enum equals native plus canonical-path; no STATX behavior is removed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "c26c49ee3b640eb23cb673742a62acf901ce63e4",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "rationale": "All 861 lines of the seven-path unique resolution reviewed. Accept replacement of legacy passthrough IDR/credentials/async wrappers/UAPI by native backing-file and iomode infrastructure, including config gate, backing IDs, release and mmap paths. The merge also temporarily removes canonical-path and sync wake hints; final ACK reapplies those, and the port retains them with current args/queue APIs. Keep native conditional virtio arg buffer and all current LTS dispatch/depth checks. Android mixed-open and capability policy remains explicitly adapted with ownership/negotiation/error fixes in 7ad75c4cc44c; BPF cleanup and canonical bounds fixes remain. Do not treat removed old bit 63/ioctls as required additional compatibility.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "7ad75c4cc44c230f2cfc0dc93de73ff8575439db",
+      "9e4d89fab8be269cdfa979c81871aff240be829d"
+    ],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "31c46931f12ac783a27ce47380e1891313d160de",
+    "disposition": "adapted-net-state",
+    "rationale": "Reintroduces canonical-path after c26c49ee3b64 removed it. Retain final daemon-context callback/request/opcode, with zeroed page, bounded nonempty reply, native split args.h, explicit errno/ENOSYS handling and reference-safe current BPF integration. Positive MediaProvider/libfuse canonical consumer; original unchecked size-1 indexing is not reintroduced.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "9e4d89fab8be269cdfa979c81871aff240be829d"
+    ],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "f0999a133a657a2acc273f099b99cf70b23b14bf",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "rationale": "All four path resolutions read. Keep native fuse_write_update_attr in the non-writeback branch and Android lower-attribute synchronization for the required writeback mixed-open branch, adapted to current kiocb callbacks. NFLOG/TRACE/MARK files are entirely native LTS, so the historical rejection of per-family target arrays is not blindly replayed over later upstream netfilter state. Existing mixed-cache limitations remain documented.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "7ad75c4cc44c230f2cfc0dc93de73ff8575439db"
+    ],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "610f86469e66e0755f3f078718953e848f446c3a",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain read-only features/fuse_passthrough=supported attribute, config gating and sysfs failure/unregister cleanup; MediaProvider positively reads this attribute before selecting upstream passthrough. Restore the omitted ABI description in a6086a9c7c71 (alongside descriptions of already retained BPF discovery attributes). This reports implemented Android interfaces, not runtime test success.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "a6086a9c7c71bde30e192c5e70c555f9497d7c01"
+    ],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "13f7b7b492a34ae1d97f6406515f8e4b9eb2bf02",
+    "disposition": "merge-resolution-partially-adapted-net-state",
+    "rationale": "All FUSE and credential resolution hunks read. Keep current kiocb-based end-write/splice interfaces, native non-writeback attribute update and Android writeback lower-attribute/cache invalidation policy; preserve added propagation of write_inode_now errors before passthrough reads. Credential hooks were explicitly reverted by ACK 5e5d81fed553; keep the full native kernel/cred.c implementation except its independently reviewed export namespace. No old override_creds_light calls or removed hooks are resurrected.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "7ad75c4cc44c230f2cfc0dc93de73ff8575439db"
+    ],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "64831d4d543f8037a58fd2693554eb7b8d3d744a",
+    "disposition": "merge-resolution-adapted-net-state",
+    "rationale": "Single opcode resolution preserves native COPY_FILE_RANGE_64=53 and Android canonical-path=2016; entire enum keeps all native opcodes and values.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "ec2e9faa557e001d642100b82832016e17ef1919",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain generic send/end vendor hooks, final declarations and GPL exports; later parameter patch adds req to both. Send runs with caller-held request ownership before extra send reference; end runs before final fuse_put_request. Hooks expose borrowed mutable kernel objects to trusted module callbacks, which must obey lifetime/locking rules. Exact SDK registration is unconfirmed, so preserve vendor source compatibility conservatively.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "4253001e5a9b75d1034a31b5bb7fe69e1f7eeb9d",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain req arguments in send/end hook declarations and matching call sites, with original waitqueue/current arguments. Do not preserve obsolete signatures merely for binary KMI. Callback must acquire its own reference to retain a request and must not mutate core lifetime/completion state inconsistently. No live hook execution tested.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
+  },
+  {
+    "commit": "64129be97c3841db98ae156b71301fa315427413",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain fetch hook declaration/export and invocation on the pending request while fiq->lock is held, before removal from the pending list. Callback must not sleep and cannot retain the borrowed request without ownership. Preserve native queue locking/list/completion logic; exact SDK callback unconfirmed, retained for generic vendor source customization.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/fuse-history-review.json",
+      "SECURITY.md: FUSE protocol history, wakeups and request hooks",
+      "evidence/fuse-local-review.json",
+      "SECURITY.md: FUSE mixed passthrough ownership and access"
+    ]
   }
 ]

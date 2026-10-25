@@ -9523,3 +9523,65 @@ MAINTAINERS delta names the retained fsverity trace header. Two merge conflicts
 change only ARM64 ABI allowed-break records for task_struct, TLB-batch and UFS
 fields. Omit these historical binary-KMI exemptions as required; the merged
 functional fixes listed in their messages remain separately inventoried.
+
+## FUSE protocol history, wakeups and request hooks
+
+`evidence/fuse-history-review.json` resolves 27 historical protocol, hook and
+merge candidates. The original passthrough skeleton, temporary reverts,
+reapplication, capability changes (28 to 31 to 63), pointer-bearing V1 argument
+and u32 V2 ioctl are superseded by ACK's own `c26c49ee3b64` merge of upstream
+FUSE 6.9. All seven paths and 861 lines of its unique resolution were examined.
+The current ACK and port use native capability bit 37, backing-file IDs and
+BACKING_OPEN/CLOSE. The supplied libfuse still has legacy fallback code, so this
+is not a claim that old interfaces have no consumers. MediaProvider positively
+supports the current protocol, selects it only after feature discovery, and
+uses the new backing-file registration/close APIs. Do not reintroduce the
+retired protocol or collide with native privilege/xattr flags.
+
+The native ioctl dispatcher, clone, backing-open/close and synchronous-init
+handlers remain exact LTS, including full command matching, native validation,
+fixed-width arguments and ENOTTY for unknown commands. An old resolution that
+kept EINVAL for wrong magic is not replayed. The retained Android mixed-open
+policy, capability relaxation, required negotiation, backing ownership and
+writeback-error fixes remain as described under "FUSE mixed passthrough
+ownership and access". The previously checked extracted functions are unchanged;
+their hashes were revalidated without claiming another kernel execution test.
+
+Canonical-path opcode 2016 and its daemon-context callback survive beside every
+native opcode, including syncfs, tmpfile, statx and copy-file-range-64. The 6.9
+merge temporarily removed this interface; final ACK reapplied it. Current
+MediaProvider registers a canonical-path callback and libfuse includes the
+terminator in replies. The port keeps zeroed allocation, split args.h, errno
+and ENOSYS handling, bounded termination and rejection of zero-size replies;
+it does not replay the original unchecked size-minus-one indexing. Existing
+BPF lookup/reference and canonical fsnotify analyses remain applicable.
+
+Retain synchronous request scheduling hints using a private one-shot request
+flag consumed by the native device queue. This adapts the old bool argument
+through changed upstream queue APIs without changing native virtio_fs.c.
+Forget, interrupt and background paths retain ordinary wakeups; native locking,
+disconnect and request completion remain. The three request vendor hooks retain
+their final source signatures and GPL exports. Fetch runs under fiq->lock and
+must not sleep; send/end expose borrowed request references before the relevant
+put. A callback retaining an object must acquire ownership and must respect
+core request state. Exact SDK hook registrations and performance effects are
+unconfirmed; the generic vendor interfaces are retained conservatively.
+
+Mixed merge resolutions also preserve exact native NFLOG/TRACE/MARK files,
+ARM DMA mapping, versatile clock configuration, current UFS core and bootconfig
+utility. Native complete_walk uses nd->state, not the incorrect nd->flags from
+one historical resolution. Its removed success_walk_trace is not restored.
+ACK explicitly reverted the credential hooks in `5e5d81fed553`; current
+kernel/cred.c is native except its independently reviewed export namespace.
+Physical UFS/ARM hook exclusions retain their previously documented SDK scope,
+without asserting that compiled UFS support is disabled.
+
+The read-only Android passthrough feature attribute is required by the concrete
+MediaProvider discovery check. Its config gate and sysfs error/unregister paths
+are retained, and `a6086a9c7c71` restores the omitted ABI descriptions for this
+attribute and the already retained BPF discovery attributes. This description
+change affects no executable source. Build 190 compiles FUSE, passthrough and
+BPF; no live mount, redaction, concurrency or hook execution was tested. The
+broader mixed-mapping/cache and BPF concurrency limits remain unchanged. This
+batch does not finalize the large original BPF implementation candidate. Only
+local checkouts and recorded local evidence were used.
