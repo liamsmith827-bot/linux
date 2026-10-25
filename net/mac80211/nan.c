@@ -216,7 +216,8 @@ ieee80211_nan_remove_channel(struct ieee80211_sub_if_data *sdata,
 		ieee80211_recalc_chanctx_min_def(sdata->local, ctx);
 	}
 
-	if (ieee80211_chanctx_refcount(sdata->local, ctx) == 0)
+	if (ieee80211_chanctx_refcount(sdata->local, ctx) == 0 &&
+	    !ieee80211_chanctx_has_replace_partner(ctx))
 		ieee80211_free_chanctx(sdata->local, ctx, false);
 }
 
@@ -753,7 +754,8 @@ ieee80211_nan_evacuate_channel(struct ieee80211_sub_if_data *sdata,
 		ieee80211_recalc_chanctx_min_def(sdata->local, ctx);
 	}
 
-	if (ieee80211_chanctx_refcount(sdata->local, ctx) == 0)
+	if (ieee80211_chanctx_refcount(sdata->local, ctx) == 0 &&
+	    !ieee80211_chanctx_has_replace_partner(ctx))
 		ieee80211_free_chanctx(sdata->local, ctx, false);
 }
 
@@ -796,8 +798,9 @@ ieee80211_nan_find_evac_chan(struct ieee80211_local *local,
 			continue;
 		}
 
-		/* Can only evacuate channels whose chanctx is NAN-only */
-		if (ieee80211_chanctx_refcount(local, chan_ctx) > 1)
+		/* Automatic evacuation must release a NAN-only context. */
+		if (ieee80211_chanctx_has_replace_partner(chan_ctx) ||
+		    ieee80211_chanctx_refcount(local, chan_ctx) > 1)
 			continue;
 
 		/* Count how many time slots use this channel */

@@ -231,7 +231,7 @@ int ieee80211_chanctx_refcount(struct ieee80211_local *local,
 	return num;
 }
 
-static bool
+bool
 ieee80211_chanctx_has_replace_partner(struct ieee80211_chanctx *ctx)
 {
 	return ctx->replace_state == IEEE80211_CHANCTX_WILL_BE_REPLACED &&
