@@ -10670,3 +10670,52 @@ establishes protected execution or SDK attestation. Firmware correctness,
 wipe coherence and runtime use are unverified. Exact patch/baseline checks pass;
 the next recorded build must compile these executable changes, which postdate
 build 197. All evidence was local; embedded source links were not contacted.
+
+## Generic memory and I/O hook contracts
+
+`evidence/generic-hooks-first-tail-review.json` resolves sixteen complete patches
+covering memory diagnostics, MM exports, signal reaping, writeback/mounts, madvise,
+DMA heaps, VMA/folio observation and block workqueues. Generic declarations,
+exports and call sites remain for source-module customization. Actual SDK
+subscribers remain unconfirmed; they are not omitted based on failed searches.
+The report records exact native function comparisons and final ACK signatures.
+
+These callbacks execute trusted kernel module code. Several deliberately change
+behavior: memory reports can affect pressure policy; I/O priority/reclaim can
+affect availability; dirty-list and accounting changes must obey native locks.
+The fsync callback can return success without calling filesystem fsync for an
+I_DIRTY_TIME inode, weakening durability if used incorrectly. The restricted
+process_madvise replacement hook runs before normal argument/ptrace/capability
+checks; a replacing module must perform adequate validation. Its initialized
+result and earlier cleanup correction remain. Restricted registration does not
+isolate callbacks. The swap hook receives a writable PTE and must preserve
+protection and userfaultfd invariants. Ordinary callback defaults preserve native
+paths, but that is not a security guarantee for arbitrary subscribers.
+
+SIGKILL reaping follows successful native permission and signal handling, starts
+with reap=false, and retains native task_will_free_mem checks, mm reference,
+queue deduplication and task reference. Early reclamation can affect dying-task
+cleanup. Existing independent thaw and delay callbacks are not erased. Inode
+skips release their lock; pageout reporting follows TLB cleanup; mount ownership
+transfer and superblock teardown ordering remain. Borrowed pointers in reporting
+and lifecycle callbacks require proper references for later module use.
+
+`e30e963e3d7c` corrects an ACK integration issue in delayed hardware-queue work.
+The CPU selector mutates its batching state. Passing it directly to the inline
+trace function and calling it again for scheduling evaluated it twice even with
+an inactive callback. Select once after the stopped-queue check and reuse that
+CPU. The native selector itself is unchanged. The extracted production wrapper
+passes 32 host UBSan cases for stopped/running, inactive/active, skip/continue
+and delay values; old ACK code is rejected. This models selection and scheduling,
+not real CPU masks, hotplug, tracepoint registration or kernel workqueues.
+Build 198 predates this latest source correction; its successor must compile it.
+No remote resources or kernel/emulator runtime tests were used.
+
+Build 198 succeeded with the unchanged emulator command at Linux 066845be07d6
+and manifest 8a77505, including the three OpenDICE source changes. Both kernel
+images, 100 common and 45 virtual-device modules were produced. All 145 module
+signatures verified against the exact output certificate, the tampered-payload
+control was rejected, and all 659 protected exports plus module CRC/flag tables
+matched. The old-stride control misses 330 exports. The later e30e963e3d7c CPU
+selection correction is not covered by build 198. Full records are in
+`evidence/build-results.json` and `evidence/module-tables-build-198.json`.

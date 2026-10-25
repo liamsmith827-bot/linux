@@ -35344,5 +35344,199 @@
       "evidence/open-dice-tail-review.json",
       "SECURITY.md: OpenDICE firmware discovery and null-node handling"
     ]
+  },
+  {
+    "commit": "aaa85edf4baefd6b00892be664980f78f4749711",
+    "disposition": "adapted",
+    "rationale": "Retain memory-report and exit/slab observation declarations, exports and calls from initial integration. Native report fields, allocation/accounting and exit_mm ordering remain; whole selected functions match native after removing hooks. Modules must not leak sensitive data through seq_file output or retain the borrowed mm after the pre-mmput callback. SDK subscribers unconfirmed; preserve generic source customization.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-first-tail-review.json",
+      "SECURITY.md: Generic memory and I/O hook contracts"
+    ]
+  },
+  {
+    "commit": "273d00a1d6ee948e68bd896fba94b4093898c468",
+    "disposition": "adapted",
+    "rationale": "Retain all five GPL exports actually added by the patch: arch_vma_name, __pmd_trans_huge_lock, anon_vma_name, vm_normal_page and pmd_clear_bad. Their complete native function bodies are unchanged. Additional exports mentioned in the message are not falsely attributed to this patch. Native MM/page-table lock and reference requirements remain the subscriber responsibility; no binary layout compatibility is retained.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-first-tail-review.json",
+      "SECURITY.md: Generic memory and I/O hook contracts"
+    ]
+  },
+  {
+    "commit": "5646ce20aac24a5b7b127b3c18913d52e46750f1",
+    "disposition": "adapted",
+    "rationale": "Retain bio I/O-priority callback before cached-request selection with current native blk-mq queue/error/zone processing. It permits trusted module priority changes and can affect fairness/availability; there is no new userspace privilege bypass by default. Other post-submit lifetime changes are separately reviewed. Generic SDK module consumers remain unconfirmed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-first-tail-review.json",
+      "SECURITY.md: Generic memory and I/O hook contracts"
+    ]
+  },
+  {
+    "commit": "569dafad395d536d594accd7d75e3d268a9583e0",
+    "disposition": "adapted",
+    "rationale": "Retain memory-cache/available/total/free adjustment hooks. Native negative clamping for cached/available and native sysinfo unit remain; complete report functions otherwise native after hook removal. These callbacks can change values consumed by memory-pressure policy, so reported values are not guaranteed accurate under an arbitrary module. No pool or new platform is provisioned; current generic GCMA support assessed separately.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-first-tail-review.json",
+      "SECURITY.md: Generic memory and I/O hook contracts"
+    ]
+  },
+  {
+    "commit": "621c6a91c1e03671899b7a378754f65a4e486d77",
+    "disposition": "adapted",
+    "rationale": "Retain opt-in SIGKILL reaping after native permission check and successful signal send, with reap=false. find_lock_task_mm pins task->mm under task lock, native task_will_free_mem excludes coredump/live shared-mm cases, oom_mm takes an mm reference and native queue deduplicates and holds the task. Existing thaw/delay callbacks remain separate adaptations. Premature reaping can disrupt dying-task cleanup; no actual concurrency/exit test is claimed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-first-tail-review.json",
+      "SECURITY.md: Generic memory and I/O hook contracts"
+    ]
+  },
+  {
+    "commit": "40f6a120de68c51979874552d42baa1a203a4f06",
+    "disposition": "adapted",
+    "rationale": "Retain all eight generic writeback/fcntl/eviction hooks and their source interfaces. Lists default to native wb lists, counters default to native results, unknown fcntl defaults to the native error, and fsync cut_off defaults to zero. A trusted subscriber can redirect dirty lists, change accounting or return success before filesystem fsync for I_DIRTY_TIME; that can weaken durability and must be documented, not described as observation-only. Native lock/lifetime/error code remains on default paths; no SDK policy subscriber established.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-first-tail-review.json",
+      "SECURITY.md: Generic memory and I/O hook contracts"
+    ]
+  },
+  {
+    "commit": "9a0a18bc9fc223db65b98a0d1d8b9fa1d0d048ec",
+    "disposition": "adapted",
+    "rationale": "Retain put_super notification before the native filesystem put_super callback and after draining s_dio_done_wq. Entire generic_shutdown_super is native after removing this call. Modules must release their own per-superblock state without invalidating native teardown ownership; callback lifetime is limited to this shutdown context.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-first-tail-review.json",
+      "SECURITY.md: Generic memory and I/O hook contracts"
+    ]
+  },
+  {
+    "commit": "3a052646b52c994542247417487b84d8f57ee82a",
+    "disposition": "adapted",
+    "rationale": "Retain successful-mount notification after do_add_mount succeeds and before retain_and_null_ptr consumes the mount reference. Native LOCK_MOUNT/error handling and transfer remain. Borrowed mount/path pointers require explicit module references for later use; no mount permission or failure path is bypassed by this observational hook.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-first-tail-review.json",
+      "SECURITY.md: Generic memory and I/O hook contracts"
+    ]
+  },
+  {
+    "commit": "d4aae9f4e8bb4b2d722bd1339ef0f205544a3313",
+    "disposition": "adapted",
+    "rationale": "Retain restricted process_madvise replacement contract, with b39eeed468ef initializing its result slot. The callback precedes native flags, iovec, ptrace and CAP_SYS_NICE validation; a replacing trusted module must implement suitable validation itself. Native default path retains all checks and cleanup. This deliberate source-compatibility hook can weaken security if its implementation is faulty; restricted registration is not a sandbox.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "b39eeed468efb77aaa5154d7aea538f428c3d8c0"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-first-tail-review.json",
+      "SECURITY.md: Generic memory and I/O hook contracts"
+    ]
+  },
+  {
+    "commit": "8efd571f419c2d4f18092d7252498efe29401aa6",
+    "disposition": "adapted",
+    "rationale": "Retain optional madvise walk-error reporting and vector-error selection. The page walker result is initialized by the call, TLB finish occurs before reporting, and vector native lock/TLB cleanup and partial-progress handling remain unless a callback selects raw errors. Default false flags preserve existing native reporting behavior. This changes error policy under a module and is not an access-control mechanism.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-first-tail-review.json",
+      "SECURITY.md: Generic memory and I/O hook contracts"
+    ]
+  },
+  {
+    "commit": "59c3fccf9d58e74ac2ec206c731023cf2f45b513",
+    "disposition": "adapted",
+    "rationale": "Retain early pageout callback after fatal-signal/abort handling and before file-pageout ownership filtering. Return slot starts at zero; a nonzero result aborts the walk, then surrounding TLB/lock cleanup remains. Native file-pageout side-channel masking is unchanged on the normal path; callback policy and actual reclaim performance unverified.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-first-tail-review.json",
+      "SECURITY.md: Generic memory and I/O hook contracts"
+    ]
+  },
+  {
+    "commit": "b05267e5367749d9dbb49f6908b1e0852d796335",
+    "disposition": "adapted",
+    "rationale": "Retain allocation start/end notifications around the currently adapted DMA-heap allocator. Existing fd/heap flags, page alignment and zero-length validation precede callbacks, and error-pointer results still return normally. The acquire-load and heap teardown/lifetime protocol from earlier review remain; callbacks cannot replace the returned buffer via these scalar/name arguments. Kernel module execution time and heap-name lifetime remain trusted.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-first-tail-review.json",
+      "SECURITY.md: Generic memory and I/O hook contracts"
+    ]
+  },
+  {
+    "commit": "290d379399c6815ce2fd2a22dff095e89ee2bdc7",
+    "disposition": "adapted",
+    "rationale": "Retain mmap-region observation immediately before __mmap_complete. Preserve newer LTS have_mmap_prepare && allocated_new guard when setting user fields, all native setup/error/unaccounting and independently reviewed 16K handling. Hook receives a live VMA under existing mmap serialization; modules must not retain the pointer without proper lifetime protection.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-first-tail-review.json",
+      "SECURITY.md: Generic memory and I/O hook contracts"
+    ]
+  },
+  {
+    "commit": "420974cf8d3b7ef91dede06e1d6b4c4bff83b986",
+    "disposition": "adapted",
+    "rationale": "Retain the five folio/PTE update hooks without treating them as KMI reservation. Current do_wp_page and uprobe write functions otherwise match native; shmem swap validation/error paths remain. In particular do_swap_page passes a writable PTE pointer, so a trusted callback can alter protection metadata and must preserve soft-dirty/userfaultfd/write invariants. Hook names do not constrain arbitrary module writes. SDK subscribers unconfirmed; no extra page-flag allocation is introduced by this patch.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-first-tail-review.json",
+      "SECURITY.md: Generic memory and I/O hook contracts"
+    ]
+  },
+  {
+    "commit": "fa2f78cf6899af26dc33123722c3778bb9979c83",
+    "disposition": "adapted",
+    "rationale": "Adapt queue-priority hooks through e30e963e3d7c: select CPU once after stopped check and reuse it for both notification and native scheduling. ACK evaluated a state-mutating selector twice on the ordinary path, even with an inactive inline trace callback, changing batching and potentially callback/scheduler CPU agreement. Keep skip=false default, jiffies conversion, delayed/requeue semantics and native selector. 32 host extracted-wrapper cases pass; old ACK negative control fails. Real hotplug/workqueue behavior unverified.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "e30e963e3d7cca18e50c85244261639af87353cb"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-first-tail-review.json",
+      "SECURITY.md: Generic memory and I/O hook contracts"
+    ]
+  },
+  {
+    "commit": "4b31be2bd544a467f00cbf1df9f80a2c7fd7c9a4",
+    "disposition": "adapted",
+    "rationale": "Retain reclaim/eviction skip hooks with initialized false policy flags. Inode skip unlocks inode->i_lock, mapping invalidation skip returns zero count, and shrink_folio_list uses existing keep_locked/activate_locked cleanup labels. Trusted modules can retain extra memory and change reclaim fairness/availability; default native accounting and lock/lifetime cleanup remain. This is generic customization, not support solely for a future physical platform.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-first-tail-review.json",
+      "SECURITY.md: Generic memory and I/O hook contracts"
+    ]
   }
 ]

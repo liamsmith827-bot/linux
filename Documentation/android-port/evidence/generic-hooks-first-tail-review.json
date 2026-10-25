@@ -1,0 +1,922 @@
+{
+  "source_head": "e30e963e3d7cca18e50c85244261639af87353cb",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "aaa85edf4baefd6b00892be664980f78f4749711",
+      "disposition": "adapted",
+      "rationale": "Retain memory-report and exit/slab observation declarations, exports and calls from initial integration. Native report fields, allocation/accounting and exit_mm ordering remain; whole selected functions match native after removing hooks. Modules must not leak sensitive data through seq_file output or retain the borrowed mm after the pre-mmput callback. SDK subscribers unconfirmed; preserve generic source customization.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-first-tail-review.json",
+        "SECURITY.md: Generic memory and I/O hook contracts"
+      ],
+      "patch_sha256": "0944832aad0c43d0af4a0c3bf1ab61c9405bb1199bdafe34289965af904b3956",
+      "hooks": [
+        {
+          "name": "android_vh_cache_show",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/slab_common.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_exit_mm",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "kernel/exit.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_meminfo_proc_show",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "fs/proc/meminfo.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_print_slabinfo_header",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/slab_common.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_show_mem",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/show_mem.c"
+          ],
+          "final_ack_signature_retained": true
+        }
+      ],
+      "path_blobs": {
+        "drivers/android/vendor_hooks.c": "3982987abc7ca93d58a72aecd2707e41d5c37769",
+        "fs/proc/meminfo.c": "0a94b562c219e3ddde4b0c2c9936cd91bcc18257",
+        "include/trace/hooks/mm.h": "843b783b45e01921c061596df8bda1af63f2aac0",
+        "kernel/exit.c": "818395a946adf0cd41871c138016fa3751d2d61c",
+        "mm/show_mem.c": "15209d78e51ed76945c60eff795318304fff5ed6",
+        "mm/slab_common.c": "e4f92041ccae097171277e4c1bd2d7937a5987c8"
+      }
+    },
+    {
+      "commit": "273d00a1d6ee948e68bd896fba94b4093898c468",
+      "disposition": "adapted",
+      "rationale": "Retain all five GPL exports actually added by the patch: arch_vma_name, __pmd_trans_huge_lock, anon_vma_name, vm_normal_page and pmd_clear_bad. Their complete native function bodies are unchanged. Additional exports mentioned in the message are not falsely attributed to this patch. Native MM/page-table lock and reference requirements remain the subscriber responsibility; no binary layout compatibility is retained.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-first-tail-review.json",
+        "SECURITY.md: Generic memory and I/O hook contracts"
+      ],
+      "patch_sha256": "6840b99eac87fa742a32e15c1f0763ffd5af4295666b0d8e1ab5a200ba4836fb",
+      "hooks": [],
+      "path_blobs": {
+        "kernel/signal.c": "dbfd435932d3d6526eb7542cbc37ae98a51652b9",
+        "mm/huge_memory.c": "a88e46559ef2cf372abb685d5187de406b135b51",
+        "mm/madvise.c": "a5a17107bbbf854709ba0f5f25b74968c43bf953",
+        "mm/memory.c": "739cda09ec26726176f841a2d8f4a0ff2d02ad0c",
+        "mm/pgtable-generic.c": "4dd87271f81c14eac236a01474e2e87e01191c7b"
+      }
+    },
+    {
+      "commit": "5646ce20aac24a5b7b127b3c18913d52e46750f1",
+      "disposition": "adapted",
+      "rationale": "Retain bio I/O-priority callback before cached-request selection with current native blk-mq queue/error/zone processing. It permits trusted module priority changes and can affect fairness/availability; there is no new userspace privilege bypass by default. Other post-submit lifetime changes are separately reviewed. Generic SDK module consumers remain unconfirmed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-first-tail-review.json",
+        "SECURITY.md: Generic memory and I/O hook contracts"
+      ],
+      "patch_sha256": "07afa77aba435c431587086fb8ac140ea25d6a4c0201c02bfa288c144dde24bb",
+      "hooks": [
+        {
+          "name": "android_vh_check_set_ioprio",
+          "headers": [
+            "include/trace/hooks/blk.h"
+          ],
+          "callers": [
+            "block/blk-mq.c"
+          ],
+          "final_ack_signature_retained": true
+        }
+      ],
+      "path_blobs": {
+        "block/blk-mq.c": "25fd5300ba74a6d20ac714ee643ee32eac9fc71a",
+        "drivers/android/vendor_hooks.c": "3982987abc7ca93d58a72aecd2707e41d5c37769",
+        "include/trace/hooks/blk.h": "2d466b4253c168043af754fc5ee9bf190ca3f2f6"
+      }
+    },
+    {
+      "commit": "569dafad395d536d594accd7d75e3d268a9583e0",
+      "disposition": "adapted",
+      "rationale": "Retain memory-cache/available/total/free adjustment hooks. Native negative clamping for cached/available and native sysinfo unit remain; complete report functions otherwise native after hook removal. These callbacks can change values consumed by memory-pressure policy, so reported values are not guaranteed accurate under an arbitrary module. No pool or new platform is provisioned; current generic GCMA support assessed separately.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-first-tail-review.json",
+        "SECURITY.md: Generic memory and I/O hook contracts"
+      ],
+      "patch_sha256": "5a38d5080d07e5a555130b45fa04281500596c99d0fe95edd13d42aa6a7a7767",
+      "hooks": [
+        {
+          "name": "android_vh_meminfo_cache_adjust",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "fs/proc/meminfo.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_si_mem_available_adjust",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/show_mem.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_si_meminfo_adjust",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/show_mem.c"
+          ],
+          "final_ack_signature_retained": true
+        }
+      ],
+      "path_blobs": {
+        "drivers/android/vendor_hooks.c": "3982987abc7ca93d58a72aecd2707e41d5c37769",
+        "fs/proc/meminfo.c": "0a94b562c219e3ddde4b0c2c9936cd91bcc18257",
+        "include/trace/hooks/mm.h": "843b783b45e01921c061596df8bda1af63f2aac0",
+        "mm/show_mem.c": "15209d78e51ed76945c60eff795318304fff5ed6"
+      }
+    },
+    {
+      "commit": "621c6a91c1e03671899b7a378754f65a4e486d77",
+      "disposition": "adapted",
+      "rationale": "Retain opt-in SIGKILL reaping after native permission check and successful signal send, with reap=false. find_lock_task_mm pins task->mm under task lock, native task_will_free_mem excludes coredump/live shared-mm cases, oom_mm takes an mm reference and native queue deduplicates and holds the task. Existing thaw/delay callbacks remain separate adaptations. Premature reaping can disrupt dying-task cleanup; no actual concurrency/exit test is claimed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-first-tail-review.json",
+        "SECURITY.md: Generic memory and I/O hook contracts"
+      ],
+      "patch_sha256": "b4dd3343dca67841e8732733abc82c70c419f1c71b7c3d97d834240b1fd616cc",
+      "hooks": [
+        {
+          "name": "android_vh_killed_process",
+          "headers": [
+            "include/trace/hooks/signal.h"
+          ],
+          "callers": [
+            "kernel/signal.c"
+          ],
+          "final_ack_signature_retained": true
+        }
+      ],
+      "path_blobs": {
+        "drivers/android/vendor_hooks.c": "3982987abc7ca93d58a72aecd2707e41d5c37769",
+        "include/linux/oom.h": "8360c371039980b17163d5e9ee1c1023c1b84252",
+        "include/trace/hooks/signal.h": "c845aec359d7f95a88cc85b0e0fb5307d3734b6c",
+        "kernel/signal.c": "dbfd435932d3d6526eb7542cbc37ae98a51652b9",
+        "mm/oom_kill.c": "6e379255a8dbe99baf6300767f10e89468984f0d"
+      }
+    },
+    {
+      "commit": "40f6a120de68c51979874552d42baa1a203a4f06",
+      "disposition": "adapted",
+      "rationale": "Retain all eight generic writeback/fcntl/eviction hooks and their source interfaces. Lists default to native wb lists, counters default to native results, unknown fcntl defaults to the native error, and fsync cut_off defaults to zero. A trusted subscriber can redirect dirty lists, change accounting or return success before filesystem fsync for I_DIRTY_TIME; that can weaken durability and must be documented, not described as observation-only. Native lock/lifetime/error code remains on default paths; no SDK policy subscriber established.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-first-tail-review.json",
+        "SECURITY.md: Generic memory and I/O hook contracts"
+      ],
+      "patch_sha256": "6c45522c29112994c63f3176d4f17edd6745e86c50122863267294f7092804bb",
+      "hooks": [
+        {
+          "name": "android_rvh_do_fcntl",
+          "headers": [
+            "include/trace/hooks/fs.h"
+          ],
+          "callers": [
+            "fs/fcntl.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_evict",
+          "headers": [
+            "include/trace/hooks/fs.h"
+          ],
+          "callers": [
+            "fs/inode.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_inode_io_list_del",
+          "headers": [
+            "include/trace/hooks/fs.h"
+          ],
+          "callers": [
+            "fs/fs-writeback.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_mark_inode_dirty",
+          "headers": [
+            "include/trace/hooks/fs.h"
+          ],
+          "callers": [
+            "fs/fs-writeback.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_queue_io",
+          "headers": [
+            "include/trace/hooks/fs.h"
+          ],
+          "callers": [
+            "fs/fs-writeback.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_redirty_tail_locked",
+          "headers": [
+            "include/trace/hooks/fs.h"
+          ],
+          "callers": [
+            "fs/fs-writeback.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_vfs_fsync_range",
+          "headers": [
+            "include/trace/hooks/fs.h"
+          ],
+          "callers": [
+            "fs/sync.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_wb_dirty_limits",
+          "headers": [
+            "include/trace/hooks/fs.h"
+          ],
+          "callers": [
+            "mm/page-writeback.c"
+          ],
+          "final_ack_signature_retained": true
+        }
+      ],
+      "path_blobs": {
+        "drivers/android/vendor_hooks.c": "3982987abc7ca93d58a72aecd2707e41d5c37769",
+        "fs/fcntl.c": "6008f00e4ace5c3b2b63dce64111648702323ee6",
+        "fs/fs-writeback.c": "573184c679cac56da39a71cba98adbe1f26b91c3",
+        "fs/inode.c": "6c25fbd059860556efb1f5a879e3e58e6cc37177",
+        "fs/sync.c": "841733fdac0b5e1b230bd45966031728d5cc817e",
+        "include/trace/hooks/fs.h": "49e86ffa4af6932f89565d2924b58e036abdc3da",
+        "mm/page-writeback.c": "866730261f2c8ddb464ad503953155348ff0398a"
+      }
+    },
+    {
+      "commit": "9a0a18bc9fc223db65b98a0d1d8b9fa1d0d048ec",
+      "disposition": "adapted",
+      "rationale": "Retain put_super notification before the native filesystem put_super callback and after draining s_dio_done_wq. Entire generic_shutdown_super is native after removing this call. Modules must release their own per-superblock state without invalidating native teardown ownership; callback lifetime is limited to this shutdown context.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-first-tail-review.json",
+        "SECURITY.md: Generic memory and I/O hook contracts"
+      ],
+      "patch_sha256": "dd149e3f8d82e7d745af60e60781262a8c99415d53e53817e6a9872671352782",
+      "hooks": [
+        {
+          "name": "android_vh_put_super",
+          "headers": [
+            "include/trace/hooks/fs.h"
+          ],
+          "callers": [
+            "fs/super.c"
+          ],
+          "final_ack_signature_retained": true
+        }
+      ],
+      "path_blobs": {
+        "drivers/android/vendor_hooks.c": "3982987abc7ca93d58a72aecd2707e41d5c37769",
+        "fs/super.c": "2b3a23617f933ed4c21c5f33d829f987ff1a9989",
+        "include/trace/hooks/fs.h": "49e86ffa4af6932f89565d2924b58e036abdc3da"
+      }
+    },
+    {
+      "commit": "3a052646b52c994542247417487b84d8f57ee82a",
+      "disposition": "adapted",
+      "rationale": "Retain successful-mount notification after do_add_mount succeeds and before retain_and_null_ptr consumes the mount reference. Native LOCK_MOUNT/error handling and transfer remain. Borrowed mount/path pointers require explicit module references for later use; no mount permission or failure path is bypassed by this observational hook.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-first-tail-review.json",
+        "SECURITY.md: Generic memory and I/O hook contracts"
+      ],
+      "patch_sha256": "8001857ca042e757b29a6e572c7eb58052b3887a0ef7ca8109c02817f8124e94",
+      "hooks": [
+        {
+          "name": "android_vh_do_new_mount_fc",
+          "headers": [
+            "include/trace/hooks/blk.h"
+          ],
+          "callers": [
+            "fs/namespace.c"
+          ],
+          "final_ack_signature_retained": true
+        }
+      ],
+      "path_blobs": {
+        "drivers/android/vendor_hooks.c": "3982987abc7ca93d58a72aecd2707e41d5c37769",
+        "fs/namespace.c": "65b1155e1b481498635aabec79db2d5f9fae17c0",
+        "include/trace/hooks/blk.h": "2d466b4253c168043af754fc5ee9bf190ca3f2f6"
+      }
+    },
+    {
+      "commit": "d4aae9f4e8bb4b2d722bd1339ef0f205544a3313",
+      "disposition": "adapted",
+      "rationale": "Retain restricted process_madvise replacement contract, with b39eeed468ef initializing its result slot. The callback precedes native flags, iovec, ptrace and CAP_SYS_NICE validation; a replacing trusted module must implement suitable validation itself. Native default path retains all checks and cleanup. This deliberate source-compatibility hook can weaken security if its implementation is faulty; restricted registration is not a sandbox.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "b39eeed468efb77aaa5154d7aea538f428c3d8c0"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-first-tail-review.json",
+        "SECURITY.md: Generic memory and I/O hook contracts"
+      ],
+      "patch_sha256": "cf762c43053f2c2f37ba8d7bfa9bf63000efbbbaa0f9aa7864601b07f8fecb09",
+      "hooks": [
+        {
+          "name": "android_rvh_process_madvise_bypass",
+          "headers": [
+            "include/trace/hooks/madvise.h"
+          ],
+          "callers": [
+            "mm/madvise.c"
+          ],
+          "final_ack_signature_retained": true
+        }
+      ],
+      "path_blobs": {
+        "drivers/android/vendor_hooks.c": "3982987abc7ca93d58a72aecd2707e41d5c37769",
+        "include/trace/hooks/madvise.h": "3dace49e3753729225ce2323bbdc786974c0b29c",
+        "mm/madvise.c": "a5a17107bbbf854709ba0f5f25b74968c43bf953"
+      }
+    },
+    {
+      "commit": "8efd571f419c2d4f18092d7252498efe29401aa6",
+      "disposition": "adapted",
+      "rationale": "Retain optional madvise walk-error reporting and vector-error selection. The page walker result is initialized by the call, TLB finish occurs before reporting, and vector native lock/TLB cleanup and partial-progress handling remain unless a callback selects raw errors. Default false flags preserve existing native reporting behavior. This changes error policy under a module and is not an access-control mechanism.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-first-tail-review.json",
+        "SECURITY.md: Generic memory and I/O hook contracts"
+      ],
+      "patch_sha256": "95bf234c5d6bdbcc801e6306c12b3d90a44e1d91f8c89367f64213fec2c99703",
+      "hooks": [
+        {
+          "name": "android_vh_madvise_pageout_return_error",
+          "headers": [
+            "include/trace/hooks/madvise.h"
+          ],
+          "callers": [
+            "mm/madvise.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_process_madvise_return_error",
+          "headers": [
+            "include/trace/hooks/madvise.h"
+          ],
+          "callers": [
+            "mm/madvise.c"
+          ],
+          "final_ack_signature_retained": true
+        }
+      ],
+      "path_blobs": {
+        "drivers/android/vendor_hooks.c": "3982987abc7ca93d58a72aecd2707e41d5c37769",
+        "include/trace/hooks/madvise.h": "3dace49e3753729225ce2323bbdc786974c0b29c",
+        "mm/madvise.c": "a5a17107bbbf854709ba0f5f25b74968c43bf953"
+      }
+    },
+    {
+      "commit": "59c3fccf9d58e74ac2ec206c731023cf2f45b513",
+      "disposition": "adapted",
+      "rationale": "Retain early pageout callback after fatal-signal/abort handling and before file-pageout ownership filtering. Return slot starts at zero; a nonzero result aborts the walk, then surrounding TLB/lock cleanup remains. Native file-pageout side-channel masking is unchanged on the normal path; callback policy and actual reclaim performance unverified.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-first-tail-review.json",
+        "SECURITY.md: Generic memory and I/O hook contracts"
+      ],
+      "patch_sha256": "f10d3bebf1847692d6343361cf434b22660179f6bf1f835b181608081649a97b",
+      "hooks": [
+        {
+          "name": "android_vh_madvise_pageout_bypass",
+          "headers": [
+            "include/trace/hooks/madvise.h"
+          ],
+          "callers": [
+            "mm/madvise.c"
+          ],
+          "final_ack_signature_retained": true
+        }
+      ],
+      "path_blobs": {
+        "drivers/android/vendor_hooks.c": "3982987abc7ca93d58a72aecd2707e41d5c37769",
+        "include/trace/hooks/madvise.h": "3dace49e3753729225ce2323bbdc786974c0b29c",
+        "mm/madvise.c": "a5a17107bbbf854709ba0f5f25b74968c43bf953"
+      }
+    },
+    {
+      "commit": "b05267e5367749d9dbb49f6908b1e0852d796335",
+      "disposition": "adapted",
+      "rationale": "Retain allocation start/end notifications around the currently adapted DMA-heap allocator. Existing fd/heap flags, page alignment and zero-length validation precede callbacks, and error-pointer results still return normally. The acquire-load and heap teardown/lifetime protocol from earlier review remain; callbacks cannot replace the returned buffer via these scalar/name arguments. Kernel module execution time and heap-name lifetime remain trusted.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-first-tail-review.json",
+        "SECURITY.md: Generic memory and I/O hook contracts"
+      ],
+      "patch_sha256": "5df8e4b97bf38e0fc1e09329fcda1160c483854fe1bfb9b5fd0921de1623696f",
+      "hooks": [
+        {
+          "name": "android_vh_dma_heap_buffer_alloc_end",
+          "headers": [
+            "include/trace/hooks/dmabuf.h"
+          ],
+          "callers": [
+            "drivers/dma-buf/dma-heap.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_dma_heap_buffer_alloc_start",
+          "headers": [
+            "include/trace/hooks/dmabuf.h"
+          ],
+          "callers": [
+            "drivers/dma-buf/dma-heap.c"
+          ],
+          "final_ack_signature_retained": true
+        }
+      ],
+      "path_blobs": {
+        "drivers/android/vendor_hooks.c": "3982987abc7ca93d58a72aecd2707e41d5c37769",
+        "drivers/dma-buf/dma-heap.c": "818b68c47a3ec206a1f80c568060bdb988378137",
+        "include/trace/hooks/dmabuf.h": "ebfdcec78975b31841f768edc4e4dd994ef32b26"
+      }
+    },
+    {
+      "commit": "290d379399c6815ce2fd2a22dff095e89ee2bdc7",
+      "disposition": "adapted",
+      "rationale": "Retain mmap-region observation immediately before __mmap_complete. Preserve newer LTS have_mmap_prepare && allocated_new guard when setting user fields, all native setup/error/unaccounting and independently reviewed 16K handling. Hook receives a live VMA under existing mmap serialization; modules must not retain the pointer without proper lifetime protection.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-first-tail-review.json",
+        "SECURITY.md: Generic memory and I/O hook contracts"
+      ],
+      "patch_sha256": "b24fbdc2b2684766b577cd9125427d00681db1ac1cb292a49ac2509141d1d7c8",
+      "hooks": [
+        {
+          "name": "android_vh_mmap_region",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/vma.c"
+          ],
+          "final_ack_signature_retained": true
+        }
+      ],
+      "path_blobs": {
+        "drivers/android/vendor_hooks.c": "3982987abc7ca93d58a72aecd2707e41d5c37769",
+        "include/trace/hooks/mm.h": "843b783b45e01921c061596df8bda1af63f2aac0",
+        "mm/vma.c": "d027da7b65d4435bd1d3cca98b0ffd68909abd71"
+      }
+    },
+    {
+      "commit": "420974cf8d3b7ef91dede06e1d6b4c4bff83b986",
+      "disposition": "adapted",
+      "rationale": "Retain the five folio/PTE update hooks without treating them as KMI reservation. Current do_wp_page and uprobe write functions otherwise match native; shmem swap validation/error paths remain. In particular do_swap_page passes a writable PTE pointer, so a trusted callback can alter protection metadata and must preserve soft-dirty/userfaultfd/write invariants. Hook names do not constrain arbitrary module writes. SDK subscribers unconfirmed; no extra page-flag allocation is introduced by this patch.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-first-tail-review.json",
+        "SECURITY.md: Generic memory and I/O hook contracts"
+      ],
+      "patch_sha256": "6818288a602f2074ce205f64e725490a37efd3b29bc2d7b59b44ca4721a498ff",
+      "hooks": [
+        {
+          "name": "android_vh_do_anonymous_page",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/memory.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_do_swap_page",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/memory.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_do_wp_page",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/memory.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_shmem_swapin_folio",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/shmem.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_uprobes_uprobe_write",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "kernel/events/uprobes.c"
+          ],
+          "final_ack_signature_retained": true
+        }
+      ],
+      "path_blobs": {
+        "drivers/android/vendor_hooks.c": "3982987abc7ca93d58a72aecd2707e41d5c37769",
+        "include/trace/hooks/mm.h": "843b783b45e01921c061596df8bda1af63f2aac0",
+        "kernel/events/uprobes.c": "556ede32ac8962e703304b3bae6556f7050de7f4",
+        "mm/memory.c": "739cda09ec26726176f841a2d8f4a0ff2d02ad0c",
+        "mm/shmem.c": "82f8b5e6b7d87b959763e105c8f17c6a04f4ae1d"
+      }
+    },
+    {
+      "commit": "fa2f78cf6899af26dc33123722c3778bb9979c83",
+      "disposition": "adapted",
+      "rationale": "Adapt queue-priority hooks through e30e963e3d7c: select CPU once after stopped check and reuse it for both notification and native scheduling. ACK evaluated a state-mutating selector twice on the ordinary path, even with an inactive inline trace callback, changing batching and potentially callback/scheduler CPU agreement. Keep skip=false default, jiffies conversion, delayed/requeue semantics and native selector. 32 host extracted-wrapper cases pass; old ACK negative control fails. Real hotplug/workqueue behavior unverified.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "e30e963e3d7cca18e50c85244261639af87353cb"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-first-tail-review.json",
+        "SECURITY.md: Generic memory and I/O hook contracts"
+      ],
+      "patch_sha256": "28759e49625f228609548d0704d582c29c74a7401186ec5bc54e84ab40e8e5aa",
+      "hooks": [
+        {
+          "name": "android_vh_blk_mq_delay_run_hw_queue",
+          "headers": [
+            "include/trace/hooks/blk.h"
+          ],
+          "callers": [
+            "block/blk-mq.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_blk_mq_kick_requeue_list",
+          "headers": [
+            "include/trace/hooks/blk.h"
+          ],
+          "callers": [
+            "block/blk-mq.c"
+          ],
+          "final_ack_signature_retained": true
+        }
+      ],
+      "path_blobs": {
+        "block/blk-mq.c": "25fd5300ba74a6d20ac714ee643ee32eac9fc71a",
+        "drivers/android/vendor_hooks.c": "3982987abc7ca93d58a72aecd2707e41d5c37769",
+        "include/trace/hooks/blk.h": "2d466b4253c168043af754fc5ee9bf190ca3f2f6"
+      }
+    },
+    {
+      "commit": "4b31be2bd544a467f00cbf1df9f80a2c7fd7c9a4",
+      "disposition": "adapted",
+      "rationale": "Retain reclaim/eviction skip hooks with initialized false policy flags. Inode skip unlocks inode->i_lock, mapping invalidation skip returns zero count, and shrink_folio_list uses existing keep_locked/activate_locked cleanup labels. Trusted modules can retain extra memory and change reclaim fairness/availability; default native accounting and lock/lifetime cleanup remain. This is generic customization, not support solely for a future physical platform.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-first-tail-review.json",
+        "SECURITY.md: Generic memory and I/O hook contracts"
+      ],
+      "patch_sha256": "603c6e75548cb021a3c873623f136dfd92b3e49c3e4d106e3a70bb1c287afad0",
+      "hooks": [
+        {
+          "name": "android_vh_inode_lru_isolate",
+          "headers": [
+            "include/trace/hooks/vmscan.h"
+          ],
+          "callers": [
+            "fs/inode.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_invalidate_mapping_pagevec",
+          "headers": [
+            "include/trace/hooks/vmscan.h"
+          ],
+          "callers": [
+            "mm/truncate.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_shrink_folio_list",
+          "headers": [
+            "include/trace/hooks/vmscan.h"
+          ],
+          "callers": [
+            "mm/vmscan.c"
+          ],
+          "final_ack_signature_retained": true
+        }
+      ],
+      "path_blobs": {
+        "drivers/android/vendor_hooks.c": "3982987abc7ca93d58a72aecd2707e41d5c37769",
+        "fs/inode.c": "6c25fbd059860556efb1f5a879e3e58e6cc37177",
+        "include/trace/hooks/vmscan.h": "20e6e2d1014a6c190ea6a204b73e35d00f93bce9",
+        "mm/truncate.c": "2924371857332d79ae9cfe1ec4ede4a966c9cb4a",
+        "mm/vmscan.c": "cfbc77ceab6b5215d038c5d55e4d0a1dda8a2054"
+      }
+    }
+  ],
+  "native_function_proofs": [
+    {
+      "path": "kernel/signal.c",
+      "function": "arch_vma_name",
+      "comparison": "Whole function equals native LTS after deleting Android hook calls and ignoring whitespace",
+      "port_sha256": "7b455292b68776b916f5591fe3340e05b5199c521a251e1c1b60ed731f9b7977",
+      "native_sha256": "7b455292b68776b916f5591fe3340e05b5199c521a251e1c1b60ed731f9b7977"
+    },
+    {
+      "path": "mm/huge_memory.c",
+      "function": "__pmd_trans_huge_lock",
+      "comparison": "Whole function equals native LTS after deleting Android hook calls and ignoring whitespace",
+      "port_sha256": "a13431bc85ee1dbb3381339c40fd7c257010b3cb1eaa543ac9231533c1e8907f",
+      "native_sha256": "a13431bc85ee1dbb3381339c40fd7c257010b3cb1eaa543ac9231533c1e8907f"
+    },
+    {
+      "path": "mm/madvise.c",
+      "function": "anon_vma_name",
+      "comparison": "Whole function equals native LTS after deleting Android hook calls and ignoring whitespace",
+      "port_sha256": "e63632d189f7f7546839313463c8ce35bb9f7a29fbdfa6517c638f76f34ae156",
+      "native_sha256": "e63632d189f7f7546839313463c8ce35bb9f7a29fbdfa6517c638f76f34ae156"
+    },
+    {
+      "path": "mm/memory.c",
+      "function": "vm_normal_page",
+      "comparison": "Whole function equals native LTS after deleting Android hook calls and ignoring whitespace",
+      "port_sha256": "414f9fcfd1a67bd60663af2ab57f1c412cb942b917cf16a937dba8d98c4cfb22",
+      "native_sha256": "414f9fcfd1a67bd60663af2ab57f1c412cb942b917cf16a937dba8d98c4cfb22"
+    },
+    {
+      "path": "mm/pgtable-generic.c",
+      "function": "pmd_clear_bad",
+      "comparison": "Whole function equals native LTS after deleting Android hook calls and ignoring whitespace",
+      "port_sha256": "f06b167c626ae45a5de171719972985a95e8d91d2c0746ed8ff4d78406aac7fc",
+      "native_sha256": "f06b167c626ae45a5de171719972985a95e8d91d2c0746ed8ff4d78406aac7fc"
+    },
+    {
+      "path": "mm/oom_kill.c",
+      "function": "task_will_free_mem",
+      "comparison": "Whole function equals native LTS after deleting Android hook calls and ignoring whitespace",
+      "port_sha256": "39065c8d6048bcc2a020d75703090fbff644398c5590819457e58e2f0cfdea6f",
+      "native_sha256": "39065c8d6048bcc2a020d75703090fbff644398c5590819457e58e2f0cfdea6f"
+    },
+    {
+      "path": "mm/oom_kill.c",
+      "function": "__task_will_free_mem",
+      "comparison": "Whole function equals native LTS after deleting Android hook calls and ignoring whitespace",
+      "port_sha256": "e38ebb493158728fb34d24a153d7ca61bf40673c90ec64eeb21bbe64b13e1ba3",
+      "native_sha256": "e38ebb493158728fb34d24a153d7ca61bf40673c90ec64eeb21bbe64b13e1ba3"
+    },
+    {
+      "path": "mm/oom_kill.c",
+      "function": "wake_oom_reaper",
+      "comparison": "Whole function equals native LTS after deleting Android hook calls and ignoring whitespace",
+      "port_sha256": "63014d7c03239fbe7c0fd195b09e531c00c3dcd397334659be6550913b7a5840",
+      "native_sha256": "63014d7c03239fbe7c0fd195b09e531c00c3dcd397334659be6550913b7a5840"
+    },
+    {
+      "path": "kernel/exit.c",
+      "function": "exit_mm",
+      "comparison": "Whole function equals native LTS after deleting Android hook calls and ignoring whitespace",
+      "port_sha256": "c6b15e8bd538de3199907d82f30ef089e0c7e6a9883aef5164ed0753fe7c4c45",
+      "native_sha256": "b302f31c7df4903a0046bc876516fd4c660bbc845dc1ff604867cc1727fe37bd"
+    },
+    {
+      "path": "fs/proc/meminfo.c",
+      "function": "meminfo_proc_show",
+      "comparison": "Whole function equals native LTS after deleting Android hook calls and ignoring whitespace",
+      "port_sha256": "42e223228b29dc05690447d3d24d6dadfba98310f4cf464687f3d8f354397474",
+      "native_sha256": "267e046f9992deb9957e8c7d7005db78cea1598cfcf762ea50eae325f9d843a6"
+    },
+    {
+      "path": "mm/show_mem.c",
+      "function": "si_mem_available",
+      "comparison": "Whole function equals native LTS after deleting Android hook calls and ignoring whitespace",
+      "port_sha256": "9c88f117c1e599ae12aa9055cf48c7f6a69fdd33cae53daccf2fa177644c5722",
+      "native_sha256": "2a41b5dcbe3d98603edf91884ad8cf268de639211740a21fe59efdeb0dbb02db"
+    },
+    {
+      "path": "mm/show_mem.c",
+      "function": "si_meminfo",
+      "comparison": "Whole function equals native LTS after deleting Android hook calls and ignoring whitespace",
+      "port_sha256": "cf1feaffb582850f91136d72fe947a0c80d4c34be108dbcba5febc0a6bdcea6e",
+      "native_sha256": "f0b8d44579f783c363acd529227475b7442ee79bcfcc67f2de14226f0373dfeb"
+    },
+    {
+      "path": "mm/show_mem.c",
+      "function": "__show_mem",
+      "comparison": "Whole function equals native LTS after deleting Android hook calls and ignoring whitespace",
+      "port_sha256": "73cab10f7820488865158e35ad381031a0aff50a991d355e3156ae7c5a316d9a",
+      "native_sha256": "09cfac25a716839b4e3ff6c43352bc6f181110bcccae610558877e65169d9f5a"
+    },
+    {
+      "path": "mm/slab_common.c",
+      "function": "print_slabinfo_header",
+      "comparison": "Whole function equals native LTS after deleting Android hook calls and ignoring whitespace",
+      "port_sha256": "01be628f4922da8ddbf4327d13182382620392e47c8a6349d1cf66a65e14d7aa",
+      "native_sha256": "c45fca10b95433faeb9ea88736d95e96b20f78bf46a0f8619b46c87db0ac55d6"
+    },
+    {
+      "path": "mm/slab_common.c",
+      "function": "cache_show",
+      "comparison": "Whole function equals native LTS after deleting Android hook calls and ignoring whitespace",
+      "port_sha256": "97dd567e3be933496828d9ae0c162a49aa816c81a5d1d75aeedd3dfb4efb1208",
+      "native_sha256": "cb63b36e2d7176af6b2cc183a4d2909d5efa909c0130626d14d8c7f71e6b42f6"
+    },
+    {
+      "path": "fs/fcntl.c",
+      "function": "do_fcntl",
+      "comparison": "Whole function equals native LTS after deleting Android hook calls and ignoring whitespace",
+      "port_sha256": "880d8d5f76957c0824e3cbd1e9b4749626d3f551c96f5891c77bb58f47145fd2",
+      "native_sha256": "3122bbe187e7534146cf0c0eca59030d89f5a88e59ea6a897e97c4cb9702180b"
+    },
+    {
+      "path": "fs/fs-writeback.c",
+      "function": "inode_io_list_del",
+      "comparison": "Whole function equals native LTS after deleting Android hook calls and ignoring whitespace",
+      "port_sha256": "483cdb4c16beefae2e181ffa635eea692debff0a794cef81eed450410a14ab68",
+      "native_sha256": "1b860ad4b4e9acd2839b3c1132306dd3500e1a776b0d5b35e670d79cd8e584d1"
+    },
+    {
+      "path": "fs/fs-writeback.c",
+      "function": "queue_io",
+      "comparison": "Whole function equals native LTS after deleting Android hook calls and ignoring whitespace",
+      "port_sha256": "81a89628e9a5b54ff8cceceafafee18ec9aad6b736e09f68eab4faf516c58ba8",
+      "native_sha256": "567fc8f86898f77b757fffce8cdf99aab6ce46a83ab98d7cb30ae7a5cd311b73"
+    },
+    {
+      "path": "fs/fs-writeback.c",
+      "function": "__mark_inode_dirty",
+      "comparison": "Whole function equals native LTS after deleting Android hook calls and ignoring whitespace",
+      "port_sha256": "248611fa6a32758a1814f31a7a143b502c62adc994479525d515cf53c48d6c18",
+      "native_sha256": "248611fa6a32758a1814f31a7a143b502c62adc994479525d515cf53c48d6c18"
+    },
+    {
+      "path": "fs/inode.c",
+      "function": "evict",
+      "comparison": "Whole function equals native LTS after deleting Android hook calls and ignoring whitespace",
+      "port_sha256": "7ec3e41ce53cba99896b8e8498ffe4d9ca4eaeaf028c3d941ce3cbe850b2d0e8",
+      "native_sha256": "8afb4cf323cb84c5ef9c2a585fbac4e771413a379a6d12821ab0be25e955e08e"
+    },
+    {
+      "path": "mm/page-writeback.c",
+      "function": "wb_dirty_limits",
+      "comparison": "Whole function equals native LTS after deleting Android hook calls and ignoring whitespace",
+      "port_sha256": "f3033f6b041223c70f2e9b8f0928ddeac68fdafdba2e932c5d8af772e8228490",
+      "native_sha256": "5913da0d030498fd053986ed0c640eae4614b1a5dcb2c75a7acee6f61add7621"
+    },
+    {
+      "path": "mm/page-writeback.c",
+      "function": "wb_bg_dirty_limits",
+      "comparison": "Whole function equals native LTS after deleting Android hook calls and ignoring whitespace",
+      "port_sha256": "15bae6431b4c6225a45f2f62750681a68fb09655bc659345957fd80223922d27",
+      "native_sha256": "f044f3b99af6cd2af0f73133ebce9cc0bed4e1b88fcdf3f7d96ddeb73dd1bc8b"
+    },
+    {
+      "path": "fs/super.c",
+      "function": "generic_shutdown_super",
+      "comparison": "Whole function equals native after removing Android hook calls and ignoring whitespace",
+      "port_sha256": "7f4f57f2a76476cfa61e3150d8ece7e3458d39505323813defb4cc342f94ffd2",
+      "native_sha256": "7f4f57f2a76476cfa61e3150d8ece7e3458d39505323813defb4cc342f94ffd2"
+    },
+    {
+      "path": "kernel/events/uprobes.c",
+      "function": "__uprobe_write",
+      "comparison": "Whole function equals native after removing Android hook calls and ignoring whitespace",
+      "port_sha256": "07e8988ca9d5cf79ff604a0801caeca8f7a9dad1cdb7fb52a2a4102005863742",
+      "native_sha256": "a1340c0661c64f51727bc3e772bde27f2f979ddfd1fca2b0f3489fd5bcb4584e"
+    },
+    {
+      "path": "mm/madvise.c",
+      "function": "can_do_file_pageout",
+      "comparison": "Whole function equals native after removing Android hook calls and ignoring whitespace",
+      "port_sha256": "ca573ed6b4e658f45fa318974bad99613f3c9ef57cd1755d37bfef3316136a2d",
+      "native_sha256": "ca573ed6b4e658f45fa318974bad99613f3c9ef57cd1755d37bfef3316136a2d"
+    },
+    {
+      "path": "mm/madvise.c",
+      "function": "process_madvise_remote_valid",
+      "comparison": "Whole function equals native after removing Android hook calls and ignoring whitespace",
+      "port_sha256": "d6b82107fad000e37248917130ed8df622c97d4c2eeba0f0f375a200dca2cc65",
+      "native_sha256": "d6b82107fad000e37248917130ed8df622c97d4c2eeba0f0f375a200dca2cc65"
+    },
+    {
+      "path": "mm/memory.c",
+      "function": "do_wp_page",
+      "comparison": "Whole function equals native after removing Android hook calls and ignoring whitespace",
+      "port_sha256": "ed530af669bca5f90761e74ad46dd33057b664c5eeb20a0182e03e6101d75033",
+      "native_sha256": "c1f1bf98bbd7586a233629266468895853a07a5ab75fa06584ee139df9ce6bf7"
+    },
+    {
+      "path": "block/blk-mq.c",
+      "comparison": "Only delayed-run wrapper changed relative to 5606656733b0; whole native stateful CPU selector unchanged. One selected CPU now shared by hook and scheduler.",
+      "before": "edcceec89122ac081a3db579afabeb9e9e272b95",
+      "after": "25fd5300ba74a6d20ac714ee643ee32eac9fc71a",
+      "validation": "evidence/blk-mq-workqueue-check.json: 32 extracted-wrapper UBSan cases, ACK negative control rejected"
+    },
+    {
+      "path": "mm/shmem.c",
+      "function": "shmem_swapin_folio",
+      "comparison": "Whole native function after deleting hook and accounting for previously reviewed read/write synchronous-swap flag split. Native swap cache/entry checks and error cleanup retained.",
+      "port_sha256": "610eb5733ce7f8fd6dde232f67e22b84cd50c5f5761a6c1b06a8ddc4f9588e44",
+      "native_sha256": "92ec12cdded25a77a69f1e0a8871b501581d0d7c14e3e814ca09770c6aa12bc3"
+    }
+  ],
+  "method": "All 16 complete candidate patches read. Current affected caller contexts and relevant native deltas checked; exact whole-function comparisons recorded where applicable. Every introduced hook declaration/export/caller found and final ACK signature compared. This does not certify arbitrary vendor callbacks. Source change only single CPU selection; all earlier finalized blk-mq candidates were explicit decisions, with no stale net/text witness to refresh.",
+  "unresolved": "Specific SDK subscribers for these generic vendor contracts remain unconfirmed; retained conservatively for explicitly requested source-module customization. Absence of a located subscriber is not evidence of dispensability. No runtime callback, memory pressure, filesystem durability, hotplug or workqueue test.",
+  "remote_resources_used": []
+}
