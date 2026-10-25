@@ -36055,5 +36055,100 @@
       "evidence/shared-last-tail-review.json",
       "SECURITY.md: Shared memory history and native VMA flag propagation"
     ]
+  },
+  {
+    "commit": "ef878199679b3df661a8551fba19441eee0155a2",
+    "disposition": "superseded-no-residual-code",
+    "rationale": "Complete original heap split/config patch reviewed, including its zeroed contiguous allocation and unwind. The contiguous heap was deleted by 9970ccca9f3d before complete ION removal in 0b2a6b913757. All heap code and ION config selections are absent from final ACK/LTS/port. Keep the modern DMA-BUF heap support already selected; do not restore a retired allocator/UAPI merely because this historical commit exists.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/retired-platform-tail-review.json",
+      "SECURITY.md: Retired ION, UFS hooks and separate kernel targets"
+    ]
+  },
+  {
+    "commit": "0b2a6b9137575eb444aa3f44e52cf1255472ff6a",
+    "disposition": "already-represented-upstream",
+    "rationale": "ION removal is represented by native LTS ancestry e722a295cf49 and final mutual absence of all 31 deleted paths. Every surviving-file hunk removes only ION config/build wiring or replaces the removed android selftest target with arm64. Current SDK has no ION config; DMA-BUF system heap is compiled separately. Deleted C/test bodies were inventoried by exact blobs rather than claimed as executable code semantically re-reviewed. No retired allocator attack surface is reintroduced.",
+    "result_commits": [
+      "e722a295cf493388dae474745d30e91e1a2ec549"
+    ],
+    "evidence": [
+      "evidence/retired-platform-tail-review.json",
+      "SECURITY.md: Retired ION, UFS hooks and separate kernel targets"
+    ]
+  },
+  {
+    "commit": "f2b125b149327bc805fb486c5b19ca7d8ef08afa",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit UFS-specific conversion of prepare/sysfs/send/completion variant operations into trace hooks and their exports/header. Follow historical paths to current drivers/ufs/core and include/ufs; all three current files are whole native LTS. SDK UFS code remains compiled, but pinned Goldfish fstab and module list positively use virtio block storage for userdata/SD. These callbacks require a UFS HBA/controller, not generic SCSI/block state. Native UFS fixes remain; optional passed-through UFS use is unverified and would require reassessment.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/retired-platform-tail-review.json",
+      "SECURITY.md: Retired ION, UFS hooks and separate kernel targets"
+    ]
+  },
+  {
+    "commit": "828de9bf79969a30ce8397348e3af309d5a7d833",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit UFS PRDT-fill trace hook and corresponding header/export with the excluded UFS customization backend. Complete patch replaces a non-upstream variant callback with initialized err=0/non-sleeping tracing. Current whole native UFS DMA mapping and error handling remain; no old PRDT or sleep contract is restored. Goldfish storage is positively virtio; UFS is compiled but its hardware/customization is not the required SDK target. Generic DMA/inline-crypto interfaces are separately retained.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/retired-platform-tail-review.json",
+      "SECURITY.md: Retired ION, UFS hooks and separate kernel targets"
+    ]
+  },
+  {
+    "commit": "289d4549c3cdc4d883c74a840c1b2fb8058fab80",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit UFS UIC/task-management/error-history hooks and added completion notification with the same UFS HBA-specific target boundary. Complete patch observations include raw command and IRQ/error state, with non-sleeping callbacks. Keep entire current native UFS core/sysfs/header, not the older ACK interrupt/completion implementation. This is not a missing-consumer inference or claim that UFS is disabled; optional UFS passthrough remains unverified.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/retired-platform-tail-review.json",
+      "SECURITY.md: Retired ION, UFS hooks and separate kernel targets"
+    ]
+  },
+  {
+    "commit": "023175b40e49310d32869837a31f38877327b671",
+    "disposition": "partially-adapted",
+    "rationale": "Retain the generic x86 GKI module/config additions used by the SDK: virtio block/PCI/console/balloon/vsock and vCPU stall detector. Current module outputs exist in common_dist; OPEN_DICE is also selected by later final config. Use final SDK VIRTIO_PCI_LEGACY=y rather than the historical disable, and current Bazel lists rather than obsolete RockPi module placement. Omit ARM/RockPi-only changes and separate protected-guest target enablement. A Microdroid subject does not make shared ordinary guest transports unnecessary.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "d1dc0cf821209662fb3a18c5bd72a2ae3792667a"
+    ],
+    "evidence": [
+      "evidence/retired-platform-tail-review.json",
+      "SECURITY.md: Retired ION, UFS hooks and separate kernel targets"
+    ]
+  },
+  {
+    "commit": "18f07e20b9588048517a112d8c509b9df1a4fee0",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit three byte-identical allmodconfig fragment relocations and their alternate-target BUILD references. They are separate allmodconfig targets, not the selected GKI plus virtual-device workflow; all old/new fragment paths are absent in this reduced target closure. No functional runtime code is involved and no allmodconfig test is claimed. Current SDK fragments and original build invocation remain supported.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/retired-platform-tail-review.json",
+      "SECURITY.md: Retired ION, UFS hooks and separate kernel targets"
+    ]
+  },
+  {
+    "commit": "b065fd40da83a67d17575020cff24a21d416348e",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit only the separate Microdroid target/config addition of system_heap.ko. The required SDK already builds the same generic system DMA heap through the virtual-device configuration (DMABUF_HEAPS_SYSTEM=m and virt_dist/system_heap.ko). This does not remove DMA-BUF userspace or generic source APIs, nor claim that Microdroid lacks real consumers. No separate Microdroid image is built.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/retired-platform-tail-review.json",
+      "SECURITY.md: Retired ION, UFS hooks and separate kernel targets"
+    ]
+  },
+  {
+    "commit": "70f13d28919f67a95dda76df0508756cca1190b4",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit Microdroid-only ABI metadata/allowlist, protected-module lists, trimming and alternate image target/signing selections. This mixed commit is not solely KMI: MODULE_SIG and symbol access protection affect runtime, but their changes are scoped to the separate Microdroid configurations. SDK signing/protected exports are independently retained and tested, and its SHA-256 choice must not be changed to this historical SHA-1 workaround. All non-STG path patches read; 113251 generated ABI lines inventoried as metadata, not individually semantic-reviewed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/retired-platform-tail-review.json",
+      "SECURITY.md: Retired ION, UFS hooks and separate kernel targets"
+    ]
   }
 ]

@@ -10867,3 +10867,48 @@ These are compatibility rules, not authentication. The readahead cast-overlay
 experiment and its correction cancel exactly; native file_ra_state remains whole
 with independent order/mmap_miss fields. All consulted projects are local and
 pinned; no remote resource was accessed.
+
+## Retired ION, UFS hooks and separate kernel targets
+
+Nine decisions in `evidence/retired-platform-tail-review.json` close historical
+allocator and target-specific changes. The ION split was reviewed in full; its
+contiguous heap was later deleted, then the remaining allocator/UAPI/test tree
+was removed. Every one of the 31 deleted paths is absent from final ACK, LTS and
+the port. Every surviving-file deletion hunk is accounted for. Deleted historical
+C bodies are inventoried by exact blob, not claimed as newly semantic-reviewed
+code. Native upstream removal is in the LTS ancestry. The SDK's current system
+DMA-BUF heap remains compiled in virt_dist.
+
+Three old UFS hook introductions are followed through the relocation from
+drivers/scsi/ufs to drivers/ufs/core and include/ufs. Native core, sysfs and HBA
+header remain whole. Their ACK changes require controller-specific prepare,
+PRDT, command, IRQ and completion state. UFS is still configured, so this is not
+an uncompiled-code argument: pinned Goldfish fstab/module files positively use
+virtio block storage for userdata/SD. Optional passed-through UFS remains
+unverified and outside the selected platform; future hardware needs reassessment.
+Generic SCSI, DMA, crypto and vendor hook support are separate retained contracts.
+
+The mixed GKI-as-Microdroid configuration commit retains ordinary x86 virtio
+block/PCI/console/balloon/vsock modules and vCPU stall detector in the SDK outputs.
+Final configuration and packaging supersede intermediate legacy-PCI/RockPi
+choices. Separate allmodconfig fragment relocations and Microdroid image changes
+are excluded from the SDK build closure. Microdroid system-heap selection does
+not remove the SDK's separately built system heap. Its KMI commit also has real
+signing/protected-export effects, but only for the separate image. Current SDK
+signing and protection remain, using SHA-256, not the historical SHA-1 choice.
+All non-generated patches are accounted for; the 113,251-line STG type graph is
+identified/hash-pinned as excluded ABI metadata, not individually semantic-audited.
+Only local resources were used, and no alternate image or runtime test was run.
+
+## Emulator build 201
+
+The unchanged `ARCH=x86_64 common/build_virt.sh` workflow succeeded with common
+pinned to 9e0272854f67342fec740491321f856e2ec630e0, including the native VMA
+padding propagation fix 68c207cc790a and unsigned RCU delay fix cd92f9b0ae2b.
+Both distribution images match. All 100 common and 45 virtual-device modules
+were generated and their signatures cryptographically verified; the modified
+payload control was rejected. All 659 protected exports were found, while the
+obsolete stride missed 330; module flag/CRC table checks passed for all 145.
+Exact dependency pins and artifacts are in build-results.json and
+module-tables-build-201.json. Compilation/artifact checks do not establish
+runtime behavior; no emulator or device was booted. No remote resource was used.
