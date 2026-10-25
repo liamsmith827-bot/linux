@@ -1,0 +1,919 @@
+{
+  "source_head": "157af1b646e2548a980fff40a70f39fa0514d55d",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "648be4d49264c6eea182eb958b6c7c1637a716ba",
+      "disposition": "adapted",
+      "rationale": "Retain six generic long-term-pin/migration/split/madvise hooks. Keep the wrapper under CONFIG_MIGRATION and the native pinning restrictions unless a trusted subscriber overrides pinnability. Madvise bypass uses b39eeed468ef to unlock and release naming references. Current native split validation assigns ret before callbacks and retains anon_vma/mapping/memcg/xarray cleanup; replacement callbacks must actually perform or fail the claimed split/migration. A permissive pin override can defeat CMA/movable/DAX eviction constraints; module correctness is required.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "b39eeed468efb77aaa5154d7aea538f428c3d8c0"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-last-tail-review.json",
+        "SECURITY.md: Folio, RCU and process-integrity hook review"
+      ],
+      "patch_sha256": "db4ebd393185d2d856e67a1eb78af5e279ebd7f5fb9a46bfd12fdb6f68d29ba1",
+      "hooks": [
+        {
+          "name": "android_vh_mm_customize_longterm_pinnable",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "include/linux/mm.h",
+            "mm/gup.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_mm_do_madvise_bypass",
+          "headers": [
+            "include/trace/hooks/madvise.h"
+          ],
+          "callers": [
+            "mm/madvise.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_mm_migrate_one_page",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/rmap.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_mm_remove_migration_pte_bypass",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/migrate.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_mm_split_huge_page_bypass",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/huge_memory.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_mm_try_split_folio_bypass",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/migrate.c"
+          ],
+          "final_ack_signature_retained": true
+        }
+      ],
+      "path_entries": {
+        "drivers/android/vendor_hooks.c": "100644 blob 3982987abc7ca93d58a72aecd2707e41d5c37769\tdrivers/android/vendor_hooks.c",
+        "include/linux/mm.h": "100644 blob d47b0f466637caf38b3c04e9ca7482a0aa71e6a5\tinclude/linux/mm.h",
+        "include/trace/hooks/madvise.h": "100644 blob 3dace49e3753729225ce2323bbdc786974c0b29c\tinclude/trace/hooks/madvise.h",
+        "include/trace/hooks/mm.h": "100644 blob 843b783b45e01921c061596df8bda1af63f2aac0\tinclude/trace/hooks/mm.h",
+        "mm/gup.c": "100644 blob d35913d5dcd9884d09affcf8ffbd6ce21e495dc0\tmm/gup.c",
+        "mm/huge_memory.c": "100644 blob a88e46559ef2cf372abb685d5187de406b135b51\tmm/huge_memory.c",
+        "mm/madvise.c": "100644 blob a5a17107bbbf854709ba0f5f25b74968c43bf953\tmm/madvise.c",
+        "mm/migrate.c": "100644 blob a0bdcdfa4705503b93bde2b83b6cd0136beeb751\tmm/migrate.c",
+        "mm/rmap.c": "100644 blob b3c79997d877f9a0c6042ccd5b7f4ecdf63b6d4d\tmm/rmap.c"
+      }
+    },
+    {
+      "commit": "434f0fe1e0310b8ce81019bacb7fc99b6be2c55f",
+      "disposition": "adapted",
+      "rationale": "Retain four RCU wait/boost observations in configured RCU_BOOST code. Both whole native RCU headers match after stripping only these callbacks/includes and blank lines. The wait condition, expedited serialization, proxy mutex and unlock remain. Subscribers must respect these synchronization contexts and borrowed task/mutex lifetimes; latency or stalls can be introduced by callbacks. No runtime RCU test.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-last-tail-review.json",
+        "SECURITY.md: Folio, RCU and process-integrity hook review"
+      ],
+      "patch_sha256": "afec7797d2b4eb119d74bf1cfff308a8a10dc69384b639f74ff3eb19d2bb4da9",
+      "hooks": [
+        {
+          "name": "android_vh_rcu_boost_end",
+          "headers": [
+            "include/trace/hooks/rcu.h"
+          ],
+          "callers": [
+            "kernel/rcu/tree_plugin.h"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_rcu_boost_start",
+          "headers": [
+            "include/trace/hooks/rcu.h"
+          ],
+          "callers": [
+            "kernel/rcu/tree_plugin.h"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_sync_rcu_wait_end",
+          "headers": [
+            "include/trace/hooks/rcu.h"
+          ],
+          "callers": [
+            "kernel/rcu/tree_exp.h"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_sync_rcu_wait_start",
+          "headers": [
+            "include/trace/hooks/rcu.h"
+          ],
+          "callers": [
+            "kernel/rcu/tree_exp.h"
+          ],
+          "final_ack_signature_retained": true
+        }
+      ],
+      "path_entries": {
+        "drivers/android/vendor_hooks.c": "100644 blob 3982987abc7ca93d58a72aecd2707e41d5c37769\tdrivers/android/vendor_hooks.c",
+        "include/trace/hooks/rcu.h": "100644 blob cff3a78e56d044689c6d1e96b50e005a1bbaa8d2\tinclude/trace/hooks/rcu.h",
+        "kernel/rcu/tree_exp.h": "100644 blob 0aaacdfb6b5410d74089b5debb597e6e37a8ee0d\tkernel/rcu/tree_exp.h",
+        "kernel/rcu/tree_plugin.h": "100644 blob 8ba4f4c47da1b0da88bca35bd06e5d5f3368eefc\tkernel/rcu/tree_plugin.h"
+      }
+    },
+    {
+      "commit": "c1bb40e99a45382dc584742ff78babf5f34e9844",
+      "disposition": "adapted",
+      "rationale": "Retain folio readahead/promote/workingset notifications and optional special-LRU reclaim. Native default nr_reclaimed/skip setup remains, and bypass exits through existing plug/accounting cleanup. Earlier 72565355d3de progress/reset corrections remain. Modules own any replacement list/reference/accounting work; optional special-page policy and actual SDK subscriber unconfirmed.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "72565355d3de8356dfe6b0041520c324248f93dc"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-last-tail-review.json",
+        "SECURITY.md: Folio, RCU and process-integrity hook review"
+      ],
+      "patch_sha256": "c5116d66937b4375de58fb412d4420d811efecc702f42d131bd17509bc9a5e09",
+      "hooks": [
+        {
+          "name": "android_rvh_shrink_spec_lru",
+          "headers": [
+            "include/trace/hooks/vmscan.h"
+          ],
+          "callers": [
+            "mm/vmscan.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_page_cache_ra_mark",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/readahead.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_spec_promote_folio",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/swap.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_workingset_active",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/workingset.c"
+          ],
+          "final_ack_signature_retained": true
+        }
+      ],
+      "path_entries": {
+        "drivers/android/vendor_hooks.c": "100644 blob 3982987abc7ca93d58a72aecd2707e41d5c37769\tdrivers/android/vendor_hooks.c",
+        "include/trace/hooks/mm.h": "100644 blob 843b783b45e01921c061596df8bda1af63f2aac0\tinclude/trace/hooks/mm.h",
+        "include/trace/hooks/vmscan.h": "100644 blob 20e6e2d1014a6c190ea6a204b73e35d00f93bce9\tinclude/trace/hooks/vmscan.h",
+        "mm/readahead.c": "100644 blob a4b25afe13b3e886db5cad539c81916095ce3869\tmm/readahead.c",
+        "mm/swap.c": "100644 blob 74f959ee99a626698a9f4d29192ebf22f235d97e\tmm/swap.c",
+        "mm/vmscan.c": "100644 blob cfbc77ceab6b5215d038c5d55e4d0a1dda8a2054\tmm/vmscan.c",
+        "mm/workingset.c": "100644 blob df7ea800575e67ad6c2dfc8ac1abf56c1d5cba46\tmm/workingset.c"
+      }
+    },
+    {
+      "commit": "7c02a373d81bff09da41c60a05582ef140884450",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit CPU generic-power-domain decision override and its matching header/export. Actual SDK configuration does not enable PM_GENERIC_DOMAINS, which gates drivers/pmdomain, and instead enables native x86 ACPI_PROCESSOR_IDLE and INTEL_IDLE. Whole native governor source remains. This positive build/idle-provider boundary limits the omission to this target; it is not a claim that thermal/voltage safety hooks are inherently unnecessary.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/generic-hooks-last-tail-review.json",
+        "SECURITY.md: Folio, RCU and process-integrity hook review"
+      ],
+      "patch_sha256": "ddef616582f81ee5ea0791abf6333d1c6f7a49662022ef2653f2f72e48903df0",
+      "hooks": [
+        {
+          "name": "android_vh_cpu_domain_power_down_ok",
+          "status": "omitted with disabled generic PM domain provider"
+        }
+      ],
+      "path_entries": {
+        "drivers/android/vendor_hooks.c": "100644 blob 3982987abc7ca93d58a72aecd2707e41d5c37769\tdrivers/android/vendor_hooks.c",
+        "drivers/pmdomain/governor.c": "100644 blob 39359811a93047b36443a1b9583962726f24b88b\tdrivers/pmdomain/governor.c",
+        "include/trace/hooks/pm_domain.h": ""
+      }
+    },
+    {
+      "commit": "b669a0e021fe8ffbb39de63773706dd18ec0a118",
+      "disposition": "partially-adapted",
+      "rationale": "Retain four generic PCI power decision/result hooks around the current MID/ACPI operations, with defaults initialized from native results; SDK uses native PCI/ACPI. Despite the commit motivation mentioning non-ACPI systems, callbacks are not restricted to them in code. Omit ANDROID_KABI_DECLONLY/include scaffolding only. Modules can override state/error reports after native operations, so safe transition sequencing and power availability require trusted implementations. Native PCI implementation otherwise preserved.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-last-tail-review.json",
+        "SECURITY.md: Folio, RCU and process-integrity hook review"
+      ],
+      "patch_sha256": "eefc18a9ec02b360bf922f06249c3bfc68d2521a6af41396b3f06dc532262970",
+      "hooks": [
+        {
+          "name": "android_vh_platform_pci_choose_state",
+          "headers": [
+            "include/trace/hooks/pci.h"
+          ],
+          "callers": [
+            "drivers/pci/pci.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_platform_pci_get_power_state",
+          "headers": [
+            "include/trace/hooks/pci.h"
+          ],
+          "callers": [
+            "drivers/pci/pci.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_platform_pci_power_manageable",
+          "headers": [
+            "include/trace/hooks/pci.h"
+          ],
+          "callers": [
+            "drivers/pci/pci.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_platform_pci_set_power_state",
+          "headers": [
+            "include/trace/hooks/pci.h"
+          ],
+          "callers": [
+            "drivers/pci/pci.c"
+          ],
+          "final_ack_signature_retained": true
+        }
+      ],
+      "path_entries": {
+        "drivers/android/vendor_hooks.c": "100644 blob 3982987abc7ca93d58a72aecd2707e41d5c37769\tdrivers/android/vendor_hooks.c",
+        "drivers/pci/pci.c": "100644 blob 5ba0f88932dd2099b5758c655f0b6a72d047edc6\tdrivers/pci/pci.c",
+        "include/trace/hooks/pci.h": "100644 blob 3fbc20278fb369c1c20730d09ffd2200c5d4e2a1\tinclude/trace/hooks/pci.h"
+      }
+    },
+    {
+      "commit": "840aacc91032aca969d2228cbdc9bbc8d422334e",
+      "disposition": "partially-adapted",
+      "rationale": "Retain six generic GPL exports: mthp_stats, swap_space, swap_migration_ad_supported and the three MMU notifier operations. Native notifier bodies are byte-equivalent and retain SRCU/lockdep/lifetime behavior. Omit ARM64 mte_sync_tags export because this is x86 SDK; whole ARM file native. Rebuilt source modules must obey the current contracts; no historical layout or signature is restored.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-last-tail-review.json",
+        "SECURITY.md: Folio, RCU and process-integrity hook review"
+      ],
+      "patch_sha256": "bed851f1deda9161ae2ab5fc48146a24b5f3e6ea1598e6fa1494f98c3de0a696",
+      "hooks": [],
+      "path_entries": {
+        "arch/arm64/kernel/mte.c": "100644 blob 32148bf09c1dc057c9b39e34e19d14dd49c7904a\tarch/arm64/kernel/mte.c",
+        "mm/huge_memory.c": "100644 blob a88e46559ef2cf372abb685d5187de406b135b51\tmm/huge_memory.c",
+        "mm/mmu_notifier.c": "100644 blob 5d6dabce9cc7a3977607cc9de626a69e021dc565\tmm/mmu_notifier.c",
+        "mm/swap_state.c": "100644 blob 993c4d7483ccf188c1e37d786d749d7e45adb3ae\tmm/swap_state.c",
+        "mm/swapfile.c": "100644 blob 37b2501828a1ee3f1712a2a22b73461c0ccb8e38\tmm/swapfile.c"
+      }
+    },
+    {
+      "commit": "a38248d16eb4687058ed91f5a663c504d55cfade",
+      "disposition": "adapted",
+      "rationale": "Retain split/reclaim hooks adapted to native int-returning folio_check_splittable rather than restoring historical boolean folio_split_supported. Native truncated-mapping, filesystem support, swapcache, huge-zero and writeback checks precede the callback; a veto returns EINVAL. Keep native __folio_split cleanup around optional replacement and native truncation fallback after result adjustment. Early-release reclaim callbacks must fulfill page/list/reference obligations and may affect accounting; no arbitrary callback safety claim.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-last-tail-review.json",
+        "SECURITY.md: Folio, RCU and process-integrity hook review"
+      ],
+      "patch_sha256": "e6dbcb9ab5c5006d6cd71487e07d5fa83b08ae0b58dd67adb0c02dfad35adacb",
+      "hooks": [
+        {
+          "name": "android_rvh_mm_folio_split_bypass",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/huge_memory.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_mm_folio_split_supported",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/huge_memory.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_mm_truncate_try_split_folio",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/truncate.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_shrink_try_release_folio",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/vmscan.c"
+          ],
+          "final_ack_signature_retained": true
+        }
+      ],
+      "path_entries": {
+        "drivers/android/vendor_hooks.c": "100644 blob 3982987abc7ca93d58a72aecd2707e41d5c37769\tdrivers/android/vendor_hooks.c",
+        "include/trace/hooks/mm.h": "100644 blob 843b783b45e01921c061596df8bda1af63f2aac0\tinclude/trace/hooks/mm.h",
+        "mm/huge_memory.c": "100644 blob a88e46559ef2cf372abb685d5187de406b135b51\tmm/huge_memory.c",
+        "mm/truncate.c": "100644 blob 2924371857332d79ae9cfe1ec4ede4a966c9cb4a\tmm/truncate.c",
+        "mm/vmscan.c": "100644 blob cfbc77ceab6b5215d038c5d55e4d0a1dda8a2054\tmm/vmscan.c"
+      }
+    },
+    {
+      "commit": "2f33719d013ebfaefec1e1f3389dbb4b3a1c9169",
+      "disposition": "adapted",
+      "rationale": "Retain forced-read-ahead replacement, read-ahead-window adjustment, writeback wait observation, and non-NUMA file-folio allocation refusal with its exported wrapper. Actual SDK has NUMA disabled. Default false decisions keep native allocation and wait behavior; restrictive callbacks can return allocation failure or change prefetch policy. Preserve current LTS readahead bounds, ownership/locking and error paths plus earlier lifetime adaptations, not old entire ACK functions.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-last-tail-review.json",
+        "SECURITY.md: Folio, RCU and process-integrity hook review"
+      ],
+      "patch_sha256": "709ed5f4e527ac62541b5f1d61d113d8a6162a3dd118825edd64dd7fbc603349",
+      "hooks": [
+        {
+          "name": "android_rvh_customize_force_ra",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/readahead.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_rvh_folio_prepare_wb_folio_wait",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/page-writeback.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_customize_ractl",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/filemap.c",
+            "mm/readahead.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_filemap_alloc_folio",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "include/linux/pagemap.h",
+            "mm/filemap.c"
+          ],
+          "final_ack_signature_retained": true
+        }
+      ],
+      "path_entries": {
+        "drivers/android/vendor_hooks.c": "100644 blob 3982987abc7ca93d58a72aecd2707e41d5c37769\tdrivers/android/vendor_hooks.c",
+        "include/linux/pagemap.h": "100644 blob 7350be8eed5d6dfdabd88c5a998c16bbaadcec44\tinclude/linux/pagemap.h",
+        "include/trace/hooks/mm.h": "100644 blob 843b783b45e01921c061596df8bda1af63f2aac0\tinclude/trace/hooks/mm.h",
+        "mm/filemap.c": "100644 blob 9fde0eaafa416772826def1ccb84f19ae1319dfd\tmm/filemap.c",
+        "mm/page-writeback.c": "100644 blob 866730261f2c8ddb464ad503953155348ff0398a\tmm/page-writeback.c",
+        "mm/readahead.c": "100644 blob a4b25afe13b3e886db5cad539c81916095ce3869\tmm/readahead.c"
+      }
+    },
+    {
+      "commit": "1c374f127638ce6243cfdf6efec3925c0fb0240a",
+      "disposition": "adapted",
+      "rationale": "Retain EROFS I/O observation for the enabled EROFS filesystem. Notify before the two ordinary submit_bio sites and at completion; file-backed/fscache submission paths retain their native dispatch. Entire endio body is native after removing observation; newer native decompression policy remains. A callback must not retain bio or superblock pointers without references or alter completion ownership. This does not certify latency accounting or runtime EROFS behavior.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-last-tail-review.json",
+        "SECURITY.md: Folio, RCU and process-integrity hook review"
+      ],
+      "patch_sha256": "e07f87f256bef55d5e5d4437cdd5e47300b6a9925700b393930b4feb7eff532f",
+      "hooks": [
+        {
+          "name": "android_vh_erofs_iostat_submit",
+          "headers": [
+            "include/trace/hooks/fs.h"
+          ],
+          "callers": [
+            "fs/erofs/zdata.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_erofs_iostat_update",
+          "headers": [
+            "include/trace/hooks/fs.h"
+          ],
+          "callers": [
+            "fs/erofs/zdata.c"
+          ],
+          "final_ack_signature_retained": true
+        }
+      ],
+      "path_entries": {
+        "drivers/android/vendor_hooks.c": "100644 blob 3982987abc7ca93d58a72aecd2707e41d5c37769\tdrivers/android/vendor_hooks.c",
+        "fs/erofs/zdata.c": "100644 blob eb305b2dfae444c96a4fbe2876d59fa398713ff9\tfs/erofs/zdata.c",
+        "include/trace/hooks/fs.h": "100644 blob 49e86ffa4af6932f89565d2924b58e036abdc3da\tinclude/trace/hooks/fs.h"
+      }
+    },
+    {
+      "commit": "233c28c7d9d962c3bf01b0b5719006bd8a187f42",
+      "disposition": "partially-adapted",
+      "rationale": "Retain generic direct/buffered I/O statistics hooks, omitting KABI declaration scaffolding. 8d75f9fa7f08 snapshots the write folio index before write_end can release it, avoiding ACK use-after-free; current native iomap error/crypto/completion flow remains. Preserve historical unsigned-int callback fields and per-site count/index conventions for source compatibility; large offsets may truncate and counts are not a universal page-accurate accounting ABI. Export reordering has no behavior change.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "8d75f9fa7f08e9c64741d10288ffeb914a2009b6"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-last-tail-review.json",
+        "SECURITY.md: Folio, RCU and process-integrity hook review"
+      ],
+      "patch_sha256": "cc4cad22a267b3128c90b04bbec5ea2316502dc8d9be0d5e2d69ad8b79fe9f64",
+      "hooks": [
+        {
+          "name": "android_vh_io_statistics",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "fs/direct-io.c",
+            "fs/iomap/direct-io.c",
+            "mm/filemap.c",
+            "mm/readahead.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_vh_mem_cgroup_over_high_reclaim",
+          "status": "existing export reordered only; no new declaration or call attributed to this commit"
+        }
+      ],
+      "path_entries": {
+        "drivers/android/vendor_hooks.c": "100644 blob 3982987abc7ca93d58a72aecd2707e41d5c37769\tdrivers/android/vendor_hooks.c",
+        "fs/direct-io.c": "100644 blob 4ab29b6c626f9ef1a9e27c7e616489ff3aa378b8\tfs/direct-io.c",
+        "fs/iomap/direct-io.c": "100644 blob 790b372c78ba0226c1c9faaabd07d5ca23d58c4d\tfs/iomap/direct-io.c",
+        "include/trace/hooks/mm.h": "100644 blob 843b783b45e01921c061596df8bda1af63f2aac0\tinclude/trace/hooks/mm.h",
+        "mm/filemap.c": "100644 blob 9fde0eaafa416772826def1ccb84f19ae1319dfd\tmm/filemap.c",
+        "mm/readahead.c": "100644 blob a4b25afe13b3e886db5cad539c81916095ce3869\tmm/readahead.c"
+      }
+    },
+    {
+      "commit": "9d29ba85d8a2c505b2d049568c3b1d29c4e0c2fd",
+      "disposition": "adapted",
+      "rationale": "Retain functional PG_oem_reserved_5 forced-readahead marker and one-time MGLRU activation, with CONFIG_64BIT guard and native tracing name. This bit is consumed by actual reclaim policy, not solely historical KMI. Pinned ART runtime.cc explicitly uses MADV_WILLNEED for mapped runtime files and actual SDK enables MGLRU. Current filemap_get_folio/folio_put pairing replaces unsafe raw XArray access and retains native invalidate lock and EOF/max-index bounds. Policy changes reclaim/availability and can be repeatedly requested; no measured latency benefit or runtime correctness claim.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-last-tail-review.json",
+        "SECURITY.md: Folio, RCU and process-integrity hook review"
+      ],
+      "patch_sha256": "f69fa4cfd50985c34ab3ebfead92c3758d42d1fac99fe50e76c8dd9af85a7850",
+      "hooks": [],
+      "path_entries": {
+        "include/linux/page-flags.h": "100644 blob 222d74235ada9260b8e755783e7e665c35d5cf60\tinclude/linux/page-flags.h",
+        "include/trace/events/mmflags.h": "100644 blob a7fddfb26897db82af247ca86a8e979ce67d6ffa\tinclude/trace/events/mmflags.h",
+        "mm/readahead.c": "100644 blob a4b25afe13b3e886db5cad539c81916095ce3869\tmm/readahead.c",
+        "mm/vmscan.c": "100644 blob cfbc77ceab6b5215d038c5d55e4d0a1dda8a2054\tmm/vmscan.c"
+      }
+    },
+    {
+      "commit": "fa573af4b2ab4a7c778dfaf0bb0a081ed59327f8",
+      "disposition": "partially-adapted",
+      "rationale": "Retain architecture-independent process-integrity hooks and generic DM/path/audit/task/RAM-walk exports; omit ARM64 kimage_vaddr and KABI-only declarations. 0553783af7f7 routes fork rejection through locked core cleanup and frees task LSM storage on callback rejection; 907c42c0138b releases the mm reference when process_vm callback denies. Native file/mmap LSM denial returns before callback, and process_vm ptrace/LSM checks run first. Ptrace/exec/lifecycle notifications do not themselves implement authentication or TrustZone attestation. Trusted subscribers can alter kernel objects and must preserve lifetimes/constraints; no secure-world platform is added.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "0553783af7f74cea06cd514fe2483a90ff531c68",
+        "907c42c0138b88eda4b981e0104d7e250e443fc8"
+      ],
+      "evidence": [
+        "evidence/generic-hooks-last-tail-review.json",
+        "SECURITY.md: Folio, RCU and process-integrity hook review"
+      ],
+      "patch_sha256": "1e831675661996d9b21e659820b0e60225e596312dfc4e32c3d40375549958a8",
+      "hooks": [
+        {
+          "name": "android_rvh_copy_process_integrity",
+          "headers": [
+            "include/trace/hooks/security.h"
+          ],
+          "callers": [
+            "kernel/fork.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_rvh_exec_binprm_check",
+          "headers": [
+            "include/trace/hooks/fs.h"
+          ],
+          "callers": [
+            "fs/exec.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_rvh_exec_binprm_fail",
+          "headers": [
+            "include/trace/hooks/fs.h"
+          ],
+          "callers": [
+            "fs/exec.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_rvh_post_setattr",
+          "headers": [
+            "include/trace/hooks/fs.h"
+          ],
+          "callers": [
+            "fs/attr.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_rvh_process_vm_rw_core",
+          "headers": [
+            "include/trace/hooks/mm.h"
+          ],
+          "callers": [
+            "mm/process_vm_access.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_rvh_ptrace",
+          "headers": [
+            "include/trace/hooks/ptrace.h"
+          ],
+          "callers": [
+            "kernel/ptrace.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_rvh_security_file_free",
+          "headers": [
+            "include/trace/hooks/security.h"
+          ],
+          "callers": [
+            "fs/file_table.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_rvh_security_file_open",
+          "headers": [
+            "include/trace/hooks/security.h"
+          ],
+          "callers": [
+            "security/security.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_rvh_security_inode_free",
+          "headers": [
+            "include/trace/hooks/security.h"
+          ],
+          "callers": [
+            "security/security.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_rvh_security_mmap_file",
+          "headers": [
+            "include/trace/hooks/security.h"
+          ],
+          "callers": [
+            "security/security.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_rvh_security_task_alloc",
+          "headers": [
+            "include/trace/hooks/security.h"
+          ],
+          "callers": [
+            "security/security.c"
+          ],
+          "final_ack_signature_retained": true
+        },
+        {
+          "name": "android_rvh_security_task_free",
+          "headers": [
+            "include/trace/hooks/security.h"
+          ],
+          "callers": [
+            "security/security.c"
+          ],
+          "final_ack_signature_retained": true
+        }
+      ],
+      "path_entries": {
+        "arch/arm64/mm/mmu.c": "100644 blob 71841b5c31928351355190743b205f72ecd9318c\tarch/arm64/mm/mmu.c",
+        "drivers/android/vendor_hooks.c": "100644 blob 3982987abc7ca93d58a72aecd2707e41d5c37769\tdrivers/android/vendor_hooks.c",
+        "drivers/md/dm.c": "100644 blob 84dcb194867517da1315492525f56eb37251ed70\tdrivers/md/dm.c",
+        "fs/attr.c": "100644 blob da406f4308cf16df82c186366af21b422c4cd58c\tfs/attr.c",
+        "fs/d_path.c": "100644 blob c66abcfb115d4b333e47273eb47ef271d5cd16ef\tfs/d_path.c",
+        "fs/exec.c": "100644 blob 54ad162303a9fbb0941bf2d15bf2e0982fd368f1\tfs/exec.c",
+        "fs/file_table.c": "100644 blob 711adc16546accf372e5c9965922e5e18dd1da74\tfs/file_table.c",
+        "include/trace/hooks/fs.h": "100644 blob 49e86ffa4af6932f89565d2924b58e036abdc3da\tinclude/trace/hooks/fs.h",
+        "include/trace/hooks/mm.h": "100644 blob 843b783b45e01921c061596df8bda1af63f2aac0\tinclude/trace/hooks/mm.h",
+        "include/trace/hooks/ptrace.h": "100644 blob 24c964fab07ef06f9ac8b65012bbfc05c460932a\tinclude/trace/hooks/ptrace.h",
+        "include/trace/hooks/security.h": "100644 blob c40422610dab00dba94d6a60b4679afd5d1aeb6b\tinclude/trace/hooks/security.h",
+        "kernel/audit.c": "100644 blob 27505a6432288b1b6b9ff66ea2a448bca25a8e23\tkernel/audit.c",
+        "kernel/fork.c": "100644 blob 732574eccf333691ebe9e7b3646f097ac44ec769\tkernel/fork.c",
+        "kernel/ptrace.c": "100644 blob 7ded2029000d6f82f417b229507b97251e973b9e\tkernel/ptrace.c",
+        "kernel/resource.c": "100644 blob aeef4672bd2900f9247c2faca1954cad861adefe\tkernel/resource.c",
+        "mm/process_vm_access.c": "100644 blob 1ae44c7a637648947b0a5dcbe6945300ecc94b24\tmm/process_vm_access.c",
+        "security/security.c": "100644 blob 4fcc3e3f74dc25dac07cf8fad4a304216a3260d0\tsecurity/security.c"
+      }
+    }
+  ],
+  "native_function_proofs": [
+    {
+      "path": "kernel/rcu/tree_exp.h",
+      "function": "synchronize_rcu_expedited",
+      "comparison": "Whole native function after removing hook calls and ignoring whitespace",
+      "port_sha256": "febc1322319e44723a9aa10afb54e508a6a6cefd3b94f076d84b978a74ec93eb",
+      "native_sha256": "c7d221a3c54272e39cb4a8a55538cca53af318ce60432af847215fb20c96752b"
+    },
+    {
+      "path": "kernel/rcu/tree_plugin.h",
+      "function": "rcu_boost",
+      "comparison": "Whole native function after removing hook calls and ignoring whitespace",
+      "port_sha256": "c12ef98fb6908468cd1465d7a82d2d71d339f677a5330124c0d4ae1ae2dcf964",
+      "native_sha256": "a183ebebeb4c48c02ec4f62cfeb31cb626f60715fb3bbd5823125641f5af6dd1"
+    },
+    {
+      "path": "mm/mmu_notifier.c",
+      "function": "__mmu_notifier_invalidate_range_start",
+      "comparison": "Whole native function after removing hook calls and ignoring whitespace",
+      "port_sha256": "0793b38a3f59d64747f91b512578d23fbea9c6f4fc65b96b66c0f3569f55bf0e",
+      "native_sha256": "0793b38a3f59d64747f91b512578d23fbea9c6f4fc65b96b66c0f3569f55bf0e"
+    },
+    {
+      "path": "mm/mmu_notifier.c",
+      "function": "__mmu_notifier_invalidate_range_end",
+      "comparison": "Whole native function after removing hook calls and ignoring whitespace",
+      "port_sha256": "5542cf8f51f0e7dab23f9868b392d0309280b653f2f62254d372d48bf8f150af",
+      "native_sha256": "5542cf8f51f0e7dab23f9868b392d0309280b653f2f62254d372d48bf8f150af"
+    },
+    {
+      "path": "mm/mmu_notifier.c",
+      "function": "__mmu_notifier_arch_invalidate_secondary_tlbs",
+      "comparison": "Whole native function after removing hook calls and ignoring whitespace",
+      "port_sha256": "51296ad115dd8bc72e582d695873601f3df068c17f38b58e3b3b4f493fc53b9a",
+      "native_sha256": "51296ad115dd8bc72e582d695873601f3df068c17f38b58e3b3b4f493fc53b9a"
+    },
+    {
+      "path": "fs/erofs/zdata.c",
+      "function": "z_erofs_endio",
+      "comparison": "Whole native function after removing hook calls and ignoring whitespace",
+      "port_sha256": "f954b89a9b66e312581a74044537a2ca38191e6c34dcf7a04e8cedfcd1a4c5c6",
+      "native_sha256": "70215fbf4c4f5221454672d03307b757ab0921d757c279c639284ca956b4befa"
+    },
+    {
+      "path": "fs/attr.c",
+      "function": "notify_change",
+      "comparison": "Whole native function after removing hook calls and ignoring whitespace",
+      "port_sha256": "14d92f99894e4e980d83337b04a4ee704634521d9348059f555615703d06bc91",
+      "native_sha256": "cf12977e64104a31d614d13ae4f7f74a091807df1290e53508c208fcb82e0650"
+    },
+    {
+      "path": "fs/d_path.c",
+      "function": "d_absolute_path",
+      "comparison": "Whole native function after removing hook calls and ignoring whitespace",
+      "port_sha256": "10393aa7aa3f80eec787f636fb3018338a1dd7ad494d35ed4581dc17dd4643bd",
+      "native_sha256": "10393aa7aa3f80eec787f636fb3018338a1dd7ad494d35ed4581dc17dd4643bd"
+    },
+    {
+      "path": "kernel/audit.c",
+      "function": "audit_log_n_hex",
+      "comparison": "Whole native function after removing hook calls and ignoring whitespace",
+      "port_sha256": "5cc09098b3a85a2f2febdce1f67bd8ed8b7206a3025daa8ac2396e16e2f0c7e6",
+      "native_sha256": "5cc09098b3a85a2f2febdce1f67bd8ed8b7206a3025daa8ac2396e16e2f0c7e6"
+    },
+    {
+      "path": "kernel/audit.c",
+      "function": "audit_log_untrustedstring",
+      "comparison": "Whole native function after removing hook calls and ignoring whitespace",
+      "port_sha256": "0b0049d908c98e58393005ef7c557142bce2ccb8d7fd0e5ab1a03b7157dddddc",
+      "native_sha256": "0b0049d908c98e58393005ef7c557142bce2ccb8d7fd0e5ab1a03b7157dddddc"
+    },
+    {
+      "path": "kernel/resource.c",
+      "function": "walk_system_ram_res",
+      "comparison": "Whole native function after removing hook calls and ignoring whitespace",
+      "port_sha256": "badeefc7e1facacc6355a203c1e0fee905b6782112642ae22c677ea951d5cf08",
+      "native_sha256": "badeefc7e1facacc6355a203c1e0fee905b6782112642ae22c677ea951d5cf08"
+    },
+    {
+      "path": "kernel/fork.c",
+      "function": "get_task_exe_file",
+      "comparison": "Whole native function after removing hook calls and ignoring whitespace",
+      "port_sha256": "bfa56f8c3745319ec05052d04e147f0cbfb295138cbe6b04392861e5c0e9e0cc",
+      "native_sha256": "bfa56f8c3745319ec05052d04e147f0cbfb295138cbe6b04392861e5c0e9e0cc"
+    },
+    {
+      "path": "drivers/md/dm.c",
+      "function": "dm_get_live_table",
+      "comparison": "Whole native function after removing hook calls and ignoring whitespace",
+      "port_sha256": "ed2223ebcb1fb02991c2db1bdb57c35d107cb2f5d9d6138279fd1da3c1577cb3",
+      "native_sha256": "ed2223ebcb1fb02991c2db1bdb57c35d107cb2f5d9d6138279fd1da3c1577cb3"
+    },
+    {
+      "path": "drivers/md/dm.c",
+      "function": "dm_put_live_table",
+      "comparison": "Whole native function after removing hook calls and ignoring whitespace",
+      "port_sha256": "4a3b7183268ec1d550db48dcf9d23215432939251eb1e8d1082c9cda16c2dd8f",
+      "native_sha256": "4a3b7183268ec1d550db48dcf9d23215432939251eb1e8d1082c9cda16c2dd8f"
+    },
+    {
+      "path": "fs/exec.c",
+      "function": "exec_binprm",
+      "comparison": "Whole native function after removing hook calls and ignoring whitespace",
+      "port_sha256": "2ef5e7d6e5e9311a487f4d1cba8a9b3370e761a335241541eabecb1e7494bc3a",
+      "native_sha256": "f8d8e7f315b6bf4296cc78d01a4ae96617abac868bafeb63c7557d40b6ba9b39"
+    },
+    {
+      "path": "security/security.c",
+      "function": "security_inode_free",
+      "comparison": "Whole native function after removing hook calls and ignoring whitespace",
+      "port_sha256": "bee0b2e32e5167cf95d42a2ca4607055f595a0ca2627412ed8398c41d55de1e5",
+      "native_sha256": "8e64a5d0796798449a967963bfbd0ed94e2eec5baf5558e70916f7ade09bb0ef"
+    },
+    {
+      "path": "security/security.c",
+      "function": "security_task_free",
+      "comparison": "Whole native function after removing hook calls and ignoring whitespace",
+      "port_sha256": "fc9224a21b22d4151fdf4805cf73d2b14c0942dfc88ba2350549f786f56562e8",
+      "native_sha256": "0f7163ce21982ff95e3f7c9019095eb499aaf229d92e11f2e95c3f0ad94d5866"
+    },
+    {
+      "path": "drivers/pmdomain/governor.c",
+      "comparison": "Whole native LTS retained; actual generated configuration lacks PM_GENERIC_DOMAINS which gates entire directory, and enables ACPI_PROCESSOR_IDLE/INTEL_IDLE. Matching Android CPU-domain hook header/export absent. Positive current build boundary, not missing-consumer inference."
+    },
+    {
+      "path": "arch/arm64/kernel/mte.c",
+      "comparison": "Whole native non-target ARM64 file retained; no ARM MTE/kimage exports introduced for x86 SDK"
+    },
+    {
+      "path": "arch/arm64/mm/mmu.c",
+      "comparison": "Whole native non-target ARM64 file retained; no ARM MTE/kimage exports introduced for x86 SDK"
+    },
+    {
+      "path": "kernel/rcu/tree_exp.h",
+      "comparison": "Entire native header after removing four RCU observation calls and include, ignoring blank lines; grace-period and boost ordering retained"
+    },
+    {
+      "path": "kernel/rcu/tree_plugin.h",
+      "comparison": "Entire native header after removing four RCU observation calls and include, ignoring blank lines; grace-period and boost ordering retained"
+    },
+    {
+      "path": "mm/readahead.c",
+      "checked_snippets": [
+        "struct folio *folio = filemap_get_folio(mapping, index + i);",
+        "set_bit(PG_oem_reserved_5, folio_flags(folio, 0));",
+        "folio_put(folio);",
+        "if (forced && lru_gen_enabled())"
+      ],
+      "blob": "a4b25afe13b3e886db5cad539c81916095ce3869"
+    },
+    {
+      "path": "mm/vmscan.c",
+      "checked_snippets": [
+        "test_and_clear_bit(PG_oem_reserved_5, folio_flags(folio, 0))",
+        "folio_set_workingset(folio);",
+        "return FOLIOREF_ACTIVATE;"
+      ],
+      "blob": "cfbc77ceab6b5215d038c5d55e4d0a1dda8a2054"
+    },
+    {
+      "path": "kernel/fork.c",
+      "checked_snippets": [
+        "trace_android_rvh_copy_process_integrity(clone_flags, p, &retval);\n\tif (retval)\n\t\tgoto bad_fork_core_free;",
+        "bad_fork_core_free:\n\tsched_core_free(p);\n\tspin_unlock(&current->sighand->siglock);\n\twrite_unlock_irq(&tasklist_lock);"
+      ],
+      "blob": "732574eccf333691ebe9e7b3646f097ac44ec769"
+    },
+    {
+      "path": "security/security.c",
+      "checked_snippets": [
+        "trace_android_rvh_security_task_alloc(task, clone_flags, &rc);\n\tif (!rc)\n\t\trc = call_int_hook(task_alloc, task, clone_flags);\n\tif (unlikely(rc))\n\t\tsecurity_task_free(task);"
+      ],
+      "blob": "4fcc3e3f74dc25dac07cf8fad4a304216a3260d0"
+    },
+    {
+      "path": "mm/process_vm_access.c",
+      "checked_snippets": [
+        "trace_android_rvh_process_vm_rw_core(task, vm_write, &rc);\n\tif (rc)\n\t\tgoto put_mm;",
+        "put_mm:\n\tmmput(mm);"
+      ],
+      "blob": "1ae44c7a637648947b0a5dcbe6945300ecc94b24"
+    },
+    {
+      "path": "mm/filemap.c",
+      "checked_snippets": [
+        "index = folio->index;\n\t\tstatus = a_ops->write_end",
+        "trace_android_vh_io_statistics(mapping, index, 1, false, false);"
+      ],
+      "blob": "9fde0eaafa416772826def1ccb84f19ae1319dfd"
+    },
+    {
+      "path": "mm/huge_memory.c",
+      "checked_snippets": [
+        "ret = folio_check_splittable(folio, new_order, uniform_split);",
+        "if (folio_test_writeback(folio))\n\t\treturn -EBUSY;",
+        "trace_android_vh_mm_folio_split_supported(folio, new_order, uniform_split, &supported);\n\tif (!supported)\n\t\treturn -EINVAL;"
+      ],
+      "blob": "a88e46559ef2cf372abb685d5187de406b135b51"
+    }
+  ],
+  "config_sha256": "5eb9df697a47e51c48fc154d7c5c9de503407ea3d7789c1d3cd3c6185088ba8e",
+  "android_consumer": {
+    "project": "../grapheneos-17/art",
+    "commit": "6a459adafb78451393b2bfb45e805934df2a3d6b",
+    "path": "runtime/runtime.cc",
+    "sha256": "5b10319787af6fbcee27e6bac3e1a7637f18392e669bb52cd04db831ebe3a083",
+    "contract": "Chunked MADV_WILLNEED over mapped runtime files; no invocation or Android build executed"
+  },
+  "method": "All twelve complete candidate patches and relevant current/native caller changes examined. Seventeen exact native function comparisons and two whole RCU header comparisons; configuration gates and previous cleanup/lifetime fixes checked. Hook signatures/exports/callers enumerated, omitting explicitly disabled PM-domain implementation. No new executable change in this group.",
+  "unresolved": "Specific vendor SDK subscribers and runtime callback correctness unconfirmed. Generic source customization retained conservatively. Compilation does not prove secure-world attestation, RCU timing, memory pressure policy, hotplug or filesystem behavior.",
+  "remote_resources_used": []
+}

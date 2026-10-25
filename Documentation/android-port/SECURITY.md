@@ -10719,3 +10719,47 @@ control was rejected, and all 659 protected exports plus module CRC/flag tables
 matched. The old-stride control misses 330 exports. The later e30e963e3d7c CPU
 selection correction is not covered by build 198. Full records are in
 `evidence/build-results.json` and `evidence/module-tables-build-198.json`.
+
+## Folio, RCU and process-integrity hook review
+
+The twelve decisions in `evidence/generic-hooks-last-tail-review.json` retain
+generic source contracts around folio/migration/reclaim, PCI, RCU, EROFS and
+process lifecycle. Actual SDK subscribers for vendor callbacks remain uncertain.
+The CPU generic-power-domain override is omitted with its header/export because
+PM_GENERIC_DOMAINS gates that entire unselected directory; native x86 ACPI and
+Intel idle implementations remain selected. ARM MTE/kimage exports and KABI-only
+declarations are separately excluded. Native MMU-notifier and generic audit/path
+export bodies remain intact, as do both whole RCU headers apart from callbacks.
+
+Native folio_check_splittable returns errors, replacing the old boolean API.
+Keep its mapping, filesystem, swapcache, zero-folio and writeback restrictions
+before allowing a module veto. Replacement splitting/migration callbacks must
+perform their promised operation and maintain list/reference/lock invariants;
+normal paths and bypass cleanup retain native anon_vma, mapping, memcg and xarray
+handling. Long-term-pin overrides can defeat CMA/movable/DAX eviction constraints.
+Early-release reclaim hooks may change reclamation and accounting. These are
+trusted kernel interfaces, not permission checks or validated policies.
+
+MADV_WILLNEED promotion has a concrete local ART consumer and selected MGLRU
+configuration. PG_oem_reserved_5 is a functional, consumed marker, not solely
+KMI padding. Preserve one-time activation/workingset marking and safe
+filemap_get_folio/folio_put ownership instead of raw XArray access. Native
+invalidate locking and bounds remain. Repeated hints can still affect retention;
+no latency or memory-pressure benefit was measured. I/O statistics retain the
+ACK field widths and per-call conventions, so counts/large offsets are not
+guaranteed exact. The prior write-end index snapshot avoids dereferencing a
+folio after filesystem code may release it.
+
+The process-integrity changes do not implement authentication themselves. Native
+file-open/mmap LSM denials return before the vendor callbacks, and process_vm
+access retains native permission checks. Ptrace and exec notifications can run
+on attempted operations and provide borrowed objects, including potentially
+absent exec-file state. The already-recorded 0553783af7f7 corrections release
+fork locks/scheduler state and task LSM storage on rejection; 907c42c0138b routes
+process_vm rejection through mmput. Their result IDs are linked to fa573af4b2ab.
+No TrustZone implementation or attestation claim is introduced. Callback code
+can still mutate kernel state and must obey security and lifetime contracts.
+
+All twelve patches were read in full. Native comparisons, final signatures and
+current callers/configuration are recorded; no new source change or runtime
+execution occurred in this group. All resources were local.

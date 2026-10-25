@@ -35538,5 +35538,152 @@
       "evidence/generic-hooks-first-tail-review.json",
       "SECURITY.md: Generic memory and I/O hook contracts"
     ]
+  },
+  {
+    "commit": "648be4d49264c6eea182eb958b6c7c1637a716ba",
+    "disposition": "adapted",
+    "rationale": "Retain six generic long-term-pin/migration/split/madvise hooks. Keep the wrapper under CONFIG_MIGRATION and the native pinning restrictions unless a trusted subscriber overrides pinnability. Madvise bypass uses b39eeed468ef to unlock and release naming references. Current native split validation assigns ret before callbacks and retains anon_vma/mapping/memcg/xarray cleanup; replacement callbacks must actually perform or fail the claimed split/migration. A permissive pin override can defeat CMA/movable/DAX eviction constraints; module correctness is required.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "b39eeed468efb77aaa5154d7aea538f428c3d8c0"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-last-tail-review.json",
+      "SECURITY.md: Folio, RCU and process-integrity hook review"
+    ]
+  },
+  {
+    "commit": "434f0fe1e0310b8ce81019bacb7fc99b6be2c55f",
+    "disposition": "adapted",
+    "rationale": "Retain four RCU wait/boost observations in configured RCU_BOOST code. Both whole native RCU headers match after stripping only these callbacks/includes and blank lines. The wait condition, expedited serialization, proxy mutex and unlock remain. Subscribers must respect these synchronization contexts and borrowed task/mutex lifetimes; latency or stalls can be introduced by callbacks. No runtime RCU test.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-last-tail-review.json",
+      "SECURITY.md: Folio, RCU and process-integrity hook review"
+    ]
+  },
+  {
+    "commit": "c1bb40e99a45382dc584742ff78babf5f34e9844",
+    "disposition": "adapted",
+    "rationale": "Retain folio readahead/promote/workingset notifications and optional special-LRU reclaim. Native default nr_reclaimed/skip setup remains, and bypass exits through existing plug/accounting cleanup. Earlier 72565355d3de progress/reset corrections remain. Modules own any replacement list/reference/accounting work; optional special-page policy and actual SDK subscriber unconfirmed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "72565355d3de8356dfe6b0041520c324248f93dc"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-last-tail-review.json",
+      "SECURITY.md: Folio, RCU and process-integrity hook review"
+    ]
+  },
+  {
+    "commit": "7c02a373d81bff09da41c60a05582ef140884450",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit CPU generic-power-domain decision override and its matching header/export. Actual SDK configuration does not enable PM_GENERIC_DOMAINS, which gates drivers/pmdomain, and instead enables native x86 ACPI_PROCESSOR_IDLE and INTEL_IDLE. Whole native governor source remains. This positive build/idle-provider boundary limits the omission to this target; it is not a claim that thermal/voltage safety hooks are inherently unnecessary.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/generic-hooks-last-tail-review.json",
+      "SECURITY.md: Folio, RCU and process-integrity hook review"
+    ]
+  },
+  {
+    "commit": "b669a0e021fe8ffbb39de63773706dd18ec0a118",
+    "disposition": "partially-adapted",
+    "rationale": "Retain four generic PCI power decision/result hooks around the current MID/ACPI operations, with defaults initialized from native results; SDK uses native PCI/ACPI. Despite the commit motivation mentioning non-ACPI systems, callbacks are not restricted to them in code. Omit ANDROID_KABI_DECLONLY/include scaffolding only. Modules can override state/error reports after native operations, so safe transition sequencing and power availability require trusted implementations. Native PCI implementation otherwise preserved.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-last-tail-review.json",
+      "SECURITY.md: Folio, RCU and process-integrity hook review"
+    ]
+  },
+  {
+    "commit": "840aacc91032aca969d2228cbdc9bbc8d422334e",
+    "disposition": "partially-adapted",
+    "rationale": "Retain six generic GPL exports: mthp_stats, swap_space, swap_migration_ad_supported and the three MMU notifier operations. Native notifier bodies are byte-equivalent and retain SRCU/lockdep/lifetime behavior. Omit ARM64 mte_sync_tags export because this is x86 SDK; whole ARM file native. Rebuilt source modules must obey the current contracts; no historical layout or signature is restored.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-last-tail-review.json",
+      "SECURITY.md: Folio, RCU and process-integrity hook review"
+    ]
+  },
+  {
+    "commit": "a38248d16eb4687058ed91f5a663c504d55cfade",
+    "disposition": "adapted",
+    "rationale": "Retain split/reclaim hooks adapted to native int-returning folio_check_splittable rather than restoring historical boolean folio_split_supported. Native truncated-mapping, filesystem support, swapcache, huge-zero and writeback checks precede the callback; a veto returns EINVAL. Keep native __folio_split cleanup around optional replacement and native truncation fallback after result adjustment. Early-release reclaim callbacks must fulfill page/list/reference obligations and may affect accounting; no arbitrary callback safety claim.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-last-tail-review.json",
+      "SECURITY.md: Folio, RCU and process-integrity hook review"
+    ]
+  },
+  {
+    "commit": "2f33719d013ebfaefec1e1f3389dbb4b3a1c9169",
+    "disposition": "adapted",
+    "rationale": "Retain forced-read-ahead replacement, read-ahead-window adjustment, writeback wait observation, and non-NUMA file-folio allocation refusal with its exported wrapper. Actual SDK has NUMA disabled. Default false decisions keep native allocation and wait behavior; restrictive callbacks can return allocation failure or change prefetch policy. Preserve current LTS readahead bounds, ownership/locking and error paths plus earlier lifetime adaptations, not old entire ACK functions.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-last-tail-review.json",
+      "SECURITY.md: Folio, RCU and process-integrity hook review"
+    ]
+  },
+  {
+    "commit": "1c374f127638ce6243cfdf6efec3925c0fb0240a",
+    "disposition": "adapted",
+    "rationale": "Retain EROFS I/O observation for the enabled EROFS filesystem. Notify before the two ordinary submit_bio sites and at completion; file-backed/fscache submission paths retain their native dispatch. Entire endio body is native after removing observation; newer native decompression policy remains. A callback must not retain bio or superblock pointers without references or alter completion ownership. This does not certify latency accounting or runtime EROFS behavior.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-last-tail-review.json",
+      "SECURITY.md: Folio, RCU and process-integrity hook review"
+    ]
+  },
+  {
+    "commit": "233c28c7d9d962c3bf01b0b5719006bd8a187f42",
+    "disposition": "partially-adapted",
+    "rationale": "Retain generic direct/buffered I/O statistics hooks, omitting KABI declaration scaffolding. 8d75f9fa7f08 snapshots the write folio index before write_end can release it, avoiding ACK use-after-free; current native iomap error/crypto/completion flow remains. Preserve historical unsigned-int callback fields and per-site count/index conventions for source compatibility; large offsets may truncate and counts are not a universal page-accurate accounting ABI. Export reordering has no behavior change.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "8d75f9fa7f08e9c64741d10288ffeb914a2009b6"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-last-tail-review.json",
+      "SECURITY.md: Folio, RCU and process-integrity hook review"
+    ]
+  },
+  {
+    "commit": "9d29ba85d8a2c505b2d049568c3b1d29c4e0c2fd",
+    "disposition": "adapted",
+    "rationale": "Retain functional PG_oem_reserved_5 forced-readahead marker and one-time MGLRU activation, with CONFIG_64BIT guard and native tracing name. This bit is consumed by actual reclaim policy, not solely historical KMI. Pinned ART runtime.cc explicitly uses MADV_WILLNEED for mapped runtime files and actual SDK enables MGLRU. Current filemap_get_folio/folio_put pairing replaces unsafe raw XArray access and retains native invalidate lock and EOF/max-index bounds. Policy changes reclaim/availability and can be repeatedly requested; no measured latency benefit or runtime correctness claim.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-last-tail-review.json",
+      "SECURITY.md: Folio, RCU and process-integrity hook review"
+    ]
+  },
+  {
+    "commit": "fa573af4b2ab4a7c778dfaf0bb0a081ed59327f8",
+    "disposition": "partially-adapted",
+    "rationale": "Retain architecture-independent process-integrity hooks and generic DM/path/audit/task/RAM-walk exports; omit ARM64 kimage_vaddr and KABI-only declarations. 0553783af7f7 routes fork rejection through locked core cleanup and frees task LSM storage on callback rejection; 907c42c0138b releases the mm reference when process_vm callback denies. Native file/mmap LSM denial returns before callback, and process_vm ptrace/LSM checks run first. Ptrace/exec/lifecycle notifications do not themselves implement authentication or TrustZone attestation. Trusted subscribers can alter kernel objects and must preserve lifetimes/constraints; no secure-world platform is added.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "0553783af7f74cea06cd514fe2483a90ff531c68",
+      "907c42c0138b88eda4b981e0104d7e250e443fc8"
+    ],
+    "evidence": [
+      "evidence/generic-hooks-last-tail-review.json",
+      "SECURITY.md: Folio, RCU and process-integrity hook review"
+    ]
   }
 ]
