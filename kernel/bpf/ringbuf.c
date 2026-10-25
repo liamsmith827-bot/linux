@@ -262,24 +262,32 @@ static int ringbuf_map_get_next_key(struct bpf_map *map, void *key,
 	return -ENOTSUPP;
 }
 
-static int ringbuf_map_mmap_kern(struct bpf_map *map, struct vm_area_struct *vma)
+static int ringbuf_map_mmap(struct bpf_map *map, struct vm_area_struct *vma)
 {
-	struct bpf_ringbuf_map *rb_map;
+	struct bpf_ringbuf_map *rb_map = container_of(map, struct bpf_ringbuf_map, map);
 	unsigned long size = vma->vm_end - vma->vm_start;
+	u64 data_size = 2ULL * map->max_entries;
+	int err;
 
-	rb_map = container_of(map, struct bpf_ringbuf_map, map);
-
-	if (vma->vm_flags & VM_WRITE) {
-		/* allow writable mapping for the consumer_pos only */
-		if (vma->vm_pgoff != 0 || vma->vm_end - vma->vm_start != __PAGE_SIZE)
-			return -EPERM;
-		/* Emulation rounds the VMA, not the writable metadata page. */
-		return remap_vmalloc_range_partial(vma, vma->vm_start,
-					   rb_map->rb, RINGBUF_PGOFF, PAGE_SIZE);
-	}
 	if (__PAGE_SIZE != PAGE_SIZE) {
-		u64 end = RINGBUF_POS_PAGES * PAGE_SIZE + 2ULL * map->max_entries;
+		u64 end = RINGBUF_POS_PAGES * PAGE_SIZE + data_size;
 		u64 offset = (u64)vma->vm_pgoff << PAGE_SHIFT;
+
+		/* libbpf maps producer metadata and data together using the
+		 * userspace page size. Android also uses separate mappings with
+		 * hardware-page offsets; preserve those offsets unchanged.
+		 */
+		if (vma->vm_pgoff == (__PAGE_SIZE >> PAGE_SHIFT) &&
+		    size == __PAGE_ALIGN(__PAGE_SIZE + data_size)) {
+			err = remap_vmalloc_range_partial(vma, vma->vm_start,
+						   rb_map->rb, RINGBUF_PGOFF + 1,
+						   PAGE_SIZE);
+			if (err)
+				return err;
+			return remap_vmalloc_range_partial(vma,
+					vma->vm_start + __PAGE_SIZE, rb_map->rb,
+					RINGBUF_NR_META_PAGES, data_size);
+		}
 
 		if (vma->vm_pgoff >= (end >> PAGE_SHIFT) ||
 		    size > __PAGE_ALIGN(end - offset))
@@ -292,12 +300,25 @@ static int ringbuf_map_mmap_kern(struct bpf_map *map, struct vm_area_struct *vma
 					   vma->vm_pgoff + RINGBUF_PGOFF, size);
 }
 
-static int ringbuf_map_mmap_user(struct bpf_map *map, struct vm_area_struct *vma)
+static int ringbuf_map_mmap_kern(struct bpf_map *map, struct vm_area_struct *vma)
 {
 	struct bpf_ringbuf_map *rb_map;
 
 	rb_map = container_of(map, struct bpf_ringbuf_map, map);
 
+	if (vma->vm_flags & VM_WRITE) {
+		/* allow writable mapping for the consumer_pos only */
+		if (vma->vm_pgoff != 0 || vma->vm_end - vma->vm_start != __PAGE_SIZE)
+			return -EPERM;
+		/* Emulation rounds the VMA, not the writable metadata page. */
+		return remap_vmalloc_range_partial(vma, vma->vm_start,
+					   rb_map->rb, RINGBUF_PGOFF, PAGE_SIZE);
+	}
+	return ringbuf_map_mmap(map, vma);
+}
+
+static int ringbuf_map_mmap_user(struct bpf_map *map, struct vm_area_struct *vma)
+{
 	if (vma->vm_flags & VM_WRITE) {
 		if (vma->vm_pgoff == 0)
 			/* Disallow writable mappings to the consumer pointer,
@@ -306,8 +327,7 @@ static int ringbuf_map_mmap_user(struct bpf_map *map, struct vm_area_struct *vma
 			 */
 			return -EPERM;
 	}
-	/* remap_vmalloc_range() checks size and offset constraints */
-	return remap_vmalloc_range(vma, rb_map->rb, vma->vm_pgoff + RINGBUF_PGOFF);
+	return ringbuf_map_mmap(map, vma);
 }
 
 static unsigned long ringbuf_avail_data_sz(struct bpf_ringbuf *rb)

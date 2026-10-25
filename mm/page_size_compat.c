@@ -62,24 +62,6 @@ static int __init init_mmap_rnd_bits(void)
 }
 core_initcall(init_mmap_rnd_bits);
 
-#ifdef CONFIG_BPF_SYSCALL
-bool bpf_is_ringbuf_file(struct file *file)
-{
-	if (file->f_op != &bpf_map_fops)
-		return false;
-
-	struct bpf_map *map = file->private_data;
-
-	return map->map_type == BPF_MAP_TYPE_RINGBUF ||
-		map->map_type == BPF_MAP_TYPE_USER_RINGBUF;
-}
-#else
-bool bpf_is_ringbuf_file(struct file *file)
-{
-	return false;
-}
-#endif
-
 #if IS_ENABLED(CONFIG_PERF_EVENTS)
 static int __init init_sysctl_perf_event_mlock(void)
 {

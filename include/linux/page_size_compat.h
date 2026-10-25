@@ -67,20 +67,6 @@
 #define __PAGE_SIZE_ROUND_UP_ADJ(size) \
 	((size) + (((1 << (__PAGE_SHIFT - PAGE_SHIFT)) - 1) << PAGE_SHIFT))
 
-bool bpf_is_ringbuf_file(struct file *file);
-
-static inline unsigned long __bpf_pgoff_fixup(struct file *file, unsigned long pgoff)
-{
-	if (file && bpf_is_ringbuf_file(file)) {
-		unsigned int nr_subpages = __PAGE_SIZE / PAGE_SIZE;
-
-		if (nr_subpages > 1 && pgoff > 0 && (pgoff & (nr_subpages - 1)) == 0)
-			pgoff /= nr_subpages;
-	}
-
-	return pgoff;
-}
-
 static __always_inline void __adjust_cachestat_counters(struct cachestat *cs)
 {
 	unsigned int nr_sub_pages = __PAGE_SIZE / PAGE_SIZE;
