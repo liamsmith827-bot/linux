@@ -9852,3 +9852,46 @@ reassessment before enabling this driver or adding physical NPU support; they
 do not weaken an existing LTS fix for the delivered target. No NPU or neural-
 network workload, emulator boot or Android build was executed. All evidence was
 local; no additional remote resources were accessed.
+
+## Audio loopback, reverted hostless DAI and SDCA interfaces
+
+Thirteen candidates are recorded in evidence/audio-interface-tail-review.json.
+The original hostless DAI patch and its explicit ACK revert were both read.
+Final ACK and port lack the added hostless flags, DMA setup and no-buffer start
+exception. Four affected files are exact native LTS; the fifth differs only by
+the independently retained SOC_SINGLE_BOOL_EXT_ACC macro. Native PCM buffer
+validation and the later LTS implementation remain intact.
+
+The actual virtual-device configuration builds snd-aloop and high-resolution
+timers, and its module distribution explicitly includes snd-aloop.ko. Goldfish
+blocks automatic loading, which is not proof that the built optional module has
+no use. Retain its hrtimer timer_source option conservatively, together with the
+try-to-cancel deadlock fix, as already integrated in 3188544c95fb. Reversing just
+these two candidates in a temporary copy yields the exact LTS file; patch context
+was extended only for the native stop_count and stop_wait initialization. No LTS
+peer-runtime lifetime fix is lost.
+
+Trigger stop/pause changes running/pause state under the cable spinlock before
+hrtimer_try_to_cancel. A running callback acquires the same lock and checks that
+state before rearming. Waiting cancellation under that lock would deadlock on
+such a callback. Prepare and close still synchronously cancel outside the cable
+spinlock, and close drains the timer before cable/runtime freeing. Existing
+module compilation is evidence of build compatibility, not a timing, audio or
+concurrency test; no particular optional SDK caller is asserted.
+
+SDCA is different: its helper library is compiled, but the SoundWire bus and
+SOF provider are disabled. The selected ranchu primary audio HAL uses TinyALSA.
+Omit the new physical SDCA terminal naming, UMP register messaging, auxiliary
+function-device objects and their new exports with those features. These are
+source APIs, not historical KMI-only changes. All affected paths are exact LTS
+or mutually absent; generic ALSA and the existing helper library remain.
+
+Read each associated fix with its feature: mute inversion, label allocation
+failure, exact-before-prefix entity lookup, error-pointer detection, partial
+registration unwind and null-safe unregister, and UMP size arithmetic. None is
+claimed to be equivalent to a native implementation that lacks its new feature.
+In particular, the UMP follow-up changes subtraction to addition; this review
+does not establish that addition cannot overflow. The entire new UMP path is
+omitted. Native exact-label matching remains and never acquires the new prefix
+ambiguity. Reassess these APIs and complete ownership/arithmetic checks for a
+future SoundWire target. No additional remote resources were used.
