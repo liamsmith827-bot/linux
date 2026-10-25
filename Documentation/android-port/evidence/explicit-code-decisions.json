@@ -33467,5 +33467,88 @@
       "evidence/early-android-tail-review.json",
       "SECURITY.md: Early Android configuration, naming and allocator history"
     ]
+  },
+  {
+    "commit": "5019ce82e0f28db9c8d3a45e77b3efcafb366bbd",
+    "disposition": "adapted",
+    "rationale": "Full 1,086-line four-path introduction examined, including area/page reference ownership, XArray/hash/LRU ordering, eviction, copy and invalidation. Retain configured built-in GCMA as cleancache backend and generic reserved-memory/source API; mm/cma.c is an actual consumer. SDK pool provisioning remains unconfirmed, not proof of dispensability. Final ACK evolves allocation refcount/mapcount initialization and GFP input; 57131aee4cb9 fixes unmount versus eviction lifetime and rescheduling based on allowed blocking instead of exact GFP_ATOMIC equality. Current whole backend equals that tested source. Trusted reservation and caller ownership contract remains; no arbitrary module-registration safety or allocator concurrency claim.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "57131aee4cb9d81124e5fc74570e38b1c3aec656"
+    ],
+    "evidence": [
+      "evidence/gcma-cleancache-tail-review.json",
+      "evidence/gcma-integration-check.json",
+      "evidence/cleancache-large-folios-check.json",
+      "evidence/unresolved-feature-questions.json: SDK GCMA reserved-pool provisioning",
+      "SECURITY.md: GCMA and cleancache foundation review"
+    ]
+  },
+  {
+    "commit": "3f3d84c99a6730553294bbe20941ea977fb9c437",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain read-only GCMA sysfs cache/store/load/eviction/discard statistics and object/Kconfig wiring, evolved with final ACK allocated/total counters and exported query. Whole statistic files equal final ACK. Configuration explicitly enables GCMA_SYSFS; no write knob or address disclosure is added. Counters report allocation activity rather than authorization and do not guarantee pool availability, snapshot consistency or measured SDK usage. Current backend includes earlier teardown fix.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "57131aee4cb9d81124e5fc74570e38b1c3aec656"
+    ],
+    "evidence": [
+      "evidence/gcma-cleancache-tail-review.json",
+      "evidence/gcma-integration-check.json",
+      "evidence/cleancache-large-folios-check.json",
+      "evidence/unresolved-feature-questions.json: SDK GCMA reserved-pool provisioning",
+      "SECURITY.md: GCMA and cleancache foundation review"
+    ]
+  },
+  {
+    "commit": "abb7c88dc2ee1567f73d54212320789301304f3d",
+    "disposition": "partially-adapted",
+    "rationale": "Retain generic existing guarantee DT binding, CMA GCMA flag/source signature, activation/allocation/release dispatch and read-only per-area gcma attribute. Preserve native CMA region/alignment/zone checks and failure cleanup; 57131aee4cb9 preserves native GFP flags and IRQ state, validates optional cma before dereference, and disallows atomic sleeping retries. Ordinary CMA still uses native alloc_contig_range and allocation mutex; GCMA retains reserved-page ownership contract. Omit ARM64 protected-host and PowerPC fadump call-site changes for x86 SDK target; no cross-architecture build claim. Actual SDK reservation is unconfirmed and no new pool or physical platform is enabled.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "57131aee4cb9d81124e5fc74570e38b1c3aec656"
+    ],
+    "evidence": [
+      "evidence/gcma-cleancache-tail-review.json",
+      "evidence/gcma-integration-check.json",
+      "evidence/cleancache-large-folios-check.json",
+      "evidence/unresolved-feature-questions.json: SDK GCMA reserved-pool provisioning",
+      "SECURITY.md: GCMA and cleancache foundation review"
+    ]
+  },
+  {
+    "commit": "768e4f189de08aa69410ad5e197eca9cd0b603f1",
+    "disposition": "adapted-net-state",
+    "rationale": "Retain all four CMA/dma-heap latency declarations, exports and balanced ordinary-allocation call sites on current allocation implementation. Initialization stime=0 supports absent callbacks; validation precedes hooks and CMA bypass/early failure remains untimed. Keep native CMA guards and separately adapted acquire load of dma-heap allocator function. Trusted callback must not retain stack timestamp; dma_buf may be an error pointer and borrowed objects cannot be consumed. CMA may execute with atomic GFP, so callbacks must respect its actual context. Exact vendor registration is not established; retain source customization conservatively.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "57131aee4cb9d81124e5fc74570e38b1c3aec656",
+      "eecae28e83be9b3498c24cc31daebea893bfb0a5"
+    ],
+    "evidence": [
+      "evidence/gcma-cleancache-tail-review.json",
+      "evidence/gcma-integration-check.json",
+      "evidence/cleancache-large-folios-check.json",
+      "evidence/unresolved-feature-questions.json: SDK GCMA reserved-pool provisioning",
+      "SECURITY.md: GCMA and cleancache foundation review"
+    ]
+  },
+  {
+    "commit": "b23efcdb7b447603fa47cc6344e8ca0ff529b7d7",
+    "disposition": "partially-adapted",
+    "rationale": "Full 883-line 18-path restoration read. Retain configured generic cleancache frontend, superblock pool lifecycle, page-cache put/invalidation and generic mpage support; ext4/F2FS initialization/read integration in 1e4401eda113 preserves native fsverity and F2FS block validation instead of original unchecked hits/inverted uptodate condition. b1ae0b82acce rejects large-folio reads and invalidates old base-page entries on compound put/invalidate. Btrfs cache integration and historical maintainer attribution are omitted; 4b1669b5ea0c removes leftover NTFS3 include and OCFS2 include/shared initialization. These filesystems are explicitly disabled and supplied GCMA rejects shared pools, not merely absent search hits. Native implementations/module namespace imports remain. Resident backend lifetime is required; no unregister or KMI layout promise.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "1e4401eda113f631464a0fe141890e1a9efe55f3",
+      "b1ae0b82acce45f4dd5c1d76afb08bcd060c2672",
+      "4b1669b5ea0c77eb6abaf86bd77a9261d9752658"
+    ],
+    "evidence": [
+      "evidence/gcma-cleancache-tail-review.json",
+      "evidence/gcma-integration-check.json",
+      "evidence/cleancache-large-folios-check.json",
+      "evidence/unresolved-feature-questions.json: SDK GCMA reserved-pool provisioning",
+      "SECURITY.md: GCMA and cleancache foundation review"
+    ]
   }
 ]

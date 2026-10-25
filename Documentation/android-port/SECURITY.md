@@ -10167,3 +10167,40 @@ native profiling capability definitions/dependencies; the CFI generic-pass block
 and compiler_types.h remain native. Those precise unchanged regions were checked
 before updating witnesses, and the earlier review records are preserved in the
 revalidation evidence. No remote source was used.
+
+# GCMA and cleancache foundation review
+
+Five original changes are reviewed in `evidence/gcma-cleancache-tail-review.json`,
+including the full GCMA and cleancache implementations. Retain the configured
+frontend/backend, statistics, generic CMA bridge and latency hooks. Exact SDK
+pool provisioning remains unconfirmed in `unresolved-feature-questions.json`;
+no pool or future platform is enabled. Native CMA validation and normal
+allocation remain, with the earlier `57131aee4cb9` null/flags/IRQ/sleep/lifetime
+corrections. Whole current CMA/GCMA files match that tested source. Registration
+requires trusted reserved-memory setup; arbitrary late/concurrent/overlapping
+registration is not certified safe. Hooks are trusted kernel callbacks, must
+respect atomic contexts and borrowed/error-pointer arguments, and cannot keep
+the stack timestamp pointer.
+
+Cleancache uses one resident backend with no unregister protocol. Its diagnostic
+counters are not synchronized snapshots or authorization decisions. Ext4/F2FS
+cache hits retain native verity checks, with F2FS block-address validation first.
+Large-folio reads fall back and compound writes/invalidations evict stale base
+entries through `b1ae0b82acce`; its tested header is unchanged. The generic
+page-cache, superblock and block-device invalidation paths remain, including
+empty-mapping invalidation. These protections differ deliberately from the
+original historical restoration.
+
+Btrfs integration remains absent. `4b1669b5ea0c` removes three leftover lines
+from NTFS3/OCFS2: an unused header include and a shared-cache mount call with its
+include. All three filesystems are disabled in the selected configuration, and
+the supplied backend rejects shared pools. NTFS3 is now entirely native LTS;
+OCFS2 and Btrfs superblock code are native except the separately retained module
+namespace import. The historical cleancache maintainer attribution is not
+asserted. ARM64 protected-host/PowerPC call-site changes are outside this x86
+target; other-architecture compilation is not verified.
+
+Existing host extracted-function tests cover modeled lifetime, flags and stale
+cache regressions, not real allocator, RCU or filesystem concurrency. Build 195
+is running for the small scope cleanup. All evidence was local; no remote
+resource was accessed.
