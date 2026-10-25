@@ -9315,3 +9315,99 @@ after proving its other paths unchanged and isolating the single external-header
 default-destination line; two textual-presence decisions also passed reverse-patch
 checks again against both LTS and current HEAD. This refresh finalizes no new
 candidate and is recorded in `evidence/makefile-uapi-witness-refresh.json`.
+
+## Shared headers and bounded firmware parameters
+
+The 35 candidate decisions and pinned local consumer evidence are in
+`evidence/shared-header-review.json`. No additional remote resource was used.
+URLs embedded in historical commit messages were not opened.
+
+Retain the exact ACK dm-user header: GrapheneOS snapuserd's local
+`dm_user_header` has the same five u64 fields, and `DmUserBlockServer` reads
+that protocol from its control fd. The Bionic ICMP member spelling prevents
+collision with the actual `__unused` macro in Bionic's `sys/cdefs.h`, without
+changing packet layout. The quota2 types include remains; the old android_fs
+trace header is absent from both final ACK and LTS. Native firmware caching
+configuration/implementation is already present, and the SDK disables caching.
+
+Generic task/TCP/writeback/signal/QoS/lock OEM storage remains for rebuilt vendor
+modules. These are functional data slots, not historical KMI padding. Their
+presence does not implement RTT statistics, alter signal delivery or change
+lock ordering. No particular SDK subscriber is established; module owners must
+initialize and synchronize their state and manage lifetimes. Current task OEM
+storage has six slots; dmabuf_info precedes the variable-size architecture
+thread member. Five 64-bit OEM page flags and trace names remain with native
+flag-capacity checks and preparation masks. Modules must release page metadata
+before freeing pages. The sched_blocked_reason trace uses __get_wchan while
+try_to_wake_up holds pi_lock; calling the locking wrapper would recurse on that
+lock. Existing task/DMA accounting lifetime reviews remain applicable.
+
+`14e6be19625d` keeps the ten-directory firmware parameter but fixes observed
+ACK parser/getter defects. Shorter replacements used to leave stale directories;
+overlong inputs were silently truncated; maximum-length entries lost their
+separator or last character on readback. The new setter validates the entire
+replacement before publishing it, clears unused entries and returns -ENOSPC on
+excess length/count. Each directory permits 255 characters, preserving native
+single-directory capacity. A mutex serializes setter/getter and copies each
+mutable directory before path formatting. Filesystem I/O runs without this
+mutex; an entire multi-directory search is not a snapshot and can observe an
+update between attempts. Native init-namespace reads, LSM checks, size limits,
+decompression and cleanup remain. Newline stripping applies consistently to
+every custom directory; the four default search paths retain their order.
+The parameter still has mode 0644. Accepting more configured directories expands
+the administrator-controlled search order; no unprivileged write access is
+added. Atomic updates prevent unintended stale or partially copied paths.
+
+The parser uses bounded static scratch storage because boot parameter parsing
+precedes mm_core_init. Each loader call adds a 256-byte stack snapshot; getter
+size is checked against PAGE_SIZE. The host test reproduces the baseline stale
+path failure and passes 815 replacement/boundary cases plus 20,000 writes and
+40,000 concurrent reads under ASan/UBSan with pthread/string shims. This is not
+a kernel firmware-load, locking or LSM runtime test. GrapheneOS ueventd documents
+the parameter; an SDK multi-directory setting is unestablished, so this generic
+Android configuration interface is retained conservatively.
+
+`45b0ec108d3d` implements the already declared generic
+power_supply_get_by_reference_array API. The original OF-only helper and its
+inline-stub fix were superseded by ACK's firmware-node replacement. ACK's array
+implementation increments use_cnt without retaining a device reference and
+ignores iterator errors. The adaptation takes both references, bounds the signed
+array size and int return count, propagates errors and releases/clears acquired
+entries on failure. Surrounding native power-supply code is unchanged. Callers
+must still put successful results before unregistering their supplies, as for
+the native single-result helper. The host test reproduces ACK's missing retained
+reference and passes 61,440 cases with 1,364,996 assertions, including overflow,
+missing references and injected iteration errors. It simulates class iterator
+lifetime; it does not verify concurrent kernel unregister behavior. No SDK
+caller is established, which is insufficient grounds to remove a generic vendor
+source API. The separately declared system-battery get/put helpers remain a
+review item and are not implemented by this array change.
+
+`82553b7cc82d` retains the generic SOC_SINGLE_BOOL_EXT_ACC macro while restoring
+native headers for omitted backends. The six-line macro uses existing ALSA
+callbacks and explicit control access flags; native access checks remain. A
+specific SDK instantiation is unestablished. RC_CORE/LIRC are enabled, so retain
+the generic one-second IR transmit ceiling; native zero-pulse and cumulative
+remaining-duration checks are unchanged. This extends the bounded maximum from
+0.5 to 1 second and does not establish physical emitter compatibility.
+FAULT_NOWARN's enum is available in disabled fault-injection configurations,
+without changing their no-op helpers.
+
+Chrome EC calibration, lightbar segment/large-sequence and power-monitor
+protocol additions are omitted together with their header fixes. Both SDK
+configurations disable CHROME_PLATFORMS; sensor/lightbar dependencies identify
+the required EC backend. Driver code, ABI text and command header now all equal
+LTS. These fixes may be required on Chrome hardware; importing an orphan payload
+would not implement that feature. SOF/SoundWire are disabled; keep native ACPI
+const qualifiers, IPC4 definitions and topology tokens with the native backend.
+The special FIPS140 module is explicitly ARM64-only in ACK Kconfig. Its forced
+fips_enabled and alternate static-key implementation serve module integrity,
+not solely KMI. Remove those orphan conditionals with the omitted module while
+preserving native FIPS and jump-label behavior; no certification is claimed.
+
+The two UFS hook-header fixes follow the separately documented UFS scope:
+Goldfish SDK storage uses virtio. UFS remains configured and native UFS supports
+a QEMU device, so absence is not inferred from a disabled driver or universal
+physical-only assumption. Keep exact native UFS code and omit the complete
+Android UFS hook family for the selected backend. Generic block, crypto and
+module interfaces retain their independent decisions.

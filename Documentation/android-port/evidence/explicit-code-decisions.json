@@ -30198,5 +30198,445 @@
       "evidence/build-shared-review.json",
       "SECURITY.md: Shared build and profiling interfaces"
     ]
+  },
+  {
+    "commit": "eab894210465f982d520d498d294511ab6b3aaa0",
+    "disposition": "partially-adapted",
+    "rationale": "Keep the linux/types.h include in the retained xt_quota2 interface; its final header equals ACK. The android_fs trace header and its linux/fs.h include have no residual code in either final ACK or LTS. No new runtime behavior or layout change is introduced by this include fix.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "cd403ef6a75c38bc126b1b7f2362ab6426062df0",
+    "disposition": "already-represented-upstream",
+    "rationale": "Native LTS already contains FW_CACHE and its guarded implementation. Kconfig is exact native; all firmware_loader/main.c outside the path parameter/read adaptation is exact native. Both SDK configurations disable firmware caching as selected by Android. Do not replay the old patch over newer firmware loading and cleanup.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "cc254ce831c0d353a45b27f412153d0fb8a18b4a",
+    "disposition": "applied",
+    "rationale": "Retain the exact ACK dm-user UAPI. Pinned GrapheneOS snapuserd defines the matching five-u64 header and DmUserBlockServer reads it from the control fd; this is a positive userspace protocol consumer, not vendor KMI. Existing dm-user driver length, copying and lifetime adaptations remain separately tested; this header does not bypass their checks.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "6c3665470dfb29730342d2d46f9511b1f3acc381",
+    "disposition": "adapted",
+    "rationale": "Retain task OEM data using the final six-u64 field rather than the historical two-slot intermediate size. Existing task storage initialization and clone lifetime reviews remain applicable. This is functional generic vendor/OEM storage, not historical binary-layout padding. Keep current native fields and rebuild modules. No active SDK subscriber or universal initialization/lifetime guarantee is established; the owning module must initialize, synchronize and release its state. Storage alone does not implement the policy described by the commit message.",
+    "result_commits": [
+      "275786041b29119fa82d6d2b5787a4b9c6576947",
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "d1dc0cf821209662fb3a18c5bd72a2ae3792667a",
+      "f6617750f7d36b82b8d4217625e9b6413ece2715"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "1dccea76dace5c8abeafdc53de6f87d80ad0dc95",
+    "disposition": "superseded",
+    "rationale": "The OF-only phandle-array declaration and non-OF stub were removed by 2fe2a181bb39 when the API moved to generic firmware nodes. Retain the replacement declaration and corrected implementation in 45b0ec108d3d; do not resurrect an obsolete parallel helper or its inline fix.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "45b0ec108d3decfa1d6c9b81d5be998197df2a49"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "1c569481ec289339751d90335412a244fa4734f4",
+    "disposition": "applied",
+    "rationale": "Retain the Bionic-only __linux_unused spelling. Local Bionic sys/cdefs.h defines __unused as an attribute and its kernel-header generator explicitly renames the conflicting field; the generated ICMP header confirms this contract. Only the C field name changes under __BIONIC__, preserving member type, position and packet layout; non-Bionic spelling remains native.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "017f3c6586bef8795adb9f3c9385daef77a2e3fe",
+    "disposition": "adapted",
+    "rationale": "Retain __get_wchan in sched_blocked_reason. The callsite in try_to_wake_up is inside the p->pi_lock guard, while get_wchan takes that same lock; restoring the old wrapper could deadlock when tracing is enabled. The low-level walker uses the existing caller synchronization. No scheduler locking relaxation or address-policy bypass is added.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "697505edff4d7d95372c862de4c94d1089274825"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "c57fe7391e3d04861895f627ece143d1c2e8cd1c",
+    "disposition": "omitted-current-target",
+    "rationale": "The const qualification repairs the UFS UIC-command hook signature. Omit with the complete UFS vendor hook family. Current SDK Goldfish fstab/ramdisk evidence selects virtio storage; native UFS is still compiled and includes QEMU matching, so this is a selected-backend boundary, not a claim that UFS cannot be emulated. Entire UFS source/header subtrees remain native, and the hook header/export family is omitted together; native fixes remain intact.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "966fa8bb3e5f0f1c40aef457cdf04b3b9272d0ad",
+    "disposition": "omitted-current-target",
+    "rationale": "The TRACE_INCLUDE_PATH undef prevents contamination of trace-header inclusion for the UFS hook family. Omit with that absent family; no standalone orphan header is retained. Current SDK Goldfish fstab/ramdisk evidence selects virtio storage; native UFS is still compiled and includes QEMU matching, so this is a selected-backend boundary, not a claim that UFS cannot be emulated. Entire UFS source/header subtrees remain native, and the hook header/export family is omitted together; native fixes remain intact.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "1afe39edbe66c201d26f23f2e3396583238f6842",
+    "disposition": "adapted",
+    "rationale": "Retain tcp_sock OEM state for source modules that may attach per-socket RTT statistics; the field does not itself alter TCP congestion control or RTT arithmetic. This is functional generic vendor/OEM storage, not historical binary-layout padding. Keep current native fields and rebuild modules. No active SDK subscriber or universal initialization/lifetime guarantee is established; the owning module must initialize, synchronize and release its state. Storage alone does not implement the policy described by the commit message.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "66b6be383cac26e4972bca7f1cfc10c2bd9f368b",
+    "disposition": "adapted",
+    "rationale": "Retain up to ten firmware search directories, but 14e6be19625d replaces ACK silent truncation, stale trailing paths and broken maximum-length getter with validated atomic replacements and coherent per-directory snapshots. Keep native 255-character single-directory capacity and -ENOSPC semantics. Invalid updates preserve the old list; shorter/empty updates clear stale entries. Mutex covers parser/getter and each copied directory, not filesystem I/O. Native read/LSM/decompression/error logic is preserved. Whole search attempts may observe updates between directories. Exact SDK multi-path consumer is unestablished; preserve the generic Android parameter conservatively. ASan/UBSan tests reproduce the old stale-path bug and cover 815 cases plus concurrent access.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "14e6be19625d8022c3dd9d063b3f3032cccda9ee"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "47d9cc810f07d202e235b5ebd60654138e14c326",
+    "disposition": "adapted",
+    "rationale": "Retain two OEM slots in bdi_writeback for vendor writeback accounting without changing native writeback/list/lock algorithms. This is functional generic vendor/OEM storage, not historical binary-layout padding. Keep current native fields and rebuild modules. No active SDK subscriber or universal initialization/lifetime guarantee is established; the owning module must initialize, synchronize and release its state. Storage alone does not implement the policy described by the commit message.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "947f9b2b6e52f1653d6c844aefc1fa9ee8730fec",
+    "disposition": "adapted",
+    "rationale": "Retain OEM page flags and their trace names on 64-bit builds; the final header has five flags rather than the initial four. Preserve native __NR_PAGEFLAGS-dependent masks and exact native page-flags-layout.h capacity checks, avoiding a fixed historical layout. The preparation mask includes these bits; modules must clear/release owned page metadata before returning pages. No SDK owner is established, so keep this generic vendor interface conservatively.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "24031d9c22903036ea5efd5d51bd96d0e7d07aa7",
+    "disposition": "adapted",
+    "rationale": "Retain signal_struct OEM state. The header field alone does not convert SIGKILL to SIGABRT or change native signal authorization/delivery, despite the use case in the commit message. This is functional generic vendor/OEM storage, not historical binary-layout padding. Keep current native fields and rebuild modules. No active SDK subscriber or universal initialization/lifetime guarantee is established; the owning module must initialize, synchronize and release its state. Storage alone does not implement the policy described by the commit message.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "be0b04c539f040e710869174a625ebfa6bf73958",
+    "disposition": "adapted",
+    "rationale": "Retain freq_qos_request OEM state for generic vendor attribution while preserving native frequency-QoS synchronization and aggregation. This is functional generic vendor/OEM storage, not historical binary-layout padding. Keep current native fields and rebuild modules. No active SDK subscriber or universal initialization/lifetime guarantee is established; the owning module must initialize, synchronize and release its state. Storage alone does not implement the policy described by the commit message.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "8fcd18aa5c53202e77627e8cca601b0588993fac",
+    "disposition": "adapted",
+    "rationale": "Retain OEM fields in both mutex representations and rw_semaphore for vendor lock state/statistics. No lock-order, owner or waiter semantics are changed by these fields. This is functional generic vendor/OEM storage, not historical binary-layout padding. Keep current native fields and rebuild modules. No active SDK subscriber or universal initialization/lifetime guarantee is established; the owning module must initialize, synchronize and release its state. Storage alone does not implement the policy described by the commit message.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "621060d19e36eac8bf1121574c38637a63f145d1",
+    "disposition": "omitted-current-target",
+    "rationale": "The const removal serves SOF/SoundWire ACPI endpoint discovery and dynamic SDCA metadata. Both SDK configurations disable SOF_TOPLEVEL and SOUNDWIRE; the containing header remains exactly native, including const qualifiers. Generic ALSA interfaces remain available. Future physical audio platforms require a separate backend review.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "71919dacd8327eda39a3c6fbb4af3b31ca121a90",
+    "disposition": "omitted-current-target",
+    "rationale": "The size-first packed lightbar_program_ex fix is necessary only with the large-sequence extension. Omit feature and fixes as a unit; 82553b7cc82d removes the orphan extension header to match native lightbar code. The Chrome EC parent/transport and sensor-hub/lightbar command protocols require the Chrome EC backend. Both generated SDK configurations disable CHROME_PLATFORMS; sensor Kconfig depends on CROS_EC_SENSORHUB and lightbar on MFD_CROS_EC_DEV. Preserve native backend code and ABI documentation together with the restored native command header. This is not a judgment that these fixes are unnecessary for Chrome hardware.",
+    "result_commits": [
+      "82553b7cc82d31e3b7f2c4ba9d3fe2dec17e9c29"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "1ffc69d725115e4f5cb929bce037cb7bb3a7daec",
+    "disposition": "omitted-current-target",
+    "rationale": "The zero-length-to-flexible-array correction belongs to the omitted lightbar large-sequence protocol. Restore the native header rather than leave an unused partial feature or revive the unfixed form. The Chrome EC parent/transport and sensor-hub/lightbar command protocols require the Chrome EC backend. Both generated SDK configurations disable CHROME_PLATFORMS; sensor Kconfig depends on CROS_EC_SENSORHUB and lightbar on MFD_CROS_EC_DEV. Preserve native backend code and ABI documentation together with the restored native command header. This is not a judgment that these fixes are unnecessary for Chrome hardware.",
+    "result_commits": [
+      "82553b7cc82d31e3b7f2c4ba9d3fe2dec17e9c29"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "6052d4375b94a35e6d68e2cc5431d9dc199d7cc0",
+    "disposition": "omitted-current-target",
+    "rationale": "The new SOF topology domain/heap/stack tokens describe the separate DSP IPC4 backend, not a generic ALSA mixer API. Remove the four orphan token additions with 82553b7cc82d while retaining native topology parsing and tokens. SOF_TOPLEVEL and SOUNDWIRE are disabled for the SDK; do not promise the new DSP firmware contract.",
+    "result_commits": [
+      "82553b7cc82d31e3b7f2c4ba9d3fe2dec17e9c29"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "38b43b53c726e61dd7145b11a69aafd90ba4a67b",
+    "disposition": "omitted-current-target",
+    "rationale": "KCPS token accompanies the omitted SOF DSP topology extension. Restore exact native tokens with 82553b7cc82d and keep the native backend; no selected SDK firmware consumes that new protocol.",
+    "result_commits": [
+      "82553b7cc82d31e3b7f2c4ba9d3fe2dec17e9c29"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "c0d282cef710dba3828f3abda2f48f2ec68c5df2",
+    "disposition": "omitted-current-target",
+    "rationale": "The extended IPC4 module-init payloads/macros are a SOF firmware interface. Header is exact native and SOF_TOPLEVEL disabled; omit with the corresponding DSP backend rather than importing unused payloads or the old mismatched EXTENDED_SHIFT macro spelling. Generic sound source interfaces are handled separately.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "99087bc077e3b3a3dad4a5995b25c63dd1ea0603",
+    "disposition": "omitted-current-target",
+    "rationale": "BUILD_FIPS140_KO forces fips_enabled for the separate ACK ARM64-only self-checking crypto module. Its Kconfig explicitly depends on ARM64, Clang and module builds; the module is absent for this x86 SDK. Remove orphan header overrides, preserving native CONFIG_CRYPTO_FIPS behavior. This does not claim FIPS certification or disable the native weak-key checks when FIPS is enabled.",
+    "result_commits": [
+      "82553b7cc82d31e3b7f2c4ba9d3fe2dec17e9c29"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "7fc426de408aacedfc94ecb2c6a1c9bb1594dcf0",
+    "disposition": "omitted-current-target",
+    "rationale": "The static-key implementation split prevents text patching inside the separate FIPS140 module while maintaining access to core keys. It has a functional integrity role, not merely historical KMI. Omit with the ARM64-only module and restore exact native jump_label.h; do not weaken normal kernel branch patching/locking.",
+    "result_commits": [
+      "82553b7cc82d31e3b7f2c4ba9d3fe2dec17e9c29"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "a1e65baedb9ad957c24acc99355f72ccb2ce7061",
+    "disposition": "omitted-current-target",
+    "rationale": "Atomic-only key toggles are intended for module-local FIPS140 keys and cannot replace the generic exported-key implementation. Omit with the ARM64-only module; exact native static-key implementation and guards are restored. No cross-module mixed-layout promise is made.",
+    "result_commits": [
+      "82553b7cc82d31e3b7f2c4ba9d3fe2dec17e9c29"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "a6841e3362ef213726afd4d73eaa96d03a4fcb23",
+    "disposition": "applied",
+    "rationale": "Retain the six-line SOC_SINGLE_BOOL_EXT_ACC descriptor macro as a generic vendor sound source API. It adds explicit control access flags while using existing native bool info/get/put callbacks. All other soc.h content equals LTS; normal ALSA access enforcement remains in the native core. A specific SDK instantiation is unestablished, which does not justify deleting the generic source interface.",
+    "result_commits": [
+      "82553b7cc82d31e3b7f2c4ba9d3fe2dec17e9c29"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "cd4c71bbe4e8220332b4d9eff7d65a113ff1aa41",
+    "disposition": "adapted",
+    "rationale": "Keep dmabuf_info before task_struct.thread. Architecture thread state may be variable-sized and must remain the final member; this is functional memory-layout safety, not historical KMI preservation. Current order is verified; existing DMA accounting initialization, lifetime and procfs failure protections remain separately reviewed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "08bf65a59b75c5d6a7685f29e633958762904ca5",
+    "disposition": "adapted",
+    "rationale": "Retain the generic one-second IR transmit ceiling; RC_CORE and LIRC are enabled in both SDK configurations. Exact SDK emitter consumer is unestablished, so retain the generic source/userspace behavior conservatively. Native lirc_dev.c still rejects zero pulses and each duration exceeding the remaining cumulative bound; 1000000 microseconds fits the representation. Maximum permitted blocking duration increases from 0.5 to 1 second; no unbounded transmission is introduced or physical remote-control test claimed.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "8652a3b649c9c9b115a1e366ce76cba26ff86136",
+    "disposition": "applied",
+    "rationale": "Keep fault_flags available even with CONFIG_FAULT_INJECTION disabled so generic callers can name FAULT_NOWARN. Final header equals ACK and the only LTS delta is moving this enum outside the conditional; disabled no-op helpers and enabled fault-injection behavior are unchanged.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "f30029bfe5b11fdfdf213e1eb1830926c6108cc2",
+    "disposition": "omitted-current-target",
+    "rationale": "Power-monitor commands/events and Strauss/PoE/hybrid-charger/log feature codes extend the Chrome EC firmware protocol. Remove orphan definitions with 82553b7cc82d and retain exact native header/backend. The Chrome EC parent/transport and sensor-hub/lightbar command protocols require the Chrome EC backend. Both generated SDK configurations disable CHROME_PLATFORMS; sensor Kconfig depends on CROS_EC_SENSORHUB and lightbar on MFD_CROS_EC_DEV. Preserve native backend code and ABI documentation together with the restored native command header. This is not a judgment that these fixes are unnecessary for Chrome hardware.",
+    "result_commits": [
+      "82553b7cc82d31e3b7f2c4ba9d3fe2dec17e9c29"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "dea1a925f6a164bc2b21ac2484983ae40347f012",
+    "disposition": "superseded",
+    "rationale": "The original OF phandle-array helper is replaced by the firmware-node API in 2fe2a181bb39. Preserve that generic source capability through 45b0ec108d3d with explicit device references and transactional error cleanup. Do not reproduce the original unbalanced use_cnt increment, ignored iterator overflow or obsolete non-OF stub.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "45b0ec108d3decfa1d6c9b81d5be998197df2a49"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "58a6dbc28186dd4bc9d1957f87b158b0f7837c82",
+    "disposition": "omitted-current-target",
+    "rationale": "Entering/exiting Chrome EC sensor calibration requires an extra enable byte and the matching sensor implementation. Keep native calibration driver, ABI text and command header together, rather than expose the changed payload alone. The Chrome EC parent/transport and sensor-hub/lightbar command protocols require the Chrome EC backend. Both generated SDK configurations disable CHROME_PLATFORMS; sensor Kconfig depends on CROS_EC_SENSORHUB and lightbar on MFD_CROS_EC_DEV. Preserve native backend code and ABI documentation together with the restored native command header. This is not a judgment that these fixes are unnecessary for Chrome hardware.",
+    "result_commits": [
+      "82553b7cc82d31e3b7f2c4ba9d3fe2dec17e9c29"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "f1ab700b83a18a82a7e1f6d8a27b88a1fd72b2e0",
+    "disposition": "omitted-current-target",
+    "rationale": "num_segments sysfs reporting and GET_PARAMS_V3 describe the Chrome EC lightbar. Keep native lightbar code and header together; the new physical LED protocol is outside the selected SDK. The Chrome EC parent/transport and sensor-hub/lightbar command protocols require the Chrome EC backend. Both generated SDK configurations disable CHROME_PLATFORMS; sensor Kconfig depends on CROS_EC_SENSORHUB and lightbar on MFD_CROS_EC_DEV. Preserve native backend code and ABI documentation together with the restored native command header. This is not a judgment that these fixes are unnecessary for Chrome hardware.",
+    "result_commits": [
+      "82553b7cc82d31e3b7f2c4ba9d3fe2dec17e9c29"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "bcfc5d3b465ce1bb6d181ebb3a35cc37428f6045",
+    "disposition": "omitted-current-target",
+    "rationale": "The larger lightbar sequence feature fragments programs over the EC transport and changes allocation/transfer sizing. Omit this complete feature plus its packed/flexible-array fixes, preserving native code and header consistency. No reliability or bounds claim is made for an untested EC transport. The Chrome EC parent/transport and sensor-hub/lightbar command protocols require the Chrome EC backend. Both generated SDK configurations disable CHROME_PLATFORMS; sensor Kconfig depends on CROS_EC_SENSORHUB and lightbar on MFD_CROS_EC_DEV. Preserve native backend code and ABI documentation together with the restored native command header. This is not a judgment that these fixes are unnecessary for Chrome hardware.",
+    "result_commits": [
+      "82553b7cc82d31e3b7f2c4ba9d3fe2dec17e9c29"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "2fe2a181bb39f6e443fc79f617ee4b0df9fe7d34",
+    "disposition": "adapted",
+    "rationale": "Retain generic firmware-node array lookup for vendor source compatibility; an orphan declaration was insufficient. 45b0ec108d3d adds the implementation while preserving native surrounding code. Unlike ACK, acquire get_device as well as use_cnt, reject nonpositive/overflowing counts, propagate iterator errors and release/clear acquired results on failure. This prevents returned dangling references and partial-result leaks. Host extraction tests reproduce ACK missing-reference behavior and pass 61440 cases/1364996 assertions, including injected iterator errors. No SDK caller is established; preserve the generic interface conservatively without claiming unregister-race runtime testing.",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "45b0ec108d3decfa1d6c9b81d5be998197df2a49"
+    ],
+    "evidence": [
+      "evidence/shared-header-review.json",
+      "SECURITY.md: Shared headers and bounded firmware parameters"
+    ]
+  },
+  {
+    "commit": "9f81255173e97d0108b5eb930c1dc635eb734e7c",
+    "disposition": "superseded",
+    "result_commits": [
+      "45b0ec108d3decfa1d6c9b81d5be998197df2a49"
+    ],
+    "rationale": "The historical pointer-to-const-class adjustment belongs to the superseded OF phandle-array helper. Its firmware-node replacement in 45b0ec108d3d passes &power_supply_class to the current native iterator. Retain the generic source API with corrected ownership; replace the earlier broad target omission. Native class type and surrounding code remain unchanged.",
+    "evidence": [
+      "evidence/power-supply-prior-review.json",
+      "evidence/shared-header-review.json"
+    ]
+  },
+  {
+    "commit": "1c5da73ac4e907641f91bd45a33e47bb3b7b6f94",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "The complete historical patch is whitespace-only under git diff -w. Both affected battery-info functions equal pinned LTS after the separate array helper addition. Keep native formatting and behavior; replace the earlier broad target omission rather than describing already present native code as omitted.",
+    "evidence": [
+      "evidence/power-supply-prior-review.json",
+      "evidence/shared-header-review.json"
+    ]
   }
 ]
