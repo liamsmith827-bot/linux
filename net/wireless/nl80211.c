@@ -8427,7 +8427,7 @@ static int nl80211_get_station(struct sk_buff *skb, struct genl_info *info)
 
 	memset(&sinfo, 0, sizeof(sinfo));
 
-	if (!wdev->netdev)
+	if (!wdev->netdev && wdev->iftype != NL80211_IFTYPE_NAN)
 		return -EINVAL;
 
 	if (!info->attrs[NL80211_ATTR_MAC])
