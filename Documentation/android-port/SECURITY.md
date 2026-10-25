@@ -11088,3 +11088,31 @@ initialization. No older fatal template init or early platform registration is
 retained. All affected ARM retained files remain native. No passthrough, PM,
 DMA, fault or lifetime runtime test was executed. Only local sources were used;
 embedded patch URLs were not visited.
+
+## GenieZone and Gunyah platform boundary
+
+Thirteen complete patches are recorded in vendor-hypervisor-tail-review.json.
+These are real Android virtualization interfaces: pinned crosvm includes both
+/dev/gzvm and /dev/gunyah backends, gated to aarch64 at module and execution
+dispatch. ACK selects these backends in ARM64 GKI. Their driver Kconfigs and
+HVC/firmware protocols require ARM64; GenieZone also requires MediaTek firmware
+and a matching DT node. They are omitted for the x86_64 SDK target, not on the
+claim that a userspace consumer could not be found.
+
+Native ARM/common build files and virtualization documentation index remain
+whole LTS. All private VM manager, firmware, UAPI and hypercall files affected
+by these patches are absent. Shared ioctl documentation retains only the
+separate zram addition, and MAINTAINERS only the separate fsverity tracepoint
+addition. The Gunyah hook declarations, exports and callers are removed as a
+unit; Android's generic vendor-hook infrastructure and selected callbacks remain.
+
+The complete historical foundations were examined for VM/fd/refcount failure
+paths. Their omission does not certify those historical versions safe for later
+reuse. In particular the GenieZone create-VM foundation does not unwind a VM
+after anonymous-fd creation failure. Any future inclusion must assess the final
+series rather than copy this foundation alone. Gunyah guest balloon ownership
+requires its UNLOCK|SANITIZE and flush protocol; ordinary native virtio support
+is not presented as an equivalent protected guest guarantee. Private QTVM
+watchdog, release and firmware-parcel reclaim callbacks do not belong to an
+x86 SDK object lifecycle. No firmware/runtime/VM test was executed. Only local
+checkouts were used; embedded schema and discussion URLs were not contacted.
