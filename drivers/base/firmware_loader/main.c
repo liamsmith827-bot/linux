@@ -469,8 +469,9 @@ static int fw_decompress_xz(struct device *dev, struct fw_priv *fw_priv,
 
 /* direct firmware loading support */
 #define CUSTOM_FW_PATH_COUNT	10
-#define PATH_SIZE		255
+#define PATH_SIZE		256
 static char fw_path_para[CUSTOM_FW_PATH_COUNT][PATH_SIZE];
+static DEFINE_MUTEX(fw_path_lock);
 static const char * const fw_path[] = {
 	fw_path_para[0],
 	fw_path_para[1],
@@ -488,55 +489,79 @@ static const char * const fw_path[] = {
 	"/lib/firmware"
 };
 
+/* Parameter parsing also runs before the slab allocator is initialized. */
 static char strpath[PATH_SIZE * CUSTOM_FW_PATH_COUNT];
 static int firmware_param_path_set(const char *val, const struct kernel_param *kp)
 {
-	int i;
+	unsigned int i = 0;
+	int ret = 0;
 	char *path, *end;
+	size_t len;
 
-	strscpy(strpath, val, sizeof(strpath));
+	mutex_lock(&fw_path_lock);
+	if (strscpy(strpath, val, sizeof(strpath)) < 0) {
+		ret = -ENOSPC;
+		goto out;
+	}
 	/* Remove leading and trailing spaces from path */
 	path = strim(strpath);
-	for (i = 0; path && i < CUSTOM_FW_PATH_COUNT; i++) {
+	/* Validate the complete replacement before changing any search path. */
+	while (path) {
 		end = strchr(path, ',');
-
-		/* Skip continuous token case, for example ',,,' */
-		if (end == path) {
-			i--;
-			path = ++end;
-			continue;
+		len = end ? end - path : strlen(path);
+		if (len) {
+			if (len >= PATH_SIZE || i == CUSTOM_FW_PATH_COUNT) {
+				ret = -ENOSPC;
+				goto out;
+			}
+			i++;
 		}
-
-		if (end != NULL)
-			*end = '\0';
-		else {
-			/* end of the string reached and no other tockens ','  */
-			strscpy(fw_path_para[i], path, PATH_SIZE);
-			break;
-		}
-
-		strscpy(fw_path_para[i], path, PATH_SIZE);
-		path = ++end;
+		path = end ? end + 1 : NULL;
 	}
 
-	return 0;
+	memset(fw_path_para, 0, sizeof(fw_path_para));
+	path = strim(strpath);
+	i = 0;
+	while (path) {
+		end = strchr(path, ',');
+		len = end ? end - path : strlen(path);
+		if (len) {
+			memcpy(fw_path_para[i], path, len);
+			i++;
+		}
+		path = end ? end + 1 : NULL;
+	}
+
+out:
+	mutex_unlock(&fw_path_lock);
+	return ret;
 }
 
 static int firmware_param_path_get(char *buffer, const struct kernel_param *kp)
 {
 	int count = 0, i;
 
+	BUILD_BUG_ON(sizeof(fw_path_para) > PAGE_SIZE);
+	mutex_lock(&fw_path_lock);
 	for (i = 0; i < CUSTOM_FW_PATH_COUNT; i++) {
-		if (strlen(fw_path_para[i]) != 0)
-			count += scnprintf(buffer + count, PATH_SIZE, "%s%s", fw_path_para[i], ",");
+		if (fw_path_para[i][0])
+			count += scnprintf(buffer + count, PAGE_SIZE - count,
+					   "%s%s", count ? "," : "", fw_path_para[i]);
 	}
+	mutex_unlock(&fw_path_lock);
+	return count;
+}
 
-	if (count == 0)
-		return 0;
+/* Copy each mutable directory before formatting a filesystem request. */
+static const char *firmware_path(unsigned int index, char *custom)
+{
+	if (index >= CUSTOM_FW_PATH_COUNT)
+		return fw_path[index];
 
-	buffer[count - 1] = '\0';
-
-	return count - 1;
+	mutex_lock(&fw_path_lock);
+	strscpy(custom, fw_path[index], PATH_SIZE);
+	mutex_unlock(&fw_path_lock);
+	return custom;
 }
 /*
  * Typical usage is that passing 'firmware_class.path=/vendor,/firwmare_mnt'
@@ -563,7 +588,8 @@ fw_get_filesystem_firmware(struct device *device, struct fw_priv *fw_priv,
 	size_t size;
 	int i, len, maxlen = 0;
 	int rc = -ENOENT;
-	char *path, *nt = NULL;
+	char *path;
+	char custom[PATH_SIZE];
 	size_t msize = INT_MAX;
 	void *buffer = NULL;
 
@@ -579,23 +605,25 @@ fw_get_filesystem_firmware(struct device *device, struct fw_priv *fw_priv,
 
 	wait_for_initramfs();
 	for (i = 0; i < ARRAY_SIZE(fw_path); i++) {
+		const char *directory = firmware_path(i, custom);
+		const char *nt;
 		size_t file_size = 0;
 		size_t *file_size_ptr = NULL;
 
 		/* skip the unset customized path */
-		if (!fw_path[i][0])
+		if (!directory[0])
 			continue;
 
 		/* strip off \n from customized path */
-		maxlen = strlen(fw_path[i]);
-		if (i == 0) {
-			nt = strchr(fw_path[i], '\n');
+		maxlen = strlen(directory);
+		if (i < CUSTOM_FW_PATH_COUNT) {
+			nt = strchr(directory, '\n');
 			if (nt)
-				maxlen = nt - fw_path[i];
+				maxlen = nt - directory;
 		}
 
 		len = snprintf(path, PATH_MAX, "%.*s/%s%s",
-			       maxlen, fw_path[i],
+			       maxlen, directory,
 			       fw_priv->fw_name, suffix);
 		if (len >= PATH_MAX) {
 			rc = -ENAMETOOLONG;
