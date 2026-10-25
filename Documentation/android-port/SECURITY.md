@@ -9411,3 +9411,65 @@ a QEMU device, so absence is not inferred from a disabled driver or universal
 physical-only assumption. Keep exact native UFS code and omit the complete
 Android UFS hook family for the selected backend. Generic block, crypto and
 module interfaces retain their independent decisions.
+
+## Power-supply source interfaces and sparse sysfs enums
+
+`evidence/power-tail-review.json` finalizes nine candidates, including both
+unique power-supply merge resolutions. `610c2b5413c3` supplies previously orphaned
+generic source interfaces and sysfs labels. No new remote resource was used.
+
+System-battery enumeration now implements the retained get/put declarations.
+The matching ACK implementation filters battery devices and excludes explicit
+device-scope supplies; missing/failed scope properties retain ACK behavior.
+A first pass counts, then a second pass collects device and use_cnt references.
+An added INT_MAX check prevents count overflow. The two passes are not an atomic
+snapshot: disappearing batteries can reduce the result, and an increase beyond
+the allocated count returns EOVERFLOW and releases partial results. Allocation
+or iterator errors and an empty second pass likewise release resources and
+return a null output. Successful callers must put the returned supplies before
+unregister, following the native lifetime contract. The complete core outside
+these helpers and the earlier firmware-node array API equals pinned LTS.
+
+ACK TCPM is a positive consumer of this generic API, although the selected SDK
+does not use that physical PD negotiation path. A specific SDK consumer remains
+unestablished; generic vendor source compatibility warrants retention. The host
+test passes 139,264 scenarios and 1,580,440 assertions covering changed supply
+sets across passes, scope filtering, allocation failures, injected iteration
+errors, reference cleanup and count overflow. These simulated passes do not
+certify concurrent kernel registration/unregister behavior.
+
+Keep Android's final TAPER_EXT=50 and the Taper sysfs label, as well as the two
+PD SPR AVS labels matching their retained enum definitions. The native formatter
+previously had no entries for those additions. Importing ACK's sparse Taper
+entry without adapting native helpers is unsafe: the first exact lookup stops
+at a null slot, and the escaped-name pass dereferences null. Host ASan/UBSan
+reproduces this with the final ACK functions. The adaptation scans non-null
+entries for exact and escaped matches, skips holes in capability formatting,
+retains numeric fallback for holes/unknown values and bounds shifts to the
+native unsigned-int mask width. This also prevents unsafe shifts if the sparse
+array grows beyond an architecture's word size. Native property get/set,
+visibility, extension locking and uevent paths remain intact.
+
+Taper can be reported and parsed through charge_type at its existing value 50.
+It cannot fit in the existing unsigned-int charge_types capability mask; the
+port documents this limit and rejects it in that mask API, rather than widening
+native interfaces or inventing a new value. Other native enums and capability
+masks retain their behavior. The sysfs host tests pass 11,834 assertions covering
+sparse/negative/out-of-range values, all native charge capability combinations,
+exact/escaped names and the complete USB label table. No live sysfs or charger
+runtime test was performed; retaining labels does not add physical PD support.
+
+Warm/Cool/Hot health properties are already represented upstream in the header,
+text table and ABI documentation. The temporary Pixel6 battery-info exposure
+rollback and reapply have exact inverse changed lines; retain native battery
+property discovery and current extension handling. The 5.18 merge's two unique
+hunks preserve both BYPASS and TAPER_EXT. The 6.17 merge adopts native firmware
+node helpers while retaining a transitional OF-only array API, subsequently
+superseded by the firmware-node array adaptation. Neither merge resolution
+requires reinstating obsolete phandle stubs or reverting newer LTS code.
+
+This completes the system-battery question identified in the preceding shared
+header checkpoint. The earlier physical-topology source-selection note for the
+core has been replaced with specific generic-interface decisions and test
+references. Absence of an established SDK caller is recorded as uncertainty,
+not treated as proof that these source APIs are unnecessary.
