@@ -10085,3 +10085,85 @@ were checked; separate F2FS changes are not claimed to be native.
 These are source/equivalence reviews. Build 193 covers unchanged executable
 code; no mount syscall, encrypted I/O, casefold or concurrency runtime test
 was performed. No remote source was used.
+
+# Encrypted casefold and configuration capability tail
+
+Five decisions in `evidence/ext4-config-tail-review.json` retain native ext4
+encrypted-casefold support with current hash-tail bounds, key-add race guards,
+generic comparison and correct inode inline-data eligibility. All original
+eight paths were examined; only previously justified rmdir, cleancache and
+namespace changes differ from LTS. No old blk-offset plumbing or per-ext4
+decryption helper is resurrected.
+
+Seven media menu visibility changes preserve Android configuration control
+with the filter off; native dependencies and defaults remain. The existing
+virtual fragment deliberately selects Vivid media tests. Allwinner timer
+configuration is outside this x86 target and remains native.
+
+`3855f9bb8e44` restores native AutoFDO/Propeller architecture capability
+definitions and gates: x86 still selected those symbols after initial shared
+configuration integration had removed their definitions. AutoFDO and required
+profile/Rust support remain enabled. The Propeller compiler-option check is
+retained, while its unused generic linker macro is removed because native x86
+already emits the same section directly. Existing section/symbol-table changes
+remain separately reviewed. Other architectures and the updated external
+profiling tutorial are not imported. Build 194 is in progress for these changes;
+no performance, profiling, filesystem or camera runtime test was performed.
+Local tutorial links were read as source text but not fetched. No remote source
+was used.
+
+# Early Android configuration, naming and allocator history
+
+Twelve decisions in `evidence/early-android-tail-review.json` preserve current
+Android interfaces while resolving obsolete implementations. ART and Bionic
+positively use anonymous mapping names; native copied/refcounted bounded names,
+character validation and name-aware VMA merging replace the historical borrowed
+userspace pointer/GUP reader. The old extra smaps Name line is absent in final
+ACK. Separately reviewed page-size and restricted callback adaptations remain;
+a bypass callback owns correct mapping, locking and name lifetime and is not
+sandboxed by the fallback. The inodepath event was explicitly reverted in ACK
+and is not restored. Jiffies hooks remain with native timekeeping/locking and
+stalled-tick recovery; timer-context callbacks must not sleep.
+
+All functional configuration hunks in three large ABI/config commits were read.
+Their XML files are ARM64 ABI corpora, classified by root/format and excluded
+under the explicit historical-KMI requirement; individual XML layout records
+were not replayed or claimed read one by one. Current SDK task/cgroup uclamp,
+schedutil and software inline-encryption fallback remain enabled. Final balloon
+module selection supersedes an early removal; SCSI virtio remains disabled while
+virtio block is enabled. Native legacy virtio PCI stays enabled conservatively
+because the exact runtime transport version is not established. Native Qualcomm
+specific-ID PCI fixups and evolved PSCI s2idle behavior are already represented.
+
+The original CMA redirect and its revert cancel exactly, but later redirection
+is present: this is not a claim of no final CMA code. The newer generic/x86
+policy and source interfaces remain, including final ACK's restricted default
+and opt-out. `38e13dcb4814` fixes PCP list separation, fallback pointer handling
+and pageblock type preservation. Current extracted functions equal that commit;
+its full source hashes match the existing host-test report (generated before
+that source commit), including negative controls reproducing earlier defects.
+Actual CMA reservation and allocator concurrency were not tested. Default SDK
+CMA reservation is zero; exact pool provisioning remains unconfirmed and is not
+used to discard the configured shared interface. No remote source was used.
+
+# Build 194 and profiling witness verification
+
+The original emulator workflow succeeded at
+`3855f9bb8e445a60f28d0c47d87424773f1e78d1`. The source/configuration changes
+above are now covered by build 194: kernel image, 100 common and 45 virtual-device
+modules. All 145 module signatures verified against the exact build certificate;
+a modified-payload control was rejected. All 659 protected exports and module
+symbol/flag/CRC counts passed; the wrong-stride control misses 330 exports.
+Pins/hashes are in `evidence/build-results.json` and detailed table checks in
+`evidence/module-tables-build-194.json`. This is compilation and artifact
+verification, not module loading, runtime compatibility or boot.
+
+`evidence/profiling-witness-revalidation.json` explains seven prior whole-file
+witnesses invalidated by this edit. The only linker-header change is removing
+six lines defining the unused Propeller macro; all symbol tables and text/init/
+exit placement patterns are byte-identical. Native x86 still emits that section
+directly. The only architecture configuration changes restore eight lines of
+native profiling capability definitions/dependencies; the CFI generic-pass block
+and compiler_types.h remain native. Those precise unchanged regions were checked
+before updating witnesses, and the earlier review records are preserved in the
+revalidation evidence. No remote source was used.

@@ -1,0 +1,191 @@
+{
+  "source_head": "3855f9bb8e445a60f28d0c47d87424773f1e78d1",
+  "previous_checkpoint": "92858f72cf66fe04b1bdc6e4b4d465418d55ad19",
+  "removed_macro": "#ifdef CONFIG_PROPELLER_CLANG\n#define PROPELLER_DATA                                                     \\\n\t.llvm_bb_addr_map : { *(.llvm_bb_addr_map) }\n#else\n#define PROPELLER_DATA\n#endif\n",
+  "header_before_blob": "a9c0ce56d3ec83bbade0019d03c1e454ed2d029b",
+  "header_after_blob": "a189214efc430286f60985ea7590db54ecf402a5",
+  "arch_diff": "diff --git a/arch/Kconfig b/arch/Kconfig\nindex c16381629907..3d0c13490af0 100644\n--- a/arch/Kconfig\n+++ b/arch/Kconfig\n@@ -866,8 +866,12 @@ config LTO_CLANG_THIN\n \t  If unsure, say Y.\n endchoice\n \n+config ARCH_SUPPORTS_AUTOFDO_CLANG\n+\tbool\n+\n config AUTOFDO_CLANG\n \tbool \"Enable Clang's AutoFDO build (EXPERIMENTAL)\"\n+\tdepends on ARCH_SUPPORTS_AUTOFDO_CLANG\n \tdepends on CC_IS_CLANG && CLANG_VERSION >= 170000\n \thelp\n \t  This option enables Clang\u2019s AutoFDO build. When\n@@ -882,8 +886,12 @@ config AUTOFDO_CLANG\n \n \t  If unsure, say N.\n \n+config ARCH_SUPPORTS_PROPELLER_CLANG\n+\tbool\n+\n config PROPELLER_CLANG\n \tbool \"Enable Clang's Propeller build\"\n+\tdepends on ARCH_SUPPORTS_PROPELLER_CLANG\n \tdepends on CC_IS_CLANG && CLANG_VERSION >= 190000\n \tdepends on $(cc-option,-fbasic-block-sections=list=/dev/null)\n \thelp\n",
+  "assessment": "3855f9bb8e44 follow-up: whole prior header minus exactly the unused six-line PROPELLER_DATA macro; native x86 linker already emits that section directly and is unchanged. All symbol/CRC/flag/protected tables and text/init/exit patterns remain byte-identical. No CFI or Kprobes section is altered. Generic optional macro is intentionally omitted with the non-x86 expansion; see ext4-config-tail-review.json.",
+  "records": [
+    {
+      "prior": {
+        "commit": "0d70da26afb1875ad5374b89a3ed19b7e036f4cb",
+        "source_head": "992b43bd7628be76a576dd3c4c2d14473c355b88",
+        "disposition": "merge-resolution-adapted-net-state",
+        "method": "Reviewed complete native-LTS-to-port and normalized-ACK-to-port deltas for mixed/source-module build rules, modpost, symbol flags and linker format. Preserve native LTS validation and record excluded ARM64-only FIPS/EL2 glue. Other affected paths have previously completed source witnesses or exact identity/architecture/KMI evidence. Security and scope are in SECURITY.md; compilation and signature results do not claim runtime loading correctness.",
+        "path_witnesses": {
+          "include/asm-generic/vmlinux.lds.h": {
+            "policy": "ported-net-source",
+            "ack_blob": "a9c0ce56d3ec83bbade0019d03c1e454ed2d029b",
+            "lts_blob": "6640e06ef2f1381cf70bd1f1fe29296e9e4522b5",
+            "port_blob": "a9c0ce56d3ec83bbade0019d03c1e454ed2d029b",
+            "normalized_ack_blob": "a9c0ce56d3ec83bbade0019d03c1e454ed2d029b",
+            "common_ancestor_blob": "6640e06ef2f1381cf70bd1f1fe29296e9e4522b5",
+            "specific_evidence": "Reviewed all LTS net changes and confirmed final content equals normalized ACK. Retain explicit function/data subsection support required by selected code-generation paths, while keeping .text.startup[.*] and .text.exit[.*] in dedicated init/exit regions rather than generic TEXT_MAIN. Retain generic optional Propeller data-section support and unified sorted symbol/CRC/flag/protected-export tables consumed by the matching loader. No historical binary layout is retained. Build 31 links the SDK image and modules; runtime relocation/loading is untested."
+          }
+        }
+      },
+      "new_source_head": "3855f9bb8e445a60f28d0c47d87424773f1e78d1",
+      "reason": "3855f9bb8e44 follow-up: whole prior header minus exactly the unused six-line PROPELLER_DATA macro; native x86 linker already emits that section directly and is unchanged. All symbol/CRC/flag/protected tables and text/init/exit patterns remain byte-identical. No CFI or Kprobes section is altered. Generic optional macro is intentionally omitted with the non-x86 expansion; see ext4-config-tail-review.json."
+    },
+    {
+      "prior": {
+        "commit": "c8e93ae7a02e4054b26a4fd407640121bf2bd4e0",
+        "source_head": "992b43bd7628be76a576dd3c4c2d14473c355b88",
+        "disposition": "adapted-net-state",
+        "method": "Reviewed complete native-LTS-to-port and normalized-ACK-to-port deltas for mixed/source-module build rules, modpost, symbol flags and linker format. Preserve native LTS validation and record excluded ARM64-only FIPS/EL2 glue. Other affected paths have previously completed source witnesses or exact identity/architecture/KMI evidence. Security and scope are in SECURITY.md; compilation and signature results do not claim runtime loading correctness.",
+        "path_witnesses": {
+          "include/asm-generic/vmlinux.lds.h": {
+            "policy": "ported-net-source",
+            "ack_blob": "a9c0ce56d3ec83bbade0019d03c1e454ed2d029b",
+            "lts_blob": "6640e06ef2f1381cf70bd1f1fe29296e9e4522b5",
+            "port_blob": "a9c0ce56d3ec83bbade0019d03c1e454ed2d029b",
+            "normalized_ack_blob": "a9c0ce56d3ec83bbade0019d03c1e454ed2d029b",
+            "common_ancestor_blob": "6640e06ef2f1381cf70bd1f1fe29296e9e4522b5",
+            "specific_evidence": "Reviewed all LTS net changes and confirmed final content equals normalized ACK. Retain explicit function/data subsection support required by selected code-generation paths, while keeping .text.startup[.*] and .text.exit[.*] in dedicated init/exit regions rather than generic TEXT_MAIN. Retain generic optional Propeller data-section support and unified sorted symbol/CRC/flag/protected-export tables consumed by the matching loader. No historical binary layout is retained. Build 31 links the SDK image and modules; runtime relocation/loading is untested."
+          },
+          "scripts/module.lds.S": {
+            "policy": "ported-net-source",
+            "ack_blob": "9083eb4f54784fca5acd99cedc32c7fc2241be40",
+            "lts_blob": "ee79c41059f3d590961a9f94c8fd2bc4f2227057",
+            "port_blob": "1841a43d87710813bf64e986d6c363fe1645d809",
+            "normalized_ack_blob": "9083eb4f54784fca5acd99cedc32c7fc2241be40",
+            "common_ancestor_blob": "ee79c41059f3d590961a9f94c8fd2bc4f2227057",
+            "specific_evidence": "Reviewed entire net delta: use one sorted __ksymtab/__kcrctab and a matching byte __kflagstab for the selected module format; GPL-only status is preserved in flags. Retain native LTS CFI traps, module common-object layout and conditional LTO data merging. Omit separate ARM64-only FIPS140 initcall/integrity-region and unconditional section-merging modifications. Native x86 modules and protected export checks use corresponding loader/source format."
+          }
+        }
+      },
+      "new_source_head": "3855f9bb8e445a60f28d0c47d87424773f1e78d1",
+      "reason": "3855f9bb8e44 follow-up: whole prior header minus exactly the unused six-line PROPELLER_DATA macro; native x86 linker already emits that section directly and is unchanged. All symbol/CRC/flag/protected tables and text/init/exit patterns remain byte-identical. No CFI or Kprobes section is altered. Generic optional macro is intentionally omitted with the non-x86 expansion; see ext4-config-tail-review.json."
+    },
+    {
+      "prior": {
+        "commit": "c856047269d5e7adc8d2d052c0b7cd1fb82f4d28",
+        "source_head": "992b43bd7628be76a576dd3c4c2d14473c355b88",
+        "disposition": "adapted-net-state",
+        "method": "Reviewed complete native-LTS-to-port and normalized-ACK-to-port deltas for mixed/source-module build rules, modpost, symbol flags and linker format. Preserve native LTS validation and record excluded ARM64-only FIPS/EL2 glue. Other affected paths have previously completed source witnesses or exact identity/architecture/KMI evidence. Security and scope are in SECURITY.md; compilation and signature results do not claim runtime loading correctness.",
+        "path_witnesses": {
+          "include/asm-generic/vmlinux.lds.h": {
+            "policy": "ported-net-source",
+            "ack_blob": "a9c0ce56d3ec83bbade0019d03c1e454ed2d029b",
+            "lts_blob": "6640e06ef2f1381cf70bd1f1fe29296e9e4522b5",
+            "port_blob": "a9c0ce56d3ec83bbade0019d03c1e454ed2d029b",
+            "normalized_ack_blob": "a9c0ce56d3ec83bbade0019d03c1e454ed2d029b",
+            "common_ancestor_blob": "6640e06ef2f1381cf70bd1f1fe29296e9e4522b5",
+            "specific_evidence": "Reviewed all LTS net changes and confirmed final content equals normalized ACK. Retain explicit function/data subsection support required by selected code-generation paths, while keeping .text.startup[.*] and .text.exit[.*] in dedicated init/exit regions rather than generic TEXT_MAIN. Retain generic optional Propeller data-section support and unified sorted symbol/CRC/flag/protected-export tables consumed by the matching loader. No historical binary layout is retained. Build 31 links the SDK image and modules; runtime relocation/loading is untested."
+          },
+          "scripts/module.lds.S": {
+            "policy": "ported-net-source",
+            "ack_blob": "9083eb4f54784fca5acd99cedc32c7fc2241be40",
+            "lts_blob": "ee79c41059f3d590961a9f94c8fd2bc4f2227057",
+            "port_blob": "1841a43d87710813bf64e986d6c363fe1645d809",
+            "normalized_ack_blob": "9083eb4f54784fca5acd99cedc32c7fc2241be40",
+            "common_ancestor_blob": "ee79c41059f3d590961a9f94c8fd2bc4f2227057",
+            "specific_evidence": "Reviewed entire net delta: use one sorted __ksymtab/__kcrctab and a matching byte __kflagstab for the selected module format; GPL-only status is preserved in flags. Retain native LTS CFI traps, module common-object layout and conditional LTO data merging. Omit separate ARM64-only FIPS140 initcall/integrity-region and unconditional section-merging modifications. Native x86 modules and protected export checks use corresponding loader/source format."
+          }
+        }
+      },
+      "new_source_head": "3855f9bb8e445a60f28d0c47d87424773f1e78d1",
+      "reason": "3855f9bb8e44 follow-up: whole prior header minus exactly the unused six-line PROPELLER_DATA macro; native x86 linker already emits that section directly and is unchanged. All symbol/CRC/flag/protected tables and text/init/exit patterns remain byte-identical. No CFI or Kprobes section is altered. Generic optional macro is intentionally omitted with the non-x86 expansion; see ext4-config-tail-review.json."
+    },
+    {
+      "prior": {
+        "commit": "52d64abc3cafad153c90ba88c9f76ede2f5f2b5d",
+        "source_head": "992b43bd7628be76a576dd3c4c2d14473c355b88",
+        "disposition": "adapted-net-state",
+        "method": "Reviewed complete native-LTS-to-port and normalized-ACK-to-port deltas for mixed/source-module build rules, modpost, symbol flags and linker format. Preserve native LTS validation and record excluded ARM64-only FIPS/EL2 glue. Other affected paths have previously completed source witnesses or exact identity/architecture/KMI evidence. Security and scope are in SECURITY.md; compilation and signature results do not claim runtime loading correctness.",
+        "path_witnesses": {
+          "include/asm-generic/vmlinux.lds.h": {
+            "policy": "ported-net-source",
+            "ack_blob": "a9c0ce56d3ec83bbade0019d03c1e454ed2d029b",
+            "lts_blob": "6640e06ef2f1381cf70bd1f1fe29296e9e4522b5",
+            "port_blob": "a9c0ce56d3ec83bbade0019d03c1e454ed2d029b",
+            "normalized_ack_blob": "a9c0ce56d3ec83bbade0019d03c1e454ed2d029b",
+            "common_ancestor_blob": "6640e06ef2f1381cf70bd1f1fe29296e9e4522b5",
+            "specific_evidence": "Reviewed all LTS net changes and confirmed final content equals normalized ACK. Retain explicit function/data subsection support required by selected code-generation paths, while keeping .text.startup[.*] and .text.exit[.*] in dedicated init/exit regions rather than generic TEXT_MAIN. Retain generic optional Propeller data-section support and unified sorted symbol/CRC/flag/protected-export tables consumed by the matching loader. No historical binary layout is retained. Build 31 links the SDK image and modules; runtime relocation/loading is untested."
+          }
+        }
+      },
+      "new_source_head": "3855f9bb8e445a60f28d0c47d87424773f1e78d1",
+      "reason": "3855f9bb8e44 follow-up: whole prior header minus exactly the unused six-line PROPELLER_DATA macro; native x86 linker already emits that section directly and is unchanged. All symbol/CRC/flag/protected tables and text/init/exit patterns remain byte-identical. No CFI or Kprobes section is altered. Generic optional macro is intentionally omitted with the non-x86 expansion; see ext4-config-tail-review.json."
+    },
+    {
+      "prior": {
+        "commit": "51951987ecb6e2c7f55e6689f5b02634a67fd1b6",
+        "source_head": "992b43bd7628be76a576dd3c4c2d14473c355b88",
+        "disposition": "adapted-net-state",
+        "method": "Reviewed complete native-LTS-to-port and normalized-ACK-to-port deltas for mixed/source-module build rules, modpost, symbol flags and linker format. Preserve native LTS validation and record excluded ARM64-only FIPS/EL2 glue. Other affected paths have previously completed source witnesses or exact identity/architecture/KMI evidence. Security and scope are in SECURITY.md; compilation and signature results do not claim runtime loading correctness.",
+        "path_witnesses": {
+          "include/asm-generic/vmlinux.lds.h": {
+            "policy": "ported-net-source",
+            "ack_blob": "a9c0ce56d3ec83bbade0019d03c1e454ed2d029b",
+            "lts_blob": "6640e06ef2f1381cf70bd1f1fe29296e9e4522b5",
+            "port_blob": "a9c0ce56d3ec83bbade0019d03c1e454ed2d029b",
+            "normalized_ack_blob": "a9c0ce56d3ec83bbade0019d03c1e454ed2d029b",
+            "common_ancestor_blob": "6640e06ef2f1381cf70bd1f1fe29296e9e4522b5",
+            "specific_evidence": "Reviewed all LTS net changes and confirmed final content equals normalized ACK. Retain explicit function/data subsection support required by selected code-generation paths, while keeping .text.startup[.*] and .text.exit[.*] in dedicated init/exit regions rather than generic TEXT_MAIN. Retain generic optional Propeller data-section support and unified sorted symbol/CRC/flag/protected-export tables consumed by the matching loader. No historical binary layout is retained. Build 31 links the SDK image and modules; runtime relocation/loading is untested."
+          },
+          "scripts/module.lds.S": {
+            "policy": "ported-net-source",
+            "ack_blob": "9083eb4f54784fca5acd99cedc32c7fc2241be40",
+            "lts_blob": "ee79c41059f3d590961a9f94c8fd2bc4f2227057",
+            "port_blob": "1841a43d87710813bf64e986d6c363fe1645d809",
+            "normalized_ack_blob": "9083eb4f54784fca5acd99cedc32c7fc2241be40",
+            "common_ancestor_blob": "ee79c41059f3d590961a9f94c8fd2bc4f2227057",
+            "specific_evidence": "Reviewed entire net delta: use one sorted __ksymtab/__kcrctab and a matching byte __kflagstab for the selected module format; GPL-only status is preserved in flags. Retain native LTS CFI traps, module common-object layout and conditional LTO data merging. Omit separate ARM64-only FIPS140 initcall/integrity-region and unconditional section-merging modifications. Native x86 modules and protected export checks use corresponding loader/source format."
+          }
+        }
+      },
+      "new_source_head": "3855f9bb8e445a60f28d0c47d87424773f1e78d1",
+      "reason": "3855f9bb8e44 follow-up: whole prior header minus exactly the unused six-line PROPELLER_DATA macro; native x86 linker already emits that section directly and is unchanged. All symbol/CRC/flag/protected tables and text/init/exit patterns remain byte-identical. No CFI or Kprobes section is altered. Generic optional macro is intentionally omitted with the non-x86 expansion; see ext4-config-tail-review.json."
+    },
+    {
+      "prior": {
+        "commit": "12c2f68d8501e0f7fb5e5a28a94ef8d701e95bb1",
+        "source_head": "992b43bd7628be76a576dd3c4c2d14473c355b88",
+        "disposition": "adapted-net-state",
+        "method": "Reviewed complete native-LTS-to-port and normalized-ACK-to-port deltas for mixed/source-module build rules, modpost, symbol flags and linker format. Preserve native LTS validation and record excluded ARM64-only FIPS/EL2 glue. Other affected paths have previously completed source witnesses or exact identity/architecture/KMI evidence. Security and scope are in SECURITY.md; compilation and signature results do not claim runtime loading correctness.",
+        "path_witnesses": {
+          "include/asm-generic/vmlinux.lds.h": {
+            "policy": "ported-net-source",
+            "ack_blob": "a9c0ce56d3ec83bbade0019d03c1e454ed2d029b",
+            "lts_blob": "6640e06ef2f1381cf70bd1f1fe29296e9e4522b5",
+            "port_blob": "a9c0ce56d3ec83bbade0019d03c1e454ed2d029b",
+            "normalized_ack_blob": "a9c0ce56d3ec83bbade0019d03c1e454ed2d029b",
+            "common_ancestor_blob": "6640e06ef2f1381cf70bd1f1fe29296e9e4522b5",
+            "specific_evidence": "Reviewed all LTS net changes and confirmed final content equals normalized ACK. Retain explicit function/data subsection support required by selected code-generation paths, while keeping .text.startup[.*] and .text.exit[.*] in dedicated init/exit regions rather than generic TEXT_MAIN. Retain generic optional Propeller data-section support and unified sorted symbol/CRC/flag/protected-export tables consumed by the matching loader. No historical binary layout is retained. Build 31 links the SDK image and modules; runtime relocation/loading is untested."
+          }
+        }
+      },
+      "new_source_head": "3855f9bb8e445a60f28d0c47d87424773f1e78d1",
+      "reason": "3855f9bb8e44 follow-up: whole prior header minus exactly the unused six-line PROPELLER_DATA macro; native x86 linker already emits that section directly and is unchanged. All symbol/CRC/flag/protected tables and text/init/exit patterns remain byte-identical. No CFI or Kprobes section is altered. Generic optional macro is intentionally omitted with the non-x86 expansion; see ext4-config-tail-review.json."
+    },
+    {
+      "prior": {
+        "commit": "7b2ef32f654f828fc86ecfab1d124a78ca50f4a6",
+        "patch_sha256": "d7ab6314f730a97c8ca3775d4c350a9e4d554ccb1f96e5abaa7ac7c4ad28d2a6",
+        "path_witnesses": {
+          "arch/Kconfig": {
+            "lts_blob": "ee9fd0150f487c491d1ffa0637a004832481de8b",
+            "port_blob": "c1638162990766533299eb5f6100b3d02a3a6a5b"
+          },
+          "include/linux/compiler_types.h": {
+            "lts_blob": "cb007601d8c3df3f91c378393ff32aaeb48446ff",
+            "port_blob": "cb007601d8c3df3f91c378393ff32aaeb48446ff"
+          }
+        }
+      },
+      "reason": "Only native AutoFDO/Propeller capability gates added. Whole CFI generic-pass block and compiler_types.h remain native; all original __nocfi_generic patch effects preserved."
+    }
+  ],
+  "remote_resources_used": [],
+  "limits": "Revalidation of precise unchanged semantic regions after a reviewed source edit, not a blanket witness refresh. Build 194 pending; no runtime test.",
+  "prior_generic_source_record": {
+    "review_head": "992b43bd7628be76a576dd3c4c2d14473c355b88",
+    "status": "reviewed-source-selection",
+    "rationale": "Reviewed all LTS net changes and confirmed final content equals normalized ACK. Retain explicit function/data subsection support required by selected code-generation paths, while keeping .text.startup[.*] and .text.exit[.*] in dedicated init/exit regions rather than generic TEXT_MAIN. Retain generic optional Propeller data-section support and unified sorted symbol/CRC/flag/protected-export tables consumed by the matching loader. No historical binary layout is retained. Build 31 links the SDK image and modules; runtime relocation/loading is untested.",
+    "port_blob": "a9c0ce56d3ec83bbade0019d03c1e454ed2d029b",
+    "lts_to_port_sha256": "7d640c9d9a7926394e0deafb0db4bfe4fc2165326ca402c97dd9bd646742d614",
+    "normalized_ack_to_port_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}
