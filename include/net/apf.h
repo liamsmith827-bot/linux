@@ -83,8 +83,6 @@ struct apf_ops {
 	int (*fast_path)(struct net_device *dev, struct netlink_ext_ack *extack,
 			 const u8 ucast_mac[ETH_ALEN], s16 vlan_tag,
 			 __be32 ucast_addr4, bool enable_ipv6_fastpath);
-
-	/* private: */
 };
 
 #endif /* _NET_APF_H */
