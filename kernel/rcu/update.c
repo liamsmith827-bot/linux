@@ -234,7 +234,7 @@ EXPORT_SYMBOL_GPL(rcu_unexpedite_gp);
  * can also be used to extend the delay to be larger than the default, assuming
  * the marking of boot complete has not yet occurred.
  */
-static int rcu_boot_end_delay = CONFIG_RCU_BOOT_END_DELAY;
+static unsigned int rcu_boot_end_delay = CONFIG_RCU_BOOT_END_DELAY;
 
 static bool rcu_boot_ended __read_mostly;
 static bool rcu_boot_end_called __read_mostly;
