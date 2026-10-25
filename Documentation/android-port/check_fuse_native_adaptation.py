@@ -18,7 +18,7 @@ assert '.rdev\t\t= new_encode_dev(fi->inode.i_rdev),'in s['fs/fuse/inode.c']
 assert 'finalize_attr(idmap, inode, &outarg, attr_version, stat)'in s['fs/fuse/dir.c']
 assert 'file ? &file->f_path : NULL'in s['fs/fuse/dir.c']
 oldB=subprocess.check_output(['git','show',old+':fs/fuse/fuse_bpf_backing.c'],cwd=root,text=True)
-body='\n'.join(function(B,n)for n in ['fuse_rename_backing_common','fuse_statfs_initialize','fuse_getxattr_backing','fuse_getxattr_finalize'])
+body='\n'.join(function(B,n)for n in ['fuse_rename_backing_common','fuse_statfs_initialize','fuse_getxattr_backing','fuse_getxattr_finalize','fuse_open_finalize','fuse_create_open_finalize'])
 body+=function(oldB,'fuse_rename_backing_common').replace('fuse_rename_backing_common','old_rename')
 body+=function(oldB,'fuse_statfs_initialize').replace('fuse_statfs_initialize','old_statfs')
 body+=function(s['fs/fuse/file.c'],'fuse_file_put')
@@ -33,7 +33,7 @@ shim=r'''
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-typedef uint64_t u64;
+typedef uint64_t u64;typedef unsigned short umode_t;
 #define ERR_PTR(e) ((void *)(intptr_t)(e))
 #define PTR_ERR(p) ((long)(intptr_t)(p))
 #define IS_ERR(p) ((uintptr_t)(p)>=(uintptr_t)-4095)
@@ -44,6 +44,7 @@ typedef uint64_t u64;
 #define GFP_KERNEL 0
 #define __GFP_NOFAIL 0
 struct mnt_idmap {int id;};static struct mnt_idmap nop_mnt_idmap;
+struct fuse_open_out {u64 fh;};struct fuse_entry_out {u64 nodeid;};
 struct fuse_attr {unsigned mode;};struct fuse_attr_out {struct fuse_attr attr;};
 struct kstat {int unused;};struct fuse_kstatfs {u64 blocks[10];};
 struct fuse_statfs_out {struct fuse_kstatfs st;};struct kstatfs {int unused;};
@@ -53,7 +54,7 @@ struct fuse_bpf_args {u64 nodeid;unsigned opcode,flags,out_numargs;struct fuse_b
 struct inode {struct inode *lower;unsigned i_mode;};
 struct dentry {struct inode *inode;struct dentry *parent;int id;};
 struct path {struct dentry *dentry;void *mnt;};
-struct fuse_inode {struct inode *backing_inode;};struct fuse_dentry {struct path backing_path;};
+struct fuse_inode {struct inode *backing_inode;u64 nodeid;};struct fuse_dentry {struct path backing_path;};
 static struct fuse_inode f_inode;static struct fuse_dentry f_dentry;
 static int old_path_missing,new_path_missing,cross_mount,trap_kind,rename_error;
 static int locks,refs,put_count,renames,unlocks,invalid;
@@ -80,8 +81,11 @@ struct fuse_args {int opcode;void (*end)(struct fuse_args*,int);};
 struct fuse_release_args {struct fuse_args args;struct inode *inode;};
 union file_args {struct fuse_release_args release_args;};
 struct fuse_conn {bool no_open,auto_submounts;};struct fuse_mount {struct fuse_conn *fc;};
-struct fuse_file {int count;union file_args *args;struct fuse_mount *fm;};
-static int mode_releases,end_calls,freed,sends;
+struct file {struct inode *f_inode;void *private_data;};
+struct fuse_file {struct file *backing_file;u64 fh,nodeid;int count;union file_args *args;struct fuse_mount *fm;};
+static int mode_releases,end_calls,freed,sends,backing_puts,file_frees;
+static void fput(struct file *f){assert(f);backing_puts++;}
+static void fuse_file_free(struct fuse_file *f){assert(f);file_frees++;}
 static bool refcount_dec_and_test(int *c){return --*c==0;}
 static void fuse_file_io_release(struct fuse_file *f,struct inode *i){assert(f && i);mode_releases++;}
 static void fuse_release_end(struct fuse_args *a,int e){assert(a);(void)e;end_calls++;}
@@ -138,7 +142,21 @@ int main(void){
   else assert(!r && attr_changes==1 && filled_idmap==71);
   cases++;
  }
- printf("%d rename/xattr/release/idmap cases and statfs controls passed; old lock/error/size failures reproduced\n",cases);
+ struct file lower_file={0};struct fuse_open_out oo={.fh=19};struct fuse_entry_out eo={.nodeid=23};
+ for(int create=0;create<2;create++)for(int error=0;error<2;error++)for(int held=0;held<2;held++){
+  struct fuse_file ff={.backing_file=&lower_file,.fh=1,.nodeid=2};
+  struct file file={.f_inode=&ino,.private_data=held?&ff:NULL};f_inode.nodeid=7;
+  fa=(struct fuse_bpf_args){.error_in=error?-EPERM:0,.out_args[0]={.value=create?(void*)&eo:(void*)&oo},.out_args[1]={.value=&oo}};
+  backing_puts=file_frees=0;
+  if(create)fuse_create_open_finalize(&fa,&ino,&old,&file,0,0);
+  else fuse_open_finalize(&fa,&ino,&file,0);
+  assert(backing_puts==(!create && error && held));assert(file_frees==backing_puts);
+  assert(file.private_data==(!create && error?NULL:held?&ff:NULL));
+  assert(ff.fh==(!error && held?19:1));
+  if(create)assert(f_inode.nodeid==(error?7:23));
+  cases++;
+ }
+ printf("%d rename/xattr/release/idmap/open cases and statfs controls passed; old lock/error/size failures reproduced\n",cases);
 }
 '''
 program=shim+body+main

@@ -11264,3 +11264,15 @@ source/extracted-model checks, not actual filesystem, lock, device or mount
 execution. Build 203 succeeded for the preceding context-bounds commit, with
 145 verified signatures and matching module tables; these additional fixes
 require a subsequent complete emulator workflow build.
+
+The final open-path follow-up propagates postfilter errors into finalization.
+An ordinary ->open error occurs before FMODE_OPENED, so native VFS cleanup does
+not call ->release; explicitly put the BPF backing file and free its fuse_file
+on that path. For atomic create, finish_open has already transferred successful
+opens to VFS release: retain that ownership on a later postfilter error and do
+not publish rejected attributes. This distinction avoids both leaks and double
+release. Native fs/open.c, fs/file_table.c and atomic_open in fs/namei.c were
+examined locally; they were not modified. The extracted dispatch checks now
+assert finalizer error propagation, and native-adaptation checks cover eight
+open/create success/error/absent-state combinations (87 total cases). Both
+ASan/UBSan harnesses passed. No live FUSE operation was executed.

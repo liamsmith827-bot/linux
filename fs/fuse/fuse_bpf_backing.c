@@ -260,6 +260,16 @@ void *fuse_open_finalize(struct fuse_bpf_args *fa,
 	struct fuse_file *ff = file->private_data;
 	struct fuse_open_out *foo = fa->out_args[0].value;
 
+	/* VFS does not call ->release() when ->open() returns an error. */
+	if (fa->error_in) {
+		if (ff) {
+			if (ff->backing_file)
+				fput(ff->backing_file);
+			fuse_file_free(ff);
+			file->private_data = NULL;
+		}
+		return NULL;
+	}
 	if (ff) {
 		ff->fh = foo->fh;
 		ff->nodeid = get_fuse_inode(inode)->nodeid;
@@ -422,6 +432,12 @@ void *fuse_create_open_finalize(
 	struct fuse_entry_out *feo = fa->out_args[0].value;
 	struct fuse_open_out *foo = fa->out_args[1].value;
 
+	/* finish_open() transfers successful opens to VFS release, even on a
+	 * later postfilter error. Leave that ownership intact and avoid
+	 * publishing unaccepted attributes.
+	 */
+	if (fa->error_in)
+		return NULL;
 	if (fi)
 		fi->nodeid = feo->nodeid;
 	if (ff)

@@ -97,7 +97,7 @@ static void fuse_unlock_inode(struct inode *n,bool l){(void)n;(void)l;}
 static ssize_t fuse_bpf_simple_request(struct fuse_mount *m,struct fuse_bpf_args *a){(void)m;(void)a;assert(0);return 0;}
 struct sample_io {int result;};
 static const char original_name[]="original";
-static int finalized,backing_called,backing_error;
+static int finalized,backing_called,backing_error,final_error;
 static int sample_init(struct fuse_bpf_args *a,struct sample_io *io,struct inode *n) {
  (void)n;void *page=alloc(4096,false);if(!page)return -ENOMEM;
  *a=(struct fuse_bpf_args){.opcode=FUSE_READDIR,.in_numargs=1,.out_numargs=2,
@@ -115,22 +115,22 @@ static int sample_backing(struct fuse_bpf_args *a,struct inode *n) {
  *(int*)a->out_args[0].value=33;a->out_args[1].size=17;
  return backing_error;
 }
-static void *sample_final(struct fuse_bpf_args *a,struct inode *n){(void)n;finalized++;assert(*(int*)a->out_args[0].value==33);return ERR_PTR(33);}
+static void *sample_final(struct fuse_bpf_args *a,struct inode *n){(void)n;finalized++;final_error=a->error_in;assert(*(int*)a->out_args[0].value==33);return ERR_PTR(33);}
 '''+macro+r'''
 static void run_dispatch(struct bpf_prog *p,int fail,int error) {
  struct inode node;struct fuse_err_ret r;
  assert(!live_allocs);allocation_call=0;fail_call=fail;free_pages=0;
- finalized=0;backing_called=0;backing_error=error;
+ finalized=0;final_error=0;backing_called=0;backing_error=error;
  fi=(struct fuse_inode){.backing_inode=&node,.bpf=p};
  r=fuse_bpf_backing(&node,struct sample_io,sample_init,sample_backing,sample_final,&node);
  assert(!live_allocs && !migrating && original_name[0]=='o');
  if(fail==1){assert(r.ret && PTR_ERR(r.result)==-ENOMEM && !finalized && !free_pages);return;}
  assert(free_pages==1);
- if(fail==4){assert(r.ret && PTR_ERR(r.result)==-ENOMEM && finalized==1 && backing_called==1);return;}
+ if(fail==4){assert(r.ret && PTR_ERR(r.result)==-ENOMEM && finalized==1 && backing_called==1 && final_error==-ENOMEM);return;}
  if(fail || (p && p->mode==2)){assert(r.ret && IS_ERR(r.result) && !finalized && !backing_called);return;}
  if(p && p->mode==3){assert(!r.ret && !finalized && !backing_called);return;}
  assert(r.ret && finalized==1 && backing_called==1);
- assert(PTR_ERR(r.result)==(error?error:33));
+ assert(PTR_ERR(r.result)==(error?error:33));assert(final_error==error);
 }
 int main(void) {
  struct bpf_prog_aux aux={.max_rdonly_access=512,.max_rdwr_access=512};

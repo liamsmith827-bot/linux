@@ -2310,6 +2310,8 @@ void fuse_bpf_cleanup_args(const struct fuse_bpf_args *original, void **buffers)
 	} while (false);						\
 									\
 	if (finalize_ready && fer.ret) {					\
+		if (IS_ERR(fer.result))					\
+			fa.error_in = PTR_ERR(fer.result);		\
 		err = finalize(&fa, args);				\
 		if (err && !IS_ERR(fer.result))			\
 			fer.result = err;				\
