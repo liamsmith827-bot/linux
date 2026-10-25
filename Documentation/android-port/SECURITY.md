@@ -9853,6 +9853,42 @@ do not weaken an existing LTS fix for the delivered target. No NPU or neural-
 network workload, emulator boot or Android build was executed. All evidence was
 local; no additional remote resources were accessed.
 
+## Physical audio topology and provider exports
+
+The 31 fully read candidates in evidence/sound-topology-tail-review.json leave
+all 34 affected paths exact LTS or mutually absent. The actual virtual-device
+configuration disables SoundWire and SOF and builds virtio sound. Intel match
+tables, DSP configuration helpers and USB audio are nevertheless compiled;
+their containing files are not described as unused. Goldfish selects the ranchu
+HAL and TinyALSA path recorded in the preceding audio-interface review.
+
+Omit new TAS2563 and CS35L63 integration, Francka/Lapis DMI quirks, Panther Lake
+codec wiring and Nova Lake enumeration. The SOF automatic-machine series adds
+per-platform names, codec prefixes, peripheral-derived links/endpoints, dummy
+topologies, best-effort callback behavior and associated naming/diagnostic fixes.
+Keep native discovery, firmware checks and static tables together. In particular,
+the RT721 removal/revert/re-land changed lines were compared, and RT722 static
+tables are retained because their new automatic replacement is not ported.
+Neither historical KMI dummy entries nor partially implemented new topology
+behavior is introduced. The profile-log null check is assessed with the new
+dereference it fixes; native reporting has neither.
+
+The sof_sdw_get_tplg_files, asoc_sdw_get_dai_type and BPT alignment exports are
+real module-source APIs, not KMI-only changes. Their semantics are specific to
+the omitted physical SoundWire/SOF features. Existing native callbacks/helpers
+and provider interfaces remain; the new exports are omitted with those features.
+This conclusion is target-specific, not based on failing to locate an arbitrary
+vendor consumer. Reassess before adding a SoundWire provider or related vendor
+modules to a future target.
+
+USB audio remains enabled. The Realtek helper refactor preserves existing Dell
+argument values and prepares new HP Thunderbolt Dock G2 support keyed by USB ID
+03f0:0269. Omit that additional physical peripheral feature and its preparatory
+refactor; the whole native mixer file, including existing dock fixes, remains.
+This does not assert that arbitrary host hardware passthrough is impossible.
+No physical audio, firmware, UCM or runtime workload was tested. URLs printed in
+local patches were not opened; no additional remote resource was used.
+
 ## Audio loopback, reverted hostless DAI and SDCA interfaces
 
 Thirteen candidates are recorded in evidence/audio-interface-tail-review.json.
