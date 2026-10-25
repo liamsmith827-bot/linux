@@ -62,15 +62,16 @@
   },
   {
     "topic": "Shared file tail behavior with emulated 16 KiB pages",
-    "status": "unresolved compatibility; shared-tail extension blocked by native MM invariants; candidate remains provisional",
+    "status": "resolved partial-adaptation decision; known shared-tail compatibility gap and exact SDK necessity remain unresolved",
     "candidates": [
       "b3c77090341c2832f1d703b6592011886cdb7e9c"
     ],
-    "evidence": "Pinned Goldfish x86_64_16k_cmdline.txt positively enables page_shift=14. ACK b3c77090341c extends file/shmem EOF to an emulated-page boundary and permits shared file VMAs in do_anonymous_page. Source review of do_anonymous_page, do_wp_page, wp_pfn_shared, wp_page_reuse and vm_normal_page shows the read-zero-page/shared-write route can make the global zero page writable; shared page_mkwrite and anonymous reverse mapping also need a coherent design. Restore the LTS VM_SHARED guard in c75a4c447656 while preserving private file-tail emulation and native 4 KiB behavior. This is a documented security-driven compatibility limit, not an absence-of-consumer finding. Determine whether to implement shared cache-backed tail pages or otherwise preserve Android shared mapping expectations safely; full runtime validation is out of current scope.",
+    "evidence": "Retain emulated mmap-length rounding and private file/shmem EOF-tail dispatch, with single-size snapshots, locked-folio put and noncolliding internal fault bit. Reject only the ACK relaxation permitting VM_SHARED in do_anonymous_page: a read can install the global zero page, then shared write handling can mark it writable via wp_pfn_shared/wp_page_reuse; allocated anonymous folios also violate shared file page_mkwrite/rmap expectations. Restore native guard. This is an explicit security-driven compatibility gap: VM_SHARED faults in whole 4 KiB pages beyond real EOF return SIGBUS even inside the final emulated 16 KiB page. Positive Goldfish page_shift=14 consumer exists; shared-tail necessity is not disproven. A cache-backed shared-tail design needs ownership, sharing, truncate/invalidate and writeback integration and is not claimed implemented. Final disposition is partial adaptation, not full ACK parity. Extracted current parser/EOF/ref/guard/flag tests passed with old-code negative controls; no whole-kernel mapping or runtime test.",
     "result_commits": [
       "7f9fdddd5bf89fe656e25c3e4069c2df2091706d",
       "c75a4c4476567c8284454fe8d1eb861de7cafdde"
-    ]
+    ],
+    "review": "evidence/last-io-mm-boundaries-review.json"
   },
   {
     "topic": "Pagemap aggregate metadata under page-size emulation",
@@ -606,8 +607,9 @@
   {
     "commit": "67ecf6fd8bddf24f3c0f9d709a64301e5ea1cd48",
     "topic": "Loop direct-I/O alignment compatibility",
-    "status": "unresolved necessity; provisional",
-    "evidence": "Full ACK revert and native f4774e92aab8 read. ACK still bypasses STATX_DIOALIGN filesystem minimum; native remains intact. Local LTP ioctl_loop05 expects backing-device logical sector size to suffice, which can conflict with filesystem direct-I/O requirements. Android apexd/libdm request 4096-byte loop blocks, but this alone does not settle every offset/filesystem combination. Need a coherent compatibility policy preserving native I/O correctness. No LTP/emulator runtime test performed; see evidence/virtio-loop-review.json."
+    "status": "resolved source-selection decision preserving native fix; runtime compatibility of stricter DIO alignment remains unverified",
+    "evidence": "Do not carry the ACK revert of native filesystem DIO-alignment validation. Complete revert and original fix reviewed; current loop.c is whole LTS apart from the separately reviewed namespace import. STATX_DIOALIGN prevents enabling an I/O geometry smaller than filesystem requirements, including out-of-place and multi-device cases; backing-device sectors alone cannot guarantee this. The actual local LTP test assumes BLKSSZGET suffices and can fail with EINVAL under this deliberate native policy. Android libdm requests 4096 blocks before enabling DIO; fs_mgr zram and image-manager users propagate failures, so compatibility for files with larger/no DIO alignment is not asserted. apexd requests 4096 blocks and current source copies li before adding its DIRECT_IO flag; do not misrepresent that flag as passed by this branch. Native configure can clear incompatible DIO while explicit SET_DIRECT_IO rejects it. Preserve upstream correctness rather than report success for unsupported direct I/O. Exact runtime necessity of ACK test behavior remains unconfirmed; no LTP/loop runtime performed.",
+    "review": "evidence/last-io-mm-boundaries-review.json"
   },
   {
     "commit": "097816659d76e06a767f1125b26b649b331abc91",

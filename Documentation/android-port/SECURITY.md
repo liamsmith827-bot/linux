@@ -11116,3 +11116,53 @@ is not presented as an equivalent protected guest guarantee. Private QTVM
 watchdog, release and firmware-parcel reclaim callbacks do not belong to an
 x86 SDK object lifecycle. No firmware/runtime/VM test was executed. Only local
 checkouts were used; embedded schema and discussion URLs were not contacted.
+
+## Final loop alignment and shared EOF decisions
+
+The two source-selection decisions in last-io-mm-boundaries-review.json are
+final; neither claims complete runtime compatibility. Earlier provisional
+notes in virtio-loop-review.json and page-size-review-in-progress.json are
+historical checkpoints superseded by these decisions and their ledger rows.
+
+67ecf6fd8bdd is not applied: native f4774e92aab8 and the complete 6.18.57 loop
+implementation remain, apart from the separately reviewed namespace import.
+Backing-device sectors do not describe filesystem direct-I/O restrictions.
+Native STATX_DIOALIGN handles multi-device and larger write-alignment cases.
+The local LTP ioctl_loop05 test assumes BLKSSZGET is sufficient and can fail
+with EINVAL; that is a real compatibility difference, not a nonexistent user.
+Native explicit LOOP_SET_DIRECT_IO rejects incompatible geometry, while
+configuration can clear the DIO flag and use buffered I/O. F2FS reports no DIO
+when writes require buffering; ext4 reports its encryption-dependent minimum;
+XFS reports larger COW write alignment to avoid unsafe/inefficient fallback.
+The revert would discard this filesystem information. No new security flaw is
+claimed in every rejected combination; the upstream correctness protection is
+retained rather than weakened to satisfy the older test assumption.
+
+Pinned libdm sets 4096-byte blocks before enabling DIO. Its zram backing and
+image-manager callers propagate failure, so those callers are not blanket
+proof of compatibility on files with larger/no DIO support. apexd requests
+4096-byte blocks; its examined configure branch copies li into config before
+setting DIRECT_IO on li, so that source alone does not demonstrate that the
+flag is passed. These observations do not authorize Android userspace changes.
+No loop/LTP runtime was executed.
+
+b3c77090341c is partially adapted. Emulated mmap rounding and private file and
+shmem tail fallback remain. 7f9fdddd5bf8 preserves one size snapshot, drops the
+locked folio reference and avoids the native hardware-poison index bit mask.
+c75a4c447656 restores native VM_SHARED rejection in do_anonymous_page. Without
+that guard, a shared read fault can install the global zero page and the later
+shared write path can mark it writable through wp_pfn_shared/wp_page_reuse.
+Simply allocating an anonymous page would still fail to provide coherent
+shared file ownership, page_mkwrite, rmap and truncate/writeback behavior.
+
+The deliberate limitation is SIGBUS for VM_SHARED faults in complete 4 KiB
+pages beyond real EOF, even within its last emulated 16 KiB page. Goldfish
+positively enables 16 KiB emulation; necessity of shared-tail behavior is not
+disproven. Full shared-tail emulation is not delivered or claimed. A safe
+cache-backed design needs explicit cross-mapping sharing and truncation/
+invalidation/writeback rules; the current decision retains LTS protection and
+the safe private subset rather than importing the unsafe guard relaxation.
+The unresolved necessity and known gap remain visible in
+unresolved-feature-questions.json. Current extracted MM checks passed with
+negative controls, but do not test kernel faults, races or exploitability.
+Build 202 compiled this exact executable source. Only local sources were used.

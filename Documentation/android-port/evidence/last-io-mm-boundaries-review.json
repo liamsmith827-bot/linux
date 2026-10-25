@@ -1,0 +1,107 @@
+{
+  "source_head": "807e6013903d60aea96578d57d613d67f4a7f250",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "67ecf6fd8bddf24f3c0f9d709a64301e5ea1cd48",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [
+        "f4774e92aab85d9bb5c76463f220ad7ba535bb1c"
+      ],
+      "rationale": "Do not carry the ACK revert of native filesystem DIO-alignment validation. Complete revert and original fix reviewed; current loop.c is whole LTS apart from the separately reviewed namespace import. STATX_DIOALIGN prevents enabling an I/O geometry smaller than filesystem requirements, including out-of-place and multi-device cases; backing-device sectors alone cannot guarantee this. The actual local LTP test assumes BLKSSZGET suffices and can fail with EINVAL under this deliberate native policy. Android libdm requests 4096 blocks before enabling DIO; fs_mgr zram and image-manager users propagate failures, so compatibility for files with larger/no DIO alignment is not asserted. apexd requests 4096 blocks and current source copies li before adding its DIRECT_IO flag; do not misrepresent that flag as passed by this branch. Native configure can clear incompatible DIO while explicit SET_DIRECT_IO rejects it. Preserve upstream correctness rather than report success for unsupported direct I/O. Exact runtime necessity of ACK test behavior remains unconfirmed; no LTP/loop runtime performed.",
+      "evidence": [
+        "evidence/last-io-mm-boundaries-review.json",
+        "SECURITY.md: Final loop alignment and shared EOF decisions"
+      ],
+      "patch_sha256": "f6cb5484c707a3f51da2bdf4cee7c5ec7245fa05fcdc64f9574c041fc19d3ad6"
+    },
+    {
+      "commit": "b3c77090341c2832f1d703b6592011886cdb7e9c",
+      "disposition": "partially-adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "7f9fdddd5bf89fe656e25c3e4069c2df2091706d",
+        "c75a4c4476567c8284454fe8d1eb861de7cafdde"
+      ],
+      "rationale": "Retain emulated mmap-length rounding and private file/shmem EOF-tail dispatch, with single-size snapshots, locked-folio put and noncolliding internal fault bit. Reject only the ACK relaxation permitting VM_SHARED in do_anonymous_page: a read can install the global zero page, then shared write handling can mark it writable via wp_pfn_shared/wp_page_reuse; allocated anonymous folios also violate shared file page_mkwrite/rmap expectations. Restore native guard. This is an explicit security-driven compatibility gap: VM_SHARED faults in whole 4 KiB pages beyond real EOF return SIGBUS even inside the final emulated 16 KiB page. Positive Goldfish page_shift=14 consumer exists; shared-tail necessity is not disproven. A cache-backed shared-tail design needs ownership, sharing, truncate/invalidate and writeback integration and is not claimed implemented. Final disposition is partial adaptation, not full ACK parity. Extracted current parser/EOF/ref/guard/flag tests passed with old-code negative controls; no whole-kernel mapping or runtime test.",
+      "evidence": [
+        "evidence/last-io-mm-boundaries-review.json",
+        "evidence/page-emulation-final-check.json",
+        "SECURITY.md: Final loop alignment and shared EOF decisions"
+      ],
+      "patch_sha256": "ff0cd4e03e886ce9d61b0f134ebcedc21d7e7797a3db5d6cacef5b880d43cb54"
+    }
+  ],
+  "blobs": {
+    "drivers/block/loop.c": {
+      "port": "099598c856f648c8c01ca80f11fb92c5421e661d",
+      "lts": "100644 blob 13ce229d450cd308ab96b98f7fc8fd49efe24df9\tdrivers/block/loop.c"
+    },
+    "mm/filemap.c": {
+      "port": "9fde0eaafa416772826def1ccb84f19ae1319dfd",
+      "lts": "100644 blob 1a035881060906d46ff279e8c55944d97742aa64\tmm/filemap.c"
+    },
+    "mm/shmem.c": {
+      "port": "82f8b5e6b7d87b959763e105c8f17c6a04f4ae1d",
+      "lts": "100644 blob 0100110f77b8e1b58169494dfe3e1522b7a4bcf2\tmm/shmem.c"
+    },
+    "mm/memory.c": {
+      "port": "739cda09ec26726176f841a2d8f4a0ff2d02ad0c",
+      "lts": "100644 blob 72793ec631072542ab6913e7c99e1e16c0c1a193\tmm/memory.c"
+    },
+    "mm/mmap.c": {
+      "port": "cd4eec926fb29cd48c53f6d1b4c1184c859b0e2b",
+      "lts": "100644 blob b29b31a29ef662b618e70b47ccec6dd998033428\tmm/mmap.c"
+    },
+    "include/linux/mm_types.h": {
+      "port": "b9243f89c5ab7581c6b75ca642c6bf5f5dbae251",
+      "lts": "100644 blob f9c552744b71af4e31eb9d257412e5bc69bfc21c\tinclude/linux/mm_types.h"
+    },
+    "include/linux/page_size_compat.h": {
+      "port": "1bf3eb184198d7050b5c234f218e025df6e7729f",
+      "lts": ""
+    },
+    "fs/f2fs/file.c": {
+      "port": "1b06fd799646b058bc12ffbce17d91282b51a4f4",
+      "lts": "100644 blob 791f1cf198c16a78f8cd2857841b648042c56ced\tfs/f2fs/file.c"
+    },
+    "fs/ext4/inode.c": {
+      "port": "65eb8b5fccbce8788c46dbc427e2309be55ca0ad",
+      "lts": "100644 blob bbc437be5e63b595d467de3f5d5a3f19e84f16e2\tfs/ext4/inode.c"
+    },
+    "fs/xfs/xfs_iops.c": {
+      "port": "caff0125faeac093c1c05a722d3588e3f2e99926",
+      "lts": "100644 blob caff0125faeac093c1c05a722d3588e3f2e99926\tfs/xfs/xfs_iops.c"
+    }
+  },
+  "local_consumers": [
+    {
+      "project": "system/apex",
+      "commit": "ce2bb9f710183c864040401d859874b5723e44d8",
+      "files": {
+        "apexd/apexd_loop.cpp": "3b7de85c1649b4901945d4625f179f558a09d9063408fb33e38af961ddd6ea4b"
+      }
+    },
+    {
+      "project": "system/fs/fs_mgr",
+      "commit": "f2de922569ca66e25406e93efa20d79c0b0d1aed",
+      "files": {
+        "libdm/loop_control.cpp": "900e1901c60c6b22f2d57394a167d8f0114c2eb5e8acda61c3384097c133acc6",
+        "libfiemap/image_manager.cpp": "9841d041982b400e7be2295f373a7c5c8b4606e50366ffe9c2cea58f9e5cb7d8",
+        "fs_mgr.cpp": "21a16c000a55b9b0d936733f52e402ad04843ff3faf8079e144ca3df1a199539"
+      }
+    },
+    {
+      "project": "external/ltp",
+      "commit": "3fe7435d5b984b46d1d1528cc9850a48d888d8c8",
+      "files": {
+        "testcases/kernel/syscalls/ioctl/ioctl_loop05.c": "ecb6b9dd800630297c5e46ec51fdeb2f0bb0ab3a0b914c5378cd772d4c44653d"
+      }
+    }
+  ],
+  "shared_tail_positive_consumer": "device/generic/goldfish at 5281db702f36e0e8c0af9e33d70b63d3ba4916ae: board/kernel/x86_64_16k_cmdline.txt supplies page_shift=14",
+  "method": "Both full candidate patches and native DIO fix read; local loop setup callers and errors, filesystem DIO reporting, complete native/port loop comparison, relevant zero-page/COW/shared write/fault dispatch paths and previous MM correction commits examined. Existing full MM deltas and earlier page-size reviews remain supporting evidence. Current extracted checks rerun when closing the shared fault decision.",
+  "limits": "Final source-selection decisions with documented compatibility differences. Exact SDK necessity and runtime behavior are unresolved, not proven unnecessary. No storage/MM/emulator runtime tests or exploitation. Initial incorrect system/core/fs_mgr and loop_device.cpp paths were corrected by file discovery; not used as missing-consumer evidence.",
+  "remote_resources_used": []
+}

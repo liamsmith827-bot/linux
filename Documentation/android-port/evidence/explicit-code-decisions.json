@@ -36872,5 +36872,32 @@
       "evidence/vendor-hypervisor-tail-review.json",
       "SECURITY.md: GenieZone and Gunyah platform boundary"
     ]
+  },
+  {
+    "commit": "67ecf6fd8bddf24f3c0f9d709a64301e5ea1cd48",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [
+      "f4774e92aab85d9bb5c76463f220ad7ba535bb1c"
+    ],
+    "rationale": "Do not carry the ACK revert of native filesystem DIO-alignment validation. Complete revert and original fix reviewed; current loop.c is whole LTS apart from the separately reviewed namespace import. STATX_DIOALIGN prevents enabling an I/O geometry smaller than filesystem requirements, including out-of-place and multi-device cases; backing-device sectors alone cannot guarantee this. The actual local LTP test assumes BLKSSZGET suffices and can fail with EINVAL under this deliberate native policy. Android libdm requests 4096 blocks before enabling DIO; fs_mgr zram and image-manager users propagate failures, so compatibility for files with larger/no DIO alignment is not asserted. apexd requests 4096 blocks and current source copies li before adding its DIRECT_IO flag; do not misrepresent that flag as passed by this branch. Native configure can clear incompatible DIO while explicit SET_DIRECT_IO rejects it. Preserve upstream correctness rather than report success for unsupported direct I/O. Exact runtime necessity of ACK test behavior remains unconfirmed; no LTP/loop runtime performed.",
+    "evidence": [
+      "evidence/last-io-mm-boundaries-review.json",
+      "SECURITY.md: Final loop alignment and shared EOF decisions"
+    ]
+  },
+  {
+    "commit": "b3c77090341c2832f1d703b6592011886cdb7e9c",
+    "disposition": "partially-adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "7f9fdddd5bf89fe656e25c3e4069c2df2091706d",
+      "c75a4c4476567c8284454fe8d1eb861de7cafdde"
+    ],
+    "rationale": "Retain emulated mmap-length rounding and private file/shmem EOF-tail dispatch, with single-size snapshots, locked-folio put and noncolliding internal fault bit. Reject only the ACK relaxation permitting VM_SHARED in do_anonymous_page: a read can install the global zero page, then shared write handling can mark it writable via wp_pfn_shared/wp_page_reuse; allocated anonymous folios also violate shared file page_mkwrite/rmap expectations. Restore native guard. This is an explicit security-driven compatibility gap: VM_SHARED faults in whole 4 KiB pages beyond real EOF return SIGBUS even inside the final emulated 16 KiB page. Positive Goldfish page_shift=14 consumer exists; shared-tail necessity is not disproven. A cache-backed shared-tail design needs ownership, sharing, truncate/invalidate and writeback integration and is not claimed implemented. Final disposition is partial adaptation, not full ACK parity. Extracted current parser/EOF/ref/guard/flag tests passed with old-code negative controls; no whole-kernel mapping or runtime test.",
+    "evidence": [
+      "evidence/last-io-mm-boundaries-review.json",
+      "evidence/page-emulation-final-check.json",
+      "SECURITY.md: Final loop alignment and shared EOF decisions"
+    ]
   }
 ]
