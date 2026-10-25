@@ -1,0 +1,166 @@
+{
+  "source_head": "a667dc60261f376ede2fc4aaa980663e0711f651",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "4d599eb6e4d8c6f9e88a12374d9a458725fa4068",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the original generic memory-relinquish API and ARM pKVM service probing changes. Full patch read; final ACK replaces this API/config with the driver-specific form in f69615bd4637, and mem_relinquish.h is absent in ACK/LTS/port. Runtime ownership transfer is not a KMI concern, but the protected-guest backend is outside the ordinary x86 SDK. Native ARM guest file remains unchanged, while ordinary virtio balloon/page reporting remains native.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/virtio-range-tail-review.json",
+        "SECURITY.md: Protected balloon ownership and ARM range hypercalls"
+      ],
+      "patch_sha256": "a50e4412e77cd4f0f599a34627ff00771bf94c046a22aed2665d449cc1d73f62",
+      "files": [
+        "arch/Kconfig",
+        "drivers/virt/coco/pkvm-guest/Kconfig",
+        "drivers/virt/coco/pkvm-guest/arm-pkvm-guest.c",
+        "include/linux/mem_relinquish.h",
+        "mm/Kconfig"
+      ]
+    },
+    {
+      "commit": "9100b269b811d01dd235130f2de8bf6e65a48e9d",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the protected-guest granule-size veto together with the memory-relinquish backend. Complete patch reviewed: relinquishing a guest page into a larger hypervisor ownership granule can release neighboring data, hence this is a real safety check. Current native driver makes no relinquish hypercall, and its ARM guest service probe rejects granules larger than PAGE_SIZE. No unsafe ACK intermediate is retained; future protected-guest support must include the proper granule checks.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/virtio-range-tail-review.json",
+        "SECURITY.md: Protected balloon ownership and ARM range hypercalls"
+      ],
+      "patch_sha256": "a4b64464ca914bb43e9a63a46029ecf5463785511a437aae2960fdc9bb8c039b",
+      "files": [
+        "drivers/virt/coco/pkvm-guest/arm-pkvm-guest.c",
+        "drivers/virtio/virtio_balloon.c",
+        "include/linux/mem_relinquish.h"
+      ]
+    },
+    {
+      "commit": "f69615bd463778e579e22cc889bccd8caecac233",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit driver-specific protected-guest balloon ownership callbacks and config/export infrastructure, including page-reporting scatterlist and inflation calls. Full patch read. This is not ordinary ballooning: it changes hypervisor ownership before buffers are submitted. Native virtio balloon/Kconfig/Makefile are whole LTS; private header/table are absent and native ACCESS_PLATFORM rejection is retained. Remove the orphan ARCH_HAS_VIRTIO_BALLOON_HYP_OPS definition in a667dc60261f after confirming there is no selector/provider/use in port source. Ordinary SDK VIRTIO_BALLOON=m and module output remain.",
+      "result_commits": [
+        "a667dc60261f376ede2fc4aaa980663e0711f651"
+      ],
+      "evidence": [
+        "evidence/virtio-range-tail-review.json",
+        "SECURITY.md: Protected balloon ownership and ARM range hypercalls"
+      ],
+      "patch_sha256": "5dd800bfceb75aebffee4b725aa689c387caa9bb764cba8d711d0edd17cd3b75",
+      "files": [
+        "arch/Kconfig",
+        "drivers/virt/coco/pkvm-guest/Kconfig",
+        "drivers/virt/coco/pkvm-guest/arm-pkvm-guest.c",
+        "drivers/virtio/Kconfig",
+        "drivers/virtio/Makefile",
+        "drivers/virtio/virtio_balloon.c",
+        "drivers/virtio/virtio_balloon_hyp_ops.c",
+        "include/linux/mem_relinquish.h",
+        "include/linux/virtio_balloon.h",
+        "mm/Kconfig"
+      ]
+    },
+    {
+      "commit": "4b0c33195df77618881e26a6a74c788f510eabbf",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the ARM range hypercall interface and MMIO range dispatch. Full patch read, including host-reported processed-granule loop and rounding/fallback. Native ARM guest remains whole with per-page APIs, and ARM code is not selected on x86. Later larger-granule/alignment fixes are separately tracked in arm-protected-tail-review.json; no partially enabled range ABI or old ACK rounding is left behind. No ARM sharing runtime guarantee is claimed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/virtio-range-tail-review.json",
+        "SECURITY.md: Protected balloon ownership and ARM range hypercalls"
+      ],
+      "patch_sha256": "f41a47270827c39f46cbcd3b2fce2a7b77cedd7194b0270ddb8de5d2308a39ff",
+      "files": [
+        "drivers/virt/coco/pkvm-guest/arm-pkvm-guest.c"
+      ]
+    },
+    {
+      "commit": "25d37fd7ab357463b97273afe5927772f0cbcb65",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit protected-balloon diagnostic/error-code relocation with its excluded callback API. Complete patch moves a granule WARN into the ARM provider and changes generic veto from EINVAL to ENODEV so the x86 always-veto provider is quiet. Native balloon has neither callback veto nor these ACK diagnostics; ordinary error handling is not globally changed. Related x86 pKVM balloon-disable stub is separately excluded, with native restricted-memory feature checks retained.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/virtio-range-tail-review.json",
+        "SECURITY.md: Protected balloon ownership and ARM range hypercalls"
+      ],
+      "patch_sha256": "15fb67e7c95050e245e9800fc0440e367a4cd8bb5e0f63443ae90bc9d326ea33",
+      "files": [
+        "drivers/virt/coco/pkvm-guest/arm-pkvm-guest.c",
+        "drivers/virtio/virtio_balloon.c"
+      ]
+    }
+  ],
+  "proofs": [
+    {
+      "path": "arch/Kconfig",
+      "port_entry": "100644 blob a17c4d02d8f14d583303106ee2bb2817732e96f4\tarch/Kconfig",
+      "lts_entry": "100644 blob ee9fd0150f487c491d1ffa0637a004832481de8b\tarch/Kconfig",
+      "comparison": "full shared delta read: Propeller compiler probe or generic cleancache/GCMA only"
+    },
+    {
+      "path": "drivers/virt/coco/pkvm-guest/Kconfig",
+      "port_entry": "100644 blob d2f344f1f98f7bc954cb6ebe37f698961642f5a2\tdrivers/virt/coco/pkvm-guest/Kconfig",
+      "lts_entry": "100644 blob d2f344f1f98f7bc954cb6ebe37f698961642f5a2\tdrivers/virt/coco/pkvm-guest/Kconfig",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "drivers/virt/coco/pkvm-guest/arm-pkvm-guest.c",
+      "port_entry": "100644 blob d66291def0f40827fcb3c76da30a4c77a76c4323\tdrivers/virt/coco/pkvm-guest/arm-pkvm-guest.c",
+      "lts_entry": "100644 blob d66291def0f40827fcb3c76da30a4c77a76c4323\tdrivers/virt/coco/pkvm-guest/arm-pkvm-guest.c",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "drivers/virtio/Kconfig",
+      "port_entry": "100644 blob 6db5235a7693d6d09caba949dfe85e6a7313f826\tdrivers/virtio/Kconfig",
+      "lts_entry": "100644 blob 6db5235a7693d6d09caba949dfe85e6a7313f826\tdrivers/virtio/Kconfig",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "drivers/virtio/Makefile",
+      "port_entry": "100644 blob eefcfe90d6b8b07737075792c59018705976b065\tdrivers/virtio/Makefile",
+      "lts_entry": "100644 blob eefcfe90d6b8b07737075792c59018705976b065\tdrivers/virtio/Makefile",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "drivers/virtio/virtio_balloon.c",
+      "port_entry": "100644 blob a3995e77a652ca3a750bd2799243cc052dad7ba2\tdrivers/virtio/virtio_balloon.c",
+      "lts_entry": "100644 blob a3995e77a652ca3a750bd2799243cc052dad7ba2\tdrivers/virtio/virtio_balloon.c",
+      "comparison": "whole native source"
+    },
+    {
+      "path": "drivers/virtio/virtio_balloon_hyp_ops.c",
+      "port_entry": "",
+      "lts_entry": "",
+      "comparison": "mutually absent"
+    },
+    {
+      "path": "include/linux/mem_relinquish.h",
+      "port_entry": "",
+      "lts_entry": "",
+      "comparison": "mutually absent"
+    },
+    {
+      "path": "include/linux/virtio_balloon.h",
+      "port_entry": "",
+      "lts_entry": "",
+      "comparison": "mutually absent"
+    },
+    {
+      "path": "mm/Kconfig",
+      "port_entry": "100644 blob 69fd6fc840a7290d294a65eacf9220af39111359\tmm/Kconfig",
+      "lts_entry": "100644 blob 76001e9ba04f1c116c92b3b76f43d45464a00f36\tmm/Kconfig",
+      "comparison": "full shared delta read: Propeller compiler probe or generic cleancache/GCMA only"
+    }
+  ],
+  "previous_completed_build": "sdk-build-attempt-201",
+  "previous_build_config_sha256": "6d27ff842b4cac221ab58093e8ca6bc7f8c692b6ccf56c9b7cceca230389d769",
+  "pending_build": "sdk-build-attempt-202",
+  "revalidated_cfi_witness": [
+    "7b2ef32f654f828fc86ecfab1d124a78ca50f4a6"
+  ],
+  "method": "All five original patches read completely. All final affected files compared whole with native or full shared config delta; whole-source grep showed only orphan capability definition before its removal. Re-read native virtio restricted-memory ACCESS_PLATFORM negotiation and full ARM guest implementation; final disabled callback config and ordinary balloon artifact checked at prior successful build.",
+  "limits": "No balloon/page-reporting runtime, protected ownership transfer, range hypercall or mixed-granule test. Removing an orphan bool requires no new unit test; existing emulator workflow is running on cleanup source. No additional remote resources.",
+  "remote_resources_used": []
+}

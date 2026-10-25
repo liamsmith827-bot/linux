@@ -36460,5 +36460,57 @@
       "evidence/arm-protected-tail-review.json",
       "SECURITY.md: Remaining ARM protected host and guest contracts"
     ]
+  },
+  {
+    "commit": "4d599eb6e4d8c6f9e88a12374d9a458725fa4068",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the original generic memory-relinquish API and ARM pKVM service probing changes. Full patch read; final ACK replaces this API/config with the driver-specific form in f69615bd4637, and mem_relinquish.h is absent in ACK/LTS/port. Runtime ownership transfer is not a KMI concern, but the protected-guest backend is outside the ordinary x86 SDK. Native ARM guest file remains unchanged, while ordinary virtio balloon/page reporting remains native.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/virtio-range-tail-review.json",
+      "SECURITY.md: Protected balloon ownership and ARM range hypercalls"
+    ]
+  },
+  {
+    "commit": "9100b269b811d01dd235130f2de8bf6e65a48e9d",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the protected-guest granule-size veto together with the memory-relinquish backend. Complete patch reviewed: relinquishing a guest page into a larger hypervisor ownership granule can release neighboring data, hence this is a real safety check. Current native driver makes no relinquish hypercall, and its ARM guest service probe rejects granules larger than PAGE_SIZE. No unsafe ACK intermediate is retained; future protected-guest support must include the proper granule checks.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/virtio-range-tail-review.json",
+      "SECURITY.md: Protected balloon ownership and ARM range hypercalls"
+    ]
+  },
+  {
+    "commit": "f69615bd463778e579e22cc889bccd8caecac233",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit driver-specific protected-guest balloon ownership callbacks and config/export infrastructure, including page-reporting scatterlist and inflation calls. Full patch read. This is not ordinary ballooning: it changes hypervisor ownership before buffers are submitted. Native virtio balloon/Kconfig/Makefile are whole LTS; private header/table are absent and native ACCESS_PLATFORM rejection is retained. Remove the orphan ARCH_HAS_VIRTIO_BALLOON_HYP_OPS definition in a667dc60261f after confirming there is no selector/provider/use in port source. Ordinary SDK VIRTIO_BALLOON=m and module output remain.",
+    "result_commits": [
+      "a667dc60261f376ede2fc4aaa980663e0711f651"
+    ],
+    "evidence": [
+      "evidence/virtio-range-tail-review.json",
+      "SECURITY.md: Protected balloon ownership and ARM range hypercalls"
+    ]
+  },
+  {
+    "commit": "4b0c33195df77618881e26a6a74c788f510eabbf",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the ARM range hypercall interface and MMIO range dispatch. Full patch read, including host-reported processed-granule loop and rounding/fallback. Native ARM guest remains whole with per-page APIs, and ARM code is not selected on x86. Later larger-granule/alignment fixes are separately tracked in arm-protected-tail-review.json; no partially enabled range ABI or old ACK rounding is left behind. No ARM sharing runtime guarantee is claimed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/virtio-range-tail-review.json",
+      "SECURITY.md: Protected balloon ownership and ARM range hypercalls"
+    ]
+  },
+  {
+    "commit": "25d37fd7ab357463b97273afe5927772f0cbcb65",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit protected-balloon diagnostic/error-code relocation with its excluded callback API. Complete patch moves a granule WARN into the ARM provider and changes generic veto from EINVAL to ENODEV so the x86 always-veto provider is quiet. Native balloon has neither callback veto nor these ACK diagnostics; ordinary error handling is not globally changed. Related x86 pKVM balloon-disable stub is separately excluded, with native restricted-memory feature checks retained.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/virtio-range-tail-review.json",
+      "SECURITY.md: Protected balloon ownership and ARM range hypercalls"
+    ]
   }
 ]

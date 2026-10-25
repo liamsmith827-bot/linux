@@ -11018,3 +11018,30 @@ for future ARM support. The port retains whole native memory-protection code
 and does not introduce ACK's optional fast ownership-transfer path. No ARM
 isolation, mixed-granule or protected-guest runtime compatibility is claimed.
 Only local sources were read; no embedded URL or device recipe was used.
+
+## Protected balloon ownership and ARM range hypercalls
+
+Five complete patches are assessed in virtio-range-tail-review.json. The first
+generic relinquish API was superseded in ACK by a virtio-specific provider and
+callbacks. Both forms transfer protected memory ownership; they are excluded
+with the protected guest deployment, while ordinary ballooning remains compiled.
+Native virtio core/balloon and its configuration/build files remain whole LTS.
+Native restricted-memory feature negotiation is retained, including balloon's
+ACCESS_PLATFORM clearing; no protected guest is silently enabled without its
+ownership-transfer provider. The granule veto is a real protection against
+releasing adjacent data, not a dispensable warning. No older unsafe relinquish
+implementation is retained.
+
+The port contained an orphan ARCH_HAS_VIRTIO_BALLOON_HYP_OPS bool despite
+excluding every selector, provider and callback. Source commit a667dc60261f
+removes that definition. Its ordinary balloon module/config remain; build 202
+is running for this change. The older CFI textual witness was revalidated:
+every nonblank original addition remains, and arch/Kconfig now differs from
+native only by the separately reviewed Propeller compiler capability probe.
+
+The ARM range API, later granule corrections and protected balloon diagnostic
+relocation are assessed together by their dependencies. Native ARM guest keeps
+its per-page API and granule ceiling, and is not compiled for x86. No generic
+SDK warning/error path is altered to mimic the protected provider. These are
+source/configuration findings; no runtime balloon or hypercall test was run.
+No remote resource was used.
