@@ -25514,5 +25514,300 @@
       "evidence/nan-mac-review.json",
       "SECURITY.md: NAN mac80211 lifecycle and shared channel contexts"
     ]
+  },
+  {
+    "commit": "20599bae2f4432c7c0c95851e0c7c3b5562356a9",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "989123cde71e577085e3d0c513ccce5e66155cf0"
+    ],
+    "rationale": "Retain accept_ra_rt_table sysctl, per-device IPv6 PIO/RIO/default route table selection and VRF precedence. Pinned netd initializeAll calls setAcceptRARouteTable with negative interface-index offset; this is direct Android runtime use. Preserve native default-router purge functions and safe fib6 references rather than the ACK fib6_clean_all replacement. Native purge already visits all flagged tables, including selected per-device tables. Default zero preserves normal table selection; sysctl remains privileged 0644. Signed offset arithmetic uses the existing kernel integer model; no new route authorization bypass.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "e92a3347dda341e763990eb9057fcd90de101f0f",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Native addrconf_f6i_alloc already omits RTF_ADDRCONF for kernel-created local routes and sets dst_nocount after successful allocation. Its full body equals LTS in the port. Do not replay the historical intermediate non-NULL test, which incorrectly accepts error pointers; retain the later IS_ERR fix.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "91e15d7d390333c7cd5b87e68fbb8e447c80655d",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Native addrconf_f6i_alloc tests !IS_ERR(f6i) before dst_nocount and the entire function equals LTS. This prevents dereferencing encoded allocation errors. Upstream 8652f17c658d is in the pinned LTS ancestry; no extra code is needed.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "1a9d91561de246161297005c80bf2cd4f3c8dcaa",
+    "disposition": "superseded",
+    "result_commits": [],
+    "rationale": "Historical unconditional compat-check removal is superseded by later Android configuration gates and ultimately 1cf1608b4abd restoring upstream translator behavior. Current xfrm_user_policy and xfrm_user_rcv_msg equal LTS and preserve the ACK compat policy; no legacy format bypass is reintroduced. SDK CONFIG_COMPAT_FOR_U64_ALIGNMENT=y and XFRM_USER_COMPAT=n means affected compat calls may return EOPNOTSUPP, matching ACK, not proof that all 32-bit callers work.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "7ad8c9a12d792fb2d5f48144f714811b9e9e0f5c",
+    "disposition": "superseded",
+    "result_commits": [],
+    "rationale": "Historical CONFIG_ANDROID-gated compat bypass replaces the earlier unconditional removal, then is superseded by translator support and retired by 1cf1608b4abd. Final policy/message handlers equal native LTS; ACK compat policy is preserved alongside newer native socket reset and netlink lifetime fixes. Keep native length, capability, translator/error cleanup and alignment checks.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "561eb836a30ce70988814b80dc2e9dc5bad90e6d",
+    "disposition": "superseded",
+    "result_commits": [],
+    "rationale": "The temporary untranslated 64-bit XFRM format for compat callers was explicitly retired by 1cf1608b4abd. Preserve final upstream/ACK translation policy, including freeing policy data on translator failure, rather than resurrecting a configuration-dependent wire-format bypass. Native final handlers equal LTS; no runtime compat call was tested.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "c1710ded877f9a4a38b998b226e110d97e4f9c43",
+    "disposition": "superseded",
+    "result_commits": [],
+    "rationale": "CONFIG_ANDROID to GKI_HACKS_TO_FIX substitution served the old compat bypass and 128-bit default SHA256 truncation. Both Android-specific defaults/gates were retired by 1cf1608b4abd; native algo file and current policy/message handlers equal LTS. Do not recreate the removed config symbol or historical wire behavior.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "ccbe77622c951061160a717702b2e67d33aaef51",
+    "disposition": "superseded",
+    "result_commits": [],
+    "rationale": "The standalone GKI_NET_XFRM_HACKS config only selected retired compat and default-truncation overrides. Its definition/select and all uses were removed by 1cf1608b4abd and are absent in both final trees. Native parser/crypto parameter handling remains; explicit authentication truncation requested by userspace is not changed by this disposition.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "1cf1608b4abd89ba850ecbfbba0108e34b179a3c",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Retain final removal of Android XFRM config hacks through the native LTS implementation: xfrm_algo.c equals LTS and policy/message handlers exactly match. Later native e0f688ccb20f additionally limits translation to actual u64 alignment mismatch. Historical SHA256 default returns to native 96 bits; explicit userspace algorithm parameters still follow native validation. No extra 2024 whole-file replacement is needed.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "d30c303aab07c42c4f70431be2899c6959641a16",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "be6aab8d72f2196accaefd55ff9bc268493e9c31"
+    ],
+    "rationale": "Retain unconditional pktgen_xfrm_outer_mode_output GPL source export, even though SDK CONFIG_NET_PKTGEN is unset, so a separately rebuilt module can use the existing XFRM implementation. This is module source customization, not ABI layout preservation or physical-platform enablement. Function body equals LTS; only config guard is removed. Export does not expose an unprivileged userspace operation or bypass xfrm checks.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "8f3ee7fd7dc34b54e9c063ef3c2c0765a652d1de",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "The temporary restoration of the obsolete XFRM inexact list is explicitly undone by c783e8acd1cf. Their semantic patches are inverse; final policy source equals LTS and lacks bydst_inexact_list. Retain newer native policy lifetime/lookup implementation rather than resurrecting removed list membership.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "c783e8acd1cf0139e2b608eda85e90d30cbd8660",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Reapply retires 8f3ee7fd7dc3 and returns to native policy lookup without the redundant inexact list. Final xfrm_policy.c equals LTS, and the old member is absent. The Android compatibility reason is recorded in local history; no external bug or change URL was accessed.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "ea70705764eef7f5fac2e0d9e89dc87316c55a6e",
+    "disposition": "superseded",
+    "result_commits": [
+      "989123cde71e577085e3d0c513ccce5e66155cf0"
+    ],
+    "rationale": "First duplicate-SPI revert is undone by d3fec4d67490 and later reintroduced by 4661ae54e4e4. Represent final Android destination-scoped allocation with 989123cde71e rather than this obsolete complete allocator revert. Retain LTS zero rejection, atomic lookup/insertion and signal exits; weakened global uniqueness is explicitly analyzed.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "d3fec4d674902d25623bb84b49e10662dc512a58",
+    "disposition": "superseded",
+    "result_commits": [
+      "989123cde71e577085e3d0c513ccce5e66155cf0"
+    ],
+    "rationale": "Reapplication of global duplicate-SPI lookup is superseded in final ACK by 4661ae54e4e4. Preserve the native allocator structure and safety fixes while adapting only collision scope for positively identified Android symmetric-SPI use. Do not claim global uniqueness survives; distinct-destination ambiguity is an explicit residual risk.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "e6e959238f93421004a8fc03fabc50b06bc70bc5",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [
+      "989123cde71e577085e3d0c513ccce5e66155cf0"
+    ],
+    "rationale": "Do not apply the ACK removal of zero-SPI rejection. Native cd8ae32e4e46 prevents states with SPI zero entering byspi, where deletion would otherwise leave freed list nodes. Destination-scoped collision compatibility does not require removing this check. Actual-function host tests exercise zero rejection and balanced lock/reference paths; no runtime UAF test.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "4661ae54e4e454db36bb836dbb75b75a455fe92b",
+    "disposition": "adapted",
+    "result_commits": [
+      "989123cde71e577085e3d0c513ccce5e66155cf0"
+    ],
+    "rationale": "Adapt collision lookup to Android destination/mark/protocol/family scope; pinned IpSecManagerTunnelTest.getRandomSpi allocates the same SPI for different local/remote destinations and netd XfrmController sends ALLOCSPI. Keep native atomic lookup/insertion under xfrm_state_lock, zero rejection, reference release and signal exit. This weakens native 94f39804d891 global SPI/protocol uniqueness: SPI-only lookup can be ambiguous and select/drop the wrong state, as its local commit explains. Compatibility is prioritized explicitly, not claimed equivalent security. Focused host tests show 28 intended scope differences and 772 passing allocation cases; packet processing/CTS not run.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "3ea9abc389264545d07d84ff0ac8b5b3320c9e4c",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "The early XDP dispatcher cherry-pick was reverted solely for upstream merge integration. Native ancestry contains 7e6897f95935 and final dispatcher install/change/run code remains LTS; no historical BPF_PROG_RUN macro/API replay is required. Native program references and dispatch lifecycle remain.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "4f912568544319ff9356006b9c10632496c64e48",
+    "disposition": "superseded",
+    "result_commits": [],
+    "rationale": "This integration-only revert cancels 3ea9abc38926 before the native merge. Their historical patches are inverse; the final kernel legitimately has the evolved upstream XDP dispatcher. Preserve native dev_xdp_install, bpf_prog_change_xdp and include/net/xdp.h run function rather than disabling it.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "0895708c5c2670b850c97cea688cc403a6ff52f3",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Native 519a8a6cf91d already restored explicit is_kernel tagging of sockptr_t. The complete header equals LTS, preserving safe user/kernel copy selection. Old bpfilter sockopt source was subsequently removed upstream and is absent in both final trees; do not resurrect its obsolete callers. Native socket users use USER_SOCKPTR with downstream hook additions reviewed separately.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "836219141ff7a77e7fab0bd749edd746fd36fef2",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "Temporary reintroduction of separate compat_import_iovec is explicitly undone by b28ad9eb4658. Their semantic patches are inverse across all eleven affected files. Native import_iovec and __import_iovec bodies remain unchanged in the port; keep automatic compat selection and current length/access checks, not the temporary duplicated caller API.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "b28ad9eb4658505d5e985718f491073560d21679",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Retain restoration of automatic compat iovec import through the native LTS implementation. import_iovec and __import_iovec exactly match LTS; callers use the current interface and no compat_import_iovec implementation remains. This preserves current user-pointer/length validation without replaying historical io_uring or SCSI paths.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "f465fb7e1af29c5f6da1cd77b44f5d02e0ad5eeb",
+    "disposition": "reverted-no-residual-code",
+    "result_commits": [],
+    "rationale": "The adjustable virtio max packet buffer parameter was explicitly removed by 5c5809e6a666 after nonlinear allocations and a bounded TX policy. Final virtio_vsock.h equals LTS with constant 64-KiB maximum; the variable/module parameter/export is absent in both final sources. Do not restore obsolete tunable or binary symbol.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "5c5809e6a666a220b289f0676b1036ec9ac351b7",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Retain final removal of the old virtio packet-size tunable, already represented by native header/common source state. Current common transport differs from LTS only in the separate bounded TX policy of 72bbea75874f. All native nonlinear-buffer and later transport fixes remain.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "72bbea75874ff2a2c7802373093ea0c2af9fa07b",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain conservative ~28-KiB TX skb cap and preserve it in zero-copy fragment limiting for the configured SDK virtio-vsock transport. Goldfish policy permits vsock for existing graphics/sensors/system clients; exact host RX allocator/version is not established by supplied sources, so do not infer a modern host and remove the common runtime interoperability guard. This is retained for current configurable SDK transport compatibility, not adding Cuttlefish support. May increase packetization/CPU use. Full LTS delta contains only the cap and min() update; native receive, memory accounting and nonlinear safety fixes remain. Host-behavior necessity is unresolved, conservatively retained.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "2c597ee562faff26f978d5146bb6190cfe29d279",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Native tcp_struct_check includes the corrected cacheline group size allowance and exactly equals LTS. Upstream 9b9fd45869e7 is in its ancestry. This is a source-layout build assertion, not Android historical KMI padding; no separate replay is needed.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "451c512db86be492a83de5824c66d9eef9b750a5",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Native IPv4/IPv6 receive functions retain the moved process label after TIME_WAIT/NEW_SYN_RECV checks; both full functions equal LTS. Upstream d13b05962369 is in ancestry. Preserve all newer receive validation and reference handling instead of replaying old bodies.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "8219376a1252d3e76fd93c6d353b7d810077c8a4",
+    "disposition": "reconciled-to-lts",
+    "result_commits": [],
+    "rationale": "Keep native CONFIG_BRIDGE guard: the actual SDK configuration has BRIDGE=y, so all required bridge tracepoints/exports are built already. The candidate only removes the guard for kernels built without bridge; that configuration is not this delivered target. This is a target/configuration decision, not a claim that tracepoint exports are KMI-only or that no external module exists. Existing bridge module/source interfaces are present in the SDK build.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
+  },
+  {
+    "commit": "194a1bf09a7958551a9e2dc947bdfe3f8be8eca8",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Android tethering offload.c explicitly calls bpf_skb_change_head to add Ethernet headers on raw-IP ingress and names this historical requirement. Native 6306c1189e77 superseded the ingress-only exception with BPF_SKB_MAX_LEN=SKB_MAX_ALLOC for the relevant helpers, avoiding ingress-device MTU while retaining overflow/size bounds. Current head/tail helper bodies exactly equal LTS. No need to restore the removed helper or weaken native bounds.",
+    "evidence": [
+      "evidence/net-compat-review.json",
+      "SECURITY.md: Networking compatibility and retired workarounds"
+    ]
   }
 ]

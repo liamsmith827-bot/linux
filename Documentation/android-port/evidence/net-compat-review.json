@@ -1,0 +1,697 @@
+{
+  "source_head": "244dc5d9113dbf3051618a5040ed3738339352f1",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "records": [
+    {
+      "commit": "20599bae2f4432c7c0c95851e0c7c3b5562356a9",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "989123cde71e577085e3d0c513ccce5e66155cf0"
+      ],
+      "rationale": "Retain accept_ra_rt_table sysctl, per-device IPv6 PIO/RIO/default route table selection and VRF precedence. Pinned netd initializeAll calls setAcceptRARouteTable with negative interface-index offset; this is direct Android runtime use. Preserve native default-router purge functions and safe fib6 references rather than the ACK fib6_clean_all replacement. Native purge already visits all flagged tables, including selected per-device tables. Default zero preserves normal table selection; sysctl remains privileged 0644. Signed offset arithmetic uses the existing kernel integer model; no new route authorization bypass.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "d714fe7d7fb023c1d0d71fdae303a205bc18f257bab2c215dcf0b58f3d0469be",
+      "changed_paths": [
+        "include/linux/ipv6.h",
+        "include/net/addrconf.h",
+        "net/ipv6/addrconf.c",
+        "net/ipv6/route.c"
+      ]
+    },
+    {
+      "commit": "e92a3347dda341e763990eb9057fcd90de101f0f",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Native addrconf_f6i_alloc already omits RTF_ADDRCONF for kernel-created local routes and sets dst_nocount after successful allocation. Its full body equals LTS in the port. Do not replay the historical intermediate non-NULL test, which incorrectly accepts error pointers; retain the later IS_ERR fix.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "dfed5f2ab5c9b72d6baae5414075d911ceaaf9edf0f65aab34992ebb821a3f97",
+      "changed_paths": [
+        "net/ipv6/route.c"
+      ]
+    },
+    {
+      "commit": "91e15d7d390333c7cd5b87e68fbb8e447c80655d",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Native addrconf_f6i_alloc tests !IS_ERR(f6i) before dst_nocount and the entire function equals LTS. This prevents dereferencing encoded allocation errors. Upstream 8652f17c658d is in the pinned LTS ancestry; no extra code is needed.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "7096e9240c3f26b39b19f569fbad2eb4feb1b7edd6d7846ce06e55ddf234a9b4",
+      "changed_paths": [
+        "net/ipv6/route.c"
+      ]
+    },
+    {
+      "commit": "1a9d91561de246161297005c80bf2cd4f3c8dcaa",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "Historical unconditional compat-check removal is superseded by later Android configuration gates and ultimately 1cf1608b4abd restoring upstream translator behavior. Current xfrm_user_policy and xfrm_user_rcv_msg equal LTS and preserve the ACK compat policy; no legacy format bypass is reintroduced. SDK CONFIG_COMPAT_FOR_U64_ALIGNMENT=y and XFRM_USER_COMPAT=n means affected compat calls may return EOPNOTSUPP, matching ACK, not proof that all 32-bit callers work.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "3b518689c2fc65329028386d437593e71ab65dbe51b3a98f5306c612b1e58928",
+      "changed_paths": [
+        "net/xfrm/xfrm_state.c",
+        "net/xfrm/xfrm_user.c"
+      ]
+    },
+    {
+      "commit": "7ad8c9a12d792fb2d5f48144f714811b9e9e0f5c",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "Historical CONFIG_ANDROID-gated compat bypass replaces the earlier unconditional removal, then is superseded by translator support and retired by 1cf1608b4abd. Final policy/message handlers equal native LTS; ACK compat policy is preserved alongside newer native socket reset and netlink lifetime fixes. Keep native length, capability, translator/error cleanup and alignment checks.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "64b75ef60448dff0d591706650f73f9098a694cc30f32d562b34f5b7fe490d9a",
+      "changed_paths": [
+        "net/xfrm/xfrm_state.c",
+        "net/xfrm/xfrm_user.c"
+      ]
+    },
+    {
+      "commit": "561eb836a30ce70988814b80dc2e9dc5bad90e6d",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "The temporary untranslated 64-bit XFRM format for compat callers was explicitly retired by 1cf1608b4abd. Preserve final upstream/ACK translation policy, including freeing policy data on translator failure, rather than resurrecting a configuration-dependent wire-format bypass. Native final handlers equal LTS; no runtime compat call was tested.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "852fb810f7e354b1479af269000934ede60196eda048470ca5a4c7d4bf5e977d",
+      "changed_paths": [
+        "net/xfrm/xfrm_state.c",
+        "net/xfrm/xfrm_user.c"
+      ]
+    },
+    {
+      "commit": "c1710ded877f9a4a38b998b226e110d97e4f9c43",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "CONFIG_ANDROID to GKI_HACKS_TO_FIX substitution served the old compat bypass and 128-bit default SHA256 truncation. Both Android-specific defaults/gates were retired by 1cf1608b4abd; native algo file and current policy/message handlers equal LTS. Do not recreate the removed config symbol or historical wire behavior.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "abf348cf61fb1eb10c6fb49e47608679fb1fec8c3c9de255593bf580ed6b58cb",
+      "changed_paths": [
+        "net/xfrm/xfrm_algo.c",
+        "net/xfrm/xfrm_state.c",
+        "net/xfrm/xfrm_user.c"
+      ]
+    },
+    {
+      "commit": "ccbe77622c951061160a717702b2e67d33aaef51",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "The standalone GKI_NET_XFRM_HACKS config only selected retired compat and default-truncation overrides. Its definition/select and all uses were removed by 1cf1608b4abd and are absent in both final trees. Native parser/crypto parameter handling remains; explicit authentication truncation requested by userspace is not changed by this disposition.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "3caf983c50a5acfbc85d36a5030226785077bc2e083788b6db9cfb28f4b19eaa",
+      "changed_paths": [
+        "init/Kconfig.gki",
+        "net/xfrm/xfrm_algo.c",
+        "net/xfrm/xfrm_state.c",
+        "net/xfrm/xfrm_user.c"
+      ]
+    },
+    {
+      "commit": "1cf1608b4abd89ba850ecbfbba0108e34b179a3c",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Retain final removal of Android XFRM config hacks through the native LTS implementation: xfrm_algo.c equals LTS and policy/message handlers exactly match. Later native e0f688ccb20f additionally limits translation to actual u64 alignment mismatch. Historical SHA256 default returns to native 96 bits; explicit userspace algorithm parameters still follow native validation. No extra 2024 whole-file replacement is needed.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "9e17e882ae132cb34a0e4b277f4c73e9693ea18aa8a3d7c2a88e2b843618415a",
+      "changed_paths": [
+        "init/Kconfig.gki",
+        "net/xfrm/xfrm_algo.c",
+        "net/xfrm/xfrm_state.c",
+        "net/xfrm/xfrm_user.c"
+      ]
+    },
+    {
+      "commit": "d30c303aab07c42c4f70431be2899c6959641a16",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "be6aab8d72f2196accaefd55ff9bc268493e9c31"
+      ],
+      "rationale": "Retain unconditional pktgen_xfrm_outer_mode_output GPL source export, even though SDK CONFIG_NET_PKTGEN is unset, so a separately rebuilt module can use the existing XFRM implementation. This is module source customization, not ABI layout preservation or physical-platform enablement. Function body equals LTS; only config guard is removed. Export does not expose an unprivileged userspace operation or bypass xfrm checks.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "1598852910a4543b6c92e6131d3bc08fd1160eed2dd0f98872288d3c3bbd934d",
+      "changed_paths": [
+        "include/net/xfrm.h",
+        "net/xfrm/xfrm_output.c"
+      ]
+    },
+    {
+      "commit": "8f3ee7fd7dc34b54e9c063ef3c2c0765a652d1de",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "The temporary restoration of the obsolete XFRM inexact list is explicitly undone by c783e8acd1cf. Their semantic patches are inverse; final policy source equals LTS and lacks bydst_inexact_list. Retain newer native policy lifetime/lookup implementation rather than resurrecting removed list membership.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "83be2b6015301461932329698a0cd74e26d6a58ef777e6dd9806b0c0bd17c636",
+      "changed_paths": [
+        "include/net/xfrm.h",
+        "net/xfrm/xfrm_policy.c"
+      ]
+    },
+    {
+      "commit": "c783e8acd1cf0139e2b608eda85e90d30cbd8660",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Reapply retires 8f3ee7fd7dc3 and returns to native policy lookup without the redundant inexact list. Final xfrm_policy.c equals LTS, and the old member is absent. The Android compatibility reason is recorded in local history; no external bug or change URL was accessed.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "40bcd21123eeebf00cda9b73927d4a1354d1c8580ba55372ce6d7ae1263ddf88",
+      "changed_paths": [
+        "include/net/xfrm.h",
+        "net/xfrm/xfrm_policy.c"
+      ]
+    },
+    {
+      "commit": "ea70705764eef7f5fac2e0d9e89dc87316c55a6e",
+      "disposition": "superseded",
+      "result_commits": [
+        "989123cde71e577085e3d0c513ccce5e66155cf0"
+      ],
+      "rationale": "First duplicate-SPI revert is undone by d3fec4d67490 and later reintroduced by 4661ae54e4e4. Represent final Android destination-scoped allocation with 989123cde71e rather than this obsolete complete allocator revert. Retain LTS zero rejection, atomic lookup/insertion and signal exits; weakened global uniqueness is explicitly analyzed.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "46ed9795cad4f878814c062c7cdd786cb4aa285a948de19391b6dbbc151dc6b5",
+      "changed_paths": [
+        "net/xfrm/xfrm_state.c"
+      ]
+    },
+    {
+      "commit": "d3fec4d674902d25623bb84b49e10662dc512a58",
+      "disposition": "superseded",
+      "result_commits": [
+        "989123cde71e577085e3d0c513ccce5e66155cf0"
+      ],
+      "rationale": "Reapplication of global duplicate-SPI lookup is superseded in final ACK by 4661ae54e4e4. Preserve the native allocator structure and safety fixes while adapting only collision scope for positively identified Android symmetric-SPI use. Do not claim global uniqueness survives; distinct-destination ambiguity is an explicit residual risk.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "869d04ca2b3ec515af85a34780888526b20703dfd69235d71672797a02caa4ad",
+      "changed_paths": [
+        "net/xfrm/xfrm_state.c"
+      ]
+    },
+    {
+      "commit": "e6e959238f93421004a8fc03fabc50b06bc70bc5",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [
+        "989123cde71e577085e3d0c513ccce5e66155cf0"
+      ],
+      "rationale": "Do not apply the ACK removal of zero-SPI rejection. Native cd8ae32e4e46 prevents states with SPI zero entering byspi, where deletion would otherwise leave freed list nodes. Destination-scoped collision compatibility does not require removing this check. Actual-function host tests exercise zero rejection and balanced lock/reference paths; no runtime UAF test.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "6118cf8df01408e74d03871e6d7d61b431388ed9633c9b104949460c82e157b0",
+      "changed_paths": [
+        "net/xfrm/xfrm_state.c"
+      ]
+    },
+    {
+      "commit": "4661ae54e4e454db36bb836dbb75b75a455fe92b",
+      "disposition": "adapted",
+      "result_commits": [
+        "989123cde71e577085e3d0c513ccce5e66155cf0"
+      ],
+      "rationale": "Adapt collision lookup to Android destination/mark/protocol/family scope; pinned IpSecManagerTunnelTest.getRandomSpi allocates the same SPI for different local/remote destinations and netd XfrmController sends ALLOCSPI. Keep native atomic lookup/insertion under xfrm_state_lock, zero rejection, reference release and signal exit. This weakens native 94f39804d891 global SPI/protocol uniqueness: SPI-only lookup can be ambiguous and select/drop the wrong state, as its local commit explains. Compatibility is prioritized explicitly, not claimed equivalent security. Focused host tests show 28 intended scope differences and 772 passing allocation cases; packet processing/CTS not run.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "c8e7e9bc76546b2dde3a6553f9b79733a455e45c9949291de3f1ade2fbcf2b5c",
+      "changed_paths": [
+        "net/xfrm/xfrm_state.c"
+      ]
+    },
+    {
+      "commit": "3ea9abc389264545d07d84ff0ac8b5b3320c9e4c",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "The early XDP dispatcher cherry-pick was reverted solely for upstream merge integration. Native ancestry contains 7e6897f95935 and final dispatcher install/change/run code remains LTS; no historical BPF_PROG_RUN macro/API replay is required. Native program references and dispatch lifecycle remain.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "aaf5857342f67af84e93d1520809c8037697fb9d0f701b20113cc9ffcbc877fb",
+      "changed_paths": [
+        "include/linux/bpf.h",
+        "include/linux/filter.h",
+        "kernel/bpf/syscall.c",
+        "net/core/dev.c",
+        "net/core/filter.c"
+      ]
+    },
+    {
+      "commit": "4f912568544319ff9356006b9c10632496c64e48",
+      "disposition": "superseded",
+      "result_commits": [],
+      "rationale": "This integration-only revert cancels 3ea9abc38926 before the native merge. Their historical patches are inverse; the final kernel legitimately has the evolved upstream XDP dispatcher. Preserve native dev_xdp_install, bpf_prog_change_xdp and include/net/xdp.h run function rather than disabling it.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "932f8e43b7e04da79641e7dc916f83e9e4e867b5d7158ce6313d1ed069f5b39b",
+      "changed_paths": [
+        "include/linux/bpf.h",
+        "include/linux/filter.h",
+        "kernel/bpf/syscall.c",
+        "net/core/dev.c",
+        "net/core/filter.c"
+      ]
+    },
+    {
+      "commit": "0895708c5c2670b850c97cea688cc403a6ff52f3",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Native 519a8a6cf91d already restored explicit is_kernel tagging of sockptr_t. The complete header equals LTS, preserving safe user/kernel copy selection. Old bpfilter sockopt source was subsequently removed upstream and is absent in both final trees; do not resurrect its obsolete callers. Native socket users use USER_SOCKPTR with downstream hook additions reviewed separately.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "f9d8e922f42080cddf8a80625b12a3ff9e484eb0aa059706d01fbdb0a22ce020",
+      "changed_paths": [
+        "include/linux/sockptr.h",
+        "net/ipv4/bpfilter/sockopt.c",
+        "net/socket.c"
+      ]
+    },
+    {
+      "commit": "836219141ff7a77e7fab0bd749edd746fd36fef2",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "Temporary reintroduction of separate compat_import_iovec is explicitly undone by b28ad9eb4658. Their semantic patches are inverse across all eleven affected files. Native import_iovec and __import_iovec bodies remain unchanged in the port; keep automatic compat selection and current length/access checks, not the temporary duplicated caller API.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "c3044c548b0d3dba00615f313039727a005c13cd9ec7080bc8bd8f8a42907ba7",
+      "changed_paths": [
+        "block/scsi_ioctl.c",
+        "drivers/scsi/sg.c",
+        "fs/aio.c",
+        "fs/io_uring.c",
+        "fs/read_write.c",
+        "fs/splice.c",
+        "include/linux/uio.h",
+        "lib/iov_iter.c",
+        "mm/process_vm_access.c",
+        "net/compat.c",
+        "security/keys/compat.c"
+      ]
+    },
+    {
+      "commit": "b28ad9eb4658505d5e985718f491073560d21679",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Retain restoration of automatic compat iovec import through the native LTS implementation. import_iovec and __import_iovec exactly match LTS; callers use the current interface and no compat_import_iovec implementation remains. This preserves current user-pointer/length validation without replaying historical io_uring or SCSI paths.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "5ac0def13d5f96d4bd7ba686589e5a976fec2fb9e91db7eab9a3a0d3166ac9b4",
+      "changed_paths": [
+        "block/scsi_ioctl.c",
+        "drivers/scsi/sg.c",
+        "fs/aio.c",
+        "fs/io_uring.c",
+        "fs/read_write.c",
+        "fs/splice.c",
+        "include/linux/uio.h",
+        "lib/iov_iter.c",
+        "mm/process_vm_access.c",
+        "net/compat.c",
+        "security/keys/compat.c"
+      ]
+    },
+    {
+      "commit": "f465fb7e1af29c5f6da1cd77b44f5d02e0ad5eeb",
+      "disposition": "reverted-no-residual-code",
+      "result_commits": [],
+      "rationale": "The adjustable virtio max packet buffer parameter was explicitly removed by 5c5809e6a666 after nonlinear allocations and a bounded TX policy. Final virtio_vsock.h equals LTS with constant 64-KiB maximum; the variable/module parameter/export is absent in both final sources. Do not restore obsolete tunable or binary symbol.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "178bb1c2ddff891761f2c02435fda22f39fb101fd867da06ebf037762369af1a",
+      "changed_paths": [
+        "include/linux/virtio_vsock.h",
+        "net/vmw_vsock/virtio_transport_common.c"
+      ]
+    },
+    {
+      "commit": "5c5809e6a666a220b289f0676b1036ec9ac351b7",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Retain final removal of the old virtio packet-size tunable, already represented by native header/common source state. Current common transport differs from LTS only in the separate bounded TX policy of 72bbea75874f. All native nonlinear-buffer and later transport fixes remain.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "e40639fc8a0223b77bcff9d2856ea134a5a4d2c112c7c46c66c97fdb341aff10",
+      "changed_paths": [
+        "include/linux/virtio_vsock.h",
+        "net/vmw_vsock/virtio_transport_common.c"
+      ]
+    },
+    {
+      "commit": "72bbea75874ff2a2c7802373093ea0c2af9fa07b",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain conservative ~28-KiB TX skb cap and preserve it in zero-copy fragment limiting for the configured SDK virtio-vsock transport. Goldfish policy permits vsock for existing graphics/sensors/system clients; exact host RX allocator/version is not established by supplied sources, so do not infer a modern host and remove the common runtime interoperability guard. This is retained for current configurable SDK transport compatibility, not adding Cuttlefish support. May increase packetization/CPU use. Full LTS delta contains only the cap and min() update; native receive, memory accounting and nonlinear safety fixes remain. Host-behavior necessity is unresolved, conservatively retained.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "63af6d68ed03e6c7db45cdae127e798004945d1346b7ad3b961a6b1291b643e8",
+      "changed_paths": [
+        "net/vmw_vsock/virtio_transport_common.c"
+      ]
+    },
+    {
+      "commit": "2c597ee562faff26f978d5146bb6190cfe29d279",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Native tcp_struct_check includes the corrected cacheline group size allowance and exactly equals LTS. Upstream 9b9fd45869e7 is in its ancestry. This is a source-layout build assertion, not Android historical KMI padding; no separate replay is needed.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "26e27bcaaf8324821f68a55163d24ee951bee473517901de246f8661c8e86677",
+      "changed_paths": [
+        "net/ipv4/tcp.c"
+      ]
+    },
+    {
+      "commit": "451c512db86be492a83de5824c66d9eef9b750a5",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Native IPv4/IPv6 receive functions retain the moved process label after TIME_WAIT/NEW_SYN_RECV checks; both full functions equal LTS. Upstream d13b05962369 is in ancestry. Preserve all newer receive validation and reference handling instead of replaying old bodies.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "2cd021dcb778e66d10924ad178708732683fe74f2fbdf9ab22b2ea6f003bcebb",
+      "changed_paths": [
+        "net/ipv4/tcp_ipv4.c",
+        "net/ipv6/tcp_ipv6.c"
+      ]
+    },
+    {
+      "commit": "8219376a1252d3e76fd93c6d353b7d810077c8a4",
+      "disposition": "reconciled-to-lts",
+      "result_commits": [],
+      "rationale": "Keep native CONFIG_BRIDGE guard: the actual SDK configuration has BRIDGE=y, so all required bridge tracepoints/exports are built already. The candidate only removes the guard for kernels built without bridge; that configuration is not this delivered target. This is a target/configuration decision, not a claim that tracepoint exports are KMI-only or that no external module exists. Existing bridge module/source interfaces are present in the SDK build.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "209555878fc6d41a49f8e00a1b7a97af8c39afee7e500bb652bc6917dc38ec30",
+      "changed_paths": [
+        "net/core/net-traces.c"
+      ]
+    },
+    {
+      "commit": "194a1bf09a7958551a9e2dc947bdfe3f8be8eca8",
+      "disposition": "already-represented-upstream",
+      "result_commits": [],
+      "rationale": "Android tethering offload.c explicitly calls bpf_skb_change_head to add Ethernet headers on raw-IP ingress and names this historical requirement. Native 6306c1189e77 superseded the ingress-only exception with BPF_SKB_MAX_LEN=SKB_MAX_ALLOC for the relevant helpers, avoiding ingress-device MTU while retaining overflow/size bounds. Current head/tail helper bodies exactly equal LTS. No need to restore the removed helper or weaken native bounds.",
+      "evidence": [
+        "evidence/net-compat-review.json",
+        "SECURITY.md: Networking compatibility and retired workarounds"
+      ],
+      "patch_sha256": "4fd099de560882d4fb4cb061421d2c8c0d263171580c5fdbde2fcb52d9aec90f",
+      "changed_paths": [
+        "net/core/filter.c"
+      ]
+    }
+  ],
+  "equivalence": [
+    {
+      "path": "include/linux/sockptr.h",
+      "equals": "LTS entire file",
+      "sha256": "9c134512be6b60a1d66df26135115764672a14a62b0b6f58a49e78ee93e7bbc9"
+    },
+    {
+      "path": "net/xfrm/xfrm_policy.c",
+      "equals": "LTS entire file",
+      "sha256": "00f86df8fbe1542d9145a9d79e8c3d50a0271183096743f7695bf80c9aa2fd2c"
+    },
+    {
+      "path": "net/xfrm/xfrm_algo.c",
+      "equals": "LTS entire file",
+      "sha256": "685b93135447e63fa4366cef4968724de460bfa13beaadfba9aa73a57ba8ba20"
+    },
+    {
+      "path": "include/linux/virtio_vsock.h",
+      "equals": "LTS entire file",
+      "sha256": "ef4e16ab194bffceef1b6ccfc5d98850e7fd13cdf4a28c090dfb01c2ec701ca0"
+    },
+    {
+      "path": "net/ipv6/route.c",
+      "function": "addrconf_f6i_alloc",
+      "equals": "LTS",
+      "sha256": "68442c4dc3e88879595acf9ae500fe45ce13f7cd111a13c4770cfba5a3ec5063"
+    },
+    {
+      "path": "net/ipv6/route.c",
+      "function": "rt6_purge_dflt_routers",
+      "equals": "LTS",
+      "sha256": "354c74be168856694dbff1939ff703d0820b462fb1e3f08b3176d5470f37ceb9"
+    },
+    {
+      "path": "net/ipv6/route.c",
+      "function": "__rt6_purge_dflt_routers",
+      "equals": "LTS",
+      "sha256": "8deb555ddab6f73d44169c0cb36a4c130bab8fea6c5081952c4465e4de4335c5"
+    },
+    {
+      "path": "lib/iov_iter.c",
+      "function": "import_iovec",
+      "equals": "LTS",
+      "sha256": "8079b4f8ffd998654ed14fe10e7643ec4b5a1270399ebe1a1e5bf76e5784d373"
+    },
+    {
+      "path": "lib/iov_iter.c",
+      "function": "__import_iovec",
+      "equals": "LTS",
+      "sha256": "8ffd334f0980450f1ad2fd40ee46c80cc6d564a742c1b0f6cbe7d7ffef91e69c"
+    },
+    {
+      "path": "net/core/filter.c",
+      "function": "__bpf_skb_change_head",
+      "equals": "LTS",
+      "sha256": "1e3d0109d3e5f3e249178cdc7c01632e5ad1ed794621bc2e7656986adc0b5c51"
+    },
+    {
+      "path": "net/core/filter.c",
+      "function": "__bpf_skb_change_tail",
+      "equals": "LTS",
+      "sha256": "c60a52dd4ed6a0ff48b644bf46914caa9d739feaaa2bed86423e9e1cce218f68"
+    },
+    {
+      "path": "net/core/filter.c",
+      "function": "bpf_prog_change_xdp",
+      "equals": "LTS",
+      "sha256": "31a44945b7cd84046040b338ef5836414912523477d266ce15d763aa36ecc531"
+    },
+    {
+      "path": "net/core/dev.c",
+      "function": "dev_xdp_install",
+      "equals": "LTS",
+      "sha256": "e75f0ecc706fc0b9f8eadbd25c752bdc238b3d4cd1facf01b2d8284a1bffa0ae"
+    },
+    {
+      "path": "include/net/xdp.h",
+      "function": "bpf_prog_run_xdp",
+      "equals": "LTS",
+      "sha256": "10f2b81e6319a0db64198d4f55b51ba786665684e717041e41128adc7b93e5b0"
+    },
+    {
+      "path": "net/xfrm/xfrm_state.c",
+      "function": "xfrm_user_policy",
+      "equals": "LTS",
+      "sha256": "c1f22e3f9ee89cccf3676f7ce62c7c48f826125d4a94ae04b7e88887308ed5da"
+    },
+    {
+      "path": "net/xfrm/xfrm_user.c",
+      "function": "xfrm_user_rcv_msg",
+      "equals": "LTS",
+      "sha256": "90ce463535996d6a70aa597664d268992e94dcfda2d285ceb178658749f78fee"
+    },
+    {
+      "path": "net/ipv4/tcp.c",
+      "function": "tcp_struct_check",
+      "equals": "LTS",
+      "sha256": "c57f36189348bf4f9e38a676dc70c14883837b16f9d997584fe0063aa4f34d4d"
+    },
+    {
+      "path": "net/ipv4/tcp_ipv4.c",
+      "function": "tcp_v4_rcv",
+      "equals": "LTS",
+      "sha256": "25dd26f4909dce7c095463cdfe81841180b8457c08516ccb226b5bc198a1a504"
+    },
+    {
+      "path": "net/ipv6/tcp_ipv6.c",
+      "function": "tcp_v6_rcv",
+      "equals": "LTS",
+      "sha256": "1b65b671795a0907aad59f55903b01ca0d98bdf25be00a12023fd297c91d0515"
+    }
+  ],
+  "deltas": [
+    {
+      "path": "net/xfrm/xfrm_state.c",
+      "function": "xfrm_user_policy",
+      "reference": "ACK, retaining native destination-reset and netlink lifetime fixes",
+      "diff": "--- \n+++ \n@@ -8,7 +8,7 @@\n \tif (sockptr_is_null(optval) && !optlen) {\n \t\txfrm_sk_policy_insert(sk, XFRM_POLICY_IN, NULL);\n \t\txfrm_sk_policy_insert(sk, XFRM_POLICY_OUT, NULL);\n-\t\t__sk_dst_reset(sk);\n+\t\tsk_dst_reset(sk);\n \t\treturn 0;\n \t}\n \n@@ -48,7 +48,7 @@\n \tif (err >= 0) {\n \t\txfrm_sk_policy_insert(sk, err, pol);\n \t\txfrm_pol_put(pol);\n-\t\t__sk_dst_reset(sk);\n+\t\tsk_dst_reset(sk);\n \t\terr = 0;\n \t}\n \n"
+    },
+    {
+      "path": "net/xfrm/xfrm_user.c",
+      "function": "xfrm_user_rcv_msg",
+      "reference": "ACK, retaining native destination-reset and netlink lifetime fixes",
+      "diff": "--- \n+++ \n@@ -47,7 +47,7 @@\n \t\t\tgoto err;\n \t\t}\n \n-\t\terr = netlink_dump_start(net->xfrm.nlsk, skb, nlh, &c);\n+\t\terr = netlink_dump_start(xfrm_net_nlsk(net, skb), skb, nlh, &c);\n \t\tgoto err;\n \t}\n \n"
+    },
+    {
+      "path": "net/ipv6/addrconf.c",
+      "reference": "LTS full file",
+      "diff": "--- \n+++ \n@@ -213,6 +213,7 @@\n \t.accept_ra_rt_info_max_plen = 0,\n #endif\n #endif\n+\t.accept_ra_rt_table\t= 0,\n \t.proxy_ndp\t\t= 0,\n \t.accept_source_route\t= 0,\t/* we do not accept RH0 by default. */\n \t.disable_ipv6\t\t= 0,\n@@ -278,6 +279,7 @@\n \t.accept_ra_rt_info_max_plen = 0,\n #endif\n #endif\n+\t.accept_ra_rt_table\t= 0,\n \t.proxy_ndp\t\t= 0,\n \t.accept_source_route\t= 0,\t/* we do not accept RH0 by default. */\n \t.disable_ipv6\t\t= 0,\n@@ -2469,6 +2471,26 @@\n \t\tgoto regen;\n }\n \n+u32 addrconf_rt_table(const struct net_device *dev, u32 default_table)\n+{\n+\tstruct inet6_dev *idev = in6_dev_get(dev);\n+\tint sysctl;\n+\tu32 table;\n+\n+\tif (!idev)\n+\t\treturn default_table;\n+\tsysctl = idev->cnf.accept_ra_rt_table;\n+\tif (sysctl == 0) {\n+\t\ttable = default_table;\n+\t} else if (sysctl > 0) {\n+\t\ttable = (u32) sysctl;\n+\t} else {\n+\t\ttable = (unsigned) dev->ifindex + (-sysctl);\n+\t}\n+\tin6_dev_put(idev);\n+\treturn table;\n+}\n+\n /*\n  *\tAdd prefix route.\n  */\n@@ -2479,7 +2501,7 @@\n \t\t      u32 flags, gfp_t gfp_flags)\n {\n \tstruct fib6_config cfg = {\n-\t\t.fc_table = l3mdev_fib_table(dev) ? : RT6_TABLE_PREFIX,\n+\t\t.fc_table = l3mdev_fib_table(dev) ? : addrconf_rt_table(dev, RT6_TABLE_PREFIX),\n \t\t.fc_metric = metric ? : IP6_RT_PRIO_ADDRCONF,\n \t\t.fc_ifindex = dev->ifindex,\n \t\t.fc_expires = expires,\n@@ -2514,7 +2536,7 @@\n \tstruct fib6_node *fn;\n \tstruct fib6_info *rt = NULL;\n \tstruct fib6_table *table;\n-\tu32 tb_id = l3mdev_fib_table(dev) ? : RT6_TABLE_PREFIX;\n+\tu32 tb_id = l3mdev_fib_table(dev) ? : addrconf_rt_table(dev, RT6_TABLE_PREFIX);\n \n \ttable = fib6_get_table(dev_net(dev), tb_id);\n \tif (!table)\n@@ -7088,6 +7110,13 @@\n #endif\n #endif\n \t{\n+\t\t.procname\t= \"accept_ra_rt_table\",\n+\t\t.data\t\t= &ipv6_devconf.accept_ra_rt_table,\n+\t\t.maxlen\t\t= sizeof(int),\n+\t\t.mode\t\t= 0644,\n+\t\t.proc_handler\t= proc_dointvec,\n+\t},\n+\t{\n \t\t.procname\t= \"proxy_ndp\",\n \t\t.data\t\t= &ipv6_devconf.proxy_ndp,\n \t\t.maxlen\t\t= sizeof(int),\n"
+    },
+    {
+      "path": "net/ipv6/route.c",
+      "reference": "LTS full file",
+      "diff": "--- \n+++ \n@@ -4379,7 +4379,7 @@\n \t\t\t\t\t   const struct in6_addr *gwaddr,\n \t\t\t\t\t   struct net_device *dev)\n {\n-\tu32 tb_id = l3mdev_fib_table(dev) ? : RT6_TABLE_INFO;\n+\tu32 tb_id = l3mdev_fib_table(dev) ? : addrconf_rt_table(dev, RT6_TABLE_INFO);\n \tint ifindex = dev->ifindex;\n \tstruct fib6_node *fn;\n \tstruct fib6_info *rt = NULL;\n@@ -4433,7 +4433,7 @@\n \t\t.fc_nlinfo.nl_net = net,\n \t};\n \n-\tcfg.fc_table = l3mdev_fib_table(dev) ? : RT6_TABLE_INFO;\n+\tcfg.fc_table = l3mdev_fib_table(dev) ? : addrconf_rt_table(dev, RT6_TABLE_INFO);\n \tcfg.fc_dst = *prefix;\n \tcfg.fc_gateway = *gwaddr;\n \n@@ -4451,7 +4451,7 @@\n \t\t\t\t     const struct in6_addr *addr,\n \t\t\t\t     struct net_device *dev)\n {\n-\tu32 tb_id = l3mdev_fib_table(dev) ? : RT6_TABLE_DFLT;\n+\tu32 tb_id = l3mdev_fib_table(dev) ? : addrconf_rt_table(dev, RT6_TABLE_DFLT);\n \tstruct fib6_info *rt;\n \tstruct fib6_table *table;\n \n@@ -4487,7 +4487,7 @@\n \t\t\t\t     int lifetime)\n {\n \tstruct fib6_config cfg = {\n-\t\t.fc_table\t= l3mdev_fib_table(dev) ? : RT6_TABLE_DFLT,\n+\t\t.fc_table\t= l3mdev_fib_table(dev) ? : addrconf_rt_table(dev, RT6_TABLE_DFLT),\n \t\t.fc_metric\t= defrtr_usr_metric,\n \t\t.fc_ifindex\t= dev->ifindex,\n \t\t.fc_flags\t= RTF_GATEWAY | RTF_ADDRCONF | RTF_DEFAULT |\n"
+    },
+    {
+      "path": "net/xfrm/xfrm_state.c",
+      "reference": "LTS full file",
+      "diff": "--- \n+++ \n@@ -1710,26 +1710,6 @@\n }\n EXPORT_SYMBOL(xfrm_state_lookup_byspi);\n \n-static struct xfrm_state *xfrm_state_lookup_spi_proto(struct net *net, __be32 spi, u8 proto)\n-{\n-\tstruct xfrm_state *x;\n-\tunsigned int i;\n-\n-\trcu_read_lock();\n-\tfor (i = 0; i <= net->xfrm.state_hmask; i++) {\n-\t\thlist_for_each_entry_rcu(x, &net->xfrm.state_byspi[i], byspi) {\n-\t\t\tif (x->id.spi == spi && x->id.proto == proto) {\n-\t\t\t\tif (!xfrm_state_hold_rcu(x))\n-\t\t\t\t\tcontinue;\n-\t\t\t\trcu_read_unlock();\n-\t\t\t\treturn x;\n-\t\t\t}\n-\t\t}\n-\t}\n-\trcu_read_unlock();\n-\treturn NULL;\n-}\n-\n static void __xfrm_state_insert(struct xfrm_state *x)\n {\n \tstruct net *net = xs_net(x);\n@@ -2594,6 +2574,7 @@\n \tstruct xfrm_state *x0;\n \tint err = -ENOENT;\n \tu32 range = high - low + 1;\n+\tu32 mark = x->mark.v & x->mark.m;\n \t__be32 newspi = 0;\n \n \tspin_lock_bh(&x->lock);\n@@ -2615,7 +2596,11 @@\n \t\tnewspi = htonl(spi);\n \n \t\tspin_lock_bh(&net->xfrm.xfrm_state_lock);\n-\t\tx0 = xfrm_state_lookup_spi_proto(net, newspi, x->id.proto);\n+\t\t/* Android permits symmetric SPIs for distinct destinations.\n+\t\t * Keep the LTS lookup/insert locking and reject zero above.\n+\t\t */\n+\t\tx0 = xfrm_state_lookup(net, mark, &x->id.daddr, newspi,\n+\t\t\t\t       x->id.proto, x->props.family);\n \t\tif (!x0) {\n \t\t\tx->id.spi = newspi;\n \t\t\th = xfrm_spi_hash(net, &x->id.daddr, newspi, x->id.proto, x->props.family);\n"
+    },
+    {
+      "path": "net/xfrm/xfrm_output.c",
+      "reference": "LTS full file",
+      "diff": "--- \n+++ \n@@ -481,13 +481,11 @@\n \treturn -EOPNOTSUPP;\n }\n \n-#if IS_ENABLED(CONFIG_NET_PKTGEN)\n int pktgen_xfrm_outer_mode_output(struct xfrm_state *x, struct sk_buff *skb)\n {\n \treturn xfrm_outer_mode_output(x, skb);\n }\n EXPORT_SYMBOL_GPL(pktgen_xfrm_outer_mode_output);\n-#endif\n \n static int xfrm_output_one(struct sk_buff *skb, int err)\n {\n"
+    },
+    {
+      "path": "net/vmw_vsock/virtio_transport_common.c",
+      "reference": "LTS full file",
+      "diff": "--- \n+++ \n@@ -301,7 +301,24 @@\n static int virtio_transport_send_pkt_info(struct vsock_sock *vsk,\n \t\t\t\t\t  struct virtio_vsock_pkt_info *info)\n {\n-\tu32 max_skb_len = VIRTIO_VSOCK_MAX_PKT_BUF_SIZE;\n+\t/* ANDROID:\n+\t *\n+\t * Older host kernels (including the 5.10-based images used by\n+\t * Cuttlefish) only support linear SKBs on the RX path.\n+\t * Consequently, if we transmit a VIRTIO_VSOCK_MAX_PKT_BUF_SIZE\n+\t * packet, the host allocation can fail and the packet will be\n+\t * silently dropped.\n+\t *\n+\t * As a nasty workaround, limit the entire SKB to ~28KiB, which\n+\t * allows for 4KiB of SKB wiggle room whilst keeping the\n+\t * allocation below PAGE_ALLOC_COSTLY_ORDER.\n+\t *\n+\t * This can be removed when all supported host kernels have\n+\t * support for non-linear RX buffers introduced by Change-Id\n+\t * I4212a8daf9f19b5bbffc06ce93338c823de7bb19.\n+\t */\n+\tu32 max_skb_len = min_t(u32, VIRTIO_VSOCK_MAX_PKT_BUF_SIZE,\n+\t\t\t\tSKB_WITH_OVERHEAD(SZ_32K - VIRTIO_VSOCK_SKB_HEADROOM) - SZ_4K);\n \tu32 src_cid, src_port, dst_cid, dst_port;\n \tconst struct virtio_transport *t_ops;\n \tstruct virtio_vsock_sock *vvs;\n@@ -348,7 +365,7 @@\n \t\t\tcan_zcopy = virtio_transport_can_zcopy(t_ops, info, pkt_len);\n \n \t\tif (can_zcopy)\n-\t\t\tmax_skb_len = min_t(u32, VIRTIO_VSOCK_MAX_PKT_BUF_SIZE,\n+\t\t\tmax_skb_len = min_t(u32, max_skb_len,\n \t\t\t\t\t    (MAX_SKB_FRAGS * PAGE_SIZE));\n \n \t\tif (info->msg->msg_flags & MSG_ZEROCOPY &&\n"
+    },
+    {
+      "path": "net/core/net-traces.c",
+      "reference": "LTS full file",
+      "diff": "--- \n+++ \n@@ -66,3 +66,10 @@\n EXPORT_TRACEPOINT_SYMBOL_GPL(udp_fail_queue_rcv_skb);\n \n EXPORT_TRACEPOINT_SYMBOL_GPL(sk_data_ready);\n+EXPORT_TRACEPOINT_SYMBOL_GPL(net_dev_queue);\n+EXPORT_TRACEPOINT_SYMBOL_GPL(net_dev_xmit);\n+EXPORT_TRACEPOINT_SYMBOL_GPL(net_dev_start_xmit);\n+EXPORT_TRACEPOINT_SYMBOL_GPL(netif_receive_skb);\n+EXPORT_TRACEPOINT_SYMBOL_GPL(netif_rx);\n+\n+EXPORT_TRACEPOINT_SYMBOL_GPL(tcp_retransmit_skb);\n"
+    }
+  ],
+  "upstream_ancestor_commits": [
+    "d55a2e374a94fa34a3048c6a2be535266e506d97",
+    "8652f17c658d03f5c87b8dee6e8e52480c6cd37d",
+    "7e6897f95935973c3253fd756135b5ea58043dc8",
+    "519a8a6cf91dda095be2d36216fc4ebc525270a1",
+    "9b9fd45869e744bea7d32a94793736e3d9fd7d26",
+    "d13b05962369bade0fb8e2d55af56492f866cd36",
+    "6306c1189e77a513bf02720450bb43bd4ba5d8ae",
+    "cd8ae32e4e4652db55bce6b9c79267d8946765a9",
+    "94f39804d891cffe4ce17737d295f3b195bc7299",
+    "e0f688ccb20f10fe16c4873ccf808eb3d1d5c96a"
+  ],
+  "inverse_patch_pairs": [
+    {
+      "pair": [
+        "3ea9abc389264545d07d84ff0ac8b5b3320c9e4c",
+        "4f912568544319ff9356006b9c10632496c64e48"
+      ],
+      "proof": "all affected files equal first parent of original after reversion"
+    },
+    {
+      "pair": [
+        "8f3ee7fd7dc34b54e9c063ef3c2c0765a652d1de",
+        "c783e8acd1cf0139e2b608eda85e90d30cbd8660"
+      ],
+      "proof": "all affected files equal first parent of original after reversion"
+    },
+    {
+      "pair": [
+        "836219141ff7a77e7fab0bd749edd746fd36fef2",
+        "b28ad9eb4658505d5e985718f491073560d21679"
+      ],
+      "proof": "inverse added/deleted line multisets per file plus full manual patch review; unrelated intervening edits prevent whole-file equality"
+    }
+  ],
+  "local_consumers": [
+    {
+      "path": "../grapheneos-17/system/netd/server/InterfaceController.cpp",
+      "sha256": "53f758363702b6aefd18e3ba5aef30c9cc5866c3ac72663a3c11fc22c367f39a",
+      "evidence": "initializeAll and setAcceptRARouteTable write negative interface-index offset"
+    },
+    {
+      "path": "../grapheneos-17/system/netd/server/XfrmController.cpp",
+      "sha256": "da03d6e9e34becd62c5d8e5ef81cdff72ec554dd9d81fcc426e798ab223a2dad",
+      "evidence": "allocateSpi constructs ALLOCSPI with requested min=max"
+    },
+    {
+      "path": "../grapheneos-17/packages/modules/Connectivity/tests/cts/net/src/android/net/cts/IpSecManagerTunnelTest.java",
+      "sha256": "68602b927f314ceb8d48b93f84f2ce16f786067f5c1882360772171a9f3e9ab1",
+      "evidence": "getRandomSpi reserves identical SPI for different local/remote outer addresses"
+    },
+    {
+      "path": "../grapheneos-17/packages/modules/Connectivity/bpf/progs/offload.c",
+      "sha256": "cbf6be74b6908ae2f1c4fe0cfafd93851d9a19f8df0a732e7cae91823df117e0",
+      "evidence": "raw-IP ingress tethering grows Ethernet headroom, explicitly names historical MTU patch"
+    },
+    {
+      "path": "../grapheneos-17/device/generic/goldfish/sepolicy/vendor/hal_graphics_composer_default.te",
+      "sha256": "5a9f393ad3d991adb0d9da8bf0676c67317424910a4c5543636214316fb72ddd",
+      "evidence": "existing Goldfish vsock client permission"
+    }
+  ],
+  "test": "evidence/xfrm-spi-scope-test.json",
+  "built_configuration": {
+    "BRIDGE": "y",
+    "NET_PKTGEN": "n",
+    "VIRTIO_VSOCKETS": "m",
+    "COMPAT_FOR_U64_ALIGNMENT": "y",
+    "XFRM_USER_COMPAT": "n"
+  },
+  "limitations": [
+    "SPI-only selection ambiguity remains an explicit security tradeoff; host tests do not exercise packet handling, cryptography, real locks or CTS.",
+    "Actual SDK host RX allocation behavior is unknown; virtio TX bound is retained conservatively in an existing configured transport. No claim default Goldfish needs an old Cuttlefish host.",
+    "Affected 32-bit XFRM calls may be unsupported when translation is unavailable, matching ACK; full optional compatibility is not claimed.",
+    "No Android OS build, boot, flashing or remote source access."
+  ],
+  "remote_sources_used": []
+}

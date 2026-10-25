@@ -8565,3 +8565,53 @@ virtual-device modules, all signatures verified and modified-payload control
 rejected. Build 177 also passed at `2c7e4c663821`, including the later chain/lifetime
 fixes, all 145 signature checks and all export/CRC table checks. All sources examined
 for this batch were local; commit-message URLs were not opened.
+## Networking compatibility and retired workarounds
+
+Twenty-eight additional decisions are recorded in `evidence/net-compat-review.json`.
+The local netd initialization writes `accept_ra_rt_table` with a negative
+interface-index offset. Retain this Android IPv6 routing interface and VRF table
+precedence, while keeping the native safe default-router purge implementation,
+which already iterates flagged tables. Native local-route flags and error-pointer
+checks remain. The tethering BPF source explicitly needs Ethernet-header growth
+on raw-IP ingress; LTS `6306c1189e77` already supersedes the historical ingress-MTU
+exception, retaining size/overflow bounds in the actual native helper bodies.
+
+The old XFRM compat-format bypass and default authentication-truncation overrides
+were explicitly removed by ACK `1cf1608b4abd`. Preserve current native handlers,
+including u64-alignment-specific translation and newer destination-reset/netlink
+socket lifetime fixes. SDK `COMPAT_FOR_U64_ALIGNMENT=y` with
+`XFRM_USER_COMPAT=n` can reject affected 32-bit XFRM calls, as ACK does; this is not
+a claim that every optional compat caller works. No removed Android config gate
+or obsolete unvalidated wire-format bypass is restored.
+
+The SPI compatibility adaptation in `989123cde71e` is justified by the pinned
+CTS `IpSecManagerTunnelTest.getRandomSpi` at lines 1215–1223 and netd's ALLOCSPI
+construction. Preserve the native allocation loop, locking, zero rejection,
+reference releases and signal exits; change only the duplicate lookup scope to
+destination/mark/protocol/family. This explicitly weakens `94f39804d891` global
+SPI/protocol uniqueness: SPI-only state selection can be ambiguous and drop or
+misselect traffic. The original local upstream commit describes that risk; no
+external RFC or link was consulted. Never apply `e6e959238f93`'s removal of
+zero-SPI rejection, which would undermine `cd8ae32e4e46`'s list-lifetime fix.
+Actual-function host tests pass 772 cases, with 28 intended collision-scope
+differences from LTS. Synthetic table/lock callbacks do not verify real concurrent
+allocation, cryptography, packet selection or CTS behavior.
+
+Historical XDP-dispatch, compat-iovec and XFRM-inexact-list reverts are accounted
+for through explicit reversal pairs and current native code. Keep the safe tagged
+`sockptr_t`, current automatic compat import and evolved XDP dispatcher. Exact
+native function/file comparisons distinguish these outcomes from replaying old
+patches. Retain the pktgen XFRM GPL export for separately rebuilt module source;
+its native implementation is unchanged. Native bridge tracepoint guards already
+emit all bridge exports for this SDK's `BRIDGE=y` configuration.
+
+The obsolete configurable virtio packet-size symbol stays removed. Retain the
+bounded TX skb policy in the existing SDK virtio-vsock transport, including its
+zero-copy limit. Goldfish policies permit existing vsock clients; the precise
+SDK host RX allocator/version is not established, so necessity of this host
+interoperability limit remains uncertain and it is conservatively retained.
+The entire common-transport delta from LTS is that cap and its zero-copy minimum;
+native allocation/receive fixes remain. More packetization/CPU work is possible.
+This adds no future platform and does not claim the SDK uses an old Cuttlefish
+host. Build 177 already compiled this code; no additional code change occurred in
+this batch. All review sources were local, and no remote URL was opened.
