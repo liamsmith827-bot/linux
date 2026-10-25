@@ -1,0 +1,417 @@
+{
+  "source_head": "60f8d7937f7d32e25baf254c20914d4569dd1a9a",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "80a81484766c53515b732aa703b34a5b3dc2bf8c",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the separately built ARM64-only fips140.ko and its evaluation/debug facilities, ARM postlink HMAC injection, private registration/self-test code, generated vectors and host utilities. Both original and final ACK Kconfig require ARM64 and module/Clang builds; BUILD uses kernel_aarch64 and an ARM fragment. All shared build/config hunks and private registration, evaluation, definitions and initialization boundaries reviewed. Other private bodies are blob-inventoried, not claimed as a full correctness audit. SDK native AES/SHA libraries remain; module-specific algorithm replacement, test-before-use gating and integrity verification are not provided or claimed for this excluded module. No FIPS certification is claimed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fips-tail-review.json",
+        "SECURITY.md: ARM64 FIPS module and shared crypto library boundary"
+      ],
+      "files": [
+        "BUILD.bazel",
+        "arch/arm64/Makefile.postlink",
+        "arch/arm64/configs/fips140_gki.fragment",
+        "arch/arm64/crypto/Kbuild.fips140",
+        "crypto/Kconfig",
+        "crypto/Makefile",
+        "crypto/fips140-alg-registration.c",
+        "crypto/fips140-defs.h",
+        "crypto/fips140-eval-testing-uapi.h",
+        "crypto/fips140-eval-testing.c",
+        "crypto/fips140-generated-testvecs.h",
+        "crypto/fips140-module.c",
+        "crypto/fips140-module.h",
+        "crypto/fips140-refs.S",
+        "crypto/fips140-selftests.c",
+        "crypto/fips140_gen_hmac.c",
+        "tools/crypto/gen_fips140_testvecs.py"
+      ],
+      "patch_sha256": "54b11e5fd0dd659d8b1d8e2689e4fbe8881cb17e4a2959a77d2b0c4225734af3"
+    },
+    {
+      "commit": "1aa0ebd06571e65783bdaee8605f6a8460fe4a5b",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit AES/SHA224/256/384/512 and HMAC library redirection to the excluded ARM64 FIPS module. Full 550-line patch read including all function-pointer entries and call-site additions; no independent cryptographic algorithm change occurs. Current four AES/SHA/utils files are entire native LTS. Final ACK makes these overrides optional, superseding their initial unconditional placement. Do not add a globally mutable override table/static-key activation path without its selected module; native preboot export suppression remains.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fips-tail-review.json",
+        "SECURITY.md: ARM64 FIPS module and shared crypto library boundary"
+      ],
+      "files": [
+        "include/crypto/fips140-lib-overrides.h",
+        "lib/crypto/aes.c",
+        "lib/crypto/fips.h",
+        "lib/crypto/sha256.c",
+        "lib/crypto/sha512.c",
+        "lib/crypto/utils.c"
+      ],
+      "patch_sha256": "88cc925c4eaf987d53858425273ea074e75b01f1ac776a57154dc84ee757c042"
+    },
+    {
+      "commit": "b6370bfcaa30f9778cf65cd9628cee95ca914181",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit removal of SHA-1 from the excluded FIPS module object list, approved-service list and private self-test vectors/generator. Complete patch does not remove native SHA-1 algorithms or their APIs. Preserve native hashing behavior; SDK module signing is independently SHA-256. This decision neither certifies SHA-1 nor claims SHA-1 was removed globally.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fips-tail-review.json",
+        "SECURITY.md: ARM64 FIPS module and shared crypto library boundary"
+      ],
+      "files": [
+        "arch/arm64/crypto/Kbuild.fips140",
+        "crypto/Makefile",
+        "crypto/fips140-generated-testvecs.h",
+        "crypto/fips140-module.c",
+        "crypto/fips140-selftests.c",
+        "tools/crypto/gen_fips140_testvecs.py"
+      ],
+      "patch_sha256": "0631cc23b99018f0fc486abbf198aa274b2bbe49b003e8a2d3a64b85facfe2f3"
+    },
+    {
+      "commit": "f0d4cdca2c49f6e11dbe28d9f008c1ac6c30448b",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit duplicate FIPS-module build rules adapting SHA256/SHA512 library migration and ARM assembly generation. Full patch read, including all lib/crypto/Kbuild.fips140 rules. Current native library implementations and regular build rules remain, so omission does not undo their upstream migration. No separate ARM crypto copy is needed in the x86 SDK workflow.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fips-tail-review.json",
+        "SECURITY.md: ARM64 FIPS module and shared crypto library boundary"
+      ],
+      "files": [
+        "arch/arm64/crypto/Kbuild.fips140",
+        "crypto/Makefile",
+        "lib/crypto/Kbuild.fips140"
+      ],
+      "patch_sha256": "fe28749161743ee3600a86bf9a2283b2946c2af533e6e2e25916d1b83ec08265"
+    },
+    {
+      "commit": "deed20447f8393f00dc4dbddc859e14565570553",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit removal/replacement of private FIPS-module SHA/HMAC tests because the module is excluded. Full patch read. Its assumption that the module executes inherited library FIPS tests is not asserted for the SDK: current SDK disables CRYPTO_SELFTESTS/CRYPTO_FIPS, and native 6.18.57 SHA files lack the ACK-added generic known-answer tests. Native implementations/init/KUnit code remain unchanged. Generic test policy is separately recorded in build-crypto-tail-review.json, not silently described as equivalent FIPS coverage.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fips-tail-review.json",
+        "SECURITY.md: ARM64 FIPS module and shared crypto library boundary"
+      ],
+      "files": [
+        "crypto/fips140-generated-testvecs.h",
+        "crypto/fips140-selftests.c",
+        "tools/crypto/gen_fips140_testvecs.py"
+      ],
+      "patch_sha256": "c62fce2877e184de318044298379e14dd54eed2392c0a13fd2c1f09e2493f85f"
+    },
+    {
+      "commit": "672c5aa4f124939029d3c4b462be8b7f85bc03aa",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the optional override table/config and ARM GKI enablement together with the FIPS module. Complete patch separates table from utils and constrains AES/SHA256/SHA512 to built-in providers, repairing the original unconditional/module dependency design. Those native libraries are built-in in this SDK, but no separate ARM FIPS module is built or supported. Shared crypto build deltas contain only separately reviewed POLYVAL changes. No orphan override symbols/dependencies are introduced; future support requires complete lifetime and gating design.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fips-tail-review.json",
+        "SECURITY.md: ARM64 FIPS module and shared crypto library boundary"
+      ],
+      "files": [
+        "arch/arm64/configs/gki_defconfig",
+        "crypto/Kconfig",
+        "include/crypto/fips140-lib-overrides.h",
+        "lib/crypto/Kconfig",
+        "lib/crypto/Makefile",
+        "lib/crypto/fips140.c",
+        "lib/crypto/utils.c"
+      ],
+      "patch_sha256": "6cfd0e367238bc3a1f083560a82299058cc508ba3d53e3563f8bac3d710a4e73"
+    },
+    {
+      "commit": "e5c2498a8d44baa9775016b5ba7e993440b71527",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit evaluation-only SHA self-test failure injection and private header/decl wiring with the excluded FIPS module. Full patch read: injection is gated by CRYPTO_FIPS140_MOD_EVAL_TESTING and BUILD_FIPS140_KO (or declaration-only evaluation source), with no-op fallback. This repairs testing for the separate module, not a native SHA algorithm bug. Preserve whole native SHA implementations and avoid adding a production debug fault interface. No test-injection or runtime crypto validation was performed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/fips-tail-review.json",
+        "SECURITY.md: ARM64 FIPS module and shared crypto library boundary"
+      ],
+      "files": [
+        "crypto/fips140-eval-testing.c",
+        "crypto/fips140-module.h",
+        "include/crypto/fips140-selftests.h",
+        "lib/crypto/fips.h",
+        "lib/crypto/sha256.c",
+        "lib/crypto/sha512.c"
+      ],
+      "patch_sha256": "4b0f9f065696fdbee21c4fdc493744395e2d85aa28a158537d68c38e33c21e17"
+    }
+  ],
+  "proofs": [
+    {
+      "path": "BUILD.bazel",
+      "comparison": "No FIPS140 config/build/override wiring; full native delta read (only separate POLYVAL adaptation in four crypto config/build files). BUILD retains selected SDK workflow.",
+      "port_entry": "100644 blob 5800787e9fd355ac66fc8309aab74cbd69dc2cc8\tBUILD.bazel",
+      "lts_entry": "",
+      "delta_sha256": "75d2dab6f0f17ffb63b7f82b29bda266390f694d9e3547d6ba85e8fa7c1d6c8b"
+    },
+    {
+      "path": "arch/arm64/Makefile.postlink",
+      "comparison": "absent from native LTS and port",
+      "port_entry": "",
+      "ack_entry": "100644 blob b2717bab9230b575a8f58870849ff7a3f4f2499f\tarch/arm64/Makefile.postlink"
+    },
+    {
+      "path": "arch/arm64/configs/fips140_gki.fragment",
+      "comparison": "absent from native LTS and port",
+      "port_entry": "",
+      "ack_entry": "100644 blob aa8444d34e5661c2fb15eb0f3074c98662361ced\tarch/arm64/configs/fips140_gki.fragment"
+    },
+    {
+      "path": "arch/arm64/configs/gki_defconfig",
+      "comparison": "absent from native LTS and port",
+      "port_entry": "",
+      "ack_entry": "100644 blob a3e1c0d60d5220b6be8b306157a331fc1696afb0\tarch/arm64/configs/gki_defconfig"
+    },
+    {
+      "path": "arch/arm64/crypto/Kbuild.fips140",
+      "comparison": "absent from native LTS and port",
+      "port_entry": "",
+      "ack_entry": "100644 blob 417f410035c8adb0e5346334af957742b771f95c\tarch/arm64/crypto/Kbuild.fips140"
+    },
+    {
+      "path": "crypto/Kconfig",
+      "comparison": "No FIPS140 config/build/override wiring; full native delta read (only separate POLYVAL adaptation in four crypto config/build files). BUILD retains selected SDK workflow.",
+      "port_entry": "100644 blob 4150e42f7f4a6289f6059ce4ba3c5b5bb1bbe1e8\tcrypto/Kconfig",
+      "lts_entry": "100644 blob a04595f9d0ca4b4c54a787cc58b8f6ef80f68dea\tcrypto/Kconfig",
+      "delta_sha256": "48eaee53b959e3101f264243f025f87a7fc4422cb6d79950a1129518bd3636c6"
+    },
+    {
+      "path": "crypto/Makefile",
+      "comparison": "No FIPS140 config/build/override wiring; full native delta read (only separate POLYVAL adaptation in four crypto config/build files). BUILD retains selected SDK workflow.",
+      "port_entry": "100644 blob 030da6770983f101c99774643201334b239a07f7\tcrypto/Makefile",
+      "lts_entry": "100644 blob ef963cc03a038d60e0ce32faf435bdfe7bb1a533\tcrypto/Makefile",
+      "delta_sha256": "e39d6d92904f4b57b89b82d1d85ca6bd849f3b4e2c395e8c1cbb3f9f1b745130"
+    },
+    {
+      "path": "crypto/fips140-alg-registration.c",
+      "comparison": "absent from native LTS and port",
+      "port_entry": "",
+      "ack_entry": "100644 blob b44513ed996f9d2dd0676ce9389cb026f829ef74\tcrypto/fips140-alg-registration.c"
+    },
+    {
+      "path": "crypto/fips140-defs.h",
+      "comparison": "absent from native LTS and port",
+      "port_entry": "",
+      "ack_entry": "100644 blob d3f62e3c3f37b67b8134f99248d851b1be3fed9c\tcrypto/fips140-defs.h"
+    },
+    {
+      "path": "crypto/fips140-eval-testing-uapi.h",
+      "comparison": "absent from native LTS and port",
+      "port_entry": "",
+      "ack_entry": "100644 blob 04e6cf633594a7505e1acfc4cab1b91ffab601e8\tcrypto/fips140-eval-testing-uapi.h"
+    },
+    {
+      "path": "crypto/fips140-eval-testing.c",
+      "comparison": "absent from native LTS and port",
+      "port_entry": "",
+      "ack_entry": "100644 blob 469d5286a23032610c2776b1ed6fe5be26328f2a\tcrypto/fips140-eval-testing.c"
+    },
+    {
+      "path": "crypto/fips140-generated-testvecs.h",
+      "comparison": "absent from native LTS and port",
+      "port_entry": "",
+      "ack_entry": "100644 blob 36ee2ecd83565b1ca075dee983bcf6dfcbf1da16\tcrypto/fips140-generated-testvecs.h"
+    },
+    {
+      "path": "crypto/fips140-module.c",
+      "comparison": "absent from native LTS and port",
+      "port_entry": "",
+      "ack_entry": "100644 blob 2ce294f919b5fb969dd43b74dd51c6d6236f3d26\tcrypto/fips140-module.c"
+    },
+    {
+      "path": "crypto/fips140-module.h",
+      "comparison": "absent from native LTS and port",
+      "port_entry": "",
+      "ack_entry": "100644 blob a0080a170c2cf8998d87718931bb8892c08d05c0\tcrypto/fips140-module.h"
+    },
+    {
+      "path": "crypto/fips140-refs.S",
+      "comparison": "absent from native LTS and port",
+      "port_entry": "",
+      "ack_entry": "100644 blob fcbd527763231ca161b8ab05e3bdaadd01a9ccfa\tcrypto/fips140-refs.S"
+    },
+    {
+      "path": "crypto/fips140-selftests.c",
+      "comparison": "absent from native LTS and port",
+      "port_entry": "",
+      "ack_entry": "100644 blob ddbfdbd170aac70420df49ce0ee8604e593d68e0\tcrypto/fips140-selftests.c"
+    },
+    {
+      "path": "crypto/fips140_gen_hmac.c",
+      "comparison": "absent from native LTS and port",
+      "port_entry": "",
+      "ack_entry": "100644 blob 69f754d38a1d68ecff2760568f5a36b054b046c4\tcrypto/fips140_gen_hmac.c"
+    },
+    {
+      "path": "include/crypto/fips140-lib-overrides.h",
+      "comparison": "absent from native LTS and port",
+      "port_entry": "",
+      "ack_entry": "100644 blob 90d1c3a48ca95913e0e62867d0795a0a10fc86e1\tinclude/crypto/fips140-lib-overrides.h"
+    },
+    {
+      "path": "include/crypto/fips140-selftests.h",
+      "comparison": "absent from native LTS and port",
+      "port_entry": "",
+      "ack_entry": "100644 blob 6af2865383e181dc2dce658eb0d591e339b9e3a5\tinclude/crypto/fips140-selftests.h"
+    },
+    {
+      "path": "lib/crypto/Kbuild.fips140",
+      "comparison": "absent from native LTS and port",
+      "port_entry": "",
+      "ack_entry": "100644 blob 94fa04c786c7c871482a8ddb245aa2ad537d6d08\tlib/crypto/Kbuild.fips140"
+    },
+    {
+      "path": "lib/crypto/Kconfig",
+      "comparison": "No FIPS140 config/build/override wiring; full native delta read (only separate POLYVAL adaptation in four crypto config/build files). BUILD retains selected SDK workflow.",
+      "port_entry": "100644 blob 12c448ec7086232af2b6fa8ceb5278335888f001\tlib/crypto/Kconfig",
+      "lts_entry": "100644 blob fa882108ba62ca347f5fcf41a1a15611d6d5b217\tlib/crypto/Kconfig",
+      "delta_sha256": "84c25485206bac1a2eb6e141915e785b95986345217d79ef330ddc30f2b9a66e"
+    },
+    {
+      "path": "lib/crypto/Makefile",
+      "comparison": "No FIPS140 config/build/override wiring; full native delta read (only separate POLYVAL adaptation in four crypto config/build files). BUILD retains selected SDK workflow.",
+      "port_entry": "100644 blob 9135532caf76d0a8b58b282bbc005a6bb5e590f3\tlib/crypto/Makefile",
+      "lts_entry": "100644 blob d2845b21458581610a8105eb7ad43d242c708f0a\tlib/crypto/Makefile",
+      "delta_sha256": "07fdd46d6fb54dd55e0c8d9cc5c00078d09b69b3b38ca318407791299e7364e3"
+    },
+    {
+      "path": "lib/crypto/aes.c",
+      "comparison": "whole native source",
+      "port_entry": "100644 blob 102aaa76bc8d76cc79be45c1a42fa40a86374dd4\tlib/crypto/aes.c",
+      "ack_entry": "100644 blob 787cdb4df0ab1fd478f1f8654dffff709fb7d07f\tlib/crypto/aes.c"
+    },
+    {
+      "path": "lib/crypto/fips.h",
+      "comparison": "absent from native LTS and port",
+      "port_entry": "",
+      "ack_entry": "100644 blob 7856e98545d4bbe8b66ace122e3e850ed43df4b2\tlib/crypto/fips.h"
+    },
+    {
+      "path": "lib/crypto/fips140.c",
+      "comparison": "absent from native LTS and port",
+      "port_entry": "",
+      "ack_entry": "100644 blob e0c6ddca834b53a79caa1637a2581b250f638a2a\tlib/crypto/fips140.c"
+    },
+    {
+      "path": "lib/crypto/sha256.c",
+      "comparison": "whole native source",
+      "port_entry": "100644 blob 881b935418cead822a7695ba20848da325922ba0\tlib/crypto/sha256.c",
+      "ack_entry": "100644 blob a1811d6527194588158b6bfa2e42222d8889f31a\tlib/crypto/sha256.c"
+    },
+    {
+      "path": "lib/crypto/sha512.c",
+      "comparison": "whole native source",
+      "port_entry": "100644 blob d8062188be98a7f8a26827f7e695090e086f8034\tlib/crypto/sha512.c",
+      "ack_entry": "100644 blob e6b7c02e45929dfd4a7a22aeeeb3f7e7bde28b8a\tlib/crypto/sha512.c"
+    },
+    {
+      "path": "lib/crypto/utils.c",
+      "comparison": "whole native source",
+      "port_entry": "100644 blob dec381d5e90651dad075607754f98caa8d9a9dc2\tlib/crypto/utils.c",
+      "ack_entry": "100644 blob dec381d5e90651dad075607754f98caa8d9a9dc2\tlib/crypto/utils.c"
+    },
+    {
+      "path": "tools/crypto/gen_fips140_testvecs.py",
+      "comparison": "absent from native LTS and port",
+      "port_entry": "",
+      "ack_entry": "100755 blob 4a3d810339bf4134e455116c11a522d2fce132c8\ttools/crypto/gen_fips140_testvecs.py"
+    }
+  ],
+  "original_private_file_inventory": [
+    {
+      "path": "arch/arm64/Makefile.postlink",
+      "blob": "b2717bab9230b575a8f58870849ff7a3f4f2499f",
+      "sha256": "f65c20ccaac040db509068983c112c949aeecdc923be682c0074c1ed039f7417",
+      "lines": 49
+    },
+    {
+      "path": "arch/arm64/configs/fips140_gki.fragment",
+      "blob": "aa8444d34e5661c2fb15eb0f3074c98662361ced",
+      "sha256": "01ed923ff08bf279a83fb6d0bf1db9460fc2643194f44908b07e6339f921f932",
+      "lines": 2
+    },
+    {
+      "path": "arch/arm64/crypto/Kbuild.fips140",
+      "blob": "9aa0af602130122bdac6c35b0cc329816719fe24",
+      "sha256": "7dc605d7d45b27dd1eb40637cba020d168a9e750a1fbf45a4ca876ba3197600e",
+      "lines": 52
+    },
+    {
+      "path": "crypto/fips140-alg-registration.c",
+      "blob": "b44513ed996f9d2dd0676ce9389cb026f829ef74",
+      "sha256": "76f1f9de9cbe04b630b5c8fc75e497eab16e4eca6b1bea4e8a64b1997f9304c0",
+      "lines": 396
+    },
+    {
+      "path": "crypto/fips140-defs.h",
+      "blob": "d3f62e3c3f37b67b8134f99248d851b1be3fed9c",
+      "sha256": "efcb83216fd86748302ac25db98a312cdf55c5532fd90a144fdee580fa502b67",
+      "lines": 58
+    },
+    {
+      "path": "crypto/fips140-eval-testing-uapi.h",
+      "blob": "04e6cf633594a7505e1acfc4cab1b91ffab601e8",
+      "sha256": "4da8b834d2a13b944b880a2dab63afd7908358696ec1d6e3db25571261d0063b",
+      "lines": 30
+    },
+    {
+      "path": "crypto/fips140-eval-testing.c",
+      "blob": "fdc786884d11e81b70ca13dd840363ac4af62a99",
+      "sha256": "a64957d71cc9aba589a477f9f5984124807c0b6782fb6fd2fc799b40ebefa85e",
+      "lines": 137
+    },
+    {
+      "path": "crypto/fips140-generated-testvecs.h",
+      "blob": "aaf140958d62cea7953ed24d415a3b8c0974e379",
+      "sha256": "d3e2c29fe5ce45768fa200173ba8bfe455f85750fcaac664189cb159c0aca250",
+      "lines": 72
+    },
+    {
+      "path": "crypto/fips140-module.c",
+      "blob": "819b4bf6339562397487e88f837968c6036738fe",
+      "sha256": "4fa53b050f2aae21315327029ea9eab4cb292a5cf1a7e187083feacd7d883731",
+      "lines": 817
+    },
+    {
+      "path": "crypto/fips140-module.h",
+      "blob": "a2a63194eb6481d7fdcf0b9eb7932d2ffe3b67b6",
+      "sha256": "0d37648727d8fb971c838592a9b24fd5a5b0068f0d8d97cf92e1a90d55d9e714",
+      "lines": 50
+    },
+    {
+      "path": "crypto/fips140-refs.S",
+      "blob": "fcbd527763231ca161b8ab05e3bdaadd01a9ccfa",
+      "sha256": "021e18abf352b0cce0a8454f33d2eb73ccab2e78363ced343d83c566b037bf95",
+      "lines": 34
+    },
+    {
+      "path": "crypto/fips140-selftests.c",
+      "blob": "4f6a5d249b4c0b5a813d2d2a725e01d32044b325",
+      "sha256": "ee68b842a1ce32acc9a9f81064b9ff8a1b78854039be8745466892badae526c5",
+      "lines": 1020
+    },
+    {
+      "path": "crypto/fips140_gen_hmac.c",
+      "blob": "69f754d38a1d68ecff2760568f5a36b054b046c4",
+      "sha256": "2f952f686a9725ea1cea92be842b1dc9960e8f5a53b1c3e3c2853faf475fca12",
+      "lines": 194
+    },
+    {
+      "path": "tools/crypto/gen_fips140_testvecs.py",
+      "blob": "2630fccc3b3bf99b2d6d743960976b9801a0a8b3",
+      "sha256": "ec79396799f82f075bcaa2f7daae2f41f62a183600b72843594f9edbec5701d2",
+      "lines": 125
+    }
+  ],
+  "generated_config_sha256": "6d27ff842b4cac221ab58093e8ca6bc7f8c692b6ccf56c9b7cceca230389d769",
+  "method": "All six follow-up patches read completely. Foundation: all shared and ARM build/config patches read, full registration/evaluation/defs/UAPI/header/assembly-reference files read, algorithm selection/service and init/dispatch sections read. Remaining integrity-unrelocation, test-vector/test-runner and host-generator bodies classified by private build boundary and exact blobs, not individually semantic-audited. Whole retained AES/SHA/utils blobs match native LTS; complete four shared crypto build deltas reviewed.",
+  "limits": "Native algorithm correctness not newly proven; no FIPS module build, lab requirements verification, certification, runtime crypto test or device commands executed. NIST and Android review URLs in local text were not contacted. Library override option itself is architecture-neutral but its selected module/build and ARM enablement are scoped separately; not misclassified as solely ARM code.",
+  "remote_resources_used": []
+}

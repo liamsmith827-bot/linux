@@ -10945,3 +10945,39 @@ negotiation rejects devices missing that feature; ACK's relaxation is excluded.
 Ordinary balloon remains built. This does not claim balloon is safe in an
 unimplemented protected guest. Local source and compiled artifact checks only
 were performed; embedded URLs were not visited and no VM was booted.
+
+## ARM64 FIPS module and shared crypto library boundary
+
+Seven decisions in fips-tail-review.json distinguish the separate ARM64-only
+fips140.ko from generic crypto libraries. Both original/final module Kconfig
+require ARM64, Clang and modular compilation; its Bazel target derives from
+kernel_aarch64 and has a dedicated fragment and ARM relocation/HMAC postlink.
+Its implementation, evaluation device, debug integrity bypass and host tools
+are omitted together. This removes no implementation from the SDK's native
+crypto libraries. It does not provide the separate module's self-test-before-use
+gate, service indicators or integrity guarantees, and no certification is claimed.
+
+The original library override patch and all five other follow-up patches were
+read completely. AES, SHA224/256/384/512 and HMAC calls redirect through a table
+only after activation; final ACK makes that mechanism optional and restricts
+its providers to built-ins. The SDK retains whole native AES/SHA/utils files,
+without adding this table or its exports/dependencies. The override option is
+architecture-neutral; omission follows its excluded module contract, not merely
+the paths of its call sites. Shared crypto config/build deltas contain only
+the separately reviewed POLYVAL migration. Native CPU-specific init remains.
+
+SHA-1 removal and library build migration affect only the duplicate module
+copies. They do not justify removing native algorithms or reverting upstream
+library migrations. Private SHA test deduplication and later fault injection
+likewise do not establish native SDK test coverage: the SDK disables
+CRYPTO_SELFTESTS and CRYPTO_FIPS, and keeps native 6.18.57 library code without
+ACK's generic known-answer tests, as recorded in build-crypto-tail-review.json.
+The debug/evaluation injection interface is not added to production paths.
+
+All foundation shared hunks and private registration/evaluation/initialization
+boundaries were examined. Remaining private integrity-reconstruction, test
+bodies and generators are classified and hash-pinned by their isolated build
+boundary, not falsely claimed as individually correctness-audited. Every
+excluded private path is absent; no old vulnerable private implementation is
+retained. No FIPS module was built or loaded, and embedded source URLs were
+not visited. No additional remote resource was used.

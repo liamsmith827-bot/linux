@@ -36230,5 +36230,75 @@
       "evidence/x86-guest-tail-review.json",
       "SECURITY.md: X86 protected guest boundary and native MMIO"
     ]
+  },
+  {
+    "commit": "80a81484766c53515b732aa703b34a5b3dc2bf8c",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the separately built ARM64-only fips140.ko and its evaluation/debug facilities, ARM postlink HMAC injection, private registration/self-test code, generated vectors and host utilities. Both original and final ACK Kconfig require ARM64 and module/Clang builds; BUILD uses kernel_aarch64 and an ARM fragment. All shared build/config hunks and private registration, evaluation, definitions and initialization boundaries reviewed. Other private bodies are blob-inventoried, not claimed as a full correctness audit. SDK native AES/SHA libraries remain; module-specific algorithm replacement, test-before-use gating and integrity verification are not provided or claimed for this excluded module. No FIPS certification is claimed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/fips-tail-review.json",
+      "SECURITY.md: ARM64 FIPS module and shared crypto library boundary"
+    ]
+  },
+  {
+    "commit": "1aa0ebd06571e65783bdaee8605f6a8460fe4a5b",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit AES/SHA224/256/384/512 and HMAC library redirection to the excluded ARM64 FIPS module. Full 550-line patch read including all function-pointer entries and call-site additions; no independent cryptographic algorithm change occurs. Current four AES/SHA/utils files are entire native LTS. Final ACK makes these overrides optional, superseding their initial unconditional placement. Do not add a globally mutable override table/static-key activation path without its selected module; native preboot export suppression remains.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/fips-tail-review.json",
+      "SECURITY.md: ARM64 FIPS module and shared crypto library boundary"
+    ]
+  },
+  {
+    "commit": "b6370bfcaa30f9778cf65cd9628cee95ca914181",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit removal of SHA-1 from the excluded FIPS module object list, approved-service list and private self-test vectors/generator. Complete patch does not remove native SHA-1 algorithms or their APIs. Preserve native hashing behavior; SDK module signing is independently SHA-256. This decision neither certifies SHA-1 nor claims SHA-1 was removed globally.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/fips-tail-review.json",
+      "SECURITY.md: ARM64 FIPS module and shared crypto library boundary"
+    ]
+  },
+  {
+    "commit": "f0d4cdca2c49f6e11dbe28d9f008c1ac6c30448b",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit duplicate FIPS-module build rules adapting SHA256/SHA512 library migration and ARM assembly generation. Full patch read, including all lib/crypto/Kbuild.fips140 rules. Current native library implementations and regular build rules remain, so omission does not undo their upstream migration. No separate ARM crypto copy is needed in the x86 SDK workflow.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/fips-tail-review.json",
+      "SECURITY.md: ARM64 FIPS module and shared crypto library boundary"
+    ]
+  },
+  {
+    "commit": "deed20447f8393f00dc4dbddc859e14565570553",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit removal/replacement of private FIPS-module SHA/HMAC tests because the module is excluded. Full patch read. Its assumption that the module executes inherited library FIPS tests is not asserted for the SDK: current SDK disables CRYPTO_SELFTESTS/CRYPTO_FIPS, and native 6.18.57 SHA files lack the ACK-added generic known-answer tests. Native implementations/init/KUnit code remain unchanged. Generic test policy is separately recorded in build-crypto-tail-review.json, not silently described as equivalent FIPS coverage.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/fips-tail-review.json",
+      "SECURITY.md: ARM64 FIPS module and shared crypto library boundary"
+    ]
+  },
+  {
+    "commit": "672c5aa4f124939029d3c4b462be8b7f85bc03aa",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the optional override table/config and ARM GKI enablement together with the FIPS module. Complete patch separates table from utils and constrains AES/SHA256/SHA512 to built-in providers, repairing the original unconditional/module dependency design. Those native libraries are built-in in this SDK, but no separate ARM FIPS module is built or supported. Shared crypto build deltas contain only separately reviewed POLYVAL changes. No orphan override symbols/dependencies are introduced; future support requires complete lifetime and gating design.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/fips-tail-review.json",
+      "SECURITY.md: ARM64 FIPS module and shared crypto library boundary"
+    ]
+  },
+  {
+    "commit": "e5c2498a8d44baa9775016b5ba7e993440b71527",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit evaluation-only SHA self-test failure injection and private header/decl wiring with the excluded FIPS module. Full patch read: injection is gated by CRYPTO_FIPS140_MOD_EVAL_TESTING and BUILD_FIPS140_KO (or declaration-only evaluation source), with no-op fallback. This repairs testing for the separate module, not a native SHA algorithm bug. Preserve whole native SHA implementations and avoid adding a production debug fault interface. No test-injection or runtime crypto validation was performed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/fips-tail-review.json",
+      "SECURITY.md: ARM64 FIPS module and shared crypto library boundary"
+    ]
   }
 ]
