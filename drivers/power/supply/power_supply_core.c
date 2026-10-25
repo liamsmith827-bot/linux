@@ -533,6 +533,78 @@ struct power_supply *power_supply_get_by_reference(struct fwnode_handle *fwnode,
 }
 EXPORT_SYMBOL_GPL(power_supply_get_by_reference);
 
+struct match_fwnode_array_param {
+	struct fwnode_handle *parent_fwnode;
+	struct power_supply **psy;
+	ssize_t psy_size;
+	int psy_count;
+};
+
+static int power_supply_match_device_fwnode_array(struct device *dev, void *data)
+{
+	struct match_fwnode_array_param *param = data;
+	struct power_supply *psy;
+
+	if (!dev->parent || dev_fwnode(dev->parent) != param->parent_fwnode)
+		return 0;
+	if (param->psy_count >= param->psy_size)
+		return -EOVERFLOW;
+
+	/* The class iterator's reference does not survive its next iteration. */
+	get_device(dev);
+	psy = dev_to_psy(dev);
+	atomic_inc(&psy->use_cnt);
+	param->psy[param->psy_count++] = psy;
+	return 0;
+}
+
+/**
+ * power_supply_get_by_reference_array() - Get supplies belonging to a referenced device
+ * @fwnode: Firmware node containing the reference property
+ * @property: Name of the reference property
+ * @psy: Caller-provided array for power supply references
+ * @size: Number of entries available in @psy
+ *
+ * The caller must power_supply_put() each returned reference before its supply
+ * is unregistered. On error, references acquired here are released and the
+ * entries filled by this function are cleared.
+ *
+ * Return: Number of supplies, -EOVERFLOW if the array is too small, -EINVAL for
+ * an invalid array or size, or -ENODEV if the firmware reference is unavailable.
+ */
+int power_supply_get_by_reference_array(struct fwnode_handle *fwnode,
+				       const char *property,
+				       struct power_supply **psy,
+				       ssize_t size)
+{
+	struct match_fwnode_array_param param = {
+		.psy = psy,
+		.psy_size = size,
+	};
+	int ret;
+
+	if (!psy || size <= 0 || size > INT_MAX)
+		return -EINVAL;
+
+	param.parent_fwnode = fwnode_find_reference(fwnode, property, 0);
+	if (IS_ERR(param.parent_fwnode))
+		return -ENODEV;
+
+	ret = class_for_each_device(&power_supply_class, NULL, &param,
+				    power_supply_match_device_fwnode_array);
+	fwnode_handle_put(param.parent_fwnode);
+	if (ret) {
+		while (param.psy_count) {
+			param.psy_count--;
+			power_supply_put(psy[param.psy_count]);
+			psy[param.psy_count] = NULL;
+		}
+		return ret;
+	}
+	return param.psy_count;
+}
+EXPORT_SYMBOL_GPL(power_supply_get_by_reference_array);
+
 static void devm_power_supply_put(struct device *dev, void *res)
 {
 	struct power_supply **psy = res;
