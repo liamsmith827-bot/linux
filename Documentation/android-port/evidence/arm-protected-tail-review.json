@@ -1,0 +1,410 @@
+{
+  "source_head": "08ad474dd8119497aa611dc10d54916062a3ef42",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "records": [
+    {
+      "commit": "c23bf34a9f5a7a6f7a2b414028e3c5f510446816",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit ARM protected-VM ioctl/capability lookup and its KVM_CAP_CORE=-1 UAPI sentinel. Full patch and final kvm_pkvm_ioctl_allowed/kvm_pkvm_ext_allowed consumers read: the sentinel labels a core ARM ioctl inside this filter, not an independent implemented x86 capability. Preserve whole native KVM UAPI and ARM host header. The associated filter/VM backend is excluded on the x86 SDK; no protected ioctl enforcement is claimed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-protected-tail-review.json",
+        "SECURITY.md: Remaining ARM protected host and guest contracts"
+      ],
+      "files": [
+        "arch/arm64/include/asm/kvm_host.h",
+        "arch/arm64/include/asm/kvm_pkvm.h",
+        "include/uapi/linux/kvm.h"
+      ],
+      "patch_sha256": "9b12466eef27f9a128bf38bb90b1eff7764720e6791edb24fd612899e69df93a"
+    },
+    {
+      "commit": "2968360a9bc2c1f931dcae57317cffa4e03f3206",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit ARM EL2 early module loader and deprivilege-time registration closure. Complete patch includes ownership checks, initialized-mode guards, module load failures clearing protected firmware, explicit modprobe path bypass of static usermodehelper policy, and legacy late-loading compatibility. These are security-sensitive protected-host contracts, not ordinary vendor module loading. Native ARM host files remain whole; private EL2 module files are absent. SDK ordinary signed module loading is retained separately.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-protected-tail-review.json",
+        "SECURITY.md: Remaining ARM protected host and guest contracts"
+      ],
+      "files": [
+        "Documentation/admin-guide/kernel-parameters.txt",
+        "arch/arm64/include/asm/kvm_pkvm_module.h",
+        "arch/arm64/kvm/hyp/include/nvhe/modules.h",
+        "arch/arm64/kvm/hyp/nvhe/hyp-main.c",
+        "arch/arm64/kvm/hyp/nvhe/mem_protect.c",
+        "arch/arm64/kvm/hyp/nvhe/modules.c",
+        "arch/arm64/kvm/pkvm.c"
+      ],
+      "patch_sha256": "170cf95096c091acfbc5db744bf6c016520e0826fc025f8c72a5bcbe4e31bf82"
+    },
+    {
+      "commit": "48918249c6c9d73bb472821563bede1ca4de5f25",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit ARM-only SMC filter skeleton and dual host/EL2 module build. Kconfig explicitly requires ARM64/KVM/module; module initialization invokes pkvm_load_el2_module. No x86 SMC hardware interface exists. Native misc build files retain unrelated per-UID stats only; the template and private image are absent. This does not substitute an unfiltered ARM protected host or claim equivalent filtering.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-protected-tail-review.json",
+        "SECURITY.md: Remaining ARM protected host and guest contracts"
+      ],
+      "files": [
+        "drivers/misc/Kconfig",
+        "drivers/misc/Makefile",
+        "drivers/misc/pkvm-smc/Makefile",
+        "drivers/misc/pkvm-smc/pkvm-smc.c",
+        "drivers/misc/pkvm-smc/pkvm/Makefile",
+        "drivers/misc/pkvm-smc/pkvm/pkvm-smc.c"
+      ],
+      "patch_sha256": "eca36b314dc27190ccc58e456b6091cc06f87d3d1097e904b57ddcb7129fbfcb"
+    },
+    {
+      "commit": "68493dadec7226df39070dae1ad58372bbc0cf42",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the private ARM SMC allowlist and handler registration with its excluded driver. Complete patch reviewed: sorted IDs, convention/SVE masking, optional argument callback, default NOT_SUPPORTED rejection and Trusty/architecture/TRNG lists. Such filtering is meaningful for ARM secure-monitor calls; the x86 SDK has no such instruction/firmware contract. No list is blindly copied to future hardware and no Trusty URL was contacted.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-protected-tail-review.json",
+        "SECURITY.md: Remaining ARM protected host and guest contracts"
+      ],
+      "files": [
+        "drivers/misc/pkvm-smc/pkvm/pkvm-smc.c"
+      ],
+      "patch_sha256": "128a16195a0f782bb574f83e894e6271a5b7a91b1e46ea44a5a0f153fdd5d0c1"
+    },
+    {
+      "commit": "b4e7716a4c290e3bbce890b027e24012d6238398",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit private filtered-SMC trace event, tracing allocator adapters and registration with the excluded ARM EL2 filter. Full patch contains only diagnostics within that boundary. Native/generic tracing remains; no denied-call visibility or SMC enforcement is claimed for an unsupported ARM protected host.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-protected-tail-review.json",
+        "SECURITY.md: Remaining ARM protected host and guest contracts"
+      ],
+      "files": [
+        "drivers/misc/pkvm-smc/pkvm-smc.c",
+        "drivers/misc/pkvm-smc/pkvm/events.h",
+        "drivers/misc/pkvm-smc/pkvm/pkvm-smc.c"
+      ],
+      "patch_sha256": "d0b09a1488baffc13bb5ea28088047a945eda30b603fc68cbcc4c88c0132d4f3"
+    },
+    {
+      "commit": "ec60c34ecccbd2d3bbb015505eec25c76366da7a",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit permissive SMC-filter module parameter with the excluded filter. Full patch makes violations pass through after logging when enabled; it is a real enforcement relaxation for bring-up, not a generic security fix. No permissive mode is introduced into SDK kernel interfaces, and no filtered ARM deployment is promised.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-protected-tail-review.json",
+        "SECURITY.md: Remaining ARM protected host and guest contracts"
+      ],
+      "files": [
+        "drivers/misc/pkvm-smc/pkvm-smc.c",
+        "drivers/misc/pkvm-smc/pkvm/pkvm-smc.c"
+      ],
+      "patch_sha256": "5ef7ab9b38c95fe8b5df718b173e93df090d3e0bc7e7f138e7d82cada5b6db8d"
+    },
+    {
+      "commit": "1e22d8817b85ea02039dcf3c59c6435fe95476a3",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit ARM protected-VM prefault order parameter and batch donation sizing. Complete patch caps order at nine, aligns/clips the starting range and calls the protected fault path only for protected vCPUs. Preserve whole native ARM mmu.c and its current fault checks. This tuning is not generic VM prefault support or the SDK page-size emulation implementation.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-protected-tail-review.json",
+        "SECURITY.md: Remaining ARM protected host and guest contracts"
+      ],
+      "files": [
+        "Documentation/admin-guide/kernel-parameters.txt",
+        "arch/arm64/kvm/mmu.c"
+      ],
+      "patch_sha256": "477328f927aa1c6e47aa7465756e03fcaa7ea08ef32e67f99c1ca66bcaaf416d"
+    },
+    {
+      "commit": "661df65815b27f150478e25c8d463a129c3e48a0",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit ARM guest larger-host-granule extension. Complete patch relaxes granule probing and adds sharing alignment constraints to the ACK range API. Native ARM guest file remains whole and still rejects granules exceeding PAGE_SIZE; it does not implement this extension or its later range API. Neither ARM guest code nor ARM configuration is selected in x86 SDK. Do not claim mixed-granule compatibility.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-protected-tail-review.json",
+        "SECURITY.md: Remaining ARM protected host and guest contracts"
+      ],
+      "files": [
+        "drivers/virt/coco/pkvm-guest/arm-pkvm-guest.c"
+      ],
+      "patch_sha256": "fd1b190571b0f35920b777dc21ccf8e40d839dc73908e331cf763916679095c6"
+    },
+    {
+      "commit": "9cfe43c876110ba2aeedc3a9806dbc4c62f1ef4c",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit the ARM guest range-API/MMIO alignment correction with the unsupported larger-granule extension. Full patch checks physical/size alignment, rounds MMIO bounds only after DRAM-range validation, and gates hook registration. Current native guest is whole LTS, with per-page calls and a PAGE_SIZE granule ceiling; it lacks the ACK arm_smccc_do_range path being fixed. No older buggy ACK range implementation is retained. ARM MMIO runtime is unverified.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-protected-tail-review.json",
+        "SECURITY.md: Remaining ARM protected host and guest contracts"
+      ],
+      "files": [
+        "drivers/virt/coco/pkvm-guest/arm-pkvm-guest.c"
+      ],
+      "patch_sha256": "8488b6269bc5e566b056a2a71fca77ef5bb579759c60556b92cac3594bef312f"
+    },
+    {
+      "commit": "f35363e5dbe22b384a2a36fcb73b067e12bdb195",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit ARM protected-host linear-map sizing parameter and metadata calculation. Complete patch replaces full-memory sizing only when a privileged boot option supplies a limit; exhaustion can be fatal. Native ARM sizing/setup files remain whole. No x86 memory policy changes or reduced hypervisor reservation is made in the SDK.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-protected-tail-review.json",
+        "SECURITY.md: Remaining ARM protected host and guest contracts"
+      ],
+      "files": [
+        "Documentation/admin-guide/kernel-parameters.txt",
+        "arch/arm64/include/asm/kvm_pkvm.h",
+        "arch/arm64/kvm/hyp/nvhe/setup.c",
+        "arch/arm64/kvm/pkvm.c"
+      ],
+      "patch_sha256": "b9a97d8babcb5229100d14843f2d3f5d934bb0de33ec2af6b82cb3b0915f6fe1"
+    },
+    {
+      "commit": "a900910d33a44079df61d966693c6e259b0531aa",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit ARM SMCCC register getters 4-6. Full patch adds three inline vcpu_get_reg wrappers to an ARM KVM header that includes asm/kvm_emulate.h; it is not a generic userspace ABI or x86 hypercall helper. Retain whole native header and exclude the ARM callers with their platform backend.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-protected-tail-review.json",
+        "SECURITY.md: Remaining ARM protected host and guest contracts"
+      ],
+      "files": [
+        "include/kvm/arm_hypercalls.h"
+      ],
+      "patch_sha256": "3b12326fadae963393d79460ed64766cc8512d45b6df89e2f78adf754438fa5e"
+    },
+    {
+      "commit": "a834e9b6ddb8d401b3ded1fb0bf4906024f99228",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit ARM host stage-2 CMA/carveout boot policy. Complete patch changes protected-host reservation and parsing only; native ARM pkvm.c remains whole. SDK CMA behavior is not changed by this omission, and future protected-host memory sizing/reclaim policy needs separate review.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-protected-tail-review.json",
+        "SECURITY.md: Remaining ARM protected host and guest contracts"
+      ],
+      "files": [
+        "Documentation/admin-guide/kernel-parameters.txt",
+        "arch/arm64/kvm/pkvm.c"
+      ],
+      "patch_sha256": "f8b328d98fe9d4f9be8559b8deef9c564d3588cb9cfd1395697515db5127b07c"
+    },
+    {
+      "commit": "51b3b28bc85cd6af901df56247126e7bc16a9845",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit ARM host stage-2 GCMA selection and its boot documentation. Complete patch exists to allow non-sleeping IOMMU-triggered hypervisor pool allocation; this is a real protected-host allocation contract. Preserve whole native ARM file while generic GCMA support is reviewed separately, rather than remove a generic allocator based on its ARM consumer. No non-preemptible protected-host top-up is claimed.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-protected-tail-review.json",
+        "SECURITY.md: Remaining ARM protected host and guest contracts"
+      ],
+      "files": [
+        "Documentation/admin-guide/kernel-parameters.txt",
+        "arch/arm64/kvm/pkvm.c"
+      ],
+      "patch_sha256": "1fc97adfcde64a0c03dcfc654c0d9f0734fd5c4848ebecb8a7582490ce7691c1"
+    },
+    {
+      "commit": "4ae29ada6061274d8f26e976e2ba3dd0fba21f12",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit ARM MMIO_GUARD_MAP WARN-to-pr_warn diagnostic change with the ACK MAP/enrollment API. Full patch and native guest driver read: native uses the older MMIO_GUARD function, not the MAP call fixed here, and is ARM-only. Do not silently suppress native warnings or claim that unenrolled protected VMs are supported. The documented enrollment ABI limitation remains relevant to future ARM work.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-protected-tail-review.json",
+        "SECURITY.md: Remaining ARM protected host and guest contracts"
+      ],
+      "files": [
+        "drivers/virt/coco/pkvm-guest/arm-pkvm-guest.c"
+      ],
+      "patch_sha256": "8eb27cac53ebcc5c9121a03c5da4010652365a8f86b8f15b9d62f0cd51c00d58"
+    },
+    {
+      "commit": "a13ef6b6b0661543b4f46b8cf5de6f1720324a63",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit ARM stage-2 keep= reserve tuning. Full patch parses mode/size, computes reclaim bound with underflow clamp and retains minimum pages to avoid later protected-module reallocations. Native ARM reclaim/reservation source remains whole. It neither changes generic SDK CMA reclaim nor proves adequate reserves for future protected device platforms.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-protected-tail-review.json",
+        "SECURITY.md: Remaining ARM protected host and guest contracts"
+      ],
+      "files": [
+        "Documentation/admin-guide/kernel-parameters.txt",
+        "arch/arm64/kvm/pkvm.c"
+      ],
+      "patch_sha256": "e7971a04fd5d0f9e1122f9e8ab9d5a42ca6017f0711b58188eea9acb65ec2b77"
+    },
+    {
+      "commit": "4add578d6e3b83c34de44996b2d204d391b319ed",
+      "disposition": "omitted-current-target",
+      "rationale": "Omit ARM FF-A full unmap-on-lend mode with the excluded protected-host ownership extension. This is security-relevant: full mode performs IOMMU updates/completion where TrustZone alone is insufficient, while off rejects and on deliberately skips steps. Complete patch read including overflow checks and state transitions. Whole native ARM memory-protection/host/header files remain; no older ACK unsafe fast donation path is introduced. The x86 SDK has no ARM FF-A/TrustZone execution; future hardware must reassess required isolation.",
+      "result_commits": [],
+      "evidence": [
+        "evidence/arm-protected-tail-review.json",
+        "SECURITY.md: Remaining ARM protected host and guest contracts"
+      ],
+      "files": [
+        "Documentation/admin-guide/kernel-parameters.txt",
+        "arch/arm64/include/asm/kvm_pkvm.h",
+        "arch/arm64/kvm/hyp/nvhe/mem_protect.c",
+        "arch/arm64/kvm/pkvm.c"
+      ],
+      "patch_sha256": "833637488ecd206dcde6b35be4b327b85236d1ff6a23dc3c215df15ef13c4fac"
+    }
+  ],
+  "proofs": [
+    {
+      "path": "Documentation/admin-guide/kernel-parameters.txt",
+      "port_entry": "100644 blob 09e1b46c3f02777556f9b748cbe822ba84d5cae0\tDocumentation/admin-guide/kernel-parameters.txt",
+      "lts_entry": "100644 blob 362ff3225220946ea5c91f4873ffc7f5e98e861b\tDocumentation/admin-guide/kernel-parameters.txt",
+      "ack_entry": "100644 blob 9766ec000bb0761e2e594733922e7c3f95e4bf7d\tDocumentation/admin-guide/kernel-parameters.txt",
+      "comparison": "shared delta read: only UID stats or disable_dma32/DPM watchdog documentation"
+    },
+    {
+      "path": "arch/arm64/include/asm/kvm_host.h",
+      "port_entry": "100644 blob 419e37112a6f02f324f3f8f370fb30701948c2a6\tarch/arm64/include/asm/kvm_host.h",
+      "lts_entry": "100644 blob 419e37112a6f02f324f3f8f370fb30701948c2a6\tarch/arm64/include/asm/kvm_host.h",
+      "ack_entry": "100644 blob 0ab34c13b1403fa271b7d7d75c8ab52148d29297\tarch/arm64/include/asm/kvm_host.h",
+      "comparison": "whole native LTS source"
+    },
+    {
+      "path": "arch/arm64/include/asm/kvm_pkvm.h",
+      "port_entry": "100644 blob 7195be508d994af455f4a8940fe8a42db0e05821\tarch/arm64/include/asm/kvm_pkvm.h",
+      "lts_entry": "100644 blob 7195be508d994af455f4a8940fe8a42db0e05821\tarch/arm64/include/asm/kvm_pkvm.h",
+      "ack_entry": "100644 blob b8d176e837925c7079685612fedb94d1d6c482ba\tarch/arm64/include/asm/kvm_pkvm.h",
+      "comparison": "whole native LTS source"
+    },
+    {
+      "path": "arch/arm64/include/asm/kvm_pkvm_module.h",
+      "port_entry": "",
+      "lts_entry": "",
+      "ack_entry": "100644 blob 63f0c6e9909493c1450860c57a88ee5e8d8e342c\tarch/arm64/include/asm/kvm_pkvm_module.h",
+      "comparison": "absent in native LTS and port"
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/include/nvhe/modules.h",
+      "port_entry": "",
+      "lts_entry": "",
+      "ack_entry": "100644 blob 8f6d5940468e6601ad4daaf5c24e84324972c94f\tarch/arm64/kvm/hyp/include/nvhe/modules.h",
+      "comparison": "absent in native LTS and port"
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/nvhe/hyp-main.c",
+      "port_entry": "100644 blob 6e7547b7ca432ac659fcb2535dd928d4fc79aca9\tarch/arm64/kvm/hyp/nvhe/hyp-main.c",
+      "lts_entry": "100644 blob 6e7547b7ca432ac659fcb2535dd928d4fc79aca9\tarch/arm64/kvm/hyp/nvhe/hyp-main.c",
+      "ack_entry": "100644 blob 8d4d6ccad4e563e06a1305b4ac55f4146e81dab9\tarch/arm64/kvm/hyp/nvhe/hyp-main.c",
+      "comparison": "whole native LTS source"
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/nvhe/mem_protect.c",
+      "port_entry": "100644 blob ece04bb10ab096533257ee3891e00266ec4f5e05\tarch/arm64/kvm/hyp/nvhe/mem_protect.c",
+      "lts_entry": "100644 blob ece04bb10ab096533257ee3891e00266ec4f5e05\tarch/arm64/kvm/hyp/nvhe/mem_protect.c",
+      "ack_entry": "100644 blob 564c83adc364c19cba3a4e05c27eeb1676aad273\tarch/arm64/kvm/hyp/nvhe/mem_protect.c",
+      "comparison": "whole native LTS source"
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/nvhe/modules.c",
+      "port_entry": "",
+      "lts_entry": "",
+      "ack_entry": "100644 blob 9b5dfd864112c1e17f38c3efecb1d02a6c15ef95\tarch/arm64/kvm/hyp/nvhe/modules.c",
+      "comparison": "absent in native LTS and port"
+    },
+    {
+      "path": "arch/arm64/kvm/hyp/nvhe/setup.c",
+      "port_entry": "100644 blob 15b25086447a148d92ecbcfbef71d93a3a7c933d\tarch/arm64/kvm/hyp/nvhe/setup.c",
+      "lts_entry": "100644 blob 15b25086447a148d92ecbcfbef71d93a3a7c933d\tarch/arm64/kvm/hyp/nvhe/setup.c",
+      "ack_entry": "100644 blob 73dd039b31073e93635b217f04d8cfbb01db24d4\tarch/arm64/kvm/hyp/nvhe/setup.c",
+      "comparison": "whole native LTS source"
+    },
+    {
+      "path": "arch/arm64/kvm/mmu.c",
+      "port_entry": "100644 blob af50fed5b59750cc19b3a53ccec7e8296036e7ef\tarch/arm64/kvm/mmu.c",
+      "lts_entry": "100644 blob af50fed5b59750cc19b3a53ccec7e8296036e7ef\tarch/arm64/kvm/mmu.c",
+      "ack_entry": "100644 blob c50d8ee4312751dffcee4ebc5517301359a29ccb\tarch/arm64/kvm/mmu.c",
+      "comparison": "whole native LTS source"
+    },
+    {
+      "path": "arch/arm64/kvm/pkvm.c",
+      "port_entry": "100644 blob 24f0f8a8c943cc9b70d88220927b6623c6251f27\tarch/arm64/kvm/pkvm.c",
+      "lts_entry": "100644 blob 24f0f8a8c943cc9b70d88220927b6623c6251f27\tarch/arm64/kvm/pkvm.c",
+      "ack_entry": "100644 blob 39ba61f11da56ad25148b5ac320ffffdcf033fb4\tarch/arm64/kvm/pkvm.c",
+      "comparison": "whole native LTS source"
+    },
+    {
+      "path": "drivers/misc/Kconfig",
+      "port_entry": "100644 blob 432047fe3401f067c3133f602bbe4af057f5eeeb\tdrivers/misc/Kconfig",
+      "lts_entry": "100644 blob b9c11f67315f0bc0b5a4a4100ebd315fac25927e\tdrivers/misc/Kconfig",
+      "ack_entry": "100644 blob d6d96080950a372192f904dff701f64bb472033d\tdrivers/misc/Kconfig",
+      "comparison": "shared delta read: only UID stats or disable_dma32/DPM watchdog documentation"
+    },
+    {
+      "path": "drivers/misc/Makefile",
+      "port_entry": "100644 blob 09c70d950b7072ea42b65a8094ebe5249241dcbd\tdrivers/misc/Makefile",
+      "lts_entry": "100644 blob b32a2597d2467bc8883ef81a89ab76544c3c9285\tdrivers/misc/Makefile",
+      "ack_entry": "100644 blob b8b5710c308fc8f77fd0b65480782593da9adefd\tdrivers/misc/Makefile",
+      "comparison": "shared delta read: only UID stats or disable_dma32/DPM watchdog documentation"
+    },
+    {
+      "path": "drivers/misc/pkvm-smc/Makefile",
+      "port_entry": "",
+      "lts_entry": "",
+      "ack_entry": "100644 blob b33293b16439eccdcea67d0e4d236697cc897337\tdrivers/misc/pkvm-smc/Makefile",
+      "comparison": "absent in native LTS and port"
+    },
+    {
+      "path": "drivers/misc/pkvm-smc/pkvm-smc.c",
+      "port_entry": "",
+      "lts_entry": "",
+      "ack_entry": "100644 blob 6a4933f182be8ff69191270525ff2fbe8d411202\tdrivers/misc/pkvm-smc/pkvm-smc.c",
+      "comparison": "absent in native LTS and port"
+    },
+    {
+      "path": "drivers/misc/pkvm-smc/pkvm/Makefile",
+      "port_entry": "",
+      "lts_entry": "",
+      "ack_entry": "100644 blob 86109e328db9825e96eb7524e2272f6323c932fb\tdrivers/misc/pkvm-smc/pkvm/Makefile",
+      "comparison": "absent in native LTS and port"
+    },
+    {
+      "path": "drivers/misc/pkvm-smc/pkvm/events.h",
+      "port_entry": "",
+      "lts_entry": "",
+      "ack_entry": "100644 blob 74bb6e356c1fb1d74312fb175f100ac2782a9a3d\tdrivers/misc/pkvm-smc/pkvm/events.h",
+      "comparison": "absent in native LTS and port"
+    },
+    {
+      "path": "drivers/misc/pkvm-smc/pkvm/pkvm-smc.c",
+      "port_entry": "",
+      "lts_entry": "",
+      "ack_entry": "100644 blob db3d11d3df34a1096a0fb2d8061e34e35f9d6ebc\tdrivers/misc/pkvm-smc/pkvm/pkvm-smc.c",
+      "comparison": "absent in native LTS and port"
+    },
+    {
+      "path": "drivers/virt/coco/pkvm-guest/arm-pkvm-guest.c",
+      "port_entry": "100644 blob d66291def0f40827fcb3c76da30a4c77a76c4323\tdrivers/virt/coco/pkvm-guest/arm-pkvm-guest.c",
+      "lts_entry": "100644 blob d66291def0f40827fcb3c76da30a4c77a76c4323\tdrivers/virt/coco/pkvm-guest/arm-pkvm-guest.c",
+      "ack_entry": "100644 blob 63f1e75cae69d534a63147ac47a72c9eb3571c52\tdrivers/virt/coco/pkvm-guest/arm-pkvm-guest.c",
+      "comparison": "whole native LTS source"
+    },
+    {
+      "path": "include/kvm/arm_hypercalls.h",
+      "port_entry": "100644 blob 2df152207ccd00bc8abb53f6b0827cfc4ee96e5c\tinclude/kvm/arm_hypercalls.h",
+      "lts_entry": "100644 blob 2df152207ccd00bc8abb53f6b0827cfc4ee96e5c\tinclude/kvm/arm_hypercalls.h",
+      "ack_entry": "100644 blob a5fcbca03c1a3a9af0fa32ff4c50b9719c5a24a3\tinclude/kvm/arm_hypercalls.h",
+      "comparison": "whole native LTS source"
+    },
+    {
+      "path": "include/uapi/linux/kvm.h",
+      "port_entry": "100644 blob 954e0511ce91c4c34e6aace4cdfc0f4393b2a44c\tinclude/uapi/linux/kvm.h",
+      "lts_entry": "100644 blob 954e0511ce91c4c34e6aace4cdfc0f4393b2a44c\tinclude/uapi/linux/kvm.h",
+      "ack_entry": "100644 blob 6f8dbfce848740d32a820df2856eae6aba1eee24\tinclude/uapi/linux/kvm.h",
+      "comparison": "whole native LTS source"
+    }
+  ],
+  "generated_config_sha256": "6d27ff842b4cac221ab58093e8ca6bc7f8c692b6ccf56c9b7cceca230389d769",
+  "method": "All sixteen complete original patches read. All affected final source/header files compared whole with LTS; three shared doc/build deltas read completely. Native ARM guest implementation and Kconfig read in full; ACK ioctl sentinel producer/consumer traced to final ARM protected filter.",
+  "limits": "ARM target is excluded by x86_64 build, not by failure to find userspace consumers. Native ARM protected guest driver remains in tree but is uncompiled; no ARM correctness, TrustZone/FF-A/SMC isolation or mixed-granule runtime claim. Source-embedded Trusty URL and device/build recipes not accessed or executed.",
+  "remote_resources_used": []
+}

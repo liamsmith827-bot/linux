@@ -10981,3 +10981,40 @@ boundary, not falsely claimed as individually correctness-audited. Every
 excluded private path is absent; no old vulnerable private implementation is
 retained. No FIPS module was built or loaded, and embedded source URLs were
 not visited. No additional remote resource was used.
+
+## Remaining ARM protected host and guest contracts
+
+Sixteen complete patches are assessed individually in arm-protected-tail-review.json.
+The SDK is built as x86_64; these ARM EL2/SMCCC/FF-A implementations are excluded
+by architecture, not by missing consumers. All affected retained ARM and UAPI
+files are whole native LTS, and all private EL2-module/SMC filter files are
+absent. Shared misc build files differ only for retained UID statistics; shared
+parameter documentation differs only for disable_dma32 and DPM watchdog support.
+
+The KVM_CAP_CORE=-1 constant labels a core ARM ioctl inside the protected-VM
+capability filter. Its final consumers were traced; this is not a new x86
+capability whose implementation was lost. The early EL2 module loader includes
+security checks and firmware clearing on module-load failure, and bypasses
+static usermodehelper selection only for its guarded early module request.
+That specialized loader is omitted together with its module backend. Ordinary
+SDK module loading/signing and vendor-source support remain separate.
+
+SMC allowlists, denied-call tracing and permissive bring-up mode belong to a
+Kconfig-gated ARM template. The permissive option actually allows violations;
+it is not imported as SDK policy. Prefault order, linear-map limit and host
+stage-2 CMA/GCMA/keep tuning similarly configure ARM hypervisor memory. Generic
+GCMA support is not removed merely because an ARM consumer is excluded.
+
+The retained native ARM guest driver rejects hypervisor granules above PAGE_SIZE
+and uses per-page calls. ACK's larger-granule/range API and subsequent alignment
+fixes are excluded together; no buggy intermediate range implementation is
+retained. The later WARN reduction concerns MMIO_GUARD_MAP enrollment, whereas
+native uses the earlier MMIO_GUARD API. Native warnings are not blindly removed.
+This ARM driver remains in the tree but is not compiled for this SDK.
+
+Full FF-A unmap-on-lend is security-relevant for hardware where TrustZone alone
+does not cover IOMMU accesses: its full updates/completion must be reconsidered
+for future ARM support. The port retains whole native memory-protection code
+and does not introduce ACK's optional fast ownership-transfer path. No ARM
+isolation, mixed-granule or protected-guest runtime compatibility is claimed.
+Only local sources were read; no embedded URL or device recipe was used.

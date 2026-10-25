@@ -36300,5 +36300,165 @@
       "evidence/fips-tail-review.json",
       "SECURITY.md: ARM64 FIPS module and shared crypto library boundary"
     ]
+  },
+  {
+    "commit": "c23bf34a9f5a7a6f7a2b414028e3c5f510446816",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit ARM protected-VM ioctl/capability lookup and its KVM_CAP_CORE=-1 UAPI sentinel. Full patch and final kvm_pkvm_ioctl_allowed/kvm_pkvm_ext_allowed consumers read: the sentinel labels a core ARM ioctl inside this filter, not an independent implemented x86 capability. Preserve whole native KVM UAPI and ARM host header. The associated filter/VM backend is excluded on the x86 SDK; no protected ioctl enforcement is claimed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-protected-tail-review.json",
+      "SECURITY.md: Remaining ARM protected host and guest contracts"
+    ]
+  },
+  {
+    "commit": "2968360a9bc2c1f931dcae57317cffa4e03f3206",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit ARM EL2 early module loader and deprivilege-time registration closure. Complete patch includes ownership checks, initialized-mode guards, module load failures clearing protected firmware, explicit modprobe path bypass of static usermodehelper policy, and legacy late-loading compatibility. These are security-sensitive protected-host contracts, not ordinary vendor module loading. Native ARM host files remain whole; private EL2 module files are absent. SDK ordinary signed module loading is retained separately.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-protected-tail-review.json",
+      "SECURITY.md: Remaining ARM protected host and guest contracts"
+    ]
+  },
+  {
+    "commit": "48918249c6c9d73bb472821563bede1ca4de5f25",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit ARM-only SMC filter skeleton and dual host/EL2 module build. Kconfig explicitly requires ARM64/KVM/module; module initialization invokes pkvm_load_el2_module. No x86 SMC hardware interface exists. Native misc build files retain unrelated per-UID stats only; the template and private image are absent. This does not substitute an unfiltered ARM protected host or claim equivalent filtering.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-protected-tail-review.json",
+      "SECURITY.md: Remaining ARM protected host and guest contracts"
+    ]
+  },
+  {
+    "commit": "68493dadec7226df39070dae1ad58372bbc0cf42",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the private ARM SMC allowlist and handler registration with its excluded driver. Complete patch reviewed: sorted IDs, convention/SVE masking, optional argument callback, default NOT_SUPPORTED rejection and Trusty/architecture/TRNG lists. Such filtering is meaningful for ARM secure-monitor calls; the x86 SDK has no such instruction/firmware contract. No list is blindly copied to future hardware and no Trusty URL was contacted.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-protected-tail-review.json",
+      "SECURITY.md: Remaining ARM protected host and guest contracts"
+    ]
+  },
+  {
+    "commit": "b4e7716a4c290e3bbce890b027e24012d6238398",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit private filtered-SMC trace event, tracing allocator adapters and registration with the excluded ARM EL2 filter. Full patch contains only diagnostics within that boundary. Native/generic tracing remains; no denied-call visibility or SMC enforcement is claimed for an unsupported ARM protected host.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-protected-tail-review.json",
+      "SECURITY.md: Remaining ARM protected host and guest contracts"
+    ]
+  },
+  {
+    "commit": "ec60c34ecccbd2d3bbb015505eec25c76366da7a",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit permissive SMC-filter module parameter with the excluded filter. Full patch makes violations pass through after logging when enabled; it is a real enforcement relaxation for bring-up, not a generic security fix. No permissive mode is introduced into SDK kernel interfaces, and no filtered ARM deployment is promised.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-protected-tail-review.json",
+      "SECURITY.md: Remaining ARM protected host and guest contracts"
+    ]
+  },
+  {
+    "commit": "1e22d8817b85ea02039dcf3c59c6435fe95476a3",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit ARM protected-VM prefault order parameter and batch donation sizing. Complete patch caps order at nine, aligns/clips the starting range and calls the protected fault path only for protected vCPUs. Preserve whole native ARM mmu.c and its current fault checks. This tuning is not generic VM prefault support or the SDK page-size emulation implementation.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-protected-tail-review.json",
+      "SECURITY.md: Remaining ARM protected host and guest contracts"
+    ]
+  },
+  {
+    "commit": "661df65815b27f150478e25c8d463a129c3e48a0",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit ARM guest larger-host-granule extension. Complete patch relaxes granule probing and adds sharing alignment constraints to the ACK range API. Native ARM guest file remains whole and still rejects granules exceeding PAGE_SIZE; it does not implement this extension or its later range API. Neither ARM guest code nor ARM configuration is selected in x86 SDK. Do not claim mixed-granule compatibility.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-protected-tail-review.json",
+      "SECURITY.md: Remaining ARM protected host and guest contracts"
+    ]
+  },
+  {
+    "commit": "9cfe43c876110ba2aeedc3a9806dbc4c62f1ef4c",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit the ARM guest range-API/MMIO alignment correction with the unsupported larger-granule extension. Full patch checks physical/size alignment, rounds MMIO bounds only after DRAM-range validation, and gates hook registration. Current native guest is whole LTS, with per-page calls and a PAGE_SIZE granule ceiling; it lacks the ACK arm_smccc_do_range path being fixed. No older buggy ACK range implementation is retained. ARM MMIO runtime is unverified.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-protected-tail-review.json",
+      "SECURITY.md: Remaining ARM protected host and guest contracts"
+    ]
+  },
+  {
+    "commit": "f35363e5dbe22b384a2a36fcb73b067e12bdb195",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit ARM protected-host linear-map sizing parameter and metadata calculation. Complete patch replaces full-memory sizing only when a privileged boot option supplies a limit; exhaustion can be fatal. Native ARM sizing/setup files remain whole. No x86 memory policy changes or reduced hypervisor reservation is made in the SDK.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-protected-tail-review.json",
+      "SECURITY.md: Remaining ARM protected host and guest contracts"
+    ]
+  },
+  {
+    "commit": "a900910d33a44079df61d966693c6e259b0531aa",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit ARM SMCCC register getters 4-6. Full patch adds three inline vcpu_get_reg wrappers to an ARM KVM header that includes asm/kvm_emulate.h; it is not a generic userspace ABI or x86 hypercall helper. Retain whole native header and exclude the ARM callers with their platform backend.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-protected-tail-review.json",
+      "SECURITY.md: Remaining ARM protected host and guest contracts"
+    ]
+  },
+  {
+    "commit": "a834e9b6ddb8d401b3ded1fb0bf4906024f99228",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit ARM host stage-2 CMA/carveout boot policy. Complete patch changes protected-host reservation and parsing only; native ARM pkvm.c remains whole. SDK CMA behavior is not changed by this omission, and future protected-host memory sizing/reclaim policy needs separate review.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-protected-tail-review.json",
+      "SECURITY.md: Remaining ARM protected host and guest contracts"
+    ]
+  },
+  {
+    "commit": "51b3b28bc85cd6af901df56247126e7bc16a9845",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit ARM host stage-2 GCMA selection and its boot documentation. Complete patch exists to allow non-sleeping IOMMU-triggered hypervisor pool allocation; this is a real protected-host allocation contract. Preserve whole native ARM file while generic GCMA support is reviewed separately, rather than remove a generic allocator based on its ARM consumer. No non-preemptible protected-host top-up is claimed.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-protected-tail-review.json",
+      "SECURITY.md: Remaining ARM protected host and guest contracts"
+    ]
+  },
+  {
+    "commit": "4ae29ada6061274d8f26e976e2ba3dd0fba21f12",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit ARM MMIO_GUARD_MAP WARN-to-pr_warn diagnostic change with the ACK MAP/enrollment API. Full patch and native guest driver read: native uses the older MMIO_GUARD function, not the MAP call fixed here, and is ARM-only. Do not silently suppress native warnings or claim that unenrolled protected VMs are supported. The documented enrollment ABI limitation remains relevant to future ARM work.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-protected-tail-review.json",
+      "SECURITY.md: Remaining ARM protected host and guest contracts"
+    ]
+  },
+  {
+    "commit": "a13ef6b6b0661543b4f46b8cf5de6f1720324a63",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit ARM stage-2 keep= reserve tuning. Full patch parses mode/size, computes reclaim bound with underflow clamp and retains minimum pages to avoid later protected-module reallocations. Native ARM reclaim/reservation source remains whole. It neither changes generic SDK CMA reclaim nor proves adequate reserves for future protected device platforms.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-protected-tail-review.json",
+      "SECURITY.md: Remaining ARM protected host and guest contracts"
+    ]
+  },
+  {
+    "commit": "4add578d6e3b83c34de44996b2d204d391b319ed",
+    "disposition": "omitted-current-target",
+    "rationale": "Omit ARM FF-A full unmap-on-lend mode with the excluded protected-host ownership extension. This is security-relevant: full mode performs IOMMU updates/completion where TrustZone alone is insufficient, while off rejects and on deliberately skips steps. Complete patch read including overflow checks and state transitions. Whole native ARM memory-protection/host/header files remain; no older ACK unsafe fast donation path is introduced. The x86 SDK has no ARM FF-A/TrustZone execution; future hardware must reassess required isolation.",
+    "result_commits": [],
+    "evidence": [
+      "evidence/arm-protected-tail-review.json",
+      "SECURITY.md: Remaining ARM protected host and guest contracts"
+    ]
   }
 ]
