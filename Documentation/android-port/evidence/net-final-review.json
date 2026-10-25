@@ -1,0 +1,397 @@
+{
+  "source_head": "79035f77e9e311df154ac1fe4d7a708530f842a8",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "records": [
+    {
+      "commit": "49f7d7cf448b569af2ff3688b83f58c7126b113a",
+      "disposition": "omitted-current-target",
+      "result_commits": [],
+      "rationale": "Both functional hunks are within CONFIG_KERNEL_MODE_NEON && CONFIG_ARM64 and change only the Mellanox mlx5 arm64 MMIO SIMD copy API. The x86_64 SDK cannot execute that branch and its native arm64 SIMD signature is not being changed. Keep the complete native wc.c, including all its LTS fixes. This is positive architecture gating, not inference from lack of a consumer; no current SDK runtime or module interface is removed.",
+      "evidence": [
+        "evidence/net-final-review.json",
+        "SECURITY.md: Networking query bounds, CAN teardown and APF"
+      ],
+      "patch_sha256": "f52a1c00d26f60ed71bc08d002e9d49080315dc39be767c119970fb8b842f52c",
+      "changed_paths": [
+        "drivers/net/ethernet/mellanox/mlx5/core/wc.c"
+      ]
+    },
+    {
+      "commit": "d1774a9fdac166a98343f84c756a6840900a7399",
+      "disposition": "superseded",
+      "result_commits": [
+        "3a910638e101d40e3b960002ac82b1f4520a03c2"
+      ],
+      "rationale": "Native cd830e0bc25e (upstream 68973f9db761) supersedes this incomplete fast-path RX_NO_AUTOTIMER test with workqueue timer cancellation after the RCU grace period and an op->sk reference through final cancellation. A receiver can pass the ACK flag check before teardown and rearm after the first cancel; the native second cancel closes that race. 3a910638e101 removes only the redundant ACK guard; the entire file now equals LTS. It also restores native throttle behavior when userspace sets RX_NO_AUTOTIMER for timeout control. Keep native device-reference, ANYDEV source selection, RX metadata/stat locking and cleanup fixes. CAN_BCM=m is compiled in the existing SDK workflow.",
+      "evidence": [
+        "evidence/net-final-review.json",
+        "SECURITY.md: Networking query bounds, CAN teardown and APF"
+      ],
+      "patch_sha256": "a73eaabfcc4e0127daee1589ed132ebde0189cefcc0a791408f65cd732198b19",
+      "changed_paths": [
+        "net/can/bcm.c"
+      ]
+    },
+    {
+      "commit": "653058aeb77b070747e2b836f65c33a66569d65e",
+      "disposition": "partially-adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain functional FIONREAD/SIOCINQ fix: include native TCP receive bytes only when neither verdict program diverts them, keep disjoint ingress_msg accounting, and fall back to tcp_ioctl after releasing the lock if psock is absent. Remaining file equals LTS. Retain the harmless native static inline sk_psock_msg_inq declaration rather than churn its header; no current in-tree call remains, and this is not a binary ABI promise. Host checks cover 288 queue/flag/listen/fallback cases and balanced synthetic references. SDK BPF_STREAM_PARSER is disabled, so the emulator build alone does not compile this optional function or verify runtime behavior; conservative common Android/module-source correctness is the retention reason.",
+      "evidence": [
+        "evidence/net-final-review.json",
+        "SECURITY.md: Networking query bounds, CAN teardown and APF"
+      ],
+      "patch_sha256": "e4a892c9d12ebd282144b41c6329e190565e49c87baf7c748930deab93a810a5",
+      "changed_paths": [
+        "include/linux/skmsg.h",
+        "net/ipv4/tcp_bpf.c"
+      ]
+    },
+    {
+      "commit": "3e610398ef87d9830de149f9f387ba5352c3d591",
+      "disposition": "partially-adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Native d3b739db5dc6 already supplies the connection reference through channel destruction, FLAG_DEL state and asynchronous worker changes. Keep every native later L2CAP fix; the complete header is native and complete core differs only by the extra NULL-conn guard before the first timeout lock. Retain that defensive guard conservatively: allocation initializes conn to NULL, while examined native scheduling paths attach or explicitly check it; no reachable native failure requiring it was established. It returns the timer-held channel reference and does not replace the actual lifetime fix. No claim is made that the NULL test protects a stale non-NULL connection. BT=m is an existing configured SDK component.",
+      "evidence": [
+        "evidence/net-final-review.json",
+        "SECURITY.md: Networking query bounds, CAN teardown and APF"
+      ],
+      "patch_sha256": "6d4a13d550f5851c124b6dc13eff26d4e90bb834f8d4239fbc2d61e0edc24eb0",
+      "changed_paths": [
+        "include/net/bluetooth/l2cap.h",
+        "net/bluetooth/l2cap_core.c"
+      ]
+    },
+    {
+      "commit": "93fe13b22b6015e9c37a53abccceecf9aefc0b40",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "989123cde71e577085e3d0c513ccce5e66155cf0"
+      ],
+      "rationale": "Keep native a7131340d0f9 cgroup size propagation and conditional revision copy exactly; its complete source/header are LTS. Retain the ACK extension of uattr_size to TCX/netkit mprog queries and uniform internal query signatures, including the lirc/netkit declarations corrected during integration. The mprog handler writes revision only when the caller buffer covers it; unrelated bodies equal LTS after argument removal. Local upstream rationale distinguishes real old cgroup binaries from TCX/netkit, which were introduced with revision; the latter guard is defensive, not proof of a historical TCX compatibility requirement. Pinned Connectivity queryProgram is an actual BPF_PROG_QUERY caller. 564 actual-function count-query cases exercise sizes from legacy count through current attr size; 72 native mprog revision copies beyond declared size are detected without performing them. This is not a complete minimum-size audit or a runtime BPF syscall test.",
+      "evidence": [
+        "evidence/net-final-review.json",
+        "SECURITY.md: Networking query bounds, CAN teardown and APF"
+      ],
+      "patch_sha256": "a5b8e6df2e0601067ad003ef3e09dc000a612be7730c4b8afc2bfd7f3d55a268",
+      "changed_paths": [
+        "drivers/media/rc/bpf-lirc.c",
+        "drivers/net/netkit.c",
+        "include/linux/bpf-cgroup.h",
+        "include/linux/bpf-netns.h",
+        "include/linux/bpf.h",
+        "include/linux/bpf_lirc.h",
+        "include/linux/bpf_mprog.h",
+        "include/net/netkit.h",
+        "include/net/tcx.h",
+        "kernel/bpf/cgroup.c",
+        "kernel/bpf/mprog.c",
+        "kernel/bpf/net_namespace.c",
+        "kernel/bpf/syscall.c",
+        "kernel/bpf/tcx.c",
+        "net/core/sock_map.c"
+      ]
+    },
+    {
+      "commit": "bec0957f88fdd176f67bf3645407a236c85649b2",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "79035f77e9e311df154ac1fe4d7a708530f842a8"
+      ],
+      "rationale": "Retain ACK common APF generic-netlink UAPI, driver callback source API, handlers and generated policies, with the original specification/YNL dependency restored in 79035f77e9e3. No APF hardware driver or future platform is added. All eight commands require GENL_ADMIN_PERM; pre/post lock the netdev, unsupported callbacks return EOPNOTSUPP, request lengths/MAC/VLAN have policies, and native generic-netlink permission/namespace infrastructure remains. Registered drivers must validate RAM bounds and fully initialize read output; zeroed info is separate from the uninitialized read buffer. Whole-RAM size returned by a driver is not capped by the explicit-request S16 policy, and per-interface locking does not serialize a multi-command transaction or cross-interface shared device state. Preserve the common ACK configuration/source interface conservatively, recording necessity uncertainty: pinned Goldfish APF HAL uses an in-process memory buffer, NetworkStack JNI entry points return ENOSYS, and examined local kernel/virtual drivers have no provider. Those facts do not prove the common interface unnecessary. Specification and generated files exactly match local ACK; optional YNL regeneration failed for missing host jsonschema and no dependency or remote resource was fetched.",
+      "evidence": [
+        "evidence/net-final-review.json",
+        "SECURITY.md: Networking query bounds, CAN teardown and APF"
+      ],
+      "patch_sha256": "e21ae7986d2bba46f320fcb132da0044c374d614875e8333d7403d542c9dfb6e",
+      "changed_paths": [
+        "Documentation/netlink/specs/net_apf.yaml",
+        "include/linux/netdevice.h",
+        "include/net/apf.h",
+        "include/uapi/linux/net_apf.h",
+        "net/Kconfig",
+        "net/Makefile",
+        "net/apf/Kconfig",
+        "net/apf/Makefile",
+        "net/apf/apf_nl_gen.c",
+        "net/apf/apf_nl_gen.h",
+        "net/apf/core.c",
+        "tools/net/ynl/Makefile.deps"
+      ]
+    },
+    {
+      "commit": "4a1ebb4dbbcfe1be0fcf08551de20bba67db04fd",
+      "disposition": "partially-adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "79035f77e9e311df154ac1fe4d7a708530f842a8"
+      ],
+      "rationale": "Keep x86 CONFIG_NET_APF=y and the real configuration-guarded net_device_ops.apf_ops pointer for current common Android configuration/module source compatibility, with the uncertainty recorded in the APF API decision. Omit arm64-only configuration for the current x86 SDK. Omit all eight apf_ops reserve slots, KABI_USE union relocation and both architecture ABI dumps/allowed-break records: they solely preserve historical module binary layout. Final functional header equals bec0957f88fd before padding; native net_device_ops types otherwise remain. No hardware provider or future platform enabled.",
+      "evidence": [
+        "evidence/net-final-review.json",
+        "SECURITY.md: Networking query bounds, CAN teardown and APF"
+      ],
+      "patch_sha256": "60861c5ca58f6a701f83c0a7c7655461e209bb2c78d013e2979edcd80decd096",
+      "changed_paths": [
+        "arch/arm64/configs/gki_defconfig",
+        "arch/x86/configs/gki_defconfig",
+        "gki/aarch64/abi.stg",
+        "gki/aarch64/abi.stg.allowed_breaks",
+        "gki/x86_64/abi.stg",
+        "gki/x86_64/abi.stg.allowed_breaks",
+        "include/linux/netdevice.h",
+        "include/net/apf.h"
+      ]
+    },
+    {
+      "commit": "b516ce86b0ef102f2aafba0ee35ecb42d20ed0aa",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain documentation correction from milliseconds to microseconds for wiphy_nan_capa.max_channel_switch_time, matching the retained NL80211_NAN_CAPA_MAX_CHANNEL_SWITCH_TIME UAPI comment and unchanged u16 encoding. This documents an already retained common NAN capability API; it changes no units conversion, packet format or security boundary and introduces no extra hardware feature.",
+      "evidence": [
+        "evidence/net-final-review.json",
+        "SECURITY.md: Networking query bounds, CAN teardown and APF"
+      ],
+      "patch_sha256": "80b7dc4f104ce5da2f1fe7f07b136227982c5ce070d79843eb90eef0fb6e16d5",
+      "changed_paths": [
+        "include/net/cfg80211.h"
+      ]
+    }
+  ],
+  "equivalence": [
+    {
+      "path": "net/can/bcm.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "complete file exactly native LTS",
+      "sha256": "4da1ab342b534e04cbfb3f9ffe023f6e91f28a581222f8da9890961d7a0a5532"
+    },
+    {
+      "path": "drivers/net/ethernet/mellanox/mlx5/core/wc.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "complete file exactly native LTS",
+      "sha256": "d1ed0eebc71d001f7badd342a697fadaa665c63fd0e5c6053ba4ac29b50b7d62"
+    },
+    {
+      "path": "include/net/bluetooth/l2cap.h",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "complete file exactly native LTS",
+      "sha256": "29d5ef820194c37f6832079a1626f13dc6263fe848275d630128d0519dfbb4d1"
+    },
+    {
+      "path": "kernel/bpf/cgroup.c",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "complete file exactly native LTS",
+      "sha256": "2bd43fd6524275a439363769e7d5b3eab034308332db0e28bc8f038437ef4eb8"
+    },
+    {
+      "path": "include/linux/skmsg.h",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "complete file exactly native LTS",
+      "sha256": "cc1e39ca45ac1427a0c86cdcfeb0050f84d8117be24ab41d540a176bf0ddef7c"
+    },
+    {
+      "path": "include/linux/bpf-cgroup.h",
+      "reference": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+      "comparison": "complete file exactly native LTS",
+      "sha256": "03b01466284e18a0b1d91944e20b4ed2350243de3eb9051a02f6e0f489f37542"
+    },
+    {
+      "path": "net/bluetooth/l2cap_core.c",
+      "comparison": "complete file equals LTS after removal of one defensive NULL-conn predicate; all native refcount/FLAG_DEL and later fixes retained"
+    },
+    {
+      "path": "net/ipv4/tcp_bpf.c",
+      "comparison": "complete file equals LTS except the reviewed ioctl replacement"
+    },
+    {
+      "path": "kernel/bpf/mprog.c",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "comparison": "complete file exactly ACK",
+      "sha256": "5e6911c0540aea43913ad1654a9cbd8b68c168cb33b84d4f009ef8f66fe0431b"
+    },
+    {
+      "path": "include/linux/bpf_mprog.h",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "comparison": "complete file exactly ACK",
+      "sha256": "ec99ef8d6f4b67268ef85073ea9502e237274507f6bc79d4d2f619267f8cd39a"
+    },
+    {
+      "path": "net/apf/core.c",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "comparison": "complete file exactly ACK",
+      "sha256": "06c142c6cd321b1b3cd3d759b11265798112a27766a4c7ca0a5b2fc3d84aba72"
+    },
+    {
+      "path": "net/apf/apf_nl_gen.c",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "comparison": "complete file exactly ACK",
+      "sha256": "eb245aba542b7754cffd91aa5c5ca8197fe8b5f801a9d0cec30c0bf729232a9e"
+    },
+    {
+      "path": "net/apf/apf_nl_gen.h",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "comparison": "complete file exactly ACK",
+      "sha256": "acc8a653f32add49f7c3115305d806ce830f463113e2372fc8efbe1a42881a68"
+    },
+    {
+      "path": "net/apf/Kconfig",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "comparison": "complete file exactly ACK",
+      "sha256": "f7ec5a829f0743e74a3f8ecc5e80087bac17108a34daee99d8935396d6e8bb67"
+    },
+    {
+      "path": "net/apf/Makefile",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "comparison": "complete file exactly ACK",
+      "sha256": "5e13c00a05dc7913154995fc664edd0fca358e5f355936b5f7d7346a223d428b"
+    },
+    {
+      "path": "Documentation/netlink/specs/net_apf.yaml",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "comparison": "complete file exactly ACK",
+      "sha256": "46d026642ffbe0937012341803019fdc7e0e229d4632269b0345720c1744e582"
+    },
+    {
+      "path": "include/uapi/linux/net_apf.h",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "comparison": "complete file exactly ACK",
+      "sha256": "b0eb5c6ae7dcf68e21e560bb6186426f18eab4d8b73b380d44d6d08ed12734c8"
+    },
+    {
+      "path": "tools/net/ynl/Makefile.deps",
+      "reference": "23112ce1886ea26b19be03207c0227a06a6ca009",
+      "comparison": "complete file exactly ACK",
+      "sha256": "85470223c68675aaaedad670b76b5ddc2107fa3174cfafcaa146ca25393d9cca"
+    },
+    {
+      "path": "include/net/apf.h",
+      "reference": "bec0957f88fdd176f67bf3645407a236c85649b2",
+      "comparison": "original functional APF header, before KMI padding",
+      "sha256": "2b2cfe92551016aeb4578ef7313ea47c17d274ef3af76a2cf2b004ba816b5fb6"
+    },
+    {
+      "path": "drivers/media/rc/bpf-lirc.c",
+      "function": "lirc_prog_query",
+      "comparison": "native LTS after removing only uattr_size parameter/argument and whitespace",
+      "sha256": "9943a5b8e09bb39fed6eafc1e8797e4d8f69c2a068259f6881bfc4ba99bd000f"
+    },
+    {
+      "path": "drivers/net/netkit.c",
+      "function": "netkit_prog_query",
+      "comparison": "native LTS after removing only uattr_size parameter/argument and whitespace",
+      "sha256": "0ddb5d9d5c2cbee8feb8b1e26abcee400557dda566804d6d671769736d25f00a"
+    },
+    {
+      "path": "kernel/bpf/net_namespace.c",
+      "function": "netns_bpf_prog_query",
+      "comparison": "native LTS after removing only uattr_size parameter/argument and whitespace",
+      "sha256": "87a39ecc7676fd3a596a32edc2268e4f0c6c2936ca29bb73212045c662ce06b5"
+    },
+    {
+      "path": "kernel/bpf/net_namespace.c",
+      "function": "__netns_bpf_prog_query",
+      "comparison": "native LTS after removing only uattr_size parameter/argument and whitespace",
+      "sha256": "98f7219349a1b8cf726207e2849d328a93d9959ef8a403967015bb9d879623a4"
+    },
+    {
+      "path": "kernel/bpf/tcx.c",
+      "function": "tcx_prog_query",
+      "comparison": "native LTS after removing only uattr_size parameter/argument and whitespace",
+      "sha256": "5b36ee46be4e0ec56429514daa511992b82a68fecc248e9d5289fb112d1aa11a"
+    },
+    {
+      "path": "net/core/sock_map.c",
+      "function": "sock_map_bpf_prog_query",
+      "comparison": "native LTS after removing only uattr_size parameter/argument and whitespace",
+      "sha256": "990d10fe9655e21a3dd3a32207c0b81f068ff78d81b282a6216245c237a9f48c"
+    },
+    {
+      "path": "kernel/bpf/syscall.c",
+      "function": "bpf_prog_query",
+      "comparison": "native LTS after removing only uattr_size parameter/argument and whitespace",
+      "sha256": "fbe92158ee92825837549d872ab8e524c0c0e5441380cca4d9d37f101a112242"
+    }
+  ],
+  "deltas": [
+    {
+      "path": "net/can/bcm.c",
+      "lts_diff": ""
+    },
+    {
+      "path": "net/bluetooth/l2cap_core.c",
+      "lts_diff": "diff --git a/net/bluetooth/l2cap_core.c b/net/bluetooth/l2cap_core.c\nindex 7d4115603d08..cb6fbaac2c4f 100644\n--- a/net/bluetooth/l2cap_core.c\n+++ b/net/bluetooth/l2cap_core.c\n@@ -411,7 +411,7 @@ static void l2cap_chan_timeout(struct work_struct *work)\n \n \tBT_DBG(\"chan %p state %s\", chan, state_to_string(chan->state));\n \n-\tif (test_bit(FLAG_DEL, &chan->flags)) {\n+\tif (!conn || test_bit(FLAG_DEL, &chan->flags)) {\n \t\tl2cap_chan_put(chan);\n \t\treturn;\n \t}\n"
+    },
+    {
+      "path": "net/ipv4/tcp_bpf.c",
+      "lts_diff": "diff --git a/net/ipv4/tcp_bpf.c b/net/ipv4/tcp_bpf.c\nindex ca51756d8aa4..6027cd33a9fd 100644\n--- a/net/ipv4/tcp_bpf.c\n+++ b/net/ipv4/tcp_bpf.c\n@@ -334,6 +334,7 @@ static int tcp_bpf_recvmsg_parser(struct sock *sk,\n \n static int tcp_bpf_ioctl(struct sock *sk, int cmd, int *karg)\n {\n+\tstruct sk_psock *psock;\n \tbool slow;\n \n \tif (cmd != SIOCINQ)\n@@ -344,7 +345,21 @@ static int tcp_bpf_ioctl(struct sock *sk, int cmd, int *karg)\n \t\treturn -EINVAL;\n \n \tslow = lock_sock_fast(sk);\n-\t*karg = sk_psock_msg_inq(sk);\n+\tpsock = sk_psock_get(sk);\n+\tif (unlikely(!psock)) {\n+\t\tunlock_sock_fast(sk, slow);\n+\t\treturn tcp_ioctl(sk, cmd, karg);\n+\t}\n+\t*karg = sk_psock_get_msg_len_nolock(psock);\n+\t/* Without a verdict program, ingress data is never diverted to\n+\t * ingress_msg: it stays in sk_receive_queue and is read through\n+\t * the fallback to tcp_recvmsg(), so account for it like\n+\t * tcp_ioctl() does.\n+\t */\n+\tif (!READ_ONCE(psock->progs.stream_verdict) &&\n+\t    !READ_ONCE(psock->progs.skb_verdict))\n+\t\t*karg += tcp_inq(sk);\n+\tsk_psock_put(sk, psock);\n \tunlock_sock_fast(sk, slow);\n \n \treturn 0;\n"
+    },
+    {
+      "path": "kernel/bpf/mprog.c",
+      "lts_diff": "diff --git a/kernel/bpf/mprog.c b/kernel/bpf/mprog.c\nindex 1394168062e8..822d9c4c0db4 100644\n--- a/kernel/bpf/mprog.c\n+++ b/kernel/bpf/mprog.c\n@@ -393,7 +393,7 @@ int bpf_mprog_detach(struct bpf_mprog_entry *entry,\n }\n \n int bpf_mprog_query(const union bpf_attr *attr, union bpf_attr __user *uattr,\n-\t\t    struct bpf_mprog_entry *entry)\n+\t\t    u32 uattr_size, struct bpf_mprog_entry *entry)\n {\n \tu32 __user *uprog_flags, *ulink_flags;\n \tu32 __user *uprog_id, *ulink_id;\n@@ -413,7 +413,8 @@ int bpf_mprog_query(const union bpf_attr *attr, union bpf_attr __user *uattr,\n \t}\n \tif (copy_to_user(&uattr->query.attach_flags, &flags, sizeof(flags)))\n \t\treturn -EFAULT;\n-\tif (copy_to_user(&uattr->query.revision, &revision, sizeof(revision)))\n+\tif (uattr_size >= offsetofend(union bpf_attr, query.revision) &&\n+\t    copy_to_user(&uattr->query.revision, &revision, sizeof(revision)))\n \t\treturn -EFAULT;\n \tif (copy_to_user(&uattr->query.count, &count, sizeof(count)))\n \t\treturn -EFAULT;\n"
+    },
+    {
+      "path": "kernel/bpf/syscall.c",
+      "lts_diff": "diff --git a/kernel/bpf/syscall.c b/kernel/bpf/syscall.c\nindex 144d8b1183a9..dfd3ff1ab528 100644\n--- a/kernel/bpf/syscall.c\n+++ b/kernel/bpf/syscall.c\n@@ -45,6 +45,8 @@\n #include <net/netkit.h>\n #include <net/tcx.h>\n \n+#include <trace/hooks/syscall_check.h>\n+\n #define IS_FD_ARRAY(map) ((map)->map_type == BPF_MAP_TYPE_PERF_EVENT_ARRAY || \\\n \t\t\t  (map)->map_type == BPF_MAP_TYPE_CGROUP_ARRAY || \\\n \t\t\t  (map)->map_type == BPF_MAP_TYPE_ARRAY_OF_MAPS)\n@@ -4681,21 +4683,21 @@ static int bpf_prog_query(const union bpf_attr *attr,\n \tcase BPF_LSM_CGROUP:\n \t\treturn cgroup_bpf_prog_query(attr, uattr, uattr_size);\n \tcase BPF_LIRC_MODE2:\n-\t\treturn lirc_prog_query(attr, uattr);\n+\t\treturn lirc_prog_query(attr, uattr, uattr_size);\n \tcase BPF_FLOW_DISSECTOR:\n \tcase BPF_SK_LOOKUP:\n-\t\treturn netns_bpf_prog_query(attr, uattr);\n+\t\treturn netns_bpf_prog_query(attr, uattr, uattr_size);\n \tcase BPF_SK_SKB_STREAM_PARSER:\n \tcase BPF_SK_SKB_STREAM_VERDICT:\n \tcase BPF_SK_MSG_VERDICT:\n \tcase BPF_SK_SKB_VERDICT:\n-\t\treturn sock_map_bpf_prog_query(attr, uattr);\n+\t\treturn sock_map_bpf_prog_query(attr, uattr, uattr_size);\n \tcase BPF_TCX_INGRESS:\n \tcase BPF_TCX_EGRESS:\n-\t\treturn tcx_prog_query(attr, uattr);\n+\t\treturn tcx_prog_query(attr, uattr, uattr_size);\n \tcase BPF_NETKIT_PRIMARY:\n \tcase BPF_NETKIT_PEER:\n-\t\treturn netkit_prog_query(attr, uattr);\n+\t\treturn netkit_prog_query(attr, uattr, uattr_size);\n \tdefault:\n \t\treturn -EINVAL;\n \t}\n@@ -6175,6 +6177,8 @@ static int __sys_bpf(enum bpf_cmd cmd, bpfptr_t uattr, unsigned int size)\n \tif (copy_from_bpfptr(&attr, uattr, size) != 0)\n \t\treturn -EFAULT;\n \n+\ttrace_android_vh_check_bpf_syscall(cmd, &attr, size);\n+\n \terr = security_bpf(cmd, &attr, size, uattr.is_kernel);\n \tif (err < 0)\n \t\treturn err;\n@@ -6217,17 +6221,25 @@ static int __sys_bpf(enum bpf_cmd cmd, bpfptr_t uattr, unsigned int size)\n \t\terr = bpf_prog_query(&attr, uattr.user, size);\n \t\tbreak;\n \tcase BPF_PROG_TEST_RUN:\n+\t\tif (size < offsetofend(union bpf_attr, test.duration))\n+\t\t\treturn -EINVAL;\n \t\terr = bpf_prog_test_run(&attr, uattr.user);\n \t\tbreak;\n \tcase BPF_PROG_GET_NEXT_ID:\n+\t\tif (size < offsetofend(union bpf_attr, next_id))\n+\t\t\treturn -EINVAL;\n \t\terr = bpf_obj_get_next_id(&attr, uattr.user,\n \t\t\t\t\t  &prog_idr, &prog_idr_lock);\n \t\tbreak;\n \tcase BPF_MAP_GET_NEXT_ID:\n+\t\tif (size < offsetofend(union bpf_attr, next_id))\n+\t\t\treturn -EINVAL;\n \t\terr = bpf_obj_get_next_id(&attr, uattr.user,\n \t\t\t\t\t  &map_idr, &map_idr_lock);\n \t\tbreak;\n \tcase BPF_BTF_GET_NEXT_ID:\n+\t\tif (size < offsetofend(union bpf_attr, next_id))\n+\t\t\treturn -EINVAL;\n \t\terr = bpf_obj_get_next_id(&attr, uattr.user,\n \t\t\t\t\t  &btf_idr, &btf_idr_lock);\n \t\tbreak;\n@@ -6238,6 +6250,8 @@ static int __sys_bpf(enum bpf_cmd cmd, bpfptr_t uattr, unsigned int size)\n \t\terr = bpf_map_get_fd_by_id(&attr);\n \t\tbreak;\n \tcase BPF_OBJ_GET_INFO_BY_FD:\n+\t\tif (size < offsetofend(union bpf_attr, info.info_len))\n+\t\t\treturn -EINVAL;\n \t\terr = bpf_obj_get_info_by_fd(&attr, uattr.user);\n \t\tbreak;\n \tcase BPF_RAW_TRACEPOINT_OPEN:\n@@ -6250,22 +6264,32 @@ static int __sys_bpf(enum bpf_cmd cmd, bpfptr_t uattr, unsigned int size)\n \t\terr = bpf_btf_get_fd_by_id(&attr);\n \t\tbreak;\n \tcase BPF_TASK_FD_QUERY:\n+\t\tif (size < offsetofend(union bpf_attr, task_fd_query.probe_addr))\n+\t\t\treturn -EINVAL;\n \t\terr = bpf_task_fd_query(&attr, uattr.user);\n \t\tbreak;\n \tcase BPF_MAP_LOOKUP_AND_DELETE_ELEM:\n \t\terr = map_lookup_and_delete_elem(&attr);\n \t\tbreak;\n \tcase BPF_MAP_LOOKUP_BATCH:\n+\t\tif (size < offsetofend(union bpf_attr, batch.flags))\n+\t\t\treturn -EINVAL;\n \t\terr = bpf_map_do_batch(&attr, uattr.user, BPF_MAP_LOOKUP_BATCH);\n \t\tbreak;\n \tcase BPF_MAP_LOOKUP_AND_DELETE_BATCH:\n+\t\tif (size < offsetofend(union bpf_attr, batch.flags))\n+\t\t\treturn -EINVAL;\n \t\terr = bpf_map_do_batch(&attr, uattr.user,\n \t\t\t\t       BPF_MAP_LOOKUP_AND_DELETE_BATCH);\n \t\tbreak;\n \tcase BPF_MAP_UPDATE_BATCH:\n+\t\tif (size < offsetofend(union bpf_attr, batch.flags))\n+\t\t\treturn -EINVAL;\n \t\terr = bpf_map_do_batch(&attr, uattr.user, BPF_MAP_UPDATE_BATCH);\n \t\tbreak;\n \tcase BPF_MAP_DELETE_BATCH:\n+\t\tif (size < offsetofend(union bpf_attr, batch.flags))\n+\t\t\treturn -EINVAL;\n \t\terr = bpf_map_do_batch(&attr, uattr.user, BPF_MAP_DELETE_BATCH);\n \t\tbreak;\n \tcase BPF_LINK_CREATE:\n@@ -6278,6 +6302,8 @@ static int __sys_bpf(enum bpf_cmd cmd, bpfptr_t uattr, unsigned int size)\n \t\terr = bpf_link_get_fd_by_id(&attr);\n \t\tbreak;\n \tcase BPF_LINK_GET_NEXT_ID:\n+\t\tif (size < offsetofend(union bpf_attr, next_id))\n+\t\t\treturn -EINVAL;\n \t\terr = bpf_obj_get_next_id(&attr, uattr.user,\n \t\t\t\t\t  &link_idr, &link_idr_lock);\n \t\tbreak;\n@@ -6324,7 +6350,7 @@ static bool syscall_prog_is_valid_access(int off, int size,\n \treturn true;\n }\n \n-BPF_CALL_3(bpf_sys_bpf, int, cmd, union bpf_attr *, attr, u32, attr_size)\n+BPF_CALL_3(bpf_sys_bpf, int, cmd, union bpf_attr *, attr, u32, uattr_size)\n {\n \tswitch (cmd) {\n \tcase BPF_MAP_CREATE:\n@@ -6340,7 +6366,7 @@ BPF_CALL_3(bpf_sys_bpf, int, cmd, union bpf_attr *, attr, u32, attr_size)\n \tdefault:\n \t\treturn -EINVAL;\n \t}\n-\treturn __sys_bpf(cmd, KERNEL_BPFPTR(attr), attr_size);\n+\treturn __sys_bpf(cmd, KERNEL_BPFPTR(attr), uattr_size);\n }\n \n \n"
+    },
+    {
+      "path": "drivers/media/rc/bpf-lirc.c",
+      "lts_diff": "diff --git a/drivers/media/rc/bpf-lirc.c b/drivers/media/rc/bpf-lirc.c\nindex 2f7564f26445..86df2aa43379 100644\n--- a/drivers/media/rc/bpf-lirc.c\n+++ b/drivers/media/rc/bpf-lirc.c\n@@ -292,7 +292,8 @@ int lirc_prog_detach(const union bpf_attr *attr)\n \treturn ret;\n }\n \n-int lirc_prog_query(const union bpf_attr *attr, union bpf_attr __user *uattr)\n+int lirc_prog_query(const union bpf_attr *attr, union bpf_attr __user *uattr,\n+\t\t    u32 uattr_size)\n {\n \t__u32 __user *prog_ids = u64_to_user_ptr(attr->query.prog_ids);\n \tstruct bpf_prog_array *progs;\n"
+    },
+    {
+      "path": "drivers/net/netkit.c",
+      "lts_diff": "diff --git a/drivers/net/netkit.c b/drivers/net/netkit.c\nindex 492be60f2e70..03d461daf637 100644\n--- a/drivers/net/netkit.c\n+++ b/drivers/net/netkit.c\n@@ -597,7 +597,8 @@ int netkit_prog_detach(const union bpf_attr *attr, struct bpf_prog *prog)\n \treturn ret;\n }\n \n-int netkit_prog_query(const union bpf_attr *attr, union bpf_attr __user *uattr)\n+int netkit_prog_query(const union bpf_attr *attr, union bpf_attr __user *uattr,\n+\t\t      u32 uattr_size)\n {\n \tstruct net_device *dev;\n \tint ret;\n@@ -610,7 +611,7 @@ int netkit_prog_query(const union bpf_attr *attr, union bpf_attr __user *uattr)\n \t\tret = PTR_ERR(dev);\n \t\tgoto out;\n \t}\n-\tret = bpf_mprog_query(attr, uattr, netkit_entry_fetch(dev, false));\n+\tret = bpf_mprog_query(attr, uattr, uattr_size, netkit_entry_fetch(dev, false));\n out:\n \trtnl_unlock();\n \treturn ret;\n"
+    },
+    {
+      "path": "kernel/bpf/net_namespace.c",
+      "lts_diff": "diff --git a/kernel/bpf/net_namespace.c b/kernel/bpf/net_namespace.c\nindex 6599d771e481..39f21f1345cb 100644\n--- a/kernel/bpf/net_namespace.c\n+++ b/kernel/bpf/net_namespace.c\n@@ -239,7 +239,7 @@ static const struct bpf_link_ops bpf_netns_link_ops = {\n /* Must be called with netns_bpf_mutex held. */\n static int __netns_bpf_prog_query(const union bpf_attr *attr,\n \t\t\t\t  union bpf_attr __user *uattr,\n-\t\t\t\t  struct net *net,\n+\t\t\t\t  u32 uattr_size, struct net *net,\n \t\t\t\t  enum netns_bpf_attach_type type)\n {\n \t__u32 __user *prog_ids = u64_to_user_ptr(attr->query.prog_ids);\n@@ -263,7 +263,7 @@ static int __netns_bpf_prog_query(const union bpf_attr *attr,\n }\n \n int netns_bpf_prog_query(const union bpf_attr *attr,\n-\t\t\t union bpf_attr __user *uattr)\n+\t\t\t union bpf_attr __user *uattr, u32 uattr_size)\n {\n \tenum netns_bpf_attach_type type;\n \tstruct net *net;\n@@ -281,7 +281,7 @@ int netns_bpf_prog_query(const union bpf_attr *attr,\n \t\treturn PTR_ERR(net);\n \n \tmutex_lock(&netns_bpf_mutex);\n-\tret = __netns_bpf_prog_query(attr, uattr, net, type);\n+\tret = __netns_bpf_prog_query(attr, uattr, uattr_size, net, type);\n \tmutex_unlock(&netns_bpf_mutex);\n \n \tput_net(net);\n"
+    },
+    {
+      "path": "kernel/bpf/tcx.c",
+      "lts_diff": "diff --git a/kernel/bpf/tcx.c b/kernel/bpf/tcx.c\nindex efd987ea6872..5c0fc1b80af7 100644\n--- a/kernel/bpf/tcx.c\n+++ b/kernel/bpf/tcx.c\n@@ -119,7 +119,8 @@ void tcx_uninstall(struct net_device *dev, bool ingress)\n \t\ttcx_entry_free(entry);\n }\n \n-int tcx_prog_query(const union bpf_attr *attr, union bpf_attr __user *uattr)\n+int tcx_prog_query(const union bpf_attr *attr, union bpf_attr __user *uattr,\n+\t\t   u32 uattr_size)\n {\n \tbool ingress = attr->query.attach_type == BPF_TCX_INGRESS;\n \tstruct net *net = current->nsproxy->net_ns;\n@@ -132,7 +133,7 @@ int tcx_prog_query(const union bpf_attr *attr, union bpf_attr __user *uattr)\n \t\tret = -ENODEV;\n \t\tgoto out;\n \t}\n-\tret = bpf_mprog_query(attr, uattr, tcx_entry_fetch(dev, ingress));\n+\tret = bpf_mprog_query(attr, uattr, uattr_size, tcx_entry_fetch(dev, ingress));\n out:\n \trtnl_unlock();\n \treturn ret;\n"
+    },
+    {
+      "path": "net/core/sock_map.c",
+      "lts_diff": "diff --git a/net/core/sock_map.c b/net/core/sock_map.c\nindex ebe8e166b6a7..6918b916bce4 100644\n--- a/net/core/sock_map.c\n+++ b/net/core/sock_map.c\n@@ -1556,7 +1556,7 @@ static int sock_map_prog_update(struct bpf_map *map, struct bpf_prog *prog,\n }\n \n int sock_map_bpf_prog_query(const union bpf_attr *attr,\n-\t\t\t    union bpf_attr __user *uattr)\n+\t\t\t    union bpf_attr __user *uattr, u32 uattr_size)\n {\n \t__u32 __user *prog_ids = u64_to_user_ptr(attr->query.prog_ids);\n \tu32 prog_cnt = 0, flags = 0;\n"
+    }
+  ],
+  "local_userspace_evidence": [
+    {
+      "repository": "../grapheneos-17/packages/modules/NetworkStack",
+      "head": "22adb6f742fdf27f2a4a2d42db06be0e490f54e0",
+      "path": "jni/network_stack_utils_jni.cpp",
+      "sha256": "b58cc18fe5e44d284c1c981c4ed9d154df5fe20ea7e58aec2bbe4f1db602ffe7"
+    },
+    {
+      "repository": "../grapheneos-17/device/generic/goldfish",
+      "head": "5281db702f36e0e8c0af9e33d70b63d3ba4916ae",
+      "path": "wifi/wifi_hal/interface.cpp",
+      "sha256": "ba1f28a36d15f088c071507221a485ff18dc8a673c31d4669d65f12bab611efa"
+    },
+    {
+      "repository": "../grapheneos-17/packages/modules/Connectivity",
+      "head": "6ab5be47d49a3f93d424f195958dfaadec8a906c",
+      "path": "bpf/syscall_wrappers/include/BpfSyscallWrappers.h",
+      "sha256": "3a4357dd87df81b4321ee1539eed488e24a1947bc377c9c598d1118691988fa6"
+    }
+  ],
+  "tests": "evidence/net-query-test.json",
+  "optional_generator_check": {
+    "command": "python3 tools/net/ynl/pyynl/ynl_gen_c.py --mode kernel --source --spec Documentation/netlink/specs/net_apf.yaml -o /tmp/apf-gen-check.c",
+    "result": "Failed before generation: ModuleNotFoundError: jsonschema. No package installed or remote source accessed. Exact original source/spec equality used instead."
+  },
+  "limitations": [
+    "APF necessity beyond pinned HAL buffer remains unresolved; retained current common UAPI/configuration and module source infrastructure conservatively. No actual driver filtering verified.",
+    "Host tests use stubs, not real BPF, sockets, hardware or concurrency.",
+    "No remote URL opened; URLs in local commit messages are provenance only."
+  ],
+  "remote_sources_used": []
+}

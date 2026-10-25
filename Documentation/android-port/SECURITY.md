@@ -8663,3 +8663,68 @@ common modules and 45 virtual-device modules. All 145 signatures and module
 flag/CRC tables passed verification; the modified-payload control was rejected.
 All evidence was local;
 no remote resource or Android OS build/boot/flash was used.
+
+## Networking query bounds, CAN teardown and APF
+
+Eight decisions and 26 source comparisons are recorded in
+`evidence/net-final-review.json`. `3a910638e101` removes the incomplete ACK CAN
+RX_NO_AUTOTIMER fast-path guard. Native `cd830e0bc25e` already closes the rearming
+race by cancelling both timers in a workqueue after the RCU grace period, retaining
+the socket reference until that cancellation. The whole CAN BCM file now equals
+6.18.57, including subsequent RX locking, device lifetime and ANYDEV fixes.
+The guard alone was not a complete lifetime fix and also changed ordinary receive
+throttling when userspace disabled automatic timeout monitoring.
+
+Retain native L2CAP connection ownership and FLAG_DEL handling from
+`d3b739db5dc6`, plus every later LTS fix. Only the defensive NULL-connection check
+differs in the complete core file; it releases the timer's channel reference.
+Examined native timer scheduling attaches or checks the connection, so necessity
+of that extra predicate is unestablished. It does not protect stale non-NULL
+pointers. The mlx5 arm64 SIMD refactor is excluded by its explicit architecture
+guard; native source remains. The NAN capability comment correctly says
+microseconds, matching its UAPI encoding without changing runtime conversion.
+
+The native cgroup BPF query bounds fix `a7131340d0f9` is retained exactly. ACK's
+additional mprog revision-size guard remains with consistent internal query
+signatures. The upstream rationale explicitly distinguishes older cgroup callers
+from TCX/netkit, introduced with the revision field. The latter guard is defensive;
+it is not evidence of an old TCX binary requirement. The actual-function host test
+passes 564 count-query cases and detects 72 old revision writes beyond declared
+size without executing the invalid copies. It starts at the legacy count-field
+size and does not audit every undersized request or output array.
+
+The sockmap FIONREAD fix retains disjoint message and native TCP queue accounting,
+and unlocks before fallback when psock disappeared. The other file contents are
+native. The unused native inline helper remains to minimize unrelated header
+changes. All 288 host cases pass, covering verdict combinations, listen sockets,
+queue counts and lock/reference balance. SDK BPF_STREAM_PARSER is disabled, so
+the emulator workflow alone does not compile this optional function. Synthetic
+callbacks do not verify real socket races or BPF syscalls.
+
+Retain the common ACK APF UAPI, callback interface and enabled x86 configuration.
+`79035f77e9e3` includes the missing original netlink specification and YNL header
+dependency. The functional header equals the original APF introduction; padding,
+KABI union relocation, ABI snapshots and arm64 configuration are omitted. No
+hardware APF provider or future platform is added. Necessity remains uncertain:
+the pinned Goldfish HAL implements APF memory operations in-process, the examined
+NetworkStack JNI methods return ENOSYS, and no provider was found in the examined
+kernel/virtual drivers. Retention conservatively preserves the current common
+Android configuration and module source interface; absence of a consumer is not
+used as proof of dispensability.
+
+All eight APF commands require GENL_ADMIN_PERM and serialize per netdev. Native
+generic-netlink permissions and namespace handling remain. Attribute policies
+bound explicit request offsets/lengths, MAC addresses and VLAN tags. Driver
+callbacks must validate backing RAM bounds, initialize the entire read buffer and
+synchronize cross-interface/shared state. The whole-RAM size returned by a driver
+is not capped by the explicit-request S16 policy. Individual command locks do not
+make a multi-command transaction atomic. These are trusted-driver responsibilities,
+not established runtime guarantees. Missing callbacks return EOPNOTSUPP.
+
+The optional YNL regeneration attempt failed before generation because host Python
+lacks jsonschema. No dependency was downloaded; specification and generated files
+were instead compared exactly with local ACK. The original emulator build does
+not regenerate them. All sources in this review were local, and no remote URL was
+opened. Build 179 passed at `79035f77e9e3`, generating the image, 100 common
+modules and 45 virtual-device modules. All 145 module signatures and flag/CRC
+tables verified; the modified-payload signature control was rejected.
