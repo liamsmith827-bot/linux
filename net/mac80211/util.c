@@ -1740,7 +1740,8 @@ static int ieee80211_reconfig_nan(struct ieee80211_sub_if_data *sdata)
 
 	/* Now we can add all the NDIs to the driver */
 	list_for_each_entry(ndi_sdata, &local->interfaces, list) {
-		if (ndi_sdata->vif.type == NL80211_IFTYPE_NAN_DATA) {
+		if (ndi_sdata->vif.type == NL80211_IFTYPE_NAN_DATA &&
+		    ieee80211_sdata_running(ndi_sdata)) {
 			res = drv_add_interface(local, ndi_sdata);
 			if (WARN_ON(res))
 				return res;
