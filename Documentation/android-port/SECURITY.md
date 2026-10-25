@@ -9191,3 +9191,33 @@ a tampered-payload control was rejected. The protected-export and parallel
 symbol/flag/CRC table checks also passed. No boot, flash, OS build or runtime
 compatibility test was performed. This build covers the source changes above;
 subsequent audit edits are documentation only.
+
+## Reverted I/O, VMA and configuration detours
+
+The 20 decisions in `evidence/revert-tail-review.json` cover ten pairs of reverted
+changes. Nine pairs have exactly inverse changed lines. For the iovec refactor,
+Git selected different closing-brace context; applying the later lib/iov_iter.c
+patch to the earlier reverted blob reconstructs its original contents exactly.
+The other files in that pair have inverse ordered additions and deletions.
+These checks establish cancellation without assuming that matching titles suffice.
+
+Current native iovec import, compat declarations and syscall tables remain intact,
+including compat element sizing, user-access checks, length/count limits and the
+single-buffer path. The read/write and splice files match LTS after only their
+separately reviewed export annotations are normalized. Obsolete duplicate compat
+syscalls and SET_FS address-limit switching are not restored. The process_vm_rw
+hook remains after successful mm_access; it cannot bypass that permission failure.
+IA32 compatibility is configured, but no compat syscall runtime test was run.
+
+The temporary __vma_adjust restoration was also reverted. Current native VMA
+prepare/complete, merge, expand and shrink functions are retained exactly; the
+old reported Zygote failure is not claimed reproduced or runtime-tested here.
+Native CFI compiler and Rust-version gates remain exact, including the LLVM
+190103 requirement where applicable; no historical expert override or relaxed
+toolchain threshold is restored. CFI remains enabled in the delivered build.
+
+The UID_SYS_STATS disable/re-enable pair leaves Android accounting enabled. The
+current source positively connects do_exit, profile_task_exit, the task-exit
+notifier chain and the registered UID accounting callback. Its temporary BROKEN
+gate is absent. This confirms the static notification path, not runtime accounting
+accuracy. No additional remote resource was accessed.
