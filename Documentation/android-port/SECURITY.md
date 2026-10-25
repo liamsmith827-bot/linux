@@ -8296,3 +8296,58 @@ success too. This supports the retained configured lifecycle; it adds no physica
 platform support. No link, suspend, encryption or radio runtime test was run.
 Build 170 covers the unchanged implementation source and generated artifacts.
 All source comparisons and consumer searches used only the pinned local trees.
+
+## NAN configuration and regulatory validation
+
+Twelve decisions are recorded in `evidence/nan-validation-review.json`. The
+configured mac80211/hwsim path implements NAN and NAN_DATA, and the pinned Android
+supplicant contains management, station and schedule consumers. The SDK radio
+creation source establishes hwsim use, P2P and optional ranging; it does not prove
+that NAN is selected. Retain these shared source/userspace interfaces conservatively
+and record that uncertainty. No physical platform is enabled by these decisions.
+
+Keep offloaded-discovery callback guards for USERSPACE_DE drivers, the non-netdev
+NAN/P2P opencount guards, and clearing cluster membership on stop. The stop function
+otherwise equals native LTS, including 7a22cbc6c6bd ranging cleanup and schedule
+cancellation. Netdev notifier accounting and non-netdev stop accounting remain
+separate; no runtime proof of vendor netdev-backed NAN teardown is claimed.
+
+Keep the owned six-byte cluster ID, avoiding separate allocation and pointer
+lifetime. Start may supply an ID; full change requests ignore it, and mac80211
+retains an established cluster. The split hwsim start consumes the resulting
+array. ACK's default generator was skipped when the entire optional NAN_CONFIG
+attribute was omitted, passing an all-zero ID. Adaptation ca0c99fea3a0 moves default
+generation after optional configuration and channel validation. Explicit prefix
+and length validation remain, changes do not generate IDs, and no cryptographic
+strength is attributed to the identifier's random 16-bit suffix. The extracted
+parser and actual configuration structures pass 384 ASan/UBSan cases; the ACK
+control reproduces 22 missing-default failures. Netlink policy traversal, nested
+band iteration, RNG quality, driver I/O and runtime are outside that host test.
+
+Keep NAN's DFS-required calculation and configured-channel validation. The shared
+native beacon helper still permits its already-DFS-available exception: neither
+the candidate title nor compilation proves an unconditional ban on every
+DFS-marked channel or complete regulatory compliance. ACK's reg_wdev_chan_valid
+returned early for every interface without a netdev, skipping the new NAN check.
+SDK mac80211 explicitly allocates NAN in that form. Adaptation e36ec95a20b3 handles
+NAN first and checks wdev_running, preserving the existing guard and body for
+other interface types. Invalid channels feed the existing RTNL/wiphy-locked leave
+path and dependent closure. The actual function passes 640 NAN cases and 57,344
+non-NAN return/callback-trace comparisons under ASan/UBSan; ACK misses 128 NAN
+checks. Radio behavior, regulatory database semantics and concurrency are not
+simulated by these shims. This does not certify all vendor netdev-backed stop paths.
+
+Keep separate band-agnostic HT/VHT/HE NAN capabilities, checked serialization,
+mandatory HT, and rejection of unsupported multi-radio NAN_DATA. The current hwsim
+registers these capabilities when requested. NAN_DATA reception accepts the
+required zero ToDS/FromDS form while the conversion function otherwise matches
+native LTS. Protected-dual action TX retains existing frame checks and requires
+the secure-NAN or userspace-DE interface capability. Capability advertisement is
+not independent proof of encryption. NAN_DATA keys are restricted to CCMP-128 or
+GCMP-256, keeping native index, pairwise/address, length, sequence and supported
+cipher checks; all validator callers pass the device context. Ordinary interface
+cipher choices are unchanged. No historical binary layout or module ABI is kept.
+
+The regression tests and source comparisons are recorded; full workflow build
+verification for both adaptations is pending. All sources used here are local.
+Commit-message remote URLs were read as local text and were not accessed.

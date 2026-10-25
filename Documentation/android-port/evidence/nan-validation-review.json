@@ -1,0 +1,351 @@
+{
+  "source_head": "ca0c99fea3a066b6b2ea68cbd7a2133a83074a03",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "records": [
+    {
+      "commit": "81399bf5a272d5a99740e88077ab85090bc1cdc5",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain non-netdev guards around NAN/P2P stop in leave_locked: netdev notifier accounting must not also incur the non-netdev opencount decrement, which can prevent unregister completion. SDK mac80211 allocates NAN/P2P without netdevs; preserve the generic shared driver API for either representation without importing a physical driver. cfg80211_leave_locked equals final ACK including native radar/ranging cleanup. This is not a claim that every netdev-backed vendor NAN teardown path has been runtime validated.",
+      "evidence": [
+        "evidence/nan-validation-review.json",
+        "SECURITY.md: NAN configuration and regulatory validation"
+      ],
+      "patch_sha256": "4bd8c619206d7f80f65ddfb6204b776f21d3aa059c2d0d79bfe6d3e623e721d6",
+      "changed_paths": [
+        "net/wireless/core.c"
+      ]
+    },
+    {
+      "commit": "4a0ac99f65a819fa7ad9ad8e72fff54c9a8d9614",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain WARN-and-return when offloaded-discovery-engine NAN match/function-termination callbacks are called by USERSPACE_DE drivers. Actual hwsim capability registration advertises USERSPACE_DE, so preserving the API distinction avoids treating userspace-managed function identifiers as offloaded IDs. Both callbacks otherwise equal native LTS; no radio discovery runtime is claimed.",
+      "evidence": [
+        "evidence/nan-validation-review.json",
+        "SECURITY.md: NAN configuration and regulatory validation"
+      ],
+      "patch_sha256": "90e07b00c5e91c6444152a1afccb44a7f8a76afed6afbabc9d971281a2639528",
+      "changed_paths": [
+        "net/wireless/nl80211.c"
+      ]
+    },
+    {
+      "commit": "2086d64c4588a440403e92500831db6e4e74a451",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain clearing the stored cluster ID on NAN stop to prevent stale membership being reported/reused. Current cfg80211_stop_nan equals native LTS after removing only eth_zero_addr, preserving native 7a22cbc6c6bd ranging cleanup and native schedule cancellation. Retain final ACK schedule lifecycle without claiming runtime teardown coverage.",
+      "evidence": [
+        "evidence/nan-validation-review.json",
+        "SECURITY.md: NAN configuration and regulatory validation"
+      ],
+      "patch_sha256": "489b7e6478ee15987ae5d9af85e96a11e7bee7f854f6cfe1145807103ab76b82",
+      "changed_paths": [
+        "net/wireless/core.c"
+      ]
+    },
+    {
+      "commit": "f80f3291d8024f6bff9b13c23095b394106fe8d4",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "ca0c99fea3a066b6b2ea68cbd7a2133a83074a03"
+      ],
+      "rationale": "Retain start/change distinction so cluster ID in full CHANGE_NAN_CONFIG messages is ignored after joining. Follow-on ca5eb7b18524 replaces pointer storage with owned six-byte array; native band/channel and nested validation remain. Adapt missing-config default initialization in ca0c99fea3a0, with start/change regression coverage. This avoids silently changing an established cluster while preserving the full-configuration userspace request format.",
+      "evidence": [
+        "evidence/nan-validation-review.json",
+        "SECURITY.md: NAN configuration and regulatory validation"
+      ],
+      "patch_sha256": "6b329b63ae94f2c48e789a90b74267502a7cb28a0437637b67084aaf00363fa1",
+      "changed_paths": [
+        "include/uapi/linux/nl80211.h",
+        "net/wireless/nl80211.c"
+      ]
+    },
+    {
+      "commit": "b3baa087639c9ff30c0fbef9ed4068919de21f5c",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain NAN in the DFS-required calculation, with native width/validity checks, so beacon/channel selection consults radar restrictions for NAN. This is the actual code effect: the shared beacon helper still has the native already-DFS-available exception, so the commit title is not evidence of an unconditional prohibition of every DFS-marked channel. Keep that native behavior and do not claim complete regulatory compliance from compilation. NAN_DATA and PD continue to have no independent DFS initiation in this helper.",
+      "evidence": [
+        "evidence/nan-validation-review.json",
+        "SECURITY.md: NAN configuration and regulatory validation"
+      ],
+      "patch_sha256": "7109754155d5199f67d5f6c24213653ec13603cfe807cde5432a2096fc8343e3",
+      "changed_paths": [
+        "net/wireless/chan.c"
+      ]
+    },
+    {
+      "commit": "ca5eb7b18524fa85575bb6e2418529506cee08b0",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "ca0c99fea3a066b6b2ea68cbd7a2133a83074a03"
+      ],
+      "rationale": "Retain owned six-byte aligned cluster ID and removal of separate cluster allocation/free. Copy it into mac80211 only when no current cluster is established; current split hwsim start copies that array instead of the historical global-cluster fallback. Adapt central default generation to cover absence of the entire optional NAN_CONFIG attribute, which ACK skipped and thus supplied all zeroes to hwsim. Preserve validated explicit prefix/length and ignore changes after start. Actual parser test reproduces 22 missing-default failures in ACK and none in the port. No cryptographic strength is attributed to this 16-bit cluster identifier.",
+      "evidence": [
+        "evidence/nan-validation-review.json",
+        "SECURITY.md: NAN configuration and regulatory validation"
+      ],
+      "patch_sha256": "7aab01fabaa806b4f931953e2e68cf7fc8595d4caa535f42f6be0e96fd9f2945",
+      "changed_paths": [
+        "drivers/net/wireless/virtual/mac80211_hwsim.c",
+        "include/net/cfg80211.h",
+        "net/mac80211/cfg.c",
+        "net/wireless/nl80211.c"
+      ]
+    },
+    {
+      "commit": "7ad732258cf9ba793fa2c3702a067c83f249e486",
+      "disposition": "adapted",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+        "e36ec95a20b3bdb7b8d12a2058ad6194508f1d29"
+      ],
+      "rationale": "Retain checks of every configured NAN chandef, but move the NAN case before the generic netdev guard and use wdev_running. ACK otherwise silently skips active non-netdev NAN, exactly how SDK mac80211 allocates NAN interfaces. Native non-NAN code remains intact. Invalid channels feed existing RTNL/wiphy-locked leave processing and dependent-interface closure; this is a focused validation fix, not proof of every vendor netdev-backed NAN shutdown path. Actual function tests cover 640 NAN cases and 57344 non-NAN equivalence cases; ACK misses 128 checks, adapted source passes.",
+      "evidence": [
+        "evidence/nan-validation-review.json",
+        "SECURITY.md: NAN configuration and regulatory validation"
+      ],
+      "patch_sha256": "6245a6c6a72690deee2a66f7d865a3b4d0e829cb89de3ba232948c0749211e8e",
+      "changed_paths": [
+        "net/wireless/reg.c"
+      ]
+    },
+    {
+      "commit": "65d718621ced534e970b2ea05312160c67f3e5e0",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain band-agnostic NAN PHY capabilities, checked netlink serialization and mandatory HT requirement for NAN_DATA. Actual hwsim fills the separate HT/VHT/HE sets when requested; optional VHT/HE are emitted only when supported. Avoid reinterpreting per-band station caps as cross-band NAN caps. Native ordinary band capability reporting remains. Exact SDK NAN radio selection is not established; conservatively retain this configured source/userspace interface, not a future physical platform.",
+      "evidence": [
+        "evidence/nan-validation-review.json",
+        "SECURITY.md: NAN configuration and regulatory validation"
+      ],
+      "patch_sha256": "d7f1dd53cd001ce83148ed72e14855a09bea381fd5812edf549dd30a26c79c72",
+      "changed_paths": [
+        "include/net/cfg80211.h",
+        "include/uapi/linux/nl80211.h",
+        "net/wireless/core.c",
+        "net/wireless/nl80211.c"
+      ]
+    },
+    {
+      "commit": "6d359cf6b25adeea3d4f5b73c0ee4d689e21ba63",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain allowing ToDS=0/FromDS=0 data on NAN_DATA. The full conversion function otherwise exactly matches native LTS after removing this extra interface type and its indentation correction, preserving native header-length, address, multicast and payload conversion checks. This is the framing used by the retained hwsim/mac80211 NAN data path; it does not loosen other interface types or independently authenticate a frame.",
+      "evidence": [
+        "evidence/nan-validation-review.json",
+        "SECURITY.md: NAN configuration and regulatory validation"
+      ],
+      "patch_sha256": "62e905c3e88ca5e5555c046bea7903f59a0889d509b634686a3e74feab954571",
+      "changed_paths": [
+        "net/wireless/util.c"
+      ]
+    },
+    {
+      "commit": "d626b5524ffe5f69678e27c09a82870bde5beaca",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain protected-dual-of-public action TX on NAN/NAN_DATA and add NAN_DATA to existing management-register/TX feature gates. SECURE_NAN or USERSPACE_DE is still required; action category restrictions, frame-length/source-address/subtype checks remain. Full management TX function equals native apart from the explicit new interface cases, including the separately retained PD rejection case. hwsim advertises both relevant features when configured; Android supplicant has NAN management consumers. No claim that capability advertisement alone supplies cryptographic protection.",
+      "evidence": [
+        "evidence/nan-validation-review.json",
+        "SECURITY.md: NAN configuration and regulatory validation"
+      ],
+      "patch_sha256": "f53c4e1ad63eef13e437ab733f649bc2fe730bd615887d2d9d32286e5b9be1e2",
+      "changed_paths": [
+        "net/wireless/mlme.c",
+        "net/wireless/nl80211.c"
+      ]
+    },
+    {
+      "commit": "3ad9926a5d177675fe818af93dcb3451532c3165",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain NAN_DATA cipher restriction to CCMP-128 or GCMP-256 and pass wdev through all validator callers, including WEXT and cached connection keys. Other key index, pairwise/address, length, sequence and cipher-support checks remain; LTF seed validation is separately audited. This tightens the newly retained NAN data interface without changing the cipher whitelist for ordinary station/AP interfaces. Source/API changes support configured hwsim/mac80211 and Android NAN station/key paths; no live encrypted data exchange is claimed.",
+      "evidence": [
+        "evidence/nan-validation-review.json",
+        "SECURITY.md: NAN configuration and regulatory validation"
+      ],
+      "patch_sha256": "f63aa03f8553b9a6bec81452631f27c6932604c6f168581c57b0f5acac4a6387",
+      "changed_paths": [
+        "net/wireless/core.h",
+        "net/wireless/nl80211.c",
+        "net/wireless/util.c",
+        "net/wireless/wext-compat.c"
+      ]
+    },
+    {
+      "commit": "7da8941b87821272c31cc42b9970944dd1e601dd",
+      "disposition": "applied-net-state",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "rationale": "Retain wiphy registration rejection of NAN_DATA on devices with more than one radio, alongside required NAN HT support. Existing NAN interface-combination handling is single-radio; accepting unsupported multi-radio topologies would exceed validated invariants. The SDK hwsim implementation does not require removing this guard. No future multi-radio platform enablement is included.",
+      "evidence": [
+        "evidence/nan-validation-review.json",
+        "SECURITY.md: NAN configuration and regulatory validation"
+      ],
+      "patch_sha256": "cc5a0b32d1bb692034d9d52bcf63bfaef94bddb3194522764799739afb31dd64",
+      "changed_paths": [
+        "net/wireless/core.c"
+      ]
+    }
+  ],
+  "function_equivalence": [
+    {
+      "path": "net/wireless/core.c",
+      "function": "cfg80211_leave_locked",
+      "equals": "ACK",
+      "sha256": "3785b4d94df7fce19e365de5cae16b84ebbc2106d99e6bac2b9751cc67ac241e"
+    },
+    {
+      "path": "net/wireless/core.c",
+      "function": "cfg80211_leave",
+      "equals": "ACK",
+      "sha256": "24bc39f604862e4fa70813e62d9a103f186e9b16310daf2e0c6c7ebb6e54f0b6"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "cfg80211_nan_match",
+      "equals": "ACK",
+      "sha256": "eb16393ec4420c72027ac0f589d638d6a5755e6c84a49c4a1b342d3b2a78dee8"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "cfg80211_nan_func_terminated",
+      "equals": "ACK",
+      "sha256": "cab502372a8a63d1af658564e26f533a8bde806073d19249a517337c91ecfce1"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "nl80211_put_nan_phy_cap",
+      "equals": "ACK",
+      "sha256": "3a33a663b3f7b921315ffe78485f2839f7c499456f273cce35dd3d19388ee2ee"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "nl80211_register_mgmt",
+      "equals": "ACK",
+      "sha256": "0f9669bd5cde59c0105413a8ba41885df126acaaad17abc8ccf63235daa2c146"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "nl80211_tx_mgmt",
+      "equals": "ACK",
+      "sha256": "d45daeb68173dba0e8b105d6ef723b4c3320a0c3e309ffc58752cafda64a72e2"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "validate_nan_cluster_id",
+      "equals": "ACK",
+      "sha256": "c7bf8eeeba47aa8c5a606e3c7543f7296d237e378b4ee8994d66ccdd09a0b9df"
+    },
+    {
+      "path": "net/wireless/chan.c",
+      "function": "cfg80211_chandef_dfs_required",
+      "equals": "ACK",
+      "sha256": "056f52ab83983e6ebc84ab67b6d0c8ab3d21dc3383877abf0d84821ca2b8a0e2"
+    },
+    {
+      "path": "net/mac80211/cfg.c",
+      "function": "ieee80211_nan_conf_free",
+      "equals": "ACK",
+      "sha256": "e7b4232c1b80811688f6e863ada10f3896eaf049a9b6a0eb1b44f9904494727a"
+    },
+    {
+      "path": "net/mac80211/cfg.c",
+      "function": "ieee80211_nan_conf_copy",
+      "equals": "ACK",
+      "sha256": "3bfd20eea470da17402e48b9e53fb56745683bea54239359315eee9a4bae6a75"
+    },
+    {
+      "path": "net/wireless/util.c",
+      "function": "ieee80211_data_to_8023_exthdr",
+      "equals": "ACK",
+      "sha256": "134cc2286632ef8e31a8beab15486fca6b35e1d0954510b35a06b4ef8a3ccc56"
+    },
+    {
+      "path": "net/wireless/util.c",
+      "function": "cfg80211_validate_key_settings",
+      "equals": "ACK",
+      "sha256": "1161e575b2ddbc38793f758d56ce3e13acd43e7e49c1e28d21383117e2f7773b"
+    },
+    {
+      "path": "net/wireless/mlme.c",
+      "function": "cfg80211_mlme_mgmt_tx",
+      "equals": "ACK",
+      "sha256": "547b908411701f1abb21db59778ae49d883fc3de87fefa7307582c7aca1fd839"
+    },
+    {
+      "path": "drivers/net/wireless/virtual/mac80211_hwsim_nan.c",
+      "function": "mac80211_hwsim_nan_start",
+      "equals": "ACK",
+      "sha256": "469adb974362d4518e32c89f9ba55aacaa92280b2bd84fbee9a9e61f07b97b2a"
+    }
+  ],
+  "native_function_deltas": [
+    {
+      "path": "net/wireless/reg.c",
+      "function": "reg_wdev_chan_valid",
+      "native_to_port_diff": "--- LTS\n+++ port\n@@ -7,6 +7,21 @@\n \tint link;\n \n \tiftype = wdev->iftype;\n+\n+\t/* NAN doesn't have links, handle it separately */\n+\tif (iftype == NL80211_IFTYPE_NAN) {\n+\t\tif (!wdev_running(wdev))\n+\t\t\treturn true;\n+\n+\t\tfor (int i = 0; i < wdev->u.nan.n_channels; i++) {\n+\t\t\tret = cfg80211_reg_can_beacon(wiphy,\n+\t\t\t\t\t\t      &wdev->u.nan.chandefs[i],\n+\t\t\t\t\t\t      NL80211_IFTYPE_NAN);\n+\t\t\tif (!ret)\n+\t\t\t\treturn false;\n+\t\t}\n+\t\treturn true;\n+\t}\n \n \t/* make sure the interface is active */\n \tif (!wdev->netdev || !netif_running(wdev->netdev))\n@@ -61,8 +76,11 @@\n \t\t\t\tcontinue;\n \t\t\tchandef = wdev->u.ocb.chandef;\n \t\t\tbreak;\n-\t\tcase NL80211_IFTYPE_NAN:\n-\t\t\t/* we have no info, but NAN is also pretty universal */\n+\t\tcase NL80211_IFTYPE_NAN_DATA:\n+\t\t\t/* NAN channels are checked in NL80211_IFTYPE_NAN interface */\n+\t\t\tbreak;\n+\t\tcase NL80211_IFTYPE_PD:\n+\t\t\t/* we have no info, but PD is also pretty universal */\n \t\t\tcontinue;\n \t\tdefault:\n \t\t\t/* others not implemented for now */\n"
+    },
+    {
+      "path": "net/wireless/nl80211.c",
+      "function": "nl80211_parse_nan_conf",
+      "native_to_port_diff": "--- LTS\n+++ port\n@@ -1,7 +1,8 @@\n static int nl80211_parse_nan_conf(struct wiphy *wiphy,\n \t\t\t\t  struct genl_info *info,\n \t\t\t\t  struct cfg80211_nan_conf *conf,\n-\t\t\t\t  u32 *changed_flags)\n+\t\t\t\t  u32 *changed_flags,\n+\t\t\t\t  bool start)\n {\n \tstruct nlattr *attrs[NL80211_NAN_CONF_ATTR_MAX + 1];\n \tint err, rem;\n@@ -48,9 +49,9 @@\n \t\treturn err;\n \n \tchanged |= CFG80211_NAN_CONF_CHANGED_CONFIG;\n-\tif (attrs[NL80211_NAN_CONF_CLUSTER_ID])\n-\t\tconf->cluster_id =\n-\t\t\tnla_data(attrs[NL80211_NAN_CONF_CLUSTER_ID]);\n+\tif (attrs[NL80211_NAN_CONF_CLUSTER_ID] && start)\n+\t\tether_addr_copy(conf->cluster_id,\n+\t\t\t\tnla_data(attrs[NL80211_NAN_CONF_CLUSTER_ID]));\n \n \tif (attrs[NL80211_NAN_CONF_EXTRA_ATTRS]) {\n \t\tconf->extra_nan_attrs =\n@@ -133,6 +134,15 @@\n \t\t}\n \t}\n \n+\t/* NAN_CONFIG itself is optional, so initialize the default here. */\n+\tif (start && is_zero_ether_addr(conf->cluster_id)) {\n+\t\tconf->cluster_id[0] = 0x50;\n+\t\tconf->cluster_id[1] = 0x6f;\n+\t\tconf->cluster_id[2] = 0x9a;\n+\t\tconf->cluster_id[3] = 0x01;\n+\t\tget_random_bytes(&conf->cluster_id[4], 2);\n+\t}\n+\n \tif (changed_flags)\n \t\t*changed_flags = changed;\n \n"
+    },
+    {
+      "path": "net/wireless/util.c",
+      "function": "ieee80211_data_to_8023_exthdr",
+      "native_to_port_diff": "--- LTS\n+++ port\n@@ -54,8 +54,9 @@\n \tcase cpu_to_le16(0):\n \t\tif (iftype != NL80211_IFTYPE_ADHOC &&\n \t\t    iftype != NL80211_IFTYPE_STATION &&\n-\t\t    iftype != NL80211_IFTYPE_OCB)\n-\t\t\t\treturn -1;\n+\t\t    iftype != NL80211_IFTYPE_OCB &&\n+\t\t    iftype != NL80211_IFTYPE_NAN_DATA)\n+\t\t\treturn -1;\n \t\tbreak;\n \t}\n \n"
+    },
+    {
+      "path": "net/wireless/chan.c",
+      "function": "cfg80211_chandef_dfs_required",
+      "native_to_port_diff": "--- LTS\n+++ port\n@@ -13,6 +13,7 @@\n \tcase NL80211_IFTYPE_AP:\n \tcase NL80211_IFTYPE_P2P_GO:\n \tcase NL80211_IFTYPE_MESH_POINT:\n+\tcase NL80211_IFTYPE_NAN:\n \t\twidth = cfg80211_chandef_get_width(chandef);\n \t\tif (width < 0)\n \t\t\treturn -EINVAL;\n@@ -27,7 +28,8 @@\n \tcase NL80211_IFTYPE_MONITOR:\n \tcase NL80211_IFTYPE_AP_VLAN:\n \tcase NL80211_IFTYPE_P2P_DEVICE:\n-\tcase NL80211_IFTYPE_NAN:\n+\tcase NL80211_IFTYPE_NAN_DATA:\n+\tcase NL80211_IFTYPE_PD:\n \t\tbreak;\n \tcase NL80211_IFTYPE_WDS:\n \tcase NL80211_IFTYPE_UNSPECIFIED:\n"
+    },
+    {
+      "path": "net/wireless/mlme.c",
+      "function": "cfg80211_mlme_mgmt_tx",
+      "native_to_port_diff": "--- LTS\n+++ port\n@@ -84,12 +84,18 @@\n \t\t\t * cfg80211 doesn't track the stations\n \t\t\t */\n \t\t\tbreak;\n+\t\tcase NL80211_IFTYPE_NAN:\n+\t\tcase NL80211_IFTYPE_NAN_DATA:\n+\t\t\tif (mgmt->u.action.category !=\n+\t\t\t    WLAN_CATEGORY_PROTECTED_DUAL_OF_ACTION)\n+\t\t\t\terr = -EOPNOTSUPP;\n+\t\t\tbreak;\n \t\tcase NL80211_IFTYPE_P2P_DEVICE:\n \t\t\t/*\n \t\t\t * fall through, P2P device only supports\n \t\t\t * public action frames\n \t\t\t */\n-\t\tcase NL80211_IFTYPE_NAN:\n+\t\tcase NL80211_IFTYPE_PD:\n \t\tdefault:\n \t\t\terr = -EOPNOTSUPP;\n \t\t\tbreak;\n"
+    }
+  ],
+  "native_stop_preservation": "cfg80211_stop_nan equals LTS after removing only cluster ID zeroing; equals ACK after removing only native 7a22cbc6c6bd cfg80211_pmsr_wdev_down call.",
+  "tests": [
+    "evidence/nan-regulatory-test.json",
+    "evidence/nan-config-test.json"
+  ],
+  "local_consumer_evidence": [
+    "net/mac80211/iface.c:ieee80211_if_add explicitly allocates NAN without a netdev.",
+    "drivers/net/wireless/virtual/mac80211_hwsim_main.c registers USERSPACE_DE/SECURE_NAN and NAN_DATA PHY capabilities when requested; mac80211_hwsim_nan.c consumes the cluster array.",
+    "Pinned external/wpa_supplicant_8/src/drivers/driver_nl80211.c excludes NAN from netdev types, supports NAN/NAN_DATA management and station creation and local/peer schedule commands. Exact CONFIG_NAN shipping use is unverified.",
+    "Pinned device/generic/goldfish/wifi/mac80211_create_radios/main.cpp builds HWSIM_CMD_NEW_RADIO with P2P and optional PMSR. Its shown construction does not establish NAN selection; do not equate P2P with NAN or use this uncertainty to omit the shared configured API."
+  ],
+  "limitations": "Source checks and host tests do not establish radio compliance, encryption, locking/concurrency, vendor netdev-backed NAN lifecycle, or emulator runtime. Shared beacon helper retains native already-DFS-available exception. Build 171 covers e36ec95a20b3 only; build for additional ca0c99fea3a0 config fix is pending.",
+  "remote_sources_used": [],
+  "scan_bounds_witness_migration": {
+    "candidate": "b293dda1a4ca499cee77c8963626e52731982aee",
+    "native": "9c46a3a5b394d6d123866aa44436fc2cd342eb0d",
+    "extracted_function_sha256": "692dfa0bb19e089b41898889c34067fbbea2192adc835b522db3d4abf2e719b9",
+    "proof": "Ordered patch edits exactly equal; native commit is LTS ancestor; entire current scan parser equals native. Former whole-file witness invalidated by unrelated NAN change. Existing final disposition is maintained by explicit re-review."
+  }
+}

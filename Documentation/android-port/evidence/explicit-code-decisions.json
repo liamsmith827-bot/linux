@@ -24767,5 +24767,161 @@
       "evidence/wifi-auth-interface-review.json",
       "SECURITY.md: Wireless authentication and lifecycle interfaces"
     ]
+  },
+  {
+    "commit": "81399bf5a272d5a99740e88077ab85090bc1cdc5",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain non-netdev guards around NAN/P2P stop in leave_locked: netdev notifier accounting must not also incur the non-netdev opencount decrement, which can prevent unregister completion. SDK mac80211 allocates NAN/P2P without netdevs; preserve the generic shared driver API for either representation without importing a physical driver. cfg80211_leave_locked equals final ACK including native radar/ranging cleanup. This is not a claim that every netdev-backed vendor NAN teardown path has been runtime validated.",
+    "evidence": [
+      "evidence/nan-validation-review.json",
+      "SECURITY.md: NAN configuration and regulatory validation"
+    ]
+  },
+  {
+    "commit": "4a0ac99f65a819fa7ad9ad8e72fff54c9a8d9614",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain WARN-and-return when offloaded-discovery-engine NAN match/function-termination callbacks are called by USERSPACE_DE drivers. Actual hwsim capability registration advertises USERSPACE_DE, so preserving the API distinction avoids treating userspace-managed function identifiers as offloaded IDs. Both callbacks otherwise equal native LTS; no radio discovery runtime is claimed.",
+    "evidence": [
+      "evidence/nan-validation-review.json",
+      "SECURITY.md: NAN configuration and regulatory validation"
+    ]
+  },
+  {
+    "commit": "2086d64c4588a440403e92500831db6e4e74a451",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain clearing the stored cluster ID on NAN stop to prevent stale membership being reported/reused. Current cfg80211_stop_nan equals native LTS after removing only eth_zero_addr, preserving native 7a22cbc6c6bd ranging cleanup and native schedule cancellation. Retain final ACK schedule lifecycle without claiming runtime teardown coverage.",
+    "evidence": [
+      "evidence/nan-validation-review.json",
+      "SECURITY.md: NAN configuration and regulatory validation"
+    ]
+  },
+  {
+    "commit": "f80f3291d8024f6bff9b13c23095b394106fe8d4",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "ca0c99fea3a066b6b2ea68cbd7a2133a83074a03"
+    ],
+    "rationale": "Retain start/change distinction so cluster ID in full CHANGE_NAN_CONFIG messages is ignored after joining. Follow-on ca5eb7b18524 replaces pointer storage with owned six-byte array; native band/channel and nested validation remain. Adapt missing-config default initialization in ca0c99fea3a0, with start/change regression coverage. This avoids silently changing an established cluster while preserving the full-configuration userspace request format.",
+    "evidence": [
+      "evidence/nan-validation-review.json",
+      "SECURITY.md: NAN configuration and regulatory validation"
+    ]
+  },
+  {
+    "commit": "b3baa087639c9ff30c0fbef9ed4068919de21f5c",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain NAN in the DFS-required calculation, with native width/validity checks, so beacon/channel selection consults radar restrictions for NAN. This is the actual code effect: the shared beacon helper still has the native already-DFS-available exception, so the commit title is not evidence of an unconditional prohibition of every DFS-marked channel. Keep that native behavior and do not claim complete regulatory compliance from compilation. NAN_DATA and PD continue to have no independent DFS initiation in this helper.",
+    "evidence": [
+      "evidence/nan-validation-review.json",
+      "SECURITY.md: NAN configuration and regulatory validation"
+    ]
+  },
+  {
+    "commit": "ca5eb7b18524fa85575bb6e2418529506cee08b0",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "ca0c99fea3a066b6b2ea68cbd7a2133a83074a03"
+    ],
+    "rationale": "Retain owned six-byte aligned cluster ID and removal of separate cluster allocation/free. Copy it into mac80211 only when no current cluster is established; current split hwsim start copies that array instead of the historical global-cluster fallback. Adapt central default generation to cover absence of the entire optional NAN_CONFIG attribute, which ACK skipped and thus supplied all zeroes to hwsim. Preserve validated explicit prefix/length and ignore changes after start. Actual parser test reproduces 22 missing-default failures in ACK and none in the port. No cryptographic strength is attributed to this 16-bit cluster identifier.",
+    "evidence": [
+      "evidence/nan-validation-review.json",
+      "SECURITY.md: NAN configuration and regulatory validation"
+    ]
+  },
+  {
+    "commit": "7ad732258cf9ba793fa2c3702a067c83f249e486",
+    "disposition": "adapted",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f",
+      "e36ec95a20b3bdb7b8d12a2058ad6194508f1d29"
+    ],
+    "rationale": "Retain checks of every configured NAN chandef, but move the NAN case before the generic netdev guard and use wdev_running. ACK otherwise silently skips active non-netdev NAN, exactly how SDK mac80211 allocates NAN interfaces. Native non-NAN code remains intact. Invalid channels feed existing RTNL/wiphy-locked leave processing and dependent-interface closure; this is a focused validation fix, not proof of every vendor netdev-backed NAN shutdown path. Actual function tests cover 640 NAN cases and 57344 non-NAN equivalence cases; ACK misses 128 checks, adapted source passes.",
+    "evidence": [
+      "evidence/nan-validation-review.json",
+      "SECURITY.md: NAN configuration and regulatory validation"
+    ]
+  },
+  {
+    "commit": "65d718621ced534e970b2ea05312160c67f3e5e0",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain band-agnostic NAN PHY capabilities, checked netlink serialization and mandatory HT requirement for NAN_DATA. Actual hwsim fills the separate HT/VHT/HE sets when requested; optional VHT/HE are emitted only when supported. Avoid reinterpreting per-band station caps as cross-band NAN caps. Native ordinary band capability reporting remains. Exact SDK NAN radio selection is not established; conservatively retain this configured source/userspace interface, not a future physical platform.",
+    "evidence": [
+      "evidence/nan-validation-review.json",
+      "SECURITY.md: NAN configuration and regulatory validation"
+    ]
+  },
+  {
+    "commit": "6d359cf6b25adeea3d4f5b73c0ee4d689e21ba63",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain allowing ToDS=0/FromDS=0 data on NAN_DATA. The full conversion function otherwise exactly matches native LTS after removing this extra interface type and its indentation correction, preserving native header-length, address, multicast and payload conversion checks. This is the framing used by the retained hwsim/mac80211 NAN data path; it does not loosen other interface types or independently authenticate a frame.",
+    "evidence": [
+      "evidence/nan-validation-review.json",
+      "SECURITY.md: NAN configuration and regulatory validation"
+    ]
+  },
+  {
+    "commit": "d626b5524ffe5f69678e27c09a82870bde5beaca",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain protected-dual-of-public action TX on NAN/NAN_DATA and add NAN_DATA to existing management-register/TX feature gates. SECURE_NAN or USERSPACE_DE is still required; action category restrictions, frame-length/source-address/subtype checks remain. Full management TX function equals native apart from the explicit new interface cases, including the separately retained PD rejection case. hwsim advertises both relevant features when configured; Android supplicant has NAN management consumers. No claim that capability advertisement alone supplies cryptographic protection.",
+    "evidence": [
+      "evidence/nan-validation-review.json",
+      "SECURITY.md: NAN configuration and regulatory validation"
+    ]
+  },
+  {
+    "commit": "3ad9926a5d177675fe818af93dcb3451532c3165",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain NAN_DATA cipher restriction to CCMP-128 or GCMP-256 and pass wdev through all validator callers, including WEXT and cached connection keys. Other key index, pairwise/address, length, sequence and cipher-support checks remain; LTF seed validation is separately audited. This tightens the newly retained NAN data interface without changing the cipher whitelist for ordinary station/AP interfaces. Source/API changes support configured hwsim/mac80211 and Android NAN station/key paths; no live encrypted data exchange is claimed.",
+    "evidence": [
+      "evidence/nan-validation-review.json",
+      "SECURITY.md: NAN configuration and regulatory validation"
+    ]
+  },
+  {
+    "commit": "7da8941b87821272c31cc42b9970944dd1e601dd",
+    "disposition": "applied-net-state",
+    "result_commits": [
+      "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+    ],
+    "rationale": "Retain wiphy registration rejection of NAN_DATA on devices with more than one radio, alongside required NAN HT support. Existing NAN interface-combination handling is single-radio; accepting unsupported multi-radio topologies would exceed validated invariants. The SDK hwsim implementation does not require removing this guard. No future multi-radio platform enablement is included.",
+    "evidence": [
+      "evidence/nan-validation-review.json",
+      "SECURITY.md: NAN configuration and regulatory validation"
+    ]
+  },
+  {
+    "commit": "b293dda1a4ca499cee77c8963626e52731982aee",
+    "disposition": "already-represented-upstream",
+    "result_commits": [],
+    "rationale": "Re-reviewed after NAN parser adaptation invalidated the former whole-file textual witness. Complete ordered added/deleted lines equal native 9c46a3a5b394, an ancestor of pinned LTS; the entire current nl80211_parse_sched_scan equals native LTS. Keep setting n_channels before writing the counted array, avoiding bounds sanitizer failure while preserving later native scan changes. NAN changes only affect a different parser; this is an explicit semantic re-review, not a blind whole-file witness refresh.",
+    "evidence": [
+      "evidence/nan-validation-review.json: scan_bounds_witness_migration"
+    ]
   }
 ]
