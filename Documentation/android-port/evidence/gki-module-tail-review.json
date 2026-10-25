@@ -1,0 +1,783 @@
+{
+  "source_head": "14b858bf1321e29d4606de8258198e4a70f4d1f5",
+  "ack": "23112ce1886ea26b19be03207c0227a06a6ca009",
+  "lts": "2ff600d29ee478d0a8d46ef8a58afb5e038fe692",
+  "build_run": "sdk-build-attempt-197",
+  "built_source": "8c395ddaf3b7a4cc10d4f29cc29b0331da2dc289",
+  "records": [
+    {
+      "commit": "c5a38e7ab5625de179d915d34eec11d3ae5fcb52",
+      "disposition": "partially-adapted-net-configuration",
+      "rationale": "Retain hidden REGMAP_SPMI and SPMI selections together for the generic vendor-source regmap API. Both are built-in in common and virtual configurations, avoiding a built-in regmap depending on a modular bus. Obsolete explicit SPMI defconfig setting and DB845C regmap module declaration are not resurrected; no SPMI controller/platform is enabled by this decision. ARM defconfigs and standalone board targets are outside the selected SDK kernel. Final shared module helpers may retain declarative architecture lists without selecting those kernels. No historical vendor-binary KMI is preserved.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/gki-module-tail-review.json",
+        "SECURITY.md: Historical GKI module configuration review",
+        "evidence/build-results.json: sdk-build-attempt-197"
+      ],
+      "patch_sha256": "49c8afc98f68d3b2a2dd7c07916633891bdc042b74d26ec761cca01dbf9f59a3",
+      "original_added_config_lines": [],
+      "settings": {
+        "CONFIG_REGMAP_SPMI": "y",
+        "CONFIG_SPMI": "y"
+      },
+      "checked_config": "common",
+      "artifacts": [],
+      "path_blobs": {
+        "BUILD.bazel": {
+          "ack": "100644 blob 3c8178ebce1f27f2c417e4aeaa00fc7001a96be6\tBUILD.bazel",
+          "lts": "",
+          "port": "100644 blob 5800787e9fd355ac66fc8309aab74cbd69dc2cc8\tBUILD.bazel"
+        },
+        "arch/arm64/configs/gki_defconfig": {
+          "ack": "100644 blob a3e1c0d60d5220b6be8b306157a331fc1696afb0\tarch/arm64/configs/gki_defconfig",
+          "lts": "",
+          "port": ""
+        },
+        "arch/x86/configs/gki_defconfig": {
+          "ack": "100644 blob 180b3166b2cce53f484b656cd70bd9dbe4a5b487\tarch/x86/configs/gki_defconfig",
+          "lts": "",
+          "port": "100644 blob 0a3476699adc33a60f0c42ffb1ca8731b47a31de\tarch/x86/configs/gki_defconfig"
+        },
+        "init/Kconfig.gki": {
+          "ack": "100644 blob 722d6a24fb8bb56c0625890feaf5e309d5ef4c8f\tinit/Kconfig.gki",
+          "lts": "",
+          "port": "100644 blob 3b32575a64b2142e619bbcf8c3b4c643ac1cea3f\tinit/Kconfig.gki"
+        }
+      }
+    },
+    {
+      "commit": "200e7cb6b044d0d6e53bdaba9d1bdebe76892a5f",
+      "disposition": "partially-adapted-net-configuration",
+      "rationale": "Retain x86 ZRAM and ZSMALLOC modular configuration and both common artifacts. Old define_common_kernels inline output lists are superseded by current get_gki_modules_list and kernel_x86_64 packaging; historical KMI enforcement is independently disabled. Zram implementation/security adaptations are separately reviewed, not replaced with the old implementation. ARM defconfigs and standalone board targets are outside the selected SDK kernel. Final shared module helpers may retain declarative architecture lists without selecting those kernels. No historical vendor-binary KMI is preserved.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/gki-module-tail-review.json",
+        "SECURITY.md: Historical GKI module configuration review",
+        "evidence/build-results.json: sdk-build-attempt-197"
+      ],
+      "patch_sha256": "3fb43d7787ff40ddb95f1de2f40ddd0ab91e773dcd0f4a2ede789b609e8c259a",
+      "original_added_config_lines": [
+        "CONFIG_ZRAM=m"
+      ],
+      "settings": {
+        "CONFIG_ZRAM": "m",
+        "CONFIG_ZSMALLOC": "m"
+      },
+      "checked_config": "common",
+      "artifacts": [
+        {
+          "path": "common_dist/zram.ko",
+          "sha256": "ad48c6b656056c6e3bd4c204ef4710bd351a3765972147ef11cbf374ae5e42c4"
+        },
+        {
+          "path": "common_dist/zsmalloc.ko",
+          "sha256": "936e53b6e542700e86828a2f73f323d82d19f52d5a084c7fd3b44592c8063a01"
+        }
+      ],
+      "path_blobs": {
+        "BUILD.bazel": {
+          "ack": "100644 blob 3c8178ebce1f27f2c417e4aeaa00fc7001a96be6\tBUILD.bazel",
+          "lts": "",
+          "port": "100644 blob 5800787e9fd355ac66fc8309aab74cbd69dc2cc8\tBUILD.bazel"
+        },
+        "arch/x86/configs/gki_defconfig": {
+          "ack": "100644 blob 180b3166b2cce53f484b656cd70bd9dbe4a5b487\tarch/x86/configs/gki_defconfig",
+          "lts": "",
+          "port": "100644 blob 0a3476699adc33a60f0c42ffb1ca8731b47a31de\tarch/x86/configs/gki_defconfig"
+        }
+      }
+    },
+    {
+      "commit": "e750789ab3066507e722c78be9808a7f2f32c5fd",
+      "disposition": "superseded-configuration",
+      "rationale": "Supersede historical common-GKI cfg80211/mac80211 packaging with final ACK placement in virtual-device modules. Common config disables CFG80211; unchanged virtual_device.fragment selects both as modules, and virt_dist contains both. Do not re-add them to common/system_dlkm lists and produce duplicate providers. This preserves final SDK wireless module behavior, not the intermediate packaging commit. ARM defconfigs and standalone board targets are outside the selected SDK kernel. Final shared module helpers may retain declarative architecture lists without selecting those kernels. No historical vendor-binary KMI is preserved.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/gki-module-tail-review.json",
+        "SECURITY.md: Historical GKI module configuration review",
+        "evidence/build-results.json: sdk-build-attempt-197"
+      ],
+      "patch_sha256": "e0d2bda3aa5effd481e62bf725f7bd520a7c32fd3ae72c24b9d047f93cf07cd1",
+      "original_added_config_lines": [
+        "CONFIG_CFG80211=m",
+        "CONFIG_MAC80211=m"
+      ],
+      "settings": {
+        "CONFIG_CFG80211": "m",
+        "CONFIG_MAC80211": "m"
+      },
+      "checked_config": "virtual",
+      "artifacts": [
+        {
+          "path": "virt_dist/cfg80211.ko",
+          "sha256": "40e9cf11701b18b8b31ecf69df99a8b028df85eb56b8dc7449ed3f2facd8f0fb"
+        },
+        {
+          "path": "virt_dist/mac80211.ko",
+          "sha256": "3554b1d775792d3c5a23afc107bdea65d76278ff307d0aff4523574300a8c5fc"
+        }
+      ],
+      "path_blobs": {
+        "BUILD.bazel": {
+          "ack": "100644 blob 3c8178ebce1f27f2c417e4aeaa00fc7001a96be6\tBUILD.bazel",
+          "lts": "",
+          "port": "100644 blob 5800787e9fd355ac66fc8309aab74cbd69dc2cc8\tBUILD.bazel"
+        },
+        "android/gki_system_dlkm_modules": {
+          "ack": "",
+          "lts": "",
+          "port": ""
+        },
+        "arch/arm64/configs/gki_defconfig": {
+          "ack": "100644 blob a3e1c0d60d5220b6be8b306157a331fc1696afb0\tarch/arm64/configs/gki_defconfig",
+          "lts": "",
+          "port": ""
+        },
+        "arch/x86/configs/gki_defconfig": {
+          "ack": "100644 blob 180b3166b2cce53f484b656cd70bd9dbe4a5b487\tarch/x86/configs/gki_defconfig",
+          "lts": "",
+          "port": "100644 blob 0a3476699adc33a60f0c42ffb1ca8731b47a31de\tarch/x86/configs/gki_defconfig"
+        }
+      }
+    },
+    {
+      "commit": "10e8592e50d353975857bbbe844daecfe12e0fa7",
+      "disposition": "partially-adapted-net-configuration",
+      "rationale": "Retain CAN common protocol/core/device/vcan/slcan module configuration and outputs. Final CONFIG_CAN=m causes default-y RAW/BCM/GW tristates to resolve to m; no obsolete explicit lines are needed. Final list also includes the core can.ko dependency. These preserve shared Android configuration/source interfaces without adding a physical CAN controller here. ARM defconfigs and standalone board targets are outside the selected SDK kernel. Final shared module helpers may retain declarative architecture lists without selecting those kernels. No historical vendor-binary KMI is preserved.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/gki-module-tail-review.json",
+        "SECURITY.md: Historical GKI module configuration review",
+        "evidence/build-results.json: sdk-build-attempt-197"
+      ],
+      "patch_sha256": "3bc478239c530487c2c9986ad46a8c019a8c2976bdf7cd905e65c509d01fcd4e",
+      "original_added_config_lines": [
+        "CONFIG_CAN_BCM=m",
+        "CONFIG_CAN_DEV=m",
+        "CONFIG_CAN_GW=m",
+        "CONFIG_CAN_RAW=m",
+        "CONFIG_CAN_SLCAN=m",
+        "CONFIG_CAN_VCAN=m"
+      ],
+      "settings": {
+        "CONFIG_CAN": "m",
+        "CONFIG_CAN_RAW": "m",
+        "CONFIG_CAN_BCM": "m",
+        "CONFIG_CAN_GW": "m",
+        "CONFIG_CAN_DEV": "m",
+        "CONFIG_CAN_VCAN": "m",
+        "CONFIG_CAN_SLCAN": "m"
+      },
+      "checked_config": "common",
+      "artifacts": [
+        {
+          "path": "common_dist/can.ko",
+          "sha256": "4eebc77661ffe1bbc649dcbacb92e51ce6d32278afb9e8c18629d5d955a8a8fe"
+        },
+        {
+          "path": "common_dist/can-raw.ko",
+          "sha256": "e6d5a25f24fa0337de8933a24cc6f1450493c1d8cb7bcaf5f4c815ab850bc244"
+        },
+        {
+          "path": "common_dist/can-bcm.ko",
+          "sha256": "aaedd183d6ee50b516024adee26139d0cbf7f49527e926f21418d29f318466f1"
+        },
+        {
+          "path": "common_dist/can-gw.ko",
+          "sha256": "666d1a0794df62f14f32b78909995e74f398e85cd3c4a0f706a2f38f59b64305"
+        },
+        {
+          "path": "common_dist/can-dev.ko",
+          "sha256": "6b606d0a8aca87f6982f187fe0d28fcf5e2bd549311182501385fc7a816221fb"
+        },
+        {
+          "path": "common_dist/vcan.ko",
+          "sha256": "e11bb367c44bbce50b140797590f5ac4e647563bc602c9a7fffee47748749668"
+        },
+        {
+          "path": "common_dist/slcan.ko",
+          "sha256": "1b7ff04c54ee01f58de932105a131a64ad6c170d636ecdf10093cfbd9765343a"
+        }
+      ],
+      "path_blobs": {
+        "BUILD.bazel": {
+          "ack": "100644 blob 3c8178ebce1f27f2c417e4aeaa00fc7001a96be6\tBUILD.bazel",
+          "lts": "",
+          "port": "100644 blob 5800787e9fd355ac66fc8309aab74cbd69dc2cc8\tBUILD.bazel"
+        },
+        "android/gki_system_dlkm_modules": {
+          "ack": "",
+          "lts": "",
+          "port": ""
+        },
+        "arch/arm64/configs/gki_defconfig": {
+          "ack": "100644 blob a3e1c0d60d5220b6be8b306157a331fc1696afb0\tarch/arm64/configs/gki_defconfig",
+          "lts": "",
+          "port": ""
+        },
+        "arch/x86/configs/gki_defconfig": {
+          "ack": "100644 blob 180b3166b2cce53f484b656cd70bd9dbe4a5b487\tarch/x86/configs/gki_defconfig",
+          "lts": "",
+          "port": "100644 blob 0a3476699adc33a60f0c42ffb1ca8731b47a31de\tarch/x86/configs/gki_defconfig"
+        }
+      }
+    },
+    {
+      "commit": "416a0f5d4f7095a5c92bc6aa985ca8dfebdf84d7",
+      "disposition": "partially-adapted-net-configuration",
+      "rationale": "Retain USB ACM as a signed common module with final cdc-acm.ko packaging. Native driver code is used with separately reviewed generic interfaces. Keeping ACK modular configuration supports the existing Android module ecosystem; exact attached SDK peripheral use is not asserted. ARM defconfigs and standalone board targets are outside the selected SDK kernel. Final shared module helpers may retain declarative architecture lists without selecting those kernels. No historical vendor-binary KMI is preserved.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/gki-module-tail-review.json",
+        "SECURITY.md: Historical GKI module configuration review",
+        "evidence/build-results.json: sdk-build-attempt-197"
+      ],
+      "patch_sha256": "a99bcab38706db70c2e328f260e89123d1666c07f8eacb1b4b80cf0199e0008d",
+      "original_added_config_lines": [
+        "CONFIG_USB_ACM=m"
+      ],
+      "settings": {
+        "CONFIG_USB_ACM": "m"
+      },
+      "checked_config": "common",
+      "artifacts": [
+        {
+          "path": "common_dist/cdc-acm.ko",
+          "sha256": "4e58ecab3c820dea3a8b212c9793584eff9b947a53304e2ab167383b58e94028"
+        }
+      ],
+      "path_blobs": {
+        "BUILD.bazel": {
+          "ack": "100644 blob 3c8178ebce1f27f2c417e4aeaa00fc7001a96be6\tBUILD.bazel",
+          "lts": "",
+          "port": "100644 blob 5800787e9fd355ac66fc8309aab74cbd69dc2cc8\tBUILD.bazel"
+        },
+        "android/gki_system_dlkm_modules": {
+          "ack": "",
+          "lts": "",
+          "port": ""
+        },
+        "arch/arm64/configs/gki_defconfig": {
+          "ack": "100644 blob a3e1c0d60d5220b6be8b306157a331fc1696afb0\tarch/arm64/configs/gki_defconfig",
+          "lts": "",
+          "port": ""
+        },
+        "arch/x86/configs/gki_defconfig": {
+          "ack": "100644 blob 180b3166b2cce53f484b656cd70bd9dbe4a5b487\tarch/x86/configs/gki_defconfig",
+          "lts": "",
+          "port": "100644 blob 0a3476699adc33a60f0c42ffb1ca8731b47a31de\tarch/x86/configs/gki_defconfig"
+        }
+      }
+    },
+    {
+      "commit": "e127eb71e44cacf66496205b97bdf975803e87b8",
+      "disposition": "partially-adapted-net-configuration",
+      "rationale": "Retain USB serial core and FTDI SIO module selection and both common outputs. This is inherited Android module/configuration compatibility, not a new board; loader authorization and native device parsing/lifetime remain separately intact. ARM defconfigs and standalone board targets are outside the selected SDK kernel. Final shared module helpers may retain declarative architecture lists without selecting those kernels. No historical vendor-binary KMI is preserved.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/gki-module-tail-review.json",
+        "SECURITY.md: Historical GKI module configuration review",
+        "evidence/build-results.json: sdk-build-attempt-197"
+      ],
+      "patch_sha256": "4b3e074e8e57000a53455bb97c5d5ecc35fe4a25d0f7822c9af50d67b28eff71",
+      "original_added_config_lines": [
+        "CONFIG_USB_SERIAL=m",
+        "CONFIG_USB_SERIAL_FTDI_SIO=m"
+      ],
+      "settings": {
+        "CONFIG_USB_SERIAL": "m",
+        "CONFIG_USB_SERIAL_FTDI_SIO": "m"
+      },
+      "checked_config": "common",
+      "artifacts": [
+        {
+          "path": "common_dist/usbserial.ko",
+          "sha256": "6ce6ec28cf5f9095cab30122d99b754c50aa8a0e56fb2636418e987cd8109588"
+        },
+        {
+          "path": "common_dist/ftdi_sio.ko",
+          "sha256": "016b3fe09a67502036708c4aa6d8779b4d24ee33f09a7ba2968a1d4ae34425ac"
+        }
+      ],
+      "path_blobs": {
+        "BUILD.bazel": {
+          "ack": "100644 blob 3c8178ebce1f27f2c417e4aeaa00fc7001a96be6\tBUILD.bazel",
+          "lts": "",
+          "port": "100644 blob 5800787e9fd355ac66fc8309aab74cbd69dc2cc8\tBUILD.bazel"
+        },
+        "android/gki_system_dlkm_modules": {
+          "ack": "",
+          "lts": "",
+          "port": ""
+        },
+        "arch/arm64/configs/gki_defconfig": {
+          "ack": "100644 blob a3e1c0d60d5220b6be8b306157a331fc1696afb0\tarch/arm64/configs/gki_defconfig",
+          "lts": "",
+          "port": ""
+        },
+        "arch/x86/configs/gki_defconfig": {
+          "ack": "100644 blob 180b3166b2cce53f484b656cd70bd9dbe4a5b487\tarch/x86/configs/gki_defconfig",
+          "lts": "",
+          "port": "100644 blob 0a3476699adc33a60f0c42ffb1ca8731b47a31de\tarch/x86/configs/gki_defconfig"
+        }
+      }
+    },
+    {
+      "commit": "d1463bf5661f899f515e71f2739ae067b2883f36",
+      "disposition": "partially-adapted-net-configuration",
+      "rationale": "Retain modular TIPC and its diagnostics dependency. Native TIPC_DIAG default follows TIPC=m; current filename is tipc_diag.ko, superseding historical diag.ko in original lists. Preserve native protocol/security code and current output names. ARM defconfigs and standalone board targets are outside the selected SDK kernel. Final shared module helpers may retain declarative architecture lists without selecting those kernels. No historical vendor-binary KMI is preserved.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/gki-module-tail-review.json",
+        "SECURITY.md: Historical GKI module configuration review",
+        "evidence/build-results.json: sdk-build-attempt-197"
+      ],
+      "patch_sha256": "efd7a1feaa6df290716d4a88fb48f1dae5ff65b138350c64ffac613c162d4735",
+      "original_added_config_lines": [
+        "CONFIG_TIPC=m"
+      ],
+      "settings": {
+        "CONFIG_TIPC": "m",
+        "CONFIG_TIPC_DIAG": "m"
+      },
+      "checked_config": "common",
+      "artifacts": [
+        {
+          "path": "common_dist/tipc.ko",
+          "sha256": "d8b277e7c3e10f725ebbfc556a4351016045919129fe2b69490f68945a1c6bd4"
+        },
+        {
+          "path": "common_dist/tipc_diag.ko",
+          "sha256": "d88cc6cf78bc9140583c7e3ac8cfabbe814ec04b3cef4384b400f64669bd3a03"
+        }
+      ],
+      "path_blobs": {
+        "BUILD.bazel": {
+          "ack": "100644 blob 3c8178ebce1f27f2c417e4aeaa00fc7001a96be6\tBUILD.bazel",
+          "lts": "",
+          "port": "100644 blob 5800787e9fd355ac66fc8309aab74cbd69dc2cc8\tBUILD.bazel"
+        },
+        "android/gki_system_dlkm_modules": {
+          "ack": "",
+          "lts": "",
+          "port": ""
+        },
+        "arch/arm64/configs/gki_defconfig": {
+          "ack": "100644 blob a3e1c0d60d5220b6be8b306157a331fc1696afb0\tarch/arm64/configs/gki_defconfig",
+          "lts": "",
+          "port": ""
+        },
+        "arch/x86/configs/gki_defconfig": {
+          "ack": "100644 blob 180b3166b2cce53f484b656cd70bd9dbe4a5b487\tarch/x86/configs/gki_defconfig",
+          "lts": "",
+          "port": "100644 blob 0a3476699adc33a60f0c42ffb1ca8731b47a31de\tarch/x86/configs/gki_defconfig"
+        }
+      }
+    },
+    {
+      "commit": "dd503c2c080fc503e58e589ffdfce9075dfa25b3",
+      "disposition": "partially-adapted-net-configuration",
+      "rationale": "Retain modular 802.1Q and final common output for Android network configuration. No VLAN is created by compiling or packaging the module; native networking permissions and implementation remain. ARM defconfigs and standalone board targets are outside the selected SDK kernel. Final shared module helpers may retain declarative architecture lists without selecting those kernels. No historical vendor-binary KMI is preserved.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/gki-module-tail-review.json",
+        "SECURITY.md: Historical GKI module configuration review",
+        "evidence/build-results.json: sdk-build-attempt-197"
+      ],
+      "patch_sha256": "0198a6348abc6d097c5074edf2d1cdac023769786e23e4e6ab034948535708a3",
+      "original_added_config_lines": [
+        "CONFIG_VLAN_8021Q=m"
+      ],
+      "settings": {
+        "CONFIG_VLAN_8021Q": "m"
+      },
+      "checked_config": "common",
+      "artifacts": [
+        {
+          "path": "common_dist/8021q.ko",
+          "sha256": "d5223e1b8a7da0d2ec942221b05f158e377ade1e9ac9dae6941e77b718a7afcd"
+        }
+      ],
+      "path_blobs": {
+        "BUILD.bazel": {
+          "ack": "100644 blob 3c8178ebce1f27f2c417e4aeaa00fc7001a96be6\tBUILD.bazel",
+          "lts": "",
+          "port": "100644 blob 5800787e9fd355ac66fc8309aab74cbd69dc2cc8\tBUILD.bazel"
+        },
+        "android/gki_system_dlkm_modules": {
+          "ack": "",
+          "lts": "",
+          "port": ""
+        },
+        "arch/arm64/configs/gki_defconfig": {
+          "ack": "100644 blob a3e1c0d60d5220b6be8b306157a331fc1696afb0\tarch/arm64/configs/gki_defconfig",
+          "lts": "",
+          "port": ""
+        },
+        "arch/x86/configs/gki_defconfig": {
+          "ack": "100644 blob 180b3166b2cce53f484b656cd70bd9dbe4a5b487\tarch/x86/configs/gki_defconfig",
+          "lts": "",
+          "port": "100644 blob 0a3476699adc33a60f0c42ffb1ca8731b47a31de\tarch/x86/configs/gki_defconfig"
+        }
+      }
+    },
+    {
+      "commit": "338ed913f3e43db71d71343ee204a9b6159279b3",
+      "disposition": "partially-adapted-net-configuration",
+      "rationale": "Retain NFC core as a common module under inherited Android configuration. This does not select a new NFC controller or assert SDK hardware availability; generic interface and final module output remain. ARM defconfigs and standalone board targets are outside the selected SDK kernel. Final shared module helpers may retain declarative architecture lists without selecting those kernels. No historical vendor-binary KMI is preserved.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/gki-module-tail-review.json",
+        "SECURITY.md: Historical GKI module configuration review",
+        "evidence/build-results.json: sdk-build-attempt-197"
+      ],
+      "patch_sha256": "044a0c199bfb5dae31a9d811887b982414ba85e3d77bf4377fe3b4ccd0c53e24",
+      "original_added_config_lines": [
+        "CONFIG_NFC=m"
+      ],
+      "settings": {
+        "CONFIG_NFC": "m"
+      },
+      "checked_config": "common",
+      "artifacts": [
+        {
+          "path": "common_dist/nfc.ko",
+          "sha256": "8480f24840564a8c46043c0191da6613f5b7c23036f254c194a2d598728fd742"
+        }
+      ],
+      "path_blobs": {
+        "BUILD.bazel": {
+          "ack": "100644 blob 3c8178ebce1f27f2c417e4aeaa00fc7001a96be6\tBUILD.bazel",
+          "lts": "",
+          "port": "100644 blob 5800787e9fd355ac66fc8309aab74cbd69dc2cc8\tBUILD.bazel"
+        },
+        "android/gki_system_dlkm_modules": {
+          "ack": "",
+          "lts": "",
+          "port": ""
+        },
+        "arch/arm64/configs/gki_defconfig": {
+          "ack": "100644 blob a3e1c0d60d5220b6be8b306157a331fc1696afb0\tarch/arm64/configs/gki_defconfig",
+          "lts": "",
+          "port": ""
+        },
+        "arch/x86/configs/gki_defconfig": {
+          "ack": "100644 blob 180b3166b2cce53f484b656cd70bd9dbe4a5b487\tarch/x86/configs/gki_defconfig",
+          "lts": "",
+          "port": "100644 blob 0a3476699adc33a60f0c42ffb1ca8731b47a31de\tarch/x86/configs/gki_defconfig"
+        }
+      }
+    },
+    {
+      "commit": "56afa3f145ff2d0571f152cee9dba4d5cc8aeeb3",
+      "disposition": "partially-adapted-net-configuration",
+      "rationale": "Retain RFCOMM module and TTY option, with rfcomm.ko in common artifacts. This preserves configured Bluetooth stream/serial interface compatibility; no runtime Bluetooth connection or module load is verified. ARM defconfigs and standalone board targets are outside the selected SDK kernel. Final shared module helpers may retain declarative architecture lists without selecting those kernels. No historical vendor-binary KMI is preserved.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/gki-module-tail-review.json",
+        "SECURITY.md: Historical GKI module configuration review",
+        "evidence/build-results.json: sdk-build-attempt-197"
+      ],
+      "patch_sha256": "86b91eda9fdc52a438cf89da7fc02f3dc528d1497831ac6fb62b33455b255fce",
+      "original_added_config_lines": [
+        "CONFIG_BT_RFCOMM=m"
+      ],
+      "settings": {
+        "CONFIG_BT_RFCOMM": "m",
+        "CONFIG_BT_RFCOMM_TTY": "y"
+      },
+      "checked_config": "common",
+      "artifacts": [
+        {
+          "path": "common_dist/rfcomm.ko",
+          "sha256": "5eb21fd318e71af6e3fe5b0df9d9c73e16c5201b94f7a837bac744d98e2b5d0a"
+        }
+      ],
+      "path_blobs": {
+        "BUILD.bazel": {
+          "ack": "100644 blob 3c8178ebce1f27f2c417e4aeaa00fc7001a96be6\tBUILD.bazel",
+          "lts": "",
+          "port": "100644 blob 5800787e9fd355ac66fc8309aab74cbd69dc2cc8\tBUILD.bazel"
+        },
+        "android/gki_system_dlkm_modules": {
+          "ack": "",
+          "lts": "",
+          "port": ""
+        },
+        "arch/arm64/configs/gki_defconfig": {
+          "ack": "100644 blob a3e1c0d60d5220b6be8b306157a331fc1696afb0\tarch/arm64/configs/gki_defconfig",
+          "lts": "",
+          "port": ""
+        },
+        "arch/x86/configs/gki_defconfig": {
+          "ack": "100644 blob 180b3166b2cce53f484b656cd70bd9dbe4a5b487\tarch/x86/configs/gki_defconfig",
+          "lts": "",
+          "port": "100644 blob 0a3476699adc33a60f0c42ffb1ca8731b47a31de\tarch/x86/configs/gki_defconfig"
+        }
+      }
+    },
+    {
+      "commit": "d39c7fb8b05fe5bc609ca1f457e313d79f72a195",
+      "disposition": "partially-adapted-net-configuration",
+      "rationale": "Retain HIDP protocol as common hidp.ko module. This preserves Android Bluetooth HID configuration and source linkage while native HID/security behavior remains independently reviewed. ARM defconfigs and standalone board targets are outside the selected SDK kernel. Final shared module helpers may retain declarative architecture lists without selecting those kernels. No historical vendor-binary KMI is preserved.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/gki-module-tail-review.json",
+        "SECURITY.md: Historical GKI module configuration review",
+        "evidence/build-results.json: sdk-build-attempt-197"
+      ],
+      "patch_sha256": "936e69e3521cd6c7641d4b0711174050d14fafa39a4accb046b6551795d7033a",
+      "original_added_config_lines": [
+        "CONFIG_BT_HIDP=m"
+      ],
+      "settings": {
+        "CONFIG_BT_HIDP": "m"
+      },
+      "checked_config": "common",
+      "artifacts": [
+        {
+          "path": "common_dist/hidp.ko",
+          "sha256": "6225fa5fcdbdb067ee4e61f9052b97c30f45557bb4fc4c680bcd61ebf0176982"
+        }
+      ],
+      "path_blobs": {
+        "BUILD.bazel": {
+          "ack": "100644 blob 3c8178ebce1f27f2c417e4aeaa00fc7001a96be6\tBUILD.bazel",
+          "lts": "",
+          "port": "100644 blob 5800787e9fd355ac66fc8309aab74cbd69dc2cc8\tBUILD.bazel"
+        },
+        "android/gki_system_dlkm_modules": {
+          "ack": "",
+          "lts": "",
+          "port": ""
+        },
+        "arch/arm64/configs/gki_defconfig": {
+          "ack": "100644 blob a3e1c0d60d5220b6be8b306157a331fc1696afb0\tarch/arm64/configs/gki_defconfig",
+          "lts": "",
+          "port": ""
+        },
+        "arch/x86/configs/gki_defconfig": {
+          "ack": "100644 blob 180b3166b2cce53f484b656cd70bd9dbe4a5b487\tarch/x86/configs/gki_defconfig",
+          "lts": "",
+          "port": "100644 blob 0a3476699adc33a60f0c42ffb1ca8731b47a31de\tarch/x86/configs/gki_defconfig"
+        }
+      }
+    },
+    {
+      "commit": "d55c01c608c1a06e88a719ed8599bbb159eba130",
+      "disposition": "partially-adapted-net-configuration",
+      "rationale": "Retain HCI SDIO/UART modules and derived Broadcom/Qualcomm helper modules; boolean HCI protocol selections derive BT_BCM=m and BT_QCA=m through native Kconfig. Final artifact list contains all four. No new vendor SoC platform configuration is introduced. ARM defconfigs and standalone board targets are outside the selected SDK kernel. Final shared module helpers may retain declarative architecture lists without selecting those kernels. No historical vendor-binary KMI is preserved.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/gki-module-tail-review.json",
+        "SECURITY.md: Historical GKI module configuration review",
+        "evidence/build-results.json: sdk-build-attempt-197"
+      ],
+      "patch_sha256": "ac9a4855f22e30bb121bd79cdcd98a483182975d892a70a0680cf0e2b8d49217",
+      "original_added_config_lines": [
+        "CONFIG_BT_HCIBTSDIO=m",
+        "CONFIG_BT_HCIUART=m"
+      ],
+      "settings": {
+        "CONFIG_BT_HCIBTSDIO": "m",
+        "CONFIG_BT_HCIUART": "m",
+        "CONFIG_BT_HCIUART_BCM": "y",
+        "CONFIG_BT_HCIUART_QCA": "y",
+        "CONFIG_BT_BCM": "m",
+        "CONFIG_BT_QCA": "m"
+      },
+      "checked_config": "common",
+      "artifacts": [
+        {
+          "path": "common_dist/btsdio.ko",
+          "sha256": "d1b412a46ab64db0c1ca3ccb7fde842d0b0aa0abc3e5a5cc42e9c34b9f30a665"
+        },
+        {
+          "path": "common_dist/hci_uart.ko",
+          "sha256": "eebeac14a059761481d01e3500b8890676b1665f2b7d56faa746347cb484b957"
+        },
+        {
+          "path": "common_dist/btbcm.ko",
+          "sha256": "2326d36b75c4b7e1240c4feb870b3d7ca853de11e2e78c152e01339c63271815"
+        },
+        {
+          "path": "common_dist/btqca.ko",
+          "sha256": "0af67948f25f21d3524899b994397643ea8aad45e3d9074b041401293c191a79"
+        }
+      ],
+      "path_blobs": {
+        "BUILD.bazel": {
+          "ack": "100644 blob 3c8178ebce1f27f2c417e4aeaa00fc7001a96be6\tBUILD.bazel",
+          "lts": "",
+          "port": "100644 blob 5800787e9fd355ac66fc8309aab74cbd69dc2cc8\tBUILD.bazel"
+        },
+        "android/gki_system_dlkm_modules": {
+          "ack": "",
+          "lts": "",
+          "port": ""
+        },
+        "arch/arm64/configs/gki_defconfig": {
+          "ack": "100644 blob a3e1c0d60d5220b6be8b306157a331fc1696afb0\tarch/arm64/configs/gki_defconfig",
+          "lts": "",
+          "port": ""
+        },
+        "arch/x86/configs/gki_defconfig": {
+          "ack": "100644 blob 180b3166b2cce53f484b656cd70bd9dbe4a5b487\tarch/x86/configs/gki_defconfig",
+          "lts": "",
+          "port": "100644 blob 0a3476699adc33a60f0c42ffb1ca8731b47a31de\tarch/x86/configs/gki_defconfig"
+        }
+      }
+    },
+    {
+      "commit": "2fd29c7b6a9f3efbfccde474dff0062ce0ecea98",
+      "disposition": "partially-adapted-net-configuration",
+      "rationale": "Retain generic power-sequencing core as pwrseq-core.ko, a dependency of the retained HCI UART source/configuration. The physical POWER_SEQUENCING_QCOM_WCN provider is disabled in the generated SDK config. Omit historical DB845C list edits and ARM platform enablement; current shared list carries only the core. ARM defconfigs and standalone board targets are outside the selected SDK kernel. Final shared module helpers may retain declarative architecture lists without selecting those kernels. No historical vendor-binary KMI is preserved.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/gki-module-tail-review.json",
+        "SECURITY.md: Historical GKI module configuration review",
+        "evidence/build-results.json: sdk-build-attempt-197"
+      ],
+      "patch_sha256": "26f5e8253a3e32ef6a98183dd1f204f3c74b489e3500ce57d206c32f5123f38a",
+      "original_added_config_lines": [
+        "# CONFIG_POWER_SEQUENCING_QCOM_WCN is not set",
+        "CONFIG_POWER_SEQUENCING=m"
+      ],
+      "settings": {
+        "CONFIG_POWER_SEQUENCING": "m"
+      },
+      "checked_config": "common",
+      "artifacts": [
+        {
+          "path": "common_dist/pwrseq-core.ko",
+          "sha256": "eaf8d3b3f72f2c5f0505d105290b1f56bd8432b15c59f01d4f361356cbfece0c"
+        }
+      ],
+      "path_blobs": {
+        "BUILD.bazel": {
+          "ack": "100644 blob 3c8178ebce1f27f2c417e4aeaa00fc7001a96be6\tBUILD.bazel",
+          "lts": "",
+          "port": "100644 blob 5800787e9fd355ac66fc8309aab74cbd69dc2cc8\tBUILD.bazel"
+        },
+        "arch/arm64/configs/gki_defconfig": {
+          "ack": "100644 blob a3e1c0d60d5220b6be8b306157a331fc1696afb0\tarch/arm64/configs/gki_defconfig",
+          "lts": "",
+          "port": ""
+        },
+        "arch/x86/configs/gki_defconfig": {
+          "ack": "100644 blob 180b3166b2cce53f484b656cd70bd9dbe4a5b487\tarch/x86/configs/gki_defconfig",
+          "lts": "",
+          "port": "100644 blob 0a3476699adc33a60f0c42ffb1ca8731b47a31de\tarch/x86/configs/gki_defconfig"
+        },
+        "modules.bzl": {
+          "ack": "100644 blob 27f0ee295bcd44ad49c630dd992818d342ed99b0\tmodules.bzl",
+          "lts": "",
+          "port": "100644 blob 27f0ee295bcd44ad49c630dd992818d342ed99b0\tmodules.bzl"
+        }
+      }
+    },
+    {
+      "commit": "fc26b8a66c76d9855789977988175a649a7513c9",
+      "disposition": "partially-adapted-net-configuration",
+      "rationale": "Retain VIRTIO_PCI_LEGACY at its native enabled default and common virtio_pci_legacy_dev.ko. Final built virtio_pci.ko metadata positively depends on both legacy and modern helpers; Goldfish ramdisk list includes all three. Omit obsolete RockPi/ARM list relocation. This prevents losing legacy probing through an inconsistent common build, but no runtime wireless/device probe is claimed. ARM defconfigs and standalone board targets are outside the selected SDK kernel. Final shared module helpers may retain declarative architecture lists without selecting those kernels. No historical vendor-binary KMI is preserved.",
+      "result_commits": [
+        "2fbc2da4ade330c86d97491696f9223c9df7bc8f"
+      ],
+      "evidence": [
+        "evidence/gki-module-tail-review.json",
+        "SECURITY.md: Historical GKI module configuration review",
+        "evidence/build-results.json: sdk-build-attempt-197"
+      ],
+      "patch_sha256": "6122b4449e8d7706ad36b15493be5ed5d2235dbb14ae24f634c9e4df0ccfb513",
+      "original_added_config_lines": [],
+      "settings": {
+        "CONFIG_VIRTIO_PCI": "m",
+        "CONFIG_VIRTIO_PCI_LEGACY": "y",
+        "CONFIG_VIRTIO_PCI_LIB_LEGACY": "m"
+      },
+      "checked_config": "common",
+      "artifacts": [
+        {
+          "path": "common_dist/virtio_pci.ko",
+          "sha256": "19768b2a4c9b158eec1d77d14b739e6c3a9cba96946c07c0cc773767aedc3297"
+        },
+        {
+          "path": "common_dist/virtio_pci_legacy_dev.ko",
+          "sha256": "d6fc107908b3f768e190bb446f716b9c3eaf588e90e17b06f31d8797c99b118d"
+        },
+        {
+          "path": "common_dist/virtio_pci_modern_dev.ko",
+          "sha256": "3f255a34471bd3d4171da9f85b0a80edcd2fde7f4cbc42b54bbf76421080fbae"
+        }
+      ],
+      "path_blobs": {
+        "BUILD.bazel": {
+          "ack": "100644 blob 3c8178ebce1f27f2c417e4aeaa00fc7001a96be6\tBUILD.bazel",
+          "lts": "",
+          "port": "100644 blob 5800787e9fd355ac66fc8309aab74cbd69dc2cc8\tBUILD.bazel"
+        },
+        "arch/arm64/configs/gki_defconfig": {
+          "ack": "100644 blob a3e1c0d60d5220b6be8b306157a331fc1696afb0\tarch/arm64/configs/gki_defconfig",
+          "lts": "",
+          "port": ""
+        },
+        "arch/x86/configs/gki_defconfig": {
+          "ack": "100644 blob 180b3166b2cce53f484b656cd70bd9dbe4a5b487\tarch/x86/configs/gki_defconfig",
+          "lts": "",
+          "port": "100644 blob 0a3476699adc33a60f0c42ffb1ca8731b47a31de\tarch/x86/configs/gki_defconfig"
+        },
+        "modules.bzl": {
+          "ack": "100644 blob 27f0ee295bcd44ad49c630dd992818d342ed99b0\tmodules.bzl",
+          "lts": "",
+          "port": "100644 blob 27f0ee295bcd44ad49c630dd992818d342ed99b0\tmodules.bzl"
+        }
+      }
+    }
+  ],
+  "generated_configurations": {
+    "common": {
+      "path": "../kernel_manifest-6.18/common_dist/kernel_x86_64_dot_config",
+      "sha256": "6d27ff842b4cac221ab58093e8ca6bc7f8c692b6ccf56c9b7cceca230389d769"
+    },
+    "virtual": {
+      "path": "../kernel_manifest-6.18/out/bazel/output_user_root/961789292c522f6ecd25a5ebbdd4dcbc/execroot/_main/bazel-out/k8-fastbuild/bin/common-modules/virtual-device/virtual_device_x86_64_config/out_dir/.config",
+      "sha256": "5eb9df697a47e51c48fc154d7c5c9de503407ea3d7789c1d3cd3c6185088ba8e"
+    }
+  },
+  "module_list_blobs": {
+    "modules.bzl": "27f0ee295bcd44ad49c630dd992818d342ed99b0",
+    "bazel/modules.bzl": "a957027148890c9f5b76a139416dd9dee26ce54e",
+    "bazel/modules_private.bzl": "a461f00ae32df9d232e9075cab4be46d180a9a55"
+  },
+  "regmap_selection": "config GKI_HIDDEN_REGMAP_CONFIGS\n\tbool \"Hidden Regmap configs needed for GKI\"\n\tselect REGMAP_IRQ\n\tselect REGMAP_MMIO\n\tselect REGMAP_SPMI\n\tselect SPMI\n\thelp\n\t  Dummy config option used to enable hidden regmap configs.\n\t  These are normally selected implicitly when a module\n\t  that relies on it is configured.\n\n",
+  "virtio_pci_module_dependencies": "[    d4]  depends=virtio_pci_modern_dev,virtio_pci_legacy_dev",
+  "limits": "Full original patches and final Kconfig/list/selected target paths reviewed; artifact SHA256 matched successful build record, no rebuild/source edit required. No module loaded, peripheral probed, network traffic generated or runtime optional-feature use established. Existing module/configuration compatibility is the retention basis, not a claim all peripherals are present.",
+  "remote_resources_used": []
+}

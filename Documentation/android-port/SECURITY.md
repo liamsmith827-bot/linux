@@ -10384,3 +10384,44 @@ was contacted. Hardware panic, SMI, suspend and reset recipes were not executed.
 This batch changes review records only, so the source built in attempt 197 is
 unchanged. It does not finalize other shared VFIO/IOMMU or protected-guest
 candidates, nor establish runtime virtualization compatibility.
+
+# Historical GKI module configuration review
+
+Fourteen original configuration/packaging patches are resolved in
+`evidence/gki-module-tail-review.json`. Their complete original patches, final
+module-list helpers and generated common/virtual configurations were examined.
+Each expected artifact hash matches successful build 197. This batch makes no
+source change and does not need a new kernel build.
+
+Retain generic hidden REGMAP_SPMI and SPMI selections together as built-ins,
+preserving the vendor-source API without a built-in-to-module dependency. No
+SPMI controller is introduced. ZRAM/ZSMALLOC, CAN protocols/core/virtual/serial
+interfaces, USB ACM/serial/FTDI, TIPC/diagnostics, 802.1Q, NFC, RFCOMM/HIDP and
+HCI transport/helper modules retain final Android configuration and packaging.
+Native Kconfig defaults derive modular CAN RAW/BCM/GW and TIPC diagnostics;
+current tipc_diag.ko supersedes the original diag.ko filename. HCI protocol
+booleans derive the modular BCM/QCA helper dependencies. Power sequencing retains
+the generic core; its physical Qualcomm provider remains disabled.
+
+The intermediate cfg80211/mac80211 common-module placement is superseded:
+common GKI disables CFG80211, while the unchanged virtual-device fragment
+selects both wireless modules and packages them in virt_dist. Restoring their
+old common/system_dlkm entries would duplicate providers. Module metadata has
+moved to the current bazel helpers; obsolete inline rules, old text list and
+standalone ARM/board targets are not resurrected. Declarative architecture
+lists in shared helpers do not select another kernel target.
+
+Legacy virtio PCI remains enabled in the common build. Read-only ELF metadata
+shows virtio_pci.ko depends on both virtio_pci_legacy_dev and
+virtio_pci_modern_dev, and the supplied Goldfish ramdisk list includes all three.
+This verifies coherent compilation/packaging for legacy probing, not an actual
+network/device probe. The old commit's emulator/Android build recipes were not
+executed.
+
+Retention is based on existing Android configuration/module-source compatibility;
+it does not assert every optional peripheral is present in SDK. Modules retain
+the reviewed signing/loader controls and native implementations with separately
+justified adaptations. Packaging is not loading, successful signature validation
+is not runtime correctness, and no network, Bluetooth, NFC or attached USB
+operation was tested. No remote source was accessed, including URLs embedded in
+original commit messages.
